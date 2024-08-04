@@ -9,7 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_Main_Help_Window:  # noqa: D101
-    def setupUi(self, Main_Help_Window):  # noqa: ANN001, ANN201, N802, N803, D102
+    def setupUi(self, Main_Help_Window):  # noqa: N802, N803, D102
         Main_Help_Window.setObjectName('Main_Help_Window')
         Main_Help_Window.resize(680, 320)
         Main_Help_Window.setMinimumSize(QtCore.QSize(680, 320))
@@ -65,7 +65,7 @@ class Ui_Main_Help_Window:  # noqa: D101
         self.retranslateUi(Main_Help_Window)
         QtCore.QMetaObject.connectSlotsByName(Main_Help_Window)
 
-    def retranslateUi(self, Main_Help_Window):  # noqa: ANN001, ANN201, N802, N803, D102
+    def retranslateUi(self, Main_Help_Window):  # noqa: N802, N803, D102
         _translate = QtCore.QCoreApplication.translate
         Main_Help_Window.setWindowTitle(_translate('Main_Help_Window', 'Help'))
         self.label.setText(

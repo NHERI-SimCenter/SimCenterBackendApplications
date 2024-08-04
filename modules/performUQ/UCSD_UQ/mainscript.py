@@ -14,7 +14,7 @@ sys.path.append(str(path_to_common_uq))
 
 
 # ======================================================================================================================
-def main(input_args):  # noqa: ANN001, ANN201, D103
+def main(input_args):  # noqa: D103
     # # Initialize analysis
     # path_to_UCSD_UQ_directory = Path(input_args[2]).resolve().parent
     # path_to_working_directory = Path(input_args[3]).resolve()

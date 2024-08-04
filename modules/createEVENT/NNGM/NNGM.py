@@ -6,7 +6,7 @@ from textwrap import wrap
 from scipy import spatial
 
 
-def ReadSMC(smcFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
+def ReadSMC(smcFilePath):  # noqa: N802, N803, D103
     with open(smcFilePath, 'r+') as smcFile:  # noqa: N806, PLW1514, PTH123
         series = []
         smcLines = smcFile.readlines()  # noqa: N806
@@ -20,7 +20,7 @@ def ReadSMC(smcFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
         return [series, dT]
 
 
-def ReadCOSMOS(cosmosFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
+def ReadCOSMOS(cosmosFilePath):  # noqa: N802, N803, D103
     with open(cosmosFilePath, 'r+') as cosmosFile:  # noqa: N806, PLW1514, PTH123
         series = []
         cosmosLines = cosmosFile.readlines()  # noqa: N806
@@ -38,7 +38,7 @@ def ReadCOSMOS(cosmosFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
         return [series, dT]
 
 
-def createEvent(recordsFolder, h1File, h2File, eventFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
+def createEvent(recordsFolder, h1File, h2File, eventFilePath):  # noqa: N802, N803, D103
     if h1File.endswith('.smc'):
         h1, dt1 = ReadSMC(os.path.join(recordsFolder, h1File))  # noqa: PTH118
     else:
@@ -88,7 +88,7 @@ def createEvent(recordsFolder, h1File, h2File, eventFilePath):  # noqa: ANN001, 
         json.dump(eventsDict, eventFile, indent=4)
 
 
-def main():  # noqa: ANN201, D103
+def main():  # noqa: D103
     # Input Argument Specifications
     gmArgsParser = argparse.ArgumentParser(  # noqa: N806
         'Characterize ground motion using seismic hazard analysis and record selection'

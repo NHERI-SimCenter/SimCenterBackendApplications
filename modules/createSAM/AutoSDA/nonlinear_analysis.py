@@ -37,13 +37,13 @@ class NonlinearAnalysis:  # noqa: PLR0904
     (16) define pushover loading pattern
     """  # noqa: D205, D400, D404
 
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        building,  # noqa: ANN001
-        column_set,  # noqa: ANN001
-        beam_set,  # noqa: ANN001
-        connection_set,  # noqa: ANN001
-        analysis_type,  # noqa: ANN001
+        building,
+        column_set,
+        beam_set,
+        connection_set,
+        analysis_type,
     ):
         """This function is used to call all methods to write .tcl files required for nonlinear analysis OpenSees model
         :param building: a class defined in "building_information.py" file
@@ -115,7 +115,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
             self.write_damping(building)
             self.write_dynamic_analysis_parameters(building)
 
-    def write_nodes(self, building, column_set, beam_set):  # noqa: ANN001, ANN201, C901, PLR6301
+    def write_nodes(self, building, column_set, beam_set):  # noqa: C901, PLR6301
         """Create a .tcl file to write node tags and coordinates for nonlinear analysis model
         :param building: a class defined in "building_information.py"
         :param column_set: a list[x][y] and each element is a class defined in "column_component.py"
@@ -272,7 +272,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
             tclfile.write('\n')
             tclfile.write('puts "Extra nodes for leaning column springs defined"\n')
 
-    def write_fixities(self, building):  # noqa: ANN001, ANN201, PLR6301
+    def write_fixities(self, building):  # noqa: PLR6301
         """Create a .tcl file to write boundary for the model
         :param building: a class defined in "building_information.py"
         :return: a .tcl file
@@ -291,7 +291,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
             )
             tclfile.write('puts "All column base fixities have been defined"')
 
-    def write_floor_constraint(self, building):  # noqa: ANN001, ANN201, PLR6301
+    def write_floor_constraint(self, building):  # noqa: PLR6301
         """Create a .tcl file to write floor constraint, i.e., equal DOF
         :param building: a class defined in "building_information.py"
         :return: a .tcl file
@@ -326,7 +326,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
                 tclfile.write('\t#Pier 1 to Leaning column\n\n')
             tclfile.write('puts "Floor constraint defined"')
 
-    def write_beam_hinge_material(self, building, beam_set):  # noqa: ANN001, ANN201, PLR6301
+    def write_beam_hinge_material(self, building, beam_set):  # noqa: PLR6301
         """Create a .tcl file to define all beam plastic hinge materials using Modified IMK material model
         :param building: a class defined in "building_information.py"
         :param beam_set: a list[x][z] and each element is a class defined in "beam_component.py"
@@ -400,7 +400,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
                     material_tag += 1
             tclfile.write('\n\nputs "Beam hinge materials defined"')
 
-    def write_column_hinge_material(self, building, column_set):  # noqa: ANN001, ANN201, PLR6301
+    def write_column_hinge_material(self, building, column_set):  # noqa: PLR6301
         """Create a .tcl file to define all column plastic hinge materials using modified IMK material model
         :param building: a class defined in "building_information.py"
         :param column_set: a list[x][y] and each element is a class defined in "column_component.py" file
@@ -488,7 +488,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
                     material_tag += 1
             tclfile.write('\n\nputs "Column hinge materials defined"')
 
-    def write_beam(self, building):  # noqa: ANN001, ANN201, PLR6301
+    def write_beam(self, building):  # noqa: PLR6301
         """Create a .tcl file to define the beam element
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
@@ -555,7 +555,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
                 tclfile.write('\n')
             tclfile.write('puts "Beams defined"')
 
-    def write_column(self, building):  # noqa: ANN001, ANN201, PLR6301
+    def write_column(self, building):  # noqa: PLR6301
         """Create a .tcl file to define column element
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
@@ -665,7 +665,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
                 tclfile.write('\t$AreaRigid\t$Es\t$IRigid\t$PDeltaTransf; \n\n')
             tclfile.write('puts "Columns defined"')
 
-    def write_beam_hinge(self, building):  # noqa: ANN001, ANN201, PLR6301
+    def write_beam_hinge(self, building):  # noqa: PLR6301
         """Create a .tcl file to define beam hinge element (rotational spring)
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
@@ -713,7 +713,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
 
             tclfile.write('puts "Beam hinges defined"')
 
-    def write_column_hinge(self, building):  # noqa: ANN001, ANN201, PLR6301
+    def write_column_hinge(self, building):  # noqa: PLR6301
         """Create a .tcl file to define column hinge element (rotational spring)
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
@@ -818,7 +818,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
             tclfile.write('\n')
             tclfile.write('puts "Column hinge defined"')
 
-    def write_mass(self, building):  # noqa: ANN001, ANN201, PLR6301
+    def write_mass(self, building):  # noqa: PLR6301
         """Create a .tcl file which defines the mass of each floor at each node
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
@@ -872,7 +872,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
                 tclfile.write('\n')
             tclfile.write('puts "Nodal mass defined"')
 
-    def write_panel_zone_elements(self, building):  # noqa: ANN001, ANN201, PLR6301
+    def write_panel_zone_elements(self, building):  # noqa: PLR6301
         """Create a .tcl file that defines the elements in panel zone
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
@@ -899,12 +899,12 @@ class NonlinearAnalysis:  # noqa: PLR0904
                 tclfile.write('\n')
             tclfile.write('puts "Panel zone elements defined"')
 
-    def write_panel_zone_springs(  # noqa: ANN201, D102, PLR6301
+    def write_panel_zone_springs(  # noqa: D102, PLR6301
         self,
-        building,  # noqa: ANN001
-        column_set,  # noqa: ANN001
-        beam_set,  # noqa: ANN001
-        connection_set,  # noqa: ANN001
+        building,
+        column_set,
+        beam_set,
+        connection_set,
     ):
         # Create a .tcl file that defines the springs involved in panel zones
         with open('DefinePanelZoneSprings.tcl', 'w') as tclfile:  # noqa: PLW1514, PTH123
@@ -967,7 +967,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
                 tclfile.write('\n')
             tclfile.write('puts "Panel zone springs defined"')
 
-    def write_gravity_load(self, building):  # noqa: ANN001, ANN201, D102, PLR6301
+    def write_gravity_load(self, building):  # noqa: D102, PLR6301
         # Create a .tcl file to write gravity load: 1.00 DL + 0.25 LL
         with open('DefineGravityLoads2DModel.tcl', 'w') as tclfile:  # noqa: PLW1514, PTH123
             tclfile.write('# Define expected gravity loads\n\n\n')
@@ -1048,7 +1048,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
 
             tclfile.write('puts "Expected gravity loads defined"')
 
-    def write_pushover_loading(self, building):  # noqa: ANN001, ANN201, D102, PLR6301
+    def write_pushover_loading(self, building):  # noqa: D102, PLR6301
         # Create a .tcl file to write lateral pushover loading
         with open('DefinePushoverLoading2DModel.tcl', 'w') as tclfile:  # noqa: PLW1514, PTH123
             tclfile.write('# Define pushover loading\n\n\n')
@@ -1072,7 +1072,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
                 tclfile.write('\n')
             tclfile.write('}')
 
-    def write_base_reaction_recorder(self, building):  # noqa: ANN001, ANN201, D102, PLR6301
+    def write_base_reaction_recorder(self, building):  # noqa: D102, PLR6301
         # Create a .tcl file to write the recorders for base reactions
         with open('DefineBaseReactionRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PLW1514, PTH123
             tclfile.write('# Define base node reaction recorders\n\n\n')
@@ -1096,7 +1096,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
             tclfile.write('\t%i%i' % (building.geometry['number of X bay'] + 2, 1))
             tclfile.write('\t-dof\t1\treaction;\n\n')
 
-    def write_beam_hinge_recorder(self, building):  # noqa: ANN001, ANN201, D102, PLR6301
+    def write_beam_hinge_recorder(self, building):  # noqa: D102, PLR6301
         # Create a .tcl file to record beam hinge forces and deformation
         with open('DefineBeamHingeRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PLW1514, PTH123
             tclfile.write('# Define beam hinge force-deformation recorders\n\n\n')
@@ -1129,7 +1129,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
                 tclfile.write('\tdeformation;\n')
             tclfile.write('\n')
 
-    def write_column_hinge_recorder(self, building):  # noqa: ANN001, ANN201, D102, PLR6301
+    def write_column_hinge_recorder(self, building):  # noqa: D102, PLR6301
         # Create a .tcl file to record column hinge forces and deformations
         with open('DefineColumnHingeRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PLW1514, PTH123
             tclfile.write('# Define column hinge force-deformation recorders\n\n\n')
@@ -1162,7 +1162,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
                 tclfile.write('\tdeformation;')
             tclfile.write('\n')
 
-    def write_beam_force_recorder(self, building):  # noqa: ANN001, ANN201, D102, PLR6301
+    def write_beam_force_recorder(self, building):  # noqa: D102, PLR6301
         # Create a .tcl file to write beam element forces recorder for output
         with open('DefineGlobalBeamForceRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PLW1514, PTH123
             tclfile.write('# Define global beam force recorders\n\n\n')
@@ -1177,7 +1177,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
                     tclfile.write('\t%i%i%i%i%i%i%i' % (2, j, i, 1, j + 1, i, 1))
                 tclfile.write('\tforce\n')
 
-    def write_column_force_recorder(self, building):  # noqa: ANN001, ANN201, D102, PLR6301
+    def write_column_force_recorder(self, building):  # noqa: D102, PLR6301
         # Create a .tcl file to write column element forces recorder for output
         with open('DefineGlobalColumnForceRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PLW1514, PTH123
             tclfile.write('# Define global column force recorders\n\n\n')
@@ -1195,7 +1195,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
                 tclfile.write('\tforce;\n')
             tclfile.write('\n')
 
-    def write_node_displacement_recorder(self, building):  # noqa: ANN001, ANN201, D102, PLR6301
+    def write_node_displacement_recorder(self, building):  # noqa: D102, PLR6301
         # Create a .tcl file to write the node displacements recorder for output
         with open('DefineNodeDisplacementRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PLW1514, PTH123
             tclfile.write('# Define node displacement recorders\n\n\n')
@@ -1211,7 +1211,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
                         tclfile.write('\t%i%i%i%i' % (j, i, 1, 1))
                 tclfile.write('\t-dof\t1\tdisp;\n')
 
-    def write_story_drift_recorder(self, building, analysis_type):  # noqa: ANN001, ANN201, D102, PLR6301
+    def write_story_drift_recorder(self, building, analysis_type):  # noqa: D102, PLR6301
         # Create a .tcl file to write story drift recorder for output
         with open('DefineStoryDriftRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PLW1514, PTH123
             tclfile.write('# Define story drift recorders\n\n\n')
@@ -1262,7 +1262,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
             )
             tclfile.write('\t-dof\t1\t-perpDirn\t2; \n')
 
-    def write_node_acceleration_recorder(self, building):  # noqa: ANN001, ANN201, D102, PLR6301
+    def write_node_acceleration_recorder(self, building):  # noqa: D102, PLR6301
         # Create a .tcl file to record absolute node acceleration
         with open('DefineNodeAccelerationRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PLW1514, PTH123
             tclfile.write('# Define node acceleration recorders\n\n\n')
@@ -1281,7 +1281,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
                         tclfile.write('\t%i%i%i%i' % (j, i, 1, 1))
                 tclfile.write('\t-dof\t1\taccel;\n')
 
-    def write_damping(self, building):  # noqa: ANN001, ANN201, D102, PLR6301
+    def write_damping(self, building):  # noqa: D102, PLR6301
         # Create a .tcl file to define damping for dynamic analysis
         with open('DefineDamping2DModel.tcl', 'w') as tclfile:  # noqa: PLW1514, PTH123
             tclfile.write('# This file will be used to define damping\n\n')
@@ -1346,7 +1346,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
             tclfile.write('\t-rayleigh\t$alpha0\t0.0\t0.0\t0.0;\n\n')
             tclfile.write('puts "Rayleigh damping defined"')
 
-    def write_dynamic_analysis_parameters(self, building):  # noqa: ANN001, ANN201, D102, PLR6301
+    def write_dynamic_analysis_parameters(self, building):  # noqa: D102, PLR6301
         # Create a .tcl file to define all parameters pertinent to dynamic analysis solver
         with open('DefineDynamicAnalysisParameters2DModel.tcl', 'w') as tclfile:  # noqa: PLW1514, PTH123
             tclfile.write(
@@ -1373,7 +1373,7 @@ class NonlinearAnalysis:  # noqa: PLR0904
             tclfile.write('];\n\n')
             tclfile.write('puts "Dynamic analysis parameters defined"')
 
-    def copy_baseline_eigen_files(self, building, analysis_type):  # noqa: ANN001, ANN201, PLR6301
+    def copy_baseline_eigen_files(self, building, analysis_type):  # noqa: PLR6301
         """Some .tcl files are fixed, i.e., no need to change for different OpenSees models.
         Therefore, just copy those .tcl files from the baseline folder
         :param building: a class defined in "building_information.py"

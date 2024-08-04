@@ -19,7 +19,7 @@ class Timeline:  # noqa: D101
     # We need to modify their codes, so their usage be safe and bug-free.
     # =============================================================================
 
-    def __init__(self, simulation_end_time, restoration, registry):  # noqa: ANN001, ANN204
+    def __init__(self, simulation_end_time, restoration, registry):
         if simulation_end_time < 0:
             raise ValueError('simulation end time must be zero or bigger than zero')  # noqa: EM101, TRY003
         self._current_time = 0
@@ -42,7 +42,7 @@ class Timeline:  # noqa: D101
         self._current_time_indexOfIndex = 0
         self.registry = registry
 
-    def iContinue(self):  # noqa: ANN201, N802, D102
+    def iContinue(self):  # noqa: N802, D102
         if (
             self._current_time == 0 and self._iFirst_time_zero == True  # noqa: E712
         ):  # So that the other condition happens
@@ -83,7 +83,7 @@ class Timeline:  # noqa: D101
 
         return True
 
-    def getNextTime(self):  # noqa: ANN201, N802, D102
+    def getNextTime(self):  # noqa: N802, D102
         if (
             not self._event_time_register.index.is_monotonic_increasing
         ):  # for just in case if the index of event time register is not sorted
@@ -101,21 +101,21 @@ class Timeline:  # noqa: D101
         ]
         return next_time  # noqa: RET504
 
-    def getCurrentStopTime(self):  # noqa: ANN201, N802, D102
+    def getCurrentStopTime(self):  # noqa: N802, D102
         return int(self._current_time)
 
-    def iCurrentTimeRepairEvent(self):  # noqa: ANN201, N802, D102
+    def iCurrentTimeRepairEvent(self):  # noqa: N802, D102
         return self._event_time_register['rpr'].loc[self._current_time]
 
-    def iCurenttimeRestorationEvent(self):  # noqa: ANN201, N802, D102
+    def iCurenttimeRestorationEvent(self):  # noqa: N802, D102
         print('current_time is= ' + str(self._current_time))  # noqa: T201
         print(self._event_time_register['rst'].loc[self._current_time])  # noqa: T201
         return self._event_time_register['rst'].loc[self._current_time]
 
-    def iCurrentTimeDamageEvent(self):  # noqa: ANN201, N802, D102
+    def iCurrentTimeDamageEvent(self):  # noqa: N802, D102
         return self._event_time_register['dmg'].loc[self._current_time]
 
-    def addEventTime(self, event_distinct_time, event_type='dmg'):  # noqa: ANN001, ANN201, N802
+    def addEventTime(self, event_distinct_time, event_type='dmg'):  # noqa: N802
         """This function is a low-level function to add event type in an already-
         existing event_time in event_time_register. FOR NOW THE DISTINCT TIMES
         CAN BE A LIST OR A LIST. MAYBE IN THE FUTURE WE CAN DECIDE WEATHER IT
@@ -185,7 +185,7 @@ class Timeline:  # noqa: D101
             self._event_time_register = self._event_time_register.sort_index()
             self.checkAndAmendTime()
 
-    def iEventTypeAt(self, begin_time, event_type):  # noqa: ANN001, ANN201, N802
+    def iEventTypeAt(self, begin_time, event_type):  # noqa: N802
         """Checks if an event type is in event registry at the time of begin_time
         ----------
         begin_time : int
@@ -206,7 +206,7 @@ class Timeline:  # noqa: D101
         else:  # noqa: RET505
             return False
 
-    def checkAndAmendTime(self):  # noqa: ANN201, N802
+    def checkAndAmendTime(self):  # noqa: N802
         """Checks if the time of event is higher than the sim time.Also checks
         if the the ending event has any thing event(nothings must be true).
 
@@ -237,7 +237,7 @@ class Timeline:  # noqa: D101
         # if self._event_time_register[self._event_time_register.index==self._simulation_end_time].empty==True:
         # self._event_time_register=self._event_time_register.append(pd.DataFrame(data = False , index = [self._simulation_end_time], columns = EVENT_TYPE))
 
-    def iFunctionalityRequirementReached(self):  # noqa: ANN201, C901, N802, D102
+    def iFunctionalityRequirementReached(self):  # noqa: C901, N802, D102
         logger.debug('Func: node functionality')
         ratio_criteria = self.registry.settings.process[
             'node_demand_termination_ratio'

@@ -53,7 +53,7 @@ class GeoClaw:
     """  # noqa: D205, D400, D404
 
     #############################################################
-    def creategeom(self, data, path):  # noqa: ANN001, ANN201
+    def creategeom(self, data, path):
         """Creates the geometry for bathymetry
 
         Arguments:

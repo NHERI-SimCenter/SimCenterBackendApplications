@@ -10,7 +10,7 @@ from functools import reduce  # Valid in Python 2.6+, required in Python 3
 import numpy as np
 
 
-def hhelper(x):  # noqa: ANN001, ANN201, D103
+def hhelper(x):  # noqa: D103
     if x < 0:
         return 0
     else:  # noqa: RET505
@@ -18,7 +18,7 @@ def hhelper(x):  # noqa: ANN001, ANN201, D103
 
 
 # @numba.jit()
-def EPHelper(prob_mat, old):  # noqa: ANN001, ANN201, N802, D103
+def EPHelper(prob_mat, old):  # noqa: N802, D103
     if old == False:  # prob_mat = prob_mat.tolist()  # noqa: E712
         # one_minus_p_list = 1-prob_mat
         one_minus_p_list = [1 - p for p in prob_mat]
@@ -45,7 +45,7 @@ def EPHelper(prob_mat, old):  # noqa: ANN001, ANN201, N802, D103
     return ep_mat
 
 
-def helper_outageMap(pandas_list):  # noqa: ANN001, ANN201, N802, D103
+def helper_outageMap(pandas_list):  # noqa: N802, D103
     false_found_flag = False
     b_list = pandas_list.tolist()
     i = 0
@@ -58,7 +58,7 @@ def helper_outageMap(pandas_list):  # noqa: ANN001, ANN201, N802, D103
     return false_found_flag, i
 
 
-def hhelper(x):  # noqa: ANN001, ANN201, D103, F811
+def hhelper(x):  # noqa: D103, F811
     if x < 0:
         return 0
     else:  # noqa: RET505

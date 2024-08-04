@@ -13,11 +13,11 @@ import mwg_sampler  # noqa: E402
 import uq_utilities  # noqa: E402
 
 
-def generate_initial_states(  # noqa: ANN201, D103
-    num_edp,  # noqa: ANN001
-    num_rv,  # noqa: ANN001
-    num_datasets,  # noqa: ANN001
-    restart_file,  # noqa: ANN001
+def generate_initial_states(  # noqa: D103
+    num_edp,
+    num_rv,
+    num_datasets,
+    restart_file,
 ):
     list_of_initial_states_of_model_parameters = [
         np.zeros((num_rv, 1)) for _ in range(num_datasets)
@@ -58,7 +58,7 @@ def generate_initial_states(  # noqa: ANN201, D103
     )
 
 
-def loglikelihood_function(residual, error_variance_sample):  # noqa: ANN001, ANN201, D103
+def loglikelihood_function(residual, error_variance_sample):  # noqa: D103
     mean = 0
     var = error_variance_sample
     standard_deviation = np.sqrt(var)
@@ -68,7 +68,7 @@ def loglikelihood_function(residual, error_variance_sample):  # noqa: ANN001, AN
     return ll
 
 
-def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0914
+def main(input_args):  # noqa: D103, PLR0914
     # Initialize analysis
     working_directory = Path(input_args[0]).resolve()
     template_directory = Path(input_args[1]).resolve()  # noqa: F841

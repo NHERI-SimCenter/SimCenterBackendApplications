@@ -50,7 +50,7 @@ class of7Prboundary:
     """  # noqa: D205, D404
 
     #############################################################
-    def Prtext(self, data, patches):  # noqa: ANN001, ANN201, N802
+    def Prtext(self, data, patches):  # noqa: N802
         """Creates the necessary text for pressure bc for openfoam7
 
         Arguments:
@@ -96,7 +96,7 @@ class of7Prboundary:
         return prtext  # noqa: RET504
 
     #############################################################
-    def Prheader(self):  # noqa: ANN201, N802, PLR6301
+    def Prheader(self):  # noqa: N802, PLR6301
         """Creates the text for the header for pressure file
 
         Variable
@@ -121,7 +121,7 @@ FoamFile
         return header  # noqa: RET504
 
     #############################################################
-    def Prpatchtext(self, data, Prtype, patchname):  # noqa: ANN001, ANN201, C901, N802, N803, PLR6301
+    def Prpatchtext(self, data, Prtype, patchname):  # noqa: C901, N802, N803, PLR6301
         """Creates the text the pressure boundary condition
 
         Arguments:

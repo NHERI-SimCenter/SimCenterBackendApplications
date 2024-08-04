@@ -15,13 +15,13 @@ from scipy.spatial import ConvexHull
 
 
 # Helper functions
-def sampleRaster(  # noqa: ANN201, N802
-    raster_file_path,  # noqa: ANN001
-    raster_crs,  # noqa: ANN001
-    x,  # noqa: ANN001
-    y,  # noqa: ANN001
-    interp_scheme='nearest',  # noqa: ANN001
-    dtype=None,  # noqa: ANN001
+def sampleRaster(  # noqa: N802
+    raster_file_path,
+    raster_crs,
+    x,
+    y,
+    interp_scheme='nearest',
+    dtype=None,
 ):
     """Performs 2D interpolation at (x,y) pairs. Accepted interp_scheme = 'nearest', 'linear', 'cubic', and 'quintic'"""  # noqa: D400, D401
     print(f'Sampling from the Raster File: {os.path.basename(raster_file_path)}...')  # noqa: T201, PTH119
@@ -86,7 +86,7 @@ def sampleRaster(  # noqa: ANN201, N802
 
 
 # Helper functions
-def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ANN001, ANN201, ARG001, N802
+def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ARG001, N802
     """Performs spatial join of vector_file with xy'"""  # noqa: D400, D401
     print(f'Sampling from the Vector File: {os.path.basename(vector_file_path)}...')  # noqa: T201, PTH119
     invalid_value = np.nan  # noqa: F841
@@ -156,7 +156,7 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ANN00
     return gdf_sites
 
 
-def find_additional_output_req(liq_info, current_step):  # noqa: ANN001, ANN201, D103
+def find_additional_output_req(liq_info, current_step):  # noqa: D103
     additional_output_keys = []
     if current_step == 'Triggering':
         trigging_parameters = liq_info['Triggering']['Parameters'].keys()  # noqa: F841
@@ -245,7 +245,7 @@ class ZhuEtal2017(Liquefaction):
 
     """  # noqa: D400
 
-    def __init__(self, parameters, stations) -> None:  # noqa: ANN001
+    def __init__(self, parameters, stations) -> None:
         self.stations = stations
         self.parameters = parameters
         self.dist_to_water = None  # (km)
@@ -256,7 +256,7 @@ class ZhuEtal2017(Liquefaction):
         self.vs30 = None  # (m/s)
         self.interpolate_spatial_parameters(parameters)
 
-    def interpolate_spatial_parameters(self, parameters):  # noqa: ANN001, ANN201, D102
+    def interpolate_spatial_parameters(self, parameters):  # noqa: D102
         # site coordinate in CRS 4326
         lat_station = [site['lat'] for site in self.stations]
         lon_station = [site['lon'] for site in self.stations]
@@ -322,7 +322,7 @@ class ZhuEtal2017(Liquefaction):
         self.vs30 = np.array([site['vs30'] for site in self.stations])
         print('Sampling finished')  # noqa: T201
 
-    def run(self, ln_im_data, eq_data, im_list, output_keys, additional_output_keys):  # noqa: ANN001, ANN201, D102
+    def run(self, ln_im_data, eq_data, im_list, output_keys, additional_output_keys):  # noqa: D102
         if ('PGA' in im_list) and ('PGV' in im_list):
             num_stations = len(self.stations)
             num_scenarios = len(eq_data)
@@ -362,7 +362,7 @@ class ZhuEtal2017(Liquefaction):
             # sys.exit(-1)
         return ln_im_data, eq_data, im_list, additional_output
 
-    def model(self, pgv, pga, mag):  # noqa: ANN001, ANN201
+    def model(self, pgv, pga, mag):
         """Model"""  # noqa: D400
         # zero prob_liq
         zero_prob_liq = 1e-5  # decimal
@@ -484,13 +484,13 @@ class Hazus2020(Liquefaction):
 
     """  # noqa: D205, D400
 
-    def __init__(self, parameters, stations) -> None:  # noqa: ANN001
+    def __init__(self, parameters, stations) -> None:
         self.stations = stations
         self.parameters = parameters
         self.gw_depth = None  # (m)
         self.interpolate_spatial_parameters(parameters)
 
-    def interpolate_spatial_parameters(self, parameters):  # noqa: ANN001, ANN201, D102
+    def interpolate_spatial_parameters(self, parameters):  # noqa: D102
         # site coordinate in CRS 4326
         lat_station = [site['lat'] for site in self.stations]
         lon_station = [site['lon'] for site in self.stations]
@@ -541,7 +541,7 @@ class Hazus2020(Liquefaction):
         # self.liq_susc = liq_susc.to_numpy()
         print('Sampling finished')  # noqa: T201
 
-    def run(self, ln_im_data, eq_data, im_list, output_keys, additional_output_keys):  # noqa: ANN001, ANN201, D102
+    def run(self, ln_im_data, eq_data, im_list, output_keys, additional_output_keys):  # noqa: D102
         if 'PGA' in im_list:
             num_stations = len(self.stations)
             num_scenarios = len(eq_data)
@@ -577,12 +577,12 @@ class Hazus2020(Liquefaction):
 
     @staticmethod
     # @njit
-    def model(  # noqa: ANN205
-        pga,  # noqa: ANN001
-        mag,  # upstream PBEE RV  # noqa: ANN001
-        gw_depth,  # geotechnical/geologic  # noqa: ANN001
-        liq_susc,  # fixed/toggles  # noqa: ANN001
-        return_inter_params=False,  # to get intermediate params  # noqa: ANN001, ARG004, FBT002
+    def model(
+        pga,
+        mag,  # upstream PBEE RV
+        gw_depth,  # geotechnical/geologic
+        liq_susc,  # fixed/toggles
+        return_inter_params=False,  # to get intermediate params  # noqa: ARG004, FBT002
     ):
         """Model"""  # noqa: D400
         # zero prob_liq
@@ -697,7 +697,7 @@ class Hazus2020_with_ZhuEtal2017(ZhuEtal2017):
 
     """
 
-    def model(self, pgv, pga, mag):  # noqa: ANN001, ANN201
+    def model(self, pgv, pga, mag):
         """Model"""  # noqa: D400
         # zero prob_liq
         zero_prob_liq = 1e-5  # decimal
@@ -858,7 +858,7 @@ class Hazus2020Lateral(LateralSpread):
 
     """
 
-    def __init__(self, stations, parameters):  # noqa: ANN001, ANN204
+    def __init__(self, stations, parameters):
         super().__init__()
         self.stations = stations
         dist_to_water = parameters.get('DistWater')
@@ -877,7 +877,7 @@ class Hazus2020Lateral(LateralSpread):
         else:
             self.dist_to_water = np.zeros(len(self.stations))
 
-    def run(self, ln_im_data, eq_data, im_list):  # noqa: ANN001, ANN201, D102
+    def run(self, ln_im_data, eq_data, im_list):  # noqa: D102
         output_keys = ['liq_PGD_h']
         if (
             ('PGA' in im_list)
@@ -919,13 +919,13 @@ class Hazus2020Lateral(LateralSpread):
 
     @staticmethod
     # @njit
-    def model(  # noqa: ANN205
-        pga,  # noqa: ANN001
-        mag,  # upstream PBEE RV  # noqa: ANN001
-        prob_liq,  # noqa: ANN001
-        dist_water,  # geotechnical/geologic  # noqa: ANN001
-        liq_susc,  # fixed/toggles  # noqa: ANN001
-        extrapolate_expected_pgdef=True,  # noqa: ANN001, FBT002
+    def model(
+        pga,
+        mag,  # upstream PBEE RV
+        prob_liq,
+        dist_water,  # geotechnical/geologic
+        liq_susc,  # fixed/toggles
+        extrapolate_expected_pgdef=True,  # noqa: FBT002
     ):
         """Model"""  # noqa: D400
         # initialize arrays
@@ -1021,10 +1021,10 @@ class Hazus2020Vertical(GroundSettlement):
 
     @staticmethod
     # @njit
-    def model(  # noqa: ANN205
-        prob_liq,  # geotechnical/geologic  # noqa: ANN001
-        liq_susc,  # fixed/toggles  # noqa: ANN001
-        return_inter_params=False,  # to get intermediate params  # noqa: ANN001, FBT002
+    def model(
+        prob_liq,  # geotechnical/geologic
+        liq_susc,  # fixed/toggles
+        return_inter_params=False,  # to get intermediate params  # noqa: FBT002
     ):
         """Model"""  # noqa: D400
         # initialize arrays
@@ -1055,7 +1055,7 @@ class Hazus2020Vertical(GroundSettlement):
         # return
         return output
 
-    def run(self, ln_im_data, eq_data, im_list):  # noqa: ANN001, ANN201, D102
+    def run(self, ln_im_data, eq_data, im_list):  # noqa: D102
         output_keys = ['liq_PGD_v']
         if ('liq_susc' in im_list) and ('liq_prob' in im_list):
             num_stations = ln_im_data[0].shape[0]

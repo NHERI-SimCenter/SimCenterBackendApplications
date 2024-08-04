@@ -38,7 +38,7 @@ from global_variables import (
 ##########################################################################
 
 
-def seismic_design(base_directory, pathDataFolder, workingDirectory):  # noqa: ANN001, ANN201, C901, D103, N803, PLR0912, PLR0914, PLR0915
+def seismic_design(base_directory, pathDataFolder, workingDirectory):  # noqa: C901, D103, N803, PLR0912, PLR0914, PLR0915
     # **************** Debug using only **********************************
     # building_id = 'Test3'
     # from global_variables import base_directory

@@ -7,7 +7,7 @@ from Gauss1D import gauss1D
 from scipy.interpolate import interp1d
 
 
-def materialPM4(baseInputs, matTag, fn):  # noqa: ANN001, ANN201, N802, N803, D103
+def materialPM4(baseInputs, matTag, fn):  # noqa: N802, N803, D103
     fn.write(
         'nDMaterial PM4Sand {} {:.3f} {:.2f} {:.3f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f}  {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} \n'.format(
             matTag,
@@ -39,7 +39,7 @@ def materialPM4(baseInputs, matTag, fn):  # noqa: ANN001, ANN201, N802, N803, D1
     )
 
 
-def materialPDMY03(baseInputs, matTag, fn):  # noqa: ANN001, ANN201, N802, N803, D103
+def materialPDMY03(baseInputs, matTag, fn):  # noqa: N802, N803, D103
     fn.write(
         'nDMaterial PressureDependMultiYield03 {} {} {:.2f} {:.3e} {:.3e} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {} {:.3f} {:.3f} {:.3f} {:.3f} \n'.format(
             matTag,
@@ -70,7 +70,7 @@ def materialPDMY03(baseInputs, matTag, fn):  # noqa: ANN001, ANN201, N802, N803,
     )
 
 
-def materialElastic(baseInputs, matTag, fn):  # noqa: ANN001, ANN201, N802, N803, D103
+def materialElastic(baseInputs, matTag, fn):  # noqa: N802, N803, D103
     fn.write(
         'nDMaterial ElasticIsotropic  {} {:.3e} {:.3f} {:.2f} \n'.format(
             matTag, baseInputs['E'], baseInputs['poisson'], baseInputs['density']
@@ -78,7 +78,7 @@ def materialElastic(baseInputs, matTag, fn):  # noqa: ANN001, ANN201, N802, N803
     )
 
 
-def calibration(variables, inputParameters, fn):  # noqa: ANN001, ANN201, C901, N803, D103
+def calibration(variables, inputParameters, fn):  # noqa: C901, N803, D103
     # This function contains two parts: call gauss1D to generate 1D random field; generate material based on random field
     # Currently only relative density is supported
     # Calibration of PM4Sand is based on a parametric study that produces hpo = f(Dr, Go, CRR)
@@ -321,7 +321,7 @@ def calibration(variables, inputParameters, fn):  # noqa: ANN001, ANN201, C901, 
                 materialElastic(baseInputs, matTag, fn)
 
 
-def createMaterial(data):  # noqa: ANN001, ANN201, N802, D103
+def createMaterial(data):  # noqa: N802, D103
     eleStart = 0  # noqa: N806
     eleEnd = 0  # noqa: N806
     elevationStart = 0  # noqa: N806

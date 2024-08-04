@@ -44,7 +44,7 @@ import os
 import sys
 
 
-def create_asset_files(output_file, asset_source_file, asset_filter, doParallel):  # noqa: ANN001, ANN201, C901, N803, D103
+def create_asset_files(output_file, asset_source_file, asset_filter, doParallel):  # noqa: C901, N803, D103
     # these imports are here to save time when the app is called without
     # the -getRV flag
     import importlib  # noqa: PLC0415

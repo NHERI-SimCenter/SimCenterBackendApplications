@@ -57,7 +57,7 @@ convert_EDP = {  # noqa: N816
 }
 
 
-def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ANN001, ANN201, ARG001, N802, N803, D103
+def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ARG001, N802, N803, D103
     # these imports are here to save time when the app is called without
     # the -getRV flag
     # import openseespy.opensees as ops
@@ -121,7 +121,7 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ANN001, ANN201, AR
         exit(-1)  # noqa: PLR1722
 
 
-def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):  # noqa: ANN001, ANN201, C901, N802, N803, D103
+def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):  # noqa: C901, N802, N803, D103
     with open(AIM_input_path, encoding='utf-8') as f:  # noqa: PTH123
         root_AIM = json.load(f)  # noqa: N806
 

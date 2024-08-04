@@ -66,15 +66,15 @@ IM_CORR_INTRA = {
 IM_CORR = {'INTER': IM_CORR_INTER, 'INTRA': IM_CORR_INTRA}
 
 
-def simulate_ground_motion(  # noqa: ANN201, D103
-    stations,  # noqa: ANN001
-    im_raw_path,  # noqa: ANN001
-    im_list,  # noqa: ANN001
-    scenarios,  # noqa: ANN001
-    num_simu,  # noqa: ANN001
-    correlation_info,  # noqa: ANN001
-    im_info,  # noqa: ANN001
-    eq_ids,  # noqa: ANN001
+def simulate_ground_motion(  # noqa: D103
+    stations,
+    im_raw_path,
+    im_list,
+    scenarios,
+    num_simu,
+    correlation_info,
+    im_info,
+    eq_ids,
 ):
     # create a ground motion simulator
     ln_im_mr = []
@@ -158,14 +158,14 @@ def simulate_ground_motion(  # noqa: ANN201, D103
 
 
 class GM_Simulator:  # noqa: D101
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        site_info=[],  # noqa: ANN001, B006
-        im_list=[],  # noqa: ANN001, B006
-        im_raw=dict(),  # noqa: ANN001, B006, C408
-        num_simu=0,  # noqa: ANN001
-        correlation_info=None,  # noqa: ANN001
-        im_info=None,  # noqa: ANN001
+        site_info=[],  # noqa: B006
+        im_list=[],  # noqa: B006
+        im_raw=dict(),  # noqa: B006, C408
+        num_simu=0,
+        correlation_info=None,
+        im_info=None,
     ):
         self.set_sites(site_info)
         self.set_num_simu(num_simu)
@@ -173,7 +173,7 @@ class GM_Simulator:  # noqa: D101
         self.set_im_raw(im_raw, im_list)
         self.cross_check_im_correlation()
 
-    def set_sites(self, site_info):  # noqa: ANN001, ANN201, D102
+    def set_sites(self, site_info):  # noqa: D102
         # set sites
         self.sites = site_info.copy()
         self.num_sites = len(self.sites)
@@ -185,7 +185,7 @@ class GM_Simulator:  # noqa: D101
             return
         self._compute_distance_matrix()
 
-    def _compute_distance_matrix(self):  # noqa: ANN202
+    def _compute_distance_matrix(self):
         # site number check
         if self.num_sites < 2:  # noqa: PLR2004
             print('GM_Simulator: error - please give at least two sites.')  # noqa: T201
@@ -201,11 +201,11 @@ class GM_Simulator:  # noqa: D101
                 tmp[i, j] = CorrelationModel.get_distance_from_lat_lon(loc_i, loc_j)
         self.stn_dist = tmp
 
-    def set_num_simu(self, num_simu):  # noqa: ANN001, ANN201, D102
+    def set_num_simu(self, num_simu):  # noqa: D102
         # set simulation number
         self.num_simu = num_simu
 
-    def set_im_raw(self, im_raw, im_list):  # noqa: ANN001, ANN201, D102
+    def set_im_raw(self, im_raw, im_list):  # noqa: D102
         # get IM type list
         self.im_type_list = im_raw.get('IM', [])
         # get im_data
@@ -217,7 +217,7 @@ class GM_Simulator:  # noqa: D101
         # set IM size
         self.num_im = len(self.im_name_list)
 
-    def get_ln_im(self):  # noqa: ANN201, D102
+    def get_ln_im(self):  # noqa: D102
         ln_im = []
         for i in range(self.num_sites):
             tmp_im_data = []
@@ -228,7 +228,7 @@ class GM_Simulator:  # noqa: D101
             ln_im.append(tmp_im_data)
         return ln_im
 
-    def get_inter_sigma_im(self):  # noqa: ANN201, D102
+    def get_inter_sigma_im(self):  # noqa: D102
         inter_sigma_im = []
         for i in range(self.num_sites):
             tmp_im_data = []
@@ -240,7 +240,7 @@ class GM_Simulator:  # noqa: D101
             inter_sigma_im.append(tmp_im_data)
         return inter_sigma_im
 
-    def get_intra_sigma_im(self):  # noqa: ANN201, D102
+    def get_intra_sigma_im(self):  # noqa: D102
         intra_sigma_im = []
         for i in range(self.num_sites):
             tmp_im_data = []
@@ -252,7 +252,7 @@ class GM_Simulator:  # noqa: D101
             intra_sigma_im.append(tmp_im_data)
         return intra_sigma_im
 
-    def parse_correlation_info(self, correlation_info, im_info):  # noqa: ANN001, ANN201, C901, D102
+    def parse_correlation_info(self, correlation_info, im_info):  # noqa: C901, D102
         # default is no correlation model and uncorrelated motions if generated
         self.inter_cm = None
         self.intra_cm = None
@@ -303,7 +303,7 @@ class GM_Simulator:  # noqa: D101
                 'GM_Simulator: no intra-event correlation information not found - results will be uncorrelated motions.'
             )
 
-    def cross_check_im_correlation(self):  # noqa: ANN201, C901, D102
+    def cross_check_im_correlation(self):  # noqa: C901, D102
         # because each correlation model only applies to certain intensity measure
         # so hear we check if the correlation models are applicable for the required intensity measures
         self.im_cm_inter_flag = True
@@ -347,7 +347,7 @@ class GM_Simulator:  # noqa: D101
                         self.im_cm_intra_flag = False
                         continue
 
-    def compute_inter_event_residual_ij(self, cm, im_name_list_1, im_name_list_2):  # noqa: ANN001, ANN201, D102, PLR6301
+    def compute_inter_event_residual_ij(self, cm, im_name_list_1, im_name_list_2):  # noqa: D102, PLR6301
         if cm == 'Baker & Jayaram (2008)':
             rho = np.array(
                 [
@@ -371,12 +371,12 @@ class GM_Simulator:  # noqa: D101
             )
         return rho
 
-    def replace_submatrix(self, mat, ind1, ind2, mat_replace):  # noqa: ANN001, ANN201, D102, PLR6301
+    def replace_submatrix(self, mat, ind1, ind2, mat_replace):  # noqa: D102, PLR6301
         for i, index in enumerate(ind1):
             mat[index, ind2] = mat_replace[i, :]
         return mat
 
-    def compute_inter_event_residual(self):  # noqa: ANN201, D102
+    def compute_inter_event_residual(self):  # noqa: D102
         if type(self.inter_cm) == dict:  # noqa: E721
             rho = np.zeros([self.num_im, self.num_im])
             im_types = list(self.inter_cm.keys())
@@ -439,7 +439,7 @@ class GM_Simulator:  # noqa: D101
         # return
         return residuals  # noqa: RET504
 
-    def compute_intra_event_residual_i(self, cm, im_name_list, num_simu):  # noqa: ANN001, ANN201, D102
+    def compute_intra_event_residual_i(self, cm, im_name_list, num_simu):  # noqa: D102
         if cm == 'Jayaram & Baker (2009)':
             rho = np.zeros((self.num_sites, self.num_sites, len(im_name_list)))
             for i in range(self.num_sites):
@@ -478,7 +478,7 @@ class GM_Simulator:  # noqa: D101
             )
         return residuals
 
-    def compute_intra_event_residual(self):  # noqa: ANN201, D102
+    def compute_intra_event_residual(self):  # noqa: D102
         if type(self.intra_cm) == dict:  # noqa: E721
             cm_groups = dict()  # noqa: C408
             # Group the IMs using the same cm
@@ -514,13 +514,13 @@ class GM_Simulator:  # noqa: D101
 
 
 class GM_Simulator_hdf5(GM_Simulator):  # noqa: D101
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        site_info=[],  # noqa: ANN001, B006
-        im_list=[],  # noqa: ANN001, B006
-        num_simu=0,  # noqa: ANN001
-        correlation_info=None,  # noqa: ANN001
-        im_info=None,  # noqa: ANN001
+        site_info=[],  # noqa: B006
+        im_list=[],  # noqa: B006
+        num_simu=0,
+        correlation_info=None,
+        im_info=None,
     ):
         self.set_im_type(im_list)
         self.set_sites(site_info)
@@ -528,7 +528,7 @@ class GM_Simulator_hdf5(GM_Simulator):  # noqa: D101
         self.parse_correlation_info(correlation_info, im_info)
         self.cross_check_im_correlation()
 
-    def set_im_type(self, im_list):  # noqa: ANN001, ANN201, D102
+    def set_im_type(self, im_list):  # noqa: D102
         self.im_name_list = im_list
         im_types = set()
         for im in im_list:
@@ -549,26 +549,26 @@ class GM_Simulator_hdf5(GM_Simulator):  # noqa: D101
         if ('PGV') in im_types:
             self.im_type_list.append('PGV')
 
-    def set_im_raw(self, im_raw, im_list):  # noqa: ANN001, ANN201, D102
+    def set_im_raw(self, im_raw, im_list):  # noqa: D102
         self.im_name_list = im_list
         self.num_im = len(im_list)
         self.im_data = im_raw
 
-    def get_ln_im(self):  # noqa: ANN201, D102
+    def get_ln_im(self):  # noqa: D102
         ln_im = []
         for i in range(self.num_sites):
             tmp_im_data = self.im_data['Mean'][i, :].tolist()
             ln_im.append(tmp_im_data)
         return ln_im
 
-    def get_inter_sigma_im(self):  # noqa: ANN201, D102
+    def get_inter_sigma_im(self):  # noqa: D102
         inter_sigma_im = []
         for i in range(self.num_sites):
             tmp_im_data = self.im_data['InterEvStdDev'][i, :].tolist()
             inter_sigma_im.append(tmp_im_data)
         return inter_sigma_im
 
-    def get_intra_sigma_im(self):  # noqa: ANN201, D102
+    def get_intra_sigma_im(self):  # noqa: D102
         intra_sigma_im = []
         for i in range(self.num_sites):
             tmp_im_data = self.im_data['IntraEvStdDev'][i, :].tolist()

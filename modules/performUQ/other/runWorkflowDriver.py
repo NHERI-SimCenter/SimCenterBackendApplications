@@ -5,7 +5,7 @@ from sys import platform
 import fire
 
 
-def runWorkflow(index):  # noqa: ANN001, ANN201, N802, D103
+def runWorkflow(index):  # noqa: N802, D103
     index = int(index)
 
     shutil.copy(

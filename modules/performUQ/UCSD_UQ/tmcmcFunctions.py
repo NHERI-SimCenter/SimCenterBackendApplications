@@ -8,25 +8,25 @@ from runFEM import runFEM
 from scipy.special import logsumexp
 
 
-def initial_population(N, p):  # noqa: ANN001, ANN201, N803, D103
+def initial_population(N, p):  # noqa: N803, D103
     IniPop = np.zeros((N, len(p)))  # noqa: N806
     for i in range(len(p)):
         IniPop[:, i] = p[i].generate_rns(N)
     return IniPop
 
 
-def log_prior(s, p):  # noqa: ANN001, ANN201, D103
+def log_prior(s, p):  # noqa: D103
     logP = 0  # noqa: N806
     for i in range(len(s)):
         logP = logP + p[i].log_pdf_eval(s[i])  # noqa: N806, PLR6104
     return logP
 
 
-def propose(current, covariance, n):  # noqa: ANN001, ANN201, D103
+def propose(current, covariance, n):  # noqa: D103
     return np.random.multivariate_normal(current, covariance, n)
 
 
-def compute_beta(beta, likelihoods, prev_ESS, threshold):  # noqa: ANN001, ANN201, N803, D103
+def compute_beta(beta, likelihoods, prev_ESS, threshold):  # noqa: N803, D103
     old_beta = beta
     min_beta = beta
     max_beta = 2.0
@@ -60,12 +60,12 @@ def compute_beta(beta, likelihoods, prev_ESS, threshold):  # noqa: ANN001, ANN20
     return new_beta, Wm, ESS
 
 
-def compute_beta_evidence_old(  # noqa: ANN201, D103
-    beta,  # noqa: ANN001
-    log_likelihoods,  # noqa: ANN001
-    log_evidence,  # noqa: ANN001
-    prev_ESS,  # noqa: ANN001, N803
-    threshold,  # noqa: ANN001
+def compute_beta_evidence_old(  # noqa: D103
+    beta,
+    log_likelihoods,
+    log_evidence,
+    prev_ESS,  # noqa: N803
+    threshold,
 ):
     old_beta = beta
     min_beta = beta
@@ -117,29 +117,29 @@ def compute_beta_evidence_old(  # noqa: ANN201, D103
 
 
 # MCMC
-def MCMC_MH_old(  # noqa: ANN201, D103, N802, PLR0913, PLR0917
-    ParticleNum,  # noqa: ANN001, N803
-    Em,  # noqa: ANN001, N803
-    Nm_steps,  # noqa: ANN001, N803
-    current,  # noqa: ANN001
-    likelihood_current,  # noqa: ANN001
-    posterior_current,  # noqa: ANN001
-    beta,  # noqa: ANN001
-    numAccepts,  # noqa: ANN001, N803
-    AllPars,  # noqa: ANN001, N803
-    log_likelihood,  # noqa: ANN001
-    variables,  # noqa: ANN001
-    resultsLocation,  # noqa: ANN001, N803
-    rng,  # noqa: ANN001
-    calibrationData,  # noqa: ANN001, N803
-    numExperiments,  # noqa: ANN001, N803
-    covarianceMatrixList,  # noqa: ANN001, N803
-    edpNamesList,  # noqa: ANN001, N803
-    edpLengthsList,  # noqa: ANN001, N803
-    normalizingFactors,  # noqa: ANN001, N803
-    locShiftList,  # noqa: ANN001, N803
-    workflowDriver,  # noqa: ANN001, N803
-    prediction_current,  # noqa: ANN001
+def MCMC_MH_old(  # noqa: D103, N802, PLR0913, PLR0917
+    ParticleNum,  # noqa: N803
+    Em,  # noqa: N803
+    Nm_steps,  # noqa: N803
+    current,
+    likelihood_current,
+    posterior_current,
+    beta,
+    numAccepts,  # noqa: N803
+    AllPars,  # noqa: N803
+    log_likelihood,
+    variables,
+    resultsLocation,  # noqa: N803
+    rng,
+    calibrationData,  # noqa: N803
+    numExperiments,  # noqa: N803
+    covarianceMatrixList,  # noqa: N803
+    edpNamesList,  # noqa: N803
+    edpLengthsList,  # noqa: N803
+    normalizingFactors,  # noqa: N803
+    locShiftList,  # noqa: N803
+    workflowDriver,  # noqa: N803
+    prediction_current,
 ):
     all_proposals = []
     all_PLP = []  # noqa: N806
@@ -204,29 +204,29 @@ def MCMC_MH_old(  # noqa: ANN201, D103, N802, PLR0913, PLR0917
 
 
 # MCMC
-def MCMC_MH(  # noqa: ANN201, D103, N802, PLR0913, PLR0917
-    ParticleNum,  # noqa: ANN001, N803
-    Em,  # noqa: ANN001, N803
-    Nm_steps,  # noqa: ANN001, N803
-    current,  # noqa: ANN001
-    likelihood_current,  # noqa: ANN001
-    posterior_current,  # noqa: ANN001
-    beta,  # noqa: ANN001
-    numAccepts,  # noqa: ANN001, N803
-    AllPars,  # noqa: ANN001, N803
-    log_likelihood,  # noqa: ANN001
-    variables,  # noqa: ANN001
-    resultsLocation,  # noqa: ANN001, N803
-    rng,  # noqa: ANN001
-    calibrationData,  # noqa: ANN001, N803
-    numExperiments,  # noqa: ANN001, N803
-    covarianceMatrixList,  # noqa: ANN001, N803
-    edpNamesList,  # noqa: ANN001, N803
-    edpLengthsList,  # noqa: ANN001, N803
-    normalizingFactors,  # noqa: ANN001, N803
-    locShiftList,  # noqa: ANN001, N803
-    workflowDriver,  # noqa: ANN001, N803
-    prediction_current,  # noqa: ANN001
+def MCMC_MH(  # noqa: D103, N802, PLR0913, PLR0917
+    ParticleNum,  # noqa: N803
+    Em,  # noqa: N803
+    Nm_steps,  # noqa: N803
+    current,
+    likelihood_current,
+    posterior_current,
+    beta,
+    numAccepts,  # noqa: N803
+    AllPars,  # noqa: N803
+    log_likelihood,
+    variables,
+    resultsLocation,  # noqa: N803
+    rng,
+    calibrationData,  # noqa: N803
+    numExperiments,  # noqa: N803
+    covarianceMatrixList,  # noqa: N803
+    edpNamesList,  # noqa: N803
+    edpLengthsList,  # noqa: N803
+    normalizingFactors,  # noqa: N803
+    locShiftList,  # noqa: N803
+    workflowDriver,  # noqa: N803
+    prediction_current,
 ):
     all_proposals = []
     all_PLP = []  # noqa: N806
@@ -331,7 +331,7 @@ def MCMC_MH(  # noqa: ANN201, D103, N802, PLR0913, PLR0917
 #     return new_beta, log_evidence, Wm_n, ESS
 
 
-def get_weights(dBeta, log_likelihoods):  # noqa: ANN001, ANN201, N803, D103
+def get_weights(dBeta, log_likelihoods):  # noqa: N803, D103
     log_weights = dBeta * log_likelihoods
     log_sum_weights = logsumexp(log_weights)
     log_weights_normalized = log_weights - log_sum_weights
@@ -342,7 +342,7 @@ def get_weights(dBeta, log_likelihoods):  # noqa: ANN001, ANN201, N803, D103
     return weights_normalized, cov_weights, std_weights_normalized
 
 
-def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):  # noqa: ANN001, ANN201, N803, D103
+def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):  # noqa: N803, D103
     max_beta = 1.0
     dBeta = min(max_beta, 1.0 - beta)  # noqa: N806
 

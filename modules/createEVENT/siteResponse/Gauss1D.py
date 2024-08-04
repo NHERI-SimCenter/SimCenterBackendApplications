@@ -4,7 +4,7 @@ import numpy as np
 
 
 class gauss1D:  # noqa: D101
-    def __init__(self, Ly, Ny, sigma=1.0, d=1.0):  # noqa: ANN001, ANN204, N803
+    def __init__(self, Ly, Ny, sigma=1.0, d=1.0):  # noqa: N803
         # overall length in x-direction
         self.Lx = 1
         # overall length in y-direction
@@ -31,7 +31,7 @@ class gauss1D:  # noqa: D101
         self.kxu = self.Nx * self.dkx
         self.kyu = self.Ny * self.dky
 
-    def calculate(self):  # noqa: ANN201, D102
+    def calculate(self):  # noqa: D102
         # matrix of random phase angles
         phi = 2 * pi * np.random.rand(self.Mx, self.My)
         psi = 2 * pi * np.random.rand(self.Mx, self.My)
@@ -83,7 +83,7 @@ class gauss1D:  # noqa: D101
                 self.f[pp, qq] = part1.sum() + part2.sum()
 
 
-def printField(self):  # noqa: ANN001, ANN201, N802, D103
+def printField(self):  # noqa: N802, D103
     print(self.f)  # noqa: T201
 
 

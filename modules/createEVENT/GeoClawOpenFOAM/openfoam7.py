@@ -66,7 +66,7 @@ class openfoam7:
     """  # noqa: D404
 
     #############################################################
-    def createfolder(self, data, path, args):  # noqa: ANN001, ANN201, PLR6301
+    def createfolder(self, data, path, args):  # noqa: PLR6301
         """Creates the necessary folders for openfoam7
 
         Arguments:
@@ -172,7 +172,7 @@ class openfoam7:
         return 0
 
     #############################################################
-    def creategeometry(self, data, path):  # noqa: ANN001, ANN201, PLR6301
+    def creategeometry(self, data, path):  # noqa: PLR6301
         """Creates the necessary folders for openfoam7
 
         Arguments:
@@ -224,7 +224,7 @@ class openfoam7:
         return 0
 
     #############################################################
-    def createmesh(self, data, path):  # noqa: ANN001, ANN201, PLR6301
+    def createmesh(self, data, path):  # noqa: PLR6301
         """Creates the mesh dictionaries for openfoam7
 
         Arguments:
@@ -282,7 +282,7 @@ class openfoam7:
         return 0
 
     #############################################################
-    def materials(self, data, path):  # noqa: ANN001, ANN201, PLR6301
+    def materials(self, data, path):  # noqa: PLR6301
         """Creates the material files for openfoam7
 
         Arguments:
@@ -307,7 +307,7 @@ class openfoam7:
         return 0
 
     #############################################################
-    def initial(self, data, path):  # noqa: ANN001, ANN201, PLR6301
+    def initial(self, data, path):  # noqa: PLR6301
         """Creates the initial condition files for openfoam7
 
         Arguments:
@@ -335,7 +335,7 @@ class openfoam7:
         return 0
 
     #############################################################
-    def boundary(self, data, path):  # noqa: ANN001, ANN201, PLR6301
+    def boundary(self, data, path):  # noqa: PLR6301
         """Creates the bc condition files for openfoam7
 
         Arguments:
@@ -403,7 +403,7 @@ class openfoam7:
         return 0
 
     #############################################################
-    def turbulence(self, data, path):  # noqa: ANN001, ANN201, PLR6301
+    def turbulence(self, data, path):  # noqa: PLR6301
         """Creates the turbulenceDict and other files for openfoam7
 
         Arguments:
@@ -424,7 +424,7 @@ class openfoam7:
         return 0
 
     #############################################################
-    def parallelize(self, data, path):  # noqa: ANN001, ANN201, PLR6301
+    def parallelize(self, data, path):  # noqa: PLR6301
         """Creates the domain decomposition files for openfoam7
 
         Arguments:
@@ -448,7 +448,7 @@ class openfoam7:
         return 0
 
     #############################################################
-    def solve(self, data, path):  # noqa: ANN001, ANN201, PLR6301
+    def solve(self, data, path):  # noqa: PLR6301
         """Creates the solver related files for openfoam7
 
         Arguments:
@@ -497,7 +497,7 @@ class openfoam7:
         return 0
 
     #############################################################
-    def others(self, data, path):  # noqa: ANN001, ANN201, PLR6301
+    def others(self, data, path):  # noqa: PLR6301
         """Creates the other auxiliary files for openfoam7
 
         Arguments:
@@ -519,7 +519,7 @@ class openfoam7:
         return 0
 
     #############################################################
-    def dakota(self, args):  # noqa: ANN001, ANN201, PLR6301
+    def dakota(self, args):  # noqa: PLR6301
         """Creates the dakota scripts for openfoam7
 
         Arguments:
@@ -536,7 +536,7 @@ class openfoam7:
         return 0
 
     #############################################################
-    def postprocessing(self, data, path):  # noqa: ANN001, ANN201, PLR6301
+    def postprocessing(self, data, path):  # noqa: PLR6301
         """Creates the postprocessing related files for openfoam7
 
         Arguments:
@@ -575,7 +575,7 @@ class openfoam7:
         return 0
 
     #############################################################
-    def cleaning(self, args, path):  # noqa: ANN001, ANN201, PLR6301
+    def cleaning(self, args, path):  # noqa: PLR6301
         """Creates the cleaning scripts for openfoam7
 
         Arguments:

@@ -40,7 +40,7 @@
 import argparse
 
 
-def simulate_event(in1, in2):  # noqa: ANN001, ANN201, D103
+def simulate_event(in1, in2):  # noqa: D103
     print(f'SIMULATING EVENT: {in1}, {in2}')  # noqa: T201
 
 

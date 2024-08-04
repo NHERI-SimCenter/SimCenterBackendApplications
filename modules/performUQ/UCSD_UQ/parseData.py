@@ -19,11 +19,11 @@ class DataProcessingError(Exception):
 
     """
 
-    def __init__(self, message):  # noqa: ANN001, ANN204
+    def __init__(self, message):
         self.message = message
 
 
-def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):  # noqa: ANN001, ANN201, C901, N802, N803, D103, PLR0915
+def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):  # noqa: C901, N802, N803, D103, PLR0915
     # Read in the json object
     logFile.write('\n\tReading the json file')
     with open(dakotaJsonFile) as f:  # noqa: PLW1514, PTH123

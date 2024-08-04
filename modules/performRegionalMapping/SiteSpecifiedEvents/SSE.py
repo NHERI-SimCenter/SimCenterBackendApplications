@@ -50,7 +50,7 @@ import pandas as pd
 from scipy.cluster.vq import vq
 
 
-def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # noqa: ANN001, ANN201, C901, N803, D103
+def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # noqa: C901, N803, D103
     # check if running parallel
     numP = 1  # noqa: N806
     procID = 0  # noqa: N806

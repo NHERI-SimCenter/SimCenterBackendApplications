@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 
-def main(args):  # noqa: ANN001, ANN201, D103
+def main(args):  # noqa: D103
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--workflowInput')

@@ -51,7 +51,7 @@ class of7Uboundary:
     """  # noqa: D205, D404
 
     #############################################################
-    def Utext(self, data, fipath, patches):  # noqa: ANN001, ANN201, N802
+    def Utext(self, data, fipath, patches):  # noqa: N802
         """Creates the necessary folders for openfoam7
 
         Arguments:
@@ -108,7 +108,7 @@ class of7Uboundary:
         return utext  # noqa: RET504
 
     #############################################################
-    def Uheader(self):  # noqa: ANN201, N802, PLR6301
+    def Uheader(self):  # noqa: N802, PLR6301
         """Creates the text for the header
 
         Variable
@@ -133,7 +133,7 @@ FoamFile
         return header  # noqa: RET504
 
     #############################################################
-    def Upatchtext(self, data, Utype, patchname, fipath, numMovWall):  # noqa: ANN001, ANN201, C901, N802, N803
+    def Upatchtext(self, data, Utype, patchname, fipath, numMovWall):  # noqa: C901, N802, N803
         """Creates the text the velocity boundary condition
 
         Arguments:
@@ -348,7 +348,7 @@ FoamFile
         return Utext
 
     #############################################################
-    def Uchecks(self, data, fipath, patches):  # noqa: ANN001, ANN201, C901, N802, PLR6301
+    def Uchecks(self, data, fipath, patches):  # noqa: C901, N802, PLR6301
         """Creates the data files required for the OSU moving wall
 
         Arguments:
@@ -428,7 +428,7 @@ FoamFile
         return 0
 
     #############################################################
-    def of7wavemakerdict(self, fipath):  # noqa: ANN001, ANN201, PLR6301
+    def of7wavemakerdict(self, fipath):  # noqa: PLR6301
         """Creates the wavemaker dictionary for the moving wall
 
         Arguments:
@@ -454,7 +454,7 @@ FoamFile
         fileID.close()
 
     #############################################################
-    def of7dynamicMeshdict(self, fipath):  # noqa: ANN001, ANN201, N802, PLR6301
+    def of7dynamicMeshdict(self, fipath):  # noqa: N802, PLR6301
         """Creates the dynamic mesh dictionary for the moving wall
 
         Arguments:
@@ -480,7 +480,7 @@ FoamFile
         fileID.close()
 
     #############################################################
-    def OSUwavemakerText(self, fipath, dispfilepath, heightfilepath, numMovWall):  # noqa: ANN001, ANN201, ARG002, C901, N802, N803, PLR6301
+    def OSUwavemakerText(self, fipath, dispfilepath, heightfilepath, numMovWall):  # noqa: ARG002, C901, N802, N803, PLR6301
         """Creates the wavemaker text file for the OSU moving wall
 
         Arguments:
@@ -562,7 +562,7 @@ FoamFile
             fileID.write(')\n);')
 
     #############################################################
-    def GenwavemakerText(self, fipath, dispfilepath, heightfilepath, numMovWall):  # noqa: ANN001, ANN201, ARG002, C901, N802, N803, PLR6301
+    def GenwavemakerText(self, fipath, dispfilepath, heightfilepath, numMovWall):  # noqa: ARG002, C901, N802, N803, PLR6301
         """Creates the wavemaker text file for a general moving wall
 
         Arguments:

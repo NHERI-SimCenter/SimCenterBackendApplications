@@ -80,7 +80,7 @@ class ERANataf:
     coefficients) can have values between -1 and 1.
     """  # noqa: D205, D400
 
-    def __init__(self, M, Correlation):  # noqa: ANN001, ANN204, C901, N803
+    def __init__(self, M, Correlation):  # noqa: C901, N803
         """Constructor method, for more details have a look at the
         class description.
         """  # noqa: D205, D401
@@ -206,7 +206,7 @@ class ERANataf:
                     ) / self.Marginals[i].std()
                     coef = tmp_f_xi * tmp_f_eta * w2d
 
-                    def fun(rho0):  # noqa: ANN001, ANN202
+                    def fun(rho0):
                         return (
                             coef * self.bivariateNormalPdf(xi, eta, rho0)  # noqa: B023
                         ).sum() - self.Rho_X[i, j]  # noqa: B023
@@ -271,7 +271,7 @@ class ERANataf:
     Jacobian of this Transformation if it is needed.
     """
 
-    def X2U(self, X, Jacobian=False):  # noqa: ANN001, ANN201, FBT002, N802, N803
+    def X2U(self, X, Jacobian=False):  # noqa: FBT002, N802, N803
         """Carries out the transformation from physical space X to
         standard normal space U.
         X must be a [n,d]-shaped array (n = number of data points,
@@ -323,7 +323,7 @@ class ERANataf:
             return np.squeeze(U)
 
     # %%
-    def U2X(self, U, Jacobian=False):  # noqa: ANN001, ANN201, FBT002, N802, N803
+    def U2X(self, U, Jacobian=False):  # noqa: FBT002, N802, N803
         """Carries out the transformation from standard normal space U
         to physical space X.
         U must be a [n,d]-shaped array (n = number of data points,
@@ -364,7 +364,7 @@ class ERANataf:
             return np.squeeze(X)
 
     # %%
-    def random(self, n=1):  # noqa: ANN001, ANN201
+    def random(self, n=1):
         """Creates n samples of the joint distribution.
         Every row in the output array corresponds to one sample.
         """  # noqa: D205, D401
@@ -379,7 +379,7 @@ class ERANataf:
         return np.squeeze(jr)
 
     # %%
-    def pdf(self, X):  # noqa: ANN001, ANN201, C901, N803
+    def pdf(self, X):  # noqa: C901, N803
         """Computes the joint PDF.
         X must be a [n,d]-shaped array (n = number of data points,
         d = dimensions).
@@ -442,7 +442,7 @@ class ERANataf:
             return jointpdf
 
     # %%
-    def cdf(self, X):  # noqa: ANN001, ANN201, N803
+    def cdf(self, X):  # noqa: N803
         """Computes the joint CDF.
         X must be a [n,d]-shaped array (n = number of data points,
         d = dimensions).
@@ -478,7 +478,7 @@ class ERANataf:
 
     # %%
     @staticmethod
-    def bivariateNormalPdf(x1, x2, rho):  # noqa: ANN001, ANN205, N802, D102
+    def bivariateNormalPdf(x1, x2, rho):  # noqa: N802, D102
         return (
             1
             / (2 * np.pi * np.sqrt(1 - rho**2))

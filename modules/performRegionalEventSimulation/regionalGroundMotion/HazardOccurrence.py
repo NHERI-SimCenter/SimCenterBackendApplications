@@ -55,15 +55,15 @@ from tqdm import tqdm
 from USGS_API import *  # noqa: F403
 
 
-def configure_hazard_occurrence(  # noqa: ANN201, C901, D103
-    input_dir,  # noqa: ANN001
-    output_dir,  # noqa: ANN001
-    IMfile,  # noqa: ANN001, N803
-    im_list,  # noqa: ANN001
-    scenarios,  # noqa: ANN001
-    hzo_config=None,  # noqa: ANN001
-    site_config=None,  # noqa: ANN001
-    mth_flag=True,  # noqa: ANN001, FBT002
+def configure_hazard_occurrence(  # noqa: C901, D103
+    input_dir,
+    output_dir,
+    IMfile,  # noqa: N803
+    im_list,
+    scenarios,
+    hzo_config=None,
+    site_config=None,
+    mth_flag=True,  # noqa: FBT002
 ):
     if hzo_config is None or site_config is None:
         # no model is defined
@@ -218,7 +218,7 @@ def configure_hazard_occurrence(  # noqa: ANN201, C901, D103
     return occ_dict  # noqa: RET504
 
 
-def fetch_usgs_hazard_curve_para(ids, hc_collectors, hc_dict):  # noqa: ANN001, ANN201, D103
+def fetch_usgs_hazard_curve_para(ids, hc_collectors, hc_dict):  # noqa: D103
     for cur_id, cur_collector in zip(ids, hc_collectors):
         if cur_collector.fetch_url():
             hc_dict[cur_id] = cur_collector.get_hazard_curve()
@@ -229,7 +229,7 @@ def fetch_usgs_hazard_curve_para(ids, hc_collectors, hc_dict):  # noqa: ANN001, 
     # return
 
 
-def calc_hazard_curve_and_contri(IMdata, site_config, im, targetReturnPeriods):  # noqa: ANN001, ANN201, ARG001, N803, D103
+def calc_hazard_curve_and_contri(IMdata, site_config, im, targetReturnPeriods):  # noqa: ARG001, N803, D103
     if im[0:2] == 'SA':
         period = float(im[2:].replace('P', '.'))
         im_name = 'lnSA'
@@ -240,7 +240,7 @@ def calc_hazard_curve_and_contri(IMdata, site_config, im, targetReturnPeriods): 
         im_ind = 0  # noqa: F841
 
 
-def calc_hazard_contribution(IMdata, site_config, targetReturnPeriods, hc_data, im):  # noqa: ANN001, ANN201, N803, D103
+def calc_hazard_contribution(IMdata, site_config, targetReturnPeriods, hc_data, im):  # noqa: N803, D103
     if im[0:2] == 'SA':
         period = float(im[2:].replace('P', '.'))
         im_name = 'lnSA'
@@ -285,7 +285,7 @@ def calc_hazard_contribution(IMdata, site_config, targetReturnPeriods, hc_data, 
     return c_vect
 
 
-def calc_hazard_curves(IMdata, site_config, im):  # noqa: ANN001, ANN201, N803, D103
+def calc_hazard_curves(IMdata, site_config, im):  # noqa: N803, D103
     if im[0:2] == 'SA':
         period = float(im[2:].replace('P', '.'))
         im_name = 'lnSA'
@@ -323,7 +323,7 @@ def calc_hazard_curves(IMdata, site_config, im):  # noqa: ANN001, ANN201, N803, 
     return hc_data
 
 
-def calc_hazard_curves_hdf5(IMfile, im_list, site_config, im, scenarios):  # noqa: ANN001, ANN201, N803, D103
+def calc_hazard_curves_hdf5(IMfile, im_list, site_config, im, scenarios):  # noqa: N803, D103
     im_ind = im_list.index(im)
     IMRange = np.power(10, np.linspace(-4, 2, 60))  # noqa: N806
     exceedRate = np.zeros((len(IMRange), len(site_config)))  # noqa: N806
@@ -358,7 +358,7 @@ def calc_hazard_curves_hdf5(IMfile, im_list, site_config, im, scenarios):  # noq
     return hc_data
 
 
-def get_hazard_curves(input_dir=None, input_csv=None, input_json=None):  # noqa: ANN001, ANN201, D103
+def get_hazard_curves(input_dir=None, input_csv=None, input_json=None):  # noqa: D103
     if input_dir is not None:
         return None
 
@@ -384,13 +384,13 @@ def get_hazard_curves(input_dir=None, input_csv=None, input_json=None):  # noqa:
 
 
 # KZ-08/23/22: adding a function for computing exceeding probability at an im level
-def get_im_exceedance_probility(  # noqa: ANN201, C901, D103
-    IMfile,  # noqa: ANN001, N803
-    im_list,  # noqa: ANN001
-    im_type,  # noqa: ANN001
-    period,  # noqa: ANN001
-    im_level,  # noqa: ANN001
-    scenario_idx,  # noqa: ANN001
+def get_im_exceedance_probility(  # noqa: C901, D103
+    IMfile,  # noqa: N803
+    im_list,
+    im_type,
+    period,
+    im_level,
+    scenario_idx,
 ):
     # number of scenarios
     num_scen = len(scenario_idx)
@@ -471,13 +471,13 @@ def get_im_exceedance_probility(  # noqa: ANN201, C901, D103
     return im_exceedance_prob
 
 
-def get_im_exceedance_probability_gm(  # noqa: ANN201, D103
-    im_raw,  # noqa: ANN001
-    im_list,  # noqa: ANN001
-    im_type,  # noqa: ANN001
-    period,  # noqa: ANN001
-    im_level,  # noqa: ANN001
-    mar_scen,  # noqa: ANN001
+def get_im_exceedance_probability_gm(  # noqa: D103
+    im_raw,
+    im_list,
+    im_type,
+    period,
+    im_level,
+    mar_scen,
 ):
     # get periodID
     for i in range(len(im_list)):
@@ -510,14 +510,14 @@ def get_im_exceedance_probability_gm(  # noqa: ANN201, D103
     return im_exceedance_prob, occurrence_rate
 
 
-def sample_earthquake_occurrence(  # noqa: ANN201, D103
-    model_type,  # noqa: ANN001
-    num_target_eqs,  # noqa: ANN001
-    return_periods,  # noqa: ANN001
-    im_exceedance_prob,  # noqa: ANN001
-    reweight_only,  # noqa: ANN001
-    occurence_rate_origin,  # noqa: ANN001
-    hzo_config,  # noqa: ANN001
+def sample_earthquake_occurrence(  # noqa: D103
+    model_type,
+    num_target_eqs,
+    return_periods,
+    im_exceedance_prob,
+    reweight_only,
+    occurence_rate_origin,
+    hzo_config,
 ):
     # model type
     if model_type == 'Manzour & Davidson (2016)':
@@ -552,7 +552,7 @@ def sample_earthquake_occurrence(  # noqa: ANN201, D103
     return om
 
 
-def export_sampled_earthquakes(error, id_selected_eqs, eqdata, P, output_dir=None):  # noqa: ANN001, ANN201, N803, D103
+def export_sampled_earthquakes(error, id_selected_eqs, eqdata, P, output_dir=None):  # noqa: N803, D103
     probabilityWeight = [P[x] for x in id_selected_eqs]  # noqa: N806
     selected_eqs = []
     for i in id_selected_eqs:
@@ -613,13 +613,13 @@ def export_sampled_earthquakes(error, id_selected_eqs, eqdata, P, output_dir=Non
 
 
 class OccurrenceModel_ManzourDavidson2016:  # noqa: D101
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        return_periods=[],  # noqa: ANN001, B006
-        im_exceedance_probs=[],  # noqa: ANN001, B006
-        num_scenarios=-1,  # noqa: ANN001
-        reweight_only=False,  # noqa: ANN001, FBT002
-        occurence_rate_origin=None,  # noqa: ANN001
+        return_periods=[],  # noqa: B006
+        im_exceedance_probs=[],  # noqa: B006
+        num_scenarios=-1,
+        reweight_only=False,  # noqa: FBT002
+        occurence_rate_origin=None,
     ):
         """__init__: initialization a hazard occurrence optimizer
         :param return_periods: 1-D array of return periods, RP(r)
@@ -642,7 +642,7 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: D101
             )
             return
 
-    def _input_check(self):  # noqa: ANN202
+    def _input_check(self):
         """_input_check: check of input parameters"""  # noqa: D400
         # number of return periods
         if len(self.return_periods) > 0:
@@ -692,7 +692,7 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: D101
                 )
                 return False
 
-    def _opt_initialization(self):  # noqa: ANN202
+    def _opt_initialization(self):
         """_opt_initialization: initialization of optimization problem"""  # noqa: D400
         # the problem is mixed integer program
         self.prob = pulp.LpProblem('MIP', pulp.LpMinimize)
@@ -759,7 +759,7 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: D101
 
         return True
 
-    def solve_opt(self):  # noqa: ANN201
+    def solve_opt(self):
         """target_function: compute the target function to be minimized
         :param X: 2-D array of annual occurrence probability of earthquakes and corresponding binary variables (many values are reduced to zeros)
         """  # noqa: D205, D400
@@ -767,7 +767,7 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: D101
         self.prob.solve(pulp.PULP_CBC_CMD(timeLimit=maximum_runtime, gapRel=0.001))
         print('Status:', pulp.LpStatus[self.prob.status])  # noqa: T201
 
-    def get_selected_earthquake(self):  # noqa: ANN201, D102
+    def get_selected_earthquake(self):  # noqa: D102
         P_selected = [self.P[i].varValue for i in range(self.num_eqs)]  # noqa: N806
         if self.reweight_only:
             Z_selected = [1 for i in range(self.num_eqs)]  # noqa: N806
@@ -776,7 +776,7 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: D101
 
         return P_selected, Z_selected
 
-    def get_error_vector(self):  # noqa: ANN201, D102
+    def get_error_vector(self):  # noqa: D102
         e_plus_selected = np.zeros([self.num_sites, self.num_return_periods])
         e_minus_selected = np.zeros([self.num_sites, self.num_return_periods])
         for i in range(self.num_sites):
@@ -788,12 +788,12 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: D101
         ) / self.num_return_periods
         return error  # noqa: RET504
 
-    def export_sampled_gmms(  # noqa: ANN201, D102
+    def export_sampled_gmms(  # noqa: D102
         self,
-        id_selected_gmms,  # noqa: ANN001
-        id_selected_scens,  # noqa: ANN001
-        P,  # noqa: ANN001, N803
-        output_dir=None,  # noqa: ANN001
+        id_selected_gmms,
+        id_selected_scens,
+        P,  # noqa: N803
+        output_dir=None,
     ):
         dict_selected_gmms = {
             'EarthquakeID': id_selected_scens.astype(int).tolist(),
@@ -807,14 +807,14 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: D101
 
 
 class OccurrenceModel_Wangetal2023:  # noqa: D101
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        return_periods=[],  # noqa: ANN001, B006
-        im_exceedance_probs=[],  # noqa: ANN001, B006
-        num_scenarios=-1,  # noqa: ANN001
-        reweight_only=False,  # noqa: ANN001, FBT002
-        occurence_rate_origin=None,  # noqa: ANN001
-        hzo_config=None,  # noqa: ANN001
+        return_periods=[],  # noqa: B006
+        im_exceedance_probs=[],  # noqa: B006
+        num_scenarios=-1,
+        reweight_only=False,  # noqa: FBT002
+        occurence_rate_origin=None,
+        hzo_config=None,
     ):
         """__init__: initialization a hazard occurrence optimizer
         :param return_periods: 1-D array of return periods, RP(r)
@@ -841,7 +841,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: D101
             )
             return
 
-    def _input_check(self):  # noqa: ANN202
+    def _input_check(self):
         """_input_check: check of input parameters"""  # noqa: D400
         # number of return periods
         if len(self.return_periods) > 0:
@@ -891,7 +891,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: D101
                 )
                 return False
 
-    def _opt_initialization(self):  # noqa: ANN202
+    def _opt_initialization(self):
         """_opt_initialization: initialization of LASSO regression"""  # noqa: D400
         # define X
         self.X_P = (
@@ -918,7 +918,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: D101
 
         return True
 
-    def solve_opt(self):  # noqa: ANN201
+    def solve_opt(self):
         """LASSO regression"""  # noqa: D400
         if self.alpha_path:
             self.alphas, self.coefs, _ = lasso_path(
@@ -939,7 +939,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: D101
 
         # re-regression may be needed here !!!
 
-    def get_selected_earthquake(self):  # noqa: ANN201, D102
+    def get_selected_earthquake(self):  # noqa: D102
         # calculate the number of selected events for each step
         self.num_selected = [
             sum(x > 0 for x in self.coefs[:, i]) for i in range(self.coefs.shape[1])
@@ -965,19 +965,19 @@ class OccurrenceModel_Wangetal2023:  # noqa: D101
         self.Z_selected = self.coefs[:, self.selected_alpha_ind] > 0
         return self.Rate_selected, self.Z_selected
 
-    def get_error_vector(self):  # noqa: ANN201, D102
+    def get_error_vector(self):  # noqa: D102
         # self.e_selected = self.y - np.dot(self.X, self.coefs[:,self.selected_alpha_ind])
         error = self.y - self.X.sum(axis=1)
         error = error.reshape(self.num_sites, self.num_return_periods)
         error = (error**2).sum(axis=1) / self.num_return_periods
         return error  # noqa: RET504
 
-    def export_sampled_gmms(  # noqa: ANN201, D102
+    def export_sampled_gmms(  # noqa: D102
         self,
-        id_selected_gmms,  # noqa: ANN001
-        id_selected_scens,  # noqa: ANN001
-        P,  # noqa: ANN001, N803
-        output_dir=None,  # noqa: ANN001
+        id_selected_gmms,
+        id_selected_scens,
+        P,  # noqa: N803
+        output_dir=None,
     ):
         dict_selected_gmms = {
             'EarthquakeID': id_selected_scens.astype(int).tolist(),

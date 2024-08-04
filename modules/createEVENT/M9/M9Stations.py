@@ -8,7 +8,7 @@ import pandas as pd
 from shapely.geometry import Point, Polygon
 
 
-def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, FBT002, C901, N802, D103
+def getStations(information, plot=False, show=False):  # noqa: FBT002, C901, N802, D103
     RegionFlag = information['RegionFlag']  # noqa: N806
     LocationFlag = information['LocationFlag']  # noqa: N806
 
@@ -211,7 +211,7 @@ def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, F
     # fig.show()
 
 
-def haversine(lat1, lon1, lat2, lon2):  # noqa: ANN001, ANN201
+def haversine(lat1, lon1, lat2, lon2):
     """Calculate the great circle distance between two points
     on the earth specified in decimal degrees.
     """  # noqa: D205

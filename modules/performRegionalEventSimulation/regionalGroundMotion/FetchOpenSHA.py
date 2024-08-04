@@ -86,7 +86,7 @@ from org.opensha.sha.gcim.imr.param.EqkRuptureParams import *  # noqa: F403
 from org.opensha.sha.gcim.imr.param.IntensityMeasureParams import *  # noqa: F403
 
 
-def getERF(scenario_info, update_flag=True):  # noqa: ANN001, ANN201, FBT002, C901, N802, D103
+def getERF(scenario_info, update_flag=True):  # noqa: FBT002, C901, N802, D103
     # Initialization
     erf = None
     erf_name = scenario_info['EqRupture']['Model']
@@ -214,7 +214,7 @@ def getERF(scenario_info, update_flag=True):  # noqa: ANN001, ANN201, FBT002, C9
     return erf
 
 
-def setERFbackgroundOptions(erf, selection):  # noqa: ANN001, ANN201, N802, D103
+def setERFbackgroundOptions(erf, selection):  # noqa: N802, D103
     option = selection.get('Background Seismicity', None)
     if option == 'Include':
         erf.setParameter('Background Seismicity', IncludeBackgroundOption.INCLUDE)  # noqa: F405
@@ -224,7 +224,7 @@ def setERFbackgroundOptions(erf, selection):  # noqa: ANN001, ANN201, N802, D103
         erf.setParameter('Background Seismicity', IncludeBackgroundOption.ONLY)  # noqa: F405
 
 
-def setERFtreatBackgroundOptions(erf, selection):  # noqa: ANN001, ANN201, N802, D103
+def setERFtreatBackgroundOptions(erf, selection):  # noqa: N802, D103
     option = selection.get('Treat Background Seismicity As', None)
     if option is None:
         pass
@@ -239,7 +239,7 @@ def setERFtreatBackgroundOptions(erf, selection):  # noqa: ANN001, ANN201, N802,
         )
 
 
-def setERFProbabilityModelOptions(erf, selection):  # noqa: ANN001, ANN201, N802, D103
+def setERFProbabilityModelOptions(erf, selection):  # noqa: N802, D103
     option = selection.get('Probability Model', None)
     if option is None:
         pass
@@ -266,7 +266,7 @@ def setERFProbabilityModelOptions(erf, selection):  # noqa: ANN001, ANN201, N802
         setERFMagDependentAperiodicityOptions(erf, selection)
 
 
-def setERFMagDependentAperiodicityOptions(erf, selection):  # noqa: ANN001, ANN201, C901, N802, D103
+def setERFMagDependentAperiodicityOptions(erf, selection):  # noqa: C901, N802, D103
     option = selection.get('Aperiodicity', None)
     if option is None:
         pass
@@ -318,7 +318,7 @@ def setERFMagDependentAperiodicityOptions(erf, selection):  # noqa: ANN001, ANN2
         )
 
 
-def setERFBPTAveragingTypeOptions(erf, selection):  # noqa: ANN001, ANN201, N802, D103
+def setERFBPTAveragingTypeOptions(erf, selection):  # noqa: N802, D103
     option = selection.get('BPT Averaging Type', None)
     if option is None:
         pass
@@ -339,14 +339,14 @@ def setERFBPTAveragingTypeOptions(erf, selection):  # noqa: ANN001, ANN201, N802
         )
 
 
-def get_source_rupture(erf, source_index, rupture_index):  # noqa: ANN001, ANN201, D103
+def get_source_rupture(erf, source_index, rupture_index):  # noqa: D103
     rupSource = erf.getSource(source_index)  # noqa: N806
     ruptures = rupSource.getRuptureList()
     rupture = ruptures.get(rupture_index)
     return rupSource, rupture
 
 
-def get_source_distance(erf, source_index, lat, lon):  # noqa: ANN001, ANN201, D103
+def get_source_distance(erf, source_index, lat, lon):  # noqa: D103
     rupSource = erf.getSource(source_index)  # noqa: N806
     sourceSurface = rupSource.getSourceSurface()  # noqa: N806
     # print(lon)
@@ -360,7 +360,7 @@ def get_source_distance(erf, source_index, lat, lon):  # noqa: ANN001, ANN201, D
     return distToSource
 
 
-def get_rupture_distance(erf, source_index, rupture_index, lat, lon):  # noqa: ANN001, ANN201, D103
+def get_rupture_distance(erf, source_index, rupture_index, lat, lon):  # noqa: D103
     rupSource = erf.getSource(source_index)  # noqa: N806
     rupSurface = rupSource.getRupture(rupture_index).getRuptureSurface()  # noqa: N806
     distToRupture = []  # noqa: N806
@@ -372,7 +372,7 @@ def get_rupture_distance(erf, source_index, rupture_index, lat, lon):  # noqa: A
     return distToRupture
 
 
-def get_rupture_info_CY2014(erf, source_index, rupture_index, siteList):  # noqa: ANN001, ANN201, N802, N803, D103
+def get_rupture_info_CY2014(erf, source_index, rupture_index, siteList):  # noqa: N802, N803, D103
     rupSource = erf.getSource(source_index)  # noqa: N806
     rupList = rupSource.getRuptureList()  # noqa: N806
     rupSurface = rupList.get(rupture_index).getRuptureSurface()  # noqa: N806
@@ -422,7 +422,7 @@ def get_rupture_info_CY2014(erf, source_index, rupture_index, siteList):  # noqa
     return site_rup_info, siteList
 
 
-def horzDistanceFast(lat1, lon1, lat2, lon2):  # noqa: ANN001, ANN201, N802, D103
+def horzDistanceFast(lat1, lon1, lat2, lon2):  # noqa: N802, D103
     lat1 = lat1 / 180 * np.pi
     lon1 = lon1 / 180 * np.pi
     lat2 = lat2 / 180 * np.pi
@@ -436,7 +436,7 @@ def horzDistanceFast(lat1, lon1, lat2, lon2):  # noqa: ANN001, ANN201, N802, D10
     return EARTH_RADIUS_MEAN * c
 
 
-def getPtSrcDistCorr(horzDist, mag, type):  # noqa: ANN001, ANN201, A002, N802, N803, D103
+def getPtSrcDistCorr(horzDist, mag, type):  # noqa: A002, N802, N803, D103
     # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/faultSurface/utils/PtSrcDistCorr.java#L20
     if type == 'FIELD':
         rupLen = np.power(10.0, -3.22 + 0.69 * mag)  # noqa: N806
@@ -453,7 +453,7 @@ def getPtSrcDistCorr(horzDist, mag, type):  # noqa: ANN001, ANN201, A002, N802, 
         return 1.0
 
 
-def get_PointSource_info_CY2014(source_info, siteList):  # noqa: ANN001, ANN201, N802, N803, D103
+def get_PointSource_info_CY2014(source_info, siteList):  # noqa: N802, N803, D103
     # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/faultSurface/PointSurface.java#L118
     sourceLat = source_info['Location']['Latitude']  # noqa: N806
     sourceLon = source_info['Location']['Longitude']  # noqa: N806
@@ -477,14 +477,14 @@ def get_PointSource_info_CY2014(source_info, siteList):  # noqa: ANN001, ANN201,
     return site_rup_info, siteList
 
 
-def export_to_json(  # noqa: ANN201, C901, D103
-    erf,  # noqa: ANN001
-    site_loc,  # noqa: ANN001
-    outfile=None,  # noqa: ANN001
-    EqName=None,  # noqa: ANN001, N803
-    minMag=0.0,  # noqa: ANN001, N803
-    maxMag=10.0,  # noqa: ANN001, N803
-    maxDistance=1000.0,  # noqa: ANN001, N803
+def export_to_json(  # noqa: C901, D103
+    erf,
+    site_loc,
+    outfile=None,
+    EqName=None,  # noqa: N803
+    minMag=0.0,  # noqa: N803
+    maxMag=10.0,  # noqa: N803
+    maxDistance=1000.0,  # noqa: N803
 ):
     # Initializing
     erf_data = {'type': 'FeatureCollection'}
@@ -648,7 +648,7 @@ def export_to_json(  # noqa: ANN201, C901, D103
     return erf_data
 
 
-def CreateIMRInstance(gmpe_name):  # noqa: ANN001, ANN201, N802, D103
+def CreateIMRInstance(gmpe_name):  # noqa: N802, D103
     # GMPE name map
     gmpe_map = {
         str(ASK_2014.NAME): ASK_2014_Wrapper.class_.getName(),  # noqa: F405
@@ -677,7 +677,7 @@ def CreateIMRInstance(gmpe_name):  # noqa: ANN001, ANN201, N802, D103
     return imr
 
 
-def get_DataSource(paramName, siteData):  # noqa: ANN001, ANN201, N802, N803, D103
+def get_DataSource(paramName, siteData):  # noqa: N802, N803, D103
     typeMap = SiteTranslator.DATA_TYPE_PARAM_NAME_MAP  # noqa: N806, F405
     for dataType in typeMap.getTypesForParameterName(paramName):  # noqa: N806
         if dataType == SiteData.TYPE_VS30:  # noqa: F405
@@ -699,7 +699,7 @@ def get_DataSource(paramName, siteData):  # noqa: ANN001, ANN201, N802, N803, D1
     return 1
 
 
-def get_site_prop(gmpe_name, siteSpec):  # noqa: ANN001, ANN201, C901, N803, D103
+def get_site_prop(gmpe_name, siteSpec):  # noqa: C901, N803, D103
     # GMPE
     try:
         imr = CreateIMRInstance(gmpe_name)
@@ -811,15 +811,15 @@ def get_site_prop(gmpe_name, siteSpec):  # noqa: ANN001, ANN201, C901, N803, D10
     return siteSpec, sites, site_prop
 
 
-def get_IM(  # noqa: ANN201, C901, N802, D103
-    gmpe_info,  # noqa: ANN001
-    erf,  # noqa: ANN001
-    sites,  # noqa: ANN001
-    siteSpec,  # noqa: ANN001, N803
-    site_prop,  # noqa: ANN001
-    source_info,  # noqa: ANN001
-    station_info,  # noqa: ANN001
-    im_info,  # noqa: ANN001
+def get_IM(  # noqa: C901, N802, D103
+    gmpe_info,
+    erf,
+    sites,
+    siteSpec,  # noqa: N803
+    site_prop,
+    source_info,
+    station_info,
+    im_info,
 ):
     # GMPE name
     gmpe_name = gmpe_info['Type']
@@ -998,7 +998,7 @@ def get_IM(  # noqa: ANN201, C901, N802, D103
     return res, station_info
 
 
-def get_site_vs30_from_opensha(lat, lon, vs30model='CGS/Wills VS30 Map (2015)'):  # noqa: ANN001, ANN201, D103
+def get_site_vs30_from_opensha(lat, lon, vs30model='CGS/Wills VS30 Map (2015)'):  # noqa: D103
     # set up site java object
     sites = ArrayList()  # noqa: F405
     num_sites = len(lat)
@@ -1032,7 +1032,7 @@ def get_site_vs30_from_opensha(lat, lon, vs30model='CGS/Wills VS30 Map (2015)'):
     return vs30
 
 
-def get_site_z1pt0_from_opensha(lat, lon):  # noqa: ANN001, ANN201, D103
+def get_site_z1pt0_from_opensha(lat, lon):  # noqa: D103
     sites = ArrayList()  # noqa: F405
     sites.add(Site(Location(lat, lon)))  # noqa: F405
     # prepare site data java object
@@ -1046,7 +1046,7 @@ def get_site_z1pt0_from_opensha(lat, lon):  # noqa: ANN001, ANN201, D103
     return z1pt0 * 1000.0
 
 
-def get_site_z2pt5_from_opensha(lat, lon):  # noqa: ANN001, ANN201, D103
+def get_site_z2pt5_from_opensha(lat, lon):  # noqa: D103
     sites = ArrayList()  # noqa: F405
     sites.add(Site(Location(lat, lon)))  # noqa: F405
     # prepare site data java object

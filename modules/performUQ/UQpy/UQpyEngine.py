@@ -37,7 +37,7 @@ import click
 @click.option(
     '--runType', required=True, type=click.Choice(['runningLocal', 'runningRemote'])
 )
-def main(workflowinput, workflowoutput, driverfile, runtype):  # noqa: ANN001, ANN201, ARG001, D103
+def main(workflowinput, workflowoutput, driverfile, runtype):  # noqa: ARG001, D103
     python = sys.executable
 
     # get os type

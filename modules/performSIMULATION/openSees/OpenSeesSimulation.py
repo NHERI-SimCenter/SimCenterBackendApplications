@@ -7,7 +7,7 @@ import sys
 # from pathlib import Path
 
 
-def main(args):  # noqa: ANN001, ANN201, D103
+def main(args):  # noqa: D103
     # set filenames
     aimName = args[1]  # noqa: N806
     samName = args[3]  # noqa: N806

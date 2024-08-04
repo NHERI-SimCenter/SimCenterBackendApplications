@@ -50,7 +50,7 @@ class of7Materials:
     """  # noqa: D205, D404
 
     #############################################################
-    def mattext(self, data):  # noqa: ANN001, ANN201
+    def mattext(self, data):
         """Creates the necessary files for materials for openfoam7
 
         Arguments:
@@ -123,7 +123,7 @@ class of7Materials:
         return mattext  # noqa: RET504
 
     #############################################################
-    def matheader(self):  # noqa: ANN201, PLR6301
+    def matheader(self):  # noqa: PLR6301
         """Creates the text for the header
 
         Variable
@@ -145,7 +145,7 @@ FoamFile
         return header  # noqa: RET504
 
     #############################################################
-    def matcheck(self, data):  # noqa: ANN001, ANN201, PLR6301
+    def matcheck(self, data):  # noqa: PLR6301
         """Checks for material properties for openfoam7
 
         Arguments:

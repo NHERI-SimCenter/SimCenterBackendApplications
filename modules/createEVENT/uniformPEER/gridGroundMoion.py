@@ -59,12 +59,12 @@ from scipy.spatial import distance_matrix
 from scipy.stats import gmean, qmc
 
 
-def main(inputArgs, err):  # noqa: ANN001, ANN201, N803, D103
+def main(inputArgs, err):  # noqa: N803, D103
     gms = gmCluster(inputArgs, err)  # noqa: F841
 
 
 class gmCluster:  # noqa: D101
-    def __init__(self, inputArgs, err):  # noqa: ANN001, ANN204, ARG002, C901, N803, PLR0912, PLR0914, PLR0915
+    def __init__(self, inputArgs, err):  # noqa: ARG002, C901, N803, PLR0912, PLR0914, PLR0915
         np.random.seed(seed=42)
         curDir = os.path.dirname(__file__)  # noqa: PTH120, N806
         gmDataBaseDir = os.path.join(curDir, 'gmdata.json')  # noqa: PTH118, N806

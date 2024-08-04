@@ -48,13 +48,13 @@ from brails.workflow.FootprintHandler import FootprintHandler
 
 
 # Define a standard way of printing program outputs:
-def log_msg(msg):  # noqa: ANN001, ANN201, D103
+def log_msg(msg):  # noqa: D103
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
     print(formatted_msg)  # noqa: T201
 
 
 # Define a way to call BRAILS FootprintHandler:
-def runBrails(latMin, latMax, longMin, longMax, locationStr, outputfile):  # noqa: ANN001, ANN201, N802, N803, D103
+def runBrails(latMin, latMax, longMin, longMax, locationStr, outputfile):  # noqa: N802, N803, D103
     # Initialize FootprintHandler:
     fpHandler = FootprintHandler()  # noqa: N806
     if locationStr == '""':
@@ -69,7 +69,7 @@ def runBrails(latMin, latMax, longMin, longMax, locationStr, outputfile):  # noq
 
 
 # Define a way to collect GUI input:
-def main(args):  # noqa: ANN001, ANN201, D103
+def main(args):  # noqa: D103
     parser = argparse.ArgumentParser()
     parser.add_argument('--latMin', default=None, type=float)
     parser.add_argument('--latMax', default=None, type=float)

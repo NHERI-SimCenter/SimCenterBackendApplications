@@ -12,7 +12,7 @@ class ModuleBaseDTO(BaseModel):  # noqa: D101
 class SamplingDTO(ModuleBaseDTO):  # noqa: D101
     uqType: Literal['Sampling'] = 'Sampling'  # noqa: N815
 
-    def generate_code(self):  # noqa: ANN201, D102
+    def generate_code(self):  # noqa: D102
         pass
 
 

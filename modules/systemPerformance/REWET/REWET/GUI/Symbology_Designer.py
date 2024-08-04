@@ -15,7 +15,7 @@ from PyQt5 import QtCore, QtWidgets
 
 
 class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
-    def __init__(self, sym, data, val_column):  # noqa: ANN001, ANN204
+    def __init__(self, sym, data, val_column):
         super().__init__()
         self._window = QtWidgets.QDialog()
         self.setupUi(self._window)
@@ -45,7 +45,7 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
 
         self.sample_legend_widget  # noqa: B018
 
-    def initializeForm(self):  # noqa: ANN201, N802, D102
+    def initializeForm(self):  # noqa: N802, D102
         self.method_combo.setCurrentText(self.sym['Method'])
         if (
             self.sym['Method'] == 'FisherJenks'
@@ -58,7 +58,7 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
         self.updateTable()
         # self.updateLegendSample()
 
-    def addByButton(self, add_location):  # noqa: ANN001, ANN201, N802, D102
+    def addByButton(self, add_location):  # noqa: N802, D102
         to_be_added_row = None  # noqa: F841
         selected_item_list = self.range_table.selectedItems()
         if len(selected_item_list) == 0:
@@ -103,18 +103,18 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
             self.method_combo.blockSignals(False)  # noqa: FBT003
         self.updateTable()
 
-    def numberOfClassEditingFinished(self):  # noqa: ANN201, N802, D102
+    def numberOfClassEditingFinished(self):  # noqa: N802, D102
         k = float(self.no_clases_line.text())
         k = int(k)
         kw = {'k': k}
         self.sym['kw'] = kw
         self.updateTable()
 
-    def colorChanged(self, text):  # noqa: ANN001, ANN201, N802, D102
+    def colorChanged(self, text):  # noqa: N802, D102
         self.sym['Color'] = text
         self.updateLegendSample()
 
-    def updateLegendSample(self):  # noqa: ANN201, N802, D102
+    def updateLegendSample(self):  # noqa: N802, D102
         fig, ax = plt.subplots()  # noqa: F841
         self.plotted_map.plot(
             ax=ax,
@@ -126,7 +126,7 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
         self.legend_widget.draw()
         # self.mpl_map.canvas.fig.tight_layout()
 
-    def updateTable(self):  # noqa: ANN201, N802, D102
+    def updateTable(self):  # noqa: N802, D102
         self.range_table.blockSignals(True)  # noqa: FBT003
         self.clearRangeTable()
         if self.sym['Method'] == 'FisherJenks':
@@ -174,11 +174,11 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
         self.range_table.blockSignals(False)  # noqa: FBT003
         self.updateLegendSample()
 
-    def clearRangeTable(self):  # noqa: ANN201, N802, D102
+    def clearRangeTable(self):  # noqa: N802, D102
         for i in range(self.range_table.rowCount()):  # noqa: B007
             self.range_table.removeRow(0)
 
-    def methodChanged(self, text):  # noqa: ANN001, ANN201, N802, D102
+    def methodChanged(self, text):  # noqa: N802, D102
         print(text)  # noqa: T201
         if text == 'FisherJenks':
             self.sym['Method'] = 'FisherJenks'
@@ -204,12 +204,12 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
         self.sym['kw'] = kw
         self.updateTable()
 
-    def currentItemChanged(self, current, previous):  # noqa: ANN001, ANN201, ARG002, N802, D102
+    def currentItemChanged(self, current, previous):  # noqa: ARG002, N802, D102
         if current != None:  # noqa: E711
             self.current_item_value = float(current.text())
         print('cur ' + repr(self.current_item_value))  # noqa: T201
 
-    def tableDataChanged(self, item):  # noqa: ANN001, ANN201, N802, D102
+    def tableDataChanged(self, item):  # noqa: N802, D102
         # row = item.row()
         # col = item.column()
 
@@ -242,7 +242,7 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
 
         return
 
-    def findBeginingRowFor(self, value):  # noqa: ANN001, ANN201, N802, D102
+    def findBeginingRowFor(self, value):  # noqa: N802, D102
         if self.range_table.rowCount() == 0:
             raise  # noqa: PLE0704
 
@@ -253,7 +253,7 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
                 return i
         return self.range_table.rowCount() - 1
 
-    def findEndingRowFor(self, value):  # noqa: ANN001, ANN201, N802, D102
+    def findEndingRowFor(self, value):  # noqa: N802, D102
         if self.range_table.rowCount() == 0:
             raise  # noqa: PLE0704
 
@@ -264,14 +264,14 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
                 return i + 1
         return self.range_table.rowCount() - 1
 
-    def removeButtonClicked(self):  # noqa: ANN201, N802, D102
+    def removeButtonClicked(self):  # noqa: N802, D102
         selected_item_list = self.range_table.selectedItems()
         if len(selected_item_list) == 0:
             return
         selected_row = selected_item_list[0].row()
         self.removeRow(selected_row)
 
-    def removeRow(self, row):  # noqa: ANN001, ANN201, N802, D102
+    def removeRow(self, row):  # noqa: N802, D102
         if row == 0 and self.range_table.rowCount() >= 2:  # noqa: PLR2004
             item_text = self.range_table.item(row, 0).text()
             self.range_table.removeRow(0)

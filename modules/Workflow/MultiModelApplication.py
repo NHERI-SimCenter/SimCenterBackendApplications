@@ -49,16 +49,16 @@ from whale.main import (
 )
 
 
-def main(  # noqa: ANN201, C901, D103
-    inputFile,  # noqa: ANN001, N803
-    appKey,  # noqa: ANN001, N803
-    getRV,  # noqa: ANN001, N803
-    samFile,  # noqa: ANN001, ARG001, N803
-    evtFile,  # noqa: ANN001, ARG001, N803
-    edpFile,  # noqa: ANN001, ARG001, N803
-    simFile,  # noqa: ANN001, ARG001, N803
-    registryFile,  # noqa: ANN001, N803
-    appDir,  # noqa: ANN001, N803
+def main(  # noqa: C901, D103
+    inputFile,  # noqa: N803
+    appKey,  # noqa: N803
+    getRV,  # noqa: N803
+    samFile,  # noqa: ARG001, N803
+    evtFile,  # noqa: ARG001, N803
+    edpFile,  # noqa: ARG001, N803
+    simFile,  # noqa: ARG001, N803
+    registryFile,  # noqa: N803
+    appDir,  # noqa: N803
 ):
     #
     # get some dir paths, load input file and get data for app, appKey

@@ -42,7 +42,7 @@ from datetime import datetime
 
 
 # Monkeypatch warnings to get prettier messages
-def _warning(message, category, filename, lineno, file=None, line=None):  # noqa: ANN001, ANN202, ARG001
+def _warning(message, category, filename, lineno, file=None, line=None):  # noqa: ARG001
     if '\\' in filename:
         file_path = filename.split('\\')
     elif '/' in filename:
@@ -54,11 +54,11 @@ def _warning(message, category, filename, lineno, file=None, line=None):  # noqa
 warnings.showwarning = _warning
 
 
-def show_warning(warning_msg):  # noqa: ANN001, ANN201, D103
+def show_warning(warning_msg):  # noqa: D103
     warnings.warn(UserWarning(warning_msg))  # noqa: B028
 
 
-def log_msg(msg='', prepend_timestamp=True):  # noqa: ANN001, ANN201, FBT002
+def log_msg(msg='', prepend_timestamp=True):  # noqa: FBT002
     """Print a message to the screen with the current time as prefix
 
     The time is in ISO-8601 format, e.g. 2018-06-16T20:24:04Z
@@ -216,7 +216,7 @@ unit_bases = {
 unit_decoupling_type_list = ['TH_file']
 
 
-def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901
+def get_scale_factors(input_units, output_units):  # noqa: C901
     """Determine the scale factor to convert input event to internal event data"""  # noqa: D400
     # special case: if the input unit is not specified then do not do any scaling
     if input_units is None:
@@ -286,7 +286,7 @@ def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901
     return scale_factors
 
 
-def get_unit_bases(input_units):  # noqa: ANN001, ANN201
+def get_unit_bases(input_units):
     """Decouple input units"""  # noqa: D400
     # special case: if the input unit is not specified then do nothing
     if input_units is None:  # noqa: PLR1702

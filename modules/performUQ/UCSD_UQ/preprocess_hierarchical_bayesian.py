@@ -96,7 +96,7 @@ def _create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _print_start_message(demarcation_string: str = '=', start_space: str = ''):  # noqa: ANN202
+def _print_start_message(demarcation_string: str = '=', start_space: str = ''):
     msg = f"'{Path(__file__).name}' started running"
     print()  # noqa: T201
     print(start_space + demarcation_string * len(msg))  # noqa: T201
@@ -104,14 +104,14 @@ def _print_start_message(demarcation_string: str = '=', start_space: str = ''): 
     print()  # noqa: T201
 
 
-def _print_end_message(demarcation_string: str = '=', start_space: str = ''):  # noqa: ANN202
+def _print_end_message(demarcation_string: str = '=', start_space: str = ''):
     msg = f"'{Path(__file__).name}' finished running"
     print()  # noqa: T201
     print(start_space + msg)  # noqa: T201
     print(start_space + demarcation_string * len(msg))  # noqa: T201
 
 
-def main(arguments: InputsType):  # noqa: ANN201, D103
+def main(arguments: InputsType):  # noqa: D103
     (
         working_directory_path,
         template_directory_path,
@@ -205,7 +205,7 @@ def main(arguments: InputsType):  # noqa: ANN201, D103
     )
 
 
-def _parse_arguments(args) -> InputsType:  # noqa: ANN001
+def _parse_arguments(args) -> InputsType:
     parser = _create_parser()
     command_line_arguments = CommandLineArguments()
     parser.parse_args(args=args, namespace=command_line_arguments)
@@ -213,7 +213,7 @@ def _parse_arguments(args) -> InputsType:  # noqa: ANN001
     return arguments  # noqa: RET504
 
 
-def preprocess_arguments(args):  # noqa: ANN001, ANN201, D103
+def preprocess_arguments(args):  # noqa: D103
     arguments = _parse_arguments(args)
     return main(arguments=arguments)
 

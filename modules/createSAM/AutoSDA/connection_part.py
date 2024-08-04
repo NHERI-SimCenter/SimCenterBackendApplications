@@ -41,17 +41,17 @@ class Connection:
     (10) Calculate doubler plate thickness
     """  # noqa: D205, D400, D404
 
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        connection_type,  # noqa: ANN001
-        steel,  # noqa: ANN001
-        beam_dead_load,  # noqa: ANN001
-        beam_live_load,  # noqa: ANN001
-        span,  # noqa: ANN001
-        left_beam=None,  # noqa: ANN001
-        right_beam=None,  # noqa: ANN001
-        top_column=None,  # noqa: ANN001
-        bottom_column=None,  # noqa: ANN001
+        connection_type,
+        steel,
+        beam_dead_load,
+        beam_live_load,
+        span,
+        left_beam=None,
+        right_beam=None,
+        top_column=None,
+        bottom_column=None,
     ):
         """This function initializes all attributes of Connection class.
         :param connection_type: a string which denotes the type of beam-column connection.
@@ -111,13 +111,13 @@ class Connection:
             connection_type, steel, left_beam, right_beam, bottom_column, top_column
         )
 
-    def check_column_beam(  # noqa: ANN201
+    def check_column_beam(
         self,
-        connection_type,  # noqa: ANN001
-        left_beam,  # noqa: ANN001
-        right_beam,  # noqa: ANN001
-        top_column,  # noqa: ANN001
-        bottom_column,  # noqa: ANN001
+        connection_type,
+        left_beam,
+        right_beam,
+        top_column,
+        bottom_column,
     ):
         """This method is used to check whether the column and beam depth (weight) is feasible for
         prequalified connection. (step 1 in ANSI Section 5.8)
@@ -222,7 +222,7 @@ class Connection:
             )
             sys.exit(2)
 
-    def extract_reduced_beam_section(self, connection_type, left_beam, right_beam):  # noqa: ANN001, ANN201
+    def extract_reduced_beam_section(self, connection_type, left_beam, right_beam):
         """This method is used to extract the RBS dimensions into one (or two) dictionary.
         The explanations for input arguments are presented in __init__() function.
         :return: one (two) dictionary which contains the RBS dimensions.
@@ -246,12 +246,12 @@ class Connection:
             )
             sys.exit(2)
 
-    def compute_probable_moment_RBS(  # noqa: ANN201, N802
+    def compute_probable_moment_RBS(  # noqa: N802
         self,
-        connection_type,  # noqa: ANN001
-        steel,  # noqa: ANN001
-        left_beam,  # noqa: ANN001
-        right_beam,  # noqa: ANN001
+        connection_type,
+        steel,
+        left_beam,
+        right_beam,
     ):
         """This method is used to compute section modulus at RBS center (step 2 and 3 in ANSI Section 5.8)
         :return: a dictionary which includes the probable moment at RBS center
@@ -290,13 +290,13 @@ class Connection:
             )
             sys.exit(2)
 
-    def compute_shear_force_RBS(  # noqa: ANN201, N802
+    def compute_shear_force_RBS(  # noqa: N802
         self,
-        connection_type,  # noqa: ANN001
-        beam_dead_load,  # noqa: ANN001
-        beam_live_load,  # noqa: ANN001
-        span,  # noqa: ANN001
-        bottom_column,  # noqa: ANN001
+        connection_type,
+        beam_dead_load,
+        beam_live_load,
+        span,
+        bottom_column,
     ):
         """This method calculates the shear force at the center of RBS (step 4 in ANSI Section 5.8)
         :return: a dictionary which includes the shear forces
@@ -327,7 +327,7 @@ class Connection:
             )
             sys.exit(2)
 
-    def compute_probable_moment_column_face(self, connection_type):  # noqa: ANN001, ANN201
+    def compute_probable_moment_column_face(self, connection_type):
         """This method calculates the probable maximum moment at the face of the column. (step 5 in ANSI Section 5.8)
         :return: Store probable maximum moment at column face into the dictionary
         """  # noqa: D205, D400, D401, D404
@@ -349,7 +349,7 @@ class Connection:
             )
             sys.exit(2)
 
-    def compute_plastic_moment(self, connection_type, steel, left_beam, right_beam):  # noqa: ANN001, ANN201
+    def compute_plastic_moment(self, connection_type, steel, left_beam, right_beam):
         """This method calculates the plastic moment of the beam based on expected yield stress.
         (step 6 in ANSI Section 5.8)
         :return: Store the plastic moment to the dictionary.
@@ -371,7 +371,7 @@ class Connection:
             )
             sys.exit(2)
 
-    def check_moment_column_face(self, connection_type):  # noqa: ANN001, ANN201
+    def check_moment_column_face(self, connection_type):
         """This method checks whether the plastic moment is greater than the actual moment at column face.
         (step 7 in ANSI Section 5.8)
         :return: boolean result stored in is_feasible dictionary.
@@ -408,13 +408,13 @@ class Connection:
             )
             sys.exit(2)
 
-    def check_shear_strength(  # noqa: ANN201
+    def check_shear_strength(
         self,
-        connection_type,  # noqa: ANN001
-        beam_dead_load,  # noqa: ANN001
-        beam_live_load,  # noqa: ANN001
-        left_beam,  # noqa: ANN001
-        right_beam,  # noqa: ANN001
+        connection_type,
+        beam_dead_load,
+        beam_live_load,
+        left_beam,
+        right_beam,
     ):
         """This method checks whether the beam shear strength is sufficient for the required shear strength.
         (step 8 in ANSI Section 5.8)
@@ -456,14 +456,14 @@ class Connection:
             )
             sys.exit(2)
 
-    def check_column_beam_relationships(  # noqa: ANN201, C901
+    def check_column_beam_relationships(  # noqa: C901
         self,
-        connection_type,  # noqa: ANN001
-        steel,  # noqa: ANN001
-        left_beam,  # noqa: ANN001
-        right_beam,  # noqa: ANN001
-        top_column,  # noqa: ANN001
-        bottom_column,  # noqa: ANN001
+        connection_type,
+        steel,
+        left_beam,
+        right_beam,
+        top_column,
+        bottom_column,
     ):
         """This method examines whether the "strong-column-weak-beam" criteria is satisfied.
         (step 11 in ANSI Section 5.8)
@@ -633,14 +633,14 @@ class Connection:
             )
             sys.exit(2)
 
-    def determine_doubler_plate(  # noqa: ANN201
+    def determine_doubler_plate(
         self,
-        connection_type,  # noqa: ANN001
-        steel,  # noqa: ANN001
-        left_beam,  # noqa: ANN001
-        right_beam,  # noqa: ANN001
-        bottom_column,  # noqa: ANN001
-        top_column,  # noqa: ANN001
+        connection_type,
+        steel,
+        left_beam,
+        right_beam,
+        bottom_column,
+        top_column,
     ):
         """This method determines the panel zone thickness (doubler plates).
         :return: a scalar which denotes the doubler plate thickness.
@@ -731,7 +731,7 @@ class Connection:
                 tp += 0.25  # Update the thickness at an increment of 0.25 until it reaches the requirement
             self.doubler_plate_thickness = tp
 
-    def check_flag(self):  # noqa: ANN201
+    def check_flag(self):
         """This method is used to test whether the connection passed all checks.
         :return: a boolean variable indicating the connection is feasible or note.
         """  # noqa: D205, D401, D404

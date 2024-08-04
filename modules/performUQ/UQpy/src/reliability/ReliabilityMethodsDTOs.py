@@ -21,7 +21,7 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):  # noqa: D101
     # def __post_init__(self):
     # self.samplingMethod.n_chains=int(self.samples_per_subset*self.conditionalProbability)
 
-    def init_to_text(self):  # noqa: ANN201, D102
+    def init_to_text(self):  # noqa: D102
         from UQpy.reliability.SubsetSimulation import (  # noqa: PLC0415
             SubsetSimulation,
         )
@@ -94,7 +94,7 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):  # noqa: D101
         )
         return prerequisite_str, input_str
 
-    def __create_postprocess_script(self, results_filename: str = 'results.out'):  # noqa: ANN202
+    def __create_postprocess_script(self, results_filename: str = 'results.out'):
         postprocess_script_code = [
             'def compute_limit_state(index: int) -> float:',
             f"\twith open('{results_filename}', 'r') as f:",

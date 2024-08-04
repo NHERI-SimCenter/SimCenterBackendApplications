@@ -56,7 +56,7 @@ from shapely.geometry import Point, Polygon
 
 
 class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
-    def __init__(self, cyclone_param=[], storm_track=[]):  # noqa: ANN001, ANN204, B006
+    def __init__(self, cyclone_param=[], storm_track=[]):  # noqa: B006
         """__init__: initializing the tropical cyclone
         cyclone_param: 6-dimensional array
         - cyclone_param[0]: landfall Latitude
@@ -127,7 +127,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
         self.zp = []
         self.mesh_info = []
 
-    def set_delta_path(self, delta_path):  # noqa: ANN001, ANN201
+    def set_delta_path(self, delta_path):
         """set_delta_path: perturbing the path coordinates and heading angle of the storm track"""  # noqa: D400
         if len(delta_path) == 3:  # noqa: PLR2004
             self.delta_path = delta_path
@@ -136,7 +136,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
                 'WindFieldSimulation: the delta_path should have a size of 3, default delta_path used.'
             )
 
-    def set_delta_feat(self, delta_feat):  # noqa: ANN001, ANN201
+    def set_delta_feat(self, delta_feat):
         """set_delta_feat: perturbing the central pressure difference, traslational speed, and max-wind-speed radius"""  # noqa: D400
         if len(delta_feat) == 3:  # noqa: PLR2004
             self.cyclone_pres = delta_feat[0] * 100.0
@@ -153,7 +153,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
                 'WindFieldSimulation: the delta_feat should have a size of 3, default delta_feat used.'
             )
 
-    def __interp_z0(self, lat, lon):  # noqa: ANN001, ANN202
+    def __interp_z0(self, lat, lon):
         """__interp_z0: finding the z0 at (lat, lon) by interpolating reference terrain polygons"""  # noqa: D400
         z0 = []
         if not self.terrain_z0:
@@ -170,7 +170,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
         # return
         return z0
 
-    def add_reference_terrain(self, terrain_info):  # noqa: ANN001, ANN201
+    def add_reference_terrain(self, terrain_info):
         """add_reference_terrainL specifying reference z0 values for a set of polygons
         terrain_info: geojson formatted polygon and z0 data
         """  # noqa: D205, D400
@@ -182,7 +182,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
                 self.terrain_z0.append(p['properties']['z0'])
                 self.terrain_num += 1
 
-    def set_cyclone_mesh(self, mesh_info):  # noqa: ANN001, ANN201
+    def set_cyclone_mesh(self, mesh_info):
         """set_cyclone_meesh: meshing the cyclone in radius and cycle
         mesh_info[0]: interval R
         mesh_info[1]: interval delta_R
@@ -203,7 +203,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
         except:  # noqa: E722
             print('WindFieldSimulation: input format error in set_cyclone_mesh.')  # noqa: T201
 
-    def set_track_mesh(self, mesh_lat):  # noqa: ANN001, ANN201
+    def set_track_mesh(self, mesh_lat):
         """set_track_meesh: meshing the storm track
         mesh_lat[0]: starting latitude value of the meshed track
         mesh_lat[1]: interval latitude value
@@ -235,7 +235,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
         )
         print('WindFieldSimulation: track meshed.')  # noqa: T201
 
-    def define_track(self, track_lat):  # noqa: ANN001, ANN201
+    def define_track(self, track_lat):
         """set_track_meesh: meshing the storm track
         mesh_lat[0]: starting latitude value of the meshed track
         mesh_lat[1]: interval latitude value
@@ -248,7 +248,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
         )
         print('WindFieldSimulation: track defined.')  # noqa: T201
 
-    def set_measure_height(self, measure_info):  # noqa: ANN001, ANN201
+    def set_measure_height(self, measure_info):
         """set_measure_height: defining the height for calculating wind speed"""  # noqa: D400
         try:
             self.zp = np.arange(
@@ -258,7 +258,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
         except:  # noqa: E722
             print('WindFieldSimulation: input format error in set_measure_height.')  # noqa: T201
 
-    def add_stations(self, station_list):  # noqa: ANN001, ANN201
+    def add_stations(self, station_list):
         """add_stations: adding stations to the model
         station_list:
         - station_list['Latitude']: latitude values of stations
@@ -284,7 +284,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
             # updating station number
             self.station_num += 1
 
-    def __calculate_heading(self):  # noqa: ANN202
+    def __calculate_heading(self):
         """__calculate_heading: computing the heading path"""  # noqa: D400
         self.beta_c = np.zeros(len(self.track_lat_m))
         for i in range(len(self.track_lat_m) - 1):
@@ -308,7 +308,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
         # fixing the last value
         self.beta_c[-1] = self.beta_c[-2]
 
-    def compute_wind_field(self):  # noqa: ANN201, PLR0914
+    def compute_wind_field(self):  # noqa: PLR0914
         """compute_wind_field: computing the peak wind speed (10-min gust duraiton)"""  # noqa: D400
         print('WindFieldSimulation: running linear analytical model.')  # noqa: T201
         # checking if all parameters are defined
@@ -592,7 +592,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
         self.station['PWS']['windspeed'] = station_umax.tolist()
         print('WindFieldSimulation: linear analytical simulation completed.')  # noqa: T201
 
-    def get_station_data(self):  # noqa: ANN201
+    def get_station_data(self):
         """get_station_data: returning station data"""  # noqa: D400
         # return station dictionary
         return self.station

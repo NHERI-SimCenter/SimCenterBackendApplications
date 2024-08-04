@@ -53,7 +53,7 @@ from shapely.geometry import Point, Polygon  # noqa: E402
 
 
 # %%
-def M9(information):  # noqa: ANN001, ANN201, C901, N802
+def M9(information):  # noqa: C901, N802
     """The default is to select sites from all M9 sites, but
     grid type (options: A, B, C, D, E, Y, and Z, can be empty)
     (ref: https://sites.uw.edu/pnet/m9-simulations/about-m9-simulations/extent-of-model/)
@@ -288,7 +288,7 @@ def M9(information):  # noqa: ANN001, ANN201, C901, N802
     )
 
 
-def write_motion(site_name, directory, i, motiondict, APIFLAG):  # noqa: ANN001, ANN201, N803, D103
+def write_motion(site_name, directory, i, motiondict, APIFLAG):  # noqa: N803, D103
     filename = f'{directory}/{site_name}_{i}.json'
 
     if APIFLAG:
@@ -314,7 +314,7 @@ def write_motion(site_name, directory, i, motiondict, APIFLAG):  # noqa: ANN001,
         json.dump(datatowrite, f, indent=2)
 
 
-def haversine(lat1, lon1, lat2, lon2):  # noqa: ANN001, ANN201
+def haversine(lat1, lon1, lat2, lon2):
     """Calculate the great circle distance between two points
     on the earth specified in decimal degrees.
     """  # noqa: D205

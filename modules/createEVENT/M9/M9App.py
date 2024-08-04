@@ -11,7 +11,7 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
 
 # %%
 # helper function to call the tapis command
-def call(command):  # noqa: ANN001, ANN201, D103
+def call(command):  # noqa: D103
     command = command.split()
     command.append('-f')
     command.append('json')
@@ -21,7 +21,7 @@ def call(command):  # noqa: ANN001, ANN201, D103
 
 
 # %%
-def Submit_tapis_job():  # noqa: ANN201, N802, D103
+def Submit_tapis_job():  # noqa: N802, D103
     with open('TapisFiles/information.json') as file:  # noqa: PLW1514, PTH123
         information = json.load(file)
     file.close()

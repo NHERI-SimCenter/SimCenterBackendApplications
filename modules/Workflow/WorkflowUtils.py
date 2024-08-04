@@ -15,10 +15,10 @@ from time import gmtime, strftime
 
 
 class WorkFlowInputError(Exception):  # noqa: D101
-    def __init__(self, value):  # noqa: ANN001, ANN204
+    def __init__(self, value):
         self.value = value
 
-    def __str__(self):  # noqa: ANN204, D105
+    def __str__(self):  # noqa: D105
         return repr(self.value)
 
 
@@ -28,13 +28,13 @@ except NameError:
     basestring = str
 
 
-def workflow_log(msg):  # noqa: ANN001, ANN201, D103
+def workflow_log(msg):  # noqa: D103
     # ISO-8601 format, e.g. 2018-06-16T20:24:04Z
     print('%s %s' % (strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg))  # noqa: T201, UP031
 
 
 # function to return result of invoking an application
-def runApplication(application_plus_args):  # noqa: ANN001, ANN201, N802, D103
+def runApplication(application_plus_args):  # noqa: N802, D103
     if application_plus_args[0] == 'python':
         command = f'python "{application_plus_args[1]}" ' + ' '.join(
             application_plus_args[2:]
@@ -61,7 +61,7 @@ def runApplication(application_plus_args):  # noqa: ANN001, ANN201, N802, D103
     return command, result, returncode
 
 
-def add_full_path(possible_filename):  # noqa: ANN001, ANN201, D103
+def add_full_path(possible_filename):  # noqa: D103
     if not isinstance(possible_filename, basestring):
         return possible_filename
     if os.path.exists(possible_filename):  # noqa: PTH110
@@ -73,7 +73,7 @@ def add_full_path(possible_filename):  # noqa: ANN001, ANN201, D103
         return possible_filename
 
 
-def recursive_iter(obj):  # noqa: ANN001, ANN201, D103
+def recursive_iter(obj):  # noqa: D103
     if isinstance(obj, dict):
         for k, v in obj.items():
             if isinstance(v, basestring):
@@ -88,5 +88,5 @@ def recursive_iter(obj):  # noqa: ANN001, ANN201, D103
                 recursive_iter(item)
 
 
-def relative2fullpath(json_object):  # noqa: ANN001, ANN201, D103
+def relative2fullpath(json_object):  # noqa: D103
     recursive_iter(json_object)

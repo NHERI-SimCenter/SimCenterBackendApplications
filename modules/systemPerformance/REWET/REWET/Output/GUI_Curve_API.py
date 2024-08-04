@@ -6,7 +6,7 @@
 import pickle  # noqa: S403
 
 
-def getDummyDataForQNExeedanceCurve():  # noqa: ANN201, N802, D103
+def getDummyDataForQNExeedanceCurve():  # noqa: N802, D103
     with open('qn_data.pkl', 'rb') as f:  # noqa: PTH123
         dummy_data = pickle.load(f)  # noqa: S301
     return dummy_data  # noqa: RET504
@@ -24,7 +24,7 @@ This section is for multi-scenarios (probabilistic) results.
 """
 
 
-def QNExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: ANN001, ANN201, N802
+def QNExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: N802
     """Gets Project Result object, and returns Exceedance probability and Quantity
     outage for the given percentages. Caution: the current version only accept
     one percentage in the percentage list.
@@ -75,7 +75,7 @@ def QNExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: AN
     return res
 
 
-def DLExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: ANN001, ANN201, N802
+def DLExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: N802
     """Gets Project Result object, and returns Exceedance probability and Delivery
     outage for the given percentages. Caution: the current version only accept
     one percentage in the percentage list.

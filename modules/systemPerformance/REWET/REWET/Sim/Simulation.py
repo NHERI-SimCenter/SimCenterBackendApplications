@@ -8,14 +8,14 @@ from EnhancedWNTR.sim.results import SimulationResults
 
 
 class Hydraulic_Simulation:  # noqa: D101
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        wn,  # noqa: ANN001
-        settings,  # noqa: ANN001
-        current_stop_time,  # noqa: ANN001
-        worker_rank,  # noqa: ANN001
-        prev_isolated_junctions,  # noqa: ANN001
-        prev_isolated_links,  # noqa: ANN001
+        wn,
+        settings,
+        current_stop_time,
+        worker_rank,
+        prev_isolated_junctions,
+        prev_isolated_links,
     ):
         self.wn = wn
         self.nne_flow_criteria = settings.process['nne_flow_limit']
@@ -53,7 +53,7 @@ class Hydraulic_Simulation:  # noqa: D101
         self._prev_isolated_junctions = prev_isolated_junctions
         self._prev_isolated_links = prev_isolated_links
 
-    def removeNonDemandNegativeNodeByPythonMinorLoss(self, maximum_iteration):  # noqa: ANN001, ANN201, N802, D102
+    def removeNonDemandNegativeNodeByPythonMinorLoss(self, maximum_iteration):  # noqa: N802, D102
         current_stop_time = self.current_stop_time
         minimum_pressure = self.minimum_pressure  # noqa: F841
         required_pressure = self.required_pressure  # noqa: F841
@@ -100,21 +100,21 @@ class Hydraulic_Simulation:  # noqa: D101
                     orginal_c_dict[pipe_name] = new_closed_pipes[pipe_name]
         return orginal_c_dict
 
-    def isolateReservoirs(self, isolated_nodes):  # noqa: ANN001, ANN201, N802, D102
+    def isolateReservoirs(self, isolated_nodes):  # noqa: N802, D102
         for reservoir_name, reservoir in self.wn.reservoirs():
             if self.wn._node_reg.get_usage(reservoir_name) == None:  # noqa: SLF001, E711
                 reservoir._is_isolated = True  # noqa: SLF001
                 isolated_nodes.add(reservoir_name)
         return isolated_nodes
 
-    def isolateTanks(self, isolated_nodes):  # noqa: ANN001, ANN201, N802, D102
+    def isolateTanks(self, isolated_nodes):  # noqa: N802, D102
         for tank_name, tank in self.wn.tanks():
             if self.wn._node_reg.get_usage(tank_name) == None:  # noqa: SLF001, E711
                 tank._is_isolated = True  # noqa: SLF001
                 isolated_nodes.add(tank_name)
         return isolated_nodes
 
-    def removeNonDemandNegativeNodeByPythonClose(self, maximum_iteration):  # noqa: ANN001, ANN201, N802, D102
+    def removeNonDemandNegativeNodeByPythonClose(self, maximum_iteration):  # noqa: N802, D102
         current_stop_time = self.current_stop_time
         minimum_pressure = self.minimum_pressure  # noqa: F841
         required_pressure = self.required_pressure  # noqa: F841
@@ -156,17 +156,17 @@ class Hydraulic_Simulation:  # noqa: D101
         # self.closed_pipes = orginal_c_dict
         # return orginal_c_dict
 
-    def rollBackPipeMinorLoss(self, altered_pipes):  # noqa: ANN001, ANN201, N802, D102
+    def rollBackPipeMinorLoss(self, altered_pipes):  # noqa: N802, D102
         for pipe_name in altered_pipes:
             self.wn.get_link(pipe_name).minor_loss = altered_pipes[pipe_name]
 
-    def rollBackPipeClose(self):  # noqa: ANN201, N802, D102
+    def rollBackPipeClose(self):  # noqa: N802, D102
         altered_pipes = self.closed_pipes
         for pipe_name in altered_pipes:
             pipe = self.wn.get_link(pipe_name)
             pipe.initial_status = altered_pipes[pipe_name]
 
-    def performSimulation(self, next_event_time, iModified):  # noqa: ANN001, ANN201, N802, N803, D102
+    def performSimulation(self, next_event_time, iModified):  # noqa: N802, N803, D102
         current_stop_time = self.current_stop_time
         minimum_pressure = self.minimum_pressure  # noqa: F841
         required_pressure = self.required_pressure  # noqa: F841
@@ -198,7 +198,7 @@ class Hydraulic_Simulation:  # noqa: D101
         )
         return rr, i_run_successful
 
-    def estimateRun(self, next_event_time, iModified):  # noqa: ANN001, ANN201, N802, N803, D102
+    def estimateRun(self, next_event_time, iModified):  # noqa: N802, N803, D102
         current_stop_time = self.current_stop_time
         minimum_pressure = self.minimum_pressure  # noqa: F841
         required_pressure = self.required_pressure  # noqa: F841
@@ -231,7 +231,7 @@ class Hydraulic_Simulation:  # noqa: D101
 
         return rr, i_run_successful
 
-    def estimateWithoutRun(self, result, next_event_time):  # noqa: ANN001, ANN201, N802, D102
+    def estimateWithoutRun(self, result, next_event_time):  # noqa: N802, D102
         current_stop_time = self.current_stop_time
         minimum_pressure = self.minimum_pressure  # noqa: F841
         required_pressure = self.required_pressure  # noqa: F841
@@ -367,13 +367,13 @@ class Hydraulic_Simulation:  # noqa: D101
         }
         return rr, True
 
-    def updateTankHeadsAndPressure(  # noqa: ANN201, N802
+    def updateTankHeadsAndPressure(  # noqa: N802
         self,
-        demand,  # noqa: ANN001
-        head,  # noqa: ANN001
-        pressure,  # noqa: ANN001
-        sim_time,  # noqa: ANN001
-        time_step,  # noqa: ANN001
+        demand,
+        head,
+        pressure,
+        sim_time,
+        time_step,
     ):  # Adapted from the latest version of wntrfr. Courtessy of WNTR: https://github.com/USEPA/WNTR
         """Parameters
         ----------
@@ -443,12 +443,12 @@ class Hydraulic_Simulation:  # noqa: D101
             head.loc[sim_time, tank_name] = new_head
             pressure.loc[sim_time, tank_name] = new_head - tank.elevation
 
-    def approximateNewResult(  # noqa: ANN201, N802, D102
+    def approximateNewResult(  # noqa: N802, D102
         self,
-        rr,  # noqa: ANN001
-        current_stop_time,  # noqa: ANN001
-        end_time,  # noqa: ANN001
-        little_time_step,  # noqa: ANN001
+        rr,
+        current_stop_time,
+        end_time,
+        little_time_step,
     ):
         time_step = min(
             self.wn.options.time.hydraulic_timestep,

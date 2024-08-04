@@ -50,7 +50,7 @@ class of7Dakota:
     """  # noqa: D205, D404
 
     #############################################################
-    def dakotascripts(self, args):  # noqa: ANN001, ANN201, PLR6301
+    def dakotascripts(self, args):  # noqa: PLR6301
         """Create the scripts for caserun.sh
 
         Arguments:
@@ -103,7 +103,7 @@ class of7Dakota:
         scriptfile.close()
 
     #############################################################
-    def cleaning(self, args, path):  # noqa: ANN001, ANN201, ARG002, PLR6301
+    def cleaning(self, args, path):  # noqa: ARG002, PLR6301
         """Create the scripts for cleaning
 
         Arguments:

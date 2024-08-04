@@ -6,7 +6,7 @@
 import numpy as np
 
 
-def log_likelihood(residuals, mean, cov):  # noqa: ANN001, ANN201, ARG001, D103
+def log_likelihood(residuals, mean, cov):  # noqa: ARG001, D103
     length = len(residuals)
     if np.shape(cov)[0] == np.shape(cov)[1] == 1:
         # If there is a single variance value that is constant for all residual terms, then this is the case of

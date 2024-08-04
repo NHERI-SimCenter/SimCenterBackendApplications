@@ -10,7 +10,7 @@ import argparse
 import json
 
 
-def write_RV(AIM_input_path, EDP_input_path, EDP_type):  # noqa: ANN001, ANN201, N802, N803, D103
+def write_RV(AIM_input_path, EDP_input_path, EDP_type):  # noqa: N802, N803, D103
     # load the AIM file
     with open(AIM_input_path, encoding='utf-8') as f:  # noqa: PTH123
         AIM_in = json.load(f)  # noqa: N806
@@ -57,7 +57,7 @@ def write_RV(AIM_input_path, EDP_input_path, EDP_type):  # noqa: ANN001, ANN201,
         json.dump(EDP_json, f, indent=2)
 
 
-def create_EDP(AIM_input_path, EDP_input_path, EDP_type):  # noqa: ANN001, ANN201, ARG001, N802, N803, D103
+def create_EDP(AIM_input_path, EDP_input_path, EDP_type):  # noqa: ARG001, N802, N803, D103
     pass
 
 

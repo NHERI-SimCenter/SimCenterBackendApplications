@@ -57,7 +57,7 @@ import whale.main as whale
 from whale.main import log_div, log_msg
 
 
-def main(run_type, input_file, app_registry):  # noqa: ANN001, ANN201, D103
+def main(run_type, input_file, app_registry):  # noqa: D103
     # initialize the log file
     with open(input_file) as f:  # noqa: PLW1514, PTH123
         inputs = json.load(f)

@@ -11,7 +11,7 @@ from Result_Project import Project_Result
 
 
 class PP_Data_Tab:  # noqa: D101
-    def __init__(self, project):  # noqa: ANN001, ANN204
+    def __init__(self, project):
         self.pp_project = project
         # self.__settings            = settings
         self.result_scenarios = []
@@ -24,7 +24,7 @@ class PP_Data_Tab:  # noqa: D101
         self.project_result = None
         self.current_population_directory = ''
 
-    def initalizeResultData(self):  # noqa: ANN201, N802, D102
+    def initalizeResultData(self):  # noqa: N802, D102
         if self.project == None:  # noqa: E711
             self.errorMSG(
                 'Error', 'No project is found. open or save a new project.'
@@ -69,11 +69,11 @@ class PP_Data_Tab:  # noqa: D101
 
         self.results_tabs_widget.setTabEnabled(1, True)  # noqa: FBT003
 
-    def clearResultData(self):  # noqa: ANN201, N802, D102
+    def clearResultData(self):  # noqa: N802, D102
         for i in range(self.result_file_status_table.rowCount()):  # noqa: B007
             self.result_file_status_table.removeRow(0)
 
-    def resultLoadButtonPressed(self):  # noqa: ANN201, N802, D102
+    def resultLoadButtonPressed(self):  # noqa: N802, D102
         # data_retrived = False
         # if self.getSimulationSettings():
         # if self.getHydraulicSettings():
@@ -86,7 +86,7 @@ class PP_Data_Tab:  # noqa: D101
 
         self.initalizeResultData()
 
-    def browsePopulationData(self):  # noqa: ANN201, N802, D102
+    def browsePopulationData(self):  # noqa: N802, D102
         file = QtWidgets.QFileDialog.getOpenFileName(
             self.asli_MainWindow,
             'Open file',
@@ -120,7 +120,7 @@ class PP_Data_Tab:  # noqa: D101
         if len(self.population_data.columns.to_list()) >= 2:  # noqa: PLR2004
             self.population_population_header_combo.setCurrentIndex(1)
 
-    def loadPopulationData(self):  # noqa: ANN201, N802, D102
+    def loadPopulationData(self):  # noqa: N802, D102
         node_id_header = self.population_node_ID_header_combo.currentText()
         population_header = self.population_population_header_combo.currentText()
 
@@ -147,7 +147,7 @@ class PP_Data_Tab:  # noqa: D101
             self.population_data, node_id_header, population_header
         )
 
-    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: D102, N802, PLR6301
         error_widget = QtWidgets.QMessageBox()
         error_widget.setIcon(QtWidgets.QMessageBox.Critical)
         error_widget.setText(error_msg)

@@ -10,7 +10,7 @@ from .Damage_Discovery_Window import Ui_damage_discovery
 
 
 class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: D101
-    def __init__(self, damage_discovery_model):  # noqa: ANN001, ANN204
+    def __init__(self, damage_discovery_model):
         self._window = QtWidgets.QDialog()
         self.setupUi(self._window)
         self.damage_discovery_model = damage_discovery_model.copy()
@@ -57,13 +57,13 @@ class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: D101
         self.remove_button.clicked.connect(self.removeTimeDiscoveryRatioByButton)
         self.buttonBox.accepted.connect(self.okButtonPressed)
 
-    def discoveryRatioValidatorHelper(self, x):  # noqa: ANN001, ANN201, ARG002, N802, D102
+    def discoveryRatioValidatorHelper(self, x):  # noqa: ARG002, N802, D102
         discovery_ratio = float(self.discovery_ratio_line.text())
 
         if discovery_ratio > 1:
             self.discovery_ratio_line.setText(str(1.0))
 
-    def enableLeakBased(self):  # noqa: ANN201, N802, D102
+    def enableLeakBased(self):  # noqa: N802, D102
         self.leak_based_radio.setChecked(True)
 
         self.leak_anount_label.setEnabled(True)
@@ -77,7 +77,7 @@ class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: D101
         self.add_button.setEnabled(False)
         self.remove_button.setEnabled(False)
 
-    def enableTimeBased(self):  # noqa: ANN201, N802, D102
+    def enableTimeBased(self):  # noqa: N802, D102
         self.time_based_radio.setChecked(True)
 
         self.leak_anount_label.setEnabled(False)
@@ -91,11 +91,11 @@ class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: D101
         self.add_button.setEnabled(True)
         self.remove_button.setEnabled(True)
 
-    def clearTimeDiscoveryRatioTable(self):  # noqa: ANN201, N802, D102
+    def clearTimeDiscoveryRatioTable(self):  # noqa: N802, D102
         for i in range(self.time_discovery_ratio_table.rowCount()):  # noqa: B007
             self.time_discovery_ratio_table.removeRow(0)
 
-    def okButtonPressed(self):  # noqa: ANN201, C901, N802, D102
+    def okButtonPressed(self):  # noqa: C901, N802, D102
         if self.leak_based_radio.isChecked():
             leak_amount = self.leak_amount_line.text()
             leak_time = self.leak_time_line.text()
@@ -153,7 +153,7 @@ class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: D101
 
         self._window.accept()
 
-    def populateTimeDiscoveryRatioTable(self, time_discovery_ratio):  # noqa: ANN001, ANN201, N802, D102
+    def populateTimeDiscoveryRatioTable(self, time_discovery_ratio):  # noqa: N802, D102
         for time, discovery_ratio in time_discovery_ratio.iteritems():
             number_of_rows = self.time_discovery_ratio_table.rowCount()
             self.time_discovery_ratio_table.insertRow(number_of_rows)
@@ -171,7 +171,7 @@ class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: D101
                 number_of_rows, 1, discovery_ratio_item
             )
 
-    def addTimeDiscoveryRatioByButton(self):  # noqa: ANN201, N802, D102
+    def addTimeDiscoveryRatioByButton(self):  # noqa: N802, D102
         time = self.time_line.text()
         discovery_ratio = self.discovery_ratio_line.text()
 
@@ -201,7 +201,7 @@ class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: D101
             self.damage_discovery_model['time_discovery_ratio']
         )
 
-    def removeTimeDiscoveryRatioByButton(self):  # noqa: ANN201, N802, D102
+    def removeTimeDiscoveryRatioByButton(self):  # noqa: N802, D102
         items = self.time_discovery_ratio_table.selectedItems()
         if len(items) < 1:
             return
@@ -222,13 +222,13 @@ class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: D101
         self.clearTimeDiscoveryRatioTable()
         self.populateTimeDiscoveryRatioTable  # noqa: B018
 
-    def methodRadioButtonToggled(self):  # noqa: ANN201, N802, D102
+    def methodRadioButtonToggled(self):  # noqa: N802, D102
         if self.leak_based_radio.isChecked():
             self.enableLeakBased()
         elif self.time_based_radio.isChecked():
             self.enableTimeBased()
 
-    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: D102, N802, PLR6301
         error_widget = QtWidgets.QMessageBox()
         error_widget.setIcon(QtWidgets.QMessageBox.Critical)
         error_widget.setText(error_msg)

@@ -66,7 +66,7 @@ from initial import Starter  # noqa: E402
 from Result_Project import Project_Result  # noqa: E402
 
 
-def createScnearioList(run_directory, scn_number):  # noqa: ANN001, ANN201, N802, D103
+def createScnearioList(run_directory, scn_number):  # noqa: N802, D103
     damage_input_dir = os.path.join(  # noqa: PTH118
         run_directory, 'Results', 'WaterDistributionNetwork', 'damage_input'
     )
@@ -100,7 +100,7 @@ def createScnearioList(run_directory, scn_number):  # noqa: ANN001, ANN201, N802
     return scenario_list, prefix
 
 
-def chooseARandomPreefix(damage_input_dir):  # noqa: ANN001, ANN201, N802
+def chooseARandomPreefix(damage_input_dir):  # noqa: N802
     """Choses a random prefix for sceranio and pipe, node, pump and tank damage
     file. The is important to find and unused prefix so if this script is being
     ran in parallel, then files are not being overwritten.
@@ -158,7 +158,7 @@ def chooseARandomPreefix(damage_input_dir):  # noqa: ANN001, ANN201, N802
     """  # noqa: RET503, W291
 
 
-def getDLFileName(run_dir, dl_file_path, scn_number):  # noqa: ANN001, ANN201, N802
+def getDLFileName(run_dir, dl_file_path, scn_number):  # noqa: N802
     """If dl_file_path is not given, the path is acquired from rwhale input data.
 
     Parameters
@@ -187,7 +187,7 @@ def getDLFileName(run_dir, dl_file_path, scn_number):  # noqa: ANN001, ANN201, N
     return file_path, file_dir
 
 
-def setSettingsData(input_json, REWET_input_data):  # noqa: ANN001, ANN201, ARG001, N802, N803, D103
+def setSettingsData(input_json, REWET_input_data):  # noqa: ARG001, N802, N803, D103
     policy_file_name = rwhale_input_Data['SystemPerformance'][
         'WaterDistributionNetwork'
     ]['Policy Definition']
@@ -385,7 +385,7 @@ def setSettingsData(input_json, REWET_input_data):  # noqa: ANN001, ANN201, ARG0
     REWET_input_data['settings']['Pipe_damage_input_method'] = 'pickle'
 
 
-def create_path(path):  # noqa: ANN001, ANN201, D103
+def create_path(path):  # noqa: D103
     if isinstance(path, str):
         path = Path(path)
     not_existing_hir = []

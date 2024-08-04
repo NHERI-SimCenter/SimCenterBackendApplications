@@ -9,7 +9,7 @@ import subprocess  # noqa: S404
 import sys
 
 
-def computeScenario(gmConfig, location):  # noqa: ANN001, ANN201, N802, N803, D103
+def computeScenario(gmConfig, location):  # noqa: N802, N803, D103
     scriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N806
     eqHazardPath = f'{scriptDir}/GMU/EQHazard.jar'  # noqa: N806
     simulateIMPath = f'{scriptDir}/GMU/SimulateIM'  # noqa: N806
@@ -90,7 +90,7 @@ def computeScenario(gmConfig, location):  # noqa: ANN001, ANN201, N802, N803, D1
         return -2
 
 
-def readNGAWest2File(ngaW2FilePath, scaleFactor):  # noqa: ANN001, ANN201, N802, N803, D103
+def readNGAWest2File(ngaW2FilePath, scaleFactor):  # noqa: N802, N803, D103
     series = []
     dt = 0.0
     with open(ngaW2FilePath) as recordFile:  # noqa: N806, PLW1514, PTH123
@@ -110,7 +110,7 @@ def readNGAWest2File(ngaW2FilePath, scaleFactor):  # noqa: ANN001, ANN201, N802,
     return series, dt
 
 
-def createNGAWest2Event(rsn, scaleFactor, recordsFolder, eventFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
+def createNGAWest2Event(rsn, scaleFactor, recordsFolder, eventFilePath):  # noqa: N802, N803, D103
     pattern = os.path.join(recordsFolder, 'RSN') + str(rsn) + '_*.AT2'  # noqa: PTH118
     recordFiles = glob.glob(pattern)  # noqa: PTH207, N806
     if len(recordFiles) != 2:  # noqa: PLR2004
@@ -169,7 +169,7 @@ def createNGAWest2Event(rsn, scaleFactor, recordsFolder, eventFilePath):  # noqa
         json.dump(eventsDict, eventFile, indent=4)
 
 
-def main():  # noqa: ANN201, D103
+def main():  # noqa: D103
     inputArgs = sys.argv  # noqa: N806
 
     # Process only if --getRV is passed

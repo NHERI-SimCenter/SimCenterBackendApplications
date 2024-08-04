@@ -12,7 +12,7 @@ import CWE as cwe  # noqa: N811
 import numpy as np
 
 
-def write_wind_profiles(case_path):  # noqa: ANN001, ANN201, D103
+def write_wind_profiles(case_path):  # noqa: D103
     inf_path = (
         case_path + '/constant/boundaryData/windProfile/sampledData/verticalProfile/'
     )
@@ -61,7 +61,7 @@ def write_wind_profiles(case_path):  # noqa: ANN001, ANN201, D103
     np.savetxt(s_uh_path, Suhout, fmt=fmt)
 
 
-def write_wind_loads(case_path):  # noqa: ANN001, ANN201, D103
+def write_wind_loads(case_path):  # noqa: D103
     # Write base forces
     base_forces_path = case_path + '/postProcessing/baseForces/0/forces.dat'
     base_o, base_t, base_f, base_m = cwe.read_forces_OF10(base_forces_path)  # noqa: F841

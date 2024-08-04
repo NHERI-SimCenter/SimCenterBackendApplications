@@ -85,7 +85,7 @@ class ERARosen:
     handle of the respective ERACond object.
     """  # noqa: D205, D400
 
-    def __init__(self, dist, depend):  # noqa: ANN001, ANN204
+    def __init__(self, dist, depend):
         """Constructor method, for more details have a look at the
         class description.
         """  # noqa: D205, D401
@@ -147,7 +147,7 @@ class ERARosen:
             )
 
     # %%
-    def X2U(self, X, error=True):  # noqa: ANN001, ANN201, FBT002, N802, N803
+    def X2U(self, X, error=True):  # noqa: FBT002, N802, N803
         """Carries out the transformation from physical space X to
         standard normal space U.
         X must be a [n,d]-shaped array (n = number of data points,
@@ -207,7 +207,7 @@ class ERARosen:
         return np.squeeze(U)
 
     # %%
-    def U2X(self, U, error=True):  # noqa: ANN001, ANN201, FBT002, N802, N803
+    def U2X(self, U, error=True):  # noqa: FBT002, N802, N803
         """Carries out the transformation from standard normal space U
         to physical space X .
         U must be a [n,d]-shaped array (n = number of data points,
@@ -253,7 +253,7 @@ class ERARosen:
         return np.squeeze(X)
 
     # %%
-    def pdf(self, X, error=True):  # noqa: ANN001, ANN201, FBT002, N803
+    def pdf(self, X, error=True):  # noqa: FBT002, N803
         """Computes the joint PDF.
         X must be a [n,d]-shaped array (n = number of data points,
         d = dimensions).
@@ -298,7 +298,7 @@ class ERARosen:
             return jointpdf
 
     # %%
-    def random(self, n=1):  # noqa: ANN001, ANN201
+    def random(self, n=1):
         """Creates n samples of the joint distribution.
         Every row in the output array corresponds to one sample.
         """  # noqa: D205, D401
@@ -317,7 +317,7 @@ class ERARosen:
         return np.squeeze(X)
 
     # %%
-    def plotGraph(self, opt=False):  # noqa: ANN001, ANN201, FBT002, C901, N802
+    def plotGraph(self, opt=False):  # noqa: FBT002, C901, N802
         """Plots the Bayesian network which defines the dependency
         between the different distributions.
         If opt is given as 'numbering' the nodes are named according

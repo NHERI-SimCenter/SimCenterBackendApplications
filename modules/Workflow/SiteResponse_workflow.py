@@ -13,16 +13,16 @@ import whale.main as whale
 from whale.main import log_div, log_msg
 
 
-def main(  # noqa: ANN201, D103
-    run_type,  # noqa: ANN001
-    input_file,  # noqa: ANN001
-    app_registry,  # noqa: ANN001
-    force_cleanup,  # noqa: ANN001
-    bldg_id_filter,  # noqa: ANN001
-    reference_dir,  # noqa: ANN001
-    working_dir,  # noqa: ANN001
-    app_dir,  # noqa: ANN001
-    log_file,  # noqa: ANN001
+def main(  # noqa: D103
+    run_type,
+    input_file,
+    app_registry,
+    force_cleanup,
+    bldg_id_filter,
+    reference_dir,
+    working_dir,
+    app_dir,
+    log_file,
 ):
     # initialize the log file
     with open(input_file) as f:  # noqa: PLW1514, PTH123
@@ -130,7 +130,7 @@ def main(  # noqa: ANN201, D103
     surfaceMoDir = collect_surface_motion(WF.run_dir, bldg_data)  # noqa: N806, F841
 
 
-def collect_surface_motion(runDir, bldg_data, surfaceMoDir=''):  # noqa: ANN001, ANN201, N803, D103
+def collect_surface_motion(runDir, bldg_data, surfaceMoDir=''):  # noqa: N803, D103
     if surfaceMoDir == '':  # noqa: PLC1901
         surfaceMoDir = f'{runDir}/surface_motions/'  # noqa: N806
 

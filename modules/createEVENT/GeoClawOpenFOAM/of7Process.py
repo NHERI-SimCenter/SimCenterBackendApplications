@@ -54,7 +54,7 @@ class of7Process:
     """  # noqa: D205, D404
 
     #############################################################
-    def pprocesstext(self, data, path):  # noqa: ANN001, ANN201, PLR6301
+    def pprocesstext(self, data, path):  # noqa: PLR6301
         """Creates the necessary files for post-processing for openfoam7
 
         Arguments:
@@ -135,7 +135,7 @@ class of7Process:
         return sampletext  # noqa: RET504
 
     #############################################################
-    def pprocesscdict(self, data, path):  # noqa: ANN001, ANN201, C901, PLR6301
+    def pprocesscdict(self, data, path):  # noqa: C901, PLR6301
         """Creates the necessary files for new controldict for post-processing for openfoam7
 
         Arguments:
@@ -278,7 +278,7 @@ class of7Process:
         return cdicttext  # noqa: RET504
 
     #############################################################
-    def scripts(self, data, path):  # noqa: ANN001, ANN201, ARG002, PLR6301
+    def scripts(self, data, path):  # noqa: ARG002, PLR6301
         """Creates the necessary postprocessing in scripts
 
         Arguments:
@@ -333,7 +333,7 @@ class of7Process:
         scriptfile.close()  # noqa: RET503
 
     #############################################################
-    def pprocesscheck(self, data, path):  # noqa: ANN001, ANN201, PLR6301
+    def pprocesscheck(self, data, path):  # noqa: PLR6301
         """Checks for material properties for openfoam7
 
         Arguments:

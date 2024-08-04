@@ -17,7 +17,7 @@ except:  # noqa: E722
 from convertWindMat import *  # noqa: F403
 
 
-def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, D103, N803, PLR0914, PLR0915
+def main(aimName, evtName, getRV):  # noqa: C901, D103, N803, PLR0914, PLR0915
     # THIS IS PERFORMED ONLY ONCE with open(aimName, 'r', encoding='utf-8') as f:
     with open(aimName) as f:  # noqa: PLW1514, PTH123
         aim_data = json.load(f)
@@ -434,7 +434,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, D103, N803, PL
     """
 
 
-def perform_POD(s_target, f_target, ncomp, l_mo):  # noqa: ANN001, ANN201, N802, D103
+def perform_POD(s_target, f_target, ncomp, l_mo):  # noqa: N802, D103
     S_F = s_target[:, :, 0:]  # do not exclude freq = 0 Hz  # noqa: N806
     f_full = f_target[0:]  # do not exclude freq = 0 Hz
 
@@ -465,24 +465,24 @@ def perform_POD(s_target, f_target, ncomp, l_mo):  # noqa: ANN001, ANN201, N802,
     return V, D1, SpeN
 
 
-def learn_CPSD(  # noqa: ANN201, D103, N802, PLR0913, PLR0917
-    Fx,  # noqa: ANN001, N803
-    Fy,  # noqa: ANN001, N803
-    Tz,  # noqa: ANN001, N803
-    ms,  # noqa: ANN001
-    air_dens,  # noqa: ANN001
-    vRef,  # noqa: ANN001, N803
-    H_full,  # noqa: ANN001, N803
-    B_full,  # noqa: ANN001, N803
-    D_full,  # noqa: ANN001, N803
-    MaxD_full,  # noqa: ANN001, N803
-    fs,  # noqa: ANN001
-    Tw,  # noqa: ANN001, N803
-    overlap,  # noqa: ANN001
-    fp,  # noqa: ANN001
-    V_H,  # noqa: ANN001, N803
-    fcut,  # noqa: ANN001
-    T_full,  # noqa: ANN001, N803
+def learn_CPSD(  # noqa: D103, N802, PLR0913, PLR0917
+    Fx,  # noqa: N803
+    Fy,  # noqa: N803
+    Tz,  # noqa: N803
+    ms,
+    air_dens,
+    vRef,  # noqa: N803
+    H_full,  # noqa: N803
+    B_full,  # noqa: N803
+    D_full,  # noqa: N803
+    MaxD_full,  # noqa: N803
+    fs,
+    Tw,  # noqa: N803
+    overlap,
+    fp,
+    V_H,  # noqa: N803
+    fcut,
+    T_full,  # noqa: N803
 ):
     Fx_full = ms**2 * Fx  # full scale Fx(N)  # noqa: N806
     Fy_full = ms**2 * Fy  # full scale  Fy(N)  # noqa: N806
@@ -535,7 +535,7 @@ def learn_CPSD(  # noqa: ANN201, D103, N802, PLR0913, PLR0917
     return s_target, f_target, norm_all, comp_CFmean, Fx_full, Fy_full, Tz_full
 
 
-def cpsd_matlab(Components1, Components2, wind_size, nover, nfft, fp):  # noqa: ANN001, ANN201, N803, D103
+def cpsd_matlab(Components1, Components2, wind_size, nover, nfft, fp):  # noqa: N803, D103
     window = windows.hann(int(wind_size))
 
     ncombs1 = Components1.shape[1]
@@ -559,23 +559,23 @@ def cpsd_matlab(Components1, Components2, wind_size, nover, nfft, fp):  # noqa: 
     return s_target, f_target
 
 
-def simulation_gaussian(  # noqa: ANN201, D103, PLR0913, PLR0917
-    ncomp,  # noqa: ANN001
-    N_t,  # noqa: ANN001, N803
-    V_vH,  # noqa: ANN001, N803
-    D_vH,  # noqa: ANN001, N803
-    theta_vH,  # noqa: ANN001, N803
-    nf_dir,  # noqa: ANN001
-    N_f,  # noqa: ANN001, N803
-    f_inc,  # noqa: ANN001
-    f,  # noqa: ANN001
-    l_mo,  # noqa: ANN001
-    tvec,  # noqa: ANN001
-    SpeN,  # noqa: ANN001, ARG001, N803
-    V_H,  # noqa: ANN001, N803
-    vRef,  # noqa: ANN001, N803
-    seed,  # noqa: ANN001
-    seed_num,  # noqa: ANN001
+def simulation_gaussian(  # noqa: D103, PLR0913, PLR0917
+    ncomp,
+    N_t,  # noqa: N803
+    V_vH,  # noqa: N803
+    D_vH,  # noqa: N803
+    theta_vH,  # noqa: N803
+    nf_dir,
+    N_f,  # noqa: N803
+    f_inc,
+    f,
+    l_mo,
+    tvec,
+    SpeN,  # noqa: ARG001, N803
+    V_H,  # noqa: N803
+    vRef,  # noqa: N803
+    seed,
+    seed_num,
 ):
     #
     # Set Seed
@@ -645,7 +645,7 @@ def simulation_gaussian(  # noqa: ANN201, D103, PLR0913, PLR0917
     return F_jzm
 
 
-def err_exit(msg):  # noqa: ANN001, ANN201, D103
+def err_exit(msg):  # noqa: D103
     print(msg)  # noqa: T201
     with open('../workflow.err', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
         f.write(msg)

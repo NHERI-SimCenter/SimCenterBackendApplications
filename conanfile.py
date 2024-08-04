@@ -47,23 +47,23 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
         'revision': 'auto',
     }
 
-    def configure(self):  # noqa: ANN201, D102
+    def configure(self):  # noqa: D102
         self.options.shared = False
 
-    def configure_cmake(self):  # noqa: ANN201, D102
+    def configure_cmake(self):  # noqa: D102
         cmake = CMake(self)
         cmake.configure(source_folder=self._source_subfolder)
         return cmake
 
-    def build(self):  # noqa: ANN201, D102
+    def build(self):  # noqa: D102
         cmake = self.configure_cmake()
         cmake.build()
 
-    def package(self):  # noqa: ANN201, D102
+    def package(self):  # noqa: D102
         self.copy(pattern='LICENSE', dst='licenses', src=self._source_subfolder)
         cmake = self.configure_cmake()
         cmake.install()
         self.copy('*', dst='bin', src=self._source_subfolder + '/applications')
 
-    def package_info(self):  # noqa: ANN201, D102
+    def package_info(self):  # noqa: D102
         self.env_info.PATH.append(os.path.join(self.package_folder, 'bin'))  # noqa: PTH118

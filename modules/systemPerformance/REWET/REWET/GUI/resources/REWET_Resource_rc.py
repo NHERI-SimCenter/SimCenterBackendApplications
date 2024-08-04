@@ -717,13 +717,13 @@ else:
     qt_resource_struct = qt_resource_struct_v2
 
 
-def qInitResources():  # noqa: ANN201, N802, D103
+def qInitResources():  # noqa: N802, D103
     QtCore.qRegisterResourceData(
         rcc_version, qt_resource_struct, qt_resource_name, qt_resource_data
     )
 
 
-def qCleanupResources():  # noqa: ANN201, N802, D103
+def qCleanupResources():  # noqa: N802, D103
     QtCore.qUnregisterResourceData(
         rcc_version, qt_resource_struct, qt_resource_name, qt_resource_data
     )

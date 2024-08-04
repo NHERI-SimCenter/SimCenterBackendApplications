@@ -12,7 +12,7 @@ import pandas as pd
 
 
 class UQengine:  # noqa: D101
-    def __init__(self, inputArgs):  # noqa: ANN001, ANN204, N803
+    def __init__(self, inputArgs):  # noqa: N803
         self.work_dir = inputArgs[1].replace(os.sep, '/')
         self.inputFile = inputArgs[2]
         self.workflowDriver = inputArgs[3]
@@ -41,7 +41,7 @@ class UQengine:  # noqa: D101
         # if self.os_type.lower().startswith('win'):
         #    self.workflowDriver = "workflow_driver.bat"
 
-    def cleanup_workdir(self):  # noqa: ANN201, C901, D102
+    def cleanup_workdir(self):  # noqa: C901, D102
         # if template dir already contains results.out, give an error
 
         # Cleanup working directory if needed
@@ -95,7 +95,7 @@ class UQengine:  # noqa: D101
 
         print('working directory cleared')  # noqa: T201
 
-    def set_FEM(self, rv_name, do_parallel, y_dim, t_init, t_thr):  # noqa: ANN001, ANN201, N802, D102
+    def set_FEM(self, rv_name, do_parallel, y_dim, t_init, t_thr):  # noqa: N802, D102
         self.rv_name = rv_name
         self.do_parallel = do_parallel
         self.y_dim = y_dim
@@ -103,7 +103,7 @@ class UQengine:  # noqa: D101
         self.t_thr = t_thr
         self.total_sim_time = 0
 
-    def run_FEM_batch(self, X, id_sim, runIdx=0, alterInput=[]):  # noqa: ANN001, ANN201, B006, C901, N802, N803, D102
+    def run_FEM_batch(self, X, id_sim, runIdx=0, alterInput=[]):  # noqa: B006, C901, N802, N803, D102
         if runIdx == -1:
             # dummy run
             return X, np.zeros((0, self.y_dim)), id_sim
@@ -207,7 +207,7 @@ class UQengine:  # noqa: D101
 
         return X, Y, id_sim + Nsim
 
-    def compute_IM(self, i_begin, i_end):  # noqa: ANN001, ANN201, N802, D102
+    def compute_IM(self, i_begin, i_end):  # noqa: N802, D102
         workdir_list = [
             os.path.join(self.work_dir, f'workdir.{int(i)}')  # noqa: PTH118
             for i in range(i_begin, i_end + 1)
@@ -261,10 +261,10 @@ class UQengine:  # noqa: D101
         return im_collector  # noqa: RET504
         # im_collector.to_csv('IM.csv', index=False)
 
-    def readJson(self):  # noqa: ANN201, N802, D102
+    def readJson(self):  # noqa: N802, D102
         pass
 
-    def make_pool(  # noqa: ANN201, D102
+    def make_pool(  # noqa: D102
         self,
     ):
         if self.run_type.lower() == 'runninglocal':
@@ -285,11 +285,11 @@ class UQengine:  # noqa: D101
     # Someplace to write down error messages
     #
 
-    def create_errLog(self):  # noqa: ANN201, N802, D102
+    def create_errLog(self):  # noqa: N802, D102
         # self.errfile = open(os.path.join(self.work_dir, "dakota.err"), "a")
         pass
 
-    def exit(self, msg):  # noqa: ANN001, ANN201, D102, PLR6301
+    def exit(self, msg):  # noqa: D102, PLR6301
         print(msg, file=sys.stderr)  # noqa: T201
         print(msg)  # noqa: T201
         # sys.stderr.write(msg)
@@ -297,7 +297,7 @@ class UQengine:  # noqa: D101
         # self.errfile.close()
         exit(-1)  # noqa: PLR1722
 
-    def terminate_errLog(self):  # noqa: ANN201, N802, D102
+    def terminate_errLog(self):  # noqa: N802, D102
         # self.errfile.close()
         pass
 
@@ -306,7 +306,7 @@ class UQengine:  # noqa: D101
     #
 
 
-def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):  # noqa: ANN001, ANN201, C901, N802, N803, D103
+def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):  # noqa: C901, N802, N803, D103
     if runIdx == 0:
         templatedirFolder = '/templatedir'  # noqa: N806
         workdirFolder = '/workdir.' + str(id_sim + 1)  # noqa: N806

@@ -51,7 +51,7 @@ class of7Initial:
     """  # noqa: D205, D404
 
     #############################################################
-    def alphatext(self, data, fipath):  # noqa: ANN001, ANN201
+    def alphatext(self, data, fipath):
         """Creates the necessary files for alpha - setFields for openfoam7
 
         Arguments:
@@ -176,7 +176,7 @@ class of7Initial:
         return alphatext  # noqa: RET504
 
     #############################################################
-    def alphaheader(self):  # noqa: ANN201, PLR6301
+    def alphaheader(self):  # noqa: PLR6301
         """Creates the text for the header
 
         Variable
@@ -198,7 +198,7 @@ FoamFile
         return header  # noqa: RET504
 
     #############################################################
-    def alphacheck(self, data, fipath):  # noqa: ANN001, ANN201, PLR6301
+    def alphacheck(self, data, fipath):  # noqa: PLR6301
         """Checks for initial conditions for openfoam7
 
         Arguments:
@@ -273,7 +273,7 @@ FoamFile
         return 0
 
     #############################################################
-    def scripts(self, data, path):  # noqa: ANN001, ANN201, ARG002, PLR6301
+    def scripts(self, data, path):  # noqa: ARG002, PLR6301
         """Create the scripts for caserun.sh
 
         Arguments:

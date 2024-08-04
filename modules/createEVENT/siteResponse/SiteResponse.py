@@ -6,7 +6,7 @@ from calibration import createMaterial
 from postProcess import postProcess
 
 
-def main(args):  # noqa: ANN001, ANN201, D103
+def main(args):  # noqa: D103
     # set filenames
     srtName = args[1]  # noqa: N806
     evtName = args[3]  # noqa: N806

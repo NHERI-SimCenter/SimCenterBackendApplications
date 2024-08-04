@@ -58,7 +58,7 @@ class of7Geometry:
     """  # noqa: D205, D404
 
     #############################################################
-    def geomcheck(self, data, path):  # noqa: ANN001, ANN201, C901, PLR0911, PLR6301
+    def geomcheck(self, data, path):  # noqa: C901, PLR0911, PLR6301
         """Checks if all files required for creating the geometry exists
 
         Arguments:
@@ -227,7 +227,7 @@ class of7Geometry:
         return 0
 
     #############################################################
-    def createOFSTL(self, data, path):  # noqa: ANN001, ANN201, C901, N802, PLR6301
+    def createOFSTL(self, data, path):  # noqa: C901, N802, PLR6301
         """Creates the STL files
 
         Arguments:
@@ -291,7 +291,7 @@ class of7Geometry:
         return 0
 
     #############################################################
-    def scripts(self, data):  # noqa: ANN001, ANN201, PLR6301
+    def scripts(self, data):  # noqa: PLR6301
         """Add to caserun.sh
 
         Arguments:

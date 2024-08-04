@@ -42,7 +42,7 @@ import os
 import pandas as pd
 
 
-def readJSONFile(file_addr):  # noqa: ANN001, ANN201, N802
+def readJSONFile(file_addr):  # noqa: N802
     """Reads a json file.
 
     Parameters
@@ -106,7 +106,7 @@ def readJSONFile(file_addr):  # noqa: ANN001, ANN201, N802
 # =============================================================================
 
 
-def save_damage_data(damage_save_path, damage_data, scn_number):  # noqa: ANN001, ANN201, D103
+def save_damage_data(damage_save_path, damage_data, scn_number):  # noqa: D103
     pipe_damage_data = damage_data['Pipe']
     node_damage_data = damage_data['Node']
     pump_damage_data = damage_data['Pump']
@@ -137,7 +137,7 @@ def save_damage_data(damage_save_path, damage_data, scn_number):  # noqa: ANN001
     return damage_file_name_list  # noqa: RET504
 
 
-def create_scneario_table():  # noqa: ANN201, D103
+def create_scneario_table():  # noqa: D103
     scenario_table = pd.DataFrame(
         dtype='O',
         columns=[
@@ -152,7 +152,7 @@ def create_scneario_table():  # noqa: ANN201, D103
     return scenario_table  # noqa: RET504
 
 
-def update_scenario_table(scenario_table, cur_damage_file_name_list, scn_number):  # noqa: ANN001, ANN201, D103
+def update_scenario_table(scenario_table, cur_damage_file_name_list, scn_number):  # noqa: D103
     if isinstance(scenario_table, pd.core.frame.DataFrame):
         scenario_table = scenario_table.to_dict('records')
     elif isinstance(scenario_table, list):
@@ -174,7 +174,7 @@ def update_scenario_table(scenario_table, cur_damage_file_name_list, scn_number)
     return scenario_table
 
 
-def save_scenario_table(scenario_table, scenario_table_file_path):  # noqa: ANN001, ANN201
+def save_scenario_table(scenario_table, scenario_table_file_path):
     """Saves the scenario data including scenario table and damage data according
     to the table data
 
@@ -202,7 +202,7 @@ def save_scenario_table(scenario_table, scenario_table_file_path):  # noqa: ANN0
     scenario_table.to_excel(scenario_table_file_path)
 
 
-def saveSettingsFile(REWET_input_data, save_directory, prefix):  # noqa: ANN001, ANN201, N802, N803
+def saveSettingsFile(REWET_input_data, save_directory, prefix):  # noqa: N802, N803
     """Saves settings data that REWET NEEDs.
 
     Parameters

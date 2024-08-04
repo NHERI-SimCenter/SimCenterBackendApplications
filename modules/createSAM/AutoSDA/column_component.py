@@ -20,16 +20,16 @@ class Column:
     (4) Column flag, an integer with value of zero or nonzero. If it's zero, the column is feasible.
     """  # noqa: D205, D404
 
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        section_size,  # noqa: ANN001
-        axial_demand,  # noqa: ANN001
-        shear_demand,  # noqa: ANN001
-        moment_demand_bot,  # noqa: ANN001
-        moment_demand_top,  # noqa: ANN001
-        Lx,  # noqa: ANN001, N803
-        Ly,  # noqa: ANN001, N803
-        steel,  # noqa: ANN001
+        section_size,
+        axial_demand,
+        shear_demand,
+        moment_demand_bot,
+        moment_demand_top,
+        Lx,  # noqa: N803
+        Ly,  # noqa: N803
+        steel,
     ):
         """This function initializes the attributes of class of column.
         :param section_size: a string which specifies the size for column.
@@ -72,7 +72,7 @@ class Column:
         self.compute_demand_capacity_ratio()
         self.calculate_hinge_parameters(steel)
 
-    def check_flange(self, steel):  # noqa: ANN001, ANN201
+    def check_flange(self, steel):
         """This method is used to check whether the flange is satisfied with highly ductile requirement, as specified in
         Seismic Design Manual Table D1.1.
         :param steel: a class defined in "steel_material.py" file.
@@ -86,7 +86,7 @@ class Column:
         else:
             self.is_feasible['flange limit'] = False
 
-    def check_web(self, steel):  # noqa: ANN001, ANN201
+    def check_web(self, steel):
         """This method is used to check whether the web is satisfied with highly ductile requirement, as specified in
         Seismic Design Manual Table D1.1.
         :param steel: a class defined in "steel_material.py" file.
@@ -110,7 +110,7 @@ class Column:
         else:
             self.is_feasible['web limit'] = False
 
-    def check_axial_strength(self, steel):  # noqa: ANN001, ANN201
+    def check_axial_strength(self, steel):
         """This method is used to check the axial strength of the column.
         :param steel: a class defined in "steel_material.py" file.
         :return: a float number denoting the axial strength
@@ -143,7 +143,7 @@ class Column:
         else:
             self.is_feasible['axial strength'] = False
 
-    def check_shear_strength(self, steel):  # noqa: ANN001, ANN201
+    def check_shear_strength(self, steel):
         """This method is used to check the shear strength of single column member.
         :param steel: a class defined in "steel_material.py" file.
         :return: a float number denoting shear strength
@@ -161,7 +161,7 @@ class Column:
         else:
             self.is_feasible['shear strength'] = False
 
-    def check_flexural_strength(self, steel):  # noqa: ANN001, ANN201
+    def check_flexural_strength(self, steel):
         """This method is used to check the flexural strength of single column member.
         :param steel:  a class defined in "steel_material.py" file.
         :return: a float number denoting the flexural strength
@@ -229,7 +229,7 @@ class Column:
         else:
             self.is_feasible['flexural strength'] = False
 
-    def check_combined_loads(self):  # noqa: ANN201
+    def check_combined_loads(self):
         """This method is whether the strength is sufficient for column subjected to combined loading.
         :return: a boolean variable denoting whether the strength is sufficient under combined loading.
         """  # noqa: D205, D401, D404
@@ -256,7 +256,7 @@ class Column:
         else:
             self.is_feasible['combined strength'] = False
 
-    def check_flag(self):  # noqa: ANN201
+    def check_flag(self):
         """This method is used check whether the column passes all checks.
         :return: a boolean variable indicating whether column is feasible or not.
         """  # noqa: D205, D401, D404
@@ -266,7 +266,7 @@ class Column:
                 self.flag = False
         return self.flag
 
-    def compute_demand_capacity_ratio(self):  # noqa: ANN201
+    def compute_demand_capacity_ratio(self):
         """This method is used to calculate the demand to capacity ratios for column components
         :return: a dictionary which includes ratios for axial force, shear force, flexural moment, and combined loading.
         """  # noqa: D205, D401, D404
@@ -281,7 +281,7 @@ class Column:
             / self.strength['flexural']
         )
 
-    def calculate_hinge_parameters(self, steel):  # noqa: ANN001, ANN201
+    def calculate_hinge_parameters(self, steel):
         """This method is used to compute the modeling parameters for plastic hinge using modified IMK material model.
         :return: a dictionary including each parameters required for nonlinear modeling in OpenSees.
         """  # noqa: D205, D401, D404

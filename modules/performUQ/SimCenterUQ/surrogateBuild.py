@@ -88,15 +88,15 @@ sys.stderr = open(errFileName, 'w')  # noqa: PLW1514, PTH123, SIM115
 
 if error_tag == False:  # noqa: E712
 
-    def monkeypatch_method(cls):  # noqa: ANN001, ANN201, D103
-        def decorator(func):  # noqa: ANN001, ANN202
+    def monkeypatch_method(cls):  # noqa: D103
+        def decorator(func):
             setattr(cls, func.__name__, func)
             return func
 
         return decorator
 
     @monkeypatch_method(GPy.models.gp_regression.GPRegression)
-    def randomize(self, rand_gen=None, *args, **kwargs):  # noqa: ANN001, ANN002, ANN003, ANN201, D103
+    def randomize(self, rand_gen=None, *args, **kwargs):  # noqa: D103
         if rand_gen is None:
             rand_gen = np.random.normal
         # first take care of all parameters (from N(0,1))
@@ -121,12 +121,12 @@ if error_tag == False:  # noqa: E712
 # Main function
 
 
-def main(inputArgs):  # noqa: ANN001, ANN201, N803, D103
+def main(inputArgs):  # noqa: N803, D103
     gp = surrogate(inputArgs)  # noqa: F841
 
 
 class surrogate(UQengine):  # noqa: D101
-    def __init__(self, inputArgs):  # noqa: ANN001, ANN204, N803
+    def __init__(self, inputArgs):  # noqa: N803
         super(surrogate, self).__init__(inputArgs)  # noqa: UP008
         t_init = time.time()
 
@@ -160,7 +160,7 @@ class surrogate(UQengine):  # noqa: D101
 
         self.save_model('SimGpModel')
 
-    def check_packages(self, error_tag, moduleName):  # noqa: ANN001, ANN201, N803, D102
+    def check_packages(self, error_tag, moduleName):  # noqa: N803, D102
         if error_tag == True and moduleName == 'GPy':  # noqa: E712
             if self.os_type.lower().startswith('darwin'):
                 msg = 'Surrogate modeling module uses GPy python package which is facing a version compatibility issue at this moment (01.05.2024). To use the surrogate module, one needs to update manually the GPy version to 1.13. The instruction can be found in the the documentation: https://nheri-simcenter.github.io/quoFEM-Documentation/common/user_manual/usage/desktop/SimCenterUQSurrogate.html#lblsimsurrogate'
@@ -181,7 +181,7 @@ class surrogate(UQengine):  # noqa: D101
                 )
             self.exit(msg)
 
-    def readJson(self):  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0915
+    def readJson(self):  # noqa: C901, N802, D102, PLR0912, PLR0915
         # self.nopt = max([20, self.n_processor])
         self.nopt = 1
 
@@ -372,14 +372,14 @@ class surrogate(UQengine):  # noqa: D101
         if self.stochastic[0]:
 
             @monkeypatch_method(GPy.likelihoods.Gaussian)
-            def gaussian_variance(self, Y_metadata=None):  # noqa: ANN001, ANN202, N803
+            def gaussian_variance(self, Y_metadata=None):  # noqa: N803
                 if Y_metadata is None:
                     return self.variance
                 else:  # noqa: RET505
                     return self.variance * Y_metadata['variance_structure']
 
             @monkeypatch_method(GPy.core.GP)
-            def set_XY2(self, X=None, Y=None, Y_metadata=None):  # noqa: ANN001, ANN202, N802, N803
+            def set_XY2(self, X=None, Y=None, Y_metadata=None):  # noqa: N802, N803
                 if Y_metadata is not None:
                     if self.Y_metadata is None:
                         self.Y_metadata = Y_metadata
@@ -510,7 +510,7 @@ class surrogate(UQengine):  # noqa: D101
             else:
                 self.rvVal = [0] * self.x_dim
 
-    def checkWorkflow(self, dakotaJson):  # noqa: ANN001, ANN201, N802, N803, D102
+    def checkWorkflow(self, dakotaJson):  # noqa: N802, N803, D102
         if dakotaJson['Applications']['EDP']['Application'] == 'SurrogateEDP':
             msg = 'Error in SurrogateGP engine: Do not select [None] in the EDP tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'
             self.exit(msg)
@@ -536,7 +536,7 @@ class surrogate(UQengine):  # noqa: D101
             )
             self.exit(msg)
 
-    def create_kernel(self, x_dim):  # noqa: ANN001, ANN201, D102
+    def create_kernel(self, x_dim):  # noqa: D102
         kernel = self.kernel
         if kernel == 'Radial Basis':
             kr = GPy.kern.RBF(input_dim=x_dim, ARD=True)
@@ -558,7 +558,7 @@ class surrogate(UQengine):  # noqa: D101
 
         return kr
 
-    def create_gpy_model(self, X_dummy, Y_dummy, kr):  # noqa: ANN001, ANN201, N803, D102
+    def create_gpy_model(self, X_dummy, Y_dummy, kr):  # noqa: N803, D102
         if not self.do_mf:
             if not self.heteroscedastic:
                 m_tmp = GPy.models.GPRegression(
@@ -594,7 +594,7 @@ class surrogate(UQengine):  # noqa: D101
 
         return m_tmp
 
-    def create_gp_model(self):  # noqa: ANN201, D102
+    def create_gp_model(self):  # noqa: D102
         x_dim = self.x_dim
         y_dim = self.y_dim
 
@@ -622,7 +622,7 @@ class surrogate(UQengine):  # noqa: D101
         self.x_dim = x_dim
         self.y_dim = y_dim
 
-    def predict(self, m_tmp, X, noise=0):  # noqa: ANN001, ANN201, ARG002, N803, D102
+    def predict(self, m_tmp, X, noise=0):  # noqa: ARG002, N803, D102
         if not self.do_mf:
             if all(np.mean(m_tmp.Y, axis=0) == m_tmp.Y):
                 return m_tmp.Y[
@@ -646,15 +646,15 @@ class surrogate(UQengine):  # noqa: D101
                 X_list_h = X_list[X.shape[0] :]  # noqa: N806
                 return m_tmp.predict(X_list_h)
 
-    def set_XY(  # noqa: ANN201, C901, N802, D102
+    def set_XY(  # noqa: C901, N802, D102
         self,
-        m_tmp,  # noqa: ANN001
-        ny,  # noqa: ANN001
-        X_hf,  # noqa: ANN001, N803
-        Y_hf,  # noqa: ANN001, N803
-        X_lf=float('nan'),  # noqa: ANN001, N803
-        Y_lf=float('nan'),  # noqa: ANN001, N803
-        enforce_hom=False,  # noqa: ANN001, FBT002
+        m_tmp,
+        ny,
+        X_hf,  # noqa: N803
+        Y_hf,  # noqa: N803
+        X_lf=float('nan'),  # noqa: N803
+        Y_lf=float('nan'),  # noqa: N803
+        enforce_hom=False,  # noqa: FBT002
     ):
         #
         # check if X dimension has changed...
@@ -838,7 +838,7 @@ class surrogate(UQengine):  # noqa: D101
 
         return m_tmp
 
-    def predictStoVars(self, X_repl, Y_var_repl, X_new, Y_mean, counts):  # noqa: ANN001, ANN201, N802, N803, D102
+    def predictStoVars(self, X_repl, Y_var_repl, X_new, Y_mean, counts):  # noqa: N802, N803, D102
         my_x_dim = X_repl.shape[1]
         kernel_var = GPy.kern.Matern52(
             input_dim=my_x_dim, ARD=True
@@ -883,7 +883,7 @@ class surrogate(UQengine):  # noqa: D101
 
         return Y_metadata, m_var, norm_var_str
 
-    def predictStoMeans(self, X, Y):  # noqa: ANN001, ANN201, N802, N803, D102
+    def predictStoMeans(self, X, Y):  # noqa: N802, N803, D102
         # under homoscedasticity
         my_x_dim = X.shape[1]
         kernel_mean = GPy.kern.Matern52(input_dim=my_x_dim, ARD=True)
@@ -951,7 +951,7 @@ class surrogate(UQengine):  # noqa: D101
         """
         return mean_pred, mean_var
 
-    def calibrate(self):  # noqa: ANN201, C901, D102
+    def calibrate(self):  # noqa: C901, D102
         print('Calibrating in parallel', flush=True)  # noqa: T201
         warnings.filterwarnings('ignore')
         t_opt = time.time()
@@ -1032,7 +1032,7 @@ class surrogate(UQengine):  # noqa: D101
 
         return Y_preds, Y_pred_vars, Y_pred_vars_w_measures, e2
 
-    def train_surrogate(self, t_init):  # noqa: ANN001, ANN201, C901, D102, PLR0915
+    def train_surrogate(self, t_init):  # noqa: C901, D102, PLR0915
         self.nc1 = min(200 * self.x_dim, 2000)  # candidate points
         self.nq = min(200 * self.x_dim, 2000)  # integration points
         # FEM index
@@ -1058,7 +1058,7 @@ class surrogate(UQengine):  # noqa: D101
             self.rv_name, self.do_parallel, self.y_dim, t_init, model_hf.thr_t
         )
 
-        def FEM_batch_hf(X, id_sim):  # noqa: ANN001, ANN202, N802, N803
+        def FEM_batch_hf(X, id_sim):  # noqa: N802, N803
             # DiscStr: Xstr will be replaced with the string
             Xstr = X.astype(str)  # noqa: N806
 
@@ -1080,7 +1080,7 @@ class surrogate(UQengine):  # noqa: D101
             self.time_ratio = self.time_hf_avg / self.time_lf_avg
             return res
 
-        def FEM_batch_lf(X, id_sim):  # noqa: ANN001, ANN202, N802, N803
+        def FEM_batch_lf(X, id_sim):  # noqa: N802, N803
             # DiscStr: Xstr will be replaced with the string
             Xstr = X.astype(str)  # noqa: N806
 
@@ -1530,7 +1530,7 @@ class surrogate(UQengine):  # noqa: D101
         #
         # self.m_list[i].predict()
 
-    def verify(self):  # noqa: ANN201, D102
+    def verify(self):  # noqa: D102
         Y_cv = self.Y_cv  # noqa: N806
         Y = self.Y_hf  # noqa: N806
         model_hf = self.modelInfoHF
@@ -1604,7 +1604,7 @@ class surrogate(UQengine):  # noqa: D101
         self.corr_val = corr_val
         self.R2_val = R2_val
 
-    def verify_nugget(self):  # noqa: ANN201, D102
+    def verify_nugget(self):  # noqa: D102
         Y_cv = self.Y_cv  # noqa: N806
         Y_cv_var_w_measure = self.Y_cv_var_w_measure  # noqa: N806
         Y = self.Y_hf  # noqa: N806
@@ -1664,7 +1664,7 @@ class surrogate(UQengine):  # noqa: D101
         else:
             pass
 
-    def save_model(self, filename):  # noqa: ANN001, ANN201, C901, D102, PLR0915
+    def save_model(self, filename):  # noqa: C901, D102, PLR0915
         if self.isEEUQ:
             self.rv_name_new = []
             for nx in range(self.x_dim):
@@ -2090,7 +2090,7 @@ class surrogate(UQengine):  # noqa: D101
         print('Results Saved', flush=True)  # noqa: T201
         return 0
 
-    def run_design_of_experiments(self, nc1, nq, e2, doeIdx='HF'):  # noqa: ANN001, ANN201, C901, D102, N803, PLR0912, PLR0914, PLR0915
+    def run_design_of_experiments(self, nc1, nq, e2, doeIdx='HF'):  # noqa: C901, D102, N803, PLR0912, PLR0914, PLR0915
         if doeIdx == 'LF':
             lfset = set([tuple(x) for x in self.X_lf.tolist()])  # noqa: C403
             hfset = set([tuple(x) for x in self.X_hf.tolist()])  # noqa: C403
@@ -2100,12 +2100,12 @@ class surrogate(UQengine):  # noqa: D101
             else:
                 lf_additional_candi = np.array([np.array(x) for x in hfsamples])
 
-            def sampling(N):  # noqa: ANN001, ANN202, N803
+            def sampling(N):  # noqa: N803
                 return model_lf.sampling(N)
 
         else:
 
-            def sampling(N):  # noqa: ANN001, ANN202, N803
+            def sampling(N):  # noqa: N803
                 return model_hf.sampling(N)
 
         # doeIdx = 0
@@ -2563,7 +2563,7 @@ class surrogate(UQengine):  # noqa: D101
 
         return update_point, y_idx, score
 
-    def normalized_mean_sq_error(self, yp, ye):  # noqa: ANN001, ANN201, D102, PLR6301
+    def normalized_mean_sq_error(self, yp, ye):  # noqa: D102, PLR6301
         n = yp.shape[0]
         data_bound = np.max(ye, axis=0) - np.min(ye, axis=0)
         RMSE = np.sqrt(1 / n * np.sum(pow(yp - ye, 2), axis=0))  # noqa: N806
@@ -2571,7 +2571,7 @@ class surrogate(UQengine):  # noqa: D101
         NRMSE[np.argwhere(data_bound == 0)] = 0
         return NRMSE
 
-    def get_cross_validation_err(self):  # noqa: ANN201, D102
+    def get_cross_validation_err(self):  # noqa: D102
         print('Calculating cross validation errors', flush=True)  # noqa: T201
         time_tmp = time.time()
         X_hf = self.X_hf  # contains separate samples  # noqa: N806
@@ -2710,7 +2710,7 @@ class surrogate(UQengine):  # noqa: D101
         return Y_pred, Y_pred_var, Y_pred_var_w_measure, e2
 
 
-def imse(m_tmp, xcandi, xq, phiqr, i, y_idx, doeIdx='HF'):  # noqa: ANN001, ANN201, ARG001, N803, D103
+def imse(m_tmp, xcandi, xq, phiqr, i, y_idx, doeIdx='HF'):  # noqa: ARG001, N803, D103
     if doeIdx == 'HF':
         X = m_tmp.X  # noqa: N806
         Y = m_tmp.Y  # noqa: N806
@@ -2770,17 +2770,17 @@ def imse(m_tmp, xcandi, xq, phiqr, i, y_idx, doeIdx='HF'):  # noqa: ANN001, ANN2
 
 
 class model_info:  # noqa: D101
-    def __init__(  # noqa: ANN204, C901
+    def __init__(  # noqa: C901
         self,
-        surrogateJson,  # noqa: ANN001, N803
-        rvJson,  # noqa: ANN001, N803
-        work_dir,  # noqa: ANN001
-        x_dim,  # noqa: ANN001
-        y_dim,  # noqa: ANN001
-        n_processor,  # noqa: ANN001
-        idx=0,  # noqa: ANN001
+        surrogateJson,  # noqa: N803
+        rvJson,  # noqa: N803
+        work_dir,
+        x_dim,
+        y_dim,
+        n_processor,
+        idx=0,
     ):
-        def exit_tmp(msg):  # noqa: ANN001, ANN202
+        def exit_tmp(msg):
             print(msg)  # noqa: T201
             print(msg, file=sys.stderr)  # noqa: T201
             exit(-1)  # noqa: PLR1722
@@ -2951,7 +2951,7 @@ class model_info:  # noqa: D101
         # self.n_init = 4
         self.doe_method = self.doe_method.lower()
 
-    def sampling(self, n):  # noqa: ANN001, ANN201, D102
+    def sampling(self, n):  # noqa: D102
         # n is "total" samples
 
         if n > 0:
@@ -2986,7 +2986,7 @@ class model_info:  # noqa: D101
 
         return X_samples
 
-    def resampling(self, X, n):  # noqa: ANN001, ANN201, D102, N803, PLR6301
+    def resampling(self, X, n):  # noqa: D102, N803, PLR6301
         # n is "total" samples
         # cube bounds obtained from data
         dim = X.shape[1]
@@ -3027,7 +3027,7 @@ class model_info:  # noqa: D101
 # Additional functions
 
 
-def weights_node2(node, nodes, ls):  # noqa: ANN001, ANN201, D103
+def weights_node2(node, nodes, ls):  # noqa: D103
     nodes = np.asarray(nodes)
     deltas = nodes - node
     deltas_norm = np.zeros(deltas.shape)
@@ -3042,16 +3042,16 @@ def weights_node2(node, nodes, ls):  # noqa: ANN001, ANN201, D103
     return weig / sum(weig)
 
 
-def calibrating(  # noqa: ANN201, C901, D103
-    m_tmp,  # noqa: ANN001
-    nugget_opt_tmp,  # noqa: ANN001
-    nuggetVal,  # noqa: ANN001, N803
-    normVar,  # noqa: ANN001, N803
-    do_mf,  # noqa: ANN001
-    do_heteroscedastic,  # noqa: ANN001
-    nopt,  # noqa: ANN001
-    ny,  # noqa: ANN001
-    n_processor,  # noqa: ANN001
+def calibrating(  # noqa: C901, D103
+    m_tmp,
+    nugget_opt_tmp,
+    nuggetVal,  # noqa: N803
+    normVar,  # noqa: N803
+    do_mf,
+    do_heteroscedastic,
+    nopt,
+    ny,
+    n_processor,
 ):  # nuggetVal = self.nuggetVal[ny]
     msg = ''
 
@@ -3161,7 +3161,7 @@ def calibrating(  # noqa: ANN201, C901, D103
     return m_tmp, msg, ny
 
 
-def closest_node(x, X, ll):  # noqa: ANN001, ANN201, N803, D103
+def closest_node(x, X, ll):  # noqa: N803, D103
     X = np.asarray(X)  # noqa: N806
     deltas = X - x
     deltas_norm = np.zeros(deltas.shape)
@@ -3172,7 +3172,7 @@ def closest_node(x, X, ll):  # noqa: ANN001, ANN201, N803, D103
     return np.argmin(dist_2)
 
 
-def read_txt(text_dir, exit_fun):  # noqa: ANN001, ANN201, D103
+def read_txt(text_dir, exit_fun):  # noqa: D103
     if not os.path.exists(text_dir):  # noqa: PTH110
         msg = 'Error: file does not exist: ' + text_dir
         exit_fun(msg)

@@ -52,7 +52,7 @@ if 'stampede2' not in socket.gethostname():
     )
 
 
-def get_label(options, labels, label_name):  # noqa: ANN001, ANN201, D103
+def get_label(options, labels, label_name):  # noqa: D103
     for option in options:
         if option in labels:
             labels = labels[labels != option]
@@ -64,37 +64,37 @@ def get_label(options, labels, label_name):  # noqa: ANN001, ANN201, D103
 class Station:
     """A class for stations in an earthquake scenario"""  # noqa: D400
 
-    def __init__(self, lon, lat, vs30=None, z2p5=None):  # noqa: ANN001, ANN204
+    def __init__(self, lon, lat, vs30=None, z2p5=None):
         # Initializing the location, vs30, z2.5, Tcond and other Tags
         self.lon = lon
         self.lat = lat
         self.vs30 = vs30
         self.z2p5 = z2p5
 
-    def get_location(self):  # noqa: ANN201, D102
+    def get_location(self):  # noqa: D102
         # Returning the geo location
         return self.lon, self.lat
 
-    def get_vs30(self):  # noqa: ANN201, D102
+    def get_vs30(self):  # noqa: D102
         # Returning the Vs30 at the station
         return self.vs30
 
-    def get_z2p5(self):  # noqa: ANN201, D102
+    def get_z2p5(self):  # noqa: D102
         # Returning the z2.5 of the station
         return self.z2p5
 
 
-def create_stations(  # noqa: ANN201, C901, PLR0912, PLR0915
-    input_file,  # noqa: ANN001
-    output_file,  # noqa: ANN001
-    filterIDs,  # noqa: ANN001, N803
-    vs30Config,  # noqa: ANN001, N803
-    z1Config,  # noqa: ANN001, N803
-    z25Config,  # noqa: ANN001, N803
-    zTR_tag=0,  # noqa: ANN001, N803
-    soil_flag=False,  # noqa: ANN001, FBT002
-    soil_model_type=None,  # noqa: ANN001
-    soil_user_fun=None,  # noqa: ANN001
+def create_stations(  # noqa: C901, PLR0912, PLR0915
+    input_file,
+    output_file,
+    filterIDs,  # noqa: N803
+    vs30Config,  # noqa: N803
+    z1Config,  # noqa: N803
+    z25Config,  # noqa: N803
+    zTR_tag=0,  # noqa: N803
+    soil_flag=False,  # noqa: FBT002
+    soil_model_type=None,
+    soil_user_fun=None,
 ):
     """Reading input csv file for stations and saving data to output json file
     Input:
@@ -578,13 +578,13 @@ def create_stations(  # noqa: ANN201, C901, PLR0912, PLR0915
     return stn_file
 
 
-def create_gridded_stations(  # noqa: ANN201
-    input_file,  # noqa: ANN001
-    output_file,  # noqa: ANN001, ARG001
-    div_lon=2,  # noqa: ANN001
-    div_lat=2,  # noqa: ANN001
-    delta_lon=None,  # noqa: ANN001
-    delta=None,  # noqa: ANN001, ARG001
+def create_gridded_stations(
+    input_file,
+    output_file,  # noqa: ARG001
+    div_lon=2,
+    div_lat=2,
+    delta_lon=None,
+    delta=None,  # noqa: ARG001
 ):
     """Reading input csv file for the grid, generating stations, and saving data
     to output json file
@@ -634,7 +634,7 @@ def create_gridded_stations(  # noqa: ANN201
     )
 
 
-def get_vs30_global(lat, lon):  # noqa: ANN001, ANN201
+def get_vs30_global(lat, lon):
     """Interpolate global Vs30 at given latitude and longitude
     Input:
         lat: list of latitude
@@ -660,7 +660,7 @@ def get_vs30_global(lat, lon):  # noqa: ANN001, ANN201
     return vs30  # noqa: RET504
 
 
-def get_vs30_thompson(lat, lon):  # noqa: ANN001, ANN201
+def get_vs30_thompson(lat, lon):
     """Interpolate global Vs30 at given latitude and longitude
     Input:
         lat: list of latitude
@@ -692,21 +692,21 @@ def get_vs30_thompson(lat, lon):  # noqa: ANN001, ANN201
     return vs30  # noqa: RET504
 
 
-def get_z1(vs30):  # noqa: ANN001, ANN201
+def get_z1(vs30):
     """Compute z1 based on the prediction equation by Chiou and Youngs (2013) (unit of vs30 is meter/second and z1 is meter)"""  # noqa: D400
     z1 = np.exp(-7.15 / 4.0 * np.log((vs30**4 + 571.0**4) / (1360.0**4 + 571.0**4)))
     # return
     return z1  # noqa: RET504
 
 
-def get_z25(z1):  # noqa: ANN001, ANN201
+def get_z25(z1):
     """Compute z25 based on the prediction equation by Campbell and Bozorgnia (2013)"""  # noqa: D400
     z25 = 0.748 + 2.218 * z1
     # return
     return z25  # noqa: RET504
 
 
-def get_z25fromVs(vs):  # noqa: ANN001, ANN201, N802
+def get_z25fromVs(vs):  # noqa: N802
     """Compute z25 (m) based on the prediction equation 33 by Campbell and Bozorgnia (2014)
     Vs is m/s
     """  # noqa: D205, D400
@@ -715,7 +715,7 @@ def get_z25fromVs(vs):  # noqa: ANN001, ANN201, N802
     return z25  # noqa: RET504
 
 
-def get_zTR_global(lat, lon):  # noqa: ANN001, ANN201, N802
+def get_zTR_global(lat, lon):  # noqa: N802
     """Interpolate depth to rock at given latitude and longitude
     Input:
         lat: list of latitude
@@ -741,7 +741,7 @@ def get_zTR_global(lat, lon):  # noqa: ANN001, ANN201, N802
     return zTR  # noqa: RET504
 
 
-def export_site_prop(stn_file, output_dir, filename):  # noqa: ANN001, ANN201
+def export_site_prop(stn_file, output_dir, filename):
     """Saving a csv file for stations
     Input:
         stn_file: a dictionary of station data
@@ -775,7 +775,7 @@ def export_site_prop(stn_file, output_dir, filename):  # noqa: ANN001, ANN201
     df.to_csv(os.path.join(output_dir, filename), index=False)  # noqa: PTH118
 
 
-def get_zTR_ncm(lat, lon):  # noqa: ANN001, ANN201, N802
+def get_zTR_ncm(lat, lon):  # noqa: N802
     """Call USGS National Crustal Model services for zTR
     https://earthquake.usgs.gov/nshmp/ncm
     Input:
@@ -809,7 +809,7 @@ def get_zTR_ncm(lat, lon):  # noqa: ANN001, ANN201, N802
     return zTR
 
 
-def get_vsp_ncm(lat, lon, depth):  # noqa: ANN001, ANN201
+def get_vsp_ncm(lat, lon, depth):
     """Call USGS National Crustal Model services for Vs30 profile
     https://earthquake.usgs.gov/nshmp/ncm
     Input:
@@ -848,7 +848,7 @@ def get_vsp_ncm(lat, lon, depth):  # noqa: ANN001, ANN201
     return vsp
 
 
-def compute_vs30_from_vsp(depthp, vsp):  # noqa: ANN001, ANN201
+def compute_vs30_from_vsp(depthp, vsp):
     """Compute the Vs30 given the depth and Vs profile
     Input:
         depthp: list of depth for Vs profile
@@ -866,7 +866,7 @@ def compute_vs30_from_vsp(depthp, vsp):  # noqa: ANN001, ANN201
     return vs30p  # noqa: RET504
 
 
-def get_vs30_ncm(lat, lon):  # noqa: ANN001, ANN201
+def get_vs30_ncm(lat, lon):
     """Fetch Vs30 at given latitude and longitude from NCM
     Input:
         lat: list of latitude
@@ -893,7 +893,7 @@ def get_vs30_ncm(lat, lon):  # noqa: ANN001, ANN201
     return vs30
 
 
-def get_soil_model_ba(param=None):  # noqa: ANN001, ANN201
+def get_soil_model_ba(param=None):
     """Get modeling parameters for Borja and Amies 1994 J2 model
     Currently just assign default values
     Can be extended to have input soil properties to predict this parameters
@@ -923,7 +923,7 @@ def get_soil_model_ba(param=None):  # noqa: ANN001, ANN201
     return res
 
 
-def get_soil_model_ei(param=None):  # noqa: ANN001, ANN201
+def get_soil_model_ei(param=None):
     """Get modeling parameters for elastic isotropic
     Currently just assign default values
     Can be extended to have input soil properties to predict this parameter
@@ -938,7 +938,7 @@ def get_soil_model_ei(param=None):  # noqa: ANN001, ANN201
     return res
 
 
-def get_soil_model_user(df_stn, model_fun):  # noqa: ANN001, ANN201, D103
+def get_soil_model_user(df_stn, model_fun):  # noqa: D103
     # check if mode_fun exists
     import importlib  # noqa: PLC0415
     import os  # noqa: PLC0415

@@ -7,7 +7,7 @@ import os
 from configureAndRunUQ import configureAndRunUQ
 
 
-def main():  # noqa: ANN201, D103
+def main():  # noqa: D103
     # KEEP THIS FOR NOW--MAYBE BACKEND WILL BE UPDATED ACCEPT DIFFERENT ARGUMENTS...
     # parser = argparse.ArgumentParser(description='Generate workflow driver based on input configuration')
     # parser.add_argument('--mainWorkDir', '-m', required=True, help="Main work directory")

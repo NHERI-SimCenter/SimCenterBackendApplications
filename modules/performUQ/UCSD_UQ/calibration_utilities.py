@@ -20,7 +20,7 @@ class DataProcessingError(Exception):
 
     """
 
-    def __init__(self, message):  # noqa: ANN001, ANN204
+    def __init__(self, message):
         self.message = message
 
 
@@ -58,7 +58,7 @@ class CovarianceMatrixPreparer:  # noqa: D101
             'the corresponding transformed response data.'
         )
 
-    def getDefaultErrorVariances(self):  # noqa: ANN201, N802, D102
+    def getDefaultErrorVariances(self):  # noqa: N802, D102
         # For each response variable, compute the variance of the data. These will be the default error variance
         # values used in the calibration process. Values of the multiplier on these default error variance values will be
         # calibrated. There will be one such error variance value per response quantity. If there is only data from one
@@ -92,7 +92,7 @@ class CovarianceMatrixPreparer:  # noqa: D101
                 currentIndex += self.edpLengthsList[i]  # noqa: N806
         self.defaultErrorVariances = defaultErrorVariances
 
-    def createCovarianceMatrix(self):  # noqa: ANN201, C901, N802, D102
+    def createCovarianceMatrix(self):  # noqa: C901, N802, D102
         covarianceMatrixList = []  # noqa: N806
         covarianceTypeList = []  # noqa: N806
 
@@ -262,13 +262,13 @@ class CalDataPreparer:  # noqa: D101
         self.lineLength = sum(edpLengthsList)
         self.moveCalDataFile(self.calDataFileName)
 
-    def moveCalDataFile(self, calDataFileName):  # noqa: ANN001, ANN201, N802, N803, D102
+    def moveCalDataFile(self, calDataFileName):  # noqa: N802, N803, D102
         os.rename(  # noqa: PTH104
             os.path.join(self.workdirTemplate, calDataFileName),  # noqa: PTH118
             os.path.join(self.workdirMain, calDataFileName),  # noqa: PTH118
         )
 
-    def createHeadings(self):  # noqa: ANN201, N802, D102
+    def createHeadings(self):  # noqa: N802, D102
         self.logFile.write('\n\tCreating headings')
         headings = 'Exp_num interface '
         for i, edpName in enumerate(self.edpNamesList):  # noqa: N806
@@ -280,7 +280,7 @@ class CalDataPreparer:  # noqa: D101
         self.logFile.write(f'\n\t\tThe headings are: \n\t\t{headings}')
         return headings
 
-    def createTempCalDataFile(self, calDataFile):  # noqa: ANN001, ANN201, N802, N803, D102
+    def createTempCalDataFile(self, calDataFile):  # noqa: N802, N803, D102
         self.tempCalDataFile = os.path.join(  # noqa: PTH118
             self.workdirMain, 'quoFEMTempCalibrationDataFile.cal'
         )
@@ -319,7 +319,7 @@ class CalDataPreparer:  # noqa: D101
                         )
         f1.close()
 
-    def readCleanedCalData(self):  # noqa: ANN201, N802, D102
+    def readCleanedCalData(self):  # noqa: N802, D102
         self.calibrationData = np.atleast_2d(
             np.genfromtxt(
                 self.tempCalDataFile,
@@ -328,7 +328,7 @@ class CalDataPreparer:  # noqa: D101
             )
         )
 
-    def getCalibrationData(self):  # noqa: ANN201, N802, D102
+    def getCalibrationData(self):  # noqa: N802, D102
         calDataFile = os.path.join(self.workdirMain, self.calDataFileName)  # noqa: PTH118, N806
         self.logFile.write(
             f'\nCalibration data file being processed: \n\t{calDataFile}\n'
@@ -338,7 +338,7 @@ class CalDataPreparer:  # noqa: D101
         return self.calibrationData, self.numExperiments
 
 
-def transform_data_function(  # noqa: ANN201, D103
+def transform_data_function(  # noqa: D103
     data_to_transform: np.ndarray,
     list_of_data_segment_lengths: list[int],  # noqa: FA102
     list_of_scale_factors: list[float],  # noqa: FA102
@@ -376,7 +376,7 @@ class DataTransformer:  # noqa: D101
             'prediction) and \nthen scaled (the data and prediction will be divided by a positive scalar value).'
         )
 
-    def computeScaleAndShiftFactors(  # noqa: ANN201, N802, D102
+    def computeScaleAndShiftFactors(  # noqa: N802, D102
         self,
         calibrationData: np.ndarray,  # noqa: N803
         edpLengthsList: list[int],  # noqa: FA102, N803
@@ -434,7 +434,7 @@ class DataTransformer:  # noqa: D101
         self.shiftFactors = shiftFactors
         return scaleFactors, shiftFactors
 
-    def transformData(self):  # noqa: ANN201, N802, D102
+    def transformData(self):  # noqa: N802, D102
         return transform_data_function(
             self.calibrationData,
             self.edpLengthsList,
@@ -443,7 +443,7 @@ class DataTransformer:  # noqa: D101
         )
 
 
-def createLogFile(where: str, logfile_name: str):  # noqa: ANN201, N802, D103
+def createLogFile(where: str, logfile_name: str):  # noqa: N802, D103
     logfile = open(os.path.join(where, logfile_name), 'w')  # noqa: PLW1514, PTH118, PTH123, SIM115
     logfile.write(
         'Starting analysis at: {}'.format(
@@ -455,12 +455,12 @@ def createLogFile(where: str, logfile_name: str):  # noqa: ANN201, N802, D103
     return logfile
 
 
-def syncLogFile(logFile: TextIO):  # noqa: ANN201, N802, N803, D103
+def syncLogFile(logFile: TextIO):  # noqa: N802, N803, D103
     logFile.flush()
     os.fsync(logFile.fileno())
 
 
-def make_distributions(variables):  # noqa: ANN001, ANN201, C901, D103
+def make_distributions(variables):  # noqa: C901, D103
     all_distributions_list = []
 
     for i in range(len(variables['names'])):
@@ -590,7 +590,7 @@ class LogLikelihoodHandler:  # noqa: D101
         list_of_data_segment_lengths: list[int],  # noqa: FA102
         list_of_scale_factors: list[float],  # noqa: FA102
         list_of_shift_factors: list[float],  # noqa: FA102
-        workdir_main,  # noqa: ANN001
+        workdir_main,
         full_path_to_tmcmc_code_directory: str,
         log_likelihood_file_name: str = '',
     ) -> None:
@@ -608,7 +608,7 @@ class LogLikelihoodHandler:  # noqa: D101
         self.num_response_quantities = self._get_num_response_quantities()
         self.log_likelihood_function = self.get_log_likelihood_function()
 
-    def _copy_log_likelihood_module(self):  # noqa: ANN202
+    def _copy_log_likelihood_module(self):
         if (
             len(self.log_likelihood_file_name) == 0
         ):  # if the log-likelihood file is an empty string
@@ -661,20 +661,20 @@ class LogLikelihoodHandler:  # noqa: D101
     def _make_mean(self, response_num: int) -> NDArray:
         return np.zeros(self.list_of_data_segment_lengths[response_num])
 
-    def _make_covariance(self, response_num, cov_multiplier) -> NDArray:  # noqa: ANN001
+    def _make_covariance(self, response_num, cov_multiplier) -> NDArray:
         return cov_multiplier * np.atleast_2d(
             self.covariance_matrix_list[response_num]
         )
 
-    def _make_input_for_log_likelihood_function(self, prediction) -> list:  # noqa: ANN001
+    def _make_input_for_log_likelihood_function(self, prediction) -> list:
         return [
             self._transform_prediction(prediction),
         ]
 
-    def _loop_for_log_likelihood(  # noqa: ANN202
+    def _loop_for_log_likelihood(
         self,
-        prediction,  # noqa: ANN001
-        list_of_covariance_multipliers,  # noqa: ANN001
+        prediction,
+        list_of_covariance_multipliers,
     ):
         transformed_prediction = self._transform_prediction(prediction)
         allResiduals = self._compute_residuals(transformed_prediction)  # noqa: N806

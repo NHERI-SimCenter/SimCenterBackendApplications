@@ -14,14 +14,14 @@ from numpy.random import SeedSequence, default_rng
 from runFEM import runFEM
 
 
-def write_stage_start_info_to_logfile(  # noqa: ANN201, D103
-    logfile,  # noqa: ANN001
-    stage_number,  # noqa: ANN001
-    beta,  # noqa: ANN001
-    effective_sample_size,  # noqa: ANN001
-    scale_factor_for_proposal_covariance,  # noqa: ANN001
-    log_evidence,  # noqa: ANN001
-    number_of_samples,  # noqa: ANN001
+def write_stage_start_info_to_logfile(  # noqa: D103
+    logfile,
+    stage_number,
+    beta,
+    effective_sample_size,
+    scale_factor_for_proposal_covariance,
+    log_evidence,
+    number_of_samples,
 ):
     logfile.write('\n\n\t\t==========================')
     logfile.write(f'\n\t\tStage number: {stage_number}')
@@ -40,13 +40,13 @@ def write_stage_start_info_to_logfile(  # noqa: ANN201, D103
     os.fsync(logfile.fileno())
 
 
-def write_eval_data_to_logfile(  # noqa: ANN201, D103
-    logfile,  # noqa: ANN001
-    parallelize_MCMC,  # noqa: ANN001, N803
-    run_type,  # noqa: ANN001
-    proc_count=1,  # noqa: ANN001
-    MPI_size=1,  # noqa: ANN001, N803
-    stage_num=0,  # noqa: ANN001
+def write_eval_data_to_logfile(  # noqa: D103
+    logfile,
+    parallelize_MCMC,  # noqa: N803
+    run_type,
+    proc_count=1,
+    MPI_size=1,  # noqa: N803
+    stage_num=0,
 ):
     if stage_num == 0:
         logfile.write(f'\n\n\t\tRun type: {run_type}')
@@ -75,13 +75,13 @@ def write_eval_data_to_logfile(  # noqa: ANN201, D103
         logfile.write(f'\n\t\t\tNumber of processors being used: {1}')
 
 
-def create_headings(  # noqa: ANN201, D103
-    logfile,  # noqa: ANN001
-    model_number,  # noqa: ANN001
-    model_parameters,  # noqa: ANN001
-    edp_names_list,  # noqa: ANN001
-    edp_lengths_list,  # noqa: ANN001
-    writeOutputs,  # noqa: ANN001, N803
+def create_headings(  # noqa: D103
+    logfile,
+    model_number,
+    model_parameters,
+    edp_names_list,
+    edp_lengths_list,
+    writeOutputs,  # noqa: N803
 ):
     # Create the headings, which will be the first line of the file
     headings = 'eval_id\tinterface\t'
@@ -101,7 +101,7 @@ def create_headings(  # noqa: ANN201, D103
     return headings
 
 
-def get_prediction_from_workdirs(i, working_directory):  # noqa: ANN001, ANN201, D103
+def get_prediction_from_workdirs(i, working_directory):  # noqa: D103
     workdir_string = 'workdir.' + str(i + 1)
     prediction = np.atleast_2d(
         np.genfromtxt(os.path.join(working_directory, workdir_string, 'results.out'))  # noqa: PTH118
@@ -109,17 +109,17 @@ def get_prediction_from_workdirs(i, working_directory):  # noqa: ANN001, ANN201,
     return prediction  # noqa: RET504
 
 
-def write_data_to_tab_files(  # noqa: ANN201, D103
-    logfile,  # noqa: ANN001
-    working_directory,  # noqa: ANN001
-    model_number,  # noqa: ANN001
-    model_parameters,  # noqa: ANN001
-    edp_names_list,  # noqa: ANN001
-    edp_lengths_list,  # noqa: ANN001
-    number_of_samples,  # noqa: ANN001
-    dataToWrite,  # noqa: ANN001, N803
-    tab_file_name,  # noqa: ANN001
-    predictions,  # noqa: ANN001
+def write_data_to_tab_files(  # noqa: D103
+    logfile,
+    working_directory,
+    model_number,
+    model_parameters,
+    edp_names_list,
+    edp_lengths_list,
+    number_of_samples,
+    dataToWrite,  # noqa: N803
+    tab_file_name,
+    predictions,
 ):
     tab_file_full_path = os.path.join(working_directory, tab_file_name)  # noqa: PTH118
     write_outputs = True
@@ -154,13 +154,13 @@ def write_data_to_tab_files(  # noqa: ANN201, D103
     os.fsync(logfile.fileno())
 
 
-def write_data_to_csvfile(  # noqa: ANN201, D103
-    logfile,  # noqa: ANN001
-    total_number_of_models_in_ensemble,  # noqa: ANN001
-    stage_number,  # noqa: ANN001
-    model_number,  # noqa: ANN001
-    working_directory,  # noqa: ANN001
-    data_to_write,  # noqa: ANN001
+def write_data_to_csvfile(  # noqa: D103
+    logfile,
+    total_number_of_models_in_ensemble,
+    stage_number,
+    model_number,
+    working_directory,
+    data_to_write,
 ):
     logfile.write(
         f'\n\n\t\tWriting samples from stage {stage_number - 1} to csv file'
@@ -183,30 +183,30 @@ def write_data_to_csvfile(  # noqa: ANN201, D103
     # Finished writing data
 
 
-def run_TMCMC(  # noqa: ANN201, N802, PLR0913, PLR0917
-    number_of_samples,  # noqa: ANN001
-    number_of_chains,  # noqa: ANN001
-    all_distributions_list,  # noqa: ANN001
-    number_of_MCMC_steps,  # noqa: ANN001, N803
-    max_number_of_MCMC_steps,  # noqa: ANN001, N803
-    log_likelihood_function,  # noqa: ANN001
-    model_parameters,  # noqa: ANN001
-    working_directory,  # noqa: ANN001
-    seed,  # noqa: ANN001
-    calibration_data,  # noqa: ANN001
-    number_of_experiments,  # noqa: ANN001
-    covariance_matrix_list,  # noqa: ANN001
-    edp_names_list,  # noqa: ANN001
-    edp_lengths_list,  # noqa: ANN001
-    scale_factors,  # noqa: ANN001
-    shift_factors,  # noqa: ANN001
-    run_type,  # noqa: ANN001
-    logfile,  # noqa: ANN001
-    MPI_size,  # noqa: ANN001, N803
-    driver_file,  # noqa: ANN001
-    parallelize_MCMC=True,  # noqa: ANN001, FBT002, N803
-    model_number=0,  # noqa: ANN001
-    total_number_of_models_in_ensemble=1,  # noqa: ANN001
+def run_TMCMC(  # noqa: N802, PLR0913, PLR0917
+    number_of_samples,
+    number_of_chains,
+    all_distributions_list,
+    number_of_MCMC_steps,  # noqa: N803
+    max_number_of_MCMC_steps,  # noqa: N803
+    log_likelihood_function,
+    model_parameters,
+    working_directory,
+    seed,
+    calibration_data,
+    number_of_experiments,
+    covariance_matrix_list,
+    edp_names_list,
+    edp_lengths_list,
+    scale_factors,
+    shift_factors,
+    run_type,
+    logfile,
+    MPI_size,  # noqa: N803
+    driver_file,
+    parallelize_MCMC=True,  # noqa: FBT002, N803
+    model_number=0,
+    total_number_of_models_in_ensemble=1,
 ):
     """Runs TMCMC Algorithm"""  # noqa: D400, D401
     # Initialize (beta, effective sample size)

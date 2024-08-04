@@ -73,13 +73,13 @@ curve_settings = {
 
 
 class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         super().__init__()
         time_units = ['second', 'hour', 'day']
 
         self.addItems(time_units)
 
-    def changeCurveTimeUnit(self, raw_time_curve):  # noqa: ANN001, ANN201, N802, D102
+    def changeCurveTimeUnit(self, raw_time_curve):  # noqa: N802, D102
         res = {}
         if type(raw_time_curve) == pd.core.series.Series:  # noqa: E721
             time_justified_curve = raw_time_curve.copy()
@@ -90,7 +90,7 @@ class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: D101
                 res[k] = self.applyUnitToSeries(time_justified_curve)
         return res
 
-    def applyUnitToSeries(self, data):  # noqa: ANN001, ANN201, N802, D102
+    def applyUnitToSeries(self, data):  # noqa: N802, D102
         time_unit = self.currentText()
         if time_unit == 'second':
             pass
@@ -105,13 +105,13 @@ class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: D101
 
 
 class Yes_No_Combo(QtWidgets.QComboBox):  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         super().__init__()
         self.addItems(['No', 'Yes'])
 
 
 class Result_Designer:  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         self.current_raw_curve = None
         self.current_curve = None
         self.curve_settings_widgets = {}
@@ -125,23 +125,23 @@ class Result_Designer:  # noqa: D101
 
         self.initalize_result()
 
-    def initalize_result(self):  # noqa: ANN201, D102
+    def initalize_result(self):  # noqa: D102
         self.setCurveAllScenarios(True)
         self.all_scenarios_checkbox.setChecked(True)
         self.scenario_combo.clear()
         self.scenario_combo.addItems(self.result_scenarios)
         # self.current_curve_data = None
 
-    def curveAllScenarioCheckboxChanged(self, state):  # noqa: ANN001, ANN201, N802, D102
+    def curveAllScenarioCheckboxChanged(self, state):  # noqa: N802, D102
         if state == 0:
             self.setCurveAllScenarios(False)
         elif state == 2:  # noqa: PLR2004
             self.setCurveAllScenarios(True)
 
-    def clearCurvePlot(self):  # noqa: ANN201, N802, D102
+    def clearCurvePlot(self):  # noqa: N802, D102
         self.mpl_curve.canvas.ax.cla()
 
-    def plot_data(self):  # noqa: ANN201, D102
+    def plot_data(self):  # noqa: D102
         x = range(10)
         y = range(0, 20, 2)
         self.mpl_curve.canvas.ax.plot(x, y)
@@ -150,7 +150,7 @@ class Result_Designer:  # noqa: D101
         # self.mpl_curve.canvas.ax.set_xlabel("x_label")
         # self.mpl_curve.canvas.fig.tight_layout()
 
-    def plotCurve(self, y_label=None, x_label=None):  # noqa: ANN001, ANN201, N802, D102
+    def plotCurve(self, y_label=None, x_label=None):  # noqa: N802, D102
         if y_label == None:  # noqa: E711
             y_label = self.mpl_curve.canvas.ax.get_ylabel()
         if x_label == None:  # noqa: E711
@@ -172,7 +172,7 @@ class Result_Designer:  # noqa: D101
         self.mpl_curve.canvas.draw()
         self.mpl_curve.canvas.fig.tight_layout()
 
-    def setCurveAllScenarios(self, flag):  # noqa: ANN001, ANN201, N802, D102
+    def setCurveAllScenarios(self, flag):  # noqa: N802, D102
         if flag == True:  # noqa: E712
             self.all_scenarios_checkbox.setChecked(True)
             self.scenario_combo.setEnabled(False)
@@ -188,18 +188,18 @@ class Result_Designer:  # noqa: D101
         else:
             raise ValueError('Unknown flag: ' + repr(flag))
 
-    def resultScenarioChanged(self, text):  # noqa: ANN001, ANN201, N802, D102
+    def resultScenarioChanged(self, text):  # noqa: N802, D102
         self.result_current_scenario = text  # self.scenario_combo.getText()
         # self.current_curve_data = None
 
-    def curveTypeChanegd(self, text):  # noqa: ANN001, ANN201, N802, D102
+    def curveTypeChanegd(self, text):  # noqa: N802, D102
         if self.project_result == None:  # noqa: E711
             return
         self.current_curve_type = text
         self.setCurveSettingBox(text)
         self.calculateCurrentCurve()
 
-    def calculateCurrentCurve(self):  # noqa: ANN201, C901, N802, D102
+    def calculateCurrentCurve(self):  # noqa: C901, N802, D102
         curve_type = self.current_curve_type
         if curve_type == 'Quantity Exceedance':
             iPopulation = self.curve_settings_widgets['Population'].currentText()  # noqa: N806
@@ -363,7 +363,7 @@ class Result_Designer:  # noqa: D101
             )
             self.plotCurve('SSI', 'Time')
 
-    def setCurveSettingBox(self, curve_type):  # noqa: ANN001, ANN201, N802, D102
+    def setCurveSettingBox(self, curve_type):  # noqa: N802, D102
         for i in range(self.curve_settings_table.rowCount()):  # noqa: B007
             self.curve_settings_table.removeRow(0)
 
@@ -373,7 +373,7 @@ class Result_Designer:  # noqa: D101
             pass
             # raise ValueError("Unknown Curve type: "+repr(curve_type))
 
-    def populateCurveSettingsTable(self, settings_content):  # noqa: ANN001, ANN201, C901, N802, D102
+    def populateCurveSettingsTable(self, settings_content):  # noqa: C901, N802, D102
         self.curve_settings_widgets.clear()
         vertical_header = []
         cell_type_list = []
@@ -460,13 +460,13 @@ class Result_Designer:  # noqa: D101
             i += 1  # noqa: SIM113
         # for label in settings_content:
 
-    def curveTimeSettingsChanged(self, x):  # noqa: ANN001, ANN201, ARG002, N802, D102
+    def curveTimeSettingsChanged(self, x):  # noqa: ARG002, N802, D102
         self.current_curve = self.time_combo.changeCurveTimeUnit(
             self.current_raw_curve
         )
         self.plotCurve()
 
-    def curveSettingChanged(self):  # noqa: ANN201, N802, D102
+    def curveSettingChanged(self):  # noqa: N802, D102
         if 'Population' in self.curve_settings_widgets:
             new_population_setting = self.curve_settings_widgets[
                 'Population'
@@ -479,11 +479,11 @@ class Result_Designer:  # noqa: D101
                 return
         self.calculateCurrentCurve()
 
-    def tabChanged(self, index):  # noqa: ANN001, ANN201, N802, D102
+    def tabChanged(self, index):  # noqa: N802, D102
         if index == 1:
             self.initalize_result()
 
-    def saveCurrentCurveByButton(self):  # noqa: ANN201, N802, D102
+    def saveCurrentCurveByButton(self):  # noqa: N802, D102
         # if self.current_curve_data == None:
         if type(self.current_curve) == type(None):  # noqa: E721
             self.errorMSG('REWET', 'No curve is ploted')

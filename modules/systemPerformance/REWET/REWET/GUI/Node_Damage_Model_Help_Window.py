@@ -9,7 +9,7 @@ from PyQt5 import QtCore, QtWidgets
 
 
 class Ui_Node_Damage_Model_Help:  # noqa: D101
-    def setupUi(self, Node_Damage_Model_Help):  # noqa: ANN001, ANN201, N802, N803, D102
+    def setupUi(self, Node_Damage_Model_Help):  # noqa: N802, N803, D102
         Node_Damage_Model_Help.setObjectName('Node_Damage_Model_Help')
         Node_Damage_Model_Help.resize(340, 130)
         Node_Damage_Model_Help.setMinimumSize(QtCore.QSize(340, 130))
@@ -45,7 +45,7 @@ class Ui_Node_Damage_Model_Help:  # noqa: D101
         self.retranslateUi(Node_Damage_Model_Help)
         QtCore.QMetaObject.connectSlotsByName(Node_Damage_Model_Help)
 
-    def retranslateUi(self, Node_Damage_Model_Help):  # noqa: ANN001, ANN201, N802, N803, D102
+    def retranslateUi(self, Node_Damage_Model_Help):  # noqa: N802, N803, D102
         _translate = QtCore.QCoreApplication.translate
         Node_Damage_Model_Help.setWindowTitle(
             _translate('Node_Damage_Model_Help', 'Help')

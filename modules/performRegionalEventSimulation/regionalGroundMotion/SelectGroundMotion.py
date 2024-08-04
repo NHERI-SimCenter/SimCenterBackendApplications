@@ -52,20 +52,20 @@ import pandas as pd  # noqa: E402
 
 
 class GM_Selector:  # noqa: D101
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        gmdb_im_df=dict(),  # noqa: ANN001, B006, C408
-        num_records=1,  # noqa: ANN001
-        sf_min=None,  # noqa: ANN001
-        sf_max=None,  # noqa: ANN001
-        target_im=None,  # noqa: ANN001
+        gmdb_im_df=dict(),  # noqa: B006, C408
+        num_records=1,
+        sf_min=None,
+        sf_max=None,
+        target_im=None,
     ):
         self.set_gmdb_im_df(gmdb_im_df)
         self.set_num_records(num_records)
         self.set_sf_range(sf_min, sf_max)
         self.set_target_im(target_im)
 
-    def set_gmdb_im_df(self, gmdb_im_df):  # noqa: ANN001, ANN201, D102
+    def set_gmdb_im_df(self, gmdb_im_df):  # noqa: D102
         self.gmdb_im_df = gmdb_im_df
         self.num_gm = len(gmdb_im_df['RSN'])
         tmp_list = list(gmdb_im_df.keys())
@@ -79,10 +79,10 @@ class GM_Selector:  # noqa: D101
                 tmp_scalable.append(1)
         self.scalable = tmp_scalable
 
-    def set_num_records(self, num_records):  # noqa: ANN001, ANN201, D102
+    def set_num_records(self, num_records):  # noqa: D102
         self.num_records = num_records
 
-    def set_sf_range(self, sf_min, sf_max):  # noqa: ANN001, ANN201, D102
+    def set_sf_range(self, sf_min, sf_max):  # noqa: D102
         if sf_min is None:
             self.sf_min = 0.0001
         else:
@@ -93,10 +93,10 @@ class GM_Selector:  # noqa: D101
             self.sf_max = sf_max
         self.sf_range = np.linspace(self.sf_min, self.sf_max, 100)
 
-    def set_target_im(self, target_im):  # noqa: ANN001, ANN201, D102
+    def set_target_im(self, target_im):  # noqa: D102
         self.target_im = [target_im for k in range(self.num_gm)]
 
-    def select_records(self):  # noqa: ANN201, D102
+    def select_records(self):  # noqa: D102
         im_table = self.gmdb_im_df.iloc[:, 1:]
         min_err = 1000000.0
         for s in self.sf_range:
@@ -118,16 +118,16 @@ class GM_Selector:  # noqa: D101
         self.sf = sf
 
 
-def select_ground_motion(  # noqa: ANN201, C901, D103
-    im_list,  # noqa: ANN001
-    target_ln_im,  # noqa: ANN001
-    gmdb_file,  # noqa: ANN001
-    sf_max,  # noqa: ANN001
-    sf_min,  # noqa: ANN001
-    output_dir,  # noqa: ANN001
-    output_file,  # noqa: ANN001
-    stations,  # noqa: ANN001
-    eq_ids,  # noqa: ANN001
+def select_ground_motion(  # noqa: C901, D103
+    im_list,
+    target_ln_im,
+    gmdb_file,
+    sf_max,
+    sf_min,
+    output_dir,
+    output_file,
+    stations,
+    eq_ids,
 ):
     # Loading gmdb
     if gmdb_file == 'PEER NGA West 2':
@@ -276,7 +276,7 @@ def select_ground_motion(  # noqa: ANN201, C901, D103
     return gm_id, filename
 
 
-def output_all_ground_motion_info(gm_id, gm_file, output_dir, filename):  # noqa: ANN001, ANN201, D103
+def output_all_ground_motion_info(gm_id, gm_file, output_dir, filename):  # noqa: D103
     # Writing all record names to a csv file
     print(gm_file)  # noqa: T201
     try:

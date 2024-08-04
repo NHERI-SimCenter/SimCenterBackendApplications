@@ -38,7 +38,7 @@
 import argparse
 
 
-def main(inputFile, evtFile, getRV):  # noqa: ANN001, ANN201, ARG001, N803, D103
+def main(inputFile, evtFile, getRV):  # noqa: ARG001, N803, D103
     print('Finished GeoClawOpenFOAM application')  # noqa: T201
 
 

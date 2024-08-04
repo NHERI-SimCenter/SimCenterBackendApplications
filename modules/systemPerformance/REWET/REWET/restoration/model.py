@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class Restoration:  # noqa: D101, PLR0904
-    def __init__(self, conifg_file_name, registry, damage):  # noqa: ANN001, ANN204
+    def __init__(self, conifg_file_name, registry, damage):
         self.ELEMENTS = ['PIPE', 'DISTNODE', 'GNODE', 'TANK', 'PUMP', 'RESERVOIR']
         self._CONDITIONS = ['EQ', 'BG', 'LT', 'BG-EQ', 'LT-EQ', 'NOTEQ']
         self.reserved_priority_names = [
@@ -66,7 +66,7 @@ class Restoration:  # noqa: D101, PLR0904
 
         self.ApplyOverrides()
 
-    def ApplyOverrides(self):  # noqa: ANN201, N802, D102
+    def ApplyOverrides(self):  # noqa: N802, D102
         overrides = self._registry.settings.overrides
 
         if 'POINTS' in overrides:
@@ -84,7 +84,7 @@ class Restoration:  # noqa: D101, PLR0904
                     point_group_name
                 ]
 
-    def perform_action(self, wn, stop_time):  # noqa: ANN001, ANN201, C901, D102
+    def perform_action(self, wn, stop_time):  # noqa: C901, D102
         logger.debug(stop_time)
 
         # checks if the restoration is started
@@ -332,17 +332,17 @@ class Restoration:  # noqa: D101, PLR0904
 
         return new_events
 
-    def perform_action_helper(  # noqa: ANN201, C901, D102
+    def perform_action_helper(  # noqa: C901, D102
         self,
-        typed_ready_agent,  # noqa: ANN001
-        entity_data,  # noqa: ANN001
-        agent_type,  # noqa: ANN001
-        action,  # noqa: ANN001
-        entity,  # noqa: ANN001
-        stop_time,  # noqa: ANN001
-        order_counter,  # noqa: ANN001
-        wn,  # noqa: ANN001
-        flag=False,  # noqa: ANN001, FBT002
+        typed_ready_agent,
+        entity_data,
+        agent_type,
+        action,
+        entity,
+        stop_time,
+        order_counter,
+        wn,
+        flag=False,  # noqa: FBT002
     ):
         ignore_list = []
         if len(entity_data) == 0:
@@ -587,17 +587,17 @@ class Restoration:  # noqa: D101, PLR0904
             # -----------------------------------------------------------
         # self._registry.updatePipeDamageTableTimeSeries(stop_time)
 
-    def assignVacantJob(  # noqa: ANN201, N802, D102
+    def assignVacantJob(  # noqa: N802, D102
         self,
-        vacant_job_list,  # noqa: ANN001
-        typed_ready_agent,  # noqa: ANN001
-        entity_data,  # noqa: ANN001
-        agent_type,  # noqa: ANN001
-        action,  # noqa: ANN001
-        entity,  # noqa: ANN001
-        stop_time,  # noqa: ANN001
-        order_counter,  # noqa: ANN001
-        wn,  # noqa: ANN001
+        vacant_job_list,
+        typed_ready_agent,
+        entity_data,
+        agent_type,
+        action,
+        entity,
+        stop_time,
+        order_counter,
+        wn,
     ):
         if not len(typed_ready_agent) > 0:
             raise RuntimeError(  # noqa: TRY003
@@ -624,14 +624,14 @@ class Restoration:  # noqa: D101, PLR0904
             flag=True,
         )
 
-    def applyEffect(  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0915
+    def applyEffect(  # noqa: C901, N802, D102, PLR0912, PLR0915
         self,
-        damage_node_name,  # noqa: ANN001
-        single_effect_data,  # noqa: ANN001
-        element_type,  # noqa: ANN001
-        wn,  # noqa: ANN001
-        action,  # noqa: ANN001
-        stop_time,  # noqa: ANN001
+        damage_node_name,
+        single_effect_data,
+        element_type,
+        wn,
+        action,
+        stop_time,
     ):
         effect_type = single_effect_data['EFFECT']
         damage_data = self._registry.getDamageData(element_type, iCopy=False)
@@ -892,10 +892,10 @@ class Restoration:  # noqa: D101, PLR0904
         else:
             raise ValueError('Unknown effect_type: ' + repr(effect_type))
 
-    def repairDistNode(self, damage_node_name, wn):  # noqa: ANN001, ANN201, N802, D102
+    def repairDistNode(self, damage_node_name, wn):  # noqa: N802, D102
         self.repair.removeNodeTemporaryRepair(damage_node_name, wn)
 
-    def updateShifiting(self, time):  # noqa: ANN001, ANN201, N802
+    def updateShifiting(self, time):  # noqa: N802
         """Updates shifting with the new time given
 
         Parameters
@@ -920,7 +920,7 @@ class Restoration:  # noqa: D101, PLR0904
         if 'shift' in self._hard_event_table['Requester'].loc[time]:
             self.agents.setChangeShift(time, working_check=True)
 
-    def updateAvailability(self, time):  # noqa: ANN001, ANN201, N802, D102
+    def updateAvailability(self, time):  # noqa: N802, D102
         # SINA DELETET IT [URGENT]
         # =============================================================================
         #        import pickle
@@ -984,14 +984,14 @@ class Restoration:  # noqa: D101, PLR0904
                 )
                 self.agents._agents.loc[new_index_list, 'available'] = True  # noqa: SLF001
 
-    def initializeActiveAgents(self, time):  # noqa: ANN001, ANN201, N802, D102
+    def initializeActiveAgents(self, time):  # noqa: N802, D102
         for name, data in self.agents._agents.iterrows():  # noqa: B007, SLF001
             agent = data['data']
             if agent.isOnShift(time):
                 data['active'] = True
                 # data['ready'] = True
 
-    def initializeReadyAgents(self):  # noqa: ANN201, N802, D102
+    def initializeReadyAgents(self):  # noqa: N802, D102
         active_agents_name_list = self.agents._agents[  # noqa: SLF001
             self.agents._agents['active'].eq(True)  # noqa: FBT003, SLF001
         ].index
@@ -1004,7 +1004,7 @@ class Restoration:  # noqa: D101, PLR0904
     # ready_agents_name_list = self.agents._agents['ready'].eq(True).index
     # self.agents._agents.loc[ready_agents_name_list, 'available'] = True
 
-    def initializeEntities(self, WaterNetwork):  # noqa: ANN001, ANN201, N802, N803, D102
+    def initializeEntities(self, WaterNetwork):  # noqa: N802, N803, D102
         for entity, val in self.entity_rule.items():
             element_type = self.entity[entity]
             if element_type not in self.ELEMENTS:
@@ -1052,7 +1052,7 @@ class Restoration:  # noqa: D101, PLR0904
                     True,  # noqa: FBT003
                 )
 
-    def removeRecordsWithoutEntities(self, element_type):  # noqa: ANN001, ANN201, N802, D102
+    def removeRecordsWithoutEntities(self, element_type):  # noqa: N802, D102
         entity_list = []
         for entity in self.entity:
             if self.entity[entity] == element_type:
@@ -1069,7 +1069,7 @@ class Restoration:  # noqa: D101, PLR0904
             not_asigned_damaged_table = damage_table.index.to_list()
         damage_table.drop(not_asigned_damaged_table, inplace=True)  # noqa: PD002
 
-    def initializeGroups(self):  # noqa: ANN201, N802, D102
+    def initializeGroups(self):  # noqa: N802, D102
         for el in self.ELEMENTS:
             group_name_list = []
 
@@ -1128,7 +1128,7 @@ class Restoration:  # noqa: D101, PLR0904
                     + repr(temp_list)
                 )
 
-    def initializeGroups_old(self):  # noqa: ANN201, N802, D102
+    def initializeGroups_old(self):  # noqa: N802, D102
         for el in self.ELEMENTS:
             group_name_list = []
 
@@ -1187,7 +1187,7 @@ class Restoration:  # noqa: D101, PLR0904
                     + repr(temp_list)
                 )
 
-    def initializeNumberOfDamages(self):  # noqa: ANN201, N802, D102
+    def initializeNumberOfDamages(self):  # noqa: N802, D102
         for element_type in self.ELEMENTS:
             if (
                 'Number_of_damages'
@@ -1199,7 +1199,7 @@ class Restoration:  # noqa: D101, PLR0904
                     element_type, 'Number_of_damages', 1
                 )
 
-    def _unionOfAll(self, in_list):  # noqa: ANN001, ANN202, N802
+    def _unionOfAll(self, in_list):  # noqa: N802
         num_of_lists = len(in_list)
 
         if len(in_list) == 0:
@@ -1226,14 +1226,14 @@ class Restoration:  # noqa: D101, PLR0904
             in_list[0] = union_list
             return self._unionOfAll(in_list)
 
-    def _getRefinedElementList(  # noqa: ANN202, N802
+    def _getRefinedElementList(  # noqa: N802
         self,
-        WaterNetwork,  # noqa: ANN001, N803
-        attribute,  # noqa: ANN001
-        condition,  # noqa: ANN001
-        condition_value,  # noqa: ANN001
-        element_type,  # noqa: ANN001
-        wn,  # noqa: ANN001
+        WaterNetwork,  # noqa: N803
+        attribute,
+        condition,
+        condition_value,
+        element_type,
+        wn,
     ):
         res = []
         node_res = []
@@ -1257,12 +1257,12 @@ class Restoration:  # noqa: D101, PLR0904
 
         return res, node_res
 
-    def refineEntityDamageTable(  # noqa: ANN201, D102, N802, PLR6301
+    def refineEntityDamageTable(  # noqa: D102, N802, PLR6301
         self,
-        damaged_table,  # noqa: ANN001
-        group_name,  # noqa: ANN001
-        agent_group_tag,  # noqa: ANN001
-        element_type,  # noqa: ANN001
+        damaged_table,
+        group_name,
+        agent_group_tag,
+        element_type,
     ):
         ret = []
         # logger.warning('Sina')
@@ -1291,7 +1291,7 @@ class Restoration:  # noqa: D101, PLR0904
 
         return ret
 
-    def _refine_table(self, table, attribute, condition, condition_value):  # noqa: ANN001, ANN202, C901, PLR6301
+    def _refine_table(self, table, attribute, condition, condition_value):  # noqa: C901, PLR6301
         refined_table = None
 
         if type(condition_value) == str:  # noqa: E721
@@ -1321,14 +1321,14 @@ class Restoration:  # noqa: D101, PLR0904
 
         return refined_table
 
-    def _getRefinedNodeElementList(  # noqa: ANN202, C901, N802
+    def _getRefinedNodeElementList(  # noqa: C901, N802
         self,
-        WaterNetwork,  # noqa: ANN001, ARG002, N803
-        attribute,  # noqa: ANN001
-        condition,  # noqa: ANN001
-        condition_value,  # noqa: ANN001
-        element_type,  # noqa: ANN001
-        wn,  # noqa: ANN001
+        WaterNetwork,  # noqa: ARG002, N803
+        attribute,
+        condition,
+        condition_value,
+        element_type,
+        wn,
     ):
         res = []
         node_res = []
@@ -1397,12 +1397,12 @@ class Restoration:  # noqa: D101, PLR0904
 
         return res, node_res
 
-    def _getRefinedPumpList(  # noqa: ANN202, N802
+    def _getRefinedPumpList(  # noqa: N802
         self,
-        WaterNetwork,  # noqa: ANN001, ARG002, N803
-        attribute,  # noqa: ANN001
-        condition,  # noqa: ANN001
-        condition_value,  # noqa: ANN001
+        WaterNetwork,  # noqa: ARG002, N803
+        attribute,
+        condition,
+        condition_value,
     ):
         element_res = []
 
@@ -1450,12 +1450,12 @@ class Restoration:  # noqa: D101, PLR0904
                 res.append(temp)
         return res
 
-    def _getRefinedPipeList(  # noqa: ANN202, C901, N802
+    def _getRefinedPipeList(  # noqa: C901, N802
         self,
-        WaterNetwork,  # noqa: ANN001, N803
-        attribute,  # noqa: ANN001
-        condition,  # noqa: ANN001
-        condition_value,  # noqa: ANN001
+        WaterNetwork,  # noqa: N803
+        attribute,
+        condition,
+        condition_value,
     ):
         res = []
 
@@ -1526,16 +1526,16 @@ class Restoration:  # noqa: D101, PLR0904
 
         return res
 
-    def _getReminderTime(self, name):  # noqa: ANN001, ANN202, N802
+    def _getReminderTime(self, name):  # noqa: N802
         return self._reminder_time_hard_event[name]
 
-    def _saveReminderTime(self, time, name):  # noqa: ANN001, ANN202, N802
+    def _saveReminderTime(self, time, name):  # noqa: N802
         if name not in self._reminder_time_hard_event:
             self._reminder_time_hard_event[name] = int(time)
         else:
             self._reminder_time_hard_event[name] += int(time)
 
-    def _addHardEvent(self, next_time, requester, detail=None, current_time=None):  # noqa: ANN001, ANN202, N802
+    def _addHardEvent(self, next_time, requester, detail=None, current_time=None):  # noqa: N802
         """Adds a hard event
 
         Parameters
@@ -1604,7 +1604,7 @@ class Restoration:  # noqa: D101, PLR0904
 
         return next_time
 
-    def _isHardEvent(self, time, requester=None):  # noqa: ANN001, ANN202, N802
+    def _isHardEvent(self, time, requester=None):  # noqa: N802
         if requester == None:  # noqa: E711
             return time in self._hard_event_table.index
         else:  # noqa: RET505
@@ -1614,7 +1614,7 @@ class Restoration:  # noqa: D101, PLR0904
                     return True
             return False
 
-    def getHardEventDetails(self, time, by=None):  # noqa: ANN001, ANN201, N802, D102
+    def getHardEventDetails(self, time, by=None):  # noqa: N802, D102
         if by == None:  # noqa: E711
             return self._hard_event_table.loc[time, 'Detail']
         elif by not in self._hard_event_table.loc[time, 'Requester']:  # noqa: RET505
@@ -1630,7 +1630,7 @@ class Restoration:  # noqa: D101, PLR0904
                 i += 1  # noqa: SIM113
             return res
 
-    def getNewEventsTime(self, reset=False):  # noqa: ANN001, ANN201, FBT002, N802, D102
+    def getNewEventsTime(self, reset=False):  # noqa: FBT002, N802, D102
         new_event_table = self._hard_event_table[
             self._hard_event_table['New'] == True  # noqa: E712
         ]
@@ -1642,13 +1642,13 @@ class Restoration:  # noqa: D101, PLR0904
 
         return list(new_event_table.index)
 
-    def unmarkNewEvents(self):  # noqa: ANN201, N802, D102
+    def unmarkNewEvents(self):  # noqa: N802, D102
         self._hard_event_table['new'][self._hard_event_table['New'] == True] = False  # noqa: E712
 
-    def getAllSequences(self, element_type):  # noqa: ANN001, ANN201, N802, D102
+    def getAllSequences(self, element_type):  # noqa: N802, D102
         return self.sequence[element_type]
 
-    def getNextSequence(self, element_type, cur_seq):  # noqa: ANN001, ANN201, N802, D102
+    def getNextSequence(self, element_type, cur_seq):  # noqa: N802, D102
         seq_list = self.sequence[element_type]
         if cur_seq not in seq_list:
             raise ValueError('Sequence was not in sequence list: ' + str(cur_seq))
@@ -1662,7 +1662,7 @@ class Restoration:  # noqa: D101, PLR0904
         else:  # noqa: RET505
             return seq_list[i + 1]
 
-    def initialize(self, wn, stop_time, delay=0, earthquake=None):  # noqa: ANN001, ANN201, C901, D102
+    def initialize(self, wn, stop_time, delay=0, earthquake=None):  # noqa: C901, D102
         self.if_initiated = True
         self.eq_time = stop_time
         if delay < 0:
@@ -1740,7 +1740,7 @@ class Restoration:  # noqa: D101, PLR0904
         event_time_list = event_time_list[1:]
         return event_time_list  # noqa: RET504
 
-    def iRestorationStopTime(self):  # noqa: ANN201, N802, D102
+    def iRestorationStopTime(self):  # noqa: N802, D102
         if self.if_initiated == False:  # noqa: E712
             return False
         logger.debug('Func: node functionality')
@@ -1770,7 +1770,7 @@ class Restoration:  # noqa: D101, PLR0904
         else:  # noqa: RET505
             return False
 
-    def iAllPipeLastActionDone(self):  # noqa: ANN201, N802, D102
+    def iAllPipeLastActionDone(self):  # noqa: N802, D102
         print()  # noqa: T201
         if 'PIPE' in self.sequence:
             if len(self._registry._pipe_damage_table) == 0:  # noqa: SLF001
@@ -1789,7 +1789,7 @@ class Restoration:  # noqa: D101, PLR0904
         else:
             return True
 
-    def iAllNodeLastActionDone(self):  # noqa: ANN201, N802, D102
+    def iAllNodeLastActionDone(self):  # noqa: N802, D102
         if 'DISTNODE' in self.sequence:
             if len(self._registry._node_damage_table) == 0:  # noqa: SLF001
                 return True
@@ -1808,7 +1808,7 @@ class Restoration:  # noqa: D101, PLR0904
         else:
             return True
 
-    def iAllPumpLastActionDone(self):  # noqa: ANN201, N802, D102
+    def iAllPumpLastActionDone(self):  # noqa: N802, D102
         if 'PUMP' in self.sequence:
             if len(self._registry._pump_damage_table) == 0:  # noqa: SLF001
                 return True
@@ -1828,7 +1828,7 @@ class Restoration:  # noqa: D101, PLR0904
         else:
             return True
 
-    def iAllGNodeLastActionDone(self):  # noqa: ANN201, N802, D102
+    def iAllGNodeLastActionDone(self):  # noqa: N802, D102
         if 'GNODE' in self.sequence:
             if len(self._registry._gnode_damage_table) == 0:  # noqa: SLF001
                 return True
@@ -1846,7 +1846,7 @@ class Restoration:  # noqa: D101, PLR0904
         else:
             return True
 
-    def iAllTankLastActionDone(self):  # noqa: ANN201, N802, D102
+    def iAllTankLastActionDone(self):  # noqa: N802, D102
         if 'TANK' in self.sequence:
             if len(self._registry._tank_damage_table) == 0:  # noqa: SLF001
                 return True
@@ -1862,7 +1862,7 @@ class Restoration:  # noqa: D101, PLR0904
         else:
             return True
 
-    def iAllReservoirLastActionDone(self):  # noqa: ANN201, N802, D102
+    def iAllReservoirLastActionDone(self):  # noqa: N802, D102
         if 'RESERVOIR' in self.sequence:
             if len(self._registry._reservoir_damage_table) == 0:  # noqa: SLF001
                 return True
@@ -1882,7 +1882,7 @@ class Restoration:  # noqa: D101, PLR0904
         else:
             return True
 
-    def getHydSigPipeList(self):  # noqa: ANN201, N802, D102
+    def getHydSigPipeList(self):  # noqa: N802, D102
         damage_group_list = self.priority.getHydSigDamageGroups()
         pipe_damage_group_list = [
             cur_damage_group

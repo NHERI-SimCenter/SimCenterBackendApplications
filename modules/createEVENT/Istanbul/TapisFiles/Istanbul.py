@@ -11,7 +11,7 @@ import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
 
-def Istanbul(information):  # noqa: ANN001, ANN201, N802, D103
+def Istanbul(information):  # noqa: N802, D103
     TopoFlag = information['TopoFlag']  # noqa: N806
     LocationFlag = information['LocationFlag']  # noqa: N806
     numSiteGM = information['number_of_realizations']  # noqa: N806
@@ -79,7 +79,7 @@ def Istanbul(information):  # noqa: ANN001, ANN201, N802, D103
     )
 
 
-def write_motion(site_name, directory, i, motiondict):  # noqa: ANN001, ANN201, D103
+def write_motion(site_name, directory, i, motiondict):  # noqa: D103
     filename = f'{directory}/site_{site_name}_{i}.json'
     with open(filename, 'w') as f:  # noqa: PLW1514, PTH123
         json.dump(motiondict, f, indent=2)

@@ -10,7 +10,7 @@ from agavepy.agave import Agave
 os.chdir(os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
 
 
-def Submit_tapis_job():  # noqa: ANN201, N802, D103
+def Submit_tapis_job():  # noqa: N802, D103
     ag = Agave.restore()
     with open('TapisFiles/information.json') as file:  # noqa: PLW1514, PTH123
         information = json.load(file)

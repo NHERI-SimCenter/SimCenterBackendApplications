@@ -12,7 +12,7 @@ import numpy as np
 from stl import mesh
 
 
-def create_building_geometry(width, depth, height, center):  # noqa: ANN001, ANN201, D103
+def create_building_geometry(width, depth, height, center):  # noqa: D103
     epsilon = 0.01 * min(width, depth, height)
 
     # Define the 8 vertices of the building
@@ -58,16 +58,16 @@ def create_building_geometry(width, depth, height, center):  # noqa: ANN001, ANN
     return bldg
 
 
-def create_surroundings_geometry(  # noqa: ANN201, D103
-    main_bldg_width,  # noqa: ANN001
-    main_bldg_depth,  # noqa: ANN001
-    sur_bldg_width,  # noqa: ANN001
-    sur_bldg_depth,  # noqa: ANN001
-    sur_bldg_height,  # noqa: ANN001
-    street_width_x,  # noqa: ANN001
-    street_width_y,  # noqa: ANN001
-    bound_radius,  # noqa: ANN001
-    randomness=0.0,  # noqa: ANN001
+def create_surroundings_geometry(  # noqa: D103
+    main_bldg_width,
+    main_bldg_depth,
+    sur_bldg_width,
+    sur_bldg_depth,
+    sur_bldg_height,
+    street_width_x,
+    street_width_y,
+    bound_radius,
+    randomness=0.0,
 ):
     plan_x = max(main_bldg_depth, sur_bldg_depth)
     plan_y = max(main_bldg_width, sur_bldg_width)
@@ -186,7 +186,7 @@ def create_surroundings_geometry(  # noqa: ANN201, D103
 #     return table
 
 
-def write_main_building_stl_file(input_json_path, case_path):  # noqa: ANN001, ANN201, D103
+def write_main_building_stl_file(input_json_path, case_path):  # noqa: D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -230,7 +230,7 @@ def write_main_building_stl_file(input_json_path, case_path):  # noqa: ANN001, A
     bldg.save(case_path + '/constant/geometry/building.stl', mode=fmt)
 
 
-def write_surrounding_buildings_stl_file(input_json_path, case_path):  # noqa: ANN001, ANN201, D103
+def write_surrounding_buildings_stl_file(input_json_path, case_path):  # noqa: D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -296,7 +296,7 @@ def write_surrounding_buildings_stl_file(input_json_path, case_path):  # noqa: A
     return len(surroundings)
 
 
-def write_block_mesh_dict(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, D103
+def write_block_mesh_dict(input_json_path, template_dict_path, case_path):  # noqa: D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -408,11 +408,11 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):  # no
     output_file.close()
 
 
-def write_snappy_hex_mesh_dict(  # noqa: ANN201, C901, D103
-    input_json_path,  # noqa: ANN001
-    template_dict_path,  # noqa: ANN001
-    case_path,  # noqa: ANN001
-    n_surr_bldgs,  # noqa: ANN001
+def write_snappy_hex_mesh_dict(  # noqa: C901, D103
+    input_json_path,
+    template_dict_path,
+    case_path,
+    n_surr_bldgs,
 ):
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
@@ -648,11 +648,11 @@ def write_snappy_hex_mesh_dict(  # noqa: ANN201, C901, D103
     output_file.close()
 
 
-def write_surfaceFeaturesDict_file(  # noqa: ANN201, N802, D103
-    input_json_path,  # noqa: ANN001
-    template_dict_path,  # noqa: ANN001
-    case_path,  # noqa: ANN001
-    n_surr_bldgs,  # noqa: ANN001
+def write_surfaceFeaturesDict_file(  # noqa: N802, D103
+    input_json_path,
+    template_dict_path,
+    case_path,
+    n_surr_bldgs,
 ):
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
@@ -694,7 +694,7 @@ def write_surfaceFeaturesDict_file(  # noqa: ANN201, N802, D103
     output_file.close()
 
 
-def write_boundary_data_files(input_json_path, case_path):  # noqa: ANN001, ANN201
+def write_boundary_data_files(input_json_path, case_path):
     """This functions writes wind profile files in "constant/boundaryData/inlet"
     if TInf options are used for the simulation.
     """  # noqa: D205, D401, D404
@@ -743,7 +743,7 @@ def write_boundary_data_files(input_json_path, case_path):  # noqa: ANN001, ANN2
     foam.write_foam_field(wind_profiles[:, 8:17], bd_path + 'L')
 
 
-def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
+def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: N802, D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -866,7 +866,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     output_file.close()
 
 
-def write_p_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, D103
+def write_p_file(input_json_path, template_dict_path, case_path):  # noqa: D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -951,7 +951,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     output_file.close()
 
 
-def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, D103
+def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -1056,7 +1056,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN
     output_file.close()
 
 
-def write_epsilon_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, D103
+def write_epsilon_file(input_json_path, template_dict_path, case_path):  # noqa: D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -1174,7 +1174,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):  # noqa:
     output_file.close()
 
 
-def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, D103
+def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -1288,7 +1288,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     output_file.close()
 
 
-def write_controlDict_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
+def write_controlDict_file(input_json_path, template_dict_path, case_path):  # noqa: N802, D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -1397,7 +1397,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
     output_file.close()
 
 
-def write_fvSolution_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
+def write_fvSolution_file(input_json_path, template_dict_path, case_path):  # noqa: N802, D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -1456,7 +1456,7 @@ def write_fvSolution_file(input_json_path, template_dict_path, case_path):  # no
     output_file.close()
 
 
-def write_pressure_probes_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, D103
+def write_pressure_probes_file(input_json_path, template_dict_path, case_path):  # noqa: D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -1502,7 +1502,7 @@ def write_pressure_probes_file(input_json_path, template_dict_path, case_path): 
     output_file.close()
 
 
-def write_wind_profiles_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, C901, D103
+def write_wind_profiles_file(input_json_path, template_dict_path, case_path):  # noqa: C901, D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -1603,7 +1603,7 @@ def write_wind_profiles_file(input_json_path, template_dict_path, case_path):  #
         output_file.close()
 
 
-def write_vtk_plane_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, C901, D103
+def write_vtk_plane_file(input_json_path, template_dict_path, case_path):  # noqa: C901, D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -1704,7 +1704,7 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):  # noq
         output_file.close()
 
 
-def write_momentumTransport_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
+def write_momentumTransport_file(input_json_path, template_dict_path, case_path):  # noqa: N802, D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -1759,7 +1759,7 @@ def write_momentumTransport_file(input_json_path, template_dict_path, case_path)
     output_file.close()
 
 
-def write_physicalProperties_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
+def write_physicalProperties_file(input_json_path, template_dict_path, case_path):  # noqa: N802, D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -1791,7 +1791,7 @@ def write_physicalProperties_file(input_json_path, template_dict_path, case_path
     output_file.close()
 
 
-def write_transportProperties_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
+def write_transportProperties_file(input_json_path, template_dict_path, case_path):  # noqa: N802, D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -1823,7 +1823,7 @@ def write_transportProperties_file(input_json_path, template_dict_path, case_pat
     output_file.close()
 
 
-def write_fvSchemes_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
+def write_fvSchemes_file(input_json_path, template_dict_path, case_path):  # noqa: N802, D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -1851,7 +1851,7 @@ def write_fvSchemes_file(input_json_path, template_dict_path, case_path):  # noq
     output_file.close()
 
 
-def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
+def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):  # noqa: N802, D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
@@ -1891,7 +1891,7 @@ def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):
     output_file.close()
 
 
-def write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
+def write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path):  # noqa: N802, D103
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)

@@ -14,7 +14,7 @@ from random import randrange
 from preprocessJSON import preProcessDakota
 
 
-def str2bool(v):  # noqa: ANN001, ANN201, D103
+def str2bool(v):  # noqa: D103
     # courtesy of Maxim @ stackoverflow
 
     if isinstance(v, bool):
@@ -27,7 +27,7 @@ def str2bool(v):  # noqa: ANN001, ANN201, D103
         raise argparse.ArgumentTypeError('Boolean value expected.')  # noqa: EM101, TRY003
 
 
-def main(args):  # noqa: ANN001, ANN201, C901, D103
+def main(args):  # noqa: C901, D103
     # First we need to set the path and environment
     home = os.path.expanduser('~')  # noqa: PTH111
     env = os.environ

@@ -4,7 +4,7 @@ import json
 import os
 
 
-def validateCaseDirectoryStructure(caseDir):  # noqa: ANN001, ANN201, N802, N803
+def validateCaseDirectoryStructure(caseDir):  # noqa: N802, N803
     """This method validates that the provided case directory is valid and contains the 0, constant and system directory
     It also checks that system directory contains the controlDict
     """  # noqa: D205, D400, D401, D404
@@ -23,7 +23,7 @@ def validateCaseDirectoryStructure(caseDir):  # noqa: ANN001, ANN201, N802, N803
     return True
 
 
-def findFunctionsDictionary(controlDictLines):  # noqa: ANN001, ANN201, N802, N803
+def findFunctionsDictionary(controlDictLines):  # noqa: N802, N803
     """This method will find functions dictionary in the controlDict"""  # noqa: D400, D401, D404
     for line in controlDictLines:
         if line.startswith('functions'):
@@ -32,7 +32,7 @@ def findFunctionsDictionary(controlDictLines):  # noqa: ANN001, ANN201, N802, N8
     return [False, len(controlDictLines)]
 
 
-def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):  # noqa: ANN001, ANN201, N802, N803
+def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):  # noqa: N802, N803
     """This method will write the force dictionary"""  # noqa: D400, D401, D404
     for line in ['\t\n', '\tbuildingsForces\n', '\t{\n', '\t}\n', '\n']:
         controlDictLines.insert(lineIndex, line)
@@ -73,7 +73,7 @@ def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):  # 
         lineIndex += 1  # noqa: N806
 
 
-def AddBuildingsForces(floorsCount, patches):  # noqa: ANN001, ANN201, N802, N803
+def AddBuildingsForces(floorsCount, patches):  # noqa: N802, N803
     """First, we need to validate the case directory structure"""  # noqa: D400
     # if not validateCaseDirectoryStructure(caseDir):
     #     print("Invalid OpenFOAM Case Directory!")
@@ -100,7 +100,7 @@ def AddBuildingsForces(floorsCount, patches):  # noqa: ANN001, ANN201, N802, N80
         controlDict.writelines(controlDictLines)
 
 
-def GetFloorsCount(BIMFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
+def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
     with open(BIMFilePath) as BIMFile:  # noqa: N806, PLW1514, PTH123
         bim = json.load(BIMFile)
 

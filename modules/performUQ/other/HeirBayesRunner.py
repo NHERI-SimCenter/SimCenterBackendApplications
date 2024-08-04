@@ -17,7 +17,7 @@ class HeirBayesRunner(UqRunner):  # noqa: D101
         self.tuning_interval = 0
         self.seed = 0
 
-    def storeUQData(self, uqData):  # noqa: ANN001, ANN201, N802, N803, D102
+    def storeUQData(self, uqData):  # noqa: N802, N803, D102
         for val in uqData['Parameters']:
             if val['name'] == 'File To Run':
                 self.file_to_run = val['value']
@@ -30,7 +30,7 @@ class HeirBayesRunner(UqRunner):  # noqa: D101
             elif val['name'] == 'Seed':
                 self.seed = int(val['value'])
 
-    def performHeirBayesSampling(self):  # noqa: ANN201, N802, D102
+    def performHeirBayesSampling(self):  # noqa: N802, D102
         self.dir_name = os.path.dirname(self.file_to_run)  # noqa: PTH120
         sys.path.append(self.dir_name)
         module_name = os.path.basename(self.file_to_run)  # noqa: PTH119
@@ -46,12 +46,12 @@ class HeirBayesRunner(UqRunner):  # noqa: D101
             )
         )
 
-    def saveResultsToPklFile(self):  # noqa: ANN201, N802, D102
+    def saveResultsToPklFile(self):  # noqa: N802, D102
         self.saved_pickle_filename = self.heir_code.save_results(
             self.trace, self.time_taken, self.inf_object, prefix='synthetic_data'
         )
 
-    def createHeadingStringsList(self):  # noqa: ANN201, N802, D102
+    def createHeadingStringsList(self):  # noqa: N802, D102
         self.params = ['fy', 'E', 'b', 'cR1', 'cR2', 'a1', 'a3']
         self.num_params = len(self.params)
 
@@ -74,10 +74,10 @@ class HeirBayesRunner(UqRunner):  # noqa: D101
         for sig in range(self.num_coupons):
             self.heading_list.append(''.join(['ErrorVariance_', str(sig + 1)]))
 
-    def makeHeadingRow(self, separator='\t'):  # noqa: ANN001, ANN201, N802, D102
+    def makeHeadingRow(self, separator='\t'):  # noqa: N802, D102
         self.headingRow = separator.join([item for item in self.heading_list])  # noqa: C416
 
-    def makeOneRowString(self, sample_num, sample, separator='\t'):  # noqa: ANN001, ANN201, N802, D102
+    def makeOneRowString(self, sample_num, sample, separator='\t'):  # noqa: N802, D102
         initial_string = separator.join([str(sample_num), '1'])
         coupon_string = separator.join(
             [
@@ -107,10 +107,10 @@ class HeirBayesRunner(UqRunner):  # noqa: D101
         )
         return row_string  # noqa: RET504
 
-    def makeTabularResultsFile(  # noqa: ANN201, N802, D102
+    def makeTabularResultsFile(  # noqa: N802, D102
         self,
-        save_file_name='tabularResults.out',  # noqa: ANN001
-        separator='\t',  # noqa: ANN001
+        save_file_name='tabularResults.out',
+        separator='\t',
     ):
         self.createHeadingStringsList()
         self.makeHeadingRow(separator=separator)
@@ -128,43 +128,43 @@ class HeirBayesRunner(UqRunner):  # noqa: D101
                 f.write(row)
                 f.write('\n')
 
-    def startTimer(self):  # noqa: ANN201, N802, D102
+    def startTimer(self):  # noqa: N802, D102
         self.startingTime = time.time()
 
-    def computeTimeElapsed(self):  # noqa: ANN201, N802, D102
+    def computeTimeElapsed(self):  # noqa: N802, D102
         self.timeElapsed = time.time() - self.startingTime
 
-    def printTimeElapsed(self):  # noqa: ANN201, N802, D102
+    def printTimeElapsed(self):  # noqa: N802, D102
         self.computeTimeElapsed()
         print(f'Time elapsed: {self.timeElapsed / 60:0.2f} minutes')  # noqa: T201
 
-    def startSectionTimer(self):  # noqa: ANN201, N802, D102
+    def startSectionTimer(self):  # noqa: N802, D102
         self.sectionStartingTime = time.time()
 
-    def resetSectionTimer(self):  # noqa: ANN201, N802, D102
+    def resetSectionTimer(self):  # noqa: N802, D102
         self.startSectionTimer()
 
-    def computeSectionTimeElapsed(self):  # noqa: ANN201, N802, D102
+    def computeSectionTimeElapsed(self):  # noqa: N802, D102
         self.sectionTimeElapsed = time.time() - self.sectionStartingTime
 
-    def printSectionTimeElapsed(self):  # noqa: ANN201, N802, D102
+    def printSectionTimeElapsed(self):  # noqa: N802, D102
         self.computeSectionTimeElapsed()
         print(f'Time elapsed: {self.sectionTimeElapsed / 60:0.2f} minutes')  # noqa: T201
 
     @staticmethod
-    def printEndMessages():  # noqa: ANN205, N802, D102
+    def printEndMessages():  # noqa: N802, D102
         print('Heirarchical Bayesian estimation done!')  # noqa: T201
 
-    def runUQ(  # noqa: ANN201, N802
+    def runUQ(  # noqa: N802
         self,
-        uqData,  # noqa: ANN001, N803
-        simulationData,  # noqa: ANN001, ARG002, N803
-        randomVarsData,  # noqa: ANN001, ARG002, N803
-        demandParams,  # noqa: ANN001, ARG002, N803
-        workingDir,  # noqa: ANN001, N803
-        runType,  # noqa: ANN001, ARG002, N803
-        localAppDir,  # noqa: ANN001, ARG002, N803
-        remoteAppDir,  # noqa: ANN001, ARG002, N803
+        uqData,  # noqa: N803
+        simulationData,  # noqa: ARG002, N803
+        randomVarsData,  # noqa: ARG002, N803
+        demandParams,  # noqa: ARG002, N803
+        workingDir,  # noqa: N803
+        runType,  # noqa: ARG002, N803
+        localAppDir,  # noqa: ARG002, N803
+        remoteAppDir,  # noqa: ARG002, N803
     ):
         """This function configures and runs hierarchical Bayesian estimation based on the
         input UQ configuration, simulation configuration, random variables,
@@ -193,13 +193,13 @@ class HeirBayesRunner(UqRunner):  # noqa: D101
 
 
 class testRunUQ:  # noqa: D101
-    def __init__(self, json_file_path_string) -> None:  # noqa: ANN001
+    def __init__(self, json_file_path_string) -> None:
         self.json_file_path_string = json_file_path_string
         self.getUQData()
         self.createRunner()
         self.runTest()
 
-    def getUQData(self):  # noqa: ANN201, N802, D102
+    def getUQData(self):  # noqa: N802, D102
         with open(os.path.abspath(self.json_file_path_string)) as f:  # noqa: PLW1514, PTH100, PTH123
             input_data = json.load(f)
 
@@ -216,10 +216,10 @@ class testRunUQ:  # noqa: D101
         )
         self.runType = 'runningLocal'
 
-    def createRunner(self):  # noqa: ANN201, N802, D102
+    def createRunner(self):  # noqa: N802, D102
         self.runner = HeirBayesRunner()
 
-    def runTest(self):  # noqa: ANN201, N802, D102
+    def runTest(self):  # noqa: N802, D102
         self.runner.runUQ(
             uqData=self.uqData,
             simulationData=self.simulationData,
@@ -232,7 +232,7 @@ class testRunUQ:  # noqa: D101
         )
 
 
-def main():  # noqa: ANN201, D103
+def main():  # noqa: D103
     filename = os.path.abspath(  # noqa: PTH100
         os.path.join(  # noqa: PTH118
             os.path.dirname(__file__),  # noqa: PTH120

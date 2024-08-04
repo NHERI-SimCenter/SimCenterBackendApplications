@@ -61,7 +61,7 @@ from simcenter_common import get_scale_factors  # noqa: E402
 class NumpyEncoder(json.JSONEncoder):  # noqa: D101
     # Encode the numpy datatypes to json
 
-    def default(self, obj):  # noqa: ANN001, ANN201, D102
+    def default(self, obj):  # noqa: D102
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
@@ -115,7 +115,7 @@ def clean_up_nistr(nistr: str) -> str:  # noqa: D103
     return nistr
 
 
-def get_replacement_response(replacement_time: float):  # noqa: ANN201, D103
+def get_replacement_response(replacement_time: float):  # noqa: D103
     return {
         'repair_class': 'replacement',
         'damage_by_component_all_DS': None,
@@ -143,7 +143,7 @@ def get_first_value(val: dict, num_levels: int) -> int:  # noqa: D103
         return next_val
 
 
-def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0914, PLR0915
+def main(args):  # noqa: C901, D103, PLR0914, PLR0915
     print('***Running REDi Seismic Downtime engine***\n')  # noqa: T201
 
     pelicun_results_dir = Path(args.dirnameOutput)

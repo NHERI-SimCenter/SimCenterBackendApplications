@@ -8,7 +8,7 @@ from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 
 
-def convert_accel_units(acceleration, from_, to_='cm/s/s'):  # noqa: ANN001, ANN201, C901
+def convert_accel_units(acceleration, from_, to_='cm/s/s'):  # noqa: C901
     """Converts acceleration from/to different units
     :param acceleration: the acceleration (numeric or numpy array)
     :param from_: unit of `acceleration`: string in "g", "m/s/s", "m/s**2",
@@ -49,12 +49,12 @@ def convert_accel_units(acceleration, from_, to_='cm/s/s'):  # noqa: ANN001, ANN
     )
 
 
-def get_velocity_displacement(  # noqa: ANN201
-    time_step,  # noqa: ANN001
-    acceleration,  # noqa: ANN001
-    units='cm/s/s',  # noqa: ANN001
-    velocity=None,  # noqa: ANN001
-    displacement=None,  # noqa: ANN001
+def get_velocity_displacement(
+    time_step,
+    acceleration,
+    units='cm/s/s',
+    velocity=None,
+    displacement=None,
 ):
     """Returns the velocity and displacement time series using simple integration
     :param float time_step:
@@ -76,14 +76,14 @@ def get_velocity_displacement(  # noqa: ANN201
 class NewmarkBeta:
     """Evaluates the response spectrum using the Newmark-Beta methodology"""  # noqa: D400
 
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        acceleration,  # noqa: ANN001
-        time_step,  # noqa: ANN001
-        periods,  # noqa: ANN001
-        damping=0.05,  # noqa: ANN001
-        dt_disc=0.002,  # noqa: ANN001
-        units='g',  # noqa: ANN001
+        acceleration,
+        time_step,
+        periods,
+        damping=0.05,
+        dt_disc=0.002,
+        units='g',
     ):
         """Setup the response spectrum calculator
         :param numpy.ndarray time_hist:
@@ -110,7 +110,7 @@ class NewmarkBeta:
         self.response_spectrum = None
         self.dt_disc = dt_disc
 
-    def run(self):  # noqa: ANN201
+    def run(self):
         """Evaluates the response spectrum
         :returns:
             Response Spectrum - Dictionary containing all response spectrum
@@ -162,7 +162,7 @@ class NewmarkBeta:
         }
         return self.response_spectrum, time_series, accel, vel, disp
 
-    def _newmark_beta(self, omega, cval, kval):  # noqa: ANN001, ANN202, ARG002
+    def _newmark_beta(self, omega, cval, kval):  # noqa: ARG002
         """Newmark-beta integral
         :param numpy.ndarray omega:
             Angular period - (2 * pi) / T

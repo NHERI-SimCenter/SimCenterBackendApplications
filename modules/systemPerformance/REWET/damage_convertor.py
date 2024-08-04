@@ -45,7 +45,7 @@ import preprocessorIO
 CBIG_int = int(1e9)
 
 
-def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geojson):  # noqa: ANN001, ANN201, N802
+def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geojson):  # noqa: N802
     """Creates REWET-style piep damage file.
 
     Parameters
@@ -139,7 +139,7 @@ def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geoj
     return pipe_damage_list  # noqa: RET504
 
 
-def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):  # noqa: ANN001, ANN201, N802
+def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):  # noqa: N802
     """Creates REWET-style node damage file.
 
     Parameters
@@ -198,7 +198,7 @@ def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):  # noq
     return node_damage_list  # noqa: RET504
 
 
-def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):  # noqa: ANN001, ANN201, N802, N803
+def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):  # noqa: N802, N803
     """Creates REWET-style pump damage file.
 
     Parameters
@@ -250,7 +250,7 @@ def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):  # noqa: 
     return pump_damage_list  # noqa: RET504
 
 
-def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):  # noqa: ANN001, ANN201, N802, N803
+def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):  # noqa: N802, N803
     """Creates REWET-style Tank damage file.
 
     Parameters
@@ -305,7 +305,7 @@ def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):  # noqa: 
     return tank_damage_list  # noqa: RET504
 
 
-def findAndReadAIMFile(asset_id, asset_type, run_dir):  # noqa: ANN001, ANN201, N802
+def findAndReadAIMFile(asset_id, asset_type, run_dir):  # noqa: N802
     """Finds and read the AIM file for an asset.
 
     Parameters
@@ -330,7 +330,7 @@ def findAndReadAIMFile(asset_id, asset_type, run_dir):  # noqa: ANN001, ANN201, 
     return aim_file_data  # noqa: RET504
 
 
-def getPumpRetsoreTime(damage_state):  # noqa: ANN001, ANN201, N802
+def getPumpRetsoreTime(damage_state):  # noqa: N802
     """NOT USED! WE WILL GET IT FROM PELICUN
 
     Provides the restore time based on HAZUS repair time or any other
@@ -361,7 +361,7 @@ def getPumpRetsoreTime(damage_state):  # noqa: ANN001, ANN201, N802
     return restore_time
 
 
-def getTankRetsoreTime(tank_type, damage_state):  # noqa: ANN001, ANN201, ARG001, N802
+def getTankRetsoreTime(tank_type, damage_state):  # noqa: ARG001, N802
     """NOT USED! WE WILL GET IT FROM PELICUN
 
     Provides the restore time based on HAZUS repair time or any other
@@ -394,7 +394,7 @@ def getTankRetsoreTime(tank_type, damage_state):  # noqa: ANN001, ANN201, ARG001
     return restore_time
 
 
-def readDamagefile(file_addr, run_dir, event_time, sc_geojson):  # noqa: ANN001, ANN201, N802
+def readDamagefile(file_addr, run_dir, event_time, sc_geojson):  # noqa: N802
     """Reads PELICUN damage files and create REWET-Style damage for all
     WaterDistributionNetwork elements
 

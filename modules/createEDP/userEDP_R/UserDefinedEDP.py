@@ -42,13 +42,13 @@ import json
 import sys
 
 
-def write_RV(AIM_file, EVENT_file, EDP_file, EDP_specs):  # noqa: ANN001, ANN201, N802, N803, D103
+def write_RV(AIM_file, EVENT_file, EDP_file, EDP_specs):  # noqa: N802, N803, D103
     # We do this to provide an option for different behavior under setup,
     # even though it is unlikely to have random variables for EDPs.
     write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs)
 
 
-def write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs):  # noqa: ANN001, ANN201, N802, N803, D103
+def write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs):  # noqa: N802, N803, D103
     with open(AIM_file) as f:  # noqa: PLW1514, PTH123
         bim_file = json.load(f)
 

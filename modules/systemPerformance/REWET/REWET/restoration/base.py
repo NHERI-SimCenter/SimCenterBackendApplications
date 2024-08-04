@@ -14,7 +14,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-def get_node_name(node_name, table):  # noqa: ANN001, ANN201, D103
+def get_node_name(node_name, table):  # noqa: D103
     if 'virtual_of' in table.columns:
         real_node_name = table.loc[node_name, 'virtual_of']
         if (
@@ -27,24 +27,24 @@ def get_node_name(node_name, table):  # noqa: ANN001, ANN201, D103
 
 
 class Coordination:  # noqa: D101
-    def __init__(self, X=None, Y=None, system=None):  # noqa: ANN001, ANN204, N803
+    def __init__(self, X=None, Y=None, system=None):  # noqa: N803
         self.x = X
         self.y = Y
         self.system = system
 
-    def set_coord(self, X, Y, system=None):  # noqa: ANN001, ANN201, ARG002, N803, D102
+    def set_coord(self, X, Y, system=None):  # noqa: ARG002, N803, D102
         self.x = X
         self.y = Y
 
-    def get_coord(self):  # noqa: ANN201, D102
+    def get_coord(self):  # noqa: D102
         return (self.x, self.y)
 
-    def set_system(self, system):  # noqa: ANN001, ANN201, D102
+    def set_system(self, system):  # noqa: D102
         self.system = system
 
 
 class Location:  # noqa: D101
-    def __init__(self, name, x, y):  # noqa: ANN001, ANN204
+    def __init__(self, name, x, y):
         self.name = name
         self.coord = Coordination(x, y)
 
@@ -60,18 +60,18 @@ class Location:  # noqa: D101
 
 
 class AgentData:  # noqa: D101
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        agent_name,  # noqa: ANN001
-        agent_type,  # noqa: ANN001
-        cur_x,  # noqa: ANN001
-        cur_y,  # noqa: ANN001
-        shift_name,  # noqa: ANN001
-        base_name,  # noqa: ANN001
-        base_x,  # noqa: ANN001
-        base_y,  # noqa: ANN001
-        shift_obj,  # noqa: ANN001
-        agent_speed,  # noqa: ANN001
+        agent_name,
+        agent_type,
+        cur_x,
+        cur_y,
+        shift_name,
+        base_name,
+        base_x,
+        base_y,
+        shift_obj,
+        agent_speed,
     ):
         if type(agent_type) != str:  # noqa: E721
             raise ValueError('agent type must be string')  # noqa: EM101, TRY003
@@ -104,7 +104,7 @@ class AgentData:  # noqa: D101
         self.cur_job_effect_definition_name = None
         self.cur_job_method_name = None
 
-    def isOnShift(self, time):  # noqa: ANN001, ANN201, N802
+    def isOnShift(self, time):  # noqa: N802
         """Checks if a time is on an agent's shift
 
         Parameters
@@ -138,7 +138,7 @@ class AgentData:  # noqa: D101
         else:  # noqa: RET505
             return False
 
-    def getDistanceFromCoordinate(self, destination_coordination):  # noqa: ANN001, ANN201, N802, D102
+    def getDistanceFromCoordinate(self, destination_coordination):  # noqa: N802, D102
         coord = self.current_location.coord.get_coord()
         cur_x = coord[0]
         cur_y = coord[1]
@@ -149,7 +149,7 @@ class AgentData:  # noqa: D101
         distance = ((cur_x - dest_x) ** 2 + (cur_y - dest_y) ** 2) ** 0.5
         return distance  # noqa: RET504
 
-    def _estimateTimeOfArival(self, destination_coordination):  # noqa: ANN001, ANN202, N802
+    def _estimateTimeOfArival(self, destination_coordination):  # noqa: N802
         distance_with_method_of_choice = self.getDistanceFromCoordinate(
             destination_coordination
         )
@@ -157,7 +157,7 @@ class AgentData:  # noqa: D101
 
         return time  # noqa: RET504
 
-    def getAgentShiftEndTime(self, cur_time):  # noqa: ANN001, ANN201, N802, D102
+    def getAgentShiftEndTime(self, cur_time):  # noqa: N802, D102
         num_of_days = int(cur_time / (24 * 3600))
 
         shift_name = self.shift._shift_name  # noqa: SLF001
@@ -168,7 +168,7 @@ class AgentData:  # noqa: D101
         else:  # noqa: RET505
             return time_finish + 24 * 3600 * (num_of_days + 1)
 
-    def getShiftLength(self):  # noqa: ANN201, N802, D102
+    def getShiftLength(self):  # noqa: N802, D102
         shift_name = self.shift._shift_name  # noqa: SLF001
         (time_start, time_finish) = self._shifting.getShiftTimes(shift_name)
 
@@ -177,16 +177,16 @@ class AgentData:  # noqa: D101
         else:  # noqa: RET505
             return 24 * 3600 - time_start + time_finish
 
-    def setJob(  # noqa: ANN201, N802, D102
+    def setJob(  # noqa: N802, D102
         self,
-        node_name,  # noqa: ANN001
-        action,  # noqa: ANN001
-        entity,  # noqa: ANN001
-        effect_definition_name,  # noqa: ANN001
-        method_name,  # noqa: ANN001
-        time_arival,  # noqa: ANN001
-        time_done,  # noqa: ANN001
-        iOnGoing,  # noqa: ANN001, N803
+        node_name,
+        action,
+        entity,
+        effect_definition_name,
+        method_name,
+        time_arival,
+        time_done,
+        iOnGoing,  # noqa: N803
     ):
         if self.isWorking == True:  # noqa: E712
             raise ValueError('The current agent is working')  # noqa: EM101, TRY003
@@ -203,7 +203,7 @@ class AgentData:  # noqa: D101
 
 
 class Agents:  # noqa: D101
-    def __init__(self, registry, shifting, jobs, restoration_log_book):  # noqa: ANN001, ANN204
+    def __init__(self, registry, shifting, jobs, restoration_log_book):
         # data:    is the
         # type:    agent type
         # sybtype: agent sub type
@@ -218,7 +218,7 @@ class Agents:  # noqa: D101
         self.restoration_log_book = restoration_log_book
         self.registry = registry
 
-    def addAgent(self, agent_name, agent_type, definition):  # noqa: ANN001, ANN201, N802
+    def addAgent(self, agent_name, agent_type, definition):  # noqa: N802
         """Adds agent to the agent list
 
         Parameters
@@ -258,7 +258,7 @@ class Agents:  # noqa: D101
         if agent_type not in self.group_names:
             self.group_names[agent_type] = definition['group_name']
 
-    def setActiveAgents(self, active_agent_ID_list):  # noqa: ANN001, ANN201, N802, N803
+    def setActiveAgents(self, active_agent_ID_list):  # noqa: N802, N803
         """Set agents active by a list of agents' ID
 
         Parameters
@@ -274,7 +274,7 @@ class Agents:  # noqa: D101
         for active_agent_ID in active_agent_ID_list:  # noqa: N806
             self._agents['active'].loc[active_agent_ID] = True
 
-    def getAgentGroupTagList(self, typed_ready_agent):  # noqa: ANN001, ANN201, N802, D102
+    def getAgentGroupTagList(self, typed_ready_agent):  # noqa: N802, D102
         ret = [None]
         agent_type = typed_ready_agent['type'].iloc[0]
         if 'group' in typed_ready_agent:
@@ -288,10 +288,10 @@ class Agents:  # noqa: D101
                 raise RuntimeError('None in agent type: ' + repr(agent_type))
         return ret, self.group_names[agent_type]
 
-    def getAllAgentTypes(self):  # noqa: ANN201, N802, D102
+    def getAllAgentTypes(self):  # noqa: N802, D102
         return self._agents['type'].unique().tolist()
 
-    def getAllAgent(self):  # noqa: ANN201, N802
+    def getAllAgent(self):  # noqa: N802
         """Get a copy of all agent dataframe.
 
         Returns
@@ -301,7 +301,7 @@ class Agents:  # noqa: D101
         """
         return self._agents.copy(deep=True)
 
-    def setChangeShift(self, time, working_check=True):  # noqa: ANN001, ANN201, FBT002, ARG002, N802, D102
+    def setChangeShift(self, time, working_check=True):  # noqa: FBT002, ARG002, N802, D102
         for name, agent in self._agents.iterrows():  # noqa: B007
             if self._agents.loc[name, 'data'].isOnShift(time):
                 if (
@@ -320,21 +320,21 @@ class Agents:  # noqa: D101
                 self._agents.loc[name, 'active'] = False
                 self._agents.loc[name, 'ready'] = False
 
-    def initializeActiveAgents(self, time):  # noqa: ANN001, ANN201, N802, D102
+    def initializeActiveAgents(self, time):  # noqa: N802, D102
         for name, agent in self._agents.iterrows():  # noqa: B007
             if self._agents.loc[name, 'data'].isOnShift(time):
                 self._agents.loc[name, 'active'] = True
             else:
                 self._agents.loc[name, 'active'] = False
 
-    def initializeReadyAgents(self):  # noqa: ANN201, N802, D102
+    def initializeReadyAgents(self):  # noqa: N802, D102
         for name, agent in self._agents.iterrows():  # noqa: B007
             if self._agents.loc[name, 'active'] == True:  # noqa: E712
                 self._agents.loc[name, 'ready'] = True
             else:
                 self._agents.loc[name, 'ready'] = False
 
-    def getReadyAgents(self):  # noqa: ANN201, N802, D102
+    def getReadyAgents(self):  # noqa: N802, D102
         temp = self._agents[
             (self._agents['ready'] == True) & (self._agents['available'] == True)  # noqa: E712
         ]
@@ -345,7 +345,7 @@ class Agents:  # noqa: D101
 
         return temp
 
-    def getAvailabilityRatio(self, agent_type, time):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def getAvailabilityRatio(self, agent_type, time):  # noqa: D102, N802, PLR6301
         if agent_type == 'WQOperator' or agent_type == 'WQWorker':  # noqa: PLR1714
             av_data = pd.Series(data=[0, 0.5, 1], index=[0, 4, 24])
         elif agent_type == 'CONT':
@@ -364,23 +364,23 @@ class Agents:  # noqa: D101
             temp.interpolate(method='index', inplace=True)  # noqa: PD002
             return temp[time]
 
-    def getDefaultAvailabilityRatio(agent_type, self):  # noqa: ANN001, ANN201, ARG002, N802, N805, D102
+    def getDefaultAvailabilityRatio(agent_type, self):  # noqa: ARG002, N802, N805, D102
         if agent_type == 'WQOperator' or agent_type == 'WQWorker':  # noqa: PLR1714
             return 0
         else:  # noqa: RET505
             return 1
 
-    def assignsJobToAgent(  # noqa: ANN201, C901, N802, D102
+    def assignsJobToAgent(  # noqa: C901, N802, D102
         self,
-        agent_name,  # noqa: ANN001
-        node_name,  # noqa: ANN001
-        entity,  # noqa: ANN001
-        action,  # noqa: ANN001
-        time,  # noqa: ANN001
-        wn,  # noqa: ANN001
-        reminded_time,  # noqa: ANN001
-        number_of_damages,  # noqa: ANN001
-        orginal_element,  # noqa: ANN001
+        agent_name,
+        node_name,
+        entity,
+        action,
+        time,
+        wn,
+        reminded_time,
+        number_of_damages,
+        orginal_element,
     ):
         if self._agents.loc[agent_name, 'active'] != True:  # noqa: E712
             raise ValueError('Agent ' + agent_name + ' is not active')
@@ -518,7 +518,7 @@ class Agents:  # noqa: D101
 
         return (True, iget, _ETJ, collective)
 
-    def getJobEndTime(self, agent_name, icheck=True):  # noqa: ANN001, ANN201, FBT002, N802, D102
+    def getJobEndTime(self, agent_name, icheck=True):  # noqa: FBT002, N802, D102
         end_time = self._agents.loc[agent_name, 'data'].job_end_time
         if icheck == True and end_time == None:  # noqa: E711, E712
             raise ValueError('No Time is assigned to agent')  # noqa: EM101, TRY003
@@ -529,7 +529,7 @@ class Agents:  # noqa: D101
             raise ValueError('The agent is not working')  # noqa: EM101, TRY003
         return end_time
 
-    def getJobArivalTime(self, agent_name, icheck=True):  # noqa: ANN001, ANN201, FBT002, N802, D102
+    def getJobArivalTime(self, agent_name, icheck=True):  # noqa: FBT002, N802, D102
         arival_time = self._agents.loc[agent_name, 'data']._time_of_arival  # noqa: SLF001
         if icheck == True and arival_time == None:  # noqa: E711, E712
             raise ValueError('No Time is assigned to agent')  # noqa: EM101, TRY003
@@ -540,7 +540,7 @@ class Agents:  # noqa: D101
             raise ValueError('The agent is not working')  # noqa: EM101, TRY003
         return arival_time
 
-    def releaseAgent(self, agent_name):  # noqa: ANN001, ANN201, N802, D102
+    def releaseAgent(self, agent_name):  # noqa: N802, D102
         if self._agents.loc[agent_name, 'ready'] == True:  # noqa: E712
             raise ValueError(agent_name + ' is already ready')
         if self._agents.loc[agent_name, 'active'] != True:  # noqa: E712
@@ -563,18 +563,18 @@ class Agents:  # noqa: D101
 
 class AgentShift:  # noqa: D101
     # , shifting_obj):
-    def __init__(self, agent_name, name):  # noqa: ANN001, ANN204
+    def __init__(self, agent_name, name):
         self._agent_name = agent_name
         self._shift_name = name
         # shifting_obj.addAgentShift(self._agent_name, self._shift_name)
 
 
 class Shifting:  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         self._all_agent_shift_data = {}
         self._shift_data = pd.DataFrame(columns=['begining', 'end'])
 
-    def addShift(self, name, beginning, ending):  # noqa: ANN001, ANN201, N802
+    def addShift(self, name, beginning, ending):  # noqa: N802
         """Adds a shift to shift registry
 
         Parameters
@@ -620,13 +620,13 @@ class Shifting:  # noqa: D101
 
         self._shift_data.loc[name] = [beginning, ending]
 
-    def getShiftTimes(self, name):  # noqa: ANN001, ANN201, N802, D102
+    def getShiftTimes(self, name):  # noqa: N802, D102
         return (
             self._shift_data['begining'].loc[name],
             self._shift_data['end'].loc[name],
         )
 
-    def getNextShiftTime(self, time):  # noqa: ANN001, ANN201, N802, D102
+    def getNextShiftTime(self, time):  # noqa: N802, D102
         daily_time = time % (24 * 3600)
         num_of_days = int(time / (24 * 3600))
 
@@ -653,7 +653,7 @@ class Shifting:  # noqa: D101
 
         return change_shift_time  # noqa: RET504
 
-    def assignShiftToAgent(self, agent_ID, shift_name):  # noqa: ANN001, ANN201, N802, N803
+    def assignShiftToAgent(self, agent_ID, shift_name):  # noqa: N802, N803
         """Assigns shift to agent
 
         Parameters
@@ -683,7 +683,7 @@ class Shifting:  # noqa: D101
 
 
 class DispatchRule:  # noqa: D101
-    def __init__(self, settings, method='deterministic', exclude=None):  # noqa: ANN001, ANN204
+    def __init__(self, settings, method='deterministic', exclude=None):
         self.settings = settings
         self._rules = {}
         self._cumulative = {}
@@ -724,7 +724,7 @@ class DispatchRule:  # noqa: D101
         for key, d in self._rules.items():  # noqa: B007, PERF102
             self._cumulative[key] = self._rules[key].cumsum()
 
-    def getDiscoveredPrecentage(self, time):  # noqa: ANN001, ANN201, N802, D102
+    def getDiscoveredPrecentage(self, time):  # noqa: N802, D102
         res = {}
         for key in self._cumulative:
             temp = self._cumulative[key].copy()
@@ -743,7 +743,7 @@ class DispatchRule:  # noqa: D101
 
 
 class Dispatch:  # noqa: D101
-    def __init__(self, restoration, settings, discovery_interval=0, method='old'):  # noqa: ANN001, ANN204
+    def __init__(self, restoration, settings, discovery_interval=0, method='old'):
         self.settings = settings
         self.method = method
         self.discovery_interval = discovery_interval
@@ -783,7 +783,7 @@ class Dispatch:  # noqa: D101
         self._rm._registry.addAttrToPipeDamageTable('discovered', False)  # noqa: FBT003, SLF001
         self._rm._registry.addAttrToDistNodeDamageTable('discovered', False)  # noqa: FBT003, SLF001
 
-    def updateDiscovery(self, time):  # noqa: ANN001, ANN201, C901, N802, D102
+    def updateDiscovery(self, time):  # noqa: C901, N802, D102
         if time < self._rm.restoration_start_time:
             print('Time is less than init time')  # noqa: T201
 
@@ -961,7 +961,7 @@ class Dispatch:  # noqa: D101
             # else:
             # raise ValueError('Unknown method: '+repr(self.method))
 
-    def _getDamageNumbers(self, discovered_ratios):  # noqa: ANN001, ANN202, N802
+    def _getDamageNumbers(self, discovered_ratios):  # noqa: N802
         num_damaged_entity = {}
 
         for el in discovered_ratios:
@@ -979,7 +979,7 @@ class Dispatch:  # noqa: D101
             num_damaged_entity[el] = int(np.round(temp * discovered_ratios[el]))
         return num_damaged_entity
 
-    def _updateDamagesNumbers(self, discovered_numbers):  # noqa: ANN001, ANN202, N802
+    def _updateDamagesNumbers(self, discovered_numbers):  # noqa: N802
         for el in discovered_numbers:
             if self._last_discovered_number[el] > discovered_numbers[el]:
                 raise ValueError(
@@ -1040,11 +1040,11 @@ class Dispatch:  # noqa: D101
 
 
 class Priority:  # noqa: D101
-    def __init__(self, restoration):  # noqa: ANN001, ANN204
+    def __init__(self, restoration):
         self._data = {}
         self._rm = restoration
 
-    def addData(self, agent_type, priority, order):  # noqa: ANN001, ANN201, N802, D102
+    def addData(self, agent_type, priority, order):  # noqa: N802, D102
         if agent_type not in self._data:
             self._data[agent_type] = pd.Series(index=[priority], data=[order])
         else:
@@ -1058,7 +1058,7 @@ class Priority:  # noqa: D101
                 )
             self._data[agent_type].loc[priority] = order
 
-    def getPriority(self, agent_type, priority):  # noqa: ANN001, ANN201, N802, D102
+    def getPriority(self, agent_type, priority):  # noqa: N802, D102
         if agent_type not in self._data:
             raise ValueError(
                 'The agent type('
@@ -1079,7 +1079,7 @@ class Priority:  # noqa: D101
 
         return temp.loc[priority]
 
-    def getHydSigDamageGroups(self):  # noqa: ANN201, N802, D102
+    def getHydSigDamageGroups(self):  # noqa: N802, D102
         damage_group_list = set()
         for crew_type in self._data:
             whole_priority_list = self._data[crew_type]
@@ -1093,15 +1093,15 @@ class Priority:  # noqa: D101
                 i += 1  # noqa: SIM113
         return damage_group_list
 
-    def sortDamageTable(  # noqa: ANN201, C901, N802, D102
+    def sortDamageTable(  # noqa: C901, N802, D102
         self,
-        wn,  # noqa: ANN001
-        entity_data,  # noqa: ANN001
-        entity,  # noqa: ANN001
-        agent_type,  # noqa: ANN001
-        target_priority_index,  # noqa: ANN001
-        order_index,  # noqa: ANN001
-        target_priority=None,  # noqa: ANN001
+        wn,
+        entity_data,
+        entity,
+        agent_type,
+        target_priority_index,
+        order_index,
+        target_priority=None,
     ):
         all_priority_data = self._data[agent_type]
         target_priority_list = all_priority_data.loc[target_priority_index]
@@ -1373,12 +1373,12 @@ class Priority:  # noqa: D101
 
         return entity_data
 
-    def isAgentTypeInPriorityData(self, agent_type):  # noqa: ANN001, ANN201, N802, D102
+    def isAgentTypeInPriorityData(self, agent_type):  # noqa: N802, D102
         return agent_type in self._data
 
 
 class Jobs:  # noqa: D101
-    def __init__(self, restoration):  # noqa: ANN001, ANN204
+    def __init__(self, restoration):
         self._rm = restoration
         self._job_list = pd.DataFrame(
             columns=['agent_type', 'entity', 'action', 'time_argument']
@@ -1389,7 +1389,7 @@ class Jobs:  # noqa: D101
         self._final_method = {}
         self._once = {}
 
-    def addEffect(self, effect_name, method_name, def_data):  # noqa: ANN001, ANN201, N802, D102
+    def addEffect(self, effect_name, method_name, def_data):  # noqa: N802, D102
         if effect_name not in self._effect_data:
             self._effect_data[effect_name] = None
 
@@ -1409,10 +1409,10 @@ class Jobs:  # noqa: D101
         else:
             self._effect_data[effect_name][method_name] = def_data
 
-    def setJob(self, jobs_definition):  # noqa: ANN001, ANN201, N802, D102
+    def setJob(self, jobs_definition):  # noqa: N802, D102
         self._job_list = pd.DataFrame.from_records(jobs_definition)
 
-    def _filter(self, agent_type, entity, action):  # noqa: ANN001, ANN202
+    def _filter(self, agent_type, entity, action):
         temp = self._job_list
         temp = temp[
             (
@@ -1434,14 +1434,14 @@ class Jobs:  # noqa: D101
             )
         return temp
 
-    def getAJobEstimate(  # noqa: ANN201, N802, D102
+    def getAJobEstimate(  # noqa: N802, D102
         self,
-        orginal_element,  # noqa: ANN001
-        agent_type,  # noqa: ANN001
-        entity,  # noqa: ANN001
-        action,  # noqa: ANN001
-        method_name,  # noqa: ANN001
-        number,  # noqa: ANN001
+        orginal_element,
+        agent_type,
+        entity,
+        action,
+        method_name,
+        number,
     ):
         temp = self._filter(agent_type, entity, action)
         time_arg = temp['time_argument'].iloc[0]
@@ -1474,7 +1474,7 @@ class Jobs:  # noqa: D101
 
         return time
 
-    def getMeanJobTime(self, agent_type, entity, action):  # noqa: ANN001, ANN201, N802, D102
+    def getMeanJobTime(self, agent_type, entity, action):  # noqa: N802, D102
         temp = self._filter(agent_type, entity, action)
         time_arg = temp['time_argument'].iloc[0]
         if type(time_arg) == int:  # noqa: E721
@@ -1483,13 +1483,13 @@ class Jobs:  # noqa: D101
             raise ValueError('Unknow time argument: ' + str(type(time_arg)))
         return time
 
-    def getAllEffectByJobData(  # noqa: ANN201, N802, D102
+    def getAllEffectByJobData(  # noqa: N802, D102
         self,
-        agent_type,  # noqa: ANN001
-        action,  # noqa: ANN001
-        entity,  # noqa: ANN001
-        iWithout_data=True,  # noqa: ANN001, FBT002, ARG002, N803
-        iOnlyData=False,  # noqa: ANN001, FBT002, N803
+        agent_type,
+        action,
+        entity,
+        iWithout_data=True,  # noqa: FBT002, ARG002, N803
+        iOnlyData=False,  # noqa: FBT002, N803
     ):
         temp = self._filter(agent_type, entity, action)
         all_effect_name = temp['effect'].iloc[0]  # noqa: F841
@@ -1497,7 +1497,7 @@ class Jobs:  # noqa: D101
         if iOnlyData == True:  # noqa: E712
             return
 
-    def addEffectDefaultValue(self, input_dict):  # noqa: ANN001, ANN201, N802, D102
+    def addEffectDefaultValue(self, input_dict):  # noqa: N802, D102
         _key = (
             input_dict['effect_definition_name'],
             input_dict['method_name'],
@@ -1517,7 +1517,7 @@ class Jobs:  # noqa: D101
             'value'
         ]  # self._effect_defualts.append(temp_s, ignore_index=True)
 
-    def getEffectsList(self, effect_definition_name, method_name):  # noqa: ANN001, ANN201, N802, D102
+    def getEffectsList(self, effect_definition_name, method_name):  # noqa: N802, D102
         if effect_definition_name == None:  # noqa: E711
             return []
 
@@ -1527,7 +1527,7 @@ class Jobs:  # noqa: D101
         effects_list = all_methods[method_name]
         return effects_list  # noqa: RET504
 
-    def getEffectDefinition(self, effect_definition_name, iWithout_data=True):  # noqa: ANN001, ANN201, FBT002, N802, N803, D102
+    def getEffectDefinition(self, effect_definition_name, iWithout_data=True):  # noqa: FBT002, N802, N803, D102
         all_methods = self._effect_data[effect_definition_name]
 
         if iWithout_data == True and 'DATA' in all_methods:  # noqa: E712
@@ -1536,12 +1536,12 @@ class Jobs:  # noqa: D101
 
         return all_methods
 
-    def getEffectDefinitionName(self, agent_type, action, entity):  # noqa: ANN001, ANN201, N802, D102
+    def getEffectDefinitionName(self, agent_type, action, entity):  # noqa: N802, D102
         temp = self._filter(agent_type, entity, action)
         effects_definition_name = temp['effect'].iloc[0]
         return effects_definition_name  # noqa: RET504
 
-    def chooseMethodForCurrentJob(self, node_name, effects_definition_name, entity):  # noqa: ANN001, ANN201, N802, D102
+    def chooseMethodForCurrentJob(self, node_name, effects_definition_name, entity):  # noqa: N802, D102
         returned_method = None
         if effects_definition_name == None:  # noqa: E711
             return None
@@ -1573,7 +1573,7 @@ class Jobs:  # noqa: D101
                 pass
         return returned_method
 
-    def _getProbability(self, method, iCondition, element_type):  # noqa: ANN001, ANN202, ARG002, N802, N803, PLR6301
+    def _getProbability(self, method, iCondition, element_type):  # noqa: ARG002, N802, N803, PLR6301
         if iCondition == True:  # noqa: E712
             if 'METHOD_PROBABILITY' in method:  # noqa: SIM401
                 probability = method['METHOD_PROBABILITY']
@@ -1582,7 +1582,7 @@ class Jobs:  # noqa: D101
         # else:
         # if 'METHOD_PROBABILITY' in method:
 
-    def _iConditionHolds(self, val1, con, val2):  # noqa: ANN001, ANN202, C901, N802, PLR6301
+    def _iConditionHolds(self, val1, con, val2):  # noqa: C901, N802, PLR6301
         if con == 'BG':
             if val1 > val2:  # noqa: SIM103
                 return True
@@ -1611,18 +1611,18 @@ class Jobs:  # noqa: D101
         else:
             raise ValueError('Unrecognized condition: ' + repr(con))
 
-    def getDefualtValue(self, effects_definition_name, method_name, argument):  # noqa: ANN001, ANN201, N802, D102
+    def getDefualtValue(self, effects_definition_name, method_name, argument):  # noqa: N802, D102
         _default = self._effect_defualts
         value = _default.get((effects_definition_name, method_name, argument), None)
 
         return value  # noqa: RET504
 
-    def iEffectApplicableByOtherConditions(  # noqa: ANN201, N802, D102
+    def iEffectApplicableByOtherConditions(  # noqa: N802, D102
         self,
-        effects_definition_name,  # noqa: ANN001
-        method_name,  # noqa: ANN001
-        damaged_node_name,  # noqa: ANN001
-        entity,  # noqa: ANN001
+        effects_definition_name,
+        method_name,
+        damaged_node_name,
+        entity,
     ):
         element_type = self._rm.entity[entity]
         effects_definition = self.getEffectDefinition(effects_definition_name)
@@ -1653,12 +1653,12 @@ class Jobs:  # noqa: D101
 
         return True
 
-    def iEffectApplicableByProbability(  # noqa: ANN201, N802, D102
+    def iEffectApplicableByProbability(  # noqa: N802, D102
         self,
-        effects_definition_name,  # noqa: ANN001
-        method_name,  # noqa: ANN001
-        damaged_node_name,  # noqa: ANN001
-        entity,  # noqa: ANN001
+        effects_definition_name,
+        method_name,
+        damaged_node_name,
+        entity,
     ):
         _prob = 0
         temp = self.getDefualtValue(
@@ -1737,7 +1737,7 @@ class Jobs:  # noqa: D101
             return True
         return False
 
-    def _check_probability(self, _prob):  # noqa: ANN001, ANN202, PLR6301
+    def _check_probability(self, _prob):  # noqa: PLR6301
         mes = None  # noqa: F841
         _prob = float(_prob)
         if _prob < 0:

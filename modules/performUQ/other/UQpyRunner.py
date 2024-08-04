@@ -18,16 +18,16 @@ from uqRunner import UqRunner
 
 
 class UQpyRunner(UqRunner):  # noqa: D101
-    def runUQ(  # noqa: ANN201, C901, N802, PLR6301
+    def runUQ(  # noqa: C901, N802, PLR6301
         self,
-        uqData,  # noqa: ANN001, N803
-        simulationData,  # noqa: ANN001, ARG002, N803
-        randomVarsData,  # noqa: ANN001, N803
-        demandParams,  # noqa: ANN001, N803
-        workingDir,  # noqa: ANN001, N803
-        runType,  # noqa: ANN001, N803
-        localAppDir,  # noqa: ANN001, N803
-        remoteAppDir,  # noqa: ANN001, ARG002, N803
+        uqData,  # noqa: N803
+        simulationData,  # noqa: ARG002, N803
+        randomVarsData,  # noqa: N803
+        demandParams,  # noqa: N803
+        workingDir,  # noqa: N803
+        runType,  # noqa: N803
+        localAppDir,  # noqa: N803
+        remoteAppDir,  # noqa: ARG002, N803
     ):
         """This function configures and runs a UQ simulation using UQpy based on the
         input UQ configuration, simulation configuration, random variables,
@@ -191,5 +191,5 @@ class UQpyRunner(UqRunner):  # noqa: D101
 
     # Factory for creating UQpy runner
     class Factory:  # noqa: D106
-        def create(self):  # noqa: ANN201, D102, PLR6301
+        def create(self):  # noqa: D102, PLR6301
             return UQpyRunner()

@@ -52,7 +52,7 @@ import psutil
 R2D = True
 
 
-def site_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103
+def site_job(hazard_info):  # noqa: C901, D103
     # Sites and stations
     print('HazardSimulation: creating stations.')  # noqa: T201
     site_info = hazard_info['Site']
@@ -122,7 +122,7 @@ def site_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103
         exit()  # noqa: PLR1722
 
 
-def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0914, PLR0915
+def hazard_job(hazard_info):  # noqa: C901, D103, PLR0914, PLR0915
     # Sites and stations
     print('HazardSimulation: creating stations.')  # noqa: T201
     site_info = hazard_info['Site']

@@ -35,7 +35,7 @@ class Opening_Designer(  # noqa: D101
     Result_Designer,
     Map_Designer,
 ):
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         self.project = None
         self.scenario_list = None
         self.settings = Settings()
@@ -76,11 +76,11 @@ class Opening_Designer(  # noqa: D101
         """
         self.asli_MainWindow.closeEvent = self.exitApp
 
-    def run(self):  # noqa: ANN201, D102
+    def run(self):  # noqa: D102
         self.asli_MainWindow.show()
         sys.exit(self.asli_app.exec_())
 
-    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: D102, N802, PLR6301
         error_widget = QtWidgets.QMessageBox()
         error_widget.setIcon(QtWidgets.QMessageBox.Critical)
         error_widget.setText(error_msg)
@@ -90,7 +90,7 @@ class Opening_Designer(  # noqa: D101
             error_widget.setInformativeText(error_more_msg)
         error_widget.exec_()
 
-    def questionPrompt(self, title, msg, more_msg=None):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def questionPrompt(self, title, msg, more_msg=None):  # noqa: D102, N802, PLR6301
         prompt_widget = QtWidgets.QMessageBox()
         prompt_widget.setIcon(QtWidgets.QMessageBox.Question)
         prompt_widget.setText(msg)
@@ -104,7 +104,7 @@ class Opening_Designer(  # noqa: D101
             prompt_widget.setInformativeText(more_msg)
         return prompt_widget.exec_()
 
-    def openProject(self):  # noqa: ANN201, N802, D102
+    def openProject(self):  # noqa: N802, D102
         file = QtWidgets.QFileDialog.getOpenFileName(
             self.asli_MainWindow,
             'Select project file',
@@ -130,7 +130,7 @@ class Opening_Designer(  # noqa: D101
         self.setDamageUI()
         self.setRestorationUI()
 
-    def saveProject(self, save_as=False):  # noqa: ANN001, ANN201, FBT002, N802, D102
+    def saveProject(self, save_as=False):  # noqa: FBT002, N802, D102
         data_retrived = False
         if self.getSimulationSettings():
             if self.getHydraulicSettings():
@@ -162,7 +162,7 @@ class Opening_Designer(  # noqa: D101
 
         return True
 
-    def saveProjectAs(self):  # noqa: ANN201, N802, D102
+    def saveProjectAs(self):  # noqa: N802, D102
         if_saved = self.saveProject(save_as=True)
         if if_saved == False:  # noqa: E712
             return
@@ -184,11 +184,11 @@ class Opening_Designer(  # noqa: D101
         with open(self.project_file_addr, 'wb') as f:  # noqa: PTH123
             pickle.dump(project, f)
 
-    def showHelpWindow(self):  # noqa: ANN201, D102, N802, PLR6301
+    def showHelpWindow(self):  # noqa: D102, N802, PLR6301
         help_window = Main_Help_Designer()
         help_window._window.exec_()  # noqa: SLF001
 
-    def exitApp(self, event):  # noqa: ANN001, ANN201, N802, D102
+    def exitApp(self, event):  # noqa: N802, D102
         return_value = self.questionPrompt(
             'REWET', 'Do you want to save the project before you leave?'
         )

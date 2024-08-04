@@ -6,7 +6,7 @@
 import datetime
 
 
-def parseTimeStamp(time_stamp):  # noqa: ANN001, ANN201, N802, D103
+def parseTimeStamp(time_stamp):  # noqa: N802, D103
     striped_time_stamp = time_stamp.split(':')
     hour = striped_time_stamp[0]
     minute = striped_time_stamp[1]
@@ -20,7 +20,7 @@ def parseTimeStamp(time_stamp):  # noqa: ANN001, ANN201, N802, D103
 
 
 class Report_Reading:  # noqa: D101
-    def __init__(self, file_addr):  # noqa: ANN001, ANN204
+    def __init__(self, file_addr):
         self.file_data = {}
         self.maximum_trial_time = []
         with open(file_addr, encoding='utf-8') as f:  # noqa: PTH123

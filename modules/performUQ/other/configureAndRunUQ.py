@@ -3,15 +3,15 @@
 # Use the UQpy driver as a starting point if you want to add other UQ capabilities
 
 
-def configureAndRunUQ(  # noqa: ANN201, N802
-    uqData,  # noqa: ANN001, N803
-    simulationData,  # noqa: ANN001, N803
-    randomVarsData,  # noqa: ANN001, N803
-    demandParams,  # noqa: ANN001, N803
-    workingDir,  # noqa: ANN001, N803
-    runType,  # noqa: ANN001, N803
-    localAppDir,  # noqa: ANN001, N803
-    remoteAppDir,  # noqa: ANN001, N803
+def configureAndRunUQ(  # noqa: N802
+    uqData,  # noqa: N803
+    simulationData,  # noqa: N803
+    randomVarsData,  # noqa: N803
+    demandParams,  # noqa: N803
+    workingDir,  # noqa: N803
+    runType,  # noqa: N803
+    localAppDir,  # noqa: N803
+    remoteAppDir,  # noqa: N803
 ):
     """This function configures and runs a UQ simulation based on the input
     UQ driver and its associated inputs, simulation configuration, random

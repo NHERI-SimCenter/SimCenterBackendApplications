@@ -104,20 +104,20 @@ from brails.EnabledAttributes import BldgAttributes  # noqa: E402
 
 
 # Define a standard way of printing program outputs:
-def log_msg(msg):  # noqa: ANN001, ANN201, D103
+def log_msg(msg):  # noqa: D103
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
     print(formatted_msg)  # noqa: T201
 
 
 # Define a way to call BRAILS BldgAttributes and write them in a file:
-def runBrails(outputfile):  # noqa: ANN001, ANN201, N802, D103
+def runBrails(outputfile):  # noqa: N802, D103
     attributes = BldgAttributes()
     with open(outputfile, 'w') as f:  # noqa: FURB103, PLW1514, PTH123
         f.write('\n'.join(attributes))
 
 
 # Define a way to collect GUI input:
-def main(args):  # noqa: ANN001, ANN201, D103
+def main(args):  # noqa: D103
     parser = argparse.ArgumentParser()
     parser.add_argument('--outputFile', default=None)
 

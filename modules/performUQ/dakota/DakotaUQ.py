@@ -19,7 +19,7 @@ import subprocess  # noqa: S404
 import sys
 
 
-def main(args):  # noqa: ANN001, ANN201, C901, D103
+def main(args):  # noqa: C901, D103
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--workflowInput')

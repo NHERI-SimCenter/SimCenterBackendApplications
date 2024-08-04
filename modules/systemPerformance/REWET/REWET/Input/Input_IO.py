@@ -6,7 +6,7 @@ import pandas as pd
 
 
 # Read files From json #####################
-def read_pipe_damage_seperate_json_file(directory, pipe_file_name):  # noqa: ANN001, ANN201
+def read_pipe_damage_seperate_json_file(directory, pipe_file_name):
     """Read pipe damage of a single scenario.
 
     Args:
@@ -50,7 +50,7 @@ def read_pipe_damage_seperate_json_file(directory, pipe_file_name):  # noqa: ANN
     return pd.Series(index=pipe_time, data=pipe_damaage)
 
 
-def read_node_damage_seperate_json_file(directory, node_file_name):  # noqa: ANN001, ANN201
+def read_node_damage_seperate_json_file(directory, node_file_name):
     """Read node damage of a single scenario.
 
     Args:
@@ -93,7 +93,7 @@ def read_node_damage_seperate_json_file(directory, node_file_name):  # noqa: ANN
     return pd.Series(index=node_time, data=node_damage)
 
 
-def read_tank_damage_seperate_json_file(directory, tank_file_name):  # noqa: ANN001, ANN201
+def read_tank_damage_seperate_json_file(directory, tank_file_name):
     """Read tank damage of a single scenario.
 
     Args:
@@ -135,7 +135,7 @@ def read_tank_damage_seperate_json_file(directory, tank_file_name):  # noqa: ANN
     return pd.Series(index=tank_time, data=tank_damage)
 
 
-def read_pump_damage_seperate_json_file(directory, pump_file_name):  # noqa: ANN001, ANN201
+def read_pump_damage_seperate_json_file(directory, pump_file_name):
     """Read pump damage of a single scenario.
 
     Args:
@@ -178,7 +178,7 @@ def read_pump_damage_seperate_json_file(directory, pump_file_name):  # noqa: ANN
 
 
 # Read files From Pickle #####################
-def read_pipe_damage_seperate_pickle_file(directory, all_damages_file_name):  # noqa: ANN001, ANN201, D103
+def read_pipe_damage_seperate_pickle_file(directory, all_damages_file_name):  # noqa: D103
     file_dest = os.path.join(directory, all_damages_file_name)  # noqa: PTH118
     with open(file_dest, 'rb') as f:  # noqa: PTH123
         _all_damages = pickle.load(f)  # noqa: S301
@@ -186,7 +186,7 @@ def read_pipe_damage_seperate_pickle_file(directory, all_damages_file_name):  # 
     return _all_damages  # noqa: RET504
 
 
-def read_node_damage_seperate_pickle_file(directory, all_damages_file_name):  # noqa: ANN001, ANN201, D103
+def read_node_damage_seperate_pickle_file(directory, all_damages_file_name):  # noqa: D103
     file_dest = os.path.join(directory, all_damages_file_name)  # noqa: PTH118
     with open(file_dest, 'rb') as f:  # noqa: PTH123
         _node_damages = pickle.load(f)  # noqa: S301
@@ -194,7 +194,7 @@ def read_node_damage_seperate_pickle_file(directory, all_damages_file_name):  # 
     return _node_damages  # noqa: RET504
 
 
-def read_tank_damage_seperate_pickle_file(directory, tank_damages_file_name):  # noqa: ANN001, ANN201, D103
+def read_tank_damage_seperate_pickle_file(directory, tank_damages_file_name):  # noqa: D103
     file_dest = os.path.join(directory, tank_damages_file_name)  # noqa: PTH118
     with open(file_dest, 'rb') as f:  # noqa: PTH123
         _tank_damages = pickle.load(f)  # noqa: S301
@@ -202,7 +202,7 @@ def read_tank_damage_seperate_pickle_file(directory, tank_damages_file_name):  #
     return _tank_damages  # noqa: RET504
 
 
-def read_pump_damage_seperate_pickle_file(directory, pump_damages_file_name):  # noqa: ANN001, ANN201, D103
+def read_pump_damage_seperate_pickle_file(directory, pump_damages_file_name):  # noqa: D103
     file_dest = os.path.join(directory, pump_damages_file_name)  # noqa: PTH118
     with open(file_dest, 'rb') as f:  # noqa: PTH123
         _pump_damages = pickle.load(f)  # noqa: S301
@@ -213,7 +213,7 @@ def read_pump_damage_seperate_pickle_file(directory, pump_damages_file_name):  #
 # Read files From Excel #####################
 
 
-def read_pipe_damage_seperate_EXCEL_file(directory, pipe_damages_file_name):  # noqa: ANN001, ANN201, N802, D103
+def read_pipe_damage_seperate_EXCEL_file(directory, pipe_damages_file_name):  # noqa: N802, D103
     ss = None
     file_dest = os.path.join(directory, pipe_damages_file_name)  # noqa: PTH118
     ss = pd.read_excel(file_dest)
@@ -235,7 +235,7 @@ def read_pipe_damage_seperate_EXCEL_file(directory, pipe_damages_file_name):  # 
     return pd.Series(ss.to_dict('records'), index=ss.index)
 
 
-def read_node_damage_seperate_EXCEL_file(directory, node_damages_file_name):  # noqa: ANN001, ANN201, N802, D103
+def read_node_damage_seperate_EXCEL_file(directory, node_damages_file_name):  # noqa: N802, D103
     ss = None
     file_dest = os.path.join(directory, node_damages_file_name)  # noqa: PTH118
     ss = pd.read_excel(file_dest)
@@ -244,7 +244,7 @@ def read_node_damage_seperate_EXCEL_file(directory, node_damages_file_name):  # 
     return pd.Series(ss.to_dict('records'), index=ss.index)
 
 
-def read_tank_damage_seperate_EXCEL_file(directory, tank_damages_file_name):  # noqa: ANN001, ANN201, N802, D103
+def read_tank_damage_seperate_EXCEL_file(directory, tank_damages_file_name):  # noqa: N802, D103
     ss = None
     file_dest = os.path.join(directory, tank_damages_file_name)  # noqa: PTH118
     ss = pd.read_excel(file_dest)
@@ -256,7 +256,7 @@ def read_tank_damage_seperate_EXCEL_file(directory, tank_damages_file_name):  # 
     return ss
 
 
-def read_pump_damage_seperate_EXCEL_file(directory, pump_damages_file_name):  # noqa: ANN001, ANN201, N802, D103
+def read_pump_damage_seperate_EXCEL_file(directory, pump_damages_file_name):  # noqa: N802, D103
     ss = None
     file_dest = os.path.join(directory, pump_damages_file_name)  # noqa: PTH118
     ss = pd.read_excel(file_dest)
@@ -265,7 +265,7 @@ def read_pump_damage_seperate_EXCEL_file(directory, pump_damages_file_name):  # 
     return ss
 
 
-def read_damage_list(list_file_addr, file_directory, iCheck=False):  # noqa: ANN001, ANN201, FBT002, ARG001, N803
+def read_damage_list(list_file_addr, file_directory, iCheck=False):  # noqa: FBT002, ARG001, N803
     """Reads damage scenario list.
 
     Parameters
@@ -315,7 +315,7 @@ def read_damage_list(list_file_addr, file_directory, iCheck=False):  # noqa: ANN
 # Save Results #####################
 
 
-def save_single(settings, result, name, restoration_data):  # noqa: ANN001, ANN201, D103
+def save_single(settings, result, name, restoration_data):  # noqa: D103
     result_file_directory = settings.process['result_directory']
     # print(result_file_directory)
     result_name = name + '.res'

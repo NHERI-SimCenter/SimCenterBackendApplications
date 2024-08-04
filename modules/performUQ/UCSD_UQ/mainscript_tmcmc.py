@@ -25,14 +25,14 @@ from runTMCMC import run_TMCMC
 # ======================================================================================================================
 
 
-def computeModelPosteriorProbabilities(modelPriorProbabilities, modelEvidences):  # noqa: ANN001, ANN201, N802, N803, D103
+def computeModelPosteriorProbabilities(modelPriorProbabilities, modelEvidences):  # noqa: N802, N803, D103
     denominator = np.dot(modelPriorProbabilities, modelEvidences)
     return modelPriorProbabilities * modelEvidences / denominator
 
 
-def computeModelPosteriorProbabilitiesUsingLogEvidences(  # noqa: ANN201, N802, D103
-    modelPriorProbabilities,  # noqa: ANN001, N803
-    modelLogEvidences,  # noqa: ANN001, N803
+def computeModelPosteriorProbabilitiesUsingLogEvidences(  # noqa: N802, D103
+    modelPriorProbabilities,  # noqa: N803
+    modelLogEvidences,  # noqa: N803
 ):
     deltas = modelLogEvidences - np.min(modelLogEvidences)
     denominator = np.dot(modelPriorProbabilities, np.exp(deltas))
@@ -65,18 +65,18 @@ class TMCMC_Data:  # noqa: D101
         self.numBurnInSteps = numBurnInSteps
         self.numSkipSteps = 1
 
-    def getMPI_size(self):  # noqa: ANN201, N802, D102
+    def getMPI_size(self):  # noqa: N802, D102
         if self.runType == 'runningRemote':
             from mpi4py import MPI  # noqa: PLC0415
 
             self.comm = MPI.COMM_WORLD
             self.MPI_size = self.comm.Get_size()
 
-    def updateUQInfo(self, numberOfSamples, seedVal):  # noqa: ANN001, ANN201, N802, N803, D102
+    def updateUQInfo(self, numberOfSamples, seedVal):  # noqa: N802, N803, D102
         self.numberOfSamples = numberOfSamples
         self.seedVal = seedVal
 
-    def findNumProcessorsAvailable(self):  # noqa: ANN201, N802, D102
+    def findNumProcessorsAvailable(self):  # noqa: N802, D102
         if self.runType == 'runningLocal':
             import multiprocessing as mp  # noqa: PLC0415
 
@@ -89,7 +89,7 @@ class TMCMC_Data:  # noqa: D101
         else:
             self.numProcessors = 1
 
-    def getNumChains(self, numberOfSamples, runType, numProcessors):  # noqa: ANN001, ANN201, N802, N803, D102
+    def getNumChains(self, numberOfSamples, runType, numProcessors):  # noqa: N802, N803, D102
         if runType == 'runningLocal':
             self.numChains = int(min(numProcessors, self.recommendedNumChains))
         elif runType == 'runningRemote':
@@ -99,7 +99,7 @@ class TMCMC_Data:  # noqa: D101
 
         self.numChains = max(self.numChains, numberOfSamples)
 
-    def getNumStepsPerChainAfterBurnIn(self, numParticles, numChains):  # noqa: ANN001, ANN201, N802, N803, D102
+    def getNumStepsPerChainAfterBurnIn(self, numParticles, numChains):  # noqa: N802, N803, D102
         self.numStepsAfterBurnIn = (
             int(np.ceil(numParticles / numChains)) * self.numSkipSteps
         )
@@ -110,7 +110,7 @@ class TMCMC_Data:  # noqa: D101
 
 
 # ======================================================================================================================
-def main(input_args):  # noqa: ANN001, ANN201, D103
+def main(input_args):  # noqa: D103
     t1 = time.time()
 
     # Initialize analysis

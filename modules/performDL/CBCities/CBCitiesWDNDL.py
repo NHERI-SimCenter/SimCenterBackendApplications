@@ -47,7 +47,7 @@ import numpy as np
 import pandas as pd
 
 
-def log_msg(msg):  # noqa: ANN001, ANN201, D103
+def log_msg(msg):  # noqa: D103
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
 
     print(formatted_msg)  # noqa: T201
@@ -56,7 +56,7 @@ def log_msg(msg):  # noqa: ANN001, ANN201, D103
 from CBCitiesMethods import *  # noqa: E402, F403
 
 
-def run_DL_calc(aim_file_path, saveDir, output_name):  # noqa: ANN001, ANN201, N802, N803, D103
+def run_DL_calc(aim_file_path, saveDir, output_name):  # noqa: N802, N803, D103
     # Load Data
 
     print('Loading the pipeline json file...')  # noqa: T201
@@ -79,7 +79,7 @@ def run_DL_calc(aim_file_path, saveDir, output_name):  # noqa: ANN001, ANN201, N
     return 0
 
 
-def main(args):  # noqa: ANN001, ANN201, D103
+def main(args):  # noqa: D103
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--filenameDL')
     parser.add_argument('-p', '--demandFile', default=None)

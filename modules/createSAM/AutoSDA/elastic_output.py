@@ -38,7 +38,7 @@ class ElasticOutput:
     (5) Determine governing load cases
     """  # noqa: D205, D400, D404
 
-    def __init__(self, building):  # noqa: ANN001, ANN204
+    def __init__(self, building):
         # Initialize attributes of elastic_output class
         self.raw_column_load = {}
         self.raw_beam_load = {}
@@ -60,7 +60,7 @@ class ElasticOutput:
         self.perform_load_combination(building)
         self.determine_dominate_load()
 
-    def read_raw_load(self, building):  # noqa: ANN001, ANN201
+    def read_raw_load(self, building):
         """This method is used to read the load demand for the structure subjected to certain type of load:
         dead load, live load or earthquake load
         :param building: user-defined class in "building_information.py" file
@@ -119,7 +119,7 @@ class ElasticOutput:
             # Store beam forces based on load scenario
             self.raw_beam_load[load_type] = beam_load
 
-    def extract_column_load(self):  # noqa: ANN201, D102
+    def extract_column_load(self):  # noqa: D102
         # Extract axial force, shear force, and moment from the variable obtained in the previous step
         # Forces at both ends of columns are stored
         N = self.raw_column_load['DeadLoad'].shape[1]  # noqa: N806
@@ -156,7 +156,7 @@ class ElasticOutput:
                     'column moment': moment,
                 }
 
-    def extract_beam_load(self):  # noqa: ANN201, D102
+    def extract_beam_load(self):  # noqa: D102
         # Extract shear and moment from variables obtained in previous step
         # Forces at both ends of beams are stored
         N = self.raw_beam_load['DeadLoad'].shape[1]  # noqa: N806
@@ -187,7 +187,7 @@ class ElasticOutput:
                 self.earthquake_load_case['beam shear'] = shear_force
                 self.earthquake_load_case['beam moment'] = moment
 
-    def perform_load_combination(self, building):  # noqa: ANN001, ANN201, C901
+    def perform_load_combination(self, building):  # noqa: C901
         """This method is used to perform the load combinations, which will be used to extract the dominate load.
         There are six load combinations in total according to ASCE 7-10.
         :param building: user-defined class in "building_information.py" file
@@ -267,7 +267,7 @@ class ElasticOutput:
                     force
                 ]
 
-    def determine_dominate_load(self):  # noqa: ANN201
+    def determine_dominate_load(self):
         """This method is used to determine the governing load for beam and column components.
         :return: a dictionary which includes all six keys and associated matrices.
                  six keys: column axial, column shear, column moment, beam axial, beam shear, beam moment

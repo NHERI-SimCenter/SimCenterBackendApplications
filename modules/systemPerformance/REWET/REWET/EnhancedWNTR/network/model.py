@@ -39,16 +39,16 @@ class WaterNetworkModel(WaterNetworkModel):
 
     """
 
-    def __init__(self, inp_file_name=None):  # noqa: ANN001, ANN204
+    def __init__(self, inp_file_name=None):
         super().__init__(inp_file_name)
         self.breakage_link = {}
         self.expicit_leak = []
 
-    def updateWaterNetworkModelWithResult(  # noqa: ANN201, C901, N802
+    def updateWaterNetworkModelWithResult(  # noqa: C901, N802
         self,
-        result,  # noqa: ANN001
-        registry,  # noqa: ANN001, ARG002
-        latest_simulation_time=None,  # noqa: ANN001
+        result,
+        registry,  # noqa: ARG002
+        latest_simulation_time=None,
     ):
         """Updates Water Network Model consistent with result model. must be only
         used with EPANET solver or just in case you really know what you are
@@ -148,7 +148,7 @@ class WaterNetworkModel(WaterNetworkModel):
                 logger.error('Element type is: ' + repr(type(link)))  # noqa: G003
                 logger.error('Status is : ' + repr(status))  # noqa: G003
 
-    def read_inpfile(self, filename):  # noqa: ANN001, ANN201
+    def read_inpfile(self, filename):
         """Defines water network model components from an EPANET INP file
 
         Parameters
@@ -161,7 +161,7 @@ class WaterNetworkModel(WaterNetworkModel):
         inpfile.read(filename, wn=self)
         self._inpfile = inpfile
 
-    def write_inpfile(self, filename, units=None):  # noqa: ANN001, ANN201
+    def write_inpfile(self, filename, units=None):
         """Writes the current water network model to an EPANET INP file
 
         Parameters
@@ -181,7 +181,7 @@ class WaterNetworkModel(WaterNetworkModel):
             units = self._options.hydraulic.en2_units
         self._inpfile.write(filename, self, units=units)
 
-    def implicitLeakToExplicitEMitter(self, registry):  # noqa: ANN001, ANN201, N802, D102
+    def implicitLeakToExplicitEMitter(self, registry):  # noqa: N802, D102
         if len(self.expicit_leak) > 0:
             raise ValueError('Explicit leak is not reset')  # noqa: EM101, TRY003
 
@@ -232,7 +232,7 @@ class WaterNetworkModel(WaterNetworkModel):
                 registry.explicit_leak_node[node_name] = new_node_name
                 registry.active_pipe_damages.update({new_node_name: node_name})
 
-    def implicitLeakToExplicitReservoir(self, registry):  # noqa: ANN001, ANN201, N802, D102
+    def implicitLeakToExplicitReservoir(self, registry):  # noqa: N802, D102
         if len(self.expicit_leak) > 0:
             raise ValueError('Explicit leak is not reset')  # noqa: EM101, TRY003
         registry.active_pipe_damages = OrderedDict()
@@ -276,7 +276,7 @@ class WaterNetworkModel(WaterNetworkModel):
                 registry.explicit_leak_node[node_name] = new_node_name
                 registry.active_pipe_damages.update({new_node_name: node_name})
 
-    def resetExplicitLeak(self):  # noqa: ANN201, N802, D102
+    def resetExplicitLeak(self):  # noqa: N802, D102
         for data in self.expicit_leak:
             new_pipe_name = data['element1']
             new_node_name = data['element2']
@@ -287,7 +287,7 @@ class WaterNetworkModel(WaterNetworkModel):
 
         self.expicit_leak = []
 
-    def linkBreackage(self, registry):  # noqa: ANN001, ANN201, N802, D102
+    def linkBreackage(self, registry):  # noqa: N802, D102
         if len(self.breakage_link) > 0:
             raise ValueError('Breakckage is not unliked')  # noqa: EM101, TRY003
 
@@ -341,7 +341,7 @@ class WaterNetworkModel(WaterNetworkModel):
                 )
                 self.breakage_link[damage_node] = new_pipe_name
 
-    def unlinkBreackage(self):  # noqa: ANN201, N802, D102
+    def unlinkBreackage(self):  # noqa: N802, D102
         for damage_node, link_pipe_name in self.breakage_link.items():  # noqa: B007, PERF102
             self.remove_link(link_pipe_name, force=True)
 

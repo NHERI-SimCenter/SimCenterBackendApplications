@@ -6,7 +6,7 @@ import sys
 import numpy as np
 
 
-def write_RV(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N802, N803, D103
+def write_RV(BIM_file, EVENT_file, data_dir):  # noqa: N802, N803, D103
     with open(BIM_file) as f:  # noqa: PLW1514, PTH123
         bim_data = json.load(f)
 
@@ -51,7 +51,7 @@ def write_RV(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N802, N80
         json.dump(event_file, f, indent=2)
 
 
-def load_record(fileName, data_dir, scale_factor=1.0, empty=False):  # noqa: ANN001, ANN201, FBT002, N803, D103
+def load_record(fileName, data_dir, scale_factor=1.0, empty=False):  # noqa: FBT002, N803, D103
     fileName = fileName.split('x')[0]  # noqa: N806
 
     with open(posixpath.join(data_dir, f'{fileName}.json')) as f:  # noqa: PLW1514, PTH123
@@ -89,7 +89,7 @@ def load_record(fileName, data_dir, scale_factor=1.0, empty=False):  # noqa: ANN
     return event_dic
 
 
-def get_records(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N803, D103
+def get_records(BIM_file, EVENT_file, data_dir):  # noqa: N803, D103
     with open(BIM_file) as f:  # noqa: PLW1514, PTH123
         bim_file = json.load(f)
 

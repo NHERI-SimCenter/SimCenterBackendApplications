@@ -56,7 +56,7 @@ sys.path.insert(0, str(main_dir / 'common'))
 from simcenter_common import *  # noqa: E402, F403
 
 
-def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901
+def get_scale_factors(input_units, output_units):  # noqa: C901
     """Determine the scale factor to convert input event to internal event data"""  # noqa: D400
     # special case: if the input unit is not specified then do not do any scaling
     if input_units is None:
@@ -123,7 +123,7 @@ def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901
     return scale_factors
 
 
-def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: ANN001, ANN201, C901, D103, N802, N803, PLR0914, PLR0915
+def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: C901, D103, N802, N803, PLR0914, PLR0915
     if not os.path.isdir(inputDir):  # noqa: PTH112
         print(f'input dir: {inputDir} does not exist')  # noqa: T201
         return 0

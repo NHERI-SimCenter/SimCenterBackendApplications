@@ -45,7 +45,7 @@ from glob import glob
 import pandas as pd
 
 
-def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: ANN001, ANN201, N802, N803, D103
+def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: N802, N803, D103
     if not os.path.isdir(inputDir):  # noqa: PTH112
         print(f'input dir: {inputDir} does not exist')  # noqa: T201
         return 0

@@ -16,7 +16,7 @@ import shapely
 
 # https://stackoverflow.com/questions/50916422/python-typeerror-object-of-type-int64-is-not-json-serializable
 class NpEncoder(json.JSONEncoder):  # noqa: D101
-    def default(self, obj):  # noqa: ANN001, ANN201, D102
+    def default(self, obj):  # noqa: D102
         if isinstance(obj, np.integer):
             return int(obj)
         if isinstance(obj, np.floating):
@@ -36,19 +36,19 @@ class generalAIMGenerator:
     :vartype arg: str
     """  # noqa: D205, D400
 
-    def __init__(self, output_file):  # noqa: ANN001, ANN204
+    def __init__(self, output_file):
         self.output_file = output_file
         self.gdf = None
         self.filter = None
 
-    def load_asset_gdf(self, source_file):  # noqa: ANN001, ANN201, D102
+    def load_asset_gdf(self, source_file):  # noqa: D102
         asset_gdf = gpd.read_file(source_file)
         self.gdf = asset_gdf
 
-    def set_asset_gdf(self, asset_gdf):  # noqa: ANN001, ANN201, D102
+    def set_asset_gdf(self, asset_gdf):  # noqa: D102
         self.gdf = asset_gdf
 
-    def selectAssets(self, filter):  # noqa: ANN001, ANN201, A002, N802, D102
+    def selectAssets(self, filter):  # noqa: A002, N802, D102
         self.filter = filter
         # check if a filter is provided for bridges
         if self.filter is not None:
@@ -71,7 +71,7 @@ class generalAIMGenerator:
         self.gdf = self.gdf.loc[assets_to_run, :]
         return assets_to_run
 
-    def createAIM(self, asset_idx, component_type=None):  # noqa: ANN001, ANN201, ARG002, N802, D102
+    def createAIM(self, asset_idx, component_type=None):  # noqa: ARG002, N802, D102
         # initialize the AIM file
         # if component_type is not None:
         #     asset_id = component_type+"_"+str(asset_idx)
@@ -98,7 +98,7 @@ class generalAIMGenerator:
         #     AIM_i["GeneralInformation"].update({"assetSubtype":component_type})
         return AIM_i
 
-    def dumpAIM(self, AIM_i):  # noqa: ANN001, ANN201, N802, N803, D102
+    def dumpAIM(self, AIM_i):  # noqa: N802, N803, D102
         # assetSubtype = AIM_i['GeneralInformation'].get("assetSubtype", None)
         componentType = AIM_i['GeneralInformation'].get('type', None)  # noqa: N806
         outDir = os.path.dirname(self.output_file)  # noqa: PTH120, N806
@@ -113,7 +113,7 @@ class generalAIMGenerator:
 
 
 class lineAIMGenerator(generalAIMGenerator):  # noqa: D101
-    def breakDownLongLines(self, delta, tolerance=10e-3):  # noqa: ANN001, ANN201, N802, D102
+    def breakDownLongLines(self, delta, tolerance=10e-3):  # noqa: N802, D102
         edges = self.gdf
         dropedEdges = []  # noqa: N806
         newEdges = []  # noqa: N806
@@ -170,11 +170,11 @@ class lineAIMGenerator(generalAIMGenerator):  # noqa: D101
         # self.gdf = edges.reset_index().rename(columns={"index":"AIM_id"})
         self.gdf = edges
 
-    def defineConnectivities(  # noqa: ANN201, N802, D102
+    def defineConnectivities(  # noqa: N802, D102
         self,
-        AIM_id_prefix=None,  # noqa: ANN001, N803
-        edges_file_name=None,  # noqa: ANN001
-        nodes_file_name=None,  # noqa: ANN001
+        AIM_id_prefix=None,  # noqa: N803
+        edges_file_name=None,
+        nodes_file_name=None,
     ):
         # Convert find connectivity and add start_node, end_node attributes
         edges = self.gdf
@@ -240,7 +240,7 @@ class lineAIMGenerator(generalAIMGenerator):  # noqa: D101
         self.gdf = edges
 
 
-def split_and_select_components(input_config, asset_source_file):  # noqa: ANN001, ANN201, C901, D103
+def split_and_select_components(input_config, asset_source_file):  # noqa: C901, D103
     component_dict = dict()  # noqa: C408
     with open(asset_source_file, encoding='utf-8') as f:  # noqa: PTH123
         source_data = json.load(f)
@@ -286,7 +286,7 @@ def split_and_select_components(input_config, asset_source_file):  # noqa: ANN00
     return component_dict
 
 
-def init_workdir(component_dict, outDir):  # noqa: ANN001, ANN201, N803, D103
+def init_workdir(component_dict, outDir):  # noqa: N803, D103
     os.chdir(outDir)
     for dir_or_file in os.listdir(outDir):
         if dir_or_file != 'log.txt':
@@ -302,12 +302,12 @@ def init_workdir(component_dict, outDir):  # noqa: ANN001, ANN201, N803, D103
     return component_dir
 
 
-def create_asset_files(  # noqa: ANN201, C901, D103
-    output_file,  # noqa: ANN001
-    asset_source_file,  # noqa: ANN001
-    asset_type,  # noqa: ANN001
-    input_file,  # noqa: ANN001
-    doParallel,  # noqa: ANN001, N803
+def create_asset_files(  # noqa: C901, D103
+    output_file,
+    asset_source_file,
+    asset_type,
+    input_file,
+    doParallel,  # noqa: N803
 ):
     # check if running parallel
     numP = 1  # noqa: N806

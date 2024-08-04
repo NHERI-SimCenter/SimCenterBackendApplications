@@ -44,7 +44,7 @@ import pandas as pd
 from scipy.interpolate import interp1d, interp2d
 
 
-def baker_jayaram_correlation_2008(im1, im2, flag_orth=False):  # noqa: ANN001, ANN201, FBT002, C901
+def baker_jayaram_correlation_2008(im1, im2, flag_orth=False):  # noqa: FBT002, C901
     """Computing inter-event correlation coeffcieint between Sa of two periods
     Reference:
         Baker and Jayaram (2008) Correlation of Spectral Acceleration
@@ -108,7 +108,7 @@ def baker_jayaram_correlation_2008(im1, im2, flag_orth=False):  # noqa: ANN001, 
     return rho
 
 
-def bradley_correlation_2011(IM, T=None, flag_Ds=True):  # noqa: ANN001, ANN201, FBT002, C901, N803, PLR0911
+def bradley_correlation_2011(IM, T=None, flag_Ds=True):  # noqa: FBT002, C901, N803, PLR0911
     """Computing inter-event correlation coeffcieint between Sa(T) and Ds575/D595
     Reference:
         Bradley (2011) Correlation of Significant Duration with Amplitude and
@@ -220,7 +220,7 @@ def bradley_correlation_2011(IM, T=None, flag_Ds=True):  # noqa: ANN001, ANN201,
         return rho  # noqa: RET504
 
 
-def jayaram_baker_correlation_2009(im, h, flag_clustering=False):  # noqa: ANN001, ANN201, FBT002
+def jayaram_baker_correlation_2009(im, h, flag_clustering=False):  # noqa: FBT002
     """Computing intra-event correlation coeffcieint between Sa(T) at two sites
     Reference:
         Jayaram and Baker (2009) Correlation model for spatially distributed
@@ -255,7 +255,7 @@ def jayaram_baker_correlation_2009(im, h, flag_clustering=False):  # noqa: ANN00
     return rho  # noqa: RET504
 
 
-def load_loth_baker_correlation_2013(datapath):  # noqa: ANN001, ANN201
+def load_loth_baker_correlation_2013(datapath):
     """Loading the three matrices in the Loth-Baker correaltion model (2013)
     Reference:
         Loth and Baker (2013) A spatial cross-correlation model of spectral
@@ -273,7 +273,7 @@ def load_loth_baker_correlation_2013(datapath):  # noqa: ANN001, ANN201
     return B1, B2, B3
 
 
-def compute_rho_loth_baker_correlation_2013(T1, T2, h, B1, B2, B3):  # noqa: ANN001, ANN201, N803
+def compute_rho_loth_baker_correlation_2013(T1, T2, h, B1, B2, B3):  # noqa: N803
     """Computing intra-event correlation coeffcieint between Sa(Ti) and Sa(Tj)
     at two sites
     Reference:
@@ -306,7 +306,7 @@ def compute_rho_loth_baker_correlation_2013(T1, T2, h, B1, B2, B3):  # noqa: ANN
     return rho  # noqa: RET504
 
 
-def loth_baker_correlation_2013(stations, im_name_list, num_simu):  # noqa: ANN001, ANN201, C901
+def loth_baker_correlation_2013(stations, im_name_list, num_simu):  # noqa: C901
     """Simulating intra-event residuals
     Reference:
         Loth and Baker (2013) A spatial cross-correlation model of spectral
@@ -376,7 +376,7 @@ def loth_baker_correlation_2013(stations, im_name_list, num_simu):  # noqa: ANN0
     return residuals  # noqa: RET504
 
 
-def load_markhvida_ceferino_baker_correlation_2017(datapath):  # noqa: ANN001, ANN201
+def load_markhvida_ceferino_baker_correlation_2017(datapath):
     """Loading the three matrices in the Markhivida et al. correaltion model (2017)
     Reference:
         Markhvida et al. (2017) Modeling spatially correlated spectral
@@ -407,11 +407,11 @@ def load_markhvida_ceferino_baker_correlation_2017(datapath):  # noqa: ANN001, A
     return MCB_model, MCB_pca, MCB_var
 
 
-def markhvida_ceferino_baker_correlation_2017(  # noqa: ANN201, C901
-    stations,  # noqa: ANN001
-    im_name_list,  # noqa: ANN001
-    num_simu,  # noqa: ANN001
-    num_pc=19,  # noqa: ANN001
+def markhvida_ceferino_baker_correlation_2017(  # noqa: C901
+    stations,
+    im_name_list,
+    num_simu,
+    num_pc=19,
 ):
     """Simulating intra-event residuals
     Reference:
@@ -524,7 +524,7 @@ def markhvida_ceferino_baker_correlation_2017(  # noqa: ANN201, C901
     return residuals
 
 
-def load_du_ning_correlation_2021(datapath):  # noqa: ANN001, ANN201
+def load_du_ning_correlation_2021(datapath):
     """Loading the three matrices in the Du and Ning correlation model (2021)
     Reference:
         Du and Ning (2021) Modeling spatial cross-correlation of multiple
@@ -551,7 +551,7 @@ def load_du_ning_correlation_2021(datapath):  # noqa: ANN001, ANN201
     return DN_model, DN_pca, DN_var
 
 
-def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):  # noqa: ANN001, ANN201
+def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
     """Simulating intra-event residuals
     Reference:
         Du and Ning (2021) Modeling spatial cross-correlation of multiple
@@ -660,7 +660,7 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):  # no
     return residuals
 
 
-def baker_bradley_correlation_2017(im1=None, im2=None):  # noqa: ANN001, ANN201, C901
+def baker_bradley_correlation_2017(im1=None, im2=None):  # noqa: C901
     """Correlation between Sa and other IMs
     Baker, J. W., and Bradley, B. A. (2017). “Intensity measure correlations observed in
     the NGA-West2 database, and dependence of correlations on rupture and site parameters.”
@@ -763,7 +763,7 @@ def baker_bradley_correlation_2017(im1=None, im2=None):  # noqa: ANN001, ANN201,
     return rho
 
 
-def get_distance_from_lat_lon(site_loc1, site_loc2):  # noqa: ANN001, ANN201, D103
+def get_distance_from_lat_lon(site_loc1, site_loc2):  # noqa: D103
     # earth radius (km)
     earth_radius_avg = 6371.0
     # site lat and lon

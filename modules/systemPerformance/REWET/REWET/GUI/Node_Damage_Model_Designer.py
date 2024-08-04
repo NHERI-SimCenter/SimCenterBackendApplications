@@ -10,7 +10,7 @@ from .Node_Damage_Model_Window import Ui_Node_Damage_Model
 
 
 class Node_Damage_Model_Designer(Ui_Node_Damage_Model):  # noqa: D101
-    def __init__(self, node_damage_model):  # noqa: ANN001, ANN204
+    def __init__(self, node_damage_model):
         self._window = QtWidgets.QDialog()
         self.setupUi(self._window)
         self.node_damage_model = node_damage_model.copy()
@@ -170,11 +170,11 @@ class Node_Damage_Model_Designer(Ui_Node_Damage_Model):  # noqa: D101
         self.buttonBox.accepted.connect(self.okButtonPressed)
         self.help_button.clicked.connect(self.showHelpByButton)
 
-    def showHelpByButton(self):  # noqa: ANN201, D102, N802, PLR6301
+    def showHelpByButton(self):  # noqa: D102, N802, PLR6301
         help_dialog_box = Node_Damage_Model_Help_Designer()
         help_dialog_box._window.exec_()  # noqa: SLF001
 
-    def okButtonPressed(self):  # noqa: ANN201, C901, N802, D102
+    def okButtonPressed(self):  # noqa: C901, N802, D102
         a = self.a_line.text()
         b = self.b_line.text()
         c = self.c_line.text()
@@ -260,7 +260,7 @@ class Node_Damage_Model_Designer(Ui_Node_Damage_Model):  # noqa: D101
 
         self._window.accept()
 
-    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: D102, N802, PLR6301
         error_widget = QtWidgets.QMessageBox()
         error_widget.setIcon(QtWidgets.QMessageBox.Critical)
         error_widget.setText(error_msg)

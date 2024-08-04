@@ -50,7 +50,7 @@ import os
 import sys
 
 
-def main(aimName, samName, evtName, edpName, simName, getRV):  # noqa: ANN001, ANN201, N803, D103
+def main(aimName, samName, evtName, edpName, simName, getRV):  # noqa: N803, D103
     #
     # Find the GI and SAM files
     #
@@ -97,7 +97,7 @@ def main(aimName, samName, evtName, edpName, simName, getRV):  # noqa: ANN001, A
         runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName)
 
 
-def runDefault(root_AIM, aimName, samName, evtName, edpName, simName, getRV=False):  # noqa: ANN001, ANN201, FBT002, N802, N803, D103
+def runDefault(root_AIM, aimName, samName, evtName, edpName, simName, getRV=False):  # noqa: FBT002, N802, N803, D103
     #
     # Find app name
     #
@@ -184,7 +184,7 @@ def runDefault(root_AIM, aimName, samName, evtName, edpName, simName, getRV=Fals
         )
 
 
-def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):  # noqa: ANN001, ANN201, C901, N802, N803, D103
+def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):  # noqa: C901, N802, N803, D103
     #
     # Augment to params.in file
     #

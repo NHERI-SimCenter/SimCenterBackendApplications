@@ -48,29 +48,29 @@ from brails.InventoryGenerator import InventoryGenerator
 
 
 # Define a standard way of printing program outputs:
-def log_msg(msg):  # noqa: ANN001, ANN201, D103
+def log_msg(msg):  # noqa: D103
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
     print(formatted_msg)  # noqa: T201
 
 
 # Define a way to call BRAILS InventoryGenerator:
-def runBrails(  # noqa: ANN201, D103, N802, PLR0913, PLR0917
-    latMin,  # noqa: ANN001, N803
-    latMax,  # noqa: ANN001, N803
-    longMin,  # noqa: ANN001, N803
-    longMax,  # noqa: ANN001, N803
-    locationStr,  # noqa: ANN001, N803
-    lengthUnit,  # noqa: ANN001, N803
-    fpSource,  # noqa: ANN001, N803
-    fpAttrMap,  # noqa: ANN001, N803
-    invInput,  # noqa: ANN001, N803
-    invAttributeMap,  # noqa: ANN001, N803
-    attrRequested,  # noqa: ANN001, N803
-    outputFile,  # noqa: ANN001, N803
-    seed,  # noqa: ANN001
-    numBuildings,  # noqa: ANN001, N803
-    getAllBuildings,  # noqa: ANN001, N803
-    gKey,  # noqa: ANN001, N803
+def runBrails(  # noqa: D103, N802, PLR0913, PLR0917
+    latMin,  # noqa: N803
+    latMax,  # noqa: N803
+    longMin,  # noqa: N803
+    longMax,  # noqa: N803
+    locationStr,  # noqa: N803
+    lengthUnit,  # noqa: N803
+    fpSource,  # noqa: N803
+    fpAttrMap,  # noqa: N803
+    invInput,  # noqa: N803
+    invAttributeMap,  # noqa: N803
+    attrRequested,  # noqa: N803
+    outputFile,  # noqa: N803
+    seed,
+    numBuildings,  # noqa: N803
+    getAllBuildings,  # noqa: N803
+    gKey,  # noqa: N803
 ):
     # Format location input based on the GUI input:
     if locationStr == '""':
@@ -127,7 +127,7 @@ def runBrails(  # noqa: ANN201, D103, N802, PLR0913, PLR0917
 
 
 # Define a way to collect GUI input:
-def main(args):  # noqa: ANN001, ANN201, D103
+def main(args):  # noqa: D103
     parser = argparse.ArgumentParser()
     parser.add_argument('--latMin', default=None, type=float)
     parser.add_argument('--latMax', default=None, type=float)

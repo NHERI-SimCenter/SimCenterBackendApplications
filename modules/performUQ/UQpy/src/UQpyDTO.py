@@ -4,13 +4,13 @@ from pydantic import BaseModel
 
 class UQpyDTO(BaseModel):  # noqa: D101
     @staticmethod
-    def is_primitive(obj):  # noqa: ANN001, ANN205, D102
+    def is_primitive(obj):  # noqa: D102
         return not hasattr(obj, '__dict__')
 
     # def init_to_text(self) -> (str, str):
     #     pass
 
-    def generate_code(self):  # noqa: ANN201, D102
+    def generate_code(self):  # noqa: D102
         prerequisite_list = ''
         fields = Enumerable(self.__dict__.items())
         objects = fields.where(lambda x: not UQpyDTO.is_primitive(x[1]))

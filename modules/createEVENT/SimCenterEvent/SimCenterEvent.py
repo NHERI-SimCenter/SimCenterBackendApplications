@@ -54,7 +54,7 @@ sys.path.insert(0, str(main_dir / 'common'))
 from simcenter_common import get_scale_factors, get_unit_bases  # noqa: E402
 
 
-def write_RV(AIM_file, EVENT_file):  # noqa: ANN001, ANN201, N802, N803, D103
+def write_RV(AIM_file, EVENT_file):  # noqa: N802, N803, D103
     # load the AIM file to get information about the assigned events
     with open(AIM_file, encoding='utf-8') as f:  # noqa: PTH123
         aim_file = json.load(f)
@@ -150,12 +150,12 @@ def write_RV(AIM_file, EVENT_file):  # noqa: ANN001, ANN201, N802, N803, D103
         json.dump(event_file, f, indent=2)
 
 
-def load_record(  # noqa: ANN201, D103
-    file_name,  # noqa: ANN001
-    data_dir,  # noqa: ANN001
-    f_scale_user=1.0,  # noqa: ANN001
-    f_scale_units={'ALL': 1.0},  # noqa: ANN001, B006
-    empty=False,  # noqa: ANN001, FBT002
+def load_record(  # noqa: D103
+    file_name,
+    data_dir,
+    f_scale_user=1.0,
+    f_scale_units={'ALL': 1.0},  # noqa: B006
+    empty=False,  # noqa: FBT002
 ):
     # event_class=None):
 
@@ -235,7 +235,7 @@ def load_record(  # noqa: ANN201, D103
     return event_dic
 
 
-def get_records(AIM_file, EVENT_file):  # noqa: ANN001, ANN201, N803
+def get_records(AIM_file, EVENT_file):  # noqa: N803
     """This function is only called if UQ is part of the workflow. That is, it is
     not called if we are using IMasEDP and skipping the response simulation.
 

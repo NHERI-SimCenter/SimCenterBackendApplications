@@ -118,7 +118,7 @@ _CURVE_ENTRY = ' {name:10s} {x:12f} {y:12f} {com:>3s}\n'
 _CURVE_LABEL = '{:11s} {:12s} {:12s}\n'
 
 
-def _split_line(line):  # noqa: ANN001, ANN202
+def _split_line(line):
     _vc = line.split(';', 1)
     _cmnt = None
     _vals = None
@@ -134,7 +134,7 @@ def _split_line(line):  # noqa: ANN001, ANN202
     return _vals, _cmnt
 
 
-def _is_number(s):  # noqa: ANN001, ANN202
+def _is_number(s):
     """Checks if input is a number
 
     Parameters
@@ -154,7 +154,7 @@ def _is_number(s):  # noqa: ANN001, ANN202
         return False
 
 
-def _str_time_to_sec(s):  # noqa: ANN001, ANN202
+def _str_time_to_sec(s):
     """Converts EPANET time format to seconds.
 
     Parameters
@@ -194,7 +194,7 @@ def _str_time_to_sec(s):  # noqa: ANN001, ANN202
                 raise RuntimeError('Time format in ' 'INP file not recognized. ')  # noqa: DOC501, EM101, TRY003
 
 
-def _clock_time_to_sec(s, am_pm):  # noqa: ANN001, ANN202, C901
+def _clock_time_to_sec(s, am_pm):  # noqa: C901
     """Converts EPANET clocktime format to seconds.
 
     Parameters
@@ -271,7 +271,7 @@ def _clock_time_to_sec(s, am_pm):  # noqa: ANN001, ANN202, C901
                 raise RuntimeError('Time format in ' 'INP file not recognized. ')  # noqa: DOC501, EM101, TRY003
 
 
-def _sec_to_string(sec):  # noqa: ANN001, ANN202
+def _sec_to_string(sec):
     hours = int(sec / 3600.0)
     sec -= hours * 3600
     mm = int(sec / 60.0)
@@ -286,7 +286,7 @@ class InpFile:
     The EPANET Users Manual provides full documentation for the INP file format.
     """
 
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         self.sections = OrderedDict()
         for sec in _INP_SECTIONS:
             self.sections[sec] = []
@@ -295,7 +295,7 @@ class InpFile:
         self.top_comments = []
         self.curves = OrderedDict()
 
-    def read(self, inp_files, wn=None):  # noqa: ANN001, ANN201, C901
+    def read(self, inp_files, wn=None):  # noqa: C901
         """Read an EPANET INP file and load data into a water network model object.
         Both EPANET 2.0 and EPANET 2.2 INP file options are recognized and handled.
 
@@ -463,7 +463,7 @@ class InpFile:
 
         return self.wn
 
-    def write(self, filename, wn, units=None, version=2.2, force_coordinates=False):  # noqa: ANN001, ANN201, FBT002
+    def write(self, filename, wn, units=None, version=2.2, force_coordinates=False):  # noqa: FBT002
         """Write a water network model into an EPANET INP file.
 
         .. note::
@@ -546,7 +546,7 @@ class InpFile:
 
     # Network Components
 
-    def _read_title(self):  # noqa: ANN202
+    def _read_title(self):
         lines = []
         for lnum, line in self.sections['[TITLE]']:  # noqa: B007
             line = line.split(';')[0]  # noqa: PLW2901
@@ -556,7 +556,7 @@ class InpFile:
             lines.append(line)
         self.wn.title = lines
 
-    def _write_title(self, f, wn):  # noqa: ANN001, ANN202, PLR6301
+    def _write_title(self, f, wn):  # noqa: PLR6301
         if wn.name is not None:
             f.write(f'; Filename: {wn.name}\n'.encode(sys_default_enc))
             f.write(
@@ -570,7 +570,7 @@ class InpFile:
                 f.write(f'{line}\n'.encode(sys_default_enc))
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_junctions(self):  # noqa: ANN202
+    def _read_junctions(self):
         #        try:
         for lnum, line in self.sections['[JUNCTIONS]']:  # noqa: B007
             line = line.split(';')[0]  # noqa: PLW2901
@@ -600,7 +600,7 @@ class InpFile:
     #            print(line)
     #            raise e
 
-    def _write_junctions(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_junctions(self, f, wn):
         f.write('[JUNCTIONS]\n'.encode(sys_default_enc))
         f.write(
             _JUNC_LABEL.format(';ID', 'Elevation', 'Demand', 'Pattern').encode(
@@ -647,7 +647,7 @@ class InpFile:
             f.write(_JUNC_ENTRY.format(**E).encode(sys_default_enc))
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_reservoirs(self):  # noqa: ANN202
+    def _read_reservoirs(self):
         for lnum, line in self.sections['[RESERVOIRS]']:  # noqa: B007
             line = line.split(';')[0]  # noqa: PLW2901
             current = line.split()
@@ -669,7 +669,7 @@ class InpFile:
                     current[2],
                 )
 
-    def _write_reservoirs(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_reservoirs(self, f, wn):
         f.write('[RESERVOIRS]\n'.encode(sys_default_enc))
         f.write(_RES_LABEL.format(';ID', 'Head', 'Pattern').encode(sys_default_enc))
         nnames = list(wn.reservoir_name_list)
@@ -697,7 +697,7 @@ class InpFile:
             f.write(_RES_ENTRY.format(**E).encode(sys_default_enc))
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_tanks(self):  # noqa: ANN202
+    def _read_tanks(self):
         for lnum, line in self.sections['[TANKS]']:  # noqa: B007
             line = line.split(';')[0]  # noqa: PLW2901
             current = line.split()
@@ -743,7 +743,7 @@ class InpFile:
                 overflow,
             )
 
-    def _write_tanks(self, f, wn, version=2.2):  # noqa: ANN001, ANN202
+    def _write_tanks(self, f, wn, version=2.2):
         f.write('[TANKS]\n'.encode(sys_default_enc))
         if version != 2.2:  # noqa: PLR2004
             f.write(
@@ -811,7 +811,7 @@ class InpFile:
             f.write(_TANK_ENTRY.format(**E).encode(sys_default_enc))
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_pipes(self):  # noqa: ANN202
+    def _read_pipes(self):
         for lnum, line in self.sections['[PIPES]']:  # noqa: B007
             line = line.split(';')[0]  # noqa: PLW2901
             current = line.split()
@@ -846,7 +846,7 @@ class InpFile:
                 check_valve,
             )
 
-    def _write_pipes(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_pipes(self, f, wn):
         f.write('[PIPES]\n'.encode(sys_default_enc))
         f.write(
             _PIPE_LABEL.format(
@@ -886,8 +886,8 @@ class InpFile:
             f.write(_PIPE_ENTRY.format(**E).encode(sys_default_enc))
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_pumps(self):  # noqa: ANN202, C901
-        def create_curve(curve_name):  # noqa: ANN001, ANN202
+    def _read_pumps(self):  # noqa: C901
+        def create_curve(curve_name):
             curve_points = []
             if (
                 curve_name not in self.wn.curve_name_list
@@ -943,7 +943,7 @@ class InpFile:
                 current[0], current[1], current[2], pump_type, value, speed, pattern
             )
 
-    def _write_pumps(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_pumps(self, f, wn):
         f.write('[PUMPS]\n'.encode(sys_default_enc))
         f.write(
             _PUMP_LABEL.format(';ID', 'Node1', 'Node2', 'Properties').encode(
@@ -994,7 +994,7 @@ class InpFile:
             f.write(tmp_entry.format(**E).encode(sys_default_enc))
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_valves(self):  # noqa: ANN202
+    def _read_valves(self):
         for lnum, line in self.sections['[VALVES]']:  # noqa: B007
             line = line.split(';')[0]  # noqa: PLW2901
             current = line.split()
@@ -1036,7 +1036,7 @@ class InpFile:
                 valve_set,
             )
 
-    def _write_valves(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_valves(self, f, wn):
         f.write('[VALVES]\n'.encode(sys_default_enc))
         f.write(
             _VALVE_LABEL.format(
@@ -1082,7 +1082,7 @@ class InpFile:
             f.write(formatter.format(**E).encode(sys_default_enc))
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_emitters(self):  # noqa: ANN202
+    def _read_emitters(self):
         for lnum, line in self.sections[  # noqa: B007
             '[EMITTERS]'
         ]:  # Private attribute on junctions
@@ -1095,7 +1095,7 @@ class InpFile:
                 self.flow_units, float(current[1]), HydParam.EmitterCoeff
             )
 
-    def _write_emitters(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_emitters(self, f, wn):
         f.write('[EMITTERS]\n'.encode(sys_default_enc))
         entry = '{:10s} {:10s}\n'
         label = '{:10s} {:10s}\n'
@@ -1122,7 +1122,7 @@ class InpFile:
 
     # System Operation
 
-    def _read_curves(self):  # noqa: ANN202
+    def _read_curves(self):
         for lnum, line in self.sections['[CURVES]']:  # noqa: B007
             # It should be noted carefully that these lines are never directly
             # applied to the WaterNetworkModel object. Because different curve
@@ -1139,7 +1139,7 @@ class InpFile:
             self.curves[curve_name].append((float(current[1]), float(current[2])))
             self.wn.curves[curve_name] = None
 
-    def _write_curves(self, f, wn):  # noqa: ANN001, ANN202, C901
+    def _write_curves(self, f, wn):  # noqa: C901
         f.write('[CURVES]\n'.encode(sys_default_enc))
         f.write(
             _CURVE_LABEL.format(';ID', 'X-Value', 'Y-Value').encode(sys_default_enc)
@@ -1201,7 +1201,7 @@ class InpFile:
             f.write('\n'.encode(sys_default_enc))
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_patterns(self):  # noqa: ANN202
+    def _read_patterns(self):
         _patterns = OrderedDict()
         for lnum, line in self.sections['[PATTERNS]']:  # noqa: B007
             # read the lines for each pattern -- patterns can be multiple lines of arbitrary length
@@ -1236,7 +1236,7 @@ class InpFile:
                 )
             self.wn.options.hydraulic.pattern = None
 
-    def _write_patterns(self, f, wn):  # noqa: ANN001, ANN202, PLR6301
+    def _write_patterns(self, f, wn):  # noqa: PLR6301
         num_columns = 6
         f.write('[PATTERNS]\n'.encode(sys_default_enc))
         f.write(
@@ -1256,7 +1256,7 @@ class InpFile:
             f.write('\n'.encode(sys_default_enc))
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_energy(self):  # noqa: ANN202, C901
+    def _read_energy(self):  # noqa: C901
         for lnum, line in self.sections['[ENERGY]']:  # noqa: B007
             line = line.split(';')[0]  # noqa: PLW2901
             current = line.split()
@@ -1300,7 +1300,7 @@ class InpFile:
             else:
                 logger.warning('Unknown entry in ENERGY section: %s', line)
 
-    def _write_energy(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_energy(self, f, wn):
         f.write('[ENERGY]\n'.encode(sys_default_enc))
         if True:  # wn.energy is not None:
             if wn.options.energy.global_efficiency is not None:
@@ -1355,7 +1355,7 @@ class InpFile:
                 )
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_status(self):  # noqa: ANN202
+    def _read_status(self):
         for lnum, line in self.sections['[STATUS]']:  # noqa: B007
             line = line.split(';')[0]  # noqa: PLW2901
             current = line.split()
@@ -1395,7 +1395,7 @@ class InpFile:
                 link._user_status = new_status  # noqa: SLF001
                 link.initial_status = new_status
 
-    def _write_status(self, f, wn):  # noqa: ANN001, ANN202, PLR6301
+    def _write_status(self, f, wn):  # noqa: PLR6301
         f.write('[STATUS]\n'.encode(sys_default_enc))
         f.write('{:10s} {:10s}\n'.format(';ID', 'Setting').encode(sys_default_enc))
 
@@ -1450,7 +1450,7 @@ class InpFile:
 
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_controls(self):  # noqa: ANN202
+    def _read_controls(self):
         control_count = 0
         for lnum, line in self.sections['[CONTROLS]']:  # noqa: B007
             control_count += 1
@@ -1472,8 +1472,8 @@ class InpFile:
             else:
                 self.wn.add_control(control_name, control_obj)
 
-    def _write_controls(self, f, wn):  # noqa: ANN001, ANN202, C901
-        def get_setting(control_action, control_name):  # noqa: ANN001, ANN202
+    def _write_controls(self, f, wn):  # noqa: C901
+        def get_setting(control_action, control_name):
             value = control_action._value  # noqa: SLF001
             attribute = control_action._attribute.lower()  # noqa: SLF001
             if attribute == 'status':
@@ -1587,7 +1587,7 @@ class InpFile:
                     )
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_rules(self):  # noqa: ANN202
+    def _read_rules(self):
         rules = _EpanetRule.parse_rules_lines(
             self.sections['[RULES]'], self.flow_units, self.mass_units
         )
@@ -1598,7 +1598,7 @@ class InpFile:
         # wn._en_rules = '\n'.join(self.sections['[RULES]'])
         # logger.warning('RULES are reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
-    def _write_rules(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_rules(self, f, wn):
         f.write('[RULES]\n'.encode(sys_default_enc))
         for text, all_control in wn.controls():
             entry = '{}\n'
@@ -1625,7 +1625,7 @@ class InpFile:
                 f.write(entry.format(str(rule)).encode(sys_default_enc))
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_demands(self):  # noqa: ANN202
+    def _read_demands(self):
         demand_num = 0
         has_been_read = set()
         for lnum, line in self.sections['[DEMANDS]']:  # noqa: B007
@@ -1657,7 +1657,7 @@ class InpFile:
                 )
             )
 
-    def _write_demands(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_demands(self, f, wn):
         f.write('[DEMANDS]\n'.encode(sys_default_enc))
         entry = '{:10s} {:10s} {:10s}{:s}\n'
         label = '{:10s} {:10s} {:10s}\n'
@@ -1697,7 +1697,7 @@ class InpFile:
 
     # Water Quality
 
-    def _read_quality(self):  # noqa: ANN202
+    def _read_quality(self):
         for lnum, line in self.sections['[QUALITY]']:  # noqa: B007
             line = line.split(';')[0]  # noqa: PLW2901
             current = line.split()
@@ -1719,7 +1719,7 @@ class InpFile:
                 quality = float(current[1])
             node.initial_quality = quality
 
-    def _write_quality(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_quality(self, f, wn):
         f.write('[QUALITY]\n'.encode(sys_default_enc))
         entry = '{:10s} {:10s}\n'
         label = '{:10s} {:10s}\n'  # noqa: F841
@@ -1748,7 +1748,7 @@ class InpFile:
                 )
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_reactions(self):  # noqa: ANN202, C901
+    def _read_reactions(self):  # noqa: C901
         BulkReactionCoeff = QualParam.BulkReactionCoeff  # noqa: N806
         WallReactionCoeff = QualParam.WallReactionCoeff  # noqa: N806
         if self.mass_units is None:
@@ -1821,7 +1821,7 @@ class InpFile:
             else:
                 raise RuntimeError('Reaction option not recognized: %s' % key1)  # noqa: UP031
 
-    def _write_reactions(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_reactions(self, f, wn):
         f.write('[REACTIONS]\n'.encode(sys_default_enc))
         f.write(
             ';Type           Pipe/Tank               Coefficient\n'.encode(
@@ -1935,7 +1935,7 @@ class InpFile:
             )
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_sources(self):  # noqa: ANN202
+    def _read_sources(self):
         source_num = 0
         for lnum, line in self.sections['[SOURCES]']:  # noqa: B007
             line = line.split(';')[0]  # noqa: PLW2901
@@ -1971,7 +1971,7 @@ class InpFile:
                     current[3],
                 )
 
-    def _write_sources(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_sources(self, f, wn):
         f.write('[SOURCES]\n'.encode(sys_default_enc))
         entry = '{:10s} {:10s} {:10s} {:10s}\n'
         label = '{:10s} {:10s} {:10s} {:10s}\n'
@@ -2018,7 +2018,7 @@ class InpFile:
             )
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_mixing(self):  # noqa: ANN202
+    def _read_mixing(self):
         for lnum, line in self.sections['[MIXING]']:  # noqa: B007
             line = line.split(';')[0]  # noqa: PLW2901
             current = line.split()
@@ -2041,7 +2041,7 @@ class InpFile:
             elif key == 'LIFO':
                 tank.mixing_model = MixType.LIFO
 
-    def _write_mixing(self, f, wn):  # noqa: ANN001, ANN202, PLR6301
+    def _write_mixing(self, f, wn):  # noqa: PLR6301
         f.write('[MIXING]\n'.encode(sys_default_enc))
         f.write(
             '{:20s} {:5s} {}\n'.format(';Tank ID', 'Model', 'Fraction').encode(
@@ -2095,7 +2095,7 @@ class InpFile:
 
     # Options and Reporting
 
-    def _read_options(self):  # noqa: ANN202, C901, PLR0912
+    def _read_options(self):  # noqa: C901, PLR0912
         edata = OrderedDict()
         wn = self.wn
         opts = wn.options
@@ -2247,7 +2247,7 @@ class InpFile:
                     'opts.report_timestep must be a multiple of opts.hydraulic_timestep'  # noqa: EM101
                 )
 
-    def _write_options(self, f, wn, version=2.2):  # noqa: ANN001, ANN202, C901
+    def _write_options(self, f, wn, version=2.2):  # noqa: C901
         f.write('[OPTIONS]\n'.encode(sys_default_enc))
         entry_string = '{:20s} {:20s}\n'
         entry_float = '{:20s} {:.11g}\n'
@@ -2474,7 +2474,7 @@ class InpFile:
             )
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_times(self):  # noqa: ANN202
+    def _read_times(self):
         opts = self.wn.options
         time_format = ['am', 'AM', 'pm', 'PM']
         for lnum, line in self.sections['[TIMES]']:  # noqa: B007
@@ -2521,7 +2521,7 @@ class InpFile:
                     else int(_str_time_to_sec(current[2])),
                 )
 
-    def _write_times(self, f, wn):  # noqa: ANN001, ANN202, PLR6301
+    def _write_times(self, f, wn):  # noqa: PLR6301
         f.write('[TIMES]\n'.encode(sys_default_enc))
         entry = '{:20s} {:10s}\n'
         time_entry = '{:20s} {:02d}:{:02d}:{:02d}\n'
@@ -2600,7 +2600,7 @@ class InpFile:
         )
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_report(self):  # noqa: ANN202, C901
+    def _read_report(self):  # noqa: C901
         for lnum, line in self.sections['[REPORT]']:  # noqa: B007
             line = line.split(';')[0]  # noqa: PLW2901
             current = line.split()
@@ -2658,7 +2658,7 @@ class InpFile:
                     current[1].upper()
                 ] = float(current[2])
 
-    def _write_report(self, f, wn):  # noqa: ANN001, ANN202, C901, PLR6301
+    def _write_report(self, f, wn):  # noqa: C901, PLR6301
         f.write('[REPORT]\n'.encode(sys_default_enc))
         report = wn.options.report
         if report.status.upper() != 'NO':
@@ -2712,7 +2712,7 @@ class InpFile:
 
     # Network Map/Tags
 
-    def _read_coordinates(self):  # noqa: ANN202
+    def _read_coordinates(self):
         for lnum, line in self.sections['[COORDINATES]']:  # noqa: B007
             line = line.split(';')[0]  # noqa: PLW2901
             current = line.split()
@@ -2722,7 +2722,7 @@ class InpFile:
             node = self.wn.get_node(current[0])
             node.coordinates = (float(current[1]), float(current[2]))
 
-    def _write_coordinates(self, f, wn):  # noqa: ANN001, ANN202, PLR6301
+    def _write_coordinates(self, f, wn):  # noqa: PLR6301
         f.write('[COORDINATES]\n'.encode(sys_default_enc))
         entry = '{:10s} {:20.9f} {:20.9f}\n'
         label = '{:10s} {:10s} {:10s}\n'
@@ -2734,7 +2734,7 @@ class InpFile:
             f.write(entry.format(name, val[0], val[1]).encode(sys_default_enc))
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_vertices(self):  # noqa: ANN202
+    def _read_vertices(self):
         for lnum, line in self.sections['[VERTICES]']:  # noqa: B007
             line = line.split(';')[0].strip()  # noqa: PLW2901
             current = line.split()
@@ -2747,7 +2747,7 @@ class InpFile:
             link = self.wn.get_link(link_name)
             link._vertices.append((float(current[1]), float(current[2])))  # noqa: SLF001
 
-    def _write_vertices(self, f, wn):  # noqa: ANN001, ANN202, PLR6301
+    def _write_vertices(self, f, wn):  # noqa: PLR6301
         f.write('[VERTICES]\n'.encode(sys_default_enc))
         entry = '{:10s} {:20.9f} {:20.9f}\n'
         label = '{:10s} {:10s} {:10s}\n'
@@ -2762,7 +2762,7 @@ class InpFile:
 
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_labels(self):  # noqa: ANN202
+    def _read_labels(self):
         labels = []
         for lnum, line in self.sections['[LABELS]']:  # noqa: B007
             line = line.split(';')[0].strip()  # noqa: PLW2901
@@ -2772,14 +2772,14 @@ class InpFile:
             labels.append(line)
         self.wn._labels = labels  # noqa: SLF001
 
-    def _write_labels(self, f, wn):  # noqa: ANN001, ANN202, PLR6301
+    def _write_labels(self, f, wn):  # noqa: PLR6301
         f.write('[LABELS]\n'.encode(sys_default_enc))
         if wn._labels is not None:  # noqa: SLF001
             for label in wn._labels:  # noqa: SLF001
                 f.write(f' {label}\n'.encode(sys_default_enc))
         f.write('\n'.encode(sys_default_enc))
 
-    def _read_backdrop(self):  # noqa: ANN202
+    def _read_backdrop(self):
         for lnum, line in self.sections['[BACKDROP]']:  # noqa: B007
             line = line.split(';')[0]  # noqa: PLW2901
             current = line.split()
@@ -2800,7 +2800,7 @@ class InpFile:
             elif key == 'OFFSET' and len(current) > 2:  # noqa: PLR2004
                 self.wn.options.graphics.offset = [current[1], current[2]]
 
-    def _write_backdrop(self, f, wn):  # noqa: ANN001, ANN202, PLR6301
+    def _write_backdrop(self, f, wn):  # noqa: PLR6301
         if wn.options.graphics is not None:
             f.write('[BACKDROP]\n'.encode(sys_default_enc))
             if wn.options.graphics.dimensions is not None:
@@ -2827,7 +2827,7 @@ class InpFile:
                 )
             f.write('\n'.encode(sys_default_enc))
 
-    def _read_tags(self):  # noqa: ANN202
+    def _read_tags(self):
         for lnum, line in self.sections['[TAGS]']:  # noqa: B007
             line = line.split(';')[0]  # noqa: PLW2901
             current = line.split()
@@ -2842,7 +2842,7 @@ class InpFile:
             else:
                 continue
 
-    def _write_tags(self, f, wn):  # noqa: ANN001, ANN202, PLR6301
+    def _write_tags(self, f, wn):  # noqa: PLR6301
         f.write('[TAGS]\n'.encode(sys_default_enc))
         entry = '{:10s} {:10s} {:10s}\n'
         label = '{:10s} {:10s} {:10s}\n'
@@ -2872,10 +2872,10 @@ class InpFile:
 
     # End of File
 
-    def _read_end(self):  # noqa: ANN202
+    def _read_end(self):
         """Finalize read by verifying that all curves have been dealt with"""  # noqa: D400
 
-        def create_curve(curve_name):  # noqa: ANN001, ANN202
+        def create_curve(curve_name):
             curve_points = []
             if (
                 curve_name not in self.wn.curve_name_list
@@ -2900,14 +2900,14 @@ class InpFile:
                 )
                 create_curve(name)
 
-    def _write_end(self, f, wn):  # noqa: ANN001, ANN202, ARG002, PLR6301
+    def _write_end(self, f, wn):  # noqa: ARG002, PLR6301
         f.write('[END]\n'.encode(sys_default_enc))
 
 
 class _EpanetRule:
     """contains the text for an EPANET rule"""  # noqa: D400
 
-    def __init__(self, ruleID, inp_units=None, mass_units=None):  # noqa: ANN001, ANN204, N803
+    def __init__(self, ruleID, inp_units=None, mass_units=None):  # noqa: N803
         self.inp_units = inp_units
         self.mass_units = mass_units
         self.ruleID = ruleID
@@ -2919,9 +2919,9 @@ class _EpanetRule:
     @classmethod
     def parse_rules_lines(  # noqa: C901
         cls,
-        lines,  # noqa: ANN001
-        flow_units=FlowUnits.SI,  # noqa: ANN001
-        mass_units=MassUnits.mg,  # noqa: ANN001
+        lines,
+        flow_units=FlowUnits.SI,
+        mass_units=MassUnits.mg,
     ) -> list:
         rules = list()  # noqa: C408
         rule = None
@@ -2999,7 +2999,7 @@ class _EpanetRule:
             rules.append(rule)
         return rules
 
-    def from_if_then_else(self, control):  # noqa: ANN001, ANN202
+    def from_if_then_else(self, control):
         """Create a rule from a Rule object"""  # noqa: D400
         if isinstance(control, Rule):
             self.ruleID = control.name
@@ -3020,11 +3020,11 @@ class _EpanetRule:
                 'Invalid control type for rules: %s' % control.__class__.__name__  # noqa: UP031
             )
 
-    def add_if(self, clause):  # noqa: ANN001, ANN202
+    def add_if(self, clause):
         """Add an "if/and/or" clause from an INP file"""  # noqa: D400
         self._if_clauses.append(clause)
 
-    def add_control_condition(self, condition, prefix=' IF'):  # noqa: ANN001, ANN202, C901
+    def add_control_condition(self, condition, prefix=' IF'):  # noqa: C901
         """Add a ControlCondition from an IfThenElseControl"""  # noqa: D400
         if isinstance(condition, OrCondition):
             self.add_control_condition(condition._condition_1, prefix)  # noqa: SLF001
@@ -3099,11 +3099,11 @@ class _EpanetRule:
         else:
             raise ValueError('Unknown ControlCondition for EPANET Rules')  # noqa: DOC501, EM101, TRY003, TRY004
 
-    def add_then(self, clause):  # noqa: ANN001, ANN202
+    def add_then(self, clause):
         """Add a "then/and" clause from an INP file"""  # noqa: D400
         self._then_clauses.append(clause)
 
-    def add_action_on_true(self, action, prefix=' THEN'):  # noqa: ANN001, ANN202, C901
+    def add_action_on_true(self, action, prefix=' THEN'):  # noqa: C901
         """Add a "then" action from an IfThenElseControl"""  # noqa: D400
         if isinstance(action, ControlAction):
             fmt = '{} {} {} {} = {}'
@@ -3147,11 +3147,11 @@ class _EpanetRule:
             )
             self.add_then(clause)
 
-    def add_else(self, clause):  # noqa: ANN001, ANN202
+    def add_else(self, clause):
         """Add an "else/and" clause from an INP file"""  # noqa: D400
         self._else_clauses.append(clause)
 
-    def add_action_on_false(self, action, prefix=' ELSE'):  # noqa: ANN001, ANN202, C901
+    def add_action_on_false(self, action, prefix=' ELSE'):  # noqa: C901
         """Add an "else" action from an IfThenElseControl"""  # noqa: D400
         if isinstance(action, ControlAction):
             fmt = '{} {} {} {} = {}'
@@ -3195,10 +3195,10 @@ class _EpanetRule:
             )
             self.add_else(clause)
 
-    def set_priority(self, priority):  # noqa: ANN001, ANN202
+    def set_priority(self, priority):
         self.priority = int(float(priority))
 
-    def __str__(self):  # noqa: ANN204
+    def __str__(self):
         if self.priority >= 0:
             if len(self._else_clauses) > 0:
                 return 'RULE {}\n{}\n{}\n{}\n PRIORITY {}\n ; end of rule\n'.format(
@@ -3229,7 +3229,7 @@ class _EpanetRule:
                 '\n'.join(self._then_clauses),
             )
 
-    def generate_control(self, model):  # noqa: ANN001, ANN202, C901
+    def generate_control(self, model):  # noqa: C901
         condition_list = []
         for line in self._if_clauses:
             condition = None
@@ -3389,13 +3389,13 @@ class BinFile:
 
     """
 
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        result_types=None,  # noqa: ANN001
-        network=False,  # noqa: ANN001, FBT002
-        energy=False,  # noqa: ANN001, FBT002
-        statistics=False,  # noqa: ANN001, FBT002
-        convert_status=True,  # noqa: ANN001, FBT002
+        result_types=None,
+        network=False,  # noqa: FBT002
+        energy=False,  # noqa: FBT002
+        statistics=False,  # noqa: FBT002
+        convert_status=True,  # noqa: FBT002
     ):
         if os.name in ['nt', 'dos'] or sys.platform == 'darwin':  # noqa: PLR6201
             self.ftype = '=f4'
@@ -3433,7 +3433,7 @@ class BinFile:
         self.keep_energy = energy
         self.keep_statistics = statistics
 
-    def _get_time(self, t):  # noqa: ANN001, ANN202, PLR6301
+    def _get_time(self, t):  # noqa: PLR6301
         s = int(t)
         h = int(s / 3600)
         s -= h * 3600
@@ -3442,7 +3442,7 @@ class BinFile:
         s = int(s)
         return f'{h:02}:{m:02}:{s:02}'
 
-    def save_network_desc_line(self, element, values):  # noqa: ANN001, ANN201
+    def save_network_desc_line(self, element, values):
         """Save network description meta-data and element characteristics.
 
         This method, by default, does nothing. It is available to be overloaded, but the
@@ -3458,7 +3458,7 @@ class BinFile:
 
         """
 
-    def save_energy_line(self, pump_idx, pump_name, values):  # noqa: ANN001, ANN201
+    def save_energy_line(self, pump_idx, pump_name, values):
         """Save pump energy from the output file.
 
         This method, by default, does nothing. It is available to be overloaded
@@ -3475,7 +3475,7 @@ class BinFile:
 
         """
 
-    def finalize_save(self, good_read, sim_warnings):  # noqa: ANN001, ANN201
+    def finalize_save(self, good_read, sim_warnings):
         """Post-process data before writing results.
 
         This method, by default, does nothing. It is available to be overloaded
@@ -3491,12 +3491,12 @@ class BinFile:
         """
 
     #    @run_lineprofile()
-    def read(  # noqa: ANN201, C901, PLR0914, PLR0915
+    def read(  # noqa: C901, PLR0914, PLR0915
         self,
-        filename,  # noqa: ANN001
-        convergence_error=False,  # noqa: ANN001, FBT002
-        darcy_weisbach=False,  # noqa: ANN001, FBT002
-        convert=True,  # noqa: ANN001, FBT002
+        filename,
+        convergence_error=False,  # noqa: FBT002
+        darcy_weisbach=False,  # noqa: FBT002
+        convert=True,  # noqa: FBT002
     ):
         """Read a binary file and create a results object.
 
@@ -3911,7 +3911,7 @@ class NoSectionError(Exception):  # noqa: D101
 
 
 class _InpFileDifferHelper:  # pragma: no cover
-    def __init__(self, f):  # noqa: ANN001, ANN204
+    def __init__(self, f):
         """Parameters
         ----------
         f: str
@@ -3923,10 +3923,10 @@ class _InpFileDifferHelper:  # pragma: no cover
         self._f.seek(0)
 
     @property
-    def f(self):  # noqa: ANN202
+    def f(self):
         return self._f
 
-    def iter(self, start=0, stop=None, skip_section_headings=True):  # noqa: ANN001, ANN202, FBT002
+    def iter(self, start=0, stop=None, skip_section_headings=True):  # noqa: FBT002
         if stop is None:
             stop = self._end
         f = self.f
@@ -3944,7 +3944,7 @@ class _InpFileDifferHelper:  # pragma: no cover
             line = line.split(';')[0]
             yield loc, line
 
-    def get_section(self, sec):  # noqa: ANN001, ANN202
+    def get_section(self, sec):
         """Parameters
         ----------
         sec: str
@@ -3977,7 +3977,7 @@ class _InpFileDifferHelper:  # pragma: no cover
             end = self._end
         return start, end
 
-    def contains_section(self, sec):  # noqa: ANN001, ANN202
+    def contains_section(self, sec):
         """Parameters
         ----------
         sec: str
@@ -3990,7 +3990,7 @@ class _InpFileDifferHelper:  # pragma: no cover
             return False
 
 
-def _convert_line(line):  # pragma: no cover  # noqa: ANN001, ANN202
+def _convert_line(line):  # pragma: no cover
     """Parameters
     ----------
     line: str
@@ -4017,7 +4017,7 @@ def _convert_line(line):  # pragma: no cover  # noqa: ANN001, ANN202
 
 
 # pragma: no cover
-def _compare_lines(line1, line2, tol=1e-14):  # noqa: ANN001, ANN202
+def _compare_lines(line1, line2, tol=1e-14):
     """Parameters
     ----------
     line1: list of str
@@ -4047,7 +4047,7 @@ def _compare_lines(line1, line2, tol=1e-14):  # noqa: ANN001, ANN202
     return True
 
 
-def _clean_line(wn, sec, line):  # pragma: no cover  # noqa: ANN001, ANN202
+def _clean_line(wn, sec, line):  # pragma: no cover
     """Parameters
     ----------
     wn: wntrfr.network.WaterNetworkModel
@@ -4072,7 +4072,7 @@ def _clean_line(wn, sec, line):  # pragma: no cover  # noqa: ANN001, ANN202
     return line
 
 
-def _read_control_line(line, wn, flow_units, control_name):  # noqa: ANN001, ANN202, C901
+def _read_control_line(line, wn, flow_units, control_name):  # noqa: C901
     """Parameters
     ----------
     line: str
@@ -4217,12 +4217,12 @@ def _read_control_line(line, wn, flow_units, control_name):  # noqa: ANN001, ANN
     return control_obj
 
 
-def _diff_inp_files(  # noqa: ANN202, C901
-    file1,  # noqa: ANN001
-    file2=None,  # noqa: ANN001
-    float_tol=1e-8,  # noqa: ANN001
-    max_diff_lines_per_section=5,  # noqa: ANN001
-    htmldiff_file='diff.html',  # noqa: ANN001
+def _diff_inp_files(  # noqa: C901
+    file1,
+    file2=None,
+    float_tol=1e-8,
+    max_diff_lines_per_section=5,
+    htmldiff_file='diff.html',
 ):  # pragma: no cover
     """Parameters
     ----------

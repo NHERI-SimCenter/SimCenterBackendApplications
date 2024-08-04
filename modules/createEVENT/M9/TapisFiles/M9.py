@@ -9,7 +9,7 @@ import xarray as xr
 
 # 'netcdf4', 'h5netcdf', 'scipy'
 # %%
-def M9(information):  # noqa: ANN001, ANN201, N802
+def M9(information):  # noqa: N802
     """The default is to select sites from all M9 sites, but
     grid type (options: A, B, C, D, E, Y, and Z, can be empty)
     (ref: https://sites.uw.edu/pnet/m9-simulations/about-m9-simulations/extent-of-model/)
@@ -79,7 +79,7 @@ def M9(information):  # noqa: ANN001, ANN201, N802
     )
 
 
-def write_motion(site_name, directory, i, motiondict, APIFLAG):  # noqa: ANN001, ANN201, N803, D103
+def write_motion(site_name, directory, i, motiondict, APIFLAG):  # noqa: N803, D103
     filename = f'{directory}/{site_name}_{i}.json'
 
     if APIFLAG:

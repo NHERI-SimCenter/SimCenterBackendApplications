@@ -63,7 +63,7 @@ convert_EDP = {  # noqa: N816
 }
 
 
-def write_RV():  # noqa: ANN201, N802, D103
+def write_RV():  # noqa: N802, D103
     # create an empty SIM file
 
     SIM = {}  # noqa: N806
@@ -75,7 +75,7 @@ def write_RV():  # noqa: ANN201, N802, D103
     # TODO: get simulation data & write to SIM file  # noqa: TD002
 
 
-def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_path):  # noqa: ANN001, ANN201, C901, N803, D103
+def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_path):  # noqa: C901, N803, D103
     # these imports are here to save time when the app is called without
     # the -getRV flag
     import sys  # noqa: PLC0415

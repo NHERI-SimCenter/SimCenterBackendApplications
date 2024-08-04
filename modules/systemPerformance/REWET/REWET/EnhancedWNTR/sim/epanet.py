@@ -58,7 +58,7 @@ class EpanetSimulator(EpanetSimulator):
 
     """
 
-    def __init__(self, wn):  # noqa: ANN001, ANN204
+    def __init__(self, wn):
         super(EpanetSimulator, self).__init__(wn)  # noqa: UP008
 
         # Sina added this for time manipulate function
@@ -80,12 +80,12 @@ class EpanetSimulator(EpanetSimulator):
         self._initialize_name_id_maps()
         # sina end
 
-    def manipulateTimeOrder(  # noqa: ANN201, N802, D102
+    def manipulateTimeOrder(  # noqa: N802, D102
         self,
-        begin_time,  # noqa: ANN001
-        end_time,  # noqa: ANN001
-        change_time_step=False,  # noqa: ANN001, FBT002
-        min_correction_time_step=None,  # noqa: ANN001
+        begin_time,
+        end_time,
+        change_time_step=False,  # noqa: FBT002
+        min_correction_time_step=None,
     ):
         time_dif = end_time - begin_time
         min_step_time = min_correction_time_step
@@ -127,16 +127,16 @@ class EpanetSimulator(EpanetSimulator):
                 raise RuntimeError('no timestep is found')  # noqa: EM101, TRY003
             self._wn.options.time.report_timestep = new_time_step
 
-    def run_sim(  # noqa: ANN201, C901
+    def run_sim(  # noqa: C901
         self,
-        file_prefix='temp',  # noqa: ANN001
-        save_hyd=False,  # noqa: ANN001, FBT002
-        use_hyd=False,  # noqa: ANN001, FBT002
-        hydfile=None,  # noqa: ANN001
-        version=2.2,  # noqa: ANN001
-        convergence_error=False,  # noqa: ANN001, FBT002, ARG002
-        start_time=None,  # noqa: ANN001
-        iModified=True,  # noqa: ANN001, FBT002, N803
+        file_prefix='temp',
+        save_hyd=False,  # noqa: FBT002
+        use_hyd=False,  # noqa: FBT002
+        hydfile=None,
+        version=2.2,
+        convergence_error=False,  # noqa: FBT002, ARG002
+        start_time=None,
+        iModified=True,  # noqa: FBT002, N803
     ):
         """Run the EPANET simulator.
 
@@ -231,7 +231,7 @@ class EpanetSimulator(EpanetSimulator):
 
         return result_data, run_successful
 
-    def _updateResultStartTime(self, result_data, start_time):  # noqa: ANN001, ANN202, N802, PLR6301
+    def _updateResultStartTime(self, result_data, start_time):  # noqa: N802, PLR6301
         for res_type, res in result_data.link.items():  # noqa: B007, PERF102
             # result_data.link[res_type].index = res
             res.index = res.index + start_time  # noqa: PLR6104
@@ -240,10 +240,10 @@ class EpanetSimulator(EpanetSimulator):
             # result_data.link[res_type].index = res
             res.index = res.index + start_time  # noqa: PLR6104
 
-    def _get_isolated_junctions_and_links(  # noqa: ANN202
+    def _get_isolated_junctions_and_links(
         self,
-        prev_isolated_junctions,  # noqa: ANN001
-        prev_isolated_links,  # noqa: ANN001
+        prev_isolated_junctions,
+        prev_isolated_links,
     ):
         self._prev_isolated_junctions = prev_isolated_junctions
         self._prev_isolated_links = prev_isolated_links
@@ -300,7 +300,7 @@ class EpanetSimulator(EpanetSimulator):
         self._prev_isolated_links = isolated_links
         return isolated_junctions, isolated_links
 
-    def _initialize_internal_graph(self):  # noqa: ANN202, C901
+    def _initialize_internal_graph(self):  # noqa: C901
         n_links = OrderedDict()
         rows = []
         cols = []
@@ -440,7 +440,7 @@ class EpanetSimulator(EpanetSimulator):
             self._source_ids.append(node_id)
         self._source_ids = np.array(self._source_ids, dtype=self._int_dtype)
 
-    def _update_internal_graph(self):  # noqa: ANN202
+    def _update_internal_graph(self):
         data = self._internal_graph.data
         ndx_map = self._map_link_to_internal_graph_data_ndx
         for mgr in [self._presolve_controls, self._rules, self._postsolve_controls]:
@@ -466,7 +466,7 @@ class EpanetSimulator(EpanetSimulator):
                     data[ndx1] = 1
                     data[ndx2] = 1
 
-    def _initialize_name_id_maps(self):  # noqa: ANN202
+    def _initialize_name_id_maps(self):
         n = 0
         for link_name, link in self._wn.links():  # noqa: B007
             self._link_name_to_id[link_name] = n
@@ -478,13 +478,13 @@ class EpanetSimulator(EpanetSimulator):
             self._node_id_to_name[n] = node_name
             n += 1
 
-    def now_temp(  # noqa: ANN201, D102
+    def now_temp(  # noqa: D102
         self,
-        rr,  # noqa: ANN001
-        isolated_link_list,  # noqa: ANN001
-        alread_closed_pipes,  # noqa: ANN001
-        _prev_isolated_junctions,  # noqa: ANN001
-        already_done_nodes,  # noqa: ANN001
+        rr,
+        isolated_link_list,
+        alread_closed_pipes,
+        _prev_isolated_junctions,
+        already_done_nodes,
     ):
         check_nodes = [
             node_name
@@ -551,13 +551,13 @@ class EpanetSimulator(EpanetSimulator):
             ifinish = True
         return closed_pipes, already_done_nodes, ifinish
 
-    def alterPipeKmNNN(  # noqa: ANN201, N802, D102
+    def alterPipeKmNNN(  # noqa: N802, D102
         self,
-        rr,  # noqa: ANN001
-        isolated_link_list,  # noqa: ANN001
-        _prev_isolated_junctions,  # noqa: ANN001
-        flow_criteria,  # noqa: ANN001
-        negative_pressure_limit,  # noqa: ANN001
+        rr,
+        isolated_link_list,
+        _prev_isolated_junctions,
+        flow_criteria,
+        negative_pressure_limit,
     ):
         # t1 = time.time()
 
@@ -673,13 +673,13 @@ class EpanetSimulator(EpanetSimulator):
 
     # def check_pipes_sin(self, pipe_list):
     # for pipe_name in pipe_list:
-    def closePipeNNN(  # noqa: ANN201, N802, D102
+    def closePipeNNN(  # noqa: N802, D102
         self,
-        rr,  # noqa: ANN001
-        isolated_link_list,  # noqa: ANN001
-        _prev_isolated_junctions,  # noqa: ANN001
-        flow_criteria,  # noqa: ANN001
-        negative_pressure_limit,  # noqa: ANN001
+        rr,
+        isolated_link_list,
+        _prev_isolated_junctions,
+        flow_criteria,
+        negative_pressure_limit,
     ):
         closed_pipes = {}
 

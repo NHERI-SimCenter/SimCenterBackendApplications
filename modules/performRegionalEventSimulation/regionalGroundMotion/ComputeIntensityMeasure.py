@@ -128,14 +128,14 @@ class IM_Calculator:  # noqa: D101
     timeGetRuptureInfo = 0  # noqa: N815
     timeGetIM = 0  # noqa: N815
 
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        source_info=dict(),  # noqa: ANN001, B006, C408, ARG002
-        im_dict=dict(),  # noqa: ANN001, B006, C408
-        gmpe_dict=dict(),  # noqa: ANN001, B006, C408
-        gmpe_weights_dict=dict(),  # noqa: ANN001, B006, C408
-        im_type=None,  # noqa: ANN001
-        site_info=dict(),  # noqa: ANN001, B006, C408
+        source_info=dict(),  # noqa: B006, C408, ARG002
+        im_dict=dict(),  # noqa: B006, C408
+        gmpe_dict=dict(),  # noqa: B006, C408
+        gmpe_weights_dict=dict(),  # noqa: B006, C408
+        im_type=None,
+        site_info=dict(),  # noqa: B006, C408
     ):
         # basic set-ups
         self.set_im_gmpe(im_dict, gmpe_dict, gmpe_weights_dict)
@@ -143,7 +143,7 @@ class IM_Calculator:  # noqa: D101
         self.set_sites(site_info)
         # self.set_source(source_info)
 
-    def set_source(self, source_info):  # noqa: ANN001, ANN201, D102
+    def set_source(self, source_info):  # noqa: D102
         # set seismic source
         self.source_info = source_info.copy()
         gmpe_list = set()
@@ -190,13 +190,13 @@ class IM_Calculator:  # noqa: D101
         self.site_rup_dict = site_rup_dict
         self.site_info = station_info
 
-    def set_im_gmpe(self, im_dict, gmpe_dict, gmpe_weights_dict):  # noqa: ANN001, ANN201, D102
+    def set_im_gmpe(self, im_dict, gmpe_dict, gmpe_weights_dict):  # noqa: D102
         # set im and gmpe information
         self.im_dict = im_dict.copy()
         self.gmpe_dict = gmpe_dict.copy()
         self.gmpe_weights_dict = gmpe_weights_dict.copy()
 
-    def set_im_type(self, im_type):  # noqa: ANN001, ANN201, D102
+    def set_im_type(self, im_type):  # noqa: D102
         # set im type
         if im_type is None:
             self.im_type = None
@@ -210,11 +210,11 @@ class IM_Calculator:  # noqa: D101
         else:
             self.im_type = im_type
 
-    def set_sites(self, site_info):  # noqa: ANN001, ANN201, D102
+    def set_sites(self, site_info):  # noqa: D102
         # set sites
         self.site_info = site_info
 
-    def calculate_im(self):  # noqa: ANN201, C901, D102
+    def calculate_im(self):  # noqa: C901, D102
         # set up intensity measure calculations
         # current im type
         im_type = self.im_type
@@ -299,16 +299,16 @@ class IM_Calculator:  # noqa: D101
         # return
         return res
 
-    def get_im_from_opensha(  # noqa: ANN201, D102, PLR6301
+    def get_im_from_opensha(  # noqa: D102, PLR6301
         self,
-        source_info,  # noqa: ANN001
-        gmpe_list,  # noqa: ANN001
-        gmpe_para,  # noqa: ANN001
-        erf,  # noqa: ANN001
-        station_info,  # noqa: ANN001
-        im_type,  # noqa: ANN001
-        im_info,  # noqa: ANN001
-        gmpe_weights=None,  # noqa: ANN001
+        source_info,
+        gmpe_list,
+        gmpe_para,
+        erf,
+        station_info,
+        im_type,
+        im_info,
+        gmpe_weights=None,
     ):
         # Computing IM
         res_list = []
@@ -341,13 +341,13 @@ class IM_Calculator:  # noqa: D101
         # return
         return res
 
-    def get_im_from_local(  # noqa: ANN201, C901, D102
+    def get_im_from_local(  # noqa: C901, D102
         self,
-        source_info,  # noqa: ANN001
-        gmpe_list,  # noqa: ANN001
-        im_type,  # noqa: ANN001
-        im_info,  # noqa: ANN001
-        gmpe_weights=None,  # noqa: ANN001
+        source_info,
+        gmpe_list,
+        im_type,
+        im_info,
+        gmpe_weights=None,
     ):
         # initiate
         res_list = []
@@ -508,7 +508,7 @@ class IM_Calculator:  # noqa: D101
         return res
 
 
-def collect_multi_im_res(res_dict):  # noqa: ANN001, ANN201, C901, D103
+def collect_multi_im_res(res_dict):  # noqa: C901, D103
     res_list = []
     if 'PGA' in res_dict.keys():  # noqa: SIM118
         res_list.append(res_dict['PGA'])
@@ -552,7 +552,7 @@ def collect_multi_im_res(res_dict):  # noqa: ANN001, ANN201, C901, D103
     return res
 
 
-def collect_multi_im_res_hdf5(res_list, im_list):  # noqa: ANN001, ANN201, D103
+def collect_multi_im_res_hdf5(res_list, im_list):  # noqa: D103
     res = dict()  # noqa: C408
     num_res = len(res_list)
     if num_res == 0:
@@ -623,7 +623,7 @@ def collect_multi_im_res_hdf5(res_list, im_list):  # noqa: ANN001, ANN201, D103
     return res
 
 
-def get_im_dict(im_info):  # noqa: ANN001, ANN201, D103
+def get_im_dict(im_info):  # noqa: D103
     if im_info.get('Type', None) == 'Vector':
         im_dict = im_info.copy()
         im_dict.pop('Type')
@@ -638,7 +638,7 @@ def get_im_dict(im_info):  # noqa: ANN001, ANN201, D103
     return im_dict
 
 
-def get_gmpe_from_im_vector(im_info, gmpe_info):  # noqa: ANN001, ANN201, D103
+def get_gmpe_from_im_vector(im_info, gmpe_info):  # noqa: D103
     gmpe_dict = dict()  # noqa: C408
     gmpe_weights_dict = dict()  # noqa: C408
     # check IM info type
@@ -677,7 +677,7 @@ def get_gmpe_from_im_vector(im_info, gmpe_info):  # noqa: ANN001, ANN201, D103
     return gmpe_dict, gmpe_weights_dict
 
 
-def get_gmpe_from_im_legency(im_info, gmpe_info, gmpe_weights=None):  # noqa: ANN001, ANN201, D103
+def get_gmpe_from_im_legency(im_info, gmpe_info, gmpe_weights=None):  # noqa: D103
     # back compatibility for getting ims and gmpes
     gmpe_dict = dict()  # noqa: C408
     gmpe_weights_dict = dict()  # noqa: C408
@@ -705,16 +705,16 @@ def get_gmpe_from_im_legency(im_info, gmpe_info, gmpe_weights=None):  # noqa: AN
     return gmpe_dict, gmpe_weights_dict
 
 
-def compute_im(  # noqa: ANN201, C901, D103
-    scenarios,  # noqa: ANN001
-    stations,  # noqa: ANN001
-    EqRupture_info,  # noqa: ANN001, N803
-    gmpe_info,  # noqa: ANN001
-    im_info,  # noqa: ANN001
-    generator_info,  # noqa: ANN001
-    output_dir,  # noqa: ANN001
-    filename='IntensityMeasureMeanStd.hdf5',  # noqa: ANN001
-    mth_flag=True,  # noqa: ANN001, FBT002
+def compute_im(  # noqa: C901, D103
+    scenarios,
+    stations,
+    EqRupture_info,  # noqa: N803
+    gmpe_info,
+    im_info,
+    generator_info,
+    output_dir,
+    filename='IntensityMeasureMeanStd.hdf5',
+    mth_flag=True,  # noqa: FBT002
 ):
     # Calling OpenSHA to compute median PSA
     if len(scenarios) < 10:  # noqa: PLR2004
@@ -893,14 +893,14 @@ def compute_im(  # noqa: ANN201, C901, D103
     return filename, im_list
 
 
-def compute_im_para(  # noqa: ANN201, D103
-    ids,  # noqa: ANN001
-    scenario_infos,  # noqa: ANN001
-    im_dict,  # noqa: ANN001
-    gmpe_dict,  # noqa: ANN001
-    gmpe_weights_dict,  # noqa: ANN001
-    station_info,  # noqa: ANN001
-    res_dict,  # noqa: ANN001
+def compute_im_para(  # noqa: D103
+    ids,
+    scenario_infos,
+    im_dict,
+    gmpe_dict,
+    gmpe_weights_dict,
+    station_info,
+    res_dict,
 ):
     for i, id in enumerate(ids):  # noqa: A001
         print(f'ComputeIntensityMeasure: Scenario #{id + 1}.')  # noqa: T201
@@ -928,16 +928,16 @@ def compute_im_para(  # noqa: ANN201, D103
     # return
 
 
-def export_im(  # noqa: ANN201, C901, D103, PLR0912
-    stations,  # noqa: ANN001
-    im_list,  # noqa: ANN001
-    im_data,  # noqa: ANN001
-    eq_data,  # noqa: ANN001
-    output_dir,  # noqa: ANN001
-    filename,  # noqa: ANN001
-    csv_flag,  # noqa: ANN001
-    gf_im_list,  # noqa: ANN001
-    scenario_ids,  # noqa: ANN001
+def export_im(  # noqa: C901, D103, PLR0912
+    stations,
+    im_list,
+    im_data,
+    eq_data,
+    output_dir,
+    filename,
+    csv_flag,
+    gf_im_list,
+    scenario_ids,
 ):
     # Rename SA(xxx) to SA_xxx
     for i, im in enumerate(im_list):
@@ -1215,7 +1215,7 @@ def export_im(  # noqa: ANN201, C901, D103, PLR0912
     # return 1
 
 
-def compute_weighted_res(res_list, gmpe_weights):  # noqa: ANN001, ANN201, C901, D103
+def compute_weighted_res(res_list, gmpe_weights):  # noqa: C901, D103
     # compute weighted average of gmpe results
     # initialize the return res (these three attributes are identical in different gmpe results)
     res = {

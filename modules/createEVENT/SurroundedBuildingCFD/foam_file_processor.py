@@ -6,7 +6,7 @@ import os
 import numpy as np
 
 
-def find_keyword_line(dict_lines, keyword):  # noqa: ANN001, ANN201, D103
+def find_keyword_line(dict_lines, keyword):  # noqa: D103
     start_line = -1
 
     count = 0
@@ -22,7 +22,7 @@ def find_keyword_line(dict_lines, keyword):  # noqa: ANN001, ANN201, D103
     return start_line
 
 
-def write_foam_field(field, file_name):  # noqa: ANN001, ANN201
+def write_foam_field(field, file_name):
     """Writes a given numpy two dimensional array to OpenFOAM
     field format. It can handle the following formats:
         pointField,
@@ -51,7 +51,7 @@ def write_foam_field(field, file_name):  # noqa: ANN001, ANN201
     foam_file.close()
 
 
-def write_scalar_field(field, file_name):  # noqa: ANN001, ANN201
+def write_scalar_field(field, file_name):
     """Writes a given one dimensional numpy array to OpenFOAM
     scalar field format.
     """  # noqa: D205, D401

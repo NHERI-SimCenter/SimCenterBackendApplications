@@ -23,15 +23,15 @@ from scipy.stats import lognorm, norm
 
 
 class GpFromModel:  # noqa: D101
-    def __init__(  # noqa: ANN204, C901, PLR0912, PLR0914, PLR0915
+    def __init__(  # noqa: C901, PLR0912, PLR0914, PLR0915
         self,
-        work_dir,  # noqa: ANN001
-        inputFile,  # noqa: ANN001, N803
-        workflowDriver,  # noqa: ANN001, N803
-        run_type,  # noqa: ANN001
-        os_type,  # noqa: ANN001
-        inp,  # noqa: ANN001
-        errlog,  # noqa: ANN001
+        work_dir,
+        inputFile,  # noqa: N803
+        workflowDriver,  # noqa: N803
+        run_type,
+        os_type,
+        inp,
+        errlog,
     ):
         t_init = time.time()
         self.errlog = errlog
@@ -387,7 +387,7 @@ class GpFromModel:  # noqa: D101
 
             n_iter = thr_count - n_init
 
-            def FEM_batch(Xs, id_sim):  # noqa: ANN001, ANN202, N802, N803
+            def FEM_batch(Xs, id_sim):  # noqa: N802, N803
                 return run_FEM_batch(
                     Xs,
                     id_sim,
@@ -505,7 +505,7 @@ class GpFromModel:  # noqa: D101
                 is_left = True
                 idx = 0
 
-                def change_permissions_recursive(path, mode):  # noqa: ANN001, ANN202
+                def change_permissions_recursive(path, mode):
                     for root, dirs, files in os.walk(path, topdown=False):  # noqa: B007
                         for dir in [os.path.join(root, d) for d in dirs]:  # noqa: A001, PTH118
                             os.chmod(dir, mode)  # noqa: PTH101
@@ -1006,7 +1006,7 @@ class GpFromModel:  # noqa: D101
             else:
                 self.rvVal = self.rvVal + [np.mean(X[:, nx])]  # noqa: PLR6104, RUF005
 
-    def __parameter_calibration(self, m_tmp_list, x_dim, nugget_opt):  # noqa: ANN001, ANN202, ARG002, C901
+    def __parameter_calibration(self, m_tmp_list, x_dim, nugget_opt):  # noqa: ARG002, C901
         warnings.filterwarnings('ignore')
 
         t_opt = time.time()
@@ -1207,18 +1207,18 @@ class GpFromModel:  # noqa: D101
 
         return m_tmp_list
 
-    def __design_of_experiments(  # noqa: ANN202, C901, PLR0914, PLR0915
+    def __design_of_experiments(  # noqa: C901, PLR0914, PLR0915
         self,
-        X,  # noqa: ANN001, N803
-        Y,  # noqa: ANN001, N803
-        ac,  # noqa: ANN001
-        ar,  # noqa: ANN001, ARG002
-        n_candi,  # noqa: ANN001
-        n_integ,  # noqa: ANN001
-        pre_m_list,  # noqa: ANN001
-        do_cal,  # noqa: ANN001
-        nugget_opt,  # noqa: ANN001
-        do_doe,  # noqa: ANN001
+        X,  # noqa: N803
+        Y,  # noqa: N803
+        ac,
+        ar,  # noqa: ARG002
+        n_candi,
+        n_integ,
+        pre_m_list,
+        do_cal,
+        nugget_opt,
+        do_doe,
     ):
         # do log transform
         if self.do_logtransform:
@@ -1692,7 +1692,7 @@ class GpFromModel:  # noqa: D101
 
         return update_point, m_list, update_IMSE, y_idx, Y_pred, Y_pred_var
 
-    def __normalized_mean_sq_error(self, yp, ye):  # noqa: ANN001, ANN202, PLR6301
+    def __normalized_mean_sq_error(self, yp, ye):  # noqa: PLR6301
         nt = yp.shape[0]
         data_bound = np.max(ye, axis=0) - np.min(ye, axis=0)
         RMSE = np.sqrt(1 / nt * np.sum(pow(yp - ye, 2), axis=0))  # noqa: N806
@@ -1700,7 +1700,7 @@ class GpFromModel:  # noqa: D101
         NRMSE[np.argwhere(data_bound == 0)] = 0
         return NRMSE
 
-    def __closest_node(self, node, nodes):  # noqa: ANN001, ANN202
+    def __closest_node(self, node, nodes):
         nodes = np.asarray(nodes)
         deltas = nodes - node
 
@@ -1714,7 +1714,7 @@ class GpFromModel:  # noqa: D101
         dist_2 = np.einsum('ij,ij->i', deltas_norm, deltas_norm)
         return np.argmin(dist_2)
 
-    def __from_XY_into_list(self, X, Y):  # noqa: ANN001, ANN202, N802, N803, PLR6301
+    def __from_XY_into_list(self, X, Y):  # noqa: N802, N803, PLR6301
         x_list = list()  # noqa: C408
         y_list = list()  # noqa: C408
         for i in range(Y.shape[1]):
@@ -1731,7 +1731,7 @@ class GpFromModel:  # noqa: D101
             ]
         return x_list, y_list
 
-    def __predict(self, m, X):  # noqa: ANN001, ANN202, N803
+    def __predict(self, m, X):  # noqa: N803
         if not self.do_mf:  # noqa: RET503
             return m.predict(X)
         elif self.mf_case == 'data-model' or self.mf_case == 'data-data':  # noqa: RET505, PLR1714
@@ -1746,7 +1746,7 @@ class GpFromModel:  # noqa: D101
             X_list_h = X_list[X.shape[0] :]  # noqa: N806
             return m.predict(X_list_h)
 
-    def __get_cross_validation(self, X, Y, m_list):  # noqa: ANN001, ANN202, N803
+    def __get_cross_validation(self, X, Y, m_list):  # noqa: N803
         if not self.do_mf:
             e2 = np.zeros(Y.shape)
             Y_pred = np.zeros(Y.shape)  # noqa: N806
@@ -1825,13 +1825,13 @@ class GpFromModel:  # noqa: D101
 
         return Y_pred, Y_pred_var, e2
 
-    def term(self):  # noqa: ANN201, D102
+    def term(self):  # noqa: D102
         if self.do_parallel:
             if self.run_type != 'runningLocal':
                 print('RUNNING SUCCESSFUL')  # noqa: T201
                 self.world.Abort(0)  # to prevent deadlock
 
-    def save_model(self, filename):  # noqa: ANN001, ANN201, C901, D102, PLR0915
+    def save_model(self, filename):  # noqa: C901, D102, PLR0915
         import json  # noqa: PLC0415
 
         with open(self.work_dir + '/' + filename + '.pkl', 'wb') as file:  # noqa: PTH123
@@ -2136,7 +2136,7 @@ class GpFromModel:  # noqa: D101
         print('Results Saved')  # noqa: T201
         return 0
 
-    def weights_node2(self, node, nodes, ls):  # noqa: ANN001, ANN201, D102, PLR6301
+    def weights_node2(self, node, nodes, ls):  # noqa: D102, PLR6301
         nodes = np.asarray(nodes)
         deltas = nodes - node
 
@@ -2152,7 +2152,7 @@ class GpFromModel:  # noqa: D101
         return weig / sum(weig)
 
 
-def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver):  # noqa: ANN001, ANN201, N802, N803, D103
+def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver):  # noqa: N802, N803, D103
     X = np.atleast_2d(X)  # noqa: N806
     x_dim = X.shape[1]
 
@@ -2210,18 +2210,18 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver):  # noqa: ANN001, ANN2
     return g, id_sim
 
 
-def run_FEM_batch(  # noqa: ANN201, N802, D103
-    X,  # noqa: ANN001, N803
-    id_sim,  # noqa: ANN001
-    rv_name,  # noqa: ANN001
-    do_parallel,  # noqa: ANN001
-    y_dim,  # noqa: ANN001
-    os_type,  # noqa: ANN001, ARG001
-    run_type,  # noqa: ANN001, ARG001
-    pool,  # noqa: ANN001
-    t_init,  # noqa: ANN001
-    t_thr,  # noqa: ANN001
-    workflowDriver,  # noqa: ANN001, N803
+def run_FEM_batch(  # noqa: N802, D103
+    X,  # noqa: N803
+    id_sim,
+    rv_name,
+    do_parallel,
+    y_dim,
+    os_type,  # noqa: ARG001
+    run_type,  # noqa: ARG001
+    pool,
+    t_init,
+    t_thr,
+    workflowDriver,  # noqa: N803
 ):
     X = np.atleast_2d(X)  # noqa: N806
     # Windows
@@ -2278,7 +2278,7 @@ def run_FEM_batch(  # noqa: ANN201, N802, D103
     return X, Y, id_sim + Nsim
 
 
-def read_txt(text_dir, errlog):  # noqa: ANN001, ANN201, D103
+def read_txt(text_dir, errlog):  # noqa: D103
     if not os.path.exists(text_dir):  # noqa: PTH110
         msg = 'Error: file does not exist: ' + text_dir
         errlog.exit(msg)
@@ -2313,7 +2313,7 @@ def read_txt(text_dir, errlog):  # noqa: ANN001, ANN201, D103
     return X
 
 
-def closest_node(node, nodes, ll):  # noqa: ANN001, ANN201, D103
+def closest_node(node, nodes, ll):  # noqa: D103
     nodes = np.asarray(nodes)
     deltas = nodes - node
     deltas_norm = np.zeros(deltas.shape)
@@ -2324,7 +2324,7 @@ def closest_node(node, nodes, ll):  # noqa: ANN001, ANN201, D103
     return np.argmin(dist_2)
 
 
-def imse(m_tmp, xcandi, xq, phiqr, i):  # noqa: ANN001, ANN201, D103
+def imse(m_tmp, xcandi, xq, phiqr, i):  # noqa: D103
     X = m_tmp.X  # noqa: N806
     Y = m_tmp.Y  # noqa: N806
     X_tmp = np.vstack([X, xcandi])  # noqa: N806
@@ -2340,21 +2340,21 @@ def imse(m_tmp, xcandi, xq, phiqr, i):  # noqa: ANN001, ANN201, D103
 
 
 class errorLog_in_pool:  # noqa: D101
-    def __init__(self, work_dir):  # noqa: ANN001, ANN204
+    def __init__(self, work_dir):
         self.file = open(f'{work_dir}/dakota.err', 'w')  # noqa: PLW1514, PTH123, SIM115
 
-    def write(self, msg):  # noqa: ANN001, ANN201, D102
+    def write(self, msg):  # noqa: D102
         print(msg)  # noqa: T201
         self.file.write(msg)
         self.file.close()
         raise WorkerStopException()  # noqa: RSE102, F821
         # exit(-1)
 
-    def terminate(self):  # noqa: ANN201, D102
+    def terminate(self):  # noqa: D102
         self.file.close()
 
 
-def build_surrogate(work_dir, inputFile, workflowDriver, os_type, run_type):  # noqa: ANN001, ANN201, N803, D103
+def build_surrogate(work_dir, inputFile, workflowDriver, os_type, run_type):  # noqa: N803, D103
     # t_total = time.process_time()
     filename = 'SimGpModel'
 

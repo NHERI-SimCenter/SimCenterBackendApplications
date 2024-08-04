@@ -51,7 +51,7 @@ if 'stampede2' not in socket.gethostname():
     from FetchOpenSHA import *  # noqa: F403
 
 
-def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):  # noqa: ANN001, ANN201, C901, D103
+def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):  # noqa: C901, D103
     # If there is a filter
     if scenario_info['Generator'].get('method', None) == 'ScenarioSpecific':
         SourceIndex = scenario_info['Generator'].get('SourceIndex', None)  # noqa: N806
@@ -104,7 +104,7 @@ def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):  # noqa: ANN0
     return rups_to_run
 
 
-def load_earthquake_rupFile(scenario_info, rupFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
+def load_earthquake_rupFile(scenario_info, rupFilePath):  # noqa: N802, N803, D103
     # Getting earthquake rupture forecast data
     source_type = scenario_info['EqRupture']['Type']
     try:
@@ -179,7 +179,7 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):  # noqa: ANN001, ANN201
     return scenario_data
 
 
-def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile):  # noqa: ANN001, ANN201, C901, N803, D103
+def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile):  # noqa: C901, N803, D103
     # Collecting all possible earthquake scenarios
     lat = []
     lon = []
@@ -351,7 +351,7 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
     return scenario_data
 
 
-def load_earthquake_scenarios(scenario_info, stations, dir_info):  # noqa: ANN001, ANN201, D103
+def load_earthquake_scenarios(scenario_info, stations, dir_info):  # noqa: D103
     # Number of scenarios
     source_num = scenario_info.get('Number', 1)  # noqa: F841
     # sampling method
@@ -424,11 +424,11 @@ def load_earthquake_scenarios(scenario_info, stations, dir_info):  # noqa: ANN00
     return scenario_data
 
 
-def create_earthquake_scenarios(  # noqa: ANN201, C901, D103
-    scenario_info,  # noqa: ANN001
-    stations,  # noqa: ANN001
-    work_dir,  # noqa: ANN001
-    openquakeSiteFile=None,  # noqa: ANN001, N803
+def create_earthquake_scenarios(  # noqa: C901, D103
+    scenario_info,
+    stations,
+    work_dir,
+    openquakeSiteFile=None,  # noqa: N803
 ):
     # # Number of scenarios
     # source_num = scenario_info.get('Number', 1)
@@ -601,12 +601,12 @@ def create_earthquake_scenarios(  # noqa: ANN201, C901, D103
     return None
 
 
-def sample_scenarios(  # noqa: ANN201, D103
-    rup_info=[],  # noqa: ANN001, B006
-    sample_num=1,  # noqa: ANN001
-    sample_type='Random',  # noqa: ANN001
-    source_name=None,  # noqa: ANN001
-    min_M=0.0,  # noqa: ANN001, N803
+def sample_scenarios(  # noqa: D103
+    rup_info=[],  # noqa: B006
+    sample_num=1,
+    sample_type='Random',
+    source_name=None,
+    min_M=0.0,  # noqa: N803
 ):
     if len(rup_info) == 0:
         print(  # noqa: T201
@@ -643,7 +643,7 @@ def sample_scenarios(  # noqa: ANN201, D103
     return s_tag
 
 
-def create_wind_scenarios(scenario_info, stations, data_dir):  # noqa: ANN001, ANN201, D103
+def create_wind_scenarios(scenario_info, stations, data_dir):  # noqa: D103
     # Number of scenarios
     source_num = scenario_info.get('Number', 1)  # noqa: F841
     # Directly defining earthquake ruptures

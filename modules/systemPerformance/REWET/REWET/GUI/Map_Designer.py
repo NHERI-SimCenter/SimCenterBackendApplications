@@ -91,13 +91,13 @@ cmap = plt.cm.RdYlGn
 
 
 class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         super().__init__()
         time_units = ['second', 'hour', 'day']
 
         self.addItems(time_units)
 
-    def changeMapTimeUnit(self, raw_time_map, value_columns_name):  # noqa: ANN001, ANN201, N802, D102
+    def changeMapTimeUnit(self, raw_time_map, value_columns_name):  # noqa: N802, D102
         time_justified_map = raw_time_map.copy()
 
         time_unit = self.currentText()
@@ -120,13 +120,13 @@ class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: D101
 
 
 class Yes_No_Combo(QtWidgets.QComboBox):  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         super().__init__()
         self.addItems(['No', 'Yes'])
 
 
 class Map_Designer:  # noqa: D101, PLR0904
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         self.current_raw_map = None
         self.current_map = None
         self.annotation_map = None
@@ -183,14 +183,14 @@ class Map_Designer:  # noqa: D101, PLR0904
 
         self.initializeMap()
 
-    def initializeMap(self):  # noqa: ANN201, N802, D102
+    def initializeMap(self):  # noqa: N802, D102
         self.setMapAllScenarios(True)
         self.map_all_scenarios_checkbox.setChecked(True)
         self.map_scenario_combo.clear()
         self.map_scenario_combo.addItems(self.result_scenarios)
         # self.current_map_data = None
 
-    def symbologyByButton(self):  # noqa: ANN201, N802, D102
+    def symbologyByButton(self):  # noqa: N802, D102
         sym = Symbology_Designer(
             self.symbology, self.plotted_map, self.map_value_columns_name
         )
@@ -200,7 +200,7 @@ class Map_Designer:  # noqa: D101, PLR0904
             self.symbology = sym.sym
             self.plotMap(self.map_value_columns_name)
 
-    def majorTickSet(self):  # noqa: ANN201, N802, D102
+    def majorTickSet(self):  # noqa: N802, D102
         major_tick_fond_size = self.major_tick_size_line.text()
         major_tick_fond_size = float(major_tick_fond_size)
 
@@ -209,7 +209,7 @@ class Map_Designer:  # noqa: D101, PLR0904
         )
         self.mpl_map.canvas.fig.canvas.draw_idle()
 
-    def openSubsituteLayerWindow(self):  # noqa: ANN201, N802, D102
+    def openSubsituteLayerWindow(self):  # noqa: N802, D102
         demand_node_temporary_layer = (
             self.project_result.createGeopandasPointDataFrameForNodes()
         )
@@ -227,7 +227,7 @@ class Map_Designer:  # noqa: D101, PLR0904
             self.iUse_substitute_layer = sub_layer.iUse_substitute_layer
             self.plotMap(self.map_value_columns_name)
 
-    def annotationRadiusChanegd(self):  # noqa: ANN201, N802, D102
+    def annotationRadiusChanegd(self):  # noqa: N802, D102
         annotation_radius = self.annotation_radius_line.text()
         self.annotation_map = self.plotted_map.copy(deep=True)
         if annotation_radius == '':  # noqa: PLC1901
@@ -237,7 +237,7 @@ class Map_Designer:  # noqa: D101, PLR0904
         for ind, val in self.current_map.geometry.iteritems():
             self.annotation_map.geometry.loc[ind] = val.buffer(annotation_radius)
 
-    def AnnotationCheckboxChanged(self, state):  # noqa: ANN001, ANN201, N802, D102
+    def AnnotationCheckboxChanged(self, state):  # noqa: N802, D102
         if state == 0:
             self.annotation_event_combo.setEnabled(False)
             self.annotation_radius_line.setEnabled(False)
@@ -248,20 +248,20 @@ class Map_Designer:  # noqa: D101, PLR0904
             self.annotation_radius_line.setEnabled(True)
             self.getAnnotationtype()
 
-    def mapAllScenarioCheckboxChanged(self, state):  # noqa: ANN001, ANN201, N802, D102
+    def mapAllScenarioCheckboxChanged(self, state):  # noqa: N802, D102
         if state == 0:
             self.setMapAllScenarios(False)
         elif state == 2:  # noqa: PLR2004
             self.setMapAllScenarios(True)
 
-    def getAnnotationtype(self, text=None):  # noqa: ANN001, ANN201, ARG002, N802, D102
+    def getAnnotationtype(self, text=None):  # noqa: ARG002, N802, D102
         combo_value = self.annotation_event_combo.currentText()
         if combo_value == 'Mouse hover' or combo_value == 'Mouse click':  # noqa: PLR1714
             self.anottation_type = combo_value
         else:
             raise ValueError('unknown annotation type: ' + repr(combo_value))
 
-    def mouseHovered(self, event):  # noqa: ANN001, ANN201, N802, D102
+    def mouseHovered(self, event):  # noqa: N802, D102
         if self.anottation_type != 'Mouse hover':
             return
 
@@ -269,7 +269,7 @@ class Map_Designer:  # noqa: D101, PLR0904
             return
         self.putAnnotation(event)
 
-    def mouseClicked(self, event):  # noqa: ANN001, ANN201, N802, D102
+    def mouseClicked(self, event):  # noqa: N802, D102
         if self.anottation_type != 'Mouse click':
             return
 
@@ -281,7 +281,7 @@ class Map_Designer:  # noqa: D101, PLR0904
 
         self.putAnnotation(event)
 
-    def putAnnotation(self, event):  # noqa: ANN001, ANN201, N802, D102
+    def putAnnotation(self, event):  # noqa: N802, D102
         vis = self.annot.get_visible()
         if event.inaxes == self.mpl_map.canvas.ax:
             # print((event.xdata, event.ydata) )
@@ -309,17 +309,17 @@ class Map_Designer:  # noqa: D101, PLR0904
                 self.annot.set_visible(False)
                 self.mpl_map.canvas.fig.canvas.draw_idle()
 
-    def update_annot(self, text, event):  # noqa: ANN001, ANN201, D102
+    def update_annot(self, text, event):  # noqa: D102
         self.annot.xy = (event.xdata, event.ydata)
 
         self.annot.set_text(text)
         self.annot.get_bbox_patch().set_facecolor(cmap(norm(1)))
         self.annot.get_bbox_patch().set_alpha(0.4)
 
-    def clearMapPlot(self):  # noqa: ANN201, N802, D102
+    def clearMapPlot(self):  # noqa: N802, D102
         self.mpl_map.canvas.ax.cla()
 
-    def plotMap(self, value_columns_name):  # noqa: ANN001, ANN201, N802, D102
+    def plotMap(self, value_columns_name):  # noqa: N802, D102
         self.clearMapPlot()
         self.mpl_map.canvas.ax.clear()
         # for ind, val in self.current_map.geometry.iteritems():
@@ -367,7 +367,7 @@ class Map_Designer:  # noqa: D101, PLR0904
         self.mpl_map.canvas.draw()
         self.mpl_map.canvas.fig.tight_layout()
 
-    def prepareForLegend(self, data, value_columns_name):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def prepareForLegend(self, data, value_columns_name):  # noqa: D102, N802, PLR6301
         return data.copy(deep=True)
         data = data.copy(deep=True)
         min_value = data[value_columns_name].min()
@@ -391,7 +391,7 @@ class Map_Designer:  # noqa: D101, PLR0904
 
         return data
 
-    def setMapAllScenarios(self, flag):  # noqa: ANN001, ANN201, N802, D102
+    def setMapAllScenarios(self, flag):  # noqa: N802, D102
         if flag == True:  # noqa: E712
             self.map_all_scenarios_checkbox.setChecked(True)
             self.map_scenario_combo.setEnabled(False)
@@ -407,17 +407,17 @@ class Map_Designer:  # noqa: D101, PLR0904
         else:
             raise ValueError('Unknown flag: ' + repr(flag))
 
-    def resultScenarioChanged(self, text):  # noqa: ANN001, ANN201, N802, D102
+    def resultScenarioChanged(self, text):  # noqa: N802, D102
         self.map_result_current_scenario = text  # self.map_scenario_combo.getText()
 
-    def mapTypeChanegd(self, text):  # noqa: ANN001, ANN201, N802, D102
+    def mapTypeChanegd(self, text):  # noqa: N802, D102
         if self.project_result == None:  # noqa: E711
             return
         self.current_map_type = text
         self.setMapSettingBox(text)
         self.calculateCurrentMap()
 
-    def calculateCurrentMap(self):  # noqa: ANN201, C901, N802, D102
+    def calculateCurrentMap(self):  # noqa: C901, N802, D102
         map_type = self.current_map_type
         if map_type == 'Quantity Outage vs. Exceedance':
             iConsider_leak = self.map_settings_widgets['LDN leak'].currentText()  # noqa: N806
@@ -643,7 +643,7 @@ class Map_Designer:  # noqa: D101, PLR0904
         # self.annotation_map = self.current_raw_map.copy()
         self.annotationRadiusChanegd()
 
-    def setMapSettingBox(self, map_type):  # noqa: ANN001, ANN201, N802, D102
+    def setMapSettingBox(self, map_type):  # noqa: N802, D102
         for i in range(self.map_settings_table.rowCount()):  # noqa: B007
             self.map_settings_table.removeRow(0)
 
@@ -653,7 +653,7 @@ class Map_Designer:  # noqa: D101, PLR0904
             pass
             # raise ValueError("Unknown Map type: "+repr(map_type))
 
-    def populateMapSettingsTable(self, settings_content):  # noqa: ANN001, ANN201, C901, N802, D102
+    def populateMapSettingsTable(self, settings_content):  # noqa: C901, N802, D102
         self.map_settings_widgets.clear()
         vertical_header = []
         cell_type_list = []
@@ -766,13 +766,13 @@ class Map_Designer:  # noqa: D101, PLR0904
             i += 1  # noqa: SIM113
         # for label in settings_content:
 
-    def mapTimeSettingsChanged(self, x):  # noqa: ANN001, ANN201, ARG002, N802, D102
+    def mapTimeSettingsChanged(self, x):  # noqa: ARG002, N802, D102
         self.current_map = self.time_combo.changeMapTimeUnit(
             self.current_raw_map, self.map_value_columns_name
         )
         self.plotMap(self.map_value_columns_name)
 
-    def mapSettingChanged(self):  # noqa: ANN201, N802, D102
+    def mapSettingChanged(self):  # noqa: N802, D102
         if 'Population' in self.map_settings_widgets:
             new_population_setting = self.map_settings_widgets[
                 'Population'
@@ -785,11 +785,11 @@ class Map_Designer:  # noqa: D101, PLR0904
                 return
         self.calculateCurrentMap()
 
-    def tabChangedMap(self, index):  # noqa: ANN001, ANN201, N802, D102
+    def tabChangedMap(self, index):  # noqa: N802, D102
         if index == 1:
             self.initializeMap()
 
-    def saveCurrentMapByButton(self):  # noqa: ANN201, N802, D102
+    def saveCurrentMapByButton(self):  # noqa: N802, D102
         # if self.current_map_data == None:
         if type(self.current_map) == type(None):  # noqa: E721
             self.errorMSG('REWET', 'No map is ploted')

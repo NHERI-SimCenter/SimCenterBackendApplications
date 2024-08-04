@@ -5,7 +5,7 @@ import shutil
 import numpy as np
 
 
-def postProcess(evtName):  # noqa: ANN001, ANN201, N802, N803, D103
+def postProcess(evtName):  # noqa: N802, N803, D103
     # acc = np.loadtxt("acceleration.out")
     # os.remove("acceleration.out")  # remove acceleration file to save space
     acc = np.loadtxt('out_tcl/acceleration.out')

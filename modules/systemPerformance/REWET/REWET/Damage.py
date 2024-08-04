@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class EarthquakeScenario:  # noqa: D101
-    def __init__(self, magnitude, depth, x_coord, y_coord, eq_time):  # noqa: ANN001, ANN204
+    def __init__(self, magnitude, depth, x_coord, y_coord, eq_time):
         self.M = abs(magnitude)
         self.depth = abs(depth)
         self.coordinate = {}
@@ -27,14 +27,14 @@ class EarthquakeScenario:  # noqa: D101
         self.coordinate['Y'] = y_coord
         self.time = abs(eq_time)
 
-    def getWNTREarthquakeObject(self):  # noqa: ANN201, N802, D102
+    def getWNTREarthquakeObject(self):  # noqa: N802, D102
         return wntrfr.scenario.Earthquake(
             (self.coordinate['X'], self.coordinate['Y']), self.M, self.depth
         )
 
 
 class Damage:  # noqa: D101, PLR0904
-    def __init__(self, registry, scenario_set):  # noqa: ANN001, ANN204
+    def __init__(self, registry, scenario_set):
         self.scenario_set = scenario_set
         self.pipe_leak = pd.Series(dtype='O')
         self.pipe_break = pd.Series(dtype='O')
@@ -57,11 +57,11 @@ class Damage:  # noqa: D101, PLR0904
         # self._nodal_damage_method = None
         self._pipe_damage_method = 1
 
-    def readDamageFromPickleFile(  # noqa: ANN201, N802
+    def readDamageFromPickleFile(  # noqa: N802
         self,
-        pickle_file_name,  # noqa: ANN001
-        csv_file_name,  # noqa: ANN001
-        csv_index=None,  # noqa: ANN001
+        pickle_file_name,
+        csv_file_name,
+        csv_index=None,
     ):
         """This function is only for the sake of reading picke file that nafiseg gives to me
         This function shall not be in any distribution that we release
@@ -107,11 +107,11 @@ class Damage:  # noqa: D101, PLR0904
 
         # print(name_list)
 
-    def readPumpDamage(self, file_name):  # noqa: ANN001, ANN201, N802, D102
+    def readPumpDamage(self, file_name):  # noqa: N802, D102
         pump_list = pd.read_csv(file_name)
         self.damaged_pumps = pump_list['Pump_ID']
 
-    def readNodalDamage(self, file_address):  # noqa: ANN001, ANN201, N802, D102
+    def readNodalDamage(self, file_address):  # noqa: N802, D102
         temp = pd.read_csv(file_address)
         for ind, val in temp.iterrows():  # noqa: B007
             temp_data = {}
@@ -132,10 +132,10 @@ class Damage:  # noqa: D101, PLR0904
 
         self.node_damage.reset_index(drop=True, inplace=True)  # noqa: PD002
 
-    def setNodalDamageModelParameter(self, damage_param):  # noqa: ANN001, ANN201, N802, D102
+    def setNodalDamageModelParameter(self, damage_param):  # noqa: N802, D102
         self._registry.nodal_equavalant_diameter = damage_param
 
-    def readDamageGiraffeFormat(self, break_file_name, leak_file_name):  # noqa: ANN001, ANN201, N802, D102
+    def readDamageGiraffeFormat(self, break_file_name, leak_file_name):  # noqa: N802, D102
         break_temp = pd.read_csv(break_file_name)
         leak_temp = pd.read_csv(leak_file_name)
 
@@ -203,7 +203,7 @@ class Damage:  # noqa: D101, PLR0904
                     )
                 )
 
-    def addPipeDamageByDamageList(self, damage_list, leak_type_ref, break_type_ref):  # noqa: ANN001, ANN201, ARG002, N802, D102
+    def addPipeDamageByDamageList(self, damage_list, leak_type_ref, break_type_ref):  # noqa: ARG002, N802, D102
         # leaked_damage = damage_list[damage_list['damage_state']==leak_type_ref]
 
         for ind, row in damage_list.iterrows():  # noqa: B007
@@ -233,7 +233,7 @@ class Damage:  # noqa: D101, PLR0904
             else:
                 raise ValueError('There is an unknown damage type')  # noqa: EM101, TRY003
 
-    def readDamageFromTextFile(self, path):  # noqa: ANN001, ANN201, N802
+    def readDamageFromTextFile(self, path):  # noqa: N802
         """Reads a damage from scenario from a text file and add the information
             to the damage class object.
 
@@ -301,7 +301,7 @@ class Damage:  # noqa: D101, PLR0904
                 )
         file.close()
 
-    def applyNodalDamage(self, WaterNetwork, current_time):  # noqa: ANN001, ANN201, C901, N802, N803
+    def applyNodalDamage(self, WaterNetwork, current_time):  # noqa: C901, N802, N803
         """Apply Nodal Damage
 
         Parameters
@@ -488,7 +488,7 @@ class Damage:  # noqa: D101, PLR0904
 
         # return WaterNetwork
 
-    def getNd(self, mp, number_of_damages, sum_of_length):  # noqa: ANN001, ANN201, N802, D102
+    def getNd(self, mp, number_of_damages, sum_of_length):  # noqa: N802, D102
         rr = number_of_damages / sum_of_length * 1000
 
         node_damage_parametrs = self._registry.settings['node_damage_model']
@@ -522,7 +522,7 @@ class Damage:  # noqa: D101, PLR0904
         nd = 0.0036 * float(mp) + 0.9012 + (0.0248 * float(mp) - 0.877) * float(rr)
         return nd  # noqa: RET504
 
-    def getNd2(self, mp, number_of_damages, sum_of_length):  # noqa: ANN001, ANN201, N802, D102
+    def getNd2(self, mp, number_of_damages, sum_of_length):  # noqa: N802, D102
         rr = number_of_damages / sum_of_length * 1000
 
         node_damage_parametrs = self._registry.settings['node_damage_model']
@@ -555,14 +555,14 @@ class Damage:  # noqa: D101, PLR0904
 
         return nd  # noqa: RET504
 
-    def getEmitterCdAndElevation(  # noqa: ANN201, N802, D102
+    def getEmitterCdAndElevation(  # noqa: N802, D102
         self,
-        real_node_name,  # noqa: ANN001
-        wn,  # noqa: ANN001
-        number_of_damages,  # noqa: ANN001
-        sum_of_length,  # noqa: ANN001
-        mp,  # noqa: ANN001
-        q,  # noqa: ANN001
+        real_node_name,
+        wn,
+        number_of_damages,
+        sum_of_length,
+        mp,
+        q,
     ):
         mp = (  # noqa: PLR6104
             mp * 1.4223
@@ -593,12 +593,12 @@ class Damage:  # noqa: D101, PLR0904
         cd = alpha * q
         return cd, mp0
 
-    def addExplicitLeakWithReservoir(  # noqa: ANN201, N802, D102
+    def addExplicitLeakWithReservoir(  # noqa: N802, D102
         self,
-        node_name,  # noqa: ANN001
-        number_of_damages,  # noqa: ANN001
-        sum_of_length,  # noqa: ANN001
-        wn,  # noqa: ANN001
+        node_name,
+        number_of_damages,
+        sum_of_length,
+        wn,
     ):
         method = self._registry.settings['damage_node_model']
         if (
@@ -686,7 +686,7 @@ class Damage:  # noqa: D101, PLR0904
             raise ValueError('Unkown Method')  # noqa: EM101, TRY003
         return new_node_name, new_pipe_name, mp, q
 
-    def estimateNodalDamage(self):  # noqa: ANN201, N802, D102
+    def estimateNodalDamage(self):  # noqa: N802, D102
         # res = pd.Series()
         temp1 = []
         temp2 = []
@@ -698,7 +698,7 @@ class Damage:  # noqa: D101, PLR0904
         res = pd.Series(data=temp2, index=temp1)
         return res  # noqa: RET504
 
-    def getPipeDamageListAt(self, time):  # noqa: ANN001, ANN201, N802, D102
+    def getPipeDamageListAt(self, time):  # noqa: N802, D102
         damaged_pipe_name_list = []
 
         if self.pipe_all_damages.empty:
@@ -716,7 +716,7 @@ class Damage:  # noqa: D101, PLR0904
         damaged_pipe_name_list = list(set(damaged_pipe_name_list))
         return damaged_pipe_name_list  # noqa: RET504
 
-    def applyPipeDamages(self, WaterNetwork, current_time):  # noqa: ANN001, ANN201, C901, N802, N803
+    def applyPipeDamages(self, WaterNetwork, current_time):  # noqa: C901, N802, N803
         """Apply the damage that we have in damage object. the damage is either
             predicted or read from somewhere.
 
@@ -950,7 +950,7 @@ class Damage:  # noqa: D101, PLR0904
             )
         # return WaterNetwork
 
-    def applyTankDamages(self, WaterNetwork, current_time):  # noqa: ANN001, ANN201, N802, N803, D102
+    def applyTankDamages(self, WaterNetwork, current_time):  # noqa: N802, N803, D102
         if self.tank_damage.empty:
             print('No Tank Damage at all')  # noqa: T201
             return
@@ -1007,7 +1007,7 @@ class Damage:  # noqa: D101, PLR0904
                 else:
                     raise  # noqa: PLE0704
 
-    def applyPumpDamages(self, WaterNetwork, current_time):  # noqa: ANN001, ANN201, N802, N803, D102
+    def applyPumpDamages(self, WaterNetwork, current_time):  # noqa: N802, N803, D102
         # print(type(self.damaged_pumps))
         if self.damaged_pumps.empty:
             print('No pump damage at all')  # noqa: T201
@@ -1025,7 +1025,7 @@ class Damage:  # noqa: D101, PLR0904
         for ind, values in pump_damage_at_time.items():  # noqa: B007, PERF102
             WaterNetwork.get_link(values).initial_status = LinkStatus(0)
 
-    def read_earthquake(self, earthquake_file_name):  # noqa: ANN001, ANN201
+    def read_earthquake(self, earthquake_file_name):
         """Parameters
         ----------
         earthquake_file_name : str
@@ -1073,7 +1073,7 @@ class Damage:  # noqa: D101, PLR0904
         file.close()
         self.sortEarthquakeListTimely()
 
-    def sortEarthquakeListTimely(self):  # noqa: ANN201, N802
+    def sortEarthquakeListTimely(self):  # noqa: N802
         """This functions sorts the list of earthquakes in a timely manner
 
         Returns
@@ -1084,7 +1084,7 @@ class Damage:  # noqa: D101, PLR0904
         self._earthquake.sort_index()
         self.is_timely_sorted = True
 
-    def predictDamage(self, wn, iClear=False):  # noqa: ANN001, ANN201, FBT002, N802, N803
+    def predictDamage(self, wn, iClear=False):  # noqa: FBT002, N802, N803
         """This function predict the water network model damage based on  probabilistic method.
 
         Parameters
@@ -1143,7 +1143,7 @@ class Damage:  # noqa: D101, PLR0904
                         pd.Series(data=[temp], index=[int(eq.time)])
                     )
 
-    def get_damage_distinct_time(self):  # noqa: ANN201
+    def get_damage_distinct_time(self):
         """Get distinct time for all kind of damages
 
         Returns
@@ -1170,7 +1170,7 @@ class Damage:  # noqa: D101, PLR0904
         # damage_time_list.sort()
         return all_damages_time
 
-    def get_earthquake_distict_time(self):  # noqa: ANN201
+    def get_earthquake_distict_time(self):
         """Checks if the earthquake time are in order. Then the it will get
         distinct earthquake time sand return it
 

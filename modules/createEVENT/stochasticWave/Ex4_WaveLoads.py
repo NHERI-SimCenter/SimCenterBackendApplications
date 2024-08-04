@@ -251,7 +251,7 @@ for i in range(nz):
 # results_df.to_csv('results.out', sep=' ', encoding='utf-8', header=False, index=False)
 
 
-def main(df=None):  # noqa: ANN001, ANN201, D103
+def main(df=None):  # noqa: D103
     return df
 
 

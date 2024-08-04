@@ -25,7 +25,7 @@ class CensusUtil:
     """Utility methods for Census data and API"""  # noqa: D400
 
     @staticmethod
-    def generate_census_api_url(  # noqa: ANN205
+    def generate_census_api_url(
         state: str = None,  # noqa: RUF013
         county: str = None,  # noqa: RUF013
         year: str = None,  # noqa: RUF013
@@ -84,7 +84,7 @@ class CensusUtil:
         return data_url
 
     @staticmethod
-    def request_census_api(data_url):  # noqa: ANN001, ANN205
+    def request_census_api(data_url):
         """Request census data to api and gets the output data
 
         Args:
@@ -110,7 +110,7 @@ class CensusUtil:
         return api_df  # noqa: RET504
 
     @staticmethod
-    def get_blockdata_for_demographics(  # noqa: ANN205, C901
+    def get_blockdata_for_demographics(  # noqa: C901
         state_counties: list,
         census_vars: list,
         vintage: str = '2010',
@@ -474,7 +474,7 @@ class CensusUtil:
         return cen_block[save_columns]
 
     @staticmethod
-    def get_blockgroupdata_for_income(  # noqa: ANN205, C901
+    def get_blockgroupdata_for_income(  # noqa: C901
         state_counties: list,
         acs_vars: list,
         vintage: str = '2010',
@@ -863,7 +863,7 @@ B19001_016E,B19001_017E,B19013_001E'
         return cen_blockgroup[save_columns]
 
     @staticmethod
-    def convert_dislocation_gpd_to_shapefile(in_gpd, programname, savefile):  # noqa: ANN001, ANN205
+    def convert_dislocation_gpd_to_shapefile(in_gpd, programname, savefile):
         """Create shapefile of dislocation geodataframe.
 
         Args:
@@ -880,7 +880,7 @@ B19001_016E,B19001_017E,B19013_001E'
         in_gpd.to_file(programname + '/' + savefile + '.shp')
 
     @staticmethod
-    def convert_dislocation_gpd_to_geojson(in_gpd, programname, savefile):  # noqa: ANN001, ANN205
+    def convert_dislocation_gpd_to_geojson(in_gpd, programname, savefile):
         """Create geojson of dislocation geodataframe.
 
         Args:
@@ -901,7 +901,7 @@ B19001_016E,B19001_017E,B19013_001E'
         in_gpd.to_file(programname + '/' + savefile + '.geojson', driver='GeoJSON')
 
     @staticmethod
-    def convert_dislocation_gpd_to_geopackage(in_gpd, programname, savefile):  # noqa: ANN001, ANN205
+    def convert_dislocation_gpd_to_geopackage(in_gpd, programname, savefile):
         """Create shapefile of dislocation geodataframe.
 
         Args:
@@ -924,7 +924,7 @@ B19001_016E,B19001_017E,B19013_001E'
         )
 
     @staticmethod
-    def convert_dislocation_pd_to_csv(in_pd, save_columns, programname, savefile):  # noqa: ANN001, ANN205
+    def convert_dislocation_pd_to_csv(in_pd, save_columns, programname, savefile):
         """Create csv of dislocation dataframe using the column names.
 
         Args:

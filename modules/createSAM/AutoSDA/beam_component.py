@@ -19,14 +19,14 @@ class Beam:
     (4) Beam flag, a boolean variable with True or False. If it is True, the beam is feasible.
     """  # noqa: D205, D404
 
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        section_size,  # noqa: ANN001
-        length,  # noqa: ANN001
-        shear_demand,  # noqa: ANN001
-        moment_demand_left,  # noqa: ANN001
-        moment_demand_right,  # noqa: ANN001
-        steel,  # noqa: ANN001
+        section_size,
+        length,
+        shear_demand,
+        moment_demand_left,
+        moment_demand_right,
+        steel,
     ):
         """This function initializes the attributes of the beam class.
         :param section_size: a string specifying the section size for the beam.
@@ -68,7 +68,7 @@ class Beam:
         self.compute_demand_capacity_ratio()
         self.calculate_hinge_parameters(steel)
 
-    def initialize_reduced_beam_section(self):  # noqa: ANN201
+    def initialize_reduced_beam_section(self):
         """This method is used to initialize RBS dimensions.
         :return: a dictionary including a, b, and c values describing RBS dimensions.
         """  # noqa: D205, D401, D404
@@ -78,7 +78,7 @@ class Beam:
         # self.RBS_dimension['c'] = 0.1 * self.section['bf']
         self.RBS_dimension['c'] = 0.25 * self.section['bf']
 
-    def check_flange(self, steel):  # noqa: ANN001, ANN201
+    def check_flange(self, steel):
         """This method is used to check whether the flange is satisfied with highly ductile requirement.
         : steel: a class defined in "steel_material.py" file
         : return: a flag (integer) which denotes the flange check result.
@@ -102,7 +102,7 @@ class Beam:
         else:
             self.is_feasible['flange limit'] = False
 
-    def check_web(self, steel):  # noqa: ANN001, ANN201
+    def check_web(self, steel):
         """This method is used to check whether the web is satisfied with highly ductile requirement.
         :param steel: a class defined in "steel_material.py" file.
         :return: a flag (integer) which denotes the web check result.
@@ -115,7 +115,7 @@ class Beam:
         else:
             self.is_feasible['web limit'] = False
 
-    def determine_spacing_between_lateral_support(self, steel):  # noqa: ANN001, ANN201
+    def determine_spacing_between_lateral_support(self, steel):
         """This method is used to compute the spacing between two lateral supports.
         :param steel: a class defined in "steel_material.py" file.
         :return: a float number indicating the spacing.
@@ -136,7 +136,7 @@ class Beam:
             number_lateral_support += 1
         self.spacing = self.length / (number_lateral_support + 1)
 
-    def check_shear_strength(self, steel):  # noqa: ANN001, ANN201
+    def check_shear_strength(self, steel):
         """This method is used to check whether the shear strength of column is sufficient or not
         :param steel: a class defined in "steel_material.py" file
         :return: a float number denoting the shear strength and a flag denoting whether shear strength is sufficient
@@ -152,7 +152,7 @@ class Beam:
         else:
             self.is_feasible['shear strength'] = False
 
-    def check_flexural_strength(self, steel):  # noqa: ANN001, ANN201
+    def check_flexural_strength(self, steel):
         """This method is used to check whether the beam has enough flexural strength.
         :return: a float number denoting flexural strength and a flag denoting whether the flexural strength is enough
         """  # noqa: D205, D400, D401, D404
@@ -173,7 +173,7 @@ class Beam:
         else:
             self.is_feasible['flexural strength'] = False
 
-    def check_flag(self):  # noqa: ANN201
+    def check_flag(self):
         """This method is used to test whether beam passes all checks.
         :return: a bool variable. True ==> passed
         """  # noqa: D205, D400, D401, D404
@@ -183,7 +183,7 @@ class Beam:
                 self.flag = False
         return self.flag
 
-    def compute_demand_capacity_ratio(self):  # noqa: ANN201
+    def compute_demand_capacity_ratio(self):
         """This method is used to compute demand to capacity ratios.
         :return: a dictionary which includes the ratios for shear force and flexural moment.
         """  # noqa: D205, D401, D404
@@ -195,7 +195,7 @@ class Beam:
             / self.strength['flexural RBS']
         )
 
-    def calculate_hinge_parameters(self, steel):  # noqa: ANN001, ANN201
+    def calculate_hinge_parameters(self, steel):
         """This method is used to compute the modeling parameters for plastic hinge using modified IMK material model.
         :return: a dictionary including each parameters required for nonlinear modeling in OpenSees.
         """  # noqa: D205, D401, D404

@@ -57,7 +57,7 @@ from scipy.stats import norm
 # start_time = time.time()
 
 
-def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, ANN201, C901, D103
+def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103
     if create_zip == '1':
         output_path = output_path[:-4]
 
@@ -428,7 +428,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, 
     print('Successfully generated component vulnerability figures.')  # noqa: T201
 
 
-def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
+def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103, PLR0912, PLR0915
     # TODO:  # noqa: TD002
     # change limit_states names
 
@@ -998,7 +998,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, ANN
     print('Successfully generated component repair consequence figures.')  # noqa: T201
 
 
-def check_diff(comp_db_path, output_path):  # noqa: ANN001, ANN201, D103
+def check_diff(comp_db_path, output_path):  # noqa: D103
     # if the output path already exists
     if os.path.exists(output_path):  # noqa: PLR1702, PTH110
         # check for both the csv and json files
@@ -1055,7 +1055,7 @@ def check_diff(comp_db_path, output_path):  # noqa: ANN001, ANN201, D103
         return True
 
 
-def main(args):  # noqa: ANN001, ANN201, D103
+def main(args):  # noqa: D103
     parser = argparse.ArgumentParser()
     parser.add_argument('viz_type')
     parser.add_argument('comp_db_path')

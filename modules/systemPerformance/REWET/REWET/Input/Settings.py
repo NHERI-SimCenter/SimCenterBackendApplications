@@ -18,18 +18,18 @@ acceptable_override_list = ['POINTS']
 
 
 class base:  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         self.settings = {}
 
-    def __getitem__(self, key):  # noqa: ANN001, ANN204, D105
+    def __getitem__(self, key):  # noqa: D105
         return self.settings[key]
 
-    def __setitem__(self, key, data):  # noqa: ANN001, ANN204, D105
+    def __setitem__(self, key, data):  # noqa: D105
         self.settings[key] = data
 
 
 class Process_Settings(base):  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         super().__init__()
         """
         simulation settings
@@ -124,7 +124,7 @@ class Process_Settings(base):  # noqa: D101
 
 
 class Scenario_Settings(base):  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         super().__init__()
         """
         Hydraulic settings
@@ -249,12 +249,12 @@ class Scenario_Settings(base):  # noqa: D101
 
 
 class Settings:  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         self.process = Process_Settings()
         self.scenario = Scenario_Settings()
         self.overrides = {}
 
-    def __setitem__(self, key, data):  # noqa: ANN001, ANN204, D105
+    def __setitem__(self, key, data):  # noqa: D105
         if key in self.process.settings:
             self.process.settings[key] = data
         elif key in self.scenario.settings:
@@ -262,7 +262,7 @@ class Settings:  # noqa: D101
         else:
             raise AttributeError(repr(key) + ' is not in the Settings.')
 
-    def __getitem__(self, key):  # noqa: ANN001, ANN204, D105
+    def __getitem__(self, key):  # noqa: D105
         if key in self.process.settings:
             if self.scenario != None:  # noqa: E711
                 if key in self.scenario.settings:
@@ -277,7 +277,7 @@ class Settings:  # noqa: D101
 
         raise ValueError(str(key) + ' NOT in either process and scenario settings.')
 
-    def __contains__(self, key):  # noqa: ANN001, ANN204, D105
+    def __contains__(self, key):  # noqa: D105
         if key in self.process.settings:
             return True
         elif self.scenario != None:  # noqa: RET505, E711
@@ -286,7 +286,7 @@ class Settings:  # noqa: D101
 
         return False
 
-    def importJsonSettings(self, json_file_path):  # noqa: ANN001, ANN201, N802
+    def importJsonSettings(self, json_file_path):  # noqa: N802
         """Read a settinsg json file and import the data
 
         Args:
@@ -326,7 +326,7 @@ class Settings:  # noqa: D101
 
             self[key] = val
 
-    def importProject(self, project_addr):  # noqa: ANN001, ANN201, N802, D102
+    def importProject(self, project_addr):  # noqa: N802, D102
         with open(project_addr, 'rb') as f:  # noqa: PTH123
             project = pickle.load(f)  # noqa: S301
         # for k in project.project_settings.scenario.settings:
@@ -336,7 +336,7 @@ class Settings:  # noqa: D101
         self.process = project.project_settings.process
         self.scenario = project.project_settings.scenario
 
-    def initializeScenarioSettings(self, scenario_index):  # noqa: ANN001, ANN201, C901, N802, D102
+    def initializeScenarioSettings(self, scenario_index):  # noqa: C901, N802, D102
         if self.process['Parameter_override'] == False:  # noqa: E712
             return
 
@@ -482,7 +482,7 @@ class Settings:  # noqa: D101
                 else:
                     raise ValueError('Unknown overrise key')  # noqa: EM101, TRY003
 
-    def getOverridePointsList(self, points_list_str, scenario_name):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def getOverridePointsList(self, points_list_str, scenario_name):  # noqa: D102, N802, PLR6301
         point_list = []
 
         points_list_str = points_list_str.strip()
@@ -554,7 +554,7 @@ class Settings:  # noqa: D101
 
         return point_list
 
-    def getOverrideCrewSpeed(self, crew_speed_str, scenario_name):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def getOverrideCrewSpeed(self, crew_speed_str, scenario_name):  # noqa: D102, N802, PLR6301
         crew_speed_str = crew_speed_str.strip()
 
         if len(crew_speed_str.split()) > 1:

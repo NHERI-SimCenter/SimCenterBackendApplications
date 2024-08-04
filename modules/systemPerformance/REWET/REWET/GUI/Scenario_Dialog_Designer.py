@@ -9,7 +9,7 @@ from .Scenario_Dialog_Window import Ui_Scenario_Dialog
 
 
 class Scenario_Dialog_Designer(Ui_Scenario_Dialog):  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         self._window = QtWidgets.QDialog()
         self.setupUi(self._window)
         self.last_probability = 1
@@ -20,7 +20,7 @@ class Scenario_Dialog_Designer(Ui_Scenario_Dialog):  # noqa: D101
         )
         self.probability_line.textChanged.connect(self.probabilityValidatorHelper)
 
-    def probabilityValidatorHelper(self, text):  # noqa: ANN001, ANN201, N802, D102
+    def probabilityValidatorHelper(self, text):  # noqa: N802, D102
         if float(text) > 1:
             self.probability_line.setText(self.last_probability)
         else:

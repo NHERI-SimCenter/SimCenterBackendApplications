@@ -15,7 +15,7 @@ from .Scenario_Dialog_Designer import Scenario_Dialog_Designer
 
 
 class Damage_Tab_Designer:  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         # self.pipe_damage_model = {"CI":{"alpha":-0.0038, "beta":0.1096, "gamma":0.0196, "a":2, "b":1 }, "DI":{"alpha":-0.0038, "beta":0.05, "gamma":0.04, "a":2, "b":1 } }
         # self.node_damage_model = {'a':0.0036, 'aa':1, 'b':0, 'bb':0, 'c':-0.877, 'cc':1, 'd':0, 'dd':0, 'e':0.0248, 'ee1':1, 'ee2':1, 'f':0, 'ff1':0, 'ff2':0, "damage_node_model": "equal_diameter_emitter"}
         """These are variables that are shared between ui and settings."""  # noqa: D401
@@ -65,7 +65,7 @@ class Damage_Tab_Designer:  # noqa: D101
         self.file_type_excel_radio.toggled.connect(self.fileTypeChanged)
         self.file_type_pickle_radio.toggled.connect(self.fileTypeChanged)
 
-    def getDamageSettings(self):  # noqa: ANN201, N802, D102
+    def getDamageSettings(self):  # noqa: N802, D102
         if len(self.scenario_list) < 1:
             self.errorMSG('REWET', 'Damage scenario list is empty.')
             return False
@@ -84,19 +84,19 @@ class Damage_Tab_Designer:  # noqa: D101
         # self.scenario_list -- already set
         return True
 
-    def setDamageUI(self):  # noqa: ANN201, N802, D102
+    def setDamageUI(self):  # noqa: N802, D102
         self.damage_direcotry_line.setText(self.damage_input_directory)
         self.clearScnearioTable()
         self.populateScenarioTable()
 
-    def setDamageSettings(self, settings, scenario_list):  # noqa: ANN001, ANN201, N802, D102
+    def setDamageSettings(self, settings, scenario_list):  # noqa: N802, D102
         self.pipe_damage_model = settings.scenario['pipe_damage_model']
         self.node_damage_model = settings.scenario['node_damage_model']
         self.pipe_damage_input_method = settings.scenario['Pipe_damage_input_method']
         self.damage_input_directory = settings.process['pipe_damage_file_directory']
         self.scenario_list = scenario_list
 
-    def addNewScenarioByButton(self):  # noqa: ANN201, N802, D102
+    def addNewScenarioByButton(self):  # noqa: N802, D102
         new_scenario_dialoge = Scenario_Dialog_Designer()
 
         error = True
@@ -163,13 +163,13 @@ class Damage_Tab_Designer:  # noqa: D101
         self.scneraio_validated = False
         self.damage_pipe_model_reviewed = False
 
-    def fileTypeChanged(self, checked):  # noqa: ANN001, ANN201, ARG002, N802, D102
+    def fileTypeChanged(self, checked):  # noqa: ARG002, N802, D102
         if self.file_type_excel_radio.isChecked():
             self.pipe_damage_input_method = 'excel'
         else:
             self.pipe_damage_input_method = 'pickle'
 
-    def removeScenarioByButton(self):  # noqa: ANN201, N802, D102
+    def removeScenarioByButton(self):  # noqa: N802, D102
         items = self.scenario_table.selectedItems()
         if len(items) < 1:
             return
@@ -193,7 +193,7 @@ class Damage_Tab_Designer:  # noqa: D101
         self.scneraio_validated = False
         self.damage_pipe_model_reviewed = False
 
-    def loadScenarioByButton(self):  # noqa: ANN201, N802, D102
+    def loadScenarioByButton(self):  # noqa: N802, D102
         file = QtWidgets.QFileDialog.getOpenFileName(
             self.asli_MainWindow,
             'Open file',
@@ -216,7 +216,7 @@ class Damage_Tab_Designer:  # noqa: D101
         self.scneraio_validated = False
         self.damage_pipe_model_reviewed = False
 
-    def saveScenarioByButton(self):  # noqa: ANN201, N802, D102
+    def saveScenarioByButton(self):  # noqa: N802, D102
         file = QtWidgets.QFileDialog.getSaveFileName(
             self.asli_MainWindow,
             'Save file',
@@ -228,7 +228,7 @@ class Damage_Tab_Designer:  # noqa: D101
 
         self.scenario_list.to_excel(file[0])
 
-    def validateScenarioByButton(self):  # noqa: ANN201, C901, N802, D102
+    def validateScenarioByButton(self):  # noqa: C901, N802, D102
         self.status_text.setText('Validating Damage Scnearios')
         if_validate_successful = True
         text_output = ''
@@ -477,7 +477,7 @@ class Damage_Tab_Designer:  # noqa: D101
 
         self.status_text.setText(text_output)
 
-    def pipeDamageSettingByButton(self):  # noqa: ANN201, N802, D102
+    def pipeDamageSettingByButton(self):  # noqa: N802, D102
         if self.scneraio_validated == False:  # noqa: E712
             self.errorMSG(
                 'REWET',
@@ -492,14 +492,14 @@ class Damage_Tab_Designer:  # noqa: D101
 
         self.damage_pipe_model_reviewed = True
 
-    def nodeDamageSettingByButton(self):  # noqa: ANN201, N802, D102
+    def nodeDamageSettingByButton(self):  # noqa: N802, D102
         node_designer = Node_Damage_Model_Designer(self.node_damage_model)
         return_value = node_designer._window.exec_()  # noqa: SLF001
 
         if return_value == 1:
             self.node_damage_model = node_designer.node_damage_model
 
-    def browseDamageDirectoryByButton(self):  # noqa: ANN201, N802, D102
+    def browseDamageDirectoryByButton(self):  # noqa: N802, D102
         directory = QtWidgets.QFileDialog.getExistingDirectory(
             self.asli_MainWindow, 'Select Directory', self.current_xlsx_directory
         )
@@ -509,7 +509,7 @@ class Damage_Tab_Designer:  # noqa: D101
         self.damage_input_directory = directory
         self.damage_direcotry_line.setText(directory)
 
-    def getScnearioListFromXLSX(self, scenario_file_addr):  # noqa: ANN001, ANN201, N802, D102
+    def getScnearioListFromXLSX(self, scenario_file_addr):  # noqa: N802, D102
         scn_list = pd.read_excel(scenario_file_addr)
 
         must_be_headers = [
@@ -535,7 +535,7 @@ class Damage_Tab_Designer:  # noqa: D101
 
         return scn_list  # noqa: RET504
 
-    def populateScenarioTable(self):  # noqa: ANN201, N802, D102
+    def populateScenarioTable(self):  # noqa: N802, D102
         for index, row in self.scenario_list.iterrows():  # noqa: B007
             number_of_rows = self.scenario_table.rowCount()
             self.scenario_table.insertRow(number_of_rows)
@@ -573,6 +573,6 @@ class Damage_Tab_Designer:  # noqa: D101
             self.scenario_table.setItem(number_of_rows, 4, tank_damage_item)
             self.scenario_table.setItem(number_of_rows, 5, probability_item)
 
-    def clearScnearioTable(self):  # noqa: ANN201, N802, D102
+    def clearScnearioTable(self):  # noqa: N802, D102
         for i in range(self.scenario_table.rowCount()):  # noqa: B007
             self.scenario_table.removeRow(0)

@@ -42,7 +42,7 @@ from openfoam7 import openfoam7
 ####################################################################
 # Main function
 ####################################################################
-def main():  # noqa: ANN201, C901
+def main():  # noqa: C901
     """This is the primary function
 
     Objects:

@@ -11,11 +11,11 @@ sys.path.append(str(path_to_common_uq))
 import uq_utilities  # noqa: E402
 
 
-def _update_parameters_of_normal_inverse_wishart_distribution(  # noqa: ANN202
+def _update_parameters_of_normal_inverse_wishart_distribution(
     niw_prior_parameters: uq_utilities.NormalInverseWishartParameters,
-    n,  # noqa: ANN001
-    theta_bar,  # noqa: ANN001
-    s,  # noqa: ANN001
+    n,
+    theta_bar,
+    s,
 ):
     lambda_0 = niw_prior_parameters.lambda_scalar
     mu_0 = niw_prior_parameters.mu_vector
@@ -33,42 +33,42 @@ def _update_parameters_of_normal_inverse_wishart_distribution(  # noqa: ANN202
     return mu_n, lambda_n, nu_n, psi_n
 
 
-def _update_parameters_of_inverse_gamma_distribution(  # noqa: ANN202
+def _update_parameters_of_inverse_gamma_distribution(
     inverse_gamma_prior_parameters: uq_utilities.InverseGammaParameters,
-    n,  # noqa: ANN001
-    sse,  # noqa: ANN001
+    n,
+    sse,
 ):
     alpha_n = inverse_gamma_prior_parameters.alpha_scalar + n / 2
     beta_n = inverse_gamma_prior_parameters.beta_scalar + sse / 2
     return alpha_n, beta_n
 
 
-def _draw_one_sample(  # noqa: ANN202, PLR0913, PLR0914, PLR0917
-    sample_number,  # noqa: ANN001
-    random_state,  # noqa: ANN001
-    num_rv,  # noqa: ANN001
-    num_edp,  # noqa: ANN001
-    num_datasets,  # noqa: ANN001
-    list_of_cholesky_decomposition_of_proposal_covariance_matrix,  # noqa: ANN001
-    list_of_current_states,  # noqa: ANN001
-    transformation_function,  # noqa: ANN001
-    list_of_model_evaluation_functions,  # noqa: ANN001
-    parallel_evaluation_function,  # noqa: ANN001
-    function_to_evaluate,  # noqa: ANN001
-    list_of_datasets,  # noqa: ANN001
-    list_of_dataset_lengths,  # noqa: ANN001
-    inverse_gamma_prior_parameters,  # noqa: ANN001
-    list_of_unnormalized_posterior_logpdf_at_current_state,  # noqa: ANN001
-    list_of_loglikelihood_at_current_state,  # noqa: ANN001
-    list_of_prior_logpdf_at_current_state,  # noqa: ANN001
-    niw_prior_parameters,  # noqa: ANN001
-    loglikelihood_function,  # noqa: ANN001
-    results_directory_path,  # noqa: ANN001
-    tabular_results_file_base_name,  # noqa: ANN001
-    current_mean_sample,  # noqa: ANN001
-    current_cov_sample,  # noqa: ANN001
-    list_of_current_error_variance_samples_scaled,  # noqa: ANN001
-    num_accepts_list,  # noqa: ANN001
+def _draw_one_sample(  # noqa: PLR0913, PLR0914, PLR0917
+    sample_number,
+    random_state,
+    num_rv,
+    num_edp,
+    num_datasets,
+    list_of_cholesky_decomposition_of_proposal_covariance_matrix,
+    list_of_current_states,
+    transformation_function,
+    list_of_model_evaluation_functions,
+    parallel_evaluation_function,
+    function_to_evaluate,
+    list_of_datasets,
+    list_of_dataset_lengths,
+    inverse_gamma_prior_parameters,
+    list_of_unnormalized_posterior_logpdf_at_current_state,
+    list_of_loglikelihood_at_current_state,
+    list_of_prior_logpdf_at_current_state,
+    niw_prior_parameters,
+    loglikelihood_function,
+    results_directory_path,
+    tabular_results_file_base_name,
+    current_mean_sample,
+    current_cov_sample,
+    list_of_current_error_variance_samples_scaled,
+    num_accepts_list,
 ):
     prngs_rvs = uq_utilities.get_random_number_generators(
         entropy=(sample_number, random_state), num_prngs=num_rv
@@ -292,8 +292,8 @@ def _draw_one_sample(  # noqa: ANN202, PLR0913, PLR0914, PLR0917
     return one_sample, results_to_write
 
 
-def _get_tabular_results_file_name_for_hyperparameters(  # noqa: ANN202
-    tabular_results_file_base_name,  # noqa: ANN001
+def _get_tabular_results_file_name_for_hyperparameters(
+    tabular_results_file_base_name,
 ):
     tabular_results_parent = tabular_results_file_base_name.parent
     tabular_results_stem = tabular_results_file_base_name.stem
@@ -306,7 +306,7 @@ def _get_tabular_results_file_name_for_hyperparameters(  # noqa: ANN202
     return tabular_results_file  # noqa: RET504
 
 
-def get_states_from_samples_list(samples_list, dataset_number):  # noqa: ANN001, ANN201, D103
+def get_states_from_samples_list(samples_list, dataset_number):  # noqa: D103
     sample_values = []
     for sample_number in range(len(samples_list)):
         sample_values.append(  # noqa: PERF401
@@ -315,7 +315,7 @@ def get_states_from_samples_list(samples_list, dataset_number):  # noqa: ANN001,
     return sample_values
 
 
-def tune(scale, acc_rate):  # noqa: ANN001, ANN201
+def tune(scale, acc_rate):
     """Tunes the scaling parameter for the proposal distribution
     according to the acceptance rate over the last tune_interval:
     Rate    Variance adaptation
@@ -342,35 +342,35 @@ def tune(scale, acc_rate):  # noqa: ANN001, ANN201
     return scale
 
 
-def metropolis_within_gibbs_sampler(  # noqa: ANN201, C901, D103, PLR0913, PLR0914, PLR0917
-    uq_inputs,  # noqa: ANN001
-    parallel_evaluation_function,  # noqa: ANN001
-    function_to_evaluate,  # noqa: ANN001
-    transformation_function,  # noqa: ANN001
-    num_rv,  # noqa: ANN001
-    num_edp,  # noqa: ANN001
-    list_of_model_evaluation_functions,  # noqa: ANN001
-    list_of_datasets,  # noqa: ANN001
-    list_of_dataset_lengths,  # noqa: ANN001
-    list_of_current_states,  # noqa: ANN001
-    list_of_cholesky_of_proposal_covariance_matrix,  # noqa: ANN001
-    inverse_gamma_prior_parameters,  # noqa: ANN001
-    loglikelihood_function,  # noqa: ANN001
-    list_of_unnormalized_posterior_logpdf_at_current_state,  # noqa: ANN001
-    list_of_loglikelihood_at_current_state,  # noqa: ANN001
-    list_of_prior_logpdf_at_current_state,  # noqa: ANN001
-    niw_prior_parameters,  # noqa: ANN001
-    results_directory_path,  # noqa: ANN001
-    tabular_results_file_base_name,  # noqa: ANN001
-    rv_inputs,  # noqa: ANN001
-    edp_inputs,  # noqa: ANN001
-    current_mean_sample,  # noqa: ANN001
-    current_covariance_sample,  # noqa: ANN001
-    list_of_current_error_variance_samples_scaled,  # noqa: ANN001
-    parent_distribution,  # noqa: ANN001, ARG001
-    num_accepts_list,  # noqa: ANN001
-    proposal_scale_list,  # noqa: ANN001
-    list_of_proposal_covariance_kernels,  # noqa: ANN001
+def metropolis_within_gibbs_sampler(  # noqa: C901, D103, PLR0913, PLR0914, PLR0917
+    uq_inputs,
+    parallel_evaluation_function,
+    function_to_evaluate,
+    transformation_function,
+    num_rv,
+    num_edp,
+    list_of_model_evaluation_functions,
+    list_of_datasets,
+    list_of_dataset_lengths,
+    list_of_current_states,
+    list_of_cholesky_of_proposal_covariance_matrix,
+    inverse_gamma_prior_parameters,
+    loglikelihood_function,
+    list_of_unnormalized_posterior_logpdf_at_current_state,
+    list_of_loglikelihood_at_current_state,
+    list_of_prior_logpdf_at_current_state,
+    niw_prior_parameters,
+    results_directory_path,
+    tabular_results_file_base_name,
+    rv_inputs,
+    edp_inputs,
+    current_mean_sample,
+    current_covariance_sample,
+    list_of_current_error_variance_samples_scaled,
+    parent_distribution,  # noqa: ARG001
+    num_accepts_list,
+    proposal_scale_list,
+    list_of_proposal_covariance_kernels,
 ):
     num_datasets = len(list_of_datasets)
     random_state = uq_inputs['Random State']

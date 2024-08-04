@@ -48,14 +48,14 @@ import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 
 
-def find_neighbors(  # noqa: ANN201, C901, D103
-    asset_file,  # noqa: ANN001
-    event_grid_file,  # noqa: ANN001
-    samples,  # noqa: ANN001
-    neighbors,  # noqa: ANN001
-    filter_label,  # noqa: ANN001
-    seed,  # noqa: ANN001
-    doParallel,  # noqa: ANN001, N803
+def find_neighbors(  # noqa: C901, D103
+    asset_file,
+    event_grid_file,
+    samples,
+    neighbors,
+    filter_label,
+    seed,
+    doParallel,  # noqa: N803
 ):
     # check if running parallel
     numP = 1  # noqa: N806

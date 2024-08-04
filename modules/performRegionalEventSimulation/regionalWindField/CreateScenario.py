@@ -44,7 +44,7 @@ import numpy as np
 import pandas as pd
 
 
-def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noqa: ANN001, ANN201, C901, D103
+def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noqa: C901, D103
     # Number of scenarios
     source_num = scenario_info.get('Number', 1)
     # Directly defining earthquake ruptures

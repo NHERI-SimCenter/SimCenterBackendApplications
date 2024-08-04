@@ -54,7 +54,7 @@ class of7Meshing:
     """  # noqa: D205, D404
 
     #############################################################
-    def meshcheck(self, data, fipath):  # noqa: ANN001, ANN201, PLR6301
+    def meshcheck(self, data, fipath):  # noqa: PLR6301
         """Checks for material properties for openfoam7
 
         Arguments:
@@ -103,7 +103,7 @@ class of7Meshing:
         return 0
 
     #############################################################
-    def meshheader(self, fileobjec):  # noqa: ANN001, ANN201, PLR6301
+    def meshheader(self, fileobjec):  # noqa: PLR6301
         """Creates the text for the header
 
         Variable
@@ -129,7 +129,7 @@ FoamFile
         return header  # noqa: RET504
 
     #############################################################
-    def bmeshtext(self, data):  # noqa: ANN001, ANN201
+    def bmeshtext(self, data):
         """Creates the necessary files for blockMeshDict for openfoam7
 
         Arguments:
@@ -287,7 +287,7 @@ FoamFile
         return bmeshtext  # noqa: RET504
 
     #############################################################
-    def sfetext(self):  # noqa: ANN201
+    def sfetext(self):
         """Creates the necessary files for new controldict for post-processing for openfoam7
 
         Arguments:
@@ -323,7 +323,7 @@ FoamFile
         return sfetext
 
     #############################################################
-    def shmtext(self, data):  # noqa: ANN001, ANN201
+    def shmtext(self, data):
         """Creates the necessary files for new controldict for post-processing for openfoam7
 
         Arguments:
@@ -508,7 +508,7 @@ FoamFile
         return shmtext  # noqa: RET504
 
     #############################################################
-    def scripts(self, data, path):  # noqa: ANN001, ANN201, C901, PLR6301
+    def scripts(self, data, path):  # noqa: C901, PLR6301
         """Create the scripts for caserun.sh
 
         Arguments:

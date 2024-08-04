@@ -26,7 +26,7 @@ sys.stderr = open(  # noqa: F405, PLW1514, PTH123, SIM115
 )  # redirecting stderr (this way we can capture all sorts of python errors)
 
 
-def err_exit(msg):  # noqa: ANN001, ANN201, D103
+def err_exit(msg):  # noqa: D103
     print('Failed in wind load generator: ' + msg)  # display in stdout  # noqa: T201
     print(
         'Failed in wind load generator: ' + msg,
@@ -35,7 +35,7 @@ def err_exit(msg):  # noqa: ANN001, ANN201, D103
     exit(-1)  # exit with non-zero exit code  # noqa: PLR1722
 
 
-def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, D103, N803, PLR0914, PLR0915
+def main(aimName, evtName, getRV):  # noqa: C901, D103, N803, PLR0914, PLR0915
     with open(aimName, encoding='utf-8') as f:  # noqa: PTH123
         aim_data = json.load(f)
 
@@ -659,7 +659,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, D103, N803, PL
     """  # noqa: W291
 
 
-def genCP(Cp_temp, Cp_sim_temp, nl, nu, my_cdf_vect, my_cdf_x_range):  # noqa: ANN001, ANN201, N802, N803, D103
+def genCP(Cp_temp, Cp_sim_temp, nl, nu, my_cdf_vect, my_cdf_x_range):  # noqa: N802, N803, D103
     #
     # combining the loops to directly send temp instead of dist_kde
     #
@@ -682,7 +682,7 @@ def genCP(Cp_temp, Cp_sim_temp, nl, nu, my_cdf_vect, my_cdf_x_range):  # noqa: A
     return paretotails_icdf(cdf_vvv, nl, nu, Cp_temp, my_cdf_vect, my_cdf_x_range)
 
 
-def getCDF(Cp_temp):  # noqa: ANN001, ANN201, N802, N803, D103
+def getCDF(Cp_temp):  # noqa: N802, N803, D103
     kernel = gaussian_kde(Cp_temp)
     kernel_cdf = np.vectorize(lambda x: kernel.integrate_box_1d(-np.inf, x))
     my_cdf_x = np.linspace(
@@ -695,7 +695,7 @@ def getCDF(Cp_temp):  # noqa: ANN001, ANN201, N802, N803, D103
     return my_cdf_vects, my_cdf_x_range
 
 
-def paretotails_icdf(pf, nl, nu, temp, my_cdf_vect, my_cdf_x):  # noqa: ANN001, ANN201, D103
+def paretotails_icdf(pf, nl, nu, temp, my_cdf_vect, my_cdf_x):  # noqa: D103
     #
     # Pareto percentile
     #
@@ -783,7 +783,7 @@ def paretotails_icdf(pf, nl, nu, temp, my_cdf_vect, my_cdf_x):  # noqa: ANN001, 
     return kernel, gpareto_param_lower, gpareto_param_upper  # noqa: F405
 
 
-def cpsd_matlab(Components1, Components2, wind_size, nover, nfft, fp):  # noqa: ANN001, ANN201, N803, D103
+def cpsd_matlab(Components1, Components2, wind_size, nover, nfft, fp):  # noqa: N803, D103
     window = windows.hann(int(wind_size))
 
     ncombs1 = Components1.shape[1]
@@ -811,7 +811,7 @@ def cpsd_matlab(Components1, Components2, wind_size, nover, nfft, fp):  # noqa: 
     return s_target, f_target
 
 
-def perform_POD(s_target, f_target, ncomp, l_mo, pool):  # noqa: ANN001, ANN201, N802, D103
+def perform_POD(s_target, f_target, ncomp, l_mo, pool):  # noqa: N802, D103
     S_F = s_target[:, :, 0:]  # do not exclude freq = 0 Hz  # noqa: N806
     f_full = f_target[0:]  # do not exclude freq = 0 Hz
 
@@ -857,23 +857,23 @@ def perform_POD(s_target, f_target, ncomp, l_mo, pool):  # noqa: ANN001, ANN201,
     return V, D1, SpeN
 
 
-def simulation_gaussian(  # noqa: ANN201, D103, PLR0913, PLR0917
-    ncomp,  # noqa: ANN001
-    N_t,  # noqa: ANN001, N803
-    V_vH,  # noqa: ANN001, N803
-    D_vH,  # noqa: ANN001, N803
-    theta_vH,  # noqa: ANN001, N803
-    nf_dir,  # noqa: ANN001
-    N_f,  # noqa: ANN001, N803
-    f_inc,  # noqa: ANN001
-    f,  # noqa: ANN001
-    l_mo,  # noqa: ANN001
-    tvec,  # noqa: ANN001
-    SpeN,  # noqa: ANN001, ARG001, N803
-    V_H,  # noqa: ANN001, N803
-    vRef,  # noqa: ANN001, N803
-    seed,  # noqa: ANN001
-    seed_num,  # noqa: ANN001
+def simulation_gaussian(  # noqa: D103, PLR0913, PLR0917
+    ncomp,
+    N_t,  # noqa: N803
+    V_vH,  # noqa: N803
+    D_vH,  # noqa: N803
+    theta_vH,  # noqa: N803
+    nf_dir,
+    N_f,  # noqa: N803
+    f_inc,
+    f,
+    l_mo,
+    tvec,
+    SpeN,  # noqa: ARG001, N803
+    V_H,  # noqa: N803
+    vRef,  # noqa: N803
+    seed,
+    seed_num,
 ):
     #
     # Set Seed

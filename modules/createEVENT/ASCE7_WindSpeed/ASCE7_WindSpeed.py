@@ -11,7 +11,7 @@ import argparse
 import json
 
 
-def write_RV(BIM_input_path, EVENT_input_path):  # noqa: ANN001, ANN201, ARG001, N802, N803, D103
+def write_RV(BIM_input_path, EVENT_input_path):  # noqa: ARG001, N802, N803, D103
     # create the empty EVENT.json file
     EVENT_in = {'Events': []}  # noqa: N806
 
@@ -21,7 +21,7 @@ def write_RV(BIM_input_path, EVENT_input_path):  # noqa: ANN001, ANN201, ARG001,
     # TODO: if there are multiple events, we need to create a random variable for them  # noqa: TD002
 
 
-def get_windspeed(BIM_input_path, EVENT_input_path, wind_database_path, severity):  # noqa: ANN001, ANN201, N803, D103
+def get_windspeed(BIM_input_path, EVENT_input_path, wind_database_path, severity):  # noqa: N803, D103
     sys.path.insert(0, os.getcwd())  # noqa: PTH109
 
     # load the BIM file

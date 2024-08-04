@@ -21,13 +21,13 @@ class EpanetException(Exception):  # noqa: N818, D101
 
 
 class ENepanet(wntrfr.epanet.toolkit.ENepanet):  # noqa: D101
-    def __init__(  # noqa: ANN204, C901
+    def __init__(  # noqa: C901
         self,
-        inpfile='',  # noqa: ANN001
-        rptfile='',  # noqa: ANN001
-        binfile='',  # noqa: ANN001
-        changed_epanet=False,  # noqa: ANN001, FBT002
-        version=2.2,  # noqa: ANN001
+        inpfile='',
+        rptfile='',
+        binfile='',
+        changed_epanet=False,  # noqa: FBT002
+        version=2.2,
     ):
         if changed_epanet == False or changed_epanet == True:  # noqa: E712, PLR1714
             self.changed_epanet = changed_epanet
@@ -82,7 +82,7 @@ class ENepanet(wntrfr.epanet.toolkit.ENepanet):  # noqa: D101
                     else:
                         self._project = None
 
-    def ENn(self, inpfile=None, rptfile=None, binfile=None):  # noqa: ANN001, ANN201, N802
+    def ENn(self, inpfile=None, rptfile=None, binfile=None):  # noqa: N802
         """Opens an EPANET input file and reads in network data
 
         Parameters
@@ -104,7 +104,7 @@ class ENepanet(wntrfr.epanet.toolkit.ENepanet):  # noqa: D101
         if self.errcode < 100:  # noqa: PLR2004
             self.fileLoaded = True
 
-    def ENSetIgnoreFlag(self, ignore_flag=0):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def ENSetIgnoreFlag(self, ignore_flag=0):  # noqa: D102, N802, PLR6301
         if abs(ignore_flag - np.round(ignore_flag)) > 0.00001 or ignore_flag < 0:  # noqa: PLR2004
             logger.error(
                 'ignore_flag must be int value and bigger than zero'  # noqa: G003

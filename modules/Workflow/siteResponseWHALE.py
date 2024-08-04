@@ -56,20 +56,20 @@ from sWHALE import runSWhale
 from whale.main import log_div, log_msg
 
 
-def main(  # noqa: ANN201, C901, D103
-    run_type,  # noqa: ANN001
-    input_file,  # noqa: ANN001
-    app_registry,  # noqa: ANN001
-    force_cleanup,  # noqa: ANN001
-    bldg_id_filter,  # noqa: ANN001
-    reference_dir,  # noqa: ANN001
-    working_dir,  # noqa: ANN001
-    app_dir,  # noqa: ANN001
-    log_file,  # noqa: ANN001
-    output_dir,  # noqa: ANN001
-    parallelType,  # noqa: ANN001, N803
-    mpiExec,  # noqa: ANN001, N803
-    numPROC,  # noqa: ANN001, N803
+def main(  # noqa: C901, D103
+    run_type,
+    input_file,
+    app_registry,
+    force_cleanup,
+    bldg_id_filter,
+    reference_dir,
+    working_dir,
+    app_dir,
+    log_file,
+    output_dir,
+    parallelType,  # noqa: N803
+    mpiExec,  # noqa: N803
+    numPROC,  # noqa: N803
 ):
     numP = 1  # noqa: N806
     procID = 0  # noqa: N806

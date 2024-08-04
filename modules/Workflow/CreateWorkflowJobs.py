@@ -46,12 +46,12 @@ import os
 import numpy as np
 
 
-def generate_workflow_tasks(  # noqa: ANN201, C901, D103
-    bldg_filter,  # noqa: ANN001
-    config_file,  # noqa: ANN001
-    out_dir,  # noqa: ANN001
-    task_size,  # noqa: ANN001
-    rWHALE_dir,  # noqa: ANN001, N803
+def generate_workflow_tasks(  # noqa: C901, D103
+    bldg_filter,
+    config_file,
+    out_dir,
+    task_size,
+    rWHALE_dir,  # noqa: N803
 ):
     jobId = os.getenv('SLURM_JOB_ID')  # We might need this later  # noqa: N806, F841
 
@@ -192,12 +192,12 @@ def generate_workflow_tasks(  # noqa: ANN201, C901, D103
                 tasksFile.write(task_list)
 
 
-def generate_workflow_tasks_siteresponse(  # noqa: ANN201, D103
-    bldg_filter,  # noqa: ANN001
-    config_file,  # noqa: ANN001
-    out_dir,  # noqa: ANN001
-    task_size,  # noqa: ANN001
-    rWHALE_dir,  # noqa: ANN001, N803
+def generate_workflow_tasks_siteresponse(  # noqa: D103
+    bldg_filter,
+    config_file,
+    out_dir,
+    task_size,
+    rWHALE_dir,  # noqa: N803
 ):
     jobId = os.getenv('SLURM_JOB_ID')  # We might need this later  # noqa: N806, F841
 
@@ -319,12 +319,12 @@ def generate_workflow_tasks_siteresponse(  # noqa: ANN201, D103
                 tasksFile.write(task_list)
 
 
-def generate_workflow_tasks_regionalsiteresponse(  # noqa: ANN201, C901, D103
-    site_filter,  # noqa: ANN001
-    config_file,  # noqa: ANN001
-    out_dir,  # noqa: ANN001
-    task_size,  # noqa: ANN001
-    rWHALE_dir,  # noqa: ANN001, N803
+def generate_workflow_tasks_regionalsiteresponse(  # noqa: C901, D103
+    site_filter,
+    config_file,
+    out_dir,
+    task_size,
+    rWHALE_dir,  # noqa: N803
 ):
     jobId = os.getenv('SLURM_JOB_ID')  # We might need this later  # noqa: N806, F841
 

@@ -10,20 +10,20 @@ class CovError(Exception):
 
     """
 
-    def __init__(self, message):  # noqa: ANN001, ANN204
+    def __init__(self, message):
         self.message = message
 
 
-def log_likelihood(  # noqa: ANN201
-    calibrationData,  # noqa: ANN001, N803
-    prediction,  # noqa: ANN001
-    numExperiments,  # noqa: ANN001, N803
-    covarianceMatrixList,  # noqa: ANN001, N803
-    edpNamesList,  # noqa: ANN001, ARG001, N803
-    edpLengthsList,  # noqa: ANN001, N803
-    covarianceMultiplierList,  # noqa: ANN001, N803
-    scaleFactors,  # noqa: ANN001, N803
-    shiftFactors,  # noqa: ANN001, N803
+def log_likelihood(
+    calibrationData,  # noqa: N803
+    prediction,
+    numExperiments,  # noqa: N803
+    covarianceMatrixList,  # noqa: N803
+    edpNamesList,  # noqa: ARG001, N803
+    edpLengthsList,  # noqa: N803
+    covarianceMultiplierList,  # noqa: N803
+    scaleFactors,  # noqa: N803
+    shiftFactors,  # noqa: N803
 ):
     """Compute the log-likelihood
 

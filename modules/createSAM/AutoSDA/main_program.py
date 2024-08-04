@@ -26,7 +26,7 @@ from model_generation import model_generation
 from seismic_design import seismic_design
 
 
-def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):  # noqa: ANN001, ANN201, ARG001, C901, N803, D103
+def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):  # noqa: ARG001, C901, N803, D103
     start_time = time.time()
 
     # Get the current directory

@@ -9,7 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_Opening_Window:  # noqa: D101
-    def setupUi(self, Opening_Window):  # noqa: ANN001, ANN201, N802, N803, D102, PLR0915
+    def setupUi(self, Opening_Window):  # noqa: N802, N803, D102, PLR0915
         Opening_Window.setObjectName('Opening_Window')
         Opening_Window.resize(830, 780)
         self.centralwidget = QtWidgets.QWidget(Opening_Window)
@@ -892,7 +892,7 @@ class Ui_Opening_Window:  # noqa: D101
         self.results_tabs_widget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Opening_Window)
 
-    def retranslateUi(self, Opening_Window):  # noqa: ANN001, ANN201, N802, N803, D102, PLR0915
+    def retranslateUi(self, Opening_Window):  # noqa: N802, N803, D102, PLR0915
         _translate = QtCore.QCoreApplication.translate
         Opening_Window.setWindowTitle(_translate('Opening_Window', 'REWET'))
         self.groupBox_4.setTitle(_translate('Opening_Window', 'Temp File Settings'))

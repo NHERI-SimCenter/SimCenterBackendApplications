@@ -67,7 +67,7 @@ VsRock = 760
 plotFlag = False  # noqa: N816
 
 
-def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901
+def get_scale_factors(input_units, output_units):  # noqa: C901
     """Determine the scale factor to convert input event to internal event data"""  # noqa: D400
     # special case: if the input unit is not specified then do not do any scaling
     if input_units is None:
@@ -134,7 +134,7 @@ def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901
     return scale_factors
 
 
-def postProcess(evtName, input_units, f_scale_units):  # noqa: ANN001, ANN201, N802, N803, D103
+def postProcess(evtName, input_units, f_scale_units):  # noqa: N802, N803, D103
     # if f_scale_units is None
     if None in [input_units, f_scale_units]:  # noqa: PLR6201
         f_scale = 1.0
@@ -214,14 +214,14 @@ def postProcess(evtName, input_units, f_scale_units):  # noqa: ANN001, ANN201, N
     return 0
 
 
-def run_opensees(  # noqa: ANN201, D103
-    BIM_file,  # noqa: ANN001, N803
-    EVENT_file,  # noqa: ANN001, N803
-    event_path,  # noqa: ANN001
-    model_script,  # noqa: ANN001
-    model_script_path,  # noqa: ANN001
-    ndm,  # noqa: ANN001
-    getRV,  # noqa: ANN001, N803
+def run_opensees(  # noqa: D103
+    BIM_file,  # noqa: N803
+    EVENT_file,  # noqa: N803
+    event_path,
+    model_script,
+    model_script_path,
+    ndm,
+    getRV,  # noqa: N803
 ):
     sys.path.insert(0, os.getcwd())  # noqa: PTH109
 
@@ -310,7 +310,7 @@ def run_opensees(  # noqa: ANN201, D103
         postProcess('fmkEVENT', input_units, f_scale_units)
 
 
-def get_records(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N803, D103
+def get_records(BIM_file, EVENT_file, data_dir):  # noqa: N803, D103
     with open(BIM_file) as f:  # noqa: PLW1514, PTH123
         bim_file = json.load(f)
 
@@ -337,7 +337,7 @@ def get_records(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N803, 
         json.dump(event_file, f, indent=2)
 
 
-def write_RV(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N802, N803, D103
+def write_RV(BIM_file, EVENT_file, data_dir):  # noqa: N802, N803, D103
     # Copied from SimCenterEvent, write name of motions
 
     with open(BIM_file) as f:  # noqa: PLW1514, PTH123
@@ -401,7 +401,7 @@ def write_RV(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N802, N80
         json.dump(event_file, f, indent=2)
 
 
-def load_record(fileName, data_dir, scale_factor=1.0, empty=False):  # noqa: ANN001, ANN201, FBT002, N803, D103
+def load_record(fileName, data_dir, scale_factor=1.0, empty=False):  # noqa: FBT002, N803, D103
     # Copied from SimCenterEvent, write data of motions into Event
 
     fileName = fileName.split('x')[0]  # noqa: N806
@@ -441,7 +441,7 @@ def load_record(fileName, data_dir, scale_factor=1.0, empty=False):  # noqa: ANN
     return event_dic
 
 
-def build_model(model_params, numEvt):  # noqa: ANN001, ANN201, N803, D103
+def build_model(model_params, numEvt):  # noqa: N803, D103
     try:
         depthToRock = model_params['DepthToRock']  # noqa: N806
     except:  # noqa: E722
@@ -569,7 +569,7 @@ def build_model(model_params, numEvt):  # noqa: ANN001, ANN201, N803, D103
     f.close()
 
 
-def SVM(Vs30, depthToRock, VsRock, elementSize):  # noqa: ANN001, ANN201, N802, N803, D103
+def SVM(Vs30, depthToRock, VsRock, elementSize):  # noqa: N802, N803, D103
     # Sediment Velocity Model (SVM)
     # Developed by Jian Shi and Domniki Asimaki (2018)
     # Generates a shear velocity profile from Vs30 for shallow crust profiles

@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 # the following function is borrowed from WNTR
-def _split_line(line):  # noqa: ANN001, ANN202
+def _split_line(line):
     _vc = line.split(';', 1)
     _cmnt = None
     _vals = None
@@ -33,7 +33,7 @@ def _split_line(line):  # noqa: ANN001, ANN202
 
 
 class restoration_data:  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         self.files = {}
         self.shift = {}
         self.entity = {}
@@ -53,7 +53,7 @@ class restoration_data:  # noqa: D101
 
 
 class RestorationIO:  # noqa: D101
-    def __init__(self, definition_file_name):  # noqa: ANN001, ANN204
+    def __init__(self, definition_file_name):
         """Needs a file that contains:
 
         Parameters
@@ -141,7 +141,7 @@ class RestorationIO:  # noqa: D101
         self._read_define()
         # self._read_config()
 
-    def _read_files(self):  # noqa: ANN202
+    def _read_files(self):
         edata = OrderedDict()
         self.file_name = []
         self._file_data = {}
@@ -165,7 +165,7 @@ class RestorationIO:  # noqa: D101
             self._file_data[file_handle] = self._read_each_file(file_address)
         self.rm.files = self._file_data
 
-    def _read_each_file(self, file_address, method=0):  # noqa: ANN001, ANN202
+    def _read_each_file(self, file_address, method=0):
         lnum = 0
         iTitle = True  # noqa: N806
         data_temp = None
@@ -198,7 +198,7 @@ class RestorationIO:  # noqa: D101
             raise ValueError('Uknown method: ' + str(method))
         return data_temp
 
-    def _read_shifts(self):  # noqa: ANN202
+    def _read_shifts(self):
         for lnum, line in self.sections['[SHIFTS]']:  # noqa: B007
             # edata['lnum'] = lnum
             words, comments = _split_line(line)  # noqa: F841
@@ -213,7 +213,7 @@ class RestorationIO:  # noqa: D101
 
                 self.rm.shift[shift_name] = (shift_begining, shift_ending)
 
-    def _read_entities(self):  # noqa: ANN202, C901
+    def _read_entities(self):  # noqa: C901
         """Reads damage group definitions and updates the Restoration Model
         object data.
 
@@ -334,7 +334,7 @@ class RestorationIO:  # noqa: D101
                             )
                         self.rm.entity_rule[entity_name].append(ent_rule[0])
 
-    def _read_sequences(self):  # noqa: ANN202
+    def _read_sequences(self):
         # sina: there is a part that you need to add in restroation init
         for lnum, line in self.sections['[SEQUENCES]']:  # noqa: B007
             words, comments = _split_line(line)  # noqa: F841
@@ -355,7 +355,7 @@ class RestorationIO:  # noqa: D101
                     )
                 self.rm.sequence[element] = seq
 
-    def _read_agents(self):  # noqa: ANN202
+    def _read_agents(self):
         agent_file_handle = {}
         group_names = {}
         group_column = {}
@@ -425,7 +425,7 @@ class RestorationIO:  # noqa: D101
                     self.rm.agents.append((agent_name, agent_type, definitions))
                 j += 1  # noqa: SIM113
 
-    def _read_groups(self):  # noqa: ANN202
+    def _read_groups(self):
         for lnum, line in self.sections['[GROUPS]']:
             words, comments = _split_line(line)  # noqa: F841
 
@@ -481,7 +481,7 @@ class RestorationIO:  # noqa: D101
 
                 self.rm.group[element_type][group_name] = group_list
 
-    def _read_priorities(self):  # noqa: ANN202, C901
+    def _read_priorities(self):  # noqa: C901
         for lnum, line in self.sections['[PRIORITIES]']:
             words, comments = _split_line(line)  # noqa: F841
 
@@ -532,7 +532,7 @@ class RestorationIO:  # noqa: D101
 
                 self.rm.priority.append((agent_type, priority, arg))
 
-    def _read_jobs(self):  # noqa: ANN202
+    def _read_jobs(self):
         for lnum, line in self.sections['[JOBS]']:
             words, comments = _split_line(line)  # noqa: F841
 
@@ -577,7 +577,7 @@ class RestorationIO:  # noqa: D101
 
                 self.rm.jobs.append((agent_type, entity, action, argument, effect))
 
-    def _read_define(self):  # noqa: ANN202, C901, PLR0912
+    def _read_define(self):  # noqa: C901, PLR0912
         job = {}  # noqa: F841
 
         effect_data = self.sections.get('[DEFINE]', self.sections.get('[EFFECTS]'))
@@ -852,7 +852,7 @@ class RestorationIO:  # noqa: D101
 
         # for self.rm.effects.pruneData()
 
-    def _read_file_effect(self, file_info, effect_name):  # noqa: ANN001, ANN202
+    def _read_file_effect(self, file_info, effect_name):
         res = {}
 
         file_handle = file_info[0]
@@ -908,7 +908,7 @@ class RestorationIO:  # noqa: D101
         # print(res)
         return res  # noqa: RET504
 
-    def _read_demand_nodes(self):  # noqa: ANN202
+    def _read_demand_nodes(self):
         titles = []  # noqa: F841
         ntitle = 0
         lnum = 0
@@ -940,7 +940,7 @@ class RestorationIO:  # noqa: D101
                     )
             self.demand_node = pd.DataFrame(dtemp, columns=title)
 
-    def _read_crew(self):  # noqa: ANN202
+    def _read_crew(self):
         titles = []  # noqa: F841
         ntitle = 0
         lnum = 0

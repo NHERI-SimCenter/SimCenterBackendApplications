@@ -20,7 +20,7 @@ import numpy as np
 from preprocessJSON import preProcessDakota
 
 
-def main(args):  # noqa: ANN001, ANN201, D103
+def main(args):  # noqa: D103
     # First we need to set the path and environment
     home = os.path.expanduser('~')  # noqa: PTH111
     env = os.environ

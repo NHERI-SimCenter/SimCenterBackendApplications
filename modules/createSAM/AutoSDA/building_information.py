@@ -69,7 +69,7 @@ class Building:
     (7) Propose initial beam and column sizes
     """  # noqa: D205, D400, D404
 
-    def __init__(self, base_directory, pathDataFolder, workingDirectory):  # noqa: ANN001, ANN204, N803
+    def __init__(self, base_directory, pathDataFolder, workingDirectory):  # noqa: N803
         """This function initializes the attributes of a building instance
         :param building_id: a string that used as a UID to label the building
         :param base_directory:  a string that denotes the path to root folder
@@ -102,7 +102,7 @@ class Building:
         self.initialize_member()
         # self.initialize_member_v2()
 
-    def define_directory(self):  # noqa: ANN201, D102
+    def define_directory(self):  # noqa: D102
         # Define all useful paths based on the path to root folder
         # Define path to folder where the baseline .tcl files for elastic analysis are saved
         baseline_elastic_directory = (
@@ -137,7 +137,7 @@ class Building:
             'building nonlinear model': building_nonlinear_model_directory,
         }
 
-    def read_geometry(self):  # noqa: ANN201
+    def read_geometry(self):
         """This method is used to read the building geometry information from .csv files:
         (1) Change the working directory to the folder where .csv data are stored
         (2) Open the .csv file and save all relevant information to the object itself
@@ -178,7 +178,7 @@ class Building:
             'floor height': floor_height,
         }
 
-    def read_gravity_loads(self):  # noqa: ANN201
+    def read_gravity_loads(self):
         """This method is used to read the load information from .csv files
         (1) Change the directory to the folder where the load data are stored
         (2) Read the .csv files and assign save load values to object values
@@ -230,7 +230,7 @@ class Building:
             'leaning column live load': leaning_column_live_load,
         }
 
-    def read_elf_parameters(self):  # noqa: ANN201
+    def read_elf_parameters(self):
         """This method is used to read equivalent lateral force (in short: elf) parameters and calculate SDS and SD1
         (1) Read equivalent lateral force parameters
         (2) Calculate SMS, SM1, SDS, SD1 values and save them into the attribute
@@ -288,7 +288,7 @@ class Building:
             'period': upper_period,
         }
 
-    def compute_seismic_force(self):  # noqa: ANN201
+    def compute_seismic_force(self):
         """This method is used to calculate the seismic story force using ELF procedure specified in ASCE 7-10 Section 12.8
         (1) Determine the floor level height and save it in a list (array)
         (2) Determine the correct period between first mode period and CuTa
@@ -365,7 +365,7 @@ class Building:
             'Cs': Cs_for_drift,
         }
 
-    def determine_member_candidate(self):  # noqa: ANN201
+    def determine_member_candidate(self):
         """This method is used to determine all possible member candidates based on the user-specified section depth
         :return: a dictionary which contains the all possible sizes for exterior columns, interior columns, and beams.
         """  # noqa: D205, D401, D404
@@ -437,7 +437,7 @@ class Building:
             'beam': beam_depth,
         }
 
-    def initialize_member(self):  # noqa: ANN201
+    def initialize_member(self):
         """This method is used to initialize the member size
         :return: a dictionary which includes the initial size for interior columns, exterior columns, and beams
         """  # noqa: D205, D400, D401, D404
@@ -476,7 +476,7 @@ class Building:
             'beam': beam,
         }
 
-    def read_modal_period(self):  # noqa: ANN201
+    def read_modal_period(self):
         """This method is used to read the modal period from OpenSees eigen value analysis results and store it in ELF
         parameters.
         :return: the first mode period stored in self.elf_parameters
@@ -495,7 +495,7 @@ class Building:
         period = pd.read_csv('Periods.out', header=None)
         self.elf_parameters['modal period'] = np.float64(period.iloc[0, 0])
 
-    def read_story_drift(self):  # noqa: ANN201
+    def read_story_drift(self):
         """This method is used to read the story drifts from OpenSees elastic analysis results and stored it as attribute
         The load case for story drift is the combination of dead, live, and earthquake loads.
         :return: an [story*1] array which includes the story drifts for each story.
@@ -515,7 +515,7 @@ class Building:
         # Assign the story drifts results into class attribute
         self.elastic_response = {'story drift': story_drift}
 
-    def optimize_member_for_drift(self):  # noqa: ANN201
+    def optimize_member_for_drift(self):
         """This method is used to decrease the member size such that the design is most economic.
         :return: update self.member_size
         """  # noqa: D205, D400, D401, D404
@@ -555,7 +555,7 @@ class Building:
         )
         self.member_size['exterior column'][target_story] = exterior_size
 
-    def upscale_column(self, target_story, type_column):  # noqa: ANN001, ANN201
+    def upscale_column(self, target_story, type_column):
         """This method is used to increase  column size which might be necessary when column strength is not sufficient
         or strong column weak beam is not satisfied.
         :param target_story: a scalar to denote which story column shall be increased (from 0 to total story # - 1).
@@ -571,7 +571,7 @@ class Building:
         #                                    self.member_size['exterior column'][target_story])
         # self.member_size['exterior column'][target_story] = temp_size_2
 
-    def upscale_beam(self, target_floor):  # noqa: ANN001, ANN201
+    def upscale_beam(self, target_floor):
         """This method is used to increase beam size which might be necessary when beam strength is not sufficient
         :param target_floor: a scalar to denote which floor beam shall be improved. (from 0 to total story # - 1)
         :return: update the beam size stored in self.member_size
@@ -609,7 +609,7 @@ class Building:
     #     self.construction_size['beam'] = temp_beam
     # ********************************************* Previous version ends here *****************************************
 
-    def constructability_beam(self):  # noqa: ANN201
+    def constructability_beam(self):
         """This method is used to update the beam member size by considering the constructability (ease of construction).
         :return: update the beam sizes stored in self.member_size['beam']
         """  # noqa: D205, D400, D401, D404
@@ -627,7 +627,7 @@ class Building:
         self.construction_size['interior column'] = temp_size['interior column']
         self.construction_size['exterior column'] = temp_size['exterior column']
 
-    def constructability_column(self):  # noqa: ANN201
+    def constructability_column(self):
         """This method is used to update the column member size by considering the constructability (ease of construction).
         :return: update the column sizes stored in self.member_size
         """  # noqa: D205, D400, D401, D404

@@ -51,7 +51,7 @@ class hydroUtils:
     """  # noqa: D205, D404
 
     #############################################################
-    def extract(self, obj, path, ind, arr):  # noqa: ANN001, ANN201, C901
+    def extract(self, obj, path, ind, arr):  # noqa: C901
         """Extracts an element from a nested dictionary
         along a specified path and returns a list.
 
@@ -93,7 +93,7 @@ class hydroUtils:
         return arr
 
     #############################################################
-    def extract_element_from_json(self, obj, path):  # noqa: ANN001, ANN201
+    def extract_element_from_json(self, obj, path):
         """Extracts an element from a nested dictionary or
         a list of nested dictionaries along a specified path.
         If the input is a dictionary, a list is returned.
@@ -114,7 +114,7 @@ class hydroUtils:
             return outer_arr
 
     #############################################################
-    def general_header(self):  # noqa: ANN201, PLR6301
+    def general_header(self):  # noqa: PLR6301
         """Used to create a general header for Hydro-UQ related files
 
         Variables
@@ -132,7 +132,7 @@ class hydroUtils:
         return header  # noqa: RET504
 
     ####################################################################
-    def of7header(self, OFclass, location, filename):  # noqa: ANN001, ANN201, N803, PLR6301
+    def of7header(self, OFclass, location, filename):  # noqa: N803, PLR6301
         """Method to create a header for the input dictionaries.
 
         Variables
@@ -159,7 +159,7 @@ FoamFile
         return header  # noqa: RET504
 
     #############################################################
-    def hydrolog(self, projname, fipath):  # noqa: ANN001, ANN201
+    def hydrolog(self, projname, fipath):
         """Used to initialize the log file for the Hydro-UQ program
 
         Arguments:
@@ -185,7 +185,7 @@ FoamFile
         self.flog = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
 
     #############################################################
-    def getlist(self, data):  # noqa: ANN001, ANN201, PLR6301
+    def getlist(self, data):  # noqa: PLR6301
         """Used to get the float from a list of negative string
 
         Arguments:

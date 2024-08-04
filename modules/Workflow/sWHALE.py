@@ -53,16 +53,16 @@ import whale.main as whale
 from whale.main import log_div, log_msg
 
 
-def runSWhale(  # noqa: ANN201, N802, D103
-    inputs,  # noqa: ANN001
-    WF,  # noqa: ANN001, N803
-    assetID=None,  # noqa: ANN001, N803
-    assetAIM='AIM.json',  # noqa: ANN001, N803
-    prep_app_sequence=['Event', 'Modeling', 'EDP', 'Simulation'],  # noqa: ANN001, B006
-    WF_app_sequence=['Event', 'Modeling', 'EDP', 'Simulation'],  # noqa: ANN001, B006, N803
-    asset_type=None,  # noqa: ANN001
-    copy_resources=False,  # noqa: ANN001, FBT002
-    force_cleanup=False,  # noqa: ANN001, FBT002
+def runSWhale(  # noqa: N802, D103
+    inputs,
+    WF,  # noqa: N803
+    assetID=None,  # noqa: N803
+    assetAIM='AIM.json',  # noqa: N803
+    prep_app_sequence=['Event', 'Modeling', 'EDP', 'Simulation'],  # noqa: B006
+    WF_app_sequence=['Event', 'Modeling', 'EDP', 'Simulation'],  # noqa: B006, N803
+    asset_type=None,
+    copy_resources=False,  # noqa: FBT002
+    force_cleanup=False,  # noqa: FBT002
 ):
     # update the runDir, if needed
     #    with open(input_file, 'r', encoding="utf-8") as f:
@@ -147,7 +147,7 @@ def runSWhale(  # noqa: ANN201, N802, D103
     log_div(prepend_blank_space=False)
 
 
-def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):  # noqa: ANN001, ANN201, ARG001, D103
+def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):  # noqa: ARG001, D103
     # update the runDir, if needed
     with open(input_file, encoding='utf-8') as f:  # noqa: PTH123
         inputs = json.load(f)

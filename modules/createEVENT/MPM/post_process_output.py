@@ -54,7 +54,7 @@ from plotly.subplots import make_subplots
 from scipy import signal
 
 
-def readPressureProbes(fileName):  # noqa: ANN001, ANN201, N802, N803
+def readPressureProbes(fileName):  # noqa: N802, N803
     """Created on Wed May 16 14:31:42 2018
 
     Reads pressure probe data from OpenFOAM and return the probe location, time, and the pressure
@@ -91,7 +91,7 @@ def readPressureProbes(fileName):  # noqa: ANN001, ANN201, N802, N803
     return probes, time, p
 
 
-def read_pressure_data(file_names):  # noqa: ANN001, ANN201
+def read_pressure_data(file_names):
     """This functions takes names of different OpenFOAM pressure measurements and connect
     them into one file removing overlaps if any. All the probes must be in the same
     location, otherwise an error might show up.
@@ -146,14 +146,14 @@ class PressureData:
     - peak pressure coefficients
     """  # noqa: D205, D400
 
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        path,  # noqa: ANN001
-        u_ref=0.0,  # noqa: ANN001
-        rho=1.25,  # noqa: ANN001
-        p_ref=0.0,  # noqa: ANN001
-        start_time=None,  # noqa: ANN001
-        end_time=None,  # noqa: ANN001
+        path,
+        u_ref=0.0,
+        rho=1.25,
+        p_ref=0.0,
+        start_time=None,
+        end_time=None,
     ):
         self.path = path
         self.u_ref = u_ref
@@ -171,7 +171,7 @@ class PressureData:
         self.dt = np.mean(np.diff(self.time))
         self.probe_count = np.shape(self.probes)[0]
 
-    def __read_cfd_data(self):  # noqa: ANN202
+    def __read_cfd_data(self):
         if os.path.isdir(self.path):  # noqa: PTH112
             print('Reading from path : %s' % (self.path))  # noqa: T201, UP031
             time_names = os.listdir(self.path)
@@ -192,7 +192,7 @@ class PressureData:
         else:
             print('Cannot find the file path: %s' % (self.path))  # noqa: T201, UP031
 
-    def __set_time(self):  # noqa: ANN202
+    def __set_time(self):
         if self.start_time != None:  # noqa: E711
             start_index = int(np.argmax(self.time > self.start_time))
             self.time = self.time[start_index:]
@@ -212,7 +212,7 @@ class PressureData:
                 pass
 
 
-def von_karman_spectrum(f, Uav, I, L, comp=0):  # noqa: ANN001, ANN201, N803, E741, D103
+def von_karman_spectrum(f, Uav, I, L, comp=0):  # noqa: N803, E741, D103
     psd = np.zeros(len(f))  # noqa: F841
 
     if comp == 0:
@@ -233,7 +233,7 @@ def von_karman_spectrum(f, Uav, I, L, comp=0):  # noqa: ANN001, ANN201, N803, E7
         )
 
 
-def psd(x, dt, nseg):  # noqa: ANN001, ANN201
+def psd(x, dt, nseg):
     """Calculates the power spectral density of a given signal using the welch
     method.
 
@@ -260,7 +260,7 @@ def psd(x, dt, nseg):  # noqa: ANN001, ANN201
     return freq[1:], spectra[1:]
 
 
-def write_open_foam_vector_field(p, file_name):  # noqa: ANN001, ANN201
+def write_open_foam_vector_field(p, file_name):
     """Writes a given vector-field (n x 3) array to OpenFOAM 'vectorField'
     format.
 
@@ -275,7 +275,7 @@ def write_open_foam_vector_field(p, file_name):  # noqa: ANN001, ANN201
     f.close()
 
 
-def read_openFoam_scalar_field(file_name):  # noqa: ANN001, ANN201, N802
+def read_openFoam_scalar_field(file_name):  # noqa: N802
     """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""  # noqa: D401
     sField = []  # noqa: N806
 
@@ -294,7 +294,7 @@ def read_openFoam_scalar_field(file_name):  # noqa: ANN001, ANN201, N802
     return sField  # noqa: RET504
 
 
-def read_openFoam_vector_field(file_name):  # noqa: ANN001, ANN201, N802
+def read_openFoam_vector_field(file_name):  # noqa: N802
     """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""  # noqa: D401
     vField = []  # noqa: N806
 
@@ -315,7 +315,7 @@ def read_openFoam_vector_field(file_name):  # noqa: ANN001, ANN201, N802
     return vField  # noqa: RET504
 
 
-def read_openFoam_tensor_field(file_name):  # noqa: ANN001, ANN201, N802
+def read_openFoam_tensor_field(file_name):  # noqa: N802
     """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""  # noqa: D401
     vField = []  # noqa: N806
 
@@ -343,7 +343,7 @@ def read_openFoam_tensor_field(file_name):  # noqa: ANN001, ANN201, N802
     return vField  # noqa: RET504
 
 
-def read_openFoam_symmetric_tensor_field(file_name):  # noqa: ANN001, ANN201, N802
+def read_openFoam_symmetric_tensor_field(file_name):  # noqa: N802
     """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""  # noqa: D401
     vField = []  # noqa: N806
 
@@ -370,7 +370,7 @@ def read_openFoam_symmetric_tensor_field(file_name):  # noqa: ANN001, ANN201, N8
     return vField  # noqa: RET504
 
 
-def read_velocity_data(path):  # noqa: ANN001, ANN201
+def read_velocity_data(path):
     """This functions takes names of different OpenFOAM velocity measurements and connect
     them into one file removing overlaps if any. All the probes must be in the same
     location, otherwise an error might showup.
@@ -421,7 +421,7 @@ def read_velocity_data(path):  # noqa: ANN001, ANN201
     return probes, connected_time, U
 
 
-def read_velocity_probes(fileName):  # noqa: ANN001, ANN201, N803
+def read_velocity_probes(fileName):  # noqa: N803
     """Created on Wed May 16 14:31:42 2018
 
     Reads velocity probe data from OpenFOAM and return the probe location, time,
@@ -465,7 +465,7 @@ def read_velocity_probes(fileName):  # noqa: ANN001, ANN201, N803
     return probes, time, U
 
 
-def calculate_length_scale(u, uav, dt, min_corr=0.0):  # noqa: ANN001, ANN201
+def calculate_length_scale(u, uav, dt, min_corr=0.0):
     """Calculates the length scale of a velocity time history given."""  # noqa: D401
     u = u - np.mean(u)  # noqa: PLR6104
 
@@ -484,7 +484,7 @@ def calculate_length_scale(u, uav, dt, min_corr=0.0):  # noqa: ANN001, ANN201
     return L  # noqa: RET504
 
 
-def psd(x, dt, nseg):  # noqa: ANN001, ANN201, F811
+def psd(x, dt, nseg):  # noqa: F811
     """Calculates the power spectral density of a given signal using the welch
     method.
 
@@ -518,15 +518,15 @@ class VelocityData:
     - integral scale of turbulence profiles
     """  # noqa: D205, D400
 
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        path,  # noqa: ANN001
-        sampling_rate=400,  # noqa: ANN001
-        filter_data=False,  # noqa: ANN001, FBT002
-        filter_freq=400,  # noqa: ANN001
-        start_time=None,  # noqa: ANN001
-        end_time=None,  # noqa: ANN001
-        resample_dt=None,  # noqa: ANN001
+        path,
+        sampling_rate=400,
+        filter_data=False,  # noqa: FBT002
+        filter_freq=400,
+        start_time=None,
+        end_time=None,
+        resample_dt=None,
     ):
         self.path = path
         self.sampling_rate = sampling_rate
@@ -550,7 +550,7 @@ class VelocityData:
         self.__filter_signal()
         self.__calculate_all()
 
-    def __read_cfd_data(self):  # noqa: ANN202
+    def __read_cfd_data(self):
         if os.path.isdir(self.path):  # noqa: PTH112
             print('Reading from path : %s' % (self.path))  # noqa: T201, UP031
             time_names = os.listdir(self.path)
@@ -582,7 +582,7 @@ class VelocityData:
         else:
             print('Cannot find the file path: %s' % (self.path))  # noqa: T201, UP031
 
-    def __adjust_time_step(self):  # noqa: ANN202
+    def __adjust_time_step(self):
         if self.resample_dt == None:  # noqa: E711
             dt = np.mean(np.diff(self.time))
         else:
@@ -601,7 +601,7 @@ class VelocityData:
         self.time = time
         self.U = U
 
-    def __filter_signal(self):  # noqa: ANN202
+    def __filter_signal(self):
         if self.filter_data:
             low_pass = signal.butter(
                 10, self.filter_freq, 'lowpass', fs=self.sampling_rate, output='sos'
@@ -610,7 +610,7 @@ class VelocityData:
                 for j in range(self.component_count):
                     self.U[i, j, :] = signal.sosfilt(low_pass, self.U[i, j, :])
 
-    def __set_time(self):  # noqa: ANN202
+    def __set_time(self):
         if self.start_time != None:  # noqa: E711
             start_index = int(np.argmax(self.time > self.start_time))
             self.time = self.time[start_index:]
@@ -621,7 +621,7 @@ class VelocityData:
             self.time = self.time[:end_index]
             self.U = self.U[:, :, :end_index]
 
-    def __calculate_all(self):  # noqa: ANN202
+    def __calculate_all(self):
         self.u = np.zeros((self.probe_count, self.component_count, self.Nt))
 
         # Calculate the mean velocity profile.
@@ -654,7 +654,7 @@ class VelocityData:
             self.uv_bar[i] = np.cov(self.U[i, 0, :], self.U[i, 1, :])[0, 1]
             self.uw_bar[i] = np.cov(self.U[i, 0, :], self.U[i, 2, :])[0, 1]
 
-    def get_Uav(self, z):  # noqa: ANN001, ANN201, N802, D102
+    def get_Uav(self, z):  # noqa: N802, D102
         from scipy import interpolate  # noqa: PLC0415
 
         f = interpolate.interp1d(self.z, self.Uav)
@@ -662,7 +662,7 @@ class VelocityData:
         return f(z)
 
 
-def copy_vtk_planes_and_order(input_path, output_path, field):  # noqa: ANN001, ANN201
+def copy_vtk_planes_and_order(input_path, output_path, field):
     """This code reads VTK sample plane data from OpenFOAM case directory and
     copies them into other directory with all vtks files ordered in their
     respective time sequence in one directory.
@@ -706,7 +706,7 @@ def copy_vtk_planes_and_order(input_path, output_path, field):  # noqa: ANN001, 
                 print(f'Copied path: {old_path}')  # noqa: T201
 
 
-def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):  # noqa: ANN001, ANN201, D103
+def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):  # noqa: D103
     # Read JSON data
     json_path = os.path.join(  # noqa: PTH118
         case_path, 'constant', 'simCenter', 'input', 'EmptyDomainCFD.json'
@@ -1247,7 +1247,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):  # noqa: 
         )
 
 
-def plot_pressure_profile(case_path, output_path, prof_name):  # noqa: ANN001, ANN201, D103
+def plot_pressure_profile(case_path, output_path, prof_name):  # noqa: D103
     prof_path = os.path.join(case_path, 'postProcessing', prof_name)  # noqa: PTH118
 
     prof = PressureData(

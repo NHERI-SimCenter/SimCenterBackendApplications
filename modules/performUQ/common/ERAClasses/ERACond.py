@@ -126,7 +126,7 @@ class ERACond:
 
     """  # noqa: D205
 
-    def __init__(self, name, opt, param, ID=False):  # noqa: ANN001, ANN204, FBT002, N803
+    def __init__(self, name, opt, param, ID=False):  # noqa: FBT002, N803
         """Constructor method, for more details have a look at the
         class description.
         """  # noqa: D205, D401
@@ -151,7 +151,7 @@ class ERACond:
         self.modParam = param
 
     # %%
-    def condParam(self, cond):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
+    def condParam(self, cond):  # noqa: C901, N802, PLR0912, PLR0915
         """Evaluates the parameters of the distribution for the
         different given conditions.
         In case that the distribution is described by its moments,
@@ -234,7 +234,7 @@ class ERACond:
             for i in range(n_cond):
                 param0 = 2.0001
 
-                def equation(param):  # noqa: ANN001, ANN202
+                def equation(param):
                     return (
                         np.sqrt(
                             special.gamma(1 - 2 / param)
@@ -322,7 +322,7 @@ class ERACond:
                     sig[i] = np.nan
                     continue
 
-                def equation(param):  # noqa: ANN001, ANN202
+                def equation(param):
                     f = lambda x: stats.norm.pdf(x, param[0], param[1]) / (  # noqa: E731
                         stats.norm.cdf(b[i], param[0], param[1])  # noqa: B023
                         - stats.norm.cdf(a[i], param[0], param[1])  # noqa: B023
@@ -366,7 +366,7 @@ class ERACond:
             k = np.zeros(n_cond)
             for i in range(n_cond):
 
-                def equation(param):  # noqa: ANN001, ANN202
+                def equation(param):
                     return (
                         np.sqrt(
                             special.gamma(1 + 2 / param)
@@ -391,7 +391,7 @@ class ERACond:
         return Par
 
     # %%
-    def condCDF(self, x, cond):  # noqa: ANN001, ANN201, C901, N802
+    def condCDF(self, x, cond):  # noqa: C901, N802
         """Evaluates the CDF of the conditional distribution at x for
         the given conditions.
         This method is used by the ERARosen method X2U.
@@ -445,7 +445,7 @@ class ERACond:
         return CDF
 
     # %%
-    def condiCDF(self, y, cond):  # noqa: ANN001, ANN201, C901, N802
+    def condiCDF(self, y, cond):  # noqa: C901, N802
         """Evaluates the inverse CDF of the conditional distribution at
         y for the given conditions.
         This method is used by the ERARosen method U2X.
@@ -499,7 +499,7 @@ class ERACond:
         return iCDF
 
     # %%
-    def condPDF(self, x, cond):  # noqa: ANN001, ANN201, C901, N802
+    def condPDF(self, x, cond):  # noqa: C901, N802
         """Evaluates the PDF of the conditional distribution at x for
         the given conditions.
         This method is used by the ERARosen method pdf.
@@ -553,7 +553,7 @@ class ERACond:
         return PDF
 
     # %%
-    def condRandom(self, cond):  # noqa: ANN001, ANN201, C901, N802
+    def condRandom(self, cond):  # noqa: C901, N802
         """Creates one random sample for each given condition.
         This method is used by the ERARosen method random.
         """  # noqa: D205, D401

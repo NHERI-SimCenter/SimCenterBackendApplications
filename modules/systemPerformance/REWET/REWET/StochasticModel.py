@@ -24,15 +24,15 @@ logger = logging.getLogger(__name__)
 
 
 class StochasticModel:  # noqa: D101
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        water_network,  # noqa: ANN001
-        damage_model,  # noqa: ANN001
-        registry,  # noqa: ANN001
-        simulation_end_time,  # noqa: ANN001
-        restoration,  # noqa: ANN001
-        mode='PDD',  # noqa: ANN001
-        i_restoration=True,  # noqa: ANN001, FBT002
+        water_network,
+        damage_model,
+        registry,
+        simulation_end_time,
+        restoration,
+        mode='PDD',
+        i_restoration=True,  # noqa: FBT002
     ):
         if (
             type(water_network) != wntrfr.network.model.WaterNetworkModel  # noqa: E721
@@ -68,7 +68,7 @@ class StochasticModel:  # noqa: D101
         self._prev_isolated_links = OrderedSet()
         self.first_leak_flag = True
 
-    def runLinearScenario(self, damage, settings, worker_rank=None):  # noqa: ANN001, ANN201, C901, N802
+    def runLinearScenario(self, damage, settings, worker_rank=None):  # noqa: C901, N802
         """Runs a simple linear analysis of water damage scenario
         Parameters
 
@@ -375,13 +375,13 @@ class StochasticModel:  # noqa: D101
 
         return self._linear_result
 
-    def KeepLinearResult(  # noqa: ANN201, C901, N802, D102
+    def KeepLinearResult(  # noqa: C901, N802, D102
         self,
-        result,  # noqa: ANN001
-        isolated_nodes,  # noqa: ANN001
-        node_attributes=None,  # noqa: ANN001
-        link_attributes=None,  # noqa: ANN001
-        iCheck=False,  # noqa: ANN001, FBT002, ARG002, N803
+        result,
+        isolated_nodes,
+        node_attributes=None,
+        link_attributes=None,
+        iCheck=False,  # noqa: FBT002, ARG002, N803
     ):  # , iNeedTimeCorrection=False, start_time=None):
         if self.registry.if_first_event_occured == False:  # noqa: E712
             self.registry.pre_event_demand_met = (
@@ -558,7 +558,7 @@ class StochasticModel:  # noqa: D101
                     result.link[att]
                 )
 
-    def dumpPartOfResult(self):  # noqa: ANN201, C901, N802, D102
+    def dumpPartOfResult(self):  # noqa: C901, N802, D102
         limit_size = self.registry.settings['limit_result_file_size']
         limit_size_byte = limit_size * 1024 * 1024
 

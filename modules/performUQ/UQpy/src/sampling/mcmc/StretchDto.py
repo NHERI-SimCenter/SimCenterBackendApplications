@@ -18,7 +18,7 @@ class StretchDto(UQpyDTO):  # noqa: D101
     random_state: int = Field(..., alias='randomState')
     scale: float = Field(..., gt=0)
 
-    def init_to_text(self):  # noqa: ANN201, D102
+    def init_to_text(self):  # noqa: D102
         from UQpy.sampling.mcmc.Stretch import Stretch  # noqa: PLC0415
 
         c = Stretch

@@ -3,7 +3,7 @@ import json
 import sys
 
 
-def create_building_files(output_file, building_source_file, min_id, max_id):  # noqa: ANN001, ANN201, D103
+def create_building_files(output_file, building_source_file, min_id, max_id):  # noqa: D103
     # check if the min and max values are provided in the right order
     if (min_id is not None) and (max_id is not None):
         if min_id > max_id:

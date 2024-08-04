@@ -16,7 +16,7 @@ from ERAClasses.ERANataf import ERANataf
 from numpy.typing import NDArray
 
 
-def _copytree(src, dst, symlinks=False, ignore=None):  # noqa: ANN001, ANN202, FBT002
+def _copytree(src, dst, symlinks=False, ignore=None):  # noqa: FBT002
     if not os.path.exists(dst):  # noqa: PTH110
         os.makedirs(dst)  # noqa: PTH103
     for item in os.listdir(src):
@@ -37,7 +37,7 @@ def _copytree(src, dst, symlinks=False, ignore=None):  # noqa: ANN001, ANN202, F
     return '0'
 
 
-def _append_msg_in_out_file(msg, out_file_name: str = 'ops.out'):  # noqa: ANN001, ANN202
+def _append_msg_in_out_file(msg, out_file_name: str = 'ops.out'):
     if glob.glob(out_file_name):  # noqa: PTH207
         with open(out_file_name) as text_file:  # noqa: FURB101, PLW1514, PTH123
             error_FEM = text_file.read()  # noqa: N806
@@ -249,11 +249,11 @@ class ParallelRunnerMultiprocessing:  # noqa: D101
         self.pool.close()
 
 
-def make_ERADist_object(name, opt, val) -> ERADist:  # noqa: ANN001, N802, D103
+def make_ERADist_object(name, opt, val) -> ERADist:  # noqa: N802, D103
     return ERADist(name=name, opt=opt, val=val)
 
 
-def create_one_marginal_distribution(rv_data) -> ERADist:  # noqa: ANN001, D103
+def create_one_marginal_distribution(rv_data) -> ERADist:  # noqa: D103
     string = (
         f'quoFEM_RV_models.{rv_data["distribution"]}'  # noqa: ISC003
         + f'{rv_data["inputType"]}.model_validate({rv_data})'
@@ -263,7 +263,7 @@ def create_one_marginal_distribution(rv_data) -> ERADist:  # noqa: ANN001, D103
 
 
 def make_list_of_marginal_distributions(  # noqa: D103
-    list_of_random_variables_data,  # noqa: ANN001
+    list_of_random_variables_data,
 ) -> list[ERADist]:  # noqa: FA102
     marginal_ERAdistribution_objects_list = []  # noqa: N806
     for rv_data in list_of_random_variables_data:
@@ -273,11 +273,11 @@ def make_list_of_marginal_distributions(  # noqa: D103
     return marginal_ERAdistribution_objects_list
 
 
-def make_correlation_matrix(correlation_matrix_data, num_rvs) -> NDArray:  # noqa: ANN001, D103
+def make_correlation_matrix(correlation_matrix_data, num_rvs) -> NDArray:  # noqa: D103
     return np.atleast_2d(correlation_matrix_data).reshape((num_rvs, num_rvs))
 
 
-def make_ERANataf_object(list_of_ERADist, correlation_matrix) -> ERANataf:  # noqa: ANN001, N802, N803, D103
+def make_ERANataf_object(list_of_ERADist, correlation_matrix) -> ERANataf:  # noqa: N802, N803, D103
     return ERANataf(M=list_of_ERADist, Correlation=correlation_matrix)
 
 
@@ -318,7 +318,7 @@ class ERANatafJointDistribution:  # noqa: D101
     ]:
         return self.ERANataf_object.X2U(X=x, Jacobian=jacobian)
 
-    def pdf(self, x: NDArray) -> Union[Any, NDArray[np.float64]]:  # noqa: ANN401, FA100, D102
+    def pdf(self, x: NDArray) -> Union[Any, NDArray[np.float64]]:  # noqa: FA100, D102
         return self.ERANataf_object.pdf(X=x)
 
     def logpdf(self, x: NDArray) -> NDArray[np.float64]:  # noqa: D102
@@ -343,13 +343,13 @@ class ERANatafJointDistribution:  # noqa: D101
         return self.u_to_x(u)
 
 
-def get_list_of_pseudo_random_number_generators(entropy, num_spawn):  # noqa: ANN001, ANN201, D103
+def get_list_of_pseudo_random_number_generators(entropy, num_spawn):  # noqa: D103
     seed_sequence = np.random.SeedSequence(entropy=entropy).spawn(num_spawn)
     prngs = [np.random.Generator(np.random.PCG64DXSM(s)) for s in seed_sequence]
     return prngs  # noqa: RET504
 
 
-def get_parallel_pool_instance(run_type: str):  # noqa: ANN201, D103
+def get_parallel_pool_instance(run_type: str):  # noqa: D103
     if run_type == 'runningRemote':
         from parallel_runner_mpi4py import ParallelRunnerMPI4PY  # noqa: PLC0415
 
@@ -358,27 +358,27 @@ def get_parallel_pool_instance(run_type: str):  # noqa: ANN201, D103
         return ParallelRunnerMultiprocessing(run_type)
 
 
-def make_list_of_rv_names(all_rv_data):  # noqa: ANN001, ANN201, D103
+def make_list_of_rv_names(all_rv_data):  # noqa: D103
     list_of_rv_names = []
     for rv_data in all_rv_data:
         list_of_rv_names.append(rv_data['name'])  # noqa: PERF401
     return list_of_rv_names
 
 
-def get_length_of_results(edp_data):  # noqa: ANN001, ANN201, D103
+def get_length_of_results(edp_data):  # noqa: D103
     length_of_results = 0
     for edp in edp_data:
         length_of_results += int(float(edp['length']))
     return length_of_results
 
 
-def create_default_model(  # noqa: ANN201, D103
-    run_directory,  # noqa: ANN001
-    list_of_dir_names_to_copy_files_from,  # noqa: ANN001
-    list_of_rv_names,  # noqa: ANN001
-    driver_filename,  # noqa: ANN001
-    length_of_results,  # noqa: ANN001
-    workdir_prefix,  # noqa: ANN001
+def create_default_model(  # noqa: D103
+    run_directory,
+    list_of_dir_names_to_copy_files_from,
+    list_of_rv_names,
+    driver_filename,
+    length_of_results,
+    workdir_prefix,
 ):
     model = SimCenterWorkflowDriver(
         full_path_of_tmpSimCenter_dir=run_directory,
@@ -391,13 +391,13 @@ def create_default_model(  # noqa: ANN201, D103
     return model  # noqa: RET504
 
 
-def get_default_model_evaluation_function(model):  # noqa: ANN001, ANN201, D103
+def get_default_model_evaluation_function(model):  # noqa: D103
     return model.evaluate_model_once
 
 
-def get_ERANataf_joint_distribution_instance(  # noqa: ANN201, N802, D103
-    list_of_rv_data,  # noqa: ANN001
-    correlation_matrix_data,  # noqa: ANN001
+def get_ERANataf_joint_distribution_instance(  # noqa: N802, D103
+    list_of_rv_data,
+    correlation_matrix_data,
 ):
     joint_distribution = ERANatafJointDistribution(
         list_of_rv_data, correlation_matrix_data
@@ -405,18 +405,18 @@ def get_ERANataf_joint_distribution_instance(  # noqa: ANN201, N802, D103
     return joint_distribution  # noqa: RET504
 
 
-def get_std_normal_to_rv_transformation_function(joint_distribution):  # noqa: ANN001, ANN201, D103
+def get_std_normal_to_rv_transformation_function(joint_distribution):  # noqa: D103
     transformation_function = joint_distribution.u_to_x
     return transformation_function  # noqa: RET504
 
 
-def get_default_model(  # noqa: ANN201, D103
-    list_of_rv_data,  # noqa: ANN001
-    edp_data,  # noqa: ANN001
-    list_of_dir_names_to_copy_files_from,  # noqa: ANN001
-    run_directory,  # noqa: ANN001
-    driver_filename='driver',  # noqa: ANN001
-    workdir_prefix='workdir',  # noqa: ANN001
+def get_default_model(  # noqa: D103
+    list_of_rv_data,
+    edp_data,
+    list_of_dir_names_to_copy_files_from,
+    run_directory,
+    driver_filename='driver',
+    workdir_prefix='workdir',
 ):
     list_of_rv_names = make_list_of_rv_names(list_of_rv_data)
     length_of_results = get_length_of_results(edp_data)
@@ -435,26 +435,26 @@ def get_default_model(  # noqa: ANN201, D103
     return model  # noqa: RET504
 
 
-def model_evaluation_function(  # noqa: ANN201, D103
-    func,  # noqa: ANN001
-    list_of_iterables,  # noqa: ANN001
+def model_evaluation_function(  # noqa: D103
+    func,
+    list_of_iterables,
 ):
     return func(*list_of_iterables)
 
 
-def get_random_number_generators(entropy, num_prngs):  # noqa: ANN001, ANN201, D103
+def get_random_number_generators(entropy, num_prngs):  # noqa: D103
     return get_list_of_pseudo_random_number_generators(entropy, num_prngs)
 
 
-def get_standard_normal_random_variates(list_of_prngs, size=1):  # noqa: ANN001, ANN201, D103
+def get_standard_normal_random_variates(list_of_prngs, size=1):  # noqa: D103
     return [prng.standard_normal(size=size) for prng in list_of_prngs]
 
 
-def get_inverse_gamma_random_variate(prng, shape, scale, size=1):  # noqa: ANN001, ANN201, D103
+def get_inverse_gamma_random_variate(prng, shape, scale, size=1):  # noqa: D103
     return scipy.stats.invgamma.rvs(shape, scale=scale, size=size, random_state=prng)
 
 
-def multivariate_normal_logpdf(x, mean, cov):  # noqa: ANN001, ANN201, D103
+def multivariate_normal_logpdf(x, mean, cov):  # noqa: D103
     eigenvalues, eigenvectors = np.linalg.eigh(cov)
     logdet = np.sum(np.log(eigenvalues))
     valsinv = 1.0 / eigenvalues
@@ -479,13 +479,13 @@ class InverseGammaParameters:  # noqa: D101
     alpha_scalar: float
     beta_scalar: float
 
-    def _to_shape_and_scale(self):  # noqa: ANN202
+    def _to_shape_and_scale(self):
         return (self.alpha_scalar, 1 / self.beta_scalar)
 
 
-def _get_tabular_results_file_name_for_dataset(  # noqa: ANN202
-    tabular_results_file_base_name,  # noqa: ANN001
-    dataset_number,  # noqa: ANN001
+def _get_tabular_results_file_name_for_dataset(
+    tabular_results_file_base_name,
+    dataset_number,
 ):
     tabular_results_parent = tabular_results_file_base_name.parent
     tabular_results_stem = tabular_results_file_base_name.stem
@@ -498,6 +498,6 @@ def _get_tabular_results_file_name_for_dataset(  # noqa: ANN202
     return tabular_results_file  # noqa: RET504
 
 
-def _write_to_tabular_results_file(tabular_results_file, string_to_write):  # noqa: ANN001, ANN202
+def _write_to_tabular_results_file(tabular_results_file, string_to_write):
     with tabular_results_file.open('a') as f:
         f.write(string_to_write)

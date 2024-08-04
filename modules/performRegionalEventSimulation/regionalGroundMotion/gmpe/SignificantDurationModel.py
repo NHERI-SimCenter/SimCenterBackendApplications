@@ -40,11 +40,11 @@
 import numpy as np
 
 
-def abrahamson_silva_ds_1999(  # noqa: ANN201
-    magnitude=7.0,  # noqa: ANN001
-    distance=10.0,  # noqa: ANN001
-    soil=True,  # noqa: ANN001, FBT002
-    duration_type='DS575H',  # noqa: ANN001
+def abrahamson_silva_ds_1999(
+    magnitude=7.0,
+    distance=10.0,
+    soil=True,  # noqa: FBT002
+    duration_type='DS575H',
 ):
     """Significant duration model by Abrahamson and Silva (1996) Empirical ground motion
     models, report prepared for Brookhaven National Laboratory.
@@ -111,12 +111,12 @@ def abrahamson_silva_ds_1999(  # noqa: ANN201
     return np.log(ds_median), ds_sigma
 
 
-def bommer_stafford_alarcon_ds_2009(  # noqa: ANN201
-    magnitude=7.0,  # noqa: ANN001
-    distance=10.0,  # noqa: ANN001
-    vs30=760.0,  # noqa: ANN001
-    ztor=0.0,  # noqa: ANN001
-    duration_type='DS575H',  # noqa: ANN001
+def bommer_stafford_alarcon_ds_2009(
+    magnitude=7.0,
+    distance=10.0,
+    vs30=760.0,
+    ztor=0.0,
+    duration_type='DS575H',
 ):
     """Significant duration model by Bommer, Stafford, Alarcon (2009) Empirical
     Equations for the Prediction of the Significant, Bracketed, and Uniform
@@ -173,14 +173,14 @@ def bommer_stafford_alarcon_ds_2009(  # noqa: ANN201
     return np.log(ds_median), ds_sigma, ds_tau, ds_phi
 
 
-def afshari_stewart_ds_2016(  # noqa: ANN201, C901
-    magnitude=7.0,  # noqa: ANN001
-    distance=10.0,  # noqa: ANN001
-    vs30=760.0,  # noqa: ANN001
-    mechanism='unknown',  # noqa: ANN001
-    z1=None,  # noqa: ANN001
-    region='california',  # noqa: ANN001
-    duration_type='DS575H',  # noqa: ANN001
+def afshari_stewart_ds_2016(  # noqa: C901
+    magnitude=7.0,
+    distance=10.0,
+    vs30=760.0,
+    mechanism='unknown',
+    z1=None,
+    region='california',
+    duration_type='DS575H',
 ):
     """Significant duration model by Afshari and Stewart (2016) hysically Parameterized
     Prediction Equations for Significant Duration in Active Crustal Regions

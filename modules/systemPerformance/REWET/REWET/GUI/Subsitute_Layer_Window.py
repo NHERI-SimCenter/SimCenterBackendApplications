@@ -9,7 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_subsitite_layer_dialoge:  # noqa: D101
-    def setupUi(self, subsitite_layer_dialoge):  # noqa: ANN001, ANN201, N802, D102
+    def setupUi(self, subsitite_layer_dialoge):  # noqa: N802, D102
         subsitite_layer_dialoge.setObjectName('subsitite_layer_dialoge')
         subsitite_layer_dialoge.resize(403, 407)
         self.Subsitute_buttonBox = QtWidgets.QDialogButtonBox(
@@ -81,7 +81,7 @@ class Ui_subsitite_layer_dialoge:  # noqa: D101
         self.Subsitute_buttonBox.rejected.connect(subsitite_layer_dialoge.reject)
         QtCore.QMetaObject.connectSlotsByName(subsitite_layer_dialoge)
 
-    def retranslateUi(self, subsitite_layer_dialoge):  # noqa: ANN001, ANN201, N802, D102
+    def retranslateUi(self, subsitite_layer_dialoge):  # noqa: N802, D102
         _translate = QtCore.QCoreApplication.translate
         subsitite_layer_dialoge.setWindowTitle(
             _translate('subsitite_layer_dialoge', 'Dialog')

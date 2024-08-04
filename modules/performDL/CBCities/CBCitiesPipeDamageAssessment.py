@@ -47,7 +47,7 @@ import pandas as pd
 from CBCitiesMethods import *  # noqa: F403
 
 
-def main(node_info, pipe_info):  # noqa: ANN001, ANN201, D103
+def main(node_info, pipe_info):  # noqa: D103
     # Load Data
 
     print('Loading the node json file...')  # noqa: T201

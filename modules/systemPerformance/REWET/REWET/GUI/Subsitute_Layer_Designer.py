@@ -12,12 +12,12 @@ from PyQt5 import QtWidgets
 
 
 class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: D101
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        subsitute_layer_addr,  # noqa: ANN001
-        subsitute_layer,  # noqa: ANN001
-        iUse_substitute_layer,  # noqa: ANN001, N803
-        demand_node_layers,  # noqa: ANN001
+        subsitute_layer_addr,
+        subsitute_layer,
+        iUse_substitute_layer,  # noqa: N803
+        demand_node_layers,
     ):
         super().__init__()
         self._window = QtWidgets.QDialog()
@@ -52,18 +52,18 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: D101
             self.iUseSubstituteCheckBoxStateChanged
         )
 
-    def iUseSubstituteCheckBoxStateChanged(self, state):  # noqa: ANN001, ANN201, N802, D102
+    def iUseSubstituteCheckBoxStateChanged(self, state):  # noqa: N802, D102
         if state == 0:
             self.iUse_substitute_layer = False
         elif state == 2:  # noqa: PLR2004
             self.iUse_substitute_layer = True
 
-    def applyNewSubsituteLayer(self):  # noqa: ANN201, N802, D102
+    def applyNewSubsituteLayer(self):  # noqa: N802, D102
         # demand_node_layers = self.createGeopandasPointDataFrameForNodes(self, self.wn, self.demand_node_name)
         if type(self.subsitute_layer) == type(None):  # noqa: E721
             return
 
-    def substituteLayerBrowseButton(self):  # noqa: ANN201, N802, D102
+    def substituteLayerBrowseButton(self):  # noqa: N802, D102
         file = QtWidgets.QFileDialog.getOpenFileName(
             self._window,
             'Open file',

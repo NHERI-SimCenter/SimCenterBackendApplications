@@ -53,7 +53,7 @@ install_requires = []
 default_oq_version = '3.17.1'
 
 
-def openquake_config(site_info, scen_info, event_info, workDir):  # noqa: ANN001, ANN201, C901, N803, D103, PLR0912, PLR0915
+def openquake_config(site_info, scen_info, event_info, workDir):  # noqa: C901, N803, D103, PLR0912, PLR0915
     dir_input = os.path.join(workDir, 'Input')  # noqa: PTH118
     dir_output = os.path.join(workDir, 'Output')  # noqa: PTH118
     import configparser  # noqa: PLC0415
@@ -547,11 +547,11 @@ def get_cfg(job_ini):
 """
 
 
-def oq_run_classical_psha(  # noqa: ANN201, C901
-    job_ini,  # noqa: ANN001
-    exports='csv',  # noqa: ANN001
-    oq_version=default_oq_version,  # noqa: ANN001
-    dir_info=None,  # noqa: ANN001
+def oq_run_classical_psha(  # noqa: C901
+    job_ini,
+    exports='csv',
+    oq_version=default_oq_version,
+    dir_info=None,
 ):
     """Run a classical PSHA by OpenQuake
 
@@ -772,7 +772,7 @@ def oq_run_classical_psha(  # noqa: ANN201, C901
     return 0
 
 
-def oq_h5clear(hdf5_file):  # noqa: ANN001, ANN201, D103
+def oq_h5clear(hdf5_file):  # noqa: D103
     # h5clear = os.path.join(os.path.dirname(os.path.abspath(__file__)),'lib/hdf5/bin/h5clear')
     # print(h5clear)
     print(hdf5_file)  # noqa: T201
@@ -784,7 +784,7 @@ def oq_h5clear(hdf5_file):  # noqa: ANN001, ANN201, D103
     return run_flag  # noqa: RET504
 
 
-def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):  # noqa: ANN001, ANN201
+def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):
     """Collect the UHS from a classical PSHA by OpenQuake"""  # noqa: D400
     import glob  # noqa: PLC0415
     import random  # noqa: PLC0415
@@ -849,13 +849,13 @@ def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):  # noqa: ANN001
 
 
 class OpenQuakeHazardCalc:  # noqa: D101
-    def __init__(  # noqa: ANN204, C901
+    def __init__(  # noqa: C901
         self,
-        job_ini,  # noqa: ANN001
-        event_info,  # noqa: ANN001
-        oq_version,  # noqa: ANN001
-        dir_info=None,  # noqa: ANN001
-        no_distribute=False,  # noqa: ANN001, FBT002
+        job_ini,
+        event_info,
+        oq_version,
+        dir_info=None,
+        no_distribute=False,  # noqa: FBT002
     ):
         """Initialize a calculation (reinvented from openquake.engine.engine)
 
@@ -955,7 +955,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
 
         print('FetchOpenQuake: OpenQuake Hazard Calculator initiated.')  # noqa: T201
 
-    def run_calc(self):  # noqa: ANN201, C901
+    def run_calc(self):  # noqa: C901
         """Run a calculation and return results (reinvented from openquake.calculators.base)"""  # noqa: D400
         from openquake.baselib import config, performance, zeromq  # noqa: PLC0415
         from openquake.calculators import base, getters  # noqa: PLC0415
@@ -1084,7 +1084,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
                 print('FetchOpenQuake: OpenQuake Hazard Calculator defined.')  # noqa: T201
                 # parallel.Starmap.shutdown()
 
-    def eval_calc(self):  # noqa: ANN201, C901, PLR0912, PLR0915
+    def eval_calc(self):  # noqa: C901, PLR0912, PLR0915
         """Evaluate each calculators for different IMs"""  # noqa: D400
         # Define the GmfGetter
 
@@ -1552,7 +1552,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
         # return
         return res  # noqa: RET504
 
-    def calculator_build_events_from_sources(self):  # noqa: ANN201, C901
+    def calculator_build_events_from_sources(self):  # noqa: C901
         """Prefilter the composite source model and store the source_info"""  # noqa: D400
         gsims_by_trt = self.calculator.csm.full_lt.get_gsims_by_trt()
         print('FetchOpenQuake: self.calculator.csm.src_groups = ')  # noqa: T201
@@ -1647,11 +1647,11 @@ class OpenQuakeHazardCalc:  # noqa: D101
 
 
 class CorrelationButNoInterIntraStdDevs(Exception):  # noqa: N818, D101
-    def __init__(self, corr, gsim):  # noqa: ANN001, ANN204
+    def __init__(self, corr, gsim):
         self.corr = corr
         self.gsim = gsim
 
-    def __str__(self):  # noqa: D105, ANN204
+    def __str__(self):  # noqa: D105
         return (
             f'You cannot use the correlation model '
             f'{self.corr.__class__.__name__} with the '
@@ -1663,14 +1663,14 @@ class CorrelationButNoInterIntraStdDevs(Exception):  # noqa: N818, D101
         )
 
 
-def to_imt_unit_values(vals, imt):  # noqa: ANN001, ANN201
+def to_imt_unit_values(vals, imt):
     """Exponentiate the values unless the IMT is MMI"""  # noqa: D400
     if str(imt) == 'MMI':
         return vals
     return np.exp(vals)
 
 
-def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):  # noqa: ANN001, ANN201, C901, N803, D103
+def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):  # noqa: C901, N803, D103
     import json  # noqa: PLC0415
 
     from openquake.commonlib import readinput  # noqa: PLC0415
@@ -1890,7 +1890,7 @@ def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):  # no
             json.dump(erf_data, f, indent=2)
 
 
-def get_site_rup_info_oq(source_info, siteList):  # noqa: ANN001, ANN201, N803, D103
+def get_site_rup_info_oq(source_info, siteList):  # noqa: N803, D103
     from openquake.hazardlib import site  # noqa: PLC0415
     from openquake.hazardlib.calc.filters import get_distances  # noqa: PLC0415
 

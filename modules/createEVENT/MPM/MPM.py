@@ -3,26 +3,26 @@ import json
 
 
 class FloorForces:  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         self.X = [0]
         self.Y = [0]
         self.Z = [0]
 
 
-def directionToDof(direction):  # noqa: ANN001, ANN201, N802
+def directionToDof(direction):  # noqa: N802
     """Converts direction to degree of freedom"""  # noqa: D400, D401
     directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
 
     return directioMap[direction]
 
 
-def addFloorForceToEvent(  # noqa: ANN201, N802
-    timeSeriesArray,  # noqa: ANN001, N803
-    patternsArray,  # noqa: ANN001, N803
-    force,  # noqa: ANN001
-    direction,  # noqa: ANN001
-    floor,  # noqa: ANN001
-    dT,  # noqa: ANN001, N803
+def addFloorForceToEvent(  # noqa: N802
+    timeSeriesArray,  # noqa: N803
+    patternsArray,  # noqa: N803
+    force,
+    direction,
+    floor,
+    dT,  # noqa: N803
 ):
     """Add force (one component) time series and pattern in the event file"""  # noqa: D400
     seriesName = 'HydroForceSeries_' + str(floor) + direction  # noqa: N806
@@ -41,7 +41,7 @@ def addFloorForceToEvent(  # noqa: ANN201, N802
     patternsArray.append(pattern)
 
 
-def addFloorForceToEvent(patternsArray, force, direction, floor):  # noqa: ANN001, ANN201, ARG001, N802, N803, F811
+def addFloorForceToEvent(patternsArray, force, direction, floor):  # noqa: ARG001, N802, N803, F811
     """Add force (one component) time series and pattern in the event file"""  # noqa: D400
     seriesName = 'HydroForceSeries_' + str(floor) + direction  # noqa: N806
     patternName = 'HydroForcePattern_' + str(floor) + direction  # noqa: N806
@@ -56,14 +56,14 @@ def addFloorForceToEvent(patternsArray, force, direction, floor):  # noqa: ANN00
     patternsArray.append(pattern)
 
 
-def addFloorPressure(pressureArray, floor):  # noqa: ANN001, ANN201, N802, N803
+def addFloorPressure(pressureArray, floor):  # noqa: N802, N803
     """Add floor pressure in the event file"""  # noqa: D400
     floorPressure = {'story': str(floor), 'pressure': [0.0, 0.0]}  # noqa: N806
 
     pressureArray.append(floorPressure)
 
 
-def writeEVENT(forces, eventFilePath):  # noqa: ANN001, ANN201, N802, N803
+def writeEVENT(forces, eventFilePath):  # noqa: N802, N803
     """This method writes the EVENT.json file"""  # noqa: D400, D401, D404
     timeSeriesArray = []  # noqa: N806, F841
     patternsArray = []  # noqa: N806
@@ -93,7 +93,7 @@ def writeEVENT(forces, eventFilePath):  # noqa: ANN001, ANN201, N802, N803
         json.dump(eventDict, eventsFile)
 
 
-def GetFloorsCount(BIMFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
+def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
     with open(BIMFilePath, encoding='utf-8') as BIMFile:  # noqa: PTH123, N806
         bim = json.load(BIMFile)
     return int(bim['GeneralInformation']['stories'])

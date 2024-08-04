@@ -84,7 +84,7 @@ pp = pprint.PrettyPrinter(indent=4)
 whale_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
 
 
-def str2bool(v):  # noqa: ANN001, ANN201, D103
+def str2bool(v):  # noqa: D103
     # courtesy of Maxim @ stackoverflow
 
     if isinstance(v, bool):
@@ -98,40 +98,40 @@ def str2bool(v):  # noqa: ANN001, ANN201, D103
 
 
 class Options:  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         self._log_show_ms = False
         self._print_log = False
 
         self.reset_log_strings()
 
     @property
-    def log_show_ms(self):  # noqa: ANN201, D102
+    def log_show_ms(self):  # noqa: D102
         return self._log_show_ms
 
     @log_show_ms.setter
-    def log_show_ms(self, value):  # noqa: ANN001, ANN202
+    def log_show_ms(self, value):
         self._log_show_ms = bool(value)
 
         self.reset_log_strings()
 
     @property
-    def log_pref(self):  # noqa: ANN201, D102
+    def log_pref(self):  # noqa: D102
         return self._log_pref
 
     @property
-    def log_div(self):  # noqa: ANN201, D102
+    def log_div(self):  # noqa: D102
         return self._log_div
 
     @property
-    def log_time_format(self):  # noqa: ANN201, D102
+    def log_time_format(self):  # noqa: D102
         return self._log_time_format
 
     @property
-    def log_file(self):  # noqa: ANN201, D102
+    def log_file(self):  # noqa: D102
         return globals()['log_file']
 
     @log_file.setter
-    def log_file(self, value):  # noqa: ANN001, ANN202, PLR6301
+    def log_file(self, value):  # noqa: PLR6301
         if value is None:
             globals()['log_file'] = value
 
@@ -151,14 +151,14 @@ class Options:  # noqa: D101
                 )
 
     @property
-    def print_log(self):  # noqa: ANN201, D102
+    def print_log(self):  # noqa: D102
         return self._print_log
 
     @print_log.setter
-    def print_log(self, value):  # noqa: ANN001, ANN202
+    def print_log(self, value):
         self._print_log = str2bool(value)
 
-    def reset_log_strings(self):  # noqa: ANN201, D102
+    def reset_log_strings(self):  # noqa: D102
         if self._log_show_ms:
             self._log_time_format = '%H:%M:%S:%f'
             self._log_pref = (
@@ -178,7 +178,7 @@ options = Options()
 log_file = None
 
 
-def set_options(config_options):  # noqa: ANN001, ANN201, D103
+def set_options(config_options):  # noqa: D103
     if config_options is not None:
         for key, value in config_options.items():
             if key == 'LogShowMS':
@@ -190,7 +190,7 @@ def set_options(config_options):  # noqa: ANN001, ANN201, D103
 
 
 # Monkeypatch warnings to get prettier messages
-def _warning(message, category, filename, lineno, file=None, line=None):  # noqa: ANN001, ANN202, ARG001
+def _warning(message, category, filename, lineno, file=None, line=None):  # noqa: ARG001
     if '\\' in filename:
         file_path = filename.split('\\')
     elif '/' in filename:
@@ -202,7 +202,7 @@ def _warning(message, category, filename, lineno, file=None, line=None):  # noqa
 warnings.showwarning = _warning
 
 
-def log_div(prepend_timestamp=False, prepend_blank_space=True):  # noqa: ANN001, ANN201, FBT002
+def log_div(prepend_timestamp=False, prepend_blank_space=True):  # noqa: FBT002
     """Print a divider line to the log file"""  # noqa: D400
     if prepend_timestamp or prepend_blank_space:
         msg = options.log_div
@@ -217,7 +217,7 @@ def log_div(prepend_timestamp=False, prepend_blank_space=True):  # noqa: ANN001,
     )
 
 
-def log_msg(msg='', prepend_timestamp=True, prepend_blank_space=True):  # noqa: ANN001, ANN201, FBT002
+def log_msg(msg='', prepend_timestamp=True, prepend_blank_space=True):  # noqa: FBT002
     """Print a message to the screen with the current time as prefix
 
     The time is in ISO-8601 format, e.g. 2018-06-16T20:24:04Z
@@ -248,7 +248,7 @@ def log_msg(msg='', prepend_timestamp=True, prepend_blank_space=True):  # noqa: 
                 f.write('\n' + formatted_msg)
 
 
-def log_error(msg):  # noqa: ANN001, ANN201
+def log_error(msg):
     """Print an error message to the screen
 
     Parameters
@@ -263,7 +263,7 @@ def log_error(msg):  # noqa: ANN001, ANN201
     log_div()
 
 
-def print_system_info():  # noqa: ANN201, D103
+def print_system_info():  # noqa: D103
     log_msg(
         'System Information:', prepend_timestamp=False, prepend_blank_space=False
     )
@@ -278,7 +278,7 @@ def print_system_info():  # noqa: ANN201, D103
     )
 
 
-def create_command(command_list, enforced_python=None):  # noqa: ANN001, ANN201
+def create_command(command_list, enforced_python=None):
     """Short description
 
     Long description
@@ -313,7 +313,7 @@ def create_command(command_list, enforced_python=None):  # noqa: ANN001, ANN201
     return command
 
 
-def run_command(command):  # noqa: ANN001, ANN201
+def run_command(command):
     """Short description
 
     Long description
@@ -384,11 +384,11 @@ def run_command(command):  # noqa: ANN001, ANN201
         return result, returncode
 
 
-def show_warning(warning_msg):  # noqa: ANN001, ANN201, D103
+def show_warning(warning_msg):  # noqa: D103
     warnings.warn(UserWarning(warning_msg))  # noqa: B028
 
 
-def resolve_path(target_path, ref_path):  # noqa: ANN001, ANN201, D103
+def resolve_path(target_path, ref_path):  # noqa: D103
     ref_path = Path(ref_path)
 
     target_path = str(target_path).strip()
@@ -415,7 +415,7 @@ def resolve_path(target_path, ref_path):  # noqa: ANN001, ANN201, D103
     return target_path
 
 
-def _parse_app_registry(registry_path, app_types, list_available_apps=False):  # noqa: ANN001, ANN202, FBT002
+def _parse_app_registry(registry_path, app_types, list_available_apps=False):  # noqa: FBT002
     """Load the information about available workflow applications.
 
     Parameters
@@ -498,10 +498,10 @@ def _parse_app_registry(registry_path, app_types, list_available_apps=False):  #
 
 
 class WorkFlowInputError(Exception):  # noqa: D101
-    def __init__(self, value):  # noqa: ANN001, ANN204
+    def __init__(self, value):
         self.value = value
 
-    def __str__(self):  # noqa: ANN204, D105
+    def __str__(self):  # noqa: D105
         return repr(self.value)
 
 
@@ -515,7 +515,7 @@ class WorkflowApplication:
 
     """  # noqa: D414
 
-    def __init__(self, app_type, app_info, api_info):  # noqa: ANN001, ANN204
+    def __init__(self, app_type, app_info, api_info):
         # print('APP_TYPE', app_type)
         # print('APP_INFO', app_info)
         # print('API_INFO', api_info)
@@ -539,7 +539,7 @@ class WorkflowApplication:
         else:
             self.defaults = None
 
-    def set_pref(self, preferences, ref_path):  # noqa: ANN001, ANN201
+    def set_pref(self, preferences, ref_path):
         """Short description
 
         Parameters
@@ -565,7 +565,7 @@ class WorkflowApplication:
                         self.pref[preference], ref_path
                     )
 
-    def get_command_list(self, app_path, force_posix=False):  # noqa: ANN001, ANN201, FBT002, C901
+    def get_command_list(self, app_path, force_posix=False):  # noqa: FBT002, C901
         """Short description
 
         Parameters
@@ -686,18 +686,18 @@ class Workflow:  # noqa: PLR0904
 
     """  # noqa: D205
 
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        run_type,  # noqa: ANN001
-        input_file,  # noqa: ANN001
-        app_registry,  # noqa: ANN001
-        app_type_list,  # noqa: ANN001
-        reference_dir=None,  # noqa: ANN001
-        working_dir=None,  # noqa: ANN001
-        app_dir=None,  # noqa: ANN001
-        parType='seqRUN',  # noqa: ANN001, N803
-        mpiExec='mpiExec',  # noqa: ANN001, N803
-        numProc=8,  # noqa: ANN001, N803
+        run_type,
+        input_file,
+        app_registry,
+        app_type_list,
+        reference_dir=None,
+        working_dir=None,
+        app_dir=None,
+        parType='seqRUN',  # noqa: N803
+        mpiExec='mpiExec',  # noqa: N803
+        numProc=8,  # noqa: N803
     ):
         log_msg('Inputs provided:')
         log_msg(f'workflow input file: {input_file}', prepend_timestamp=False)
@@ -798,7 +798,7 @@ class Workflow:  # noqa: PLR0904
         self.workflow_assets = {}
         self._parse_inputs()
 
-    def __del__(self):  # noqa: ANN204, D105
+    def __del__(self):  # noqa: D105
         # if parallel setup, add command to run this script with parallel option
         if self.parType == 'parSETUP':
             inputArgs = sys.argv  # noqa: N806
@@ -820,7 +820,7 @@ class Workflow:  # noqa: PLR0904
             )
             self.parCommandFile.close()
 
-    def _register_app_type(self, app_type, app_dict, sub_app=''):  # noqa: ANN001, ANN202, C901
+    def _register_app_type(self, app_type, app_dict, sub_app=''):  # noqa: C901
         """Function to register the applications provided in the input file into
         memory, i.e., the 'App registry'
 
@@ -907,7 +907,7 @@ class Workflow:  # noqa: PLR0904
                 prepend_timestamp=False,
             )
 
-    def _register_asset(self, asset_type, asset_dict):  # noqa: ANN001, ANN202
+    def _register_asset(self, asset_type, asset_dict):
         """Function to register the assets provided in the input file into memory
 
         Parameters
@@ -934,7 +934,7 @@ class Workflow:  # noqa: PLR0904
 
         log_msg(f'Found asset: {asset_type} ', prepend_timestamp=False)
 
-    def _parse_inputs(self):  # noqa: ANN202, C901
+    def _parse_inputs(self):  # noqa: C901
         """Load the information about the workflow to run"""  # noqa: D400
         log_msg('Parsing workflow input file')
 
@@ -1153,7 +1153,7 @@ class Workflow:  # noqa: PLR0904
             ):
                 self.app_type_list.remove(app_type)
 
-        def recursiveLog(app_type, app_object):  # noqa: ANN001, ANN202, N802
+        def recursiveLog(app_type, app_object):  # noqa: N802
             if type(app_object) is dict:
                 for sub_app_type, sub_object in app_object.items():
                     log_msg(f'   {app_type} : ', prepend_timestamp=False)
@@ -1172,7 +1172,7 @@ class Workflow:  # noqa: PLR0904
         log_msg('\nSuccessfully parsed workflow inputs', prepend_timestamp=False)
         log_div()
 
-    def create_asset_files(self):  # noqa: ANN201
+    def create_asset_files(self):
         """Short description
 
         Longer description
@@ -1318,7 +1318,7 @@ class Workflow:  # noqa: PLR0904
 
         return assetFilesList
 
-    def augment_asset_files(self):  # noqa: ANN201, C901
+    def augment_asset_files(self):  # noqa: C901
         """Short description
 
         Longer description
@@ -1506,7 +1506,7 @@ class Workflow:  # noqa: PLR0904
 
         return assetFilesList
 
-    def perform_system_performance_assessment(self, asset_type):  # noqa: ANN001, ANN201
+    def perform_system_performance_assessment(self, asset_type):
         """For an asset type run the system level performance assessment application
 
         Longer description
@@ -1614,7 +1614,7 @@ class Workflow:  # noqa: PLR0904
         log_div()
         return True
 
-    def perform_regional_event(self):  # noqa: ANN201
+    def perform_regional_event(self):
         """Run an application to simulate a regional-scale hazard event.
 
         Longer description
@@ -1677,7 +1677,7 @@ class Workflow:  # noqa: PLR0904
             )
         log_div()
 
-    def perform_regional_recovery(self, asset_keys):  # noqa: ANN001, ANN201, ARG002
+    def perform_regional_recovery(self, asset_keys):  # noqa: ARG002
         """Run an application to simulate regional recovery
 
         Longer description
@@ -1740,7 +1740,7 @@ class Workflow:  # noqa: PLR0904
             )
         log_div()
 
-    def perform_regional_mapping(self, AIM_file_path, assetType, doParallel=True):  # noqa: ANN001, ANN201, FBT002, N803
+    def perform_regional_mapping(self, AIM_file_path, assetType, doParallel=True):  # noqa: FBT002, N803
         """Performs the regional mapping between the asset and a hazard event.
 
         Parameters
@@ -1828,7 +1828,7 @@ class Workflow:  # noqa: PLR0904
 
         log_div()
 
-    def init_simdir(self, asst_id=None, AIM_file_path='AIM.json'):  # noqa: ANN001, ANN201, C901, N803
+    def init_simdir(self, asst_id=None, AIM_file_path='AIM.json'):  # noqa: C901, N803
         """Initializes the simulation directory for each asset.
 
         In the current directory where the Asset Information Model (AIM) file resides, e.g., ./Buildings/2000-AIM.json, a new directory is created with the asset id, e.g., ./Buildings/2000, and within that directory a template directory is created (templatedir) ./Buildings/2000/templatedir. The AIM file is copied over to the template dir. It is within this template dir that the analysis is run for the individual asset.
@@ -1907,7 +1907,7 @@ class Workflow:  # noqa: PLR0904
         log_div()
         return dst
 
-    def cleanup_simdir(self, asst_id):  # noqa: ANN001, ANN201
+    def cleanup_simdir(self, asst_id):
         """Short description
 
         Longer description
@@ -1933,7 +1933,7 @@ class Workflow:  # noqa: PLR0904
         )
         log_div()
 
-    def init_workdir(self):  # noqa: ANN201
+    def init_workdir(self):
         """Short description
 
         Longer description
@@ -1958,7 +1958,7 @@ class Workflow:  # noqa: PLR0904
         )
         log_div()
 
-    def cleanup_workdir(self):  # noqa: ANN201
+    def cleanup_workdir(self):
         """Short description
 
         Longer description
@@ -1980,12 +1980,12 @@ class Workflow:  # noqa: PLR0904
         log_msg('Working directory successfully cleaned up.')
         log_div()
 
-    def preprocess_inputs(  # noqa: ANN201, C901
+    def preprocess_inputs(  # noqa: C901
         self,
-        app_sequence,  # noqa: ANN001
-        AIM_file_path='AIM.json',  # noqa: ANN001, N803
-        asst_id=None,  # noqa: ANN001
-        asset_type=None,  # noqa: ANN001
+        app_sequence,
+        AIM_file_path='AIM.json',  # noqa: N803
+        asst_id=None,
+        asset_type=None,
     ):
         """Short description
 
@@ -2195,7 +2195,7 @@ class Workflow:  # noqa: PLR0904
                 )
                 log_div()
 
-    def gather_workflow_inputs(self, asst_id=None, AIM_file_path='AIM.json'):  # noqa: ANN001, ANN201, N803, D102
+    def gather_workflow_inputs(self, asst_id=None, AIM_file_path='AIM.json'):  # noqa: N803, D102
         log_msg('Gathering Workflow Inputs.', prepend_timestamp=False)
 
         if 'UQ' in self.workflow_apps.keys():  # noqa: SIM118
@@ -2263,11 +2263,11 @@ class Workflow:  # noqa: PLR0904
             log_msg('Successfully Gathered Inputs.', prepend_timestamp=False)
             log_div()
 
-    def create_driver_file(  # noqa: ANN201, C901
+    def create_driver_file(  # noqa: C901
         self,
-        app_sequence,  # noqa: ANN001
-        asst_id=None,  # noqa: ANN001
-        AIM_file_path='AIM.json',  # noqa: ANN001, N803
+        app_sequence,
+        asst_id=None,
+        AIM_file_path='AIM.json',  # noqa: N803
     ):
         """This functipon creates a UQ driver file. This is only done if UQ is in the workflow apps
 
@@ -2372,7 +2372,7 @@ class Workflow:  # noqa: PLR0904
             log_msg('No UQ requested, workflow driver is not needed.')
             log_div()
 
-    def simulate_response(self, AIM_file_path='AIM.json', asst_id=None):  # noqa: ANN001, ANN201, C901, N803
+    def simulate_response(self, AIM_file_path='AIM.json', asst_id=None):  # noqa: C901, N803
         """Short description
 
         Longer description
@@ -2514,7 +2514,7 @@ class Workflow:  # noqa: PLR0904
 
             log_div()
 
-    def perform_asset_performance(asset_type):  # noqa: ANN201, N805, D102
+    def perform_asset_performance(asset_type):  # noqa: N805, D102
         performanceWfapps = self.workflow_apps.get('Performance', None)  # noqa: N806, F821
         performance_app = performanceWfapps[asset_type]
         app_command_list = performance_app.get_command_list(
@@ -2523,13 +2523,13 @@ class Workflow:  # noqa: PLR0904
         command = create_command(app_command_list)
         result, returncode = run_command(command)  # noqa: F841
 
-    def estimate_losses(  # noqa: ANN201, C901
+    def estimate_losses(  # noqa: C901
         self,
-        AIM_file_path='AIM.json',  # noqa: ANN001, N803
-        asst_id=None,  # noqa: ANN001
-        asset_type=None,  # noqa: ANN001
-        input_file=None,  # noqa: ANN001
-        copy_resources=False,  # noqa: ANN001, FBT002
+        AIM_file_path='AIM.json',  # noqa: N803
+        asst_id=None,
+        asset_type=None,
+        input_file=None,
+        copy_resources=False,  # noqa: FBT002
     ):
         """Short description
 
@@ -2759,13 +2759,13 @@ class Workflow:  # noqa: PLR0904
 
             log_div()
 
-    def estimate_performance(  # noqa: ANN201, D102
+    def estimate_performance(  # noqa: D102
         self,
-        AIM_file_path='AIM.json',  # noqa: ANN001, N803
-        asst_id=None,  # noqa: ANN001
-        asset_type=None,  # noqa: ANN001, ARG002
-        input_file=None,  # noqa: ANN001, ARG002
-        copy_resources=False,  # noqa: ANN001, FBT002, ARG002
+        AIM_file_path='AIM.json',  # noqa: N803
+        asst_id=None,
+        asset_type=None,  # noqa: ARG002
+        input_file=None,  # noqa: ARG002
+        copy_resources=False,  # noqa: FBT002, ARG002
     ):
         if 'Performance' not in self.workflow_apps.keys():  # noqa: SIM118
             log_msg(
@@ -2815,13 +2815,13 @@ class Workflow:  # noqa: PLR0904
         log_msg('Performance assessment finished.', prepend_timestamp=False)
         log_div()
 
-    def aggregate_results(  # noqa: ANN201, C901, PLR0912, PLR0914, PLR0915
+    def aggregate_results(  # noqa: C901, PLR0912, PLR0914, PLR0915
         self,
-        asst_data,  # noqa: ANN001
-        asset_type='',  # noqa: ANN001
+        asst_data,
+        asset_type='',
         # out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'],
-        out_types=['AIM', 'EDP', 'DMG', 'DV', 'every_realization'],  # noqa: ANN001, B006
-        headers=None,  # noqa: ANN001
+        out_types=['AIM', 'EDP', 'DMG', 'DV', 'every_realization'],  # noqa: B006
+        headers=None,
     ):
         """Short description
 
@@ -3402,7 +3402,7 @@ class Workflow:  # noqa: PLR0904
         )
         log_div()
 
-    def compile_r2d_results_geojson(self, asset_files):  # noqa: ANN001, ANN201, D102
+    def compile_r2d_results_geojson(self, asset_files):  # noqa: D102
         run_path = self.run_dir
         with open(self.input_file, encoding='utf-8') as f:  # noqa: PTH123
             input_data = json.load(f)
@@ -3467,7 +3467,7 @@ class Workflow:  # noqa: PLR0904
         with open(run_path / 'R2D_results.geojson', 'w', encoding='utf-8') as f:  # noqa: PTH123
             json.dump(geojson_result, f, indent=2)
 
-    def combine_assets_results(self, asset_files):  # noqa: ANN001, ANN201, D102
+    def combine_assets_results(self, asset_files):  # noqa: D102
         asset_types = list(asset_files.keys())
         for asset_type in asset_types:
             if self.workflow_apps['DL'][asset_type].name != 'Pelicun3':

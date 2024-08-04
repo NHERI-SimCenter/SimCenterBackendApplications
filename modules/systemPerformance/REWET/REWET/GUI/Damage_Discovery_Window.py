@@ -9,7 +9,7 @@ from PyQt5 import QtCore, QtWidgets
 
 
 class Ui_damage_discovery:  # noqa: D101
-    def setupUi(self, damage_discovery):  # noqa: ANN001, ANN201, N802, D102
+    def setupUi(self, damage_discovery):  # noqa: N802, D102
         damage_discovery.setObjectName('damage_discovery')
         damage_discovery.resize(450, 400)
         damage_discovery.setMinimumSize(QtCore.QSize(450, 400))
@@ -79,7 +79,7 @@ class Ui_damage_discovery:  # noqa: D101
         self.buttonBox.rejected.connect(damage_discovery.reject)
         QtCore.QMetaObject.connectSlotsByName(damage_discovery)
 
-    def retranslateUi(self, damage_discovery):  # noqa: ANN001, ANN201, N802, D102
+    def retranslateUi(self, damage_discovery):  # noqa: N802, D102
         _translate = QtCore.QCoreApplication.translate
         damage_discovery.setWindowTitle(
             _translate('damage_discovery', 'Damage Discovery')

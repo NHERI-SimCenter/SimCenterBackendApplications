@@ -24,7 +24,7 @@ logging.basicConfig(level=50)
 
 
 class Starter:  # noqa: D101
-    def createProjectFile(self, project_settings, damage_list, project_file_name):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def createProjectFile(self, project_settings, damage_list, project_file_name):  # noqa: D102, N802, PLR6301
         project = Project(project_settings, damage_list)
         project_file_addr = os.path.join(  # noqa: PTH118
             project_settings.process['result_directory'], project_file_name
@@ -32,7 +32,7 @@ class Starter:  # noqa: D101
         with open(project_file_addr, 'wb') as f:  # noqa: PTH123
             pickle.dump(project, f)
 
-    def run(self, project_file=None):  # noqa: ANN001, ANN201, C901
+    def run(self, project_file=None):  # noqa: C901
         """Runs the ptogram. It initiates the Settings class and based on the
         settings, run the program in either single scenario, multiple serial or
         multiple parallel mode.
@@ -123,15 +123,15 @@ class Starter:  # noqa: D101
         else:
             raise ValueError('Number of processor must be equal to or more than 1')  # noqa: EM101, TRY003
 
-    def run_local_single(  # noqa: ANN201, C901
+    def run_local_single(  # noqa: C901
         self,
-        file_name,  # noqa: ANN001
-        scenario_name,  # noqa: ANN001
-        settings,  # noqa: ANN001
-        worker_rank=None,  # noqa: ANN001
-        nodal_damage_file_name=None,  # noqa: ANN001
-        pump_damage_file_name=None,  # noqa: ANN001
-        tank_damage_file_name=None,  # noqa: ANN001
+        file_name,
+        scenario_name,
+        settings,
+        worker_rank=None,
+        nodal_damage_file_name=None,
+        pump_damage_file_name=None,
+        tank_damage_file_name=None,
     ):
         """Runs a single scenario on the local machine.
 
@@ -293,7 +293,7 @@ class Starter:  # noqa: D101
         io.save_single(settings, result, scenario_name, registry)
         return 1
 
-    def run_mpi(self, settings):  # noqa: ANN001, ANN201, C901, D102
+    def run_mpi(self, settings):  # noqa: C901, D102
         import mpi4py  # noqa: PLC0415
         from mpi4py import MPI  # noqa: PLC0415
 
@@ -582,7 +582,7 @@ class Starter:  # noqa: D101
                 flush=True,
             )
 
-    def checkArgument(self, argv):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def checkArgument(self, argv):  # noqa: D102, N802, PLR6301
         if len(argv) > 2:  # noqa: PLR2004
             print('REWET USAGE is as [./REWET Project.prj: optional]')  # noqa: T201
         if len(argv) == 1:  # noqa: SIM103

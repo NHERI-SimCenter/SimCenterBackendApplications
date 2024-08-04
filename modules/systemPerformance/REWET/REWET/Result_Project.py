@@ -21,15 +21,15 @@ from Output.Result_Time import Result_Time
 
 
 class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D101
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        project_file_addr,  # noqa: ANN001
-        result_directory=None,  # noqa: ANN001
-        ignore_not_found=False,  # noqa: ANN001, FBT002
-        to_neglect_file=None,  # noqa: ANN001
-        node_col='',  # noqa: ANN001
-        result_file_dir=None,  # noqa: ANN001
-        iObject=False,  # noqa: ANN001, FBT002, N803
+        project_file_addr,
+        result_directory=None,
+        ignore_not_found=False,  # noqa: FBT002
+        to_neglect_file=None,
+        node_col='',
+        result_file_dir=None,
+        iObject=False,  # noqa: FBT002, N803
     ):
         if iObject == False:  # noqa: E712
             self.readPorjectFile(project_file_addr)
@@ -100,18 +100,18 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
         self.prepareData()
         return ret_val  # noqa: PLE0101
 
-    def readPorjectFile(self, project_file_addr):  # noqa: ANN001, ANN201, N802, D102
+    def readPorjectFile(self, project_file_addr):  # noqa: N802, D102
         print(project_file_addr)  # noqa: T201
         with open(project_file_addr, 'rb') as f:  # noqa: PTH123
             self.project = pickle.load(f)  # noqa: S301
 
-    def loadPopulation(self, popuation_data, node_id_header, population_header):  # noqa: ANN001, ANN201, N802, D102
+    def loadPopulation(self, popuation_data, node_id_header, population_header):  # noqa: N802, D102
         pop = popuation_data.copy()
         pop = pop.set_index(node_id_header)
         pop = pop[population_header]
         self._population_data = pop
 
-    def checkForNotExistingFile(self, ignore_not_found):  # noqa: ANN001, ANN201, N802, D102
+    def checkForNotExistingFile(self, ignore_not_found):  # noqa: N802, D102
         self.scn_name_list_that_result_file_not_found = []
 
         result_directory = self.result_directory
@@ -140,7 +140,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
                     + repr(result_directory)
                 )
 
-    def prepareData(self):  # noqa: ANN201, N802, D102
+    def prepareData(self):  # noqa: N802, D102
         i = 0
         # result_directory = self.project.project_settings.process['result_directory']
         # self.project.scenario_list = self.project.scenario_list.iloc[0:20]
@@ -166,7 +166,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
                 ATTENTION: We need probability for any prbablistic result
             """
 
-    def loadScneariodata(self, scn_name):  # noqa: ANN001, ANN201, N802, D102
+    def loadScneariodata(self, scn_name):  # noqa: N802, D102
         if self.data[scn_name] != None:  # noqa: E711
             return
         print('loading scenario ' + str(scn_name))  # noqa: T201
@@ -197,7 +197,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
         self.remove_maximum_trials(res_file_data)
         self.data[scn_name] = res_file_data
 
-    def readData(self):  # noqa: ANN201, N802, D102
+    def readData(self):  # noqa: N802, D102
         # i=0
         self.project.scenario_list = self.project.scenario_list.iloc[0:2]
         result_directory = self.result_directory
@@ -250,7 +250,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
             """
             print(str(scn_name) + ' loaded')  # noqa: T201
 
-    def remove_maximum_trials(self, data):  # noqa: ANN001, ANN201, D102, PLR6301
+    def remove_maximum_trials(self, data):  # noqa: D102, PLR6301
         all_time_list = data.maximum_trial_time
         result_time_list = data.node['demand'].index.to_list()
         result_time_max_trailed_list = [
@@ -312,7 +312,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
                 att_data.drop(result_time_max_trailed_list, inplace=True)  # noqa: PD002
                 data.link[att] = att_data
 
-    def remove_maximum_trials_demand_flow(self, data):  # noqa: ANN001, ANN201, D102, PLR6301
+    def remove_maximum_trials_demand_flow(self, data):  # noqa: D102, PLR6301
         flow_balance = data.node['demand'].sum(axis=1)
 
         time_to_drop = flow_balance[abs(flow_balance) >= 0.01].index  # noqa: PLR2004
@@ -341,11 +341,11 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
             att_data.drop(result_time_max_trailed_list, inplace=True)  # noqa: PD002
             data.link[att] = att_data
 
-    def readPopulation(  # noqa: ANN201, N802, D102
+    def readPopulation(  # noqa: N802, D102
         self,
-        population_xlsx_addr='demandNode-Northridge.xlsx',  # noqa: ANN001
-        demand_node_header='NodeID',  # noqa: ANN001
-        population_header='#Customer',  # noqa: ANN001, ARG002
+        population_xlsx_addr='demandNode-Northridge.xlsx',
+        demand_node_header='NodeID',
+        population_header='#Customer',  # noqa: ARG002
     ):
         pop = pd.read_excel(population_xlsx_addr)
         pop = pop.set_index(demand_node_header)
@@ -362,7 +362,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
                 + repr(demand_node_without_population)
             )
 
-    def getRequiredDemandForAllNodesandtime(self, scn_name):  # noqa: ANN001, ANN201, N802
+    def getRequiredDemandForAllNodesandtime(self, scn_name):  # noqa: N802
         """**********
         ATTENTION: We Assume that all scenarios have the same time indexing
         **********
@@ -471,12 +471,12 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
         )
         return self._RequiredDemandForAllNodesandtime[scn_name]
 
-    def AS_getDLIndexPopulation(  # noqa: ANN201, N802, D102
+    def AS_getDLIndexPopulation(  # noqa: N802, D102
         self,
-        iPopulation='No',  # noqa: ANN001, N803
-        ratio=False,  # noqa: ANN001, FBT002
-        consider_leak=False,  # noqa: ANN001, FBT002
-        leak_ratio=0.75,  # noqa: ANN001
+        iPopulation='No',  # noqa: N803
+        ratio=False,  # noqa: FBT002
+        consider_leak=False,  # noqa: FBT002
+        leak_ratio=0.75,
     ):
         scenario_list = list(self.data.keys())
         all_scenario_DL_data = {}  # noqa: N806
@@ -493,12 +493,12 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
 
         return pd.DataFrame.from_dict(all_scenario_DL_data)
 
-    def AS_getQNIndexPopulation(  # noqa: ANN201, N802, D102
+    def AS_getQNIndexPopulation(  # noqa: N802, D102
         self,
-        iPopulation='No',  # noqa: ANN001, N803
-        ratio=False,  # noqa: ANN001, FBT002
-        consider_leak=False,  # noqa: ANN001, FBT002
-        leak_ratio=0.75,  # noqa: ANN001
+        iPopulation='No',  # noqa: N803
+        ratio=False,  # noqa: FBT002
+        consider_leak=False,  # noqa: FBT002
+        leak_ratio=0.75,
     ):
         scenario_list = list(self.data.keys())
         all_scenario_QN_data = {}  # noqa: N806
@@ -516,12 +516,12 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
 
         return pd.DataFrame.from_dict(all_scenario_QN_data)
 
-    def AS_getOutage_4(  # noqa: ANN201, N802, D102
+    def AS_getOutage_4(  # noqa: N802, D102
         self,
-        LOS='DL',  # noqa: ANN001, N803
-        iConsider_leak=False,  # noqa: ANN001, FBT002, N803
-        leak_ratio=0,  # noqa: ANN001
-        consistency_time_window=7200,  # noqa: ANN001
+        LOS='DL',  # noqa: N803
+        iConsider_leak=False,  # noqa: FBT002, N803
+        leak_ratio=0,
+        consistency_time_window=7200,
     ):
         scenario_list = list(self.data.keys())
         all_scenario_outage_data = {}
@@ -540,7 +540,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
 
         return pd.DataFrame.from_dict(all_scenario_outage_data)
 
-    def PR_getBSCPercentageExcedanceCurce(self, data_frame, restoration_percentage):  # noqa: ANN001, ANN201, N802, D102
+    def PR_getBSCPercentageExcedanceCurce(self, data_frame, restoration_percentage):  # noqa: N802, D102
         max_time = data_frame.max().max()
 
         restore_time = {}
@@ -603,13 +603,13 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
 
         return restore_data
 
-    def PR_getCurveExcedence(  # noqa: ANN201, C901, N802, D102
+    def PR_getCurveExcedence(  # noqa: C901, N802, D102
         self,
-        data_frame,  # noqa: ANN001
-        result_type='mean',  # noqa: ANN001
-        daily=False,  # noqa: ANN001, FBT002
-        min_time=0,  # noqa: ANN001
-        max_time=24 * 3600 * 1000,  # noqa: ANN001
+        data_frame,
+        result_type='mean',
+        daily=False,  # noqa: FBT002
+        min_time=0,
+        max_time=24 * 3600 * 1000,
     ):
         data_size = len(data_frame.columns)
         table_temp = []
@@ -683,7 +683,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
 
         return res
 
-    def getResultSeperatedDaily(self, data, begin_time=0):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def getResultSeperatedDaily(self, data, begin_time=0):  # noqa: D102, N802, PLR6301
         data = data[data.index >= begin_time]
         data.index = (data.index - begin_time) / (24 * 3600)
 

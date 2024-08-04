@@ -105,7 +105,7 @@ _CURVE_ENTRY = ' {name:10s} {x:12f} {y:12f} {com:>3s}\n'
 _CURVE_LABEL = '{:11s} {:12s} {:12s}\n'
 
 
-def _split_line(line):  # noqa: ANN001, ANN202
+def _split_line(line):
     _vc = line.split(';', 1)
     _cmnt = None
     _vals = None
@@ -121,7 +121,7 @@ def _split_line(line):  # noqa: ANN001, ANN202
     return _vals, _cmnt
 
 
-def _is_number(s):  # noqa: ANN001, ANN202
+def _is_number(s):
     """Checks if input is a number
 
     Parameters
@@ -136,7 +136,7 @@ def _is_number(s):  # noqa: ANN001, ANN202
         return False
 
 
-def _str_time_to_sec(s):  # noqa: ANN001, ANN202
+def _str_time_to_sec(s):
     """Converts EPANET time format to seconds.
 
     Parameters
@@ -175,7 +175,7 @@ def _str_time_to_sec(s):  # noqa: ANN001, ANN202
                 raise RuntimeError('Time format in ' 'INP file not recognized. ')  # noqa: DOC501, EM101, TRY003
 
 
-def _clock_time_to_sec(s, am_pm):  # noqa: ANN001, ANN202, C901
+def _clock_time_to_sec(s, am_pm):  # noqa: C901
     """Converts EPANET clocktime format to seconds.
 
     Parameters
@@ -251,7 +251,7 @@ def _clock_time_to_sec(s, am_pm):  # noqa: ANN001, ANN202, C901
                 raise RuntimeError('Time format in ' 'INP file not recognized. ')  # noqa: DOC501, EM101, TRY003
 
 
-def _sec_to_string(sec):  # noqa: ANN001, ANN202
+def _sec_to_string(sec):
     hours = int(sec / 3600.0)
     sec -= hours * 3600
     mm = int(sec / 60.0)
@@ -266,10 +266,10 @@ class InpFile(wntrfr.epanet.InpFile):
     The EPANET Users Manual provides full documentation for the INP file format.
     """
 
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         super().__init__()
 
-    def _write_junctions(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_junctions(self, f, wn):
         f.write('[JUNCTIONS]\n'.encode('ascii'))
         f.write(
             _JUNC_LABEL.format(';ID', 'Elevation', 'Demand', 'Pattern').encode(
@@ -314,7 +314,7 @@ class InpFile(wntrfr.epanet.InpFile):
             f.write(_JUNC_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
-    def _write_reservoirs(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_reservoirs(self, f, wn):
         f.write('[RESERVOIRS]\n'.encode('ascii'))
         f.write(_RES_LABEL.format(';ID', 'Head', 'Pattern').encode('ascii'))
         nnames = list(wn.reservoir_name_list)
@@ -340,7 +340,7 @@ class InpFile(wntrfr.epanet.InpFile):
             f.write(_RES_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
-    def _write_tanks(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_tanks(self, f, wn):
         f.write('[TANKS]\n'.encode('ascii'))
         f.write(
             _TANK_LABEL.format(
@@ -384,7 +384,7 @@ class InpFile(wntrfr.epanet.InpFile):
             f.write(_TANK_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
-    def _write_pipes(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_pipes(self, f, wn):
         f.write('[PIPES]\n'.encode('ascii'))
         f.write(
             _PIPE_LABEL.format(
@@ -422,7 +422,7 @@ class InpFile(wntrfr.epanet.InpFile):
             f.write(_PIPE_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
-    def _write_pumps(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_pumps(self, f, wn):
         f.write('[PUMPS]\n'.encode('ascii'))
         f.write(
             _PUMP_LABEL.format(';ID', 'Node1', 'Node2', 'Properties').encode('ascii')
@@ -469,7 +469,7 @@ class InpFile(wntrfr.epanet.InpFile):
             f.write(tmp_entry.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
-    def _write_valves(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_valves(self, f, wn):
         f.write('[VALVES]\n'.encode('ascii'))
         f.write(
             _VALVE_LABEL.format(
@@ -517,7 +517,7 @@ class InpFile(wntrfr.epanet.InpFile):
             f.write(formatter.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
-    def _write_emitters(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_emitters(self, f, wn):
         f.write('[EMITTERS]\n'.encode('ascii'))
         entry = '{:10s} {:10s}\n'
         label = '{:10s} {:10s}\n'
@@ -540,7 +540,7 @@ class InpFile(wntrfr.epanet.InpFile):
 
     # System Operation
 
-    def _write_status(self, f, wn):  # noqa: ANN001, ANN202, PLR6301
+    def _write_status(self, f, wn):  # noqa: PLR6301
         f.write('[STATUS]\n'.encode('ascii'))
         f.write('{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
         for link_name, link in wn.links():
@@ -587,8 +587,8 @@ class InpFile(wntrfr.epanet.InpFile):
     #                        setting).encode('ascii'))
     #        f.write('\n'.encode('ascii'))
 
-    def _write_controls(self, f, wn):  # noqa: ANN001, ANN202, C901
-        def get_setting(control_action, control_name):  # noqa: ANN001, ANN202
+    def _write_controls(self, f, wn):  # noqa: C901
+        def get_setting(control_action, control_name):
             value = control_action._value  # noqa: SLF001
             attribute = control_action._attribute.lower()  # noqa: SLF001
             if attribute == 'status':
@@ -700,7 +700,7 @@ class InpFile(wntrfr.epanet.InpFile):
                     )
         f.write('\n'.encode('ascii'))
 
-    def _write_rules(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_rules(self, f, wn):
         f.write('[RULES]\n'.encode('ascii'))
         for text, all_control in wn.controls():  # noqa: B007
             entry = '{}\n'
@@ -724,7 +724,7 @@ class InpFile(wntrfr.epanet.InpFile):
                 f.write(entry.format(str(rule)).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
-    def _write_demands(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_demands(self, f, wn):
         f.write('[DEMANDS]\n'.encode('ascii'))
         entry = '{:10s} {:10s} {:10s}{:s}\n'
         label = '{:10s} {:10s} {:10s}\n'
@@ -765,7 +765,7 @@ class InpFile(wntrfr.epanet.InpFile):
 
     # Water Quality
 
-    def _write_quality(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_quality(self, f, wn):
         f.write('[QUALITY]\n'.encode('ascii'))
         entry = '{:10s} {:10s}\n'
         label = '{:10s} {:10s}\n'  # noqa: F841
@@ -792,7 +792,7 @@ class InpFile(wntrfr.epanet.InpFile):
                 f.write(entry.format(node_name, str(quality)).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
-    def _write_reactions(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_reactions(self, f, wn):
         f.write('[REACTIONS]\n'.encode('ascii'))
         f.write(
             ';Type           Pipe/Tank               Coefficient\n'.encode('ascii')
@@ -904,7 +904,7 @@ class InpFile(wntrfr.epanet.InpFile):
             )
         f.write('\n'.encode('ascii'))
 
-    def _write_sources(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_sources(self, f, wn):
         f.write('[SOURCES]\n'.encode('ascii'))
         entry = '{:10s} {:10s} {:10s} {:10s}\n'
         label = '{:10s} {:10s} {:10s} {:10s}\n'
@@ -946,7 +946,7 @@ class InpFile(wntrfr.epanet.InpFile):
             )
         f.write('\n'.encode('ascii'))
 
-    def _write_mixing(self, f, wn):  # noqa: ANN001, ANN202, PLR6301
+    def _write_mixing(self, f, wn):  # noqa: PLR6301
         f.write('[MIXING]\n'.encode('ascii'))
         f.write(
             '{:20s} {:5s} {}\n'.format(';Tank ID', 'Model', 'Fraction').encode(
@@ -990,7 +990,7 @@ class InpFile(wntrfr.epanet.InpFile):
 
     # Options and Reporting
 
-    def _write_options(self, f, wn):  # noqa: ANN001, ANN202
+    def _write_options(self, f, wn):
         f.write('[OPTIONS]\n'.encode('ascii'))
         entry_string = '{:20s} {:20s}\n'
         entry_float = '{:20s} {:.11g}\n'
@@ -1154,7 +1154,7 @@ class InpFile(wntrfr.epanet.InpFile):
             )
         f.write('\n'.encode('ascii'))
 
-    def _write_times(self, f, wn):  # noqa: ANN001, ANN202, PLR6301
+    def _write_times(self, f, wn):  # noqa: PLR6301
         f.write('[TIMES]\n'.encode('ascii'))
         entry = '{:20s} {:10s}\n'
         time_entry = '{:20s} {:02d}:{:02d}:{:02d}\n'
@@ -1208,7 +1208,7 @@ class InpFile(wntrfr.epanet.InpFile):
         )
         f.write('\n'.encode('ascii'))
 
-    def _write_coordinates(self, f, wn):  # noqa: ANN001, ANN202, PLR6301
+    def _write_coordinates(self, f, wn):  # noqa: PLR6301
         f.write('[COORDINATES]\n'.encode('ascii'))
         entry = '{:10s} {:20.9f} {:20.9f}\n'
         label = '{:10s} {:10s} {:10s}\n'
@@ -1220,7 +1220,7 @@ class InpFile(wntrfr.epanet.InpFile):
             f.write(entry.format(name, val[0], val[1]).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
-    def _write_vertices(self, f, wn):  # noqa: ANN001, ANN202, PLR6301
+    def _write_vertices(self, f, wn):  # noqa: PLR6301
         f.write('[VERTICES]\n'.encode('ascii'))
         entry = '{:10s} {:20.9f} {:20.9f}\n'
         label = '{:10s} {:10s} {:10s}\n'
@@ -1235,7 +1235,7 @@ class InpFile(wntrfr.epanet.InpFile):
                 f.write(entry.format(pipe_name, vert[0], vert[1]).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
-    def _write_tags(self, f, wn):  # noqa: ANN001, ANN202, PLR6301
+    def _write_tags(self, f, wn):  # noqa: PLR6301
         f.write('[TAGS]\n'.encode('ascii'))
         entry = '{:10s} {:10s} {:10s}\n'
         label = '{:10s} {:10s} {:10s}\n'
@@ -1293,17 +1293,17 @@ class BinFile(wntrfr.epanet.io.BinFile):
 
     """
 
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        result_types=None,  # noqa: ANN001, ARG002
-        network=False,  # noqa: ANN001, FBT002, ARG002
-        energy=False,  # noqa: ANN001, FBT002, ARG002
-        statistics=False,  # noqa: ANN001, FBT002, ARG002
-        convert_status=True,  # noqa: ANN001, FBT002, ARG002
+        result_types=None,  # noqa: ARG002
+        network=False,  # noqa: FBT002, ARG002
+        energy=False,  # noqa: FBT002, ARG002
+        statistics=False,  # noqa: FBT002, ARG002
+        convert_status=True,  # noqa: FBT002, ARG002
     ):
         super().__init__()
 
-    def read(self, filename, custom_handlers=False, start_time=None):  # noqa: ANN001, ANN201, C901, FBT002, PLR0914, PLR0915
+    def read(self, filename, custom_handlers=False, start_time=None):  # noqa: C901, FBT002, PLR0914, PLR0915
         """Read a binary file and create a results object.
 
         Parameters

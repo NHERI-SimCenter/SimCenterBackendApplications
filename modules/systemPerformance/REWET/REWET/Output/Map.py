@@ -27,24 +27,24 @@ from Output import Helper
 
 
 class Map:  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         pass
 
     # def loadShapeFile(shapeFileAddr='Northridge\GIS\Demand\demand_polygons.shp'):
-    def loadShapeFile(  # noqa: ANN201, D102, N802, PLR6301
+    def loadShapeFile(  # noqa: D102, N802, PLR6301
         self,
-        shapeFileAddr=r'Northridge\GIS\Demand\demand_polygons.shp',  # noqa: ANN001, N803
+        shapeFileAddr=r'Northridge\GIS\Demand\demand_polygons.shp',  # noqa: N803
     ):
         shape_file = gpd.read_file(shapeFileAddr)
         return shape_file  # noqa: RET504
 
-    def joinTwoShapeFiles(self, first, second):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def joinTwoShapeFiles(self, first, second):  # noqa: D102, N802, PLR6301
         second = second.set_crs(crs=first.crs)
         joined_map = gpd.sjoin(first, second)
 
         return joined_map  # noqa: RET504
 
-    def createGeopandasPointDataFrameForNodes(self):  # noqa: ANN201, N802, D102
+    def createGeopandasPointDataFrameForNodes(self):  # noqa: N802, D102
         s = gpd.GeoDataFrame(index=self.demand_node_name_list)
         point_list = []
         point_name_list = []
@@ -56,7 +56,7 @@ class Map:  # noqa: D101
         s.geometry = point_list
         return s
 
-    def getDLQNExceedenceProbabilityMap(self, data_frame, ihour, param):  # noqa: ANN001, ANN201, N802, D102
+    def getDLQNExceedenceProbabilityMap(self, data_frame, ihour, param):  # noqa: N802, D102
         data = data_frame.transpose()
         scn_prob_list = self.scenario_prob
         # DLQN_dmg = pd.DataFrame(data=0, index=data.index, columns=data.columns)
@@ -157,13 +157,13 @@ class Map:  # noqa: D101
         print(tt)  # noqa: T201
         return s
 
-    def getOutageTimeGeoPandas_4(  # noqa: ANN201, C901, N802, D102
+    def getOutageTimeGeoPandas_4(  # noqa: C901, N802, D102
         self,
-        scn_name,  # noqa: ANN001
-        LOS='DL',  # noqa: ANN001, N803
-        iConsider_leak=False,  # noqa: ANN001, FBT002, N803
-        leak_ratio=0,  # noqa: ANN001
-        consistency_time_window=7200,  # noqa: ANN001
+        scn_name,
+        LOS='DL',  # noqa: N803
+        iConsider_leak=False,  # noqa: FBT002, N803
+        leak_ratio=0,
+        consistency_time_window=7200,
     ):
         # print(repr(LOS) + "   " + repr(iConsider_leak)+"  "+ repr(leak_ratio)+"   "+repr(consistency_time_window  ) )
         self.loadScneariodata(scn_name)
@@ -257,14 +257,14 @@ class Map:  # noqa: D101
 
         return geopandas_df
 
-    def getOutageTimeGeoPandas_5(  # noqa: ANN201, C901, N802, D102
+    def getOutageTimeGeoPandas_5(  # noqa: C901, N802, D102
         self,
-        scn_name,  # noqa: ANN001
-        bsc='DL',  # noqa: ANN001
-        iConsider_leak=False,  # noqa: ANN001, FBT002, N803
-        leak_ratio=0,  # noqa: ANN001
-        consistency_time_window=7200,  # noqa: ANN001
-        sum_time=False,  # noqa: ANN001, FBT002
+        scn_name,
+        bsc='DL',
+        iConsider_leak=False,  # noqa: FBT002, N803
+        leak_ratio=0,
+        consistency_time_window=7200,
+        sum_time=False,  # noqa: FBT002
     ):
         self.loadScneariodata(scn_name)
         res = self.data[scn_name]
@@ -446,13 +446,13 @@ class Map:  # noqa: D101
 
         return joined_map  # noqa: RET504
 
-    def percentOfEffectNodes(  # noqa: ANN201, C901, N802, D102
+    def percentOfEffectNodes(  # noqa: C901, N802, D102
         self,
-        scn_name,  # noqa: ANN001
-        bsc='QN',  # noqa: ANN001
-        iConsider_leak=True,  # noqa: ANN001, FBT002, N803
-        leak_ratio=0.75,  # noqa: ANN001
-        consistency_time_window=7200,  # noqa: ANN001
+        scn_name,
+        bsc='QN',
+        iConsider_leak=True,  # noqa: FBT002, N803
+        leak_ratio=0.75,
+        consistency_time_window=7200,
     ):
         self.loadScneariodata(scn_name)
         res = self.data[scn_name]

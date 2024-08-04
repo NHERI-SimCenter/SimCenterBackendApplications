@@ -81,7 +81,7 @@ class of7PtDboundary:
     # 			print(patchname)
 
     #############################################################
-    def PtDcheck(self, data, patches):  # noqa: ANN001, ANN201, N802, PLR6301
+    def PtDcheck(self, data, patches):  # noqa: N802, PLR6301
         """Checks if a point displacement for openfoam7 is required
 
         Arguments:
@@ -123,7 +123,7 @@ class of7PtDboundary:
             return 1
 
     #############################################################
-    def PtDtext(self, data, fipath, patches):  # noqa: ANN001, ANN201, N802
+    def PtDtext(self, data, fipath, patches):  # noqa: N802
         """Create text for point displacement for openfoam7
 
         Arguments:
@@ -172,7 +172,7 @@ class of7PtDboundary:
         return ptdtext  # noqa: RET504
 
     #############################################################
-    def PtDheader(self):  # noqa: ANN201, N802, PLR6301
+    def PtDheader(self):  # noqa: N802, PLR6301
         """Creates the text for the header
 
         Variable
@@ -197,7 +197,7 @@ FoamFile
         return header  # noqa: RET504
 
     #############################################################
-    def PtDpatchtext(self, data, Utype, patchname, fipath):  # noqa: ANN001, ANN201, ARG002, N802, N803
+    def PtDpatchtext(self, data, Utype, patchname, fipath):  # noqa: ARG002, N802, N803
         """Creates the text the pointDisplacement boundary condition
 
         Arguments:
@@ -246,7 +246,7 @@ FoamFile
         return PtDtext
 
     #############################################################
-    def getNormal(self, patchname):  # noqa: ANN001, ANN201, N802, PLR6301
+    def getNormal(self, patchname):  # noqa: N802, PLR6301
         """Get the normal to the patch
 
         Arguments:

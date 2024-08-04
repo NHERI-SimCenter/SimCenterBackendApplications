@@ -2,7 +2,7 @@ import json  # noqa: CPY001, D100, EXE002, INP001
 import sys
 
 
-def main(inputFile, outputFile):  # noqa: ANN001, ANN201, N803, D103
+def main(inputFile, outputFile):  # noqa: N803, D103
     extraArgs = sys.argv[3:]  # noqa: N806
 
     # initialize the log file

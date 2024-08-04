@@ -8,14 +8,14 @@ from wntrfr.network.elements import Pipe, Reservoir
 logger = logging.getLogger(__name__)
 
 
-def split_pipe(  # noqa: ANN201
-    wn,  # noqa: ANN001
-    pipe_name_to_split,  # noqa: ANN001
-    new_pipe_name,  # noqa: ANN001
-    new_junction_name,  # noqa: ANN001
-    add_pipe_at_end=True,  # noqa: ANN001, FBT002
-    split_at_point=0.5,  # noqa: ANN001
-    return_copy=True,  # noqa: ANN001, FBT002
+def split_pipe(
+    wn,
+    pipe_name_to_split,
+    new_pipe_name,
+    new_junction_name,
+    add_pipe_at_end=True,  # noqa: FBT002
+    split_at_point=0.5,
+    return_copy=True,  # noqa: FBT002
 ):
     """Split a pipe by adding a junction and one new pipe segment.
 
@@ -80,15 +80,15 @@ def split_pipe(  # noqa: ANN201
     return wn2  # noqa: RET504
 
 
-def break_pipe(  # noqa: ANN201
-    wn,  # noqa: ANN001
-    pipe_name_to_split,  # noqa: ANN001
-    new_pipe_name,  # noqa: ANN001
-    new_junction_name_old_pipe,  # noqa: ANN001
-    new_junction_name_new_pipe,  # noqa: ANN001
-    add_pipe_at_end=True,  # noqa: ANN001, FBT002
-    split_at_point=0.5,  # noqa: ANN001
-    return_copy=True,  # noqa: ANN001, FBT002
+def break_pipe(
+    wn,
+    pipe_name_to_split,
+    new_pipe_name,
+    new_junction_name_old_pipe,
+    new_junction_name_new_pipe,
+    add_pipe_at_end=True,  # noqa: FBT002
+    split_at_point=0.5,
+    return_copy=True,  # noqa: FBT002
 ):
     """Break a pipe by adding a two unconnected junctions and one new pipe segment.
 
@@ -159,15 +159,15 @@ def break_pipe(  # noqa: ANN201
     return wn2  # noqa: RET504
 
 
-def _split_or_break_pipe(  # noqa: ANN202, C901
-    wn,  # noqa: ANN001
-    pipe_name_to_split,  # noqa: ANN001
-    new_pipe_name,  # noqa: ANN001
-    new_junction_names,  # noqa: ANN001
-    add_pipe_at_end,  # noqa: ANN001
-    split_at_point,  # noqa: ANN001
-    flag,  # noqa: ANN001
-    return_copy,  # noqa: ANN001
+def _split_or_break_pipe(  # noqa: C901
+    wn,
+    pipe_name_to_split,
+    new_pipe_name,
+    new_junction_names,
+    add_pipe_at_end,
+    split_at_point,
+    flag,
+    return_copy,
 ):
     if return_copy:  # Get a copy of the WaterNetworkModel
         wn2 = copy.deepcopy(wn)

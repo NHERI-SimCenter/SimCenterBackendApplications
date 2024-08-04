@@ -56,7 +56,7 @@ class flume:
     """  # noqa: D400, D404
 
     #############################################################
-    def generateflume(self, breadth, path):  # noqa: ANN001, ANN201
+    def generateflume(self, breadth, path):
         """Creates the STL files for the flume
 
         Arguments:
@@ -113,7 +113,7 @@ class flume:
         return extremeval
 
     #############################################################
-    def flumedata(self, IpPTFile):  # noqa: ANN001, ANN201, N803
+    def flumedata(self, IpPTFile):  # noqa: N803
         """Gets information about the flume to create STL files
 
         Arguments:
@@ -181,7 +181,7 @@ class flume:
         return extremeval
 
     ####################################################################
-    def right(self):  # noqa: ANN201
+    def right(self):
         """Gets information/nodes about to create right face of the flume
 
         Arguments:
@@ -195,7 +195,7 @@ class flume:
         self.npa_right[:, 1] = -self.breadth / 2
 
     ####################################################################
-    def left(self):  # noqa: ANN201
+    def left(self):
         """Gets information/nodes about to create left face of the flume
 
         Arguments:
@@ -209,7 +209,7 @@ class flume:
         self.npa_left[:, 1] = self.breadth / 2
 
     ####################################################################
-    def lefttri(self):  # noqa: ANN201
+    def lefttri(self):
         """Define triangles of the left face of the flume
 
         Arguments:
@@ -221,7 +221,7 @@ class flume:
         self.npt_left[:, [1, 0]] = self.npt_left[:, [0, 1]]
 
     ####################################################################
-    def front(self):  # noqa: ANN201
+    def front(self):
         """Define information/nodes of the front face of the flume
 
         Arguments:
@@ -236,7 +236,7 @@ class flume:
         self.npa_front[3, :] = self.npa_left[self.npa_left.shape[0] - 1, :]
 
     ####################################################################
-    def fronttri(self):  # noqa: ANN201
+    def fronttri(self):
         """Define triangles of the front face of the flume
 
         Arguments:
@@ -247,7 +247,7 @@ class flume:
         self.npt_front = np.array([[0, 1, 2], [1, 3, 2]])
 
     ####################################################################
-    def back(self):  # noqa: ANN201
+    def back(self):
         """Define information/nodes of the back face of the flume
 
         Arguments:
@@ -262,7 +262,7 @@ class flume:
         self.npa_back[3, :] = self.npa_left[self.npa_left.shape[0] - 2, :]
 
     ####################################################################
-    def backtri(self):  # noqa: ANN201
+    def backtri(self):
         """Define triangles of the back face of the flume
 
         Arguments:
@@ -273,7 +273,7 @@ class flume:
         self.npt_back = np.array([[3, 1, 0], [0, 2, 3]])
 
     ####################################################################
-    def top(self):  # noqa: ANN201
+    def top(self):
         """Define information/nodes of the top face of the flume
 
         Arguments:
@@ -288,7 +288,7 @@ class flume:
         self.npa_top[3, :] = self.npa_left[self.npa_left.shape[0] - 2, :]
 
     ####################################################################
-    def toptri(self):  # noqa: ANN201
+    def toptri(self):
         """Define triangles of the top face of the flume
 
         Arguments:
@@ -299,7 +299,7 @@ class flume:
         self.npt_top = np.array([[2, 0, 1], [2, 1, 3]])
 
     ####################################################################
-    def bottom(self):  # noqa: ANN201
+    def bottom(self):
         """Define information/nodes of the bottom face of the flume
 
         Arguments:
@@ -334,7 +334,7 @@ class flume:
                 )
 
     ####################################################################
-    def bottomtri(self):  # noqa: ANN201
+    def bottomtri(self):
         """Define triangles of the bottom face of the flume
 
         Arguments:
@@ -361,7 +361,7 @@ class flume:
                 self.npt_bottom = np.concatenate((self.npt_bottom, npt_temp), axis=0)
 
     #############################################################
-    def writeSTL(self, base_filename, npa, npt, path):  # noqa: ANN001, ANN201, N802, PLR6301
+    def writeSTL(self, base_filename, npa, npt, path):  # noqa: N802, PLR6301
         """Write the STL files for each patch
 
         Arguments:
@@ -390,7 +390,7 @@ class flume:
         os.replace(filename, newfilepath)  # noqa: PTH105
 
     #############################################################
-    def extremedata(self, extreme, breadth):  # noqa: ANN001, ANN201, PLR6301
+    def extremedata(self, extreme, breadth):  # noqa: PLR6301
         """Creates the STL files for the flume
 
         Arguments:

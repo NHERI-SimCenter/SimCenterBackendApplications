@@ -15,23 +15,23 @@ from general import *  # noqa: F403
 
 
 class PLoM:  # noqa: D101
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        model_name='plom',  # noqa: ANN001
-        data='',  # noqa: ANN001
-        separator=',',  # noqa: ANN001
-        col_header=False,  # noqa: ANN001, FBT002
-        constraints=None,  # noqa: ANN001
-        run_tag=False,  # noqa: ANN001, FBT002
-        plot_tag=False,  # noqa: ANN001, FBT002
-        num_rlz=5,  # noqa: ANN001
-        tol_pca=1e-6,  # noqa: ANN001
-        epsilon_kde=25,  # noqa: ANN001
-        tol_PCA2=1e-5,  # noqa: ANN001, N803
-        tol=1e-6,  # noqa: ANN001
-        max_iter=50,  # noqa: ANN001
-        runDiffMaps=True,  # noqa: ANN001, FBT002, N803
-        db_path=None,  # noqa: ANN001
+        model_name='plom',
+        data='',
+        separator=',',
+        col_header=False,  # noqa: FBT002
+        constraints=None,
+        run_tag=False,  # noqa: FBT002
+        plot_tag=False,  # noqa: FBT002
+        num_rlz=5,
+        tol_pca=1e-6,
+        epsilon_kde=25,
+        tol_PCA2=1e-5,  # noqa: N803
+        tol=1e-6,
+        max_iter=50,
+        runDiffMaps=True,  # noqa: FBT002, N803
+        db_path=None,
     ):
         # basic setups
         self._basic_config(model_name=model_name, db_path=db_path)
@@ -93,7 +93,7 @@ class PLoM:  # noqa: D101
                 msg_level=0,
             )
 
-    def _basic_config(self, model_name=None, db_path=None):  # noqa: ANN001, ANN202
+    def _basic_config(self, model_name=None, db_path=None):
         """Basic setups
         - model_name: job name (used for database name)
         """  # noqa: D205, D400, D401
@@ -158,7 +158,7 @@ class PLoM:  # noqa: D101
                 msg_level=0,
             )
 
-    def add_constraints(self, constraints_file=None):  # noqa: ANN001, ANN201, D102
+    def add_constraints(self, constraints_file=None):  # noqa: D102
         if not constraints_file:
             self.g_c = None
             self.D_x_g_c = None
@@ -222,7 +222,7 @@ class PLoM:  # noqa: D101
             return 1
         return 0
 
-    def switch_constraints(self, constraint_tag=1):  # noqa: ANN001, ANN201
+    def switch_constraints(self, constraint_tag=1):
         """Selecting different constraints
         - constraint_tag: the tag of selected constraint
         """  # noqa: D205, D400, D401
@@ -260,14 +260,14 @@ class PLoM:  # noqa: D101
                 msg_level=0,
             )
 
-    def delete_constraints(self):  # noqa: ANN201
+    def delete_constraints(self):
         """Removing all current constraints"""  # noqa: D400, D401
         self.g_c = None
         self.D_x_g_c = None
         self.beta_c = []
         self.dbserver.add_item(item=[''], data_type='ConstraintsFile')
 
-    def load_data(self, filename, separator=',', col_header=False):  # noqa: ANN001, ANN201, FBT002, C901, D102
+    def load_data(self, filename, separator=',', col_header=False):  # noqa: FBT002, C901, D102
         # initialize the matrix and data size
         X = []  # noqa: N806
         N = 0  # noqa: N806
@@ -362,11 +362,11 @@ class PLoM:  # noqa: D101
 
     # def check_var_name():
 
-    def get_data(self):  # noqa: ANN201, D102
+    def get_data(self):  # noqa: D102
         # return data and data sizes
         return self.X, self.N, self.n
 
-    def _load_h5_plom(self, filename):  # noqa: ANN001, ANN202
+    def _load_h5_plom(self, filename):
         """Loading PLoM-formatted h5 database"""  # noqa: D400, D401
         try:
             store = pd.HDFStore(filename, 'r')
@@ -405,7 +405,7 @@ class PLoM:  # noqa: D101
                 msg_level=0,
             )
 
-    def _load_h5_data_X(self, filename):  # noqa: ANN001, ANN202, N802
+    def _load_h5_data_X(self, filename):  # noqa: N802
         """Loading a h5 data which is expected to contain X data"""  # noqa: D400, D401
         try:
             store = pd.HDFStore(filename, 'r')
@@ -420,7 +420,7 @@ class PLoM:  # noqa: D101
         except:  # noqa: E722
             return None
 
-    def _sync_data(self):  # noqa: ANN202
+    def _sync_data(self):
         """Sync database data to current attributes"""  # noqa: D400
         avail_name_list = self.dbserver.get_name_list()
         if not avail_name_list:
@@ -453,7 +453,7 @@ class PLoM:  # noqa: D101
                         msg_level=0,
                     )
 
-    def _sync_constraints(self):  # noqa: ANN202
+    def _sync_constraints(self):
         """Sync constraints from dbserver to the attributes"""  # noqa: D400
         avail_name_list = self.dbserver.get_name_list()
         if '/constraints_file' not in avail_name_list:
@@ -469,7 +469,7 @@ class PLoM:  # noqa: D101
             # add the constraints
             self.add_constraints(constraints_file=cfile)
 
-    def load_h5(self, filename):  # noqa: ANN001, ANN201
+    def load_h5(self, filename):
         """Loading h5 database"""  # noqa: D400, D401
         try:
             self._load_h5_plom(filename)
@@ -511,7 +511,7 @@ class PLoM:  # noqa: D101
             else:  # noqa: RET505
                 return X
 
-    def add_data(self, filename, separator=',', col_header=False):  # noqa: ANN001, ANN201, FBT002, D102
+    def add_data(self, filename, separator=',', col_header=False):  # noqa: FBT002, D102
         # load new data
         new_X, new_N, new_n = self.load_data(filename, separator, col_header)  # noqa: N806
         # check data sizes
@@ -533,12 +533,12 @@ class PLoM:  # noqa: D101
             msg_level=0,
         )
 
-    def initialize_data(  # noqa: ANN201, D102
+    def initialize_data(  # noqa: D102
         self,
-        filename,  # noqa: ANN001
-        separator=',',  # noqa: ANN001
-        col_header=False,  # noqa: ANN001, FBT002
-        constraints='',  # noqa: ANN001, ARG002
+        filename,
+        separator=',',
+        col_header=False,  # noqa: FBT002
+        constraints='',  # noqa: ARG002
     ):
         # initialize the data and data sizes
         try:
@@ -573,12 +573,12 @@ class PLoM:  # noqa: D101
 
         return 0
 
-    def _init_indv_tasks(self):  # noqa: ANN202
+    def _init_indv_tasks(self):
         """Initializing tasks"""  # noqa: D400, D401
         for cur_task in FULL_TASK_LIST:  # noqa: F405
             self.__setattr__('task_' + cur_task, Task(task_name=cur_task))  # noqa: F405, PLC2801
 
-    def ConfigTasks(self, task_list=FULL_TASK_LIST):  # noqa: ANN001, ANN201, C901, N802, F405
+    def ConfigTasks(self, task_list=FULL_TASK_LIST):  # noqa: C901, N802, F405
         """Creating a task list object
         - task_list: a string list of tasks to run
         """  # noqa: D205, D400, D401
@@ -672,18 +672,18 @@ class PLoM:  # noqa: D101
                 msg_level=0,
             )
 
-    def RunAlgorithm(  # noqa: ANN201, C901, N802
+    def RunAlgorithm(  # noqa: C901, N802
         self,
-        n_mc=5,  # noqa: ANN001
-        epsilon_pca=1e-6,  # noqa: ANN001
-        epsilon_kde=25,  # noqa: ANN001
-        tol_PCA2=1e-5,  # noqa: ANN001, N803
-        tol=1e-6,  # noqa: ANN001
-        max_iter=50,  # noqa: ANN001
-        plot_tag=False,  # noqa: ANN001, FBT002
-        runDiffMaps=None,  # noqa: ANN001, N803
-        seed_num=None,  # noqa: ANN001
-        tolKDE=0.1,  # noqa: ANN001, N803
+        n_mc=5,
+        epsilon_pca=1e-6,
+        epsilon_kde=25,
+        tol_PCA2=1e-5,  # noqa: N803
+        tol=1e-6,
+        max_iter=50,
+        plot_tag=False,  # noqa: FBT002
+        runDiffMaps=None,  # noqa: N803
+        seed_num=None,
+        tolKDE=0.1,  # noqa: N803
     ):
         """Running the PLoM algorithm to train the model and generate new realizations
         - n_mc: realization/sample size ratio
@@ -953,7 +953,7 @@ class PLoM:  # noqa: D101
                 msg_level=0,
             )
 
-    def DataNormalization(self, X):  # noqa: ANN001, ANN201, N802, N803, PLR6301
+    def DataNormalization(self, X):  # noqa: N802, N803, PLR6301
         """Normalizing the X
         - X: the data matrix to be normalized
         """  # noqa: D205, D400, D401
@@ -963,7 +963,7 @@ class PLoM:  # noqa: D101
 
         return X_scaled, alpha, x_min, x_mean
 
-    def RunPCA(self, X_origin, epsilon_pca):  # noqa: ANN001, ANN201, N802, N803, D102
+    def RunPCA(self, X_origin, epsilon_pca):  # noqa: N802, N803, D102
         # ...PCA...
         (H, mu, phi, errors) = plom.PCA(X_origin, epsilon_pca)  # noqa: N806
         nu = len(H)
@@ -987,7 +987,7 @@ class PLoM:  # noqa: D101
         """
         return H, mu, phi, nu, errors
 
-    def RunKDE(self, X, epsilon_kde):  # noqa: ANN001, ANN201, N802, N803, PLR6301
+    def RunKDE(self, X, epsilon_kde):  # noqa: N802, N803, PLR6301
         """Running Kernel Density Estimation
         - X: the data matrix to be reduced
         - epsilon_kde: smoothing parameter in the kernel density estimation
@@ -997,7 +997,7 @@ class PLoM:  # noqa: D101
 
         return s_v, c_v, hat_s_v, K, b
 
-    def DiffMaps(self, H, K, b, tol=0.1):  # noqa: ANN001, ANN201, N802, N803, D102
+    def DiffMaps(self, H, K, b, tol=0.1):  # noqa: N802, N803, D102
         # ..diff maps basis...
         # self.Z = PCA(self.H)
         try:
@@ -1030,13 +1030,13 @@ class PLoM:  # noqa: D101
 
         return g, m, a, Z, eigenvalues
 
-    def ISDEGeneration(  # noqa: ANN201, N802
+    def ISDEGeneration(  # noqa: N802
         self,
-        n_mc=5,  # noqa: ANN001
-        tol_PCA2=1e-5,  # noqa: ANN001, N803
-        tol=0.02,  # noqa: ANN001
-        max_iter=50,  # noqa: ANN001
-        seed_num=None,  # noqa: ANN001
+        n_mc=5,
+        tol_PCA2=1e-5,  # noqa: N803
+        tol=0.02,
+        max_iter=50,
+        seed_num=None,
     ):
         """The construction of a nonlinear Ito Stochastic Differential Equation (ISDE) to generate realizations of random variable H"""  # noqa: D400, D401
         if seed_num:
@@ -1184,7 +1184,7 @@ class PLoM:  # noqa: D101
         # unscale
         self.Xnew = np.diag(self.alpha).dot(self.Xnew) + self.x_min
 
-    def export_results(self, data_list=[], file_format_list=['csv']):  # noqa: ANN001, ANN201, B006
+    def export_results(self, data_list=[], file_format_list=['csv']):  # noqa: B006
         """Exporting results by the data names
         - data_list: list of data names
         - file_format_list: list of output formats

@@ -14,7 +14,7 @@ else:
 import sys
 
 
-def process_results(inputArgs):  # noqa: ANN001, ANN201, N803, D103
+def process_results(inputArgs):  # noqa: N803, D103
     #
     # process output file "node.out" for nodal displacements
     #

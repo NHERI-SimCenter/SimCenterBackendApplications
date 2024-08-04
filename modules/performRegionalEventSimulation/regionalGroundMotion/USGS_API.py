@@ -45,14 +45,14 @@ import requests
 
 
 class USGS_HazardCurve:  # noqa: D101
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        longitude=None,  # noqa: ANN001
-        latitude=None,  # noqa: ANN001
-        vs30=None,  # noqa: ANN001
-        edition='E2014',  # noqa: ANN001
-        imt='PGA',  # noqa: ANN001
-        tag=None,  # noqa: ANN001
+        longitude=None,
+        latitude=None,
+        vs30=None,
+        edition='E2014',
+        imt='PGA',
+        tag=None,
     ):
         if self._load_config():
             print('USGS_HazardCurve.__init__: configuration loaded.')  # noqa: T201
@@ -109,7 +109,7 @@ class USGS_HazardCurve:  # noqa: D101
         print('USGS_HazardCurve.__init__: configuration done.')  # noqa: T201
         return
 
-    def _load_config(self):  # noqa: ANN202
+    def _load_config(self):
         cur_path = os.path.dirname(os.path.abspath(__file__))  # noqa: PTH100, PTH120
         config_file = os.path.join(cur_path, 'lib', 'USGS_HazardCurveConfig.json')  # noqa: PTH118
         try:
@@ -120,7 +120,7 @@ class USGS_HazardCurve:  # noqa: D101
             self.config = {}
             return False
 
-    def _check_edition(self, edition, auto_correction=True):  # noqa: ANN001, ANN202, FBT002
+    def _check_edition(self, edition, auto_correction=True):  # noqa: FBT002
         # available editions
         ed_list = self.config.get('parameters').get('edition').get('values')
         self.avail_editions = [x.get('value') for x in ed_list]
@@ -137,7 +137,7 @@ class USGS_HazardCurve:  # noqa: D101
         else:
             return False
 
-    def _get_region(self, long, lat):  # noqa: ANN001, ANN202
+    def _get_region(self, long, lat):
         self.all_regions = [
             x['value']
             for x in self.config.get('parameters').get('region').get('values')
@@ -156,7 +156,7 @@ class USGS_HazardCurve:  # noqa: D101
         # return empty
         return None
 
-    def _check_region(self, region):  # noqa: ANN001, ANN202
+    def _check_region(self, region):
         # available regions
         self.avail_regions = (
             self.config.get('parameters')
@@ -172,7 +172,7 @@ class USGS_HazardCurve:  # noqa: D101
         else:  # noqa: RET505
             return False
 
-    def _check_vs30(self, vs30):  # noqa: ANN001, ANN202
+    def _check_vs30(self, vs30):
         # get edition supported vs30
         vs30_avail_ed = [
             int(x)
@@ -192,7 +192,7 @@ class USGS_HazardCurve:  # noqa: D101
 
         return False
 
-    def _check_imt(self, imt):  # noqa: ANN001, ANN202
+    def _check_imt(self, imt):
         # get supported imt:
         imt_available = (
             self.config.get('parameters')
@@ -231,7 +231,7 @@ class USGS_HazardCurve:  # noqa: D101
                 # print('self.imt_list = ',self.imt_list)
                 return True
 
-    def fetch_url(self):  # noqa: ANN201, D102
+    def fetch_url(self):  # noqa: D102
         self.res_json = []
 
         for cur_imt in self.imt_list:
@@ -257,7 +257,7 @@ class USGS_HazardCurve:  # noqa: D101
 
         return True
 
-    def get_hazard_curve(self):  # noqa: ANN201, D102
+    def get_hazard_curve(self):  # noqa: D102
         cur_ims = []
         cur_mafs = []
         cur_rps = []

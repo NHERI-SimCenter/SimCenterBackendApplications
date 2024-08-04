@@ -11,7 +11,7 @@ import subprocess  # noqa: S404
 import numpy as np
 
 
-def copytree(src, dst, symlinks=False, ignore=None):  # noqa: ANN001, ANN201, FBT002, D103
+def copytree(src, dst, symlinks=False, ignore=None):  # noqa: FBT002, D103
     if not os.path.exists(dst):  # noqa: PTH110
         os.makedirs(dst)  # noqa: PTH103
     for item in os.listdir(src):
@@ -32,20 +32,20 @@ def copytree(src, dst, symlinks=False, ignore=None):  # noqa: ANN001, ANN201, FB
     return '0'
 
 
-def runFEM(  # noqa: ANN201, N802
-    particleNumber,  # noqa: ANN001, N803
-    parameterSampleValues,  # noqa: ANN001, N803
-    variables,  # noqa: ANN001
-    workdirMain,  # noqa: ANN001, N803
-    log_likelihood_function,  # noqa: ANN001
-    calibrationData,  # noqa: ANN001, ARG001, N803
-    numExperiments,  # noqa: ANN001, ARG001, N803
-    covarianceMatrixList,  # noqa: ANN001, ARG001, N803
-    edpNamesList,  # noqa: ANN001, N803
-    edpLengthsList,  # noqa: ANN001, N803
-    scaleFactors,  # noqa: ANN001, ARG001, N803
-    shiftFactors,  # noqa: ANN001, ARG001, N803
-    workflowDriver,  # noqa: ANN001, N803
+def runFEM(  # noqa: N802
+    particleNumber,  # noqa: N803
+    parameterSampleValues,  # noqa: N803
+    variables,
+    workdirMain,  # noqa: N803
+    log_likelihood_function,
+    calibrationData,  # noqa: ARG001, N803
+    numExperiments,  # noqa: ARG001, N803
+    covarianceMatrixList,  # noqa: ARG001, N803
+    edpNamesList,  # noqa: N803
+    edpLengthsList,  # noqa: N803
+    scaleFactors,  # noqa: ARG001, N803
+    shiftFactors,  # noqa: ARG001, N803
+    workflowDriver,  # noqa: N803
 ):
     """This function runs FE model (model.tcl) for each parameter value (par)
     model.tcl should take parameter input

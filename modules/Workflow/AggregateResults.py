@@ -46,13 +46,13 @@ import numpy as np
 import pandas as pd
 
 
-def log_msg(msg):  # noqa: ANN001, ANN201, D103
+def log_msg(msg):  # noqa: D103
     print(  # noqa: T201
         '{} {}'.format(datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S:%fZ')[:-4], msg)  # noqa: DTZ003
     )
 
 
-def main(threads=1):  # noqa: ANN001, ANN201, C901, D103
+def main(threads=1):  # noqa: C901, D103
     headers = dict(  # noqa: C408
         IM=[0, 1, 2, 3],
         BIM=[
@@ -74,10 +74,10 @@ def main(threads=1):  # noqa: ANN001, ANN201, C901, D103
         from dask.distributed import Client, LocalCluster  # noqa: PLC0415
 
         @delayed
-        def read_csv_files(file_list, header):  # noqa: ANN001, ANN202
+        def read_csv_files(file_list, header):
             return [pd.read_csv(fn, header=header, index_col=0) for fn in file_list]
 
-        def read_csv_np(file, header):  # noqa: ANN001, ANN202
+        def read_csv_np(file, header):
             res = np.loadtxt(file, delimiter=',', dtype=str)
 
             first_row = header[-1] + 1
@@ -94,7 +94,7 @@ def main(threads=1):  # noqa: ANN001, ANN201, C901, D103
             return df  # noqa: RET504
 
         @delayed
-        def read_csv_files_np(file_list, header):  # noqa: ANN001, ANN202
+        def read_csv_files_np(file_list, header):
             return [read_csv_np(fn, header=header) for fn in file_list]
 
         cluster = LocalCluster()

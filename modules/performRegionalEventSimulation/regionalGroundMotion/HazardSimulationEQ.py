@@ -53,7 +53,7 @@ import psutil
 R2D = True
 
 
-def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0914, PLR0915
+def hazard_job(hazard_info):  # noqa: C901, D103, PLR0914, PLR0915
     from CreateScenario import load_ruptures_openquake  # noqa: PLC0415
     from GMSimulators import simulate_ground_motion  # noqa: PLC0415
 

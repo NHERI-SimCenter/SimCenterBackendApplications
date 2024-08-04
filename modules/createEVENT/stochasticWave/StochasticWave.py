@@ -12,7 +12,7 @@ from welib.hydro.wavekin import *  # noqa: E402, F403
 
 
 class FloorForces:  # noqa: D101
-    def __init__(self, recorderID=-1):  # noqa: ANN001, ANN204, N803
+    def __init__(self, recorderID=-1):  # noqa: N803
         if recorderID < 0:
             print(  # noqa: T201
                 'No recorder ID, or a negative ID, provided, defaulting to 0 for all forces.'
@@ -96,14 +96,14 @@ class FloorForces:  # noqa: D101
             file.close()
 
 
-def directionToDof(direction):  # noqa: ANN001, ANN201, N802
+def directionToDof(direction):  # noqa: N802
     """Converts direction to degree of freedom"""  # noqa: D400, D401
     directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
 
     return directioMap[direction]
 
 
-def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):  # noqa: ANN001, ANN201, N802, N803
+def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):  # noqa: N802, N803
     """Add force (one component) time series and pattern in the event file
     Use of Wind is just a placeholder for now, since its more developed than Hydro
     """  # noqa: D205, D400
@@ -140,7 +140,7 @@ def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):
     timeSeriesList.append(sensorData)
 
 
-def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):  # noqa: ANN001, ANN201, N802, N803
+def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):  # noqa: N802, N803
     """This method writes the EVENT.json file"""  # noqa: D400, D401, D404
     # Adding floor forces
     patternsArray = []  # noqa: N806
@@ -186,7 +186,7 @@ def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):  # noqa: ANN0
     file.close()
 
 
-def GetFloorsCount(BIMFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
+def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
     filePath = BIMFilePath  # noqa: N806
     with open(filePath, encoding='utf-8') as file:  # noqa: PTH123
         bim = json.load(file)
@@ -195,7 +195,7 @@ def GetFloorsCount(BIMFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
     return int(bim['GeneralInformation']['stories'])
 
 
-def main():  # noqa: ANN201, D103
+def main():  # noqa: D103
     return 0
     # """
     # Entry point to generate event file using Stochastic Waves

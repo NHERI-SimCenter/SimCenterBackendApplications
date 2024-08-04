@@ -50,7 +50,7 @@ from whale.main import (
 )
 
 
-def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType):  # noqa: ANN001, ANN201, C901, N803, D103
+def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType):  # noqa: C901, N803, D103
     #
     # get some dir paths, load input file and get data for app, appKey
     #

@@ -5,6 +5,6 @@
 
 
 class Project:  # noqa: D101
-    def __init__(self, project_settings, scenario_list):  # noqa: ANN001, ANN204
+    def __init__(self, project_settings, scenario_list):
         self.scenario_list = scenario_list
         self.project_settings = project_settings

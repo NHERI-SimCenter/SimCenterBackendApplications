@@ -12,7 +12,7 @@ ops.wipe()
 from TrussParams import *  # noqa: E402, F403
 
 
-def run_analysis():  # noqa: ANN201, D103
+def run_analysis():  # noqa: D103
     # build the model
 
     ops.model('basic', '-ndm', 2, '-ndf', 2)
@@ -62,7 +62,7 @@ def run_analysis():  # noqa: ANN201, D103
     return node_disp  # noqa: RET504
 
 
-def process_results(responses, node_disp):  # noqa: ANN001, ANN201, D103
+def process_results(responses, node_disp):  # noqa: D103
     # identify the responses of interest
     nodes = [int(r.split('_')[1]) for r in responses]
     dofs = [int(r.split('_')[3]) if len(r.split('_')) > 2 else 1 for r in responses]  # noqa: PLR2004

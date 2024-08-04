@@ -8,7 +8,7 @@ import numpy as np
 import scipy.io as sio
 
 
-def parseWindMatFile(matFileIn, windFileOutName):  # noqa: ANN001, ANN201, N802, N803, D103
+def parseWindMatFile(matFileIn, windFileOutName):  # noqa: N802, N803, D103
     dataDir = os.getcwd()  # noqa: PTH109, N806, F841
     scriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N806, F841
 
@@ -138,17 +138,17 @@ def parseWindMatFile(matFileIn, windFileOutName):  # noqa: ANN001, ANN201, N802,
                 print('JSON file is not valid')  # noqa: T201
 
 
-def createSpectraJson(  # noqa: ANN201, N802, D103
-    windFileOutName,  # noqa: ANN001, N803
-    breadth,  # noqa: ANN001
-    depth,  # noqa: ANN001
-    height,  # noqa: ANN001
-    fs,  # noqa: ANN001
-    vRef,  # noqa: ANN001, N803
-    f_target,  # noqa: ANN001
-    s_target,  # noqa: ANN001
-    comp_CFmean,  # noqa: ANN001, N803
-    norm_all,  # noqa: ANN001
+def createSpectraJson(  # noqa: N802, D103
+    windFileOutName,  # noqa: N803
+    breadth,
+    depth,
+    height,
+    fs,
+    vRef,  # noqa: N803
+    f_target,
+    s_target,
+    comp_CFmean,  # noqa: N803
+    norm_all,
 ):
     ncomp = comp_CFmean.shape[0]  # noqa: F841
     nf = f_target.shape[0]  # noqa: F841
@@ -251,19 +251,19 @@ def createSpectraJson(  # noqa: ANN201, N802, D103
     # file.close()
 
 
-def createPODJson(  # noqa: ANN201, N802, D103
-    filename,  # noqa: ANN001
-    V,  # noqa: ANN001, N803
-    D1,  # noqa: ANN001, N803
-    SpeN,  # noqa: ANN001, N803
-    f_target,  # noqa: ANN001
-    norm_all,  # noqa: ANN001
-    D,  # noqa: ANN001, N803
-    H,  # noqa: ANN001, N803
-    B,  # noqa: ANN001, N803
-    fs,  # noqa: ANN001
-    vRef,  # noqa: ANN001, N803
-    comp_CFmean,  # noqa: ANN001, N803
+def createPODJson(  # noqa: N802, D103
+    filename,
+    V,  # noqa: N803
+    D1,  # noqa: N803
+    SpeN,  # noqa: N803
+    f_target,
+    norm_all,
+    D,  # noqa: N803
+    H,  # noqa: N803
+    B,  # noqa: N803
+    fs,
+    vRef,  # noqa: N803
+    comp_CFmean,  # noqa: N803
 ):
     myJson = {}  # noqa: N806
     myJson['V_imag'] = np.imag(V).tolist()

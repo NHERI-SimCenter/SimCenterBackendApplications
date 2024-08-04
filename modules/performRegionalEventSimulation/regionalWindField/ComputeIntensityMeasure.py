@@ -49,7 +49,7 @@ import pandas as pd
 from WindFieldSimulation import *  # noqa: F403
 
 
-def run_model(scen, p, t, path_perturb, feat_perturb, res_mp):  # noqa: ANN001, ANN201, D103
+def run_model(scen, p, t, path_perturb, feat_perturb, res_mp):  # noqa: D103
     model = LinearAnalyticalModel_SnaikiWu_2017(cyclone_param=p, storm_track=t)  # noqa: F405
     if scen['Terrain']:
         model.add_reference_terrain(scen['Terrain'])
@@ -70,7 +70,7 @@ def run_model(scen, p, t, path_perturb, feat_perturb, res_mp):  # noqa: ANN001, 
     res_mp.append(model.get_station_data())
 
 
-def simulate_storm(scenarios, event_info, model_type):  # noqa: ANN001, ANN201, D103
+def simulate_storm(scenarios, event_info, model_type):  # noqa: D103
     if model_type == 'LinearAnalytical':
         num_per_site = event_info['NumberPerSite']
         if num_per_site == 1:
@@ -131,13 +131,13 @@ def simulate_storm(scenarios, event_info, model_type):  # noqa: ANN001, ANN201, 
     return res
 
 
-def simulate_storm_cpp(  # noqa: ANN201, C901, D103
-    site_info,  # noqa: ANN001
-    scenario_info,  # noqa: ANN001
-    scenario_data,  # noqa: ANN001
-    event_info,  # noqa: ANN001
-    model_type,  # noqa: ANN001
-    dir_info,  # noqa: ANN001
+def simulate_storm_cpp(  # noqa: C901, D103
+    site_info,
+    scenario_info,
+    scenario_data,
+    event_info,
+    model_type,
+    dir_info,
 ):
     if model_type == 'LinearAnalytical':
         # save configuration file
@@ -364,7 +364,7 @@ def simulate_storm_cpp(  # noqa: ANN201, C901, D103
     return res
 
 
-def convert_wind_speed(event_info, simu_res):  # noqa: ANN001, ANN201, D103
+def convert_wind_speed(event_info, simu_res):  # noqa: D103
     print(  # noqa: T201
         'ComputeIntensityMeasure: converting peak wind speed to specified exposure, measuring height, and gust duration.'
     )
@@ -434,7 +434,7 @@ def convert_wind_speed(event_info, simu_res):  # noqa: ANN001, ANN201, D103
     return pws_mr
 
 
-def interp_wind_by_height(pws_ip, height_simu, height_ref):  # noqa: ANN001, ANN201
+def interp_wind_by_height(pws_ip, height_simu, height_ref):
     """interp_wind_by_height: interpolating the wind simulation results by the reference height"""  # noqa: D400
     num_stat = pws_ip.shape[0]
     pws_op = np.zeros(num_stat)
@@ -451,7 +451,7 @@ def interp_wind_by_height(pws_ip, height_simu, height_ref):  # noqa: ANN001, ANN
     return pws_op
 
 
-def gust_factor_ESDU(gd_c, gd_t):  # noqa: ANN001, ANN201, N802
+def gust_factor_ESDU(gd_c, gd_t):  # noqa: N802
     """gust_factor_ESDU: return a gust facto between gd_c and gd_t"""  # noqa: D400
     # gust duration (sec)
     gd = [
@@ -478,7 +478,7 @@ def gust_factor_ESDU(gd_c, gd_t):  # noqa: ANN001, ANN201, N802
     return gf_t  # noqa: RET504
 
 
-def export_pws(stations, pws, output_dir, filename='EventGrid.csv'):  # noqa: ANN001, ANN201, D103
+def export_pws(stations, pws, output_dir, filename='EventGrid.csv'):  # noqa: D103
     print('ComputeIntensityMeasure: saving results.')  # noqa: T201
 
     # collecting site locations

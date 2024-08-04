@@ -50,7 +50,7 @@ class of7Others:
     """  # noqa: D205, D404
 
     #############################################################
-    def othersheader(self, fileclas, fileloc, fileobjec):  # noqa: ANN001, ANN201, PLR6301
+    def othersheader(self, fileclas, fileloc, fileobjec):  # noqa: PLR6301
         """Creates the text for the header
 
         Variable
@@ -81,7 +81,7 @@ FoamFile
         return header  # noqa: RET504
 
     #############################################################
-    def gfiletext(self, data):  # noqa: ANN001, ANN201
+    def gfiletext(self, data):
         """Creates the necessary text for gravity file for openfoam7
 
         Arguments:

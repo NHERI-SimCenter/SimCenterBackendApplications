@@ -43,7 +43,7 @@ import numpy as np
 import pandas as pd
 
 
-def get_label(options, labels, label_name):  # noqa: ANN001, ANN201, D103
+def get_label(options, labels, label_name):  # noqa: D103
     for option in options:
         if option in labels:
             labels = labels[labels != option]
@@ -52,7 +52,7 @@ def get_label(options, labels, label_name):  # noqa: ANN001, ANN201, D103
     print(f'WARNING: Could not identify the label for the {label_name}')  # noqa: T201, RET503
 
 
-def create_stations(input_file, output_file, min_id, max_id):  # noqa: ANN001, ANN201
+def create_stations(input_file, output_file, min_id, max_id):
     """Reading input csv file for stations and saving data to output json file
     Input:
         input_file: the filename of the station csv file

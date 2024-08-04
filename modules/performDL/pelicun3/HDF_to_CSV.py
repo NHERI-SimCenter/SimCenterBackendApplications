@@ -43,7 +43,7 @@ from pathlib import Path
 import pandas as pd
 
 
-def convert_HDF(HDF_path):  # noqa: ANN001, ANN201, N802, N803, D103
+def convert_HDF(HDF_path):  # noqa: N802, N803, D103
     HDF_ext = HDF_path.split('.')[-1]  # noqa: N806
     CSV_base = HDF_path[: -len(HDF_ext) - 1]  # noqa: N806
 

@@ -50,7 +50,7 @@ class of7Turbulence:
     """  # noqa: D205, D404
 
     #############################################################
-    def turbtext(self, data):  # noqa: ANN001, ANN201
+    def turbtext(self, data):
         """Creates the necessary files for turbulenceDict for openfoam7
 
         Arguments:
@@ -87,7 +87,7 @@ class of7Turbulence:
         return turbtext
 
     #############################################################
-    def turbheader(self):  # noqa: ANN201, PLR6301
+    def turbheader(self):  # noqa: PLR6301
         """Creates the text for the header
 
         Variable

@@ -9,7 +9,7 @@ import pandas as pd
 
 
 class RestorationLog:  # noqa: D101
-    def __init__(self, settings):  # noqa: ANN001, ANN204
+    def __init__(self, settings):
         self.settings = settings
         self._agent_state_log_book = pd.DataFrame(
             columns=[
@@ -41,13 +41,13 @@ class RestorationLog:  # noqa: D101
         )
         self.crew_history = OrderedDict()
 
-    def updateAgentHistory(self, agent_table, time):  # noqa: ANN001, ANN201, N802, D102
+    def updateAgentHistory(self, agent_table, time):  # noqa: N802, D102
         if self.settings['record_restoration_agent_logs'] == False:  # noqa: E712
             return
 
         self.crew_history[time] = agent_table.copy()
 
-    def updateAgentLogBook(self, agent_table, time):  # noqa: ANN001, ANN201, N802, D102
+    def updateAgentLogBook(self, agent_table, time):  # noqa: N802, D102
         if self.settings['record_restoration_agent_logs'] == False:  # noqa: E712
             return
 
@@ -97,18 +97,18 @@ class RestorationLog:  # noqa: D101
                 temp, ignore_index=True
             )
 
-    def addAgentActionToLogBook(  # noqa: ANN201, N802, D102
+    def addAgentActionToLogBook(  # noqa: N802, D102
         self,
-        agent_name,  # noqa: ANN001
-        node_name,  # noqa: ANN001
-        entity,  # noqa: ANN001
-        action,  # noqa: ANN001
-        time,  # noqa: ANN001
-        end_time,  # noqa: ANN001
-        travel_time,  # noqa: ANN001
-        effect_definition_name,  # noqa: ANN001
-        method_name,  # noqa: ANN001
-        iFinished=True,  # noqa: ANN001, FBT002, N803
+        agent_name,
+        node_name,
+        entity,
+        action,
+        time,
+        end_time,
+        travel_time,
+        effect_definition_name,
+        method_name,
+        iFinished=True,  # noqa: FBT002, N803
     ):
         if self.settings['record_restoration_agent_logs'] == False:  # noqa: E712
             return
@@ -143,7 +143,7 @@ class RestorationLog:  # noqa: D101
             temp, ignore_index=True
         )
 
-    def addEndTimegentActionToLogBook(self, agent_name, time, modified_end_time):  # noqa: ANN001, ANN201, N802, D102
+    def addEndTimegentActionToLogBook(self, agent_name, time, modified_end_time):  # noqa: N802, D102
         if self.settings['record_restoration_agent_logs'] == False:  # noqa: E712
             return
 

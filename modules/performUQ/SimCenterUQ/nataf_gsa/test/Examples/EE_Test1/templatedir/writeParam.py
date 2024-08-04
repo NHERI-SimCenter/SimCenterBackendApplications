@@ -2,7 +2,7 @@ import os  # noqa: CPY001, D100, INP001
 import sys
 
 
-def main():  # noqa: ANN201, D103
+def main():  # noqa: D103
     paramsIn = sys.argv[1]  # noqa: N806
     paramsOut = sys.argv[2]  # noqa: N806
 

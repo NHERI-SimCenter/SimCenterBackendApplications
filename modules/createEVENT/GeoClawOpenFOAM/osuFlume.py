@@ -53,7 +53,7 @@ class osuFlume:
     """  # noqa: D205, D400, D404
 
     #############################################################
-    def creategeom(self, data, path):  # noqa: ANN001, ANN201, ARG002, PLR6301
+    def creategeom(self, data, path):  # noqa: ARG002, PLR6301
         """Creates the geometry for OSU flume
 
         Arguments:

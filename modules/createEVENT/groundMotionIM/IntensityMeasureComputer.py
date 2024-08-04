@@ -72,7 +72,7 @@ IM_MAP = {
 
 
 class IntensityMeasureComputer:  # noqa: D101
-    def __init__(self, time_hist_dict=dict(), units=dict(), ampScaled=False):  # noqa: ANN001, ANN204, FBT002, B006, C408, ARG002, N803
+    def __init__(self, time_hist_dict=dict(), units=dict(), ampScaled=False):  # noqa: FBT002, B006, C408, ARG002, N803
         self.time_hist_dict = time_hist_dict
         self.units = units
         self._define_constants()
@@ -90,7 +90,7 @@ class IntensityMeasureComputer:  # noqa: D101
         # initialize intensity measure dict
         self._init_intensity_measures()
 
-    def _define_constants(self):  # noqa: ANN202
+    def _define_constants(self):
         self.km_sec_square = ('km/sec/sec', 'km/sec**2', 'km/sec^2')
         self.m_sec_square = ('m/sec/sec', 'm/sec**2', 'm/sec^2')
         self.cm_sec_square = ('cm/sec/sec', 'cm/sec**2', 'cm/sec^2')
@@ -108,7 +108,7 @@ class IntensityMeasureComputer:  # noqa: D101
         self.g = 9.80665
         self.inch = 0.0254
 
-    def _init_intensity_measures(self):  # noqa: ANN202
+    def _init_intensity_measures(self):
         # response spectra
         self.periods = dict()  # noqa: C408
         self.disp_spectrum = dict()  # noqa: C408
@@ -162,7 +162,7 @@ class IntensityMeasureComputer:  # noqa: D101
             'SaRatio': 'scalar',
         }
 
-    def convert_accel_units(self, acceleration, from_, to_='cm/sec/sec'):  # noqa: ANN001, ANN201, C901, PLR0911, PLR0912
+    def convert_accel_units(self, acceleration, from_, to_='cm/sec/sec'):  # noqa: C901, PLR0911, PLR0912
         """Converts acceleration from/to different units"""  # noqa: D400, D401
         acceleration = np.asarray(acceleration)
         if from_ == 'g':
@@ -311,7 +311,7 @@ class IntensityMeasureComputer:  # noqa: D101
 
         raise ValueError(f'Unrecognized unit {from_}')  # noqa: DOC501, EM102, TRY003
 
-    def compute_response_spectrum(self, periods=[], damping=0.05, im_units=dict()):  # noqa: ANN001, ANN201, B006, C408, D102
+    def compute_response_spectrum(self, periods=[], damping=0.05, im_units=dict()):  # noqa: B006, C408, D102
         if len(im_units) == 0:
             unit_factor_vspec = 1.0
             unit_factor_aspec = 1.0
@@ -434,7 +434,7 @@ class IntensityMeasureComputer:  # noqa: D101
             )
             self.periods.update({cur_hist_name: periods.tolist()})
 
-    def compute_peak_ground_responses(self, im_units=dict()):  # noqa: ANN001, ANN201, B006, C408, D102
+    def compute_peak_ground_responses(self, im_units=dict()):  # noqa: B006, C408, D102
         if len(im_units) == 0:
             unit_factor_pga = 1.0
             unit_factor_pgv = 1.0
@@ -476,7 +476,7 @@ class IntensityMeasureComputer:  # noqa: D101
                 {cur_hist_name: np.max(np.fabs(displacement)) * unit_factor_pgd}
             )
 
-    def compute_arias_intensity(self, im_units=dict()):  # noqa: ANN001, ANN201, B006, C408, D102
+    def compute_arias_intensity(self, im_units=dict()):  # noqa: B006, C408, D102
         if len(im_units) == 0:
             unit_factor_ai = 1.0
             unit_factor_ds575 = 1.0
@@ -507,7 +507,7 @@ class IntensityMeasureComputer:  # noqa: D101
             self.ds575.update({cur_hist_name: ds575 * unit_factor_ds575})
             self.ds595.update({cur_hist_name: ds595 * unit_factor_ds595})
 
-    def _compute_significant_duration(self, I_A, dt):  # noqa: ANN001, ANN202, N803, PLR6301
+    def _compute_significant_duration(self, I_A, dt):  # noqa: N803, PLR6301
         # note this function return duration in sec
         ds575 = 0.0
         ds595 = 0.0
@@ -523,7 +523,7 @@ class IntensityMeasureComputer:  # noqa: D101
         # return
         return ds575, ds595
 
-    def compute_saratio(self, T1=1.0, Ta=0.02, Tb=3.0, im_units=dict()):  # noqa: ANN001, ANN201, B006, C408, N803, D102
+    def compute_saratio(self, T1=1.0, Ta=0.02, Tb=3.0, im_units=dict()):  # noqa: B006, C408, N803, D102
         if len(self.psa) == 0:
             return
 
@@ -551,7 +551,7 @@ class IntensityMeasureComputer:  # noqa: D101
                 )
 
 
-def load_records(event_file, ampScaled):  # noqa: ANN001, ANN201, N803, D103
+def load_records(event_file, ampScaled):  # noqa: N803, D103
     event_data = event_file.get('Events', None)
     if event_data is None:
         raise ValueError(  # noqa: TRY003
@@ -605,7 +605,7 @@ def load_records(event_file, ampScaled):  # noqa: ANN001, ANN201, N803, D103
     return dict_ts
 
 
-def get_unit_factor(unit_in, unit_out):  # noqa: ANN001, ANN201, D103
+def get_unit_factor(unit_in, unit_out):  # noqa: D103
     # this function is geared to the unit names in SimCenterUnitsCombo in R2D.
     unit_factor = 1.0
     # unit types
@@ -621,7 +621,7 @@ def get_unit_factor(unit_in, unit_out):  # noqa: ANN001, ANN201, D103
     return unit_factor  # noqa: RET504
 
 
-def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):  # noqa: ANN001, ANN201, C901, N803, D103
+def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):  # noqa: C901, N803, D103
     # load AIM file
     try:
         with open(AIM_file, encoding='utf-8') as f:  # noqa: PTH123

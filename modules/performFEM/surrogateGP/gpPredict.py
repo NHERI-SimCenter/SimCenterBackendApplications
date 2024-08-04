@@ -42,7 +42,7 @@ except:  # noqa: E722
 # from emukit.multi_fidelity.convert_lists_to_array import convert_x_list_to_array, convert_xy_lists_to_arrays
 
 
-def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0914, PLR0915
+def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa: C901, D103, PLR0912, PLR0914, PLR0915
     global error_file  # noqa: PLW0602
 
     os_type = sys.platform.lower()
@@ -62,7 +62,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     # read json -- current input file
     #
 
-    def error_exit(msg):  # noqa: ANN001, ANN202
+    def error_exit(msg):
         error_file.write(msg)  # local
         error_file.close()
         file_object.write(msg0 + msg)  # global file
@@ -70,7 +70,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         print(msg)  # noqa: T201
         exit(-1)  # noqa: PLR1722
 
-    def error_warning(msg):  # noqa: ANN001, ANN202
+    def error_warning(msg):
         # error_file.write(msg)
         file_object.write(msg)
         # print(msg)
@@ -176,22 +176,22 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         #
         # Modify GPy package
         #
-        def monkeypatch_method(cls):  # noqa: ANN001, ANN202
-            def decorator(func):  # noqa: ANN001, ANN202
+        def monkeypatch_method(cls):
+            def decorator(func):
                 setattr(cls, func.__name__, func)
                 return func
 
             return decorator
 
         @monkeypatch_method(GPy.likelihoods.Gaussian)
-        def gaussian_variance(self, Y_metadata=None):  # noqa: ANN001, ANN202, N803
+        def gaussian_variance(self, Y_metadata=None):  # noqa: N803
             if Y_metadata is None:
                 return self.variance
             else:  # noqa: RET505
                 return self.variance * Y_metadata['variance_structure']
 
         @monkeypatch_method(GPy.core.GP)
-        def set_XY2(self, X=None, Y=None, Y_metadata=None):  # noqa: ANN001, ANN202, N802, N803
+        def set_XY2(self, X=None, Y=None, Y_metadata=None):  # noqa: N802, N803
             if Y_metadata is not None:
                 if self.Y_metadata is None:
                     self.Y_metadata = Y_metadata
@@ -201,7 +201,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
             self.set_XY(X, Y)
 
-        def get_stochastic_variance(X, Y, x, ny):  # noqa: ANN001, ANN202, N803
+        def get_stochastic_variance(X, Y, x, ny):  # noqa: N803
             # X_unique, X_idx, indices, counts = np.unique(X, axis=0, return_index=True, return_counts=True, return_inverse=True)
             X_unique, dummy, indices, counts = np.unique(  # noqa: F841, N806
                 X, axis=0, return_index=True, return_counts=True, return_inverse=True
@@ -1018,7 +1018,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     file_object.close()
 
 
-def predict(m, X, did_mf):  # noqa: ANN001, ANN201, N803, D103
+def predict(m, X, did_mf):  # noqa: N803, D103
     if not did_mf:
         return m.predict_noiseless(X)
     else:  # noqa: RET505

@@ -48,22 +48,22 @@ from brails.workflow.FootprintHandler import FootprintHandler
 
 
 # Define a standard way of printing program outputs:
-def log_msg(msg):  # noqa: ANN001, ANN201, D103
+def log_msg(msg):  # noqa: D103
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
     print(formatted_msg)  # noqa: T201
 
 
 # Define a way to call BRAILS FootprintHandler:
-def runBrails(  # noqa: ANN201, N802, D103
-    latMin,  # noqa: ANN001, N803
-    latMax,  # noqa: ANN001, N803
-    longMin,  # noqa: ANN001, N803
-    longMax,  # noqa: ANN001, N803
-    locationStr,  # noqa: ANN001, N803
-    fpSrc,  # noqa: ANN001, N803
-    fpSourceAttrMap,  # noqa: ANN001, N803
-    outputfile,  # noqa: ANN001
-    lengthunit,  # noqa: ANN001
+def runBrails(  # noqa: N802, D103
+    latMin,  # noqa: N803
+    latMax,  # noqa: N803
+    longMin,  # noqa: N803
+    longMax,  # noqa: N803
+    locationStr,  # noqa: N803
+    fpSrc,  # noqa: N803
+    fpSourceAttrMap,  # noqa: N803
+    outputfile,
+    lengthunit,
 ):
     # Initialize FootprintHandler:
     fpHandler = FootprintHandler()  # noqa: N806
@@ -95,7 +95,7 @@ def runBrails(  # noqa: ANN201, N802, D103
 
 
 # Define a way to collect GUI input:
-def main(args):  # noqa: ANN001, ANN201, D103
+def main(args):  # noqa: D103
     parser = argparse.ArgumentParser()
     parser.add_argument('--latMin', default=None, type=float)
     parser.add_argument('--latMax', default=None, type=float)

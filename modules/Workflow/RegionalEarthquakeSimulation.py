@@ -11,7 +11,7 @@ log_output = []
 from WorkflowUtils import *  # noqa: E402, F403
 
 
-def main(run_type, inputFile, applicationsRegistry):  # noqa: ANN001, ANN201, C901, D103, N803, PLR0912, PLR0914, PLR0915
+def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, PLR0912, PLR0914, PLR0915
     # the whole workflow is wrapped within a 'try' block.
     # a number of exceptions (files missing, explicit application failures, etc.) are
     # handled explicitly to aid the user.

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 # the following function is borrowed from WNTR
-def _split_line(line):  # noqa: ANN001, ANN202
+def _split_line(line):
     _vc = line.split(';', 1)
     _cmnt = None
     _vals = None
@@ -30,7 +30,7 @@ def _split_line(line):  # noqa: ANN001, ANN202
 
 
 class RestorationIO:  # noqa: D101
-    def __init__(self, restoration_model, definition_file_name):  # noqa: ANN001, ANN204
+    def __init__(self, restoration_model, definition_file_name):
         """Needs a file that contains:
 
         Parameters
@@ -126,7 +126,7 @@ class RestorationIO:  # noqa: D101
         self._read_define()
         # self._read_config()
 
-    def _read_files(self):  # noqa: ANN202
+    def _read_files(self):
         edata = OrderedDict()
         self.file_name = []
         self._file_data = {}
@@ -150,7 +150,7 @@ class RestorationIO:  # noqa: D101
             self._file_data[file_handle] = self._read_each_file(file_address)
         self.rm._files = self._file_data  # noqa: SLF001
 
-    def _read_each_file(self, file_address, method=0):  # noqa: ANN001, ANN202
+    def _read_each_file(self, file_address, method=0):
         lnum = 0
         iTitle = True  # noqa: N806
         data_temp = None
@@ -184,7 +184,7 @@ class RestorationIO:  # noqa: D101
             raise ValueError('Uknown method: ' + str(method))
         return data_temp
 
-    def _read_shifts(self):  # noqa: ANN202
+    def _read_shifts(self):
         # self._shift_data=pd.DataFrame()
         # self._file_handle_address = {}
         for lnum, line in self.sections['[SHIFTS]']:  # noqa: B007
@@ -201,7 +201,7 @@ class RestorationIO:  # noqa: D101
 
                 self.rm.shifting.addShift(shift_name, shift_begining, shift_ending)
 
-    def _read_entities(self):  # noqa: ANN202, C901
+    def _read_entities(self):  # noqa: C901
         for lnum, line in self.sections['[ENTITIES]']:
             arg1 = None
             arg2 = None
@@ -341,7 +341,7 @@ class RestorationIO:  # noqa: D101
     #                         raise ValueError('Element type is not recognized')
     # =============================================================================
 
-    def _read_sequences(self):  # noqa: ANN202
+    def _read_sequences(self):
         for lnum, line in self.sections['[SEQUENCES]']:  # noqa: B007
             words, comments = _split_line(line)  # noqa: F841
             if words is not None and len(words) > 0:
@@ -359,7 +359,7 @@ class RestorationIO:  # noqa: D101
                 for action in self.rm.sequence[el]:
                     self.rm._registry.addAttrToElementDamageTable(el, action, None)  # noqa: SLF001
 
-    def _read_agents(self):  # noqa: ANN202
+    def _read_agents(self):
         agent_file_handle = {}
         group_names = {}
         group_column = {}
@@ -428,7 +428,7 @@ class RestorationIO:  # noqa: D101
                     self.rm.agents.addAgent(agent_name, agent_type, definitions)
                 j += 1  # noqa: SIM113
 
-    def _read_groups(self):  # noqa: ANN202
+    def _read_groups(self):
         for lnum, line in self.sections['[GROUPS]']:
             words, comments = _split_line(line)  # noqa: F841
 
@@ -490,7 +490,7 @@ class RestorationIO:  # noqa: D101
 
                 self.rm.group[element_type][group_name] = group_list
 
-    def _read_points(self):  # noqa: ANN202, C901
+    def _read_points(self):  # noqa: C901
         for lnum, line in self.sections['[POINTS]']:
             words, comments = _split_line(line)  # noqa: F841
 
@@ -595,7 +595,7 @@ class RestorationIO:  # noqa: D101
             else:
                 self.rm.proximity_points[group_name] = current_group_point_list
 
-    def _read_priorities(self):  # noqa: ANN202, C901
+    def _read_priorities(self):  # noqa: C901
         agent_type_list = self.rm.agents.getAllAgentTypes()
         for lnum, line in self.sections['[PRIORITIES]']:
             words, comments = _split_line(line)  # noqa: F841
@@ -771,7 +771,7 @@ class RestorationIO:  # noqa: D101
                 + repr(not_defined)
             )
 
-    def _read_jobs(self):  # noqa: ANN202
+    def _read_jobs(self):
         jobs_definition = []
         for lnum, line in self.sections['[JOBS]']:
             cur_job_definition = {}
@@ -826,7 +826,7 @@ class RestorationIO:  # noqa: D101
                 jobs_definition.append(cur_job_definition)
         self.rm.jobs.setJob(jobs_definition)
 
-    def _read_define(self):  # noqa: ANN202, C901, PLR0912
+    def _read_define(self):  # noqa: C901, PLR0912
         job = {}  # noqa: F841
         used_jobs = self.rm.jobs._job_list.effect.unique().tolist()  # noqa: SLF001
         if None in used_jobs:
@@ -1111,7 +1111,7 @@ class RestorationIO:  # noqa: D101
 
         # for self.rm.effects.pruneData()
 
-    def _read_file_effect(self, file_info, effect_name):  # noqa: ANN001, ANN202
+    def _read_file_effect(self, file_info, effect_name):
         res = {}
 
         file_handle = file_info[0]
@@ -1167,7 +1167,7 @@ class RestorationIO:  # noqa: D101
         # print(res)
         return res  # noqa: RET504
 
-    def _read_config(self):  # noqa: ANN202
+    def _read_config(self):
         """Reads config files which contains general specification of
         configurations
 
@@ -1204,7 +1204,7 @@ class RestorationIO:  # noqa: D101
                     self._crew_file_name.append(words[2])
                     self._read_crew()
 
-    def _read_demand_nodes(self):  # noqa: ANN202
+    def _read_demand_nodes(self):
         titles = []  # noqa: F841
         ntitle = 0
         lnum = 0
@@ -1236,7 +1236,7 @@ class RestorationIO:  # noqa: D101
                     )
             self.demand_node = pd.DataFrame(dtemp, columns=title)
 
-    def _read_crew(self):  # noqa: ANN202
+    def _read_crew(self):
         titles = []  # noqa: F841
         ntitle = 0
         lnum = 0

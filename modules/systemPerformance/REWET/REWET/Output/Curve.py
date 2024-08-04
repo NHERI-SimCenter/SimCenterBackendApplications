@@ -9,10 +9,10 @@ from .Helper import hhelper
 
 
 class Curve:  # noqa: D101
-    def __init__():  # noqa: ANN204
+    def __init__():
         pass
 
-    def getPipeStatusByAction(self, scn_name, action):  # noqa: ANN001, ANN201, N802, D102
+    def getPipeStatusByAction(self, scn_name, action):  # noqa: N802, D102
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
         sequence = reg.retoration_data['sequence']['PIPE']
@@ -53,7 +53,7 @@ class Curve:  # noqa: D101
 
         return pd.Series(time_action_done)
 
-    def getNodeStatusByAction(self, scn_name, action):  # noqa: ANN001, ANN201, N802, D102
+    def getNodeStatusByAction(self, scn_name, action):  # noqa: N802, D102
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
         sequence = reg.retoration_data['sequence']['DISTNODE']
@@ -94,7 +94,7 @@ class Curve:  # noqa: D101
 
         return pd.Series(time_action_done)
 
-    def getPumpStatus(self, scn_name):  # noqa: ANN001, ANN201, N802, D102
+    def getPumpStatus(self, scn_name):  # noqa: N802, D102
         self.loadScneariodata(scn_name)
         res = self.data[scn_name]
         reg = self.registry[scn_name]
@@ -109,7 +109,7 @@ class Curve:  # noqa: D101
 
         return pd.Series(time_action_done)
 
-    def getTankStatus(self, scn_name):  # noqa: ANN001, ANN201, N802, D102
+    def getTankStatus(self, scn_name):  # noqa: N802, D102
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
         time_list = reg.time_list
@@ -123,12 +123,12 @@ class Curve:  # noqa: D101
 
         return pd.Series(time_action_done)
 
-    def getInputWaterFlowCurve(  # noqa: ANN201, C901, N802, D102
+    def getInputWaterFlowCurve(  # noqa: C901, N802, D102
         self,
-        scn_name,  # noqa: ANN001
-        tank_name_list=None,  # noqa: ANN001
-        reservoir_name_list=None,  # noqa: ANN001
-        mode='all',  # noqa: ANN001
+        scn_name,
+        tank_name_list=None,
+        reservoir_name_list=None,
+        mode='all',
     ):
         self.loadScneariodata(scn_name)
         res = self.data[scn_name]
@@ -206,7 +206,7 @@ class Curve:  # noqa: D101
 
         return waterFlow
 
-    def getOveralDemandSatisfied(self, scn_name, pure=False):  # noqa: ANN001, ANN201, FBT002, N802, D102
+    def getOveralDemandSatisfied(self, scn_name, pure=False):  # noqa: FBT002, N802, D102
         self.loadScneariodata(scn_name)
         if pure == False:  # noqa: E712
             demand_node_name_list = self.demand_node_name_list
@@ -227,7 +227,7 @@ class Curve:  # noqa: D101
 
         return s  # noqa: RET504
 
-    def getWaterLeakingFromNode(self, scn_name):  # noqa: ANN001, ANN201, N802, D102
+    def getWaterLeakingFromNode(self, scn_name):  # noqa: N802, D102
         self.loadScneariodata(scn_name)
         res = self.data[scn_name]
         sum_amount = 0
@@ -238,7 +238,7 @@ class Curve:  # noqa: D101
             sum_amount = 0
         return sum_amount
 
-    def getWaterLeakingFromPipe(self, scn_name, mode='all'):  # noqa: ANN001, ANN201, N802, D102
+    def getWaterLeakingFromPipe(self, scn_name, mode='all'):  # noqa: N802, D102
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
         res = self.data[scn_name]
@@ -279,7 +279,7 @@ class Curve:  # noqa: D101
 
         return leak_from_pipe.sum(axis=1)
 
-    def getSystemServiceabilityIndexCurve(self, scn_name, iPopulation='No'):  # noqa: ANN001, ANN201, N802, N803, D102
+    def getSystemServiceabilityIndexCurve(self, scn_name, iPopulation='No'):  # noqa: N802, N803, D102
         s4 = self.getRequiredDemandForAllNodesandtime(scn_name)
         sat_node_demands = (
             self.data[scn_name].node['demand'].filter(self.demand_node_name_list)
@@ -305,14 +305,14 @@ class Curve:  # noqa: D101
 
         return s
 
-    def getBSCIndexPopulation_4(  # noqa: ANN201, N802, D102
+    def getBSCIndexPopulation_4(  # noqa: N802, D102
         self,
-        scn_name,  # noqa: ANN001
-        bsc='DL',  # noqa: ANN001
-        iPopulation=False,  # noqa: ANN001, FBT002, N803
-        ratio=False,  # noqa: ANN001, FBT002
-        consider_leak=False,  # noqa: ANN001, FBT002
-        leak_ratio=1,  # noqa: ANN001
+        scn_name,
+        bsc='DL',
+        iPopulation=False,  # noqa: FBT002, N803
+        ratio=False,  # noqa: FBT002
+        consider_leak=False,  # noqa: FBT002
+        leak_ratio=1,
     ):
         if bsc == 'DL':
             return self.getDLIndexPopulation_4(
@@ -333,13 +333,13 @@ class Curve:  # noqa: D101
         else:
             raise ValueError(f'BSC input is not recognizable: {bsc}')  # noqa: EM102, TRY003
 
-    def getDLIndexPopulation_4(  # noqa: ANN201, C901, N802, D102
+    def getDLIndexPopulation_4(  # noqa: C901, N802, D102
         self,
-        scn_name,  # noqa: ANN001
-        iPopulation='No',  # noqa: ANN001, N803
-        ratio=False,  # noqa: ANN001, FBT002
-        consider_leak=False,  # noqa: ANN001, FBT002
-        leak_ratio=1,  # noqa: ANN001
+        scn_name,
+        iPopulation='No',  # noqa: N803
+        ratio=False,  # noqa: FBT002
+        consider_leak=False,  # noqa: FBT002
+        leak_ratio=1,
     ):
         if type(leak_ratio) != float:  # noqa: E721
             leak_ratio = float(leak_ratio)
@@ -402,13 +402,13 @@ class Curve:  # noqa: D101
 
         return result  # noqa: RET504
 
-    def getQNIndexPopulation_4(  # noqa: ANN201, C901, N802, D102
+    def getQNIndexPopulation_4(  # noqa: C901, N802, D102
         self,
-        scn_name,  # noqa: ANN001
-        iPopulation=False,  # noqa: ANN001, FBT002, N803
-        ratio=False,  # noqa: ANN001, FBT002
-        consider_leak=False,  # noqa: ANN001, FBT002
-        leak_ratio=0.75,  # noqa: ANN001
+        scn_name,
+        iPopulation=False,  # noqa: FBT002, N803
+        ratio=False,  # noqa: FBT002
+        consider_leak=False,  # noqa: FBT002
+        leak_ratio=0.75,
     ):
         if type(leak_ratio) != float:  # noqa: E721
             leak_ratio = float(leak_ratio)
@@ -467,16 +467,16 @@ class Curve:  # noqa: D101
 
         return result  # noqa: RET504
 
-    def getQuantityExceedanceCurve(  # noqa: ANN201, N802, D102
+    def getQuantityExceedanceCurve(  # noqa: N802, D102
         self,
-        iPopulation='No',  # noqa: ANN001, ARG002, N803
-        ratio=False,  # noqa: ANN001, FBT002
-        consider_leak=False,  # noqa: ANN001, FBT002
-        leak_ratio=0.75,  # noqa: ANN001
-        result_type='mean',  # noqa: ANN001
-        daily=False,  # noqa: ANN001, FBT002
-        min_time=0,  # noqa: ANN001
-        max_time=999999999999999,  # noqa: ANN001
+        iPopulation='No',  # noqa: ARG002, N803
+        ratio=False,  # noqa: FBT002
+        consider_leak=False,  # noqa: FBT002
+        leak_ratio=0.75,
+        result_type='mean',
+        daily=False,  # noqa: FBT002
+        min_time=0,
+        max_time=999999999999999,
     ):
         all_scenarios_qn_data = self.AS_getQNIndexPopulation(
             iPopulation='No',
@@ -509,16 +509,16 @@ class Curve:  # noqa: D101
 
         return res
 
-    def getDeliveryExceedanceCurve(  # noqa: ANN201, N802, D102
+    def getDeliveryExceedanceCurve(  # noqa: N802, D102
         self,
-        iPopulation='No',  # noqa: ANN001, N803
-        ratio=False,  # noqa: ANN001, FBT002
-        consider_leak=False,  # noqa: ANN001, FBT002
-        leak_ratio=0.75,  # noqa: ANN001
-        result_type='mean',  # noqa: ANN001
-        daily=False,  # noqa: ANN001, FBT002
-        min_time=0,  # noqa: ANN001
-        max_time=999999999999999,  # noqa: ANN001
+        iPopulation='No',  # noqa: N803
+        ratio=False,  # noqa: FBT002
+        consider_leak=False,  # noqa: FBT002
+        leak_ratio=0.75,
+        result_type='mean',
+        daily=False,  # noqa: FBT002
+        min_time=0,
+        max_time=999999999999999,
     ):
         all_scenarios_qn_data = self.AS_getDLIndexPopulation(
             iPopulation=iPopulation,

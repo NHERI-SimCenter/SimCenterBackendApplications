@@ -10,7 +10,7 @@ from PyQt5 import QtGui, QtWidgets
 
 
 class Simulation_Tab_Designer:  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         """These are variables that are shared between ui and settings."""  # noqa: D401
         self.setSimulationSettings(self.settings)
 
@@ -49,7 +49,7 @@ class Simulation_Tab_Designer:  # noqa: D101
             self.SimulationTimeValidatorHelper
         )
 
-    def getSimulationSettings(self):  # noqa: ANN201, N802, D102
+    def getSimulationSettings(self):  # noqa: N802, D102
         if self.result_folder_addr == '':  # noqa: PLC1901
             self.errorMSG('REWET', 'Result folder must be provided')
             return False
@@ -88,7 +88,7 @@ class Simulation_Tab_Designer:  # noqa: D101
 
         return True
 
-    def setSimulationUI(self):  # noqa: ANN201, N802, D102
+    def setSimulationUI(self):  # noqa: N802, D102
         self.simulation_time_line.setText(str(int(self.simulation_time)))
         self.simulation_time_step_line.setText(str(int(self.simulation_time_step)))
         self.result_folder_addr_line.setText(self.result_folder_addr)
@@ -110,7 +110,7 @@ class Simulation_Tab_Designer:  # noqa: D101
                 'Unknown time save value: ' + repr(self.save_time_step_no_radio)
             )
 
-    def setSimulationSettings(self, settings):  # noqa: ANN001, ANN201, N802, D102
+    def setSimulationSettings(self, settings):  # noqa: N802, D102
         self.simulation_time = settings.process['RUN_TIME']
         self.simulation_time_step = settings.process['simulation_time_step']
         self.number_of_damages = settings.process['number_of_damages']
@@ -118,7 +118,7 @@ class Simulation_Tab_Designer:  # noqa: D101
         self.temp_folder_addr = settings.process['temp_directory']
         self.save_time_step = settings.process['save_time_step']
 
-    def ResultFileBrowserClicked(self):  # noqa: ANN201, N802, D102
+    def ResultFileBrowserClicked(self):  # noqa: N802, D102
         directory = QtWidgets.QFileDialog.getExistingDirectory(
             self.asli_MainWindow, 'Select Directory'
         )
@@ -127,7 +127,7 @@ class Simulation_Tab_Designer:  # noqa: D101
         self.result_folder_addr = directory
         self.result_folder_addr_line.setText(self.result_folder_addr)
 
-    def tempFileBrowserClicked(self):  # noqa: ANN201, N802, D102
+    def tempFileBrowserClicked(self):  # noqa: N802, D102
         directory = QtWidgets.QFileDialog.getExistingDirectory(
             self.asli_MainWindow, 'Select Directory'
         )
@@ -136,7 +136,7 @@ class Simulation_Tab_Designer:  # noqa: D101
         self.temp_folder_addr = directory
         self.temp_folder_addr_line.setText(self.temp_folder_addr)
 
-    def SimulationTimeValidatorHelper(self, text):  # noqa: ANN001, ANN201, N802, D102
+    def SimulationTimeValidatorHelper(self, text):  # noqa: N802, D102
         try:
             simulation_time = int(float(self.simulation_time_line.text()))
         except:  # noqa: E722

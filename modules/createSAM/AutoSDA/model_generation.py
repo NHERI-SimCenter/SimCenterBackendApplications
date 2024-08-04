@@ -9,7 +9,7 @@ import pickle  # noqa: S403
 from nonlinear_analysis import NonlinearAnalysis
 
 
-def model_generation(base_directory, pathDataFolder, workingDirectory):  # noqa: ANN001, ANN201, N803, D103
+def model_generation(base_directory, pathDataFolder, workingDirectory):  # noqa: N803, D103
     ##########################################################################
     #                       Load Building Design Result                      #
     ##########################################################################

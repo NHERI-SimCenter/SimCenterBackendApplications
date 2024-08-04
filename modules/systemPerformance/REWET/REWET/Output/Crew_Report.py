@@ -7,10 +7,10 @@ import pandas as pd
 
 
 class Crew_Report:  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         pass
 
-    def getCrewForTime(self, scn_name, time):  # noqa: ANN001, ANN201, N802, D102
+    def getCrewForTime(self, scn_name, time):  # noqa: N802, D102
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
 
@@ -19,7 +19,7 @@ class Crew_Report:  # noqa: D101
         crew_table = crew_table.loc[time]
         return crew_table  # noqa: RET504
 
-    def getCrewTableAt(self, scn_name, time, crew_type_name, crew_zone=None):  # noqa: ANN001, ANN201, N802, D102
+    def getCrewTableAt(self, scn_name, time, crew_type_name, crew_zone=None):  # noqa: N802, D102
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
         # crew_type  = self.getCrewForTime(scn_name, time)
@@ -45,11 +45,11 @@ class Crew_Report:  # noqa: D101
 
         return typed_crew_table
 
-    def getCrewAvailabilityThroughTime(  # noqa: ANN201, N802, D102
+    def getCrewAvailabilityThroughTime(  # noqa: N802, D102
         self,
-        scn_name,  # noqa: ANN001
-        crew_type_name,  # noqa: ANN001
-        crew_zone=None,  # noqa: ANN001
+        scn_name,
+        crew_type_name,
+        crew_zone=None,
     ):
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
@@ -72,12 +72,12 @@ class Crew_Report:  # noqa: D101
 
         return total_number, crew_number
 
-    def getCrewOnShiftThroughTime(  # noqa: ANN201, N802, D102
+    def getCrewOnShiftThroughTime(  # noqa: N802, D102
         self,
-        scn_name,  # noqa: ANN001
-        crew_type_name,  # noqa: ANN001
-        crew_zone=None,  # noqa: ANN001
-        not_on_shift=False,  # noqa: ANN001, FBT002
+        scn_name,
+        crew_type_name,
+        crew_zone=None,
+        not_on_shift=False,  # noqa: FBT002
     ):
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
@@ -107,12 +107,12 @@ class Crew_Report:  # noqa: D101
 
         return total_number, crew_number
 
-    def getCrewWorkingThroughTime(  # noqa: ANN201, N802, D102
+    def getCrewWorkingThroughTime(  # noqa: N802, D102
         self,
-        scn_name,  # noqa: ANN001
-        crew_type_name,  # noqa: ANN001
-        crew_zone=None,  # noqa: ANN001
-        not_on_working=False,  # noqa: ANN001, FBT002
+        scn_name,
+        crew_type_name,
+        crew_zone=None,
+        not_on_working=False,  # noqa: FBT002
     ):
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
@@ -145,7 +145,7 @@ class Crew_Report:  # noqa: D101
 
         return total_number, crew_number
 
-    def getCrewCompleteStatusReport(self, scn_name, crew_type_name, crew_zone=None):  # noqa: ANN001, ANN201, N802, D102
+    def getCrewCompleteStatusReport(self, scn_name, crew_type_name, crew_zone=None):  # noqa: N802, D102
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
         crew_table = reg.restoration_log_book.crew_history

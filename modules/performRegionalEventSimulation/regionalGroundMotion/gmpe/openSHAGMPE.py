@@ -51,7 +51,7 @@ class chiou_youngs_2013:  # noqa: D101
     timeCalc = 0  # noqa: N815
     supportedImt = None  # noqa: N815
 
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         self.coeff = pd.read_csv(
             os.path.join(os.path.dirname(__file__), 'data', 'CY14.csv')  # noqa: PTH118, PTH120
         )
@@ -72,7 +72,7 @@ class chiou_youngs_2013:  # noqa: D101
         self.B = np.power(1360, 4) + self.A
         self.CRBsq = self.CRB * self.CRB
 
-    def setIMT(self, imt):  # noqa: ANN001, ANN201, N802, D102
+    def setIMT(self, imt):  # noqa: N802, D102
         if imt not in self.supportedImt:
             sys.exit(f'The imt {imt} is not supported by Chiou and Young (2014)')
             return False
@@ -110,7 +110,7 @@ class chiou_youngs_2013:  # noqa: D101
         return True
 
     # Center zTop on the zTop-M relation -- Equations 4, 5
-    def calcMwZtop(self, style, Mw):  # noqa: ANN001, ANN201, D102, N802, N803, PLR6301
+    def calcMwZtop(self, style, Mw):  # noqa: D102, N802, N803, PLR6301
         mzTop = 0.0  # noqa: N806
         if style == 'REVERSE':
             if Mw <= 5.849:  # noqa: PLR2004
@@ -121,7 +121,7 @@ class chiou_youngs_2013:  # noqa: D101
             mzTop = 2.673 if (Mw <= 4.970) else max(2.673 - 1.136 * (Mw - 4.970), 0)  # noqa: N806, PLR2004
         return mzTop * mzTop
 
-    def calcSAref(self, Mw, rJB, rRup, rX, dip, zTop, style):  # noqa: ANN001, ANN201, N802, N803, D102
+    def calcSAref(self, Mw, rJB, rRup, rX, dip, zTop, style):  # noqa: N802, N803, D102
         # Magnitude scaling
         r1 = (
             self.c1
@@ -161,23 +161,23 @@ class chiou_youngs_2013:  # noqa: D101
             )
         return np.exp(r1 + r2 + r3 + r4 + r5)
 
-    def calcSoilNonLin(self, vs30):  # noqa: ANN001, ANN201, N802, D102
+    def calcSoilNonLin(self, vs30):  # noqa: N802, D102
         exp1 = np.exp(self.phi3 * (min(vs30, 1130.0) - 360.0))
         exp2 = np.exp(self.phi3 * (1130.0 - 360.0))
         return self.phi2 * (exp1 - exp2)
 
-    def calcZ1ref(self, vs30):  # noqa: ANN001, ANN201, N802, D102
+    def calcZ1ref(self, vs30):  # noqa: N802, D102
         # -- Equation 18
         vsPow4 = vs30 * vs30 * vs30 * vs30  # noqa: N806
         return np.exp(-7.15 / 4 * np.log((vsPow4 + self.A) / self.B)) / 1000.0  # km
 
-    def calcDeltaZ1(self, z1p0, vs30):  # noqa: ANN001, ANN201, N802, D102
+    def calcDeltaZ1(self, z1p0, vs30):  # noqa: N802, D102
         if np.isnan(z1p0):
             return 0.0
         return 1000.0 * (z1p0 - self.calcZ1ref(vs30))
 
     # Mean ground motion model -- Equation 12
-    def calcMean(self, vs30, z1p0, snl, saRef):  # noqa: ANN001, ANN201, N802, N803, D102
+    def calcMean(self, vs30, z1p0, snl, saRef):  # noqa: N802, N803, D102
         # Soil effect: linear response
         sl = self.phi1 * min(np.log(vs30 / 1130.0), 0.0)
         # Soil effect: nonlinear response (base passed in)
@@ -187,24 +187,24 @@ class chiou_youngs_2013:  # noqa: D101
         rkdepth = self.phi5 * (1.0 - np.exp(-dZ1 / self.PHI6))
         return np.log(saRef) + sl + snl + rkdepth
 
-    def calcNLOsq(self, snl, saRef):  # noqa: ANN001, ANN201, N802, N803, D102
+    def calcNLOsq(self, snl, saRef):  # noqa: N802, N803, D102
         NL0 = snl * saRef / (saRef + self.phi4)  # noqa: N806
         NL0sq = (1 + NL0) * (1 + NL0)  # noqa: N806
         return NL0sq  # noqa: RET504
 
-    def calcTauSq(self, NL0sq, mTest):  # noqa: ANN001, ANN201, N802, N803, D102
+    def calcTauSq(self, NL0sq, mTest):  # noqa: N802, N803, D102
         tau = self.tau1 + (self.tau2 - self.tau1) / 1.5 * mTest
         tauSq = tau * tau * NL0sq  # noqa: N806
         return tauSq  # noqa: RET504
 
-    def calcPhiSq(self, vsInf, NL0sq, mTest):  # noqa: ANN001, ANN201, N802, N803, D102
+    def calcPhiSq(self, vsInf, NL0sq, mTest):  # noqa: N802, N803, D102
         sigmaNL0 = self.sigma1 + (self.sigma2 - self.sigma1) / 1.5 * mTest  # noqa: N806
         vsTerm = self.sigma3 if vsInf else 0.7  # noqa: N806
         sigmaNL0 *= np.sqrt(vsTerm + NL0sq)  # noqa: N806
         phiSq = sigmaNL0 * sigmaNL0  # noqa: N806
         return phiSq  # noqa: RET504
 
-    def calc(self, Mw, rJB, rRup, rX, dip, zTop, vs30, vsInf, z1p0, style):  # noqa: ANN001, ANN201, N803
+    def calc(self, Mw, rJB, rRup, rX, dip, zTop, vs30, vsInf, z1p0, style):  # noqa: N803
         """Preliminary implementation of the Chiou & Youngs (2013) next generation
         attenuation relationship developed as part of NGA West II.
         Input
@@ -243,7 +243,7 @@ class chiou_youngs_2013:  # noqa: D101
         return mean, stdDev, np.sqrt(tauSq), np.sqrt(phiSq)
 
     # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/imr/attenRelImpl/ngaw2/NGAW2_Wrapper.java#L220
-    def getFaultFromRake(self, rake):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def getFaultFromRake(self, rake):  # noqa: D102, N802, PLR6301
         if rake >= 135 or rake <= -135 or (rake >= -45 and rake <= 45):  # noqa: PLR2004
             return 'STRIKE_SLIP'
         elif rake >= 45 and rake <= 135:  # noqa: RET505, PLR2004
@@ -251,7 +251,7 @@ class chiou_youngs_2013:  # noqa: D101
         else:
             return 'NORMAL'
 
-    def get_IM(self, Mw, site_rup_dict, site_info, im_info):  # noqa: ANN001, ANN201, N802, N803, D102
+    def get_IM(self, Mw, site_rup_dict, site_info, im_info):  # noqa: N802, N803, D102
         vsInf = bool(site_info['vsInferred'])  # noqa: N806
         style = self.getFaultFromRake(site_rup_dict['aveRake'])
         if 'SA' in im_info['Type']:
@@ -308,7 +308,7 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
     timeCalc = 0  # noqa: N815
     supportedImt = None  # noqa: N815
 
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         self.coeff = pd.read_csv(
             os.path.join(os.path.dirname(__file__), 'data', 'ASK14.csv')  # noqa: PTH118, PTH120
         )
@@ -335,7 +335,7 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
         self.H3 = -0.75
         self.PHI_AMP_SQ = 0.16
 
-    def setIMT(self, imt):  # noqa: ANN001, ANN201, N802, D102
+    def setIMT(self, imt):  # noqa: N802, D102
         if imt not in self.supportedImt:
             sys.exit(
                 f'The imt {imt} is not supported by Abrahamson, Silva, and Kamai (2014)'
@@ -369,7 +369,7 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
         self.M1 = self.coeff['M1'][imt]
         self.Vlin = self.coeff['Vlin'][imt]
 
-    def getV1(self):  # noqa: ANN201, N802, D102
+    def getV1(self):  # noqa: N802, D102
         try:
             if self.imt == 'PGA' or self.imt == 'PGV':  # noqa: PLR1714
                 return 1500.0
@@ -381,11 +381,11 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
         except:  # noqa: E722
             return 1500.0
 
-    def calcZ1ref(self, vs30):  # noqa: ANN001, ANN201, N802, D102
+    def calcZ1ref(self, vs30):  # noqa: N802, D102
         vsPow4 = vs30 * vs30 * vs30 * vs30  # noqa: N806
         return np.exp(-7.67 / 4.0 * np.log((vsPow4 + self.A) / self.B)) / 1000.0
 
-    def calcSoilTerm(self, vs30, z1p0):  # noqa: ANN001, ANN201, N802, D102
+    def calcSoilTerm(self, vs30, z1p0):  # noqa: N802, D102
         if np.isnan(z1p0):
             return 0.0
         z1ref = self.calcZ1ref(vs30)
@@ -394,7 +394,7 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
         z1c = np.interp(vs30, VS_BINS, vsCoeff)
         return z1c * np.log((z1p0 + 0.01) / (z1ref + 0.01))
 
-    def getPhiA(self, Mw, s1, s2):  # noqa: ANN001, ANN201, D102, N802, N803, PLR6301
+    def getPhiA(self, Mw, s1, s2):  # noqa: D102, N802, N803, PLR6301
         if Mw < 4.0:  # noqa: PLR2004
             return s1
         if Mw > 6.0:  # noqa: PLR2004
@@ -402,34 +402,34 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
         else:  # noqa: RET505
             return s1 + ((s2 - s1) / 2) * (Mw - 4.0)
 
-    def getTauA(self, Mw, s3, s4):  # noqa: ANN001, ANN201, D102, N802, N803, PLR6301
+    def getTauA(self, Mw, s3, s4):  # noqa: D102, N802, N803, PLR6301
         if Mw < 5.0:  # noqa: PLR2004
             return s3
         if Mw > 7.0:  # noqa: PLR2004
             return s4
         return s3 + ((s4 - s3) / 2) * (Mw - 5.0)
 
-    def get_dAmp(self, b, c, vLin, vs30, saRock):  # noqa: ANN001, ANN201, N802, N803, D102
+    def get_dAmp(self, b, c, vLin, vs30, saRock):  # noqa: N802, N803, D102
         if vs30 >= vLin:
             return 0.0
         return (-b * saRock) / (saRock + c) + (b * saRock) / (
             saRock + c * np.power(vs30 / vLin, self.N)
         )
 
-    def calcValues(  # noqa: ANN201, C901, N802, D102
+    def calcValues(  # noqa: C901, N802, D102
         self,
-        Mw,  # noqa: ANN001, N803
-        rJB,  # noqa: ANN001, N803
-        rRup,  # noqa: ANN001, N803
-        rX,  # noqa: ANN001, N803
-        rY0,  # noqa: ANN001, ARG002, N803
-        dip,  # noqa: ANN001
-        width,  # noqa: ANN001
-        zTop,  # noqa: ANN001, N803
-        vs30,  # noqa: ANN001
-        vsInferred,  # noqa: ANN001, N803
-        z1p0,  # noqa: ANN001
-        style,  # noqa: ANN001
+        Mw,  # noqa: N803
+        rJB,  # noqa: N803
+        rRup,  # noqa: N803
+        rX,  # noqa: N803
+        rY0,  # noqa: ARG002, N803
+        dip,
+        width,
+        zTop,  # noqa: N803
+        vs30,
+        vsInferred,  # noqa: N803
+        z1p0,
+        style,
     ):
         if Mw > 5:  # noqa: PLR2004
             c4mag = self.C4
@@ -550,7 +550,7 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
 
         return mean, stdDev, np.sqrt(phiSq), tau
 
-    def getFaultFromRake(self, rake):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def getFaultFromRake(self, rake):  # noqa: D102, N802, PLR6301
         if rake >= 135 or rake <= -135 or (rake >= -45 and rake <= 45):  # noqa: PLR2004
             return 'STRIKE_SLIP'
         elif rake >= 45 and rake <= 135:  # noqa: RET505, PLR2004
@@ -558,7 +558,7 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
         else:
             return 'NORMAL'
 
-    def get_IM(self, Mw, site_rup_dict, site_info, im_info):  # noqa: ANN001, ANN201, N802, N803, D102
+    def get_IM(self, Mw, site_rup_dict, site_info, im_info):  # noqa: N802, N803, D102
         vsInf = bool(site_info['vsInferred'])  # noqa: N806
         style = self.getFaultFromRake(site_rup_dict['aveRake'])
         if 'SA' in im_info['Type']:
@@ -612,7 +612,7 @@ class boore_etal_2014:  # noqa: D101
     timeCalc = 0  # noqa: N815
     supportedImt = None  # noqa: N815
 
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         self.coeff = pd.read_csv(
             os.path.join(os.path.dirname(__file__), 'data', 'BSSA14.csv')  # noqa: PTH118, PTH120
         )
@@ -634,7 +634,7 @@ class boore_etal_2014:  # noqa: D101
         self.V2 = 300
         self.imt = 'PGA'
 
-    def setIMT(self, imt):  # noqa: ANN001, ANN201, N802, D102
+    def setIMT(self, imt):  # noqa: N802, D102
         if imt not in self.supportedImt:
             sys.exit(
                 f'The imt {imt} is not supported by Boore, Stewart, Seyhan & Atkinson (2014)'
@@ -668,7 +668,7 @@ class boore_etal_2014:  # noqa: D101
         self.tau1 = self.coeff['tau1'][imt]
         self.tau2 = self.coeff['tau2'][imt]
 
-    def getFaultFromRake(self, rake):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def getFaultFromRake(self, rake):  # noqa: D102, N802, PLR6301
         if rake >= 135 or rake <= -135 or (rake >= -45 and rake <= 45):  # noqa: PLR2004
             return 'STRIKE_SLIP'
         elif rake >= 45 and rake <= 135:  # noqa: RET505, PLR2004
@@ -676,7 +676,7 @@ class boore_etal_2014:  # noqa: D101
         else:
             return 'NORMAL'
 
-    def calcSourceTerm(self, Mw, style):  # noqa: ANN001, ANN201, N802, N803, D102
+    def calcSourceTerm(self, Mw, style):  # noqa: N802, N803, D102
         if style == 'STRIKE_SLIP':
             Fe = self.e1  # noqa: N806
         elif style == 'REVERSE':
@@ -692,30 +692,30 @@ class boore_etal_2014:  # noqa: D101
             Fe = Fe + self.e6 * MwMh  # noqa: N806, PLR6104
         return Fe
 
-    def calcPathTerm(self, Mw, R):  # noqa: ANN001, ANN201, N802, N803, D102
+    def calcPathTerm(self, Mw, R):  # noqa: N802, N803, D102
         return (self.c1 + self.c2 * (Mw - self.M_REF)) * np.log(R / self.R_REF) + (
             self.c3 + self.DC3_CA_TW
         ) * (R - self.R_REF)
 
-    def calcPGArock(self, Mw, rJB, style):  # noqa: ANN001, ANN201, N802, N803, D102
+    def calcPGArock(self, Mw, rJB, style):  # noqa: N802, N803, D102
         FePGA = self.calcSourceTerm(Mw, style)  # noqa: N806
         R = np.sqrt(rJB * rJB + self.h * self.h)  # noqa: N806
         FpPGA = self.calcPathTerm(Mw, R)  # noqa: N806
         return np.exp(FePGA + FpPGA)
 
-    def calcLnFlin(self, vs30):  # noqa: ANN001, ANN201, N802, D102
+    def calcLnFlin(self, vs30):  # noqa: N802, D102
         vsLin = min(vs30, self.Vc)  # noqa: N806
         lnFlin = self.c * np.log(vsLin / self.V_REF)  # noqa: N806
         return lnFlin  # noqa: RET504
 
-    def calcF2(self, vs30):  # noqa: ANN001, ANN201, N802, D102
+    def calcF2(self, vs30):  # noqa: N802, D102
         f2 = self.f4 * (
             np.exp(self.f5 * (min(vs30, 760.0) - 360.0))
             - np.exp(self.f5 * (760.0 - 360.0))
         )
         return f2  # noqa: RET504
 
-    def calcFdz1(self, vs30, z1p0):  # noqa: ANN001, ANN201, N802, D102
+    def calcFdz1(self, vs30, z1p0):  # noqa: N802, D102
         DZ1 = self.calcDeltaZ1(z1p0, vs30)  # noqa: N806
         if self.imt != 'PGA' and self.imt != 'PGV' and self.imt >= 0.65:  # noqa: PLR1714, PLR2004
             if (self.f7 / self.f6) >= DZ1:
@@ -726,16 +726,16 @@ class boore_etal_2014:  # noqa: D101
             Fdz1 = 0.0  # noqa: N806
         return Fdz1
 
-    def calcDeltaZ1(self, z1p0, vs30):  # noqa: ANN001, ANN201, N802, D102
+    def calcDeltaZ1(self, z1p0, vs30):  # noqa: N802, D102
         if np.isnan(z1p0):
             return 0.0
         return z1p0 - self.calcZ1ref(vs30)
 
-    def calcZ1ref(self, vs30):  # noqa: ANN001, ANN201, N802, D102
+    def calcZ1ref(self, vs30):  # noqa: N802, D102
         vsPow4 = np.power(vs30, 4)  # noqa: N806
         return np.exp(-7.15 / 4.0 * np.log((vsPow4 + self.A) / self.B)) / 1000.0
 
-    def calcMean(self, Mw, rJB, vs30, z1p0, style, pgaRock):  # noqa: ANN001, ANN201, N802, N803, D102
+    def calcMean(self, Mw, rJB, vs30, z1p0, style, pgaRock):  # noqa: N802, N803, D102
         Fe = self.calcSourceTerm(Mw, style)  # noqa: N806
         R = np.sqrt(rJB * rJB + self.h * self.h)  # noqa: N806
         Fp = self.calcPathTerm(Mw, R)  # noqa: N806
@@ -746,7 +746,7 @@ class boore_etal_2014:  # noqa: D101
         Fs = lnFlin + lnFnl + Fdz1  # noqa: N806
         return Fe + Fp + Fs
 
-    def calcPhi(self, Mw, rJB, vs30):  # noqa: ANN001, ANN201, N802, N803, D102
+    def calcPhi(self, Mw, rJB, vs30):  # noqa: N802, N803, D102
         if Mw >= 5.5:  # noqa: PLR2004
             phiM = self.phi2  # noqa: N806
         elif Mw <= 4.5:  # noqa: PLR2004
@@ -767,7 +767,7 @@ class boore_etal_2014:  # noqa: D101
             )
         return phiMRV
 
-    def calcTau(self, Mw):  # noqa: ANN001, ANN201, N802, N803, D102
+    def calcTau(self, Mw):  # noqa: N802, N803, D102
         if Mw >= 5.5:  # noqa: PLR2004
             tau = self.tau2
         elif Mw <= 4.5:  # noqa: PLR2004
@@ -780,10 +780,10 @@ class boore_etal_2014:  # noqa: D101
     #     tau = self.calcTau(Mw)
     #     phiMRV = self.calcPhi(Mw, rJB, vs30)
     #     return np.sqrt(phiMRV * phiMRV + tau * tau)
-    def calcStdDev(self, phiMRV, tau):  # noqa: ANN001, ANN201, D102, N802, N803, PLR6301
+    def calcStdDev(self, phiMRV, tau):  # noqa: D102, N802, N803, PLR6301
         return np.sqrt(phiMRV * phiMRV + tau * tau)
 
-    def calc(self, Mw, rJB, vs30, z1p0, style):  # noqa: ANN001, ANN201, N803, D102
+    def calc(self, Mw, rJB, vs30, z1p0, style):  # noqa: N803, D102
         imt_tmp = self.imt
         self.setIMT('PGA')
         pgaRock = self.calcPGArock(Mw, rJB, style)  # noqa: N806
@@ -794,7 +794,7 @@ class boore_etal_2014:  # noqa: D101
         stdDev = self.calcStdDev(phi, tau)  # noqa: N806
         return mean, stdDev, tau, phi
 
-    def get_IM(self, Mw, site_rup_dict, site_info, im_info):  # noqa: ANN001, ANN201, N802, N803, D102
+    def get_IM(self, Mw, site_rup_dict, site_info, im_info):  # noqa: N802, N803, D102
         vsInf = bool(site_info['vsInferred'])  # noqa: N806, F841
         style = self.getFaultFromRake(site_rup_dict['aveRake'])
         if 'SA' in im_info['Type']:
@@ -841,7 +841,7 @@ class campbell_bozorgnia_2014:  # noqa: D101
     timeCalc = 0  # noqa: N815
     supportedImt = None  # noqa: N815
 
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         self.coeff = pd.read_csv(
             os.path.join(os.path.dirname(__file__), 'data', 'CB14.csv')  # noqa: PTH118, PTH120
         )
@@ -861,7 +861,7 @@ class campbell_bozorgnia_2014:  # noqa: D101
         self.phi_hi_PGA = self.coeff['phi2']['PGA']
         self.phi_lo_PGA = self.coeff['phi1']['PGA']
 
-    def setIMT(self, imt):  # noqa: ANN001, ANN201, N802, D102
+    def setIMT(self, imt):  # noqa: N802, D102
         if imt not in self.supportedImt:
             sys.exit(
                 f'The imt {imt} is not supported by Campbell & Bozorgnia (2014)'
@@ -904,7 +904,7 @@ class campbell_bozorgnia_2014:  # noqa: D101
         self.tau2 = self.coeff['tau2'][imt]
         self.rho = self.coeff['rho'][imt]
 
-    def getFaultFromRake(self, rake):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def getFaultFromRake(self, rake):  # noqa: D102, N802, PLR6301
         if rake >= 135 or rake <= -135 or (rake >= -45 and rake <= 45):  # noqa: PLR2004
             return 'STRIKE_SLIP'
         elif rake >= 45 and rake <= 135:  # noqa: RET505, PLR2004
@@ -912,23 +912,23 @@ class campbell_bozorgnia_2014:  # noqa: D101
         else:
             return 'NORMAL'
 
-    def calcZ25ref(self, vs30):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+    def calcZ25ref(self, vs30):  # noqa: D102, N802, PLR6301
         return np.exp(7.089 - 1.144 * np.log(vs30))
 
-    def calcMean(  # noqa: ANN201, C901, N802, D102
+    def calcMean(  # noqa: C901, N802, D102
         self,
-        Mw,  # noqa: ANN001, N803
-        rJB,  # noqa: ANN001, N803
-        rRup,  # noqa: ANN001, N803
-        rX,  # noqa: ANN001, N803
-        dip,  # noqa: ANN001
-        width,  # noqa: ANN001
-        zTop,  # noqa: ANN001, N803
-        zHyp,  # noqa: ANN001, N803
-        vs30,  # noqa: ANN001
-        z2p5,  # noqa: ANN001
-        style,  # noqa: ANN001
-        pgaRock,  # noqa: ANN001, N803
+        Mw,  # noqa: N803
+        rJB,  # noqa: N803
+        rRup,  # noqa: N803
+        rX,  # noqa: N803
+        dip,
+        width,
+        zTop,  # noqa: N803
+        zHyp,  # noqa: N803
+        vs30,
+        z2p5,
+        style,
+        pgaRock,  # noqa: N803
     ):
         Fmag = self.c0 + self.c1 * Mw  # noqa: N806
         if Mw > 6.5:  # noqa: PLR2004
@@ -1006,7 +1006,7 @@ class campbell_bozorgnia_2014:  # noqa: D101
             Fatn = 0.0  # noqa: N806
         return Fmag + Fr + Fflt + Fhw + Fsite + Fsed + Fhyp + Fdip + Fatn
 
-    def calcAlpha(self, vs30, pgaRock):  # noqa: ANN001, ANN201, N802, N803, D102
+    def calcAlpha(self, vs30, pgaRock):  # noqa: N802, N803, D102
         vsk1 = vs30 / self.k1
         if vs30 < self.k1:
             alpha = (
@@ -1021,10 +1021,10 @@ class campbell_bozorgnia_2014:  # noqa: D101
             alpha = 0.0
         return alpha
 
-    def stdMagDep(self, lo, hi, Mw):  # noqa: ANN001, ANN201, D102, N802, N803, PLR6301
+    def stdMagDep(self, lo, hi, Mw):  # noqa: D102, N802, N803, PLR6301
         return hi + (lo - hi) * (5.5 - Mw)
 
-    def calcPhiSq(self, Mw, alpha):  # noqa: ANN001, ANN201, N802, N803, D102
+    def calcPhiSq(self, Mw, alpha):  # noqa: N802, N803, D102
         if Mw <= 4.5:  # noqa: PLR2004
             phi_lnY = self.phi1  # noqa: N806
             phi_lnPGAB = self.phi_lo_PGA  # noqa: N806
@@ -1044,7 +1044,7 @@ class campbell_bozorgnia_2014:  # noqa: D101
         )
         return phiSq  # noqa: RET504
 
-    def calcTauSq(self, Mw, alpha):  # noqa: ANN001, ANN201, N802, N803, D102
+    def calcTauSq(self, Mw, alpha):  # noqa: N802, N803, D102
         if Mw <= 4.5:  # noqa: PLR2004
             tau_lnYB = self.tau1  # noqa: N806
             tau_lnPGAB = self.tau_lo_PGA  # noqa: N806
@@ -1062,7 +1062,7 @@ class campbell_bozorgnia_2014:  # noqa: D101
         )
         return tauSq  # noqa: RET504
 
-    def calc(self, Mw, rJB, rRup, rX, dip, width, zTop, zHyp, vs30, z2p5, style):  # noqa: ANN001, ANN201, N803, D102
+    def calc(self, Mw, rJB, rRup, rX, dip, width, zTop, zHyp, vs30, z2p5, style):  # noqa: N803, D102
         if vs30 < self.k1:
             imt_tmp = self.imt
             self.setIMT('PGA')
@@ -1102,7 +1102,7 @@ class campbell_bozorgnia_2014:  # noqa: D101
         stdDev = np.sqrt(phiSq + tauSq)  # noqa: N806
         return mean, stdDev, np.sqrt(tauSq), np.sqrt(phiSq)
 
-    def get_IM(self, Mw, site_rup_dict, site_info, im_info):  # noqa: ANN001, ANN201, N802, N803, D102
+    def get_IM(self, Mw, site_rup_dict, site_info, im_info):  # noqa: N802, N803, D102
         vsInf = bool(site_info['vsInferred'])  # noqa: N806, F841
         style = self.getFaultFromRake(site_rup_dict['aveRake'])
         if 'SA' in im_info['Type']:

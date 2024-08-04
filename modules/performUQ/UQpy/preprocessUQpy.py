@@ -26,7 +26,7 @@ from src.runmodel.RunModelDTOs import RunModelDTO
     type=click.Choice(['Linux', 'Windows']),
     help='Type of operating system the workflow will run on.',
 )
-def preprocess(workflowinput, driverfile, runtype, ostype):  # noqa: ANN001, ANN201, ARG001, D103
+def preprocess(workflowinput, driverfile, runtype, ostype):  # noqa: ARG001, D103
     # 1. Parse the input JSON file
     model = Model.parse_file(workflowinput)
 

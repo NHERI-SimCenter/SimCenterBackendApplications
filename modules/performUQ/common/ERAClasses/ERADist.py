@@ -139,7 +139,7 @@ class ERADist:
     """  # noqa: D205, D400
 
     # %%
-    def __init__(self, name, opt, val=[0, 1], ID=False):  # noqa: ANN001, ANN204, FBT002, B006, C901, N803, PLR0912, PLR0915
+    def __init__(self, name, opt, val=[0, 1], ID=False):  # noqa: FBT002, B006, C901, N803, PLR0912, PLR0915
         """Constructor method, for more details have a look at the
         class description.
         """  # noqa: D205, D401
@@ -472,7 +472,7 @@ class ERADist:
             elif name.lower() == 'frechet':
                 par0 = 2.0001
 
-                def equation(par):  # noqa: ANN001, ANN202
+                def equation(par):
                     return (
                         np.sqrt(
                             special.gamma(1 - 2 / par)
@@ -685,7 +685,7 @@ class ERADist:
                         'The mean of the distribution must be within the interval [a,b].'  # noqa: EM101
                     )
 
-                def equation(par):  # noqa: ANN001, ANN202
+                def equation(par):
                     f = lambda x: stats.norm.pdf(x, par[0], par[1]) / (  # noqa: E731
                         stats.norm.cdf(val[3], par[0], par[1])
                         - stats.norm.cdf(val[2], par[0], par[1])
@@ -741,7 +741,7 @@ class ERADist:
 
             elif name.lower() == 'weibull':
 
-                def equation(par):  # noqa: ANN001, ANN202
+                def equation(par):
                     return (
                         np.sqrt(
                             special.gamma(1 + 2 / par)
@@ -830,7 +830,7 @@ class ERADist:
                 if min(val) < 0:
                     raise RuntimeError('The given samples must be non-negative.')  # noqa: DOC501, EM101, TRY003
 
-                def equation(par):  # noqa: ANN001, ANN202
+                def equation(par):
                     return -np.sum(
                         np.log(
                             stats.genextreme.pdf(
@@ -935,7 +935,7 @@ class ERADist:
                 x_m = min(val)
                 if x_m > 0:
 
-                    def equation(par):  # noqa: ANN001, ANN202
+                    def equation(par):
                         return -np.sum(
                             np.log(
                                 stats.genpareto.pdf(
@@ -999,7 +999,7 @@ class ERADist:
                         'The given samples must be in the range [a,b].'  # noqa: EM101
                     )
 
-                def equation(par):  # noqa: ANN001, ANN202
+                def equation(par):
                     return -np.sum(
                         np.log(
                             stats.norm.pdf(X, loc=par[0], scale=par[1])
@@ -1052,7 +1052,7 @@ class ERADist:
             raise RuntimeError('Unknown option :' + opt)  # noqa: DOC501
 
     # %%
-    def mean(self):  # noqa: ANN201
+    def mean(self):
         """Returns the mean of the distribution."""  # noqa: D401
         if self.Name == 'gevmin':
             return -self.Dist.mean()
@@ -1064,12 +1064,12 @@ class ERADist:
             return self.Dist.mean()
 
     # %%
-    def std(self):  # noqa: ANN201
+    def std(self):
         """Returns the standard deviation of the distribution."""  # noqa: D401
         return self.Dist.std()
 
     # %%
-    def pdf(self, x):  # noqa: ANN001, ANN201
+    def pdf(self, x):
         """Returns the PDF value."""  # noqa: D401
         if self.Name == 'binomial' or self.Name == 'geometric':  # noqa: PLR1714
             return self.Dist.pmf(x)
@@ -1087,7 +1087,7 @@ class ERADist:
             return self.Dist.pdf(x)
 
     # %%
-    def cdf(self, x):  # noqa: ANN001, ANN201
+    def cdf(self, x):
         """Returns the CDF value."""  # noqa: D401
         if self.Name == 'gevmin':
             return 1 - self.Dist.cdf(-x)  # <-- this is not a proper cdf !
@@ -1099,7 +1099,7 @@ class ERADist:
             return self.Dist.cdf(x)
 
     # %%
-    def random(self, size=None):  # noqa: ANN001, ANN201
+    def random(self, size=None):
         """Generates random samples according to the distribution of the
         object.
         """  # noqa: D205, D401
@@ -1115,7 +1115,7 @@ class ERADist:
             return samples  # noqa: RET504
 
     # %%
-    def icdf(self, y):  # noqa: ANN001, ANN201
+    def icdf(self, y):
         """Returns the value of the inverse CDF."""  # noqa: D401
         if self.Name == 'gevmin':
             return -self.Dist.ppf(1 - y)
@@ -1130,7 +1130,7 @@ class ERADist:
 # %% Nested functions: for GEV-parameter fitting
 
 
-def gevfit_alt(y):  # noqa: ANN001, ANN201
+def gevfit_alt(y):
     """Author: Iason Papaioannou
     The function gevfit_alt evaluates the parameters of the generalized
     extreme value distribution with the method of Probability Weighted
@@ -1177,7 +1177,7 @@ def gevfit_alt(y):  # noqa: ANN001, ANN201
 # ------------------------------------------------------------------------------
 
 
-def gevpwm(y):  # noqa: ANN001, ANN201
+def gevpwm(y):
     """Author: Iason Papaioannou
     The function gevpwm evaluates the parameters of the generalized
     extreme value distribution applying the method of Probability Weighted

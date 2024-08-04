@@ -20,7 +20,7 @@ dataDir = os.getcwd()  # noqa: PTH109, N816
 scriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N816
 
 
-def parseTPU_LowRise_MatFile(matFileIn, windFileOutName):  # noqa: ANN001, ANN201, C901, N802, N803, D103
+def parseTPU_LowRise_MatFile(matFileIn, windFileOutName):  # noqa: C901, N802, N803, D103
     file = open(windFileOutName, 'w')  # noqa: PLW1514, PTH123, SIM115
     file.write('{\n')
     mat_contents = sio.loadmat(matFileIn)

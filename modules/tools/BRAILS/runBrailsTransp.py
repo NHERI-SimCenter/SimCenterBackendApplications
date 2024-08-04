@@ -44,7 +44,7 @@ from time import gmtime, strftime  # noqa: E402
 from brails.TranspInventoryGenerator import TranspInventoryGenerator  # noqa: E402
 
 
-def str2bool(v):  # noqa: ANN001, ANN201, D103
+def str2bool(v):  # noqa: D103
     # courtesy of Maxim @ stackoverflow
 
     if isinstance(v, bool):
@@ -58,20 +58,20 @@ def str2bool(v):  # noqa: ANN001, ANN201, D103
 
 
 # Define a standard way of printing program outputs:
-def log_msg(msg):  # noqa: ANN001, ANN201, D103
+def log_msg(msg):  # noqa: D103
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
     print(formatted_msg)  # noqa: T201
 
 
 # Define a way to call BRAILS TranspInventoryGenerator:
-def runBrails(  # noqa: ANN201, N802, D103
-    latMin,  # noqa: ANN001, N803
-    latMax,  # noqa: ANN001, N803
-    longMin,  # noqa: ANN001, N803
-    longMax,  # noqa: ANN001, N803
-    minimumHAZUS,  # noqa: ANN001, N803
-    maxRoadLength,  # noqa: ANN001, N803
-    lengthUnit,  # noqa: ANN001, N803
+def runBrails(  # noqa: N802, D103
+    latMin,  # noqa: N803
+    latMax,  # noqa: N803
+    longMin,  # noqa: N803
+    longMax,  # noqa: N803
+    minimumHAZUS,  # noqa: N803
+    maxRoadLength,  # noqa: N803
+    lengthUnit,  # noqa: N803
 ):
     # Initialize TranspInventoryGenerator:
     invGenerator = TranspInventoryGenerator(  # noqa: N806
@@ -87,7 +87,7 @@ def runBrails(  # noqa: ANN201, N802, D103
     )
 
 
-def main(args):  # noqa: ANN001, ANN201, D103
+def main(args):  # noqa: D103
     parser = argparse.ArgumentParser()
     parser.add_argument('--latMin', default=None, type=float)
     parser.add_argument('--latMax', default=None, type=float)

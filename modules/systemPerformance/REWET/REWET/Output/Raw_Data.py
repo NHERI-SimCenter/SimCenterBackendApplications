@@ -5,15 +5,15 @@
 
 
 class Raw_Data:  # noqa: D101
-    def __init__():  # noqa: ANN204
+    def __init__():
         pass
 
-    def saveDetailedDemandNodeData(  # noqa: ANN201, N802, D102
+    def saveDetailedDemandNodeData(  # noqa: N802, D102
         self,
-        scn_name,  # noqa: ANN001
-        data_type,  # noqa: ANN001
-        file_address,  # noqa: ANN001
-        file_type,  # noqa: ANN001
+        scn_name,
+        data_type,
+        file_address,
+        file_type,
     ):
         if data_type not in ['pressure', 'head', 'demand', 'quality']:  # noqa: PLR6201
             raise ValueError(
@@ -23,7 +23,7 @@ class Raw_Data:  # noqa: D101
         data = data[self.demand_node_name_list]
         self.saveDataFrame(data, file_address, file_type=file_type)
 
-    def saveDetailedJunctionData(self, scn_name, data_type, file_address, file_type):  # noqa: ANN001, ANN201, N802, D102
+    def saveDetailedJunctionData(self, scn_name, data_type, file_address, file_type):  # noqa: N802, D102
         if data_type not in ['pressure', 'head', 'demand', 'quality']:  # noqa: PLR6201
             raise ValueError(
                 'data type is not recognized for junctiosn: ' + repr(data_type)
@@ -32,7 +32,7 @@ class Raw_Data:  # noqa: D101
         data = data[self.wn.junction_name_list]
         self.saveDataFrame(data, file_address, file_type=file_type)
 
-    def saveDetailedTankData(self, scn_name, data_type, file_address, file_type):  # noqa: ANN001, ANN201, N802, D102
+    def saveDetailedTankData(self, scn_name, data_type, file_address, file_type):  # noqa: N802, D102
         if data_type not in ['pressure', 'head', 'demand', 'quality']:  # noqa: PLR6201
             raise ValueError(
                 'data type is not recognized for tanks: ' + repr(data_type)
@@ -41,12 +41,12 @@ class Raw_Data:  # noqa: D101
         data = data[self.wn.tank_name_list]
         self.saveDataFrame(data, file_address, file_type=file_type)
 
-    def saveDetailedReservoirData(  # noqa: ANN201, N802, D102
+    def saveDetailedReservoirData(  # noqa: N802, D102
         self,
-        scn_name,  # noqa: ANN001
-        data_type,  # noqa: ANN001
-        file_address,  # noqa: ANN001
-        file_type,  # noqa: ANN001
+        scn_name,
+        data_type,
+        file_address,
+        file_type,
     ):
         if data_type not in ['pressure', 'head', 'demand', 'quality']:  # noqa: PLR6201
             raise ValueError(
@@ -56,7 +56,7 @@ class Raw_Data:  # noqa: D101
         data = data[self.wn.tank_name_list]
         self.saveDataFrame(data, file_address, file_type=file_type)
 
-    def saveDetailedPipeData(self, scn_name, data_type, file_address, file_type):  # noqa: ANN001, ANN201, N802, D102
+    def saveDetailedPipeData(self, scn_name, data_type, file_address, file_type):  # noqa: N802, D102
         if data_type not in [  # noqa: PLR6201
             'linkquality',
             'flowrate',
@@ -74,7 +74,7 @@ class Raw_Data:  # noqa: D101
         data = data[self.wn.pipe_name_list]
         self.saveDataFrame(data, file_address, file_type=file_type)
 
-    def saveDetailedPumpData(self, scn_name, data_type, file_address, file_type):  # noqa: ANN001, ANN201, N802, D102
+    def saveDetailedPumpData(self, scn_name, data_type, file_address, file_type):  # noqa: N802, D102
         if data_type not in [  # noqa: PLR6201
             'linkquality',
             'flowrate',
@@ -92,7 +92,7 @@ class Raw_Data:  # noqa: D101
         data = data[self.wn.pump_name_list]
         self.saveDataFrame(data, file_address, file_type=file_type)
 
-    def saveDetailedValveData(self, scn_name, data_type, file_address, file_type):  # noqa: ANN001, ANN201, N802, D102
+    def saveDetailedValveData(self, scn_name, data_type, file_address, file_type):  # noqa: N802, D102
         if data_type not in [  # noqa: PLR6201
             'linkquality',
             'flowrate',
@@ -110,7 +110,7 @@ class Raw_Data:  # noqa: D101
         data = data[self.wn.valve_name_list]
         self.saveDataFrame(data, file_address, file_type=file_type)
 
-    def getDetailedData(self, scn_name, data_type):  # noqa: ANN001, ANN201, N802, D102
+    def getDetailedData(self, scn_name, data_type):  # noqa: N802, D102
         cur_scn_data = None
         if data_type in [  # noqa: PLR6201
             'linkquality',
@@ -129,7 +129,7 @@ class Raw_Data:  # noqa: D101
             raise ValueError('Unknown Data Type For output')  # noqa: EM101, TRY003
         return cur_scn_data
 
-    def saveDataFrame(dataframe, file_address, file_type='xlsx'):  # noqa: ANN001, ANN201, N802, N805, D102
+    def saveDataFrame(dataframe, file_address, file_type='xlsx'):  # noqa: N802, N805, D102
         if file_type == 'xlsx':
             dataframe.to_excel(file_address)
         elif file_type == 'csv':

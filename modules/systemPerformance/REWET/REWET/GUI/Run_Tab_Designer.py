@@ -14,7 +14,7 @@ class Custom_Object(QObject):  # noqa: D101
 
 
 class Run_Tab_Designer:  # noqa: D101
-    def __init__(self):  # noqa: ANN204
+    def __init__(self):
         self.run_button.clicked.connect(self.runREWET)
         self.stop_button.clicked.connect(self.stopRun)
         self.cobject = Custom_Object()
@@ -22,7 +22,7 @@ class Run_Tab_Designer:  # noqa: D101
         self.rewet_sub_process = None
         self.if_run_in_progress = False
 
-    def runREWET(self):  # noqa: ANN201, N802, D102
+    def runREWET(self):  # noqa: N802, D102
         if self.if_run_in_progress == True:  # noqa: E712
             return False
         if_saved = self.saveProject()
@@ -40,7 +40,7 @@ class Run_Tab_Designer:  # noqa: D101
         self.setAllTabsEnabled(False)
         threading.Thread(target=self._RunREWETHelper, args=(), daemon=True).start()  # noqa: RET503
 
-    def _RunREWETHelper(self):  # noqa: ANN202, N802
+    def _RunREWETHelper(self):  # noqa: N802
         self.rewet_sub_process = subprocess.Popen(  # noqa: S603
             ['python', 'initial.py', self.project_file_addr],  # noqa: S607
             stdout=subprocess.PIPE,
@@ -52,7 +52,7 @@ class Run_Tab_Designer:  # noqa: D101
             self.cobject.outSignal.emit(line)
         self.rewet_sub_process.stdout.close()
 
-    def setAllTabsEnabled(self, enabled):  # noqa: ANN001, ANN201, N802, D102
+    def setAllTabsEnabled(self, enabled):  # noqa: N802, D102
         # self.ouput_textedit.setEnabled(enabled)
         self.main_tab.setTabEnabled(1, enabled)
         self.main_process1.setTabEnabled(0, enabled)
@@ -64,7 +64,7 @@ class Run_Tab_Designer:  # noqa: D101
         # self.stop_button.setEnabled(True)
 
     # @pyqtSlot(bytes)
-    def updateRunOuput(self, string):  # noqa: ANN001, ANN201, N802, D102
+    def updateRunOuput(self, string):  # noqa: N802, D102
         string = string.decode()
 
         if 'Time of Single run is' in string:
@@ -76,7 +76,7 @@ class Run_Tab_Designer:  # noqa: D101
 
         # running code for the project
 
-    def endSimulation(self):  # noqa: ANN201, N802, D102
+    def endSimulation(self):  # noqa: N802, D102
         end_message = (
             '\n-------------------\nSIMULATION FINISHED\n-------------------\n'
         )
@@ -84,7 +84,7 @@ class Run_Tab_Designer:  # noqa: D101
         self.if_run_in_progress = False
         self.ouput_textedit.appendPlainText(end_message)
 
-    def errorInSimulation(self):  # noqa: ANN201, N802, D102
+    def errorInSimulation(self):  # noqa: N802, D102
         end_message = '\n-------------\nERROR OCCURRED\n-------------\n'
         self.setAllTabsEnabled(True)
         self.if_run_in_progress = False
@@ -94,7 +94,7 @@ class Run_Tab_Designer:  # noqa: D101
         )
         self.ouput_textedit.appendPlainText(end_message)
 
-    def stopRun(self):  # noqa: ANN201, N802, D102
+    def stopRun(self):  # noqa: N802, D102
         if self.if_run_in_progress == False:  # noqa: E712
             return
         if type(self.rewet_sub_process) != type(None):  # noqa: E721

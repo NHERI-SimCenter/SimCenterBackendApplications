@@ -55,7 +55,7 @@ class of7Building:
     """  # noqa: D205, D404
 
     #############################################################
-    def buildcheck(self, data, path):  # noqa: ANN001, ANN201, C901, PLR0911, PLR6301
+    def buildcheck(self, data, path):  # noqa: C901, PLR0911, PLR6301
         """Checks if all files required for creating the building exists
 
         Arguments:
@@ -196,7 +196,7 @@ class of7Building:
         return 0
 
     #############################################################
-    def createbuilds(self, data, path):  # noqa: ANN001, ANN201
+    def createbuilds(self, data, path):
         """Creates the STL files for the buildings and move to correct location
 
         Arguments:
@@ -221,7 +221,7 @@ class of7Building:
         return 0
 
     #############################################################
-    def buildmanual(self, data, path):  # noqa: ANN001, ANN201
+    def buildmanual(self, data, path):
         """Creates the STL files for the buildings using manual data from table
 
         Arguments:
@@ -284,7 +284,7 @@ class of7Building:
         self.buildflagadd(numresbuild, numotherbuild)
 
     #############################################################
-    def buildpara(self, data, path):  # noqa: ANN001, ANN201, ARG002, PLR6301
+    def buildpara(self, data, path):  # noqa: ARG002, PLR6301
         """Creates the STL files for the buildings using parametrized data
 
         Arguments:
@@ -297,7 +297,7 @@ class of7Building:
         hydroutil = hydroUtils()  # noqa: F841
 
     #############################################################
-    def buildcubeGI(self, data, path):  # noqa: ANN001, ANN201, ARG002, N802, PLR6301
+    def buildcubeGI(self, data, path):  # noqa: ARG002, N802, PLR6301
         """Creates the STL files for the buildings using parametrized data
 
         Arguments:
@@ -375,7 +375,7 @@ class of7Building:
                 f.writelines(lines)
 
     #############################################################
-    def readResSTL(self, data, path, ztrans):  # noqa: ANN001, ANN201, N802, PLR6301
+    def readResSTL(self, data, path, ztrans):  # noqa: N802, PLR6301
         """Creates the STL files for the buildings using parametrized data
 
         Arguments:
@@ -482,7 +482,7 @@ class of7Building:
                 f.writelines(lines)
 
     #############################################################
-    def buildflagadd(self, numresbuild, numotherbuild):  # noqa: ANN001, ANN201, PLR6301
+    def buildflagadd(self, numresbuild, numotherbuild):  # noqa: PLR6301
         """Add building flag to temp_geometry.txt
 
         Arguments:

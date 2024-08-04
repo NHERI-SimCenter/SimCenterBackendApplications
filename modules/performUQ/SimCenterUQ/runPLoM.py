@@ -66,15 +66,15 @@ class runPLoM:
         save_model: model saving
     """  # noqa: D205, D400
 
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        work_dir,  # noqa: ANN001
-        run_type,  # noqa: ANN001
-        os_type,  # noqa: ANN001
-        job_config,  # noqa: ANN001
-        errlog,  # noqa: ANN001
-        input_file,  # noqa: ANN001
-        workflow_driver,  # noqa: ANN001
+        work_dir,
+        run_type,
+        os_type,
+        job_config,
+        errlog,
+        input_file,
+        workflow_driver,
     ):
         """__init__
         input:
@@ -145,7 +145,7 @@ class runPLoM:
             msg = 'runPLoM.__init__: Error in loading variables.'
             self.errlog.exit(msg)
 
-    def _run_simulation(self):  # noqa: ANN202, C901
+    def _run_simulation(self):  # noqa: C901
         """_run_simulation: running simulation to get training data
         input:
             job_config: job configuration dictionary
@@ -274,7 +274,7 @@ class runPLoM:
         elif self.run_type in ['set_up', 'runningRemote']:  # noqa: PLR6201
             pass
 
-    def _prepare_training_data(self, run_dir):  # noqa: ANN001, ANN202, C901
+    def _prepare_training_data(self, run_dir):  # noqa: C901
         # load IM.csv if exists
         df_IM = pd.DataFrame()  # noqa: N806
         if os.path.exists(os.path.join(run_dir, 'IM.csv')):  # noqa: PTH110, PTH118
@@ -359,7 +359,7 @@ class runPLoM:
 
         return inpData, outData
 
-    def _compute_IM(self, run_dir, pythonEXE):  # noqa: ANN001, ANN202, N802, N803, PLR6301
+    def _compute_IM(self, run_dir, pythonEXE):  # noqa: N802, N803, PLR6301
         # find workdirs
         workdir_list = [x for x in os.listdir(run_dir) if x.startswith('workdir')]
 
@@ -408,7 +408,7 @@ class runPLoM:
         im_collector = im_collector.sort_values(by=['%eval_id'])
         im_collector.to_csv('IM.csv', index=False)
 
-    def _create_variables(self, training_data):  # noqa: ANN001, ANN202
+    def _create_variables(self, training_data):
         """create_variables: creating X and Y variables
         input:
             training_data: training data source
@@ -452,7 +452,7 @@ class runPLoM:
         # return
         return x_dim, y_dim, rv_name, g_name
 
-    def _create_variables_from_input(self):  # noqa: ANN202
+    def _create_variables_from_input(self):
         df_variables = pd.read_csv(self.inpData, header=0)
         df_responses = pd.read_csv(self.outData, header=0)
 
@@ -471,7 +471,7 @@ class runPLoM:
         else:
             self.multipleEvent = None
 
-    def _parse_plom_parameters(self, surrogateInfo):  # noqa: ANN001, ANN202, C901, N803
+    def _parse_plom_parameters(self, surrogateInfo):  # noqa: C901, N803
         """_parse_plom_parameters: parse PLoM parameters from surrogateInfo
         input:
             surrogateInfo: surrogate information dictionary
@@ -564,7 +564,7 @@ class runPLoM:
         # return
         return run_flag
 
-    def _set_up_parallel(self):  # noqa: ANN202
+    def _set_up_parallel(self):
         """_set_up_parallel: set up modules and variables for parallel jobs
         input:
             none
@@ -594,7 +594,7 @@ class runPLoM:
         # return
         return run_flag
 
-    def _load_variables(self, do_sampling, do_simulation):  # noqa: ANN001, ANN202, C901
+    def _load_variables(self, do_sampling, do_simulation):  # noqa: C901
         """_load_variables: load variables
         input:
             do_sampling: sampling flag
@@ -669,7 +669,7 @@ class runPLoM:
         return run_flag
 
     # KZ, 07/24: loading user-defined hyper-parameter files
-    def _load_hyperparameter(self):  # noqa: ANN202
+    def _load_hyperparameter(self):
         run_flag = 0
         try:
             # load constraints first
@@ -706,7 +706,7 @@ class runPLoM:
             run_flag = 1
         return run_flag
 
-    def train_model(self, model_name='SurrogatePLoM'):  # noqa: ANN001, ANN201, D102
+    def train_model(self, model_name='SurrogatePLoM'):  # noqa: D102
         db_path = os.path.join(self.work_dir, 'templatedir')  # noqa: PTH118
         if not self.preTrained:
             self.modelPLoM = PLoM(  # noqa: F405
@@ -756,7 +756,7 @@ class runPLoM:
         if self.constraintsFlag:
             self.Errors = self.modelPLoM.errors
 
-    def save_model(self):  # noqa: ANN201, C901, D102
+    def save_model(self):  # noqa: C901, D102
         # copy the h5 model file to the main work dir
         shutil.copy2(
             os.path.join(  # noqa: PTH118
@@ -913,7 +913,7 @@ class runPLoM:
         print('Results Saved')  # noqa: T201
 
 
-def read_txt(text_dir, errlog):  # noqa: ANN001, ANN201, D103
+def read_txt(text_dir, errlog):  # noqa: D103
     if not os.path.exists(text_dir):  # noqa: PTH110
         msg = 'Error: file does not exist: ' + text_dir
         errlog.exit(msg)
@@ -957,17 +957,17 @@ def read_txt(text_dir, errlog):  # noqa: ANN001, ANN201, D103
 
 
 class errorLog:  # noqa: D101
-    def __init__(self, work_dir):  # noqa: ANN001, ANN204
+    def __init__(self, work_dir):
         self.file = open(f'{work_dir}/dakota.err', 'w')  # noqa: PLW1514, PTH123, SIM115
 
-    def exit(self, msg):  # noqa: ANN001, ANN201, D102
+    def exit(self, msg):  # noqa: D102
         print(msg)  # noqa: T201
         self.file.write(msg)
         self.file.close()
         exit(-1)  # noqa: PLR1722
 
 
-def build_surrogate(work_dir, os_type, run_type, input_file, workflow_driver):  # noqa: ANN001, ANN201
+def build_surrogate(work_dir, os_type, run_type, input_file, workflow_driver):
     """build_surrogate: built surrogate model
     input:
         work_dir: working directory

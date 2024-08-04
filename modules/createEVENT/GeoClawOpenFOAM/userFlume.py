@@ -53,7 +53,7 @@ class userFlume:
     """  # noqa: D205, D400, D404
 
     #############################################################
-    def creategeom(self, data, path):  # noqa: ANN001, ANN201, PLR6301
+    def creategeom(self, data, path):  # noqa: PLR6301
         """Creates the geometry for user flume
 
         Arguments:

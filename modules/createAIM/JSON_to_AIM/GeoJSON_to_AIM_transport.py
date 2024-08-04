@@ -55,7 +55,7 @@ import shapely
 
 
 # Break down long roads according to delta
-def breakDownLongEdges(edges, delta, tolerance=10e-3):  # noqa: ANN001, ANN201, N802, D103
+def breakDownLongEdges(edges, delta, tolerance=10e-3):  # noqa: N802, D103
     dropedEdges = []  # noqa: N806
     newEdges = []  # noqa: N806
     crs = edges.crs
@@ -111,16 +111,16 @@ def breakDownLongEdges(edges, delta, tolerance=10e-3):  # noqa: ANN001, ANN201, 
     return edges  # noqa: RET504
 
 
-def create_asset_files(  # noqa: ANN201, C901, D103, PLR0915
-    output_file,  # noqa: ANN001
-    asset_source_road,  # noqa: ANN001
-    asset_source_bridge,  # noqa: ANN001
-    asset_source_tunnel,  # noqa: ANN001
-    bridge_filter,  # noqa: ANN001
-    tunnel_filter,  # noqa: ANN001
-    road_filter,  # noqa: ANN001
-    doParallel,  # noqa: ANN001, N803
-    roadSegLength,  # noqa: ANN001, N803
+def create_asset_files(  # noqa: C901, D103, PLR0915
+    output_file,
+    asset_source_road,
+    asset_source_bridge,
+    asset_source_tunnel,
+    bridge_filter,
+    tunnel_filter,
+    road_filter,
+    doParallel,  # noqa: N803
+    roadSegLength,  # noqa: N803
 ):
     # these imports are here to save time when the app is called without
     # the -getRV flag

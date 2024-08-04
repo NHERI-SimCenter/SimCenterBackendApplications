@@ -42,16 +42,16 @@ import json
 import sys
 
 
-def create_SAM(  # noqa: ANN201, N802, D103
-    AIM_file,  # noqa: ANN001, N803
-    EVENT_file,  # noqa: ANN001, ARG001, N803
-    SAM_file,  # noqa: ANN001, N803
-    model_script,  # noqa: ANN001
-    model_path,  # noqa: ANN001
-    ndm,  # noqa: ANN001
-    dof_map,  # noqa: ANN001
-    column_line,  # noqa: ANN001
-    getRV,  # noqa: ANN001, ARG001, N803
+def create_SAM(  # noqa: N802, D103
+    AIM_file,  # noqa: N803
+    EVENT_file,  # noqa: ARG001, N803
+    SAM_file,  # noqa: N803
+    model_script,
+    model_path,
+    ndm,
+    dof_map,
+    column_line,
+    getRV,  # noqa: ARG001, N803
 ):
     # KZ: modifying BIM to AIM
     with open(AIM_file, encoding='utf-8') as f:  # noqa: PTH123

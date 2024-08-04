@@ -17,12 +17,12 @@ class SteelMaterial:
     (4) Ry value
     """  # noqa: D205, D400, D404
 
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
-        yield_stress=50,  # noqa: ANN001
-        ultimate_stress=65,  # noqa: ANN001
-        elastic_modulus=29000,  # noqa: ANN001
-        Ry_value=1.1,  # noqa: ANN001, N803
+        yield_stress=50,
+        ultimate_stress=65,
+        elastic_modulus=29000,
+        Ry_value=1.1,  # noqa: N803
     ):
         """:param yield_stress: Fy of steel material, default value is 50 ksi
         :param elastic_modulus: E of steel material, default value is 29000 ksi

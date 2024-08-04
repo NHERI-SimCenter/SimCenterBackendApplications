@@ -9,7 +9,7 @@ from PyQt5 import QtCore, QtWidgets
 
 
 class Ui_pipe_damage_discovery:  # noqa: D101
-    def setupUi(self, pipe_damage_discovery):  # noqa: ANN001, ANN201, N802, D102
+    def setupUi(self, pipe_damage_discovery):  # noqa: N802, D102
         pipe_damage_discovery.setObjectName('pipe_damage_discovery')
         pipe_damage_discovery.resize(450, 400)
         pipe_damage_discovery.setMinimumSize(QtCore.QSize(450, 400))
@@ -79,7 +79,7 @@ class Ui_pipe_damage_discovery:  # noqa: D101
         self.buttonBox.rejected.connect(pipe_damage_discovery.reject)
         QtCore.QMetaObject.connectSlotsByName(pipe_damage_discovery)
 
-    def retranslateUi(self, pipe_damage_discovery):  # noqa: ANN001, ANN201, N802, D102
+    def retranslateUi(self, pipe_damage_discovery):  # noqa: N802, D102
         _translate = QtCore.QCoreApplication.translate
         pipe_damage_discovery.setWindowTitle(
             _translate('pipe_damage_discovery', 'Pipe Damaeg Discovery')

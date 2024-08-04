@@ -15,7 +15,7 @@ class ModifiedMetropolisHastingsDto(UQpyDTO):  # noqa: D101
     concatenate_chains = True
     proposal_is_symmetric = False
 
-    def init_to_text(self):  # noqa: ANN201, D102
+    def init_to_text(self):  # noqa: D102
         from UQpy.sampling.mcmc.ModifiedMetropolisHastings import (  # noqa: PLC0415
             ModifiedMetropolisHastings,
         )

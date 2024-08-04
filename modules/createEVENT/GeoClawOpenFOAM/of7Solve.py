@@ -50,7 +50,7 @@ class of7Solve:
     """  # noqa: D205, D404
 
     #############################################################
-    def solverheader(self, fileobjec):  # noqa: ANN001, ANN201, PLR6301
+    def solverheader(self, fileobjec):  # noqa: PLR6301
         """Creates the text for the header
 
         Variable
@@ -76,7 +76,7 @@ FoamFile
         return header  # noqa: RET504
 
     #############################################################
-    def fvSchemetext(self, data):  # noqa: ANN001, ANN201, ARG002, N802
+    def fvSchemetext(self, data):  # noqa: ARG002, N802
         """Creates the necessary text for fvSchemes for openfoam7
 
         Arguments:
@@ -166,7 +166,7 @@ FoamFile
         return fvSchemetext  # noqa: RET504
 
     #############################################################
-    def fvSolntext(self, data):  # noqa: ANN001, ANN201, N802
+    def fvSolntext(self, data):  # noqa: N802
         """Creates the necessary text for fvSolution for openfoam7
 
         Arguments:
@@ -283,7 +283,7 @@ FoamFile
         return fvSolntext  # noqa: RET504
 
     #############################################################
-    def cdicttext(self, data):  # noqa: ANN001, ANN201
+    def cdicttext(self, data):
         """Creates the necessary text for controlDict for openfoam7
 
         Arguments:
@@ -352,7 +352,7 @@ FoamFile
         return cdicttext  # noqa: RET504
 
     #############################################################
-    def cdictcheck(self, data):  # noqa: ANN001, ANN201, PLR6301
+    def cdictcheck(self, data):  # noqa: PLR6301
         """Creates the check for controlDict for openfoam7
 
         Arguments:
@@ -391,7 +391,7 @@ FoamFile
         return 0
 
     #############################################################
-    def cdictFtext(self, data):  # noqa: ANN001, ANN201, N802
+    def cdictFtext(self, data):  # noqa: N802
         """Creates the necessary text for controlDict for openfoam7
         This is used for force computation with Dakota
 

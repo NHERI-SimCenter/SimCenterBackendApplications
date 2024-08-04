@@ -64,7 +64,7 @@ print(f'mainDir: {mainDir}')  # noqa: T201
 print(f'currentDir: {currentDir}')  # noqa: T201
 
 
-def runHazardSimulation(inputFILE):  # noqa: ANN001, ANN201, N802, N803, D103
+def runHazardSimulation(inputFILE):  # noqa: N802, N803, D103
     # log_msg('Startring simulation script...')
 
     sys.path.insert(0, os.getcwd())  # noqa: PTH109

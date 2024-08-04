@@ -6,7 +6,7 @@ from src.quofemDTOs import RandomVariable
 
 class RunModelDTO:  # noqa: D101
     @staticmethod
-    def create_runmodel_with_variables_driver(  # noqa: ANN205, D102
+    def create_runmodel_with_variables_driver(  # noqa: D102
         variables: List[RandomVariable],  # noqa: FA100
         driver_filename: str = 'driver',
     ):
@@ -30,7 +30,7 @@ class RunModelDTO:  # noqa: D101
         return '\n'.join(run_model_code)
 
     @staticmethod
-    def __create_runmodel_input_teplate(variables: List[RandomVariable]):  # noqa: ANN205, FA100
+    def __create_runmodel_input_teplate(variables: List[RandomVariable]):  # noqa: FA100
         template_code = [f'{len(variables)}']
         for rv in variables:
             template_code.append(f'{rv.name} <{rv.name}>')  # noqa: PERF401
@@ -39,7 +39,7 @@ class RunModelDTO:  # noqa: D101
             f.write('\n'.join(template_code))
 
     @staticmethod
-    def __create_model_script(driver_filename):  # noqa: ANN001, ANN205
+    def __create_model_script(driver_filename):
         template_filepath = Path('params_template.in')
         template_file_base = template_filepath.stem
         template_file_suffix = template_filepath.suffix
@@ -61,7 +61,7 @@ class RunModelDTO:  # noqa: D101
             f.write('\n'.join(model_script_code))
 
     @staticmethod
-    def __create_postprocess_script(results_filename: str = 'results.out'):  # noqa: ANN205
+    def __create_postprocess_script(results_filename: str = 'results.out'):
         postprocess_script_code = [
             'def compute_limit_state(index: int) -> float:',
             f"\twith open('{results_filename}', 'r') as f:",

@@ -50,7 +50,7 @@ class of7Decomp:
     """  # noqa: D205, D404
 
     #############################################################
-    def decomptext(self, data):  # noqa: ANN001, ANN201
+    def decomptext(self, data):
         """Creates the necessary files for domain decomposition for openfoam7
 
         Arguments:
@@ -78,7 +78,7 @@ class of7Decomp:
         return decomptext  # noqa: RET504
 
     #############################################################
-    def decompheader(self):  # noqa: ANN201, PLR6301
+    def decompheader(self):  # noqa: PLR6301
         """Creates the text for the header
 
         Variable
@@ -100,7 +100,7 @@ FoamFile
         return header  # noqa: RET504
 
     #############################################################
-    def scripts(self, data, path):  # noqa: ANN001, ANN201, ARG002, PLR6301
+    def scripts(self, data, path):  # noqa: ARG002, PLR6301
         """Create the scripts for caserun.sh
 
         Arguments:

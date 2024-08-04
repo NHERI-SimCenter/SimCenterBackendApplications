@@ -50,7 +50,7 @@ class of7Alpboundary:
     """  # noqa: D205, D404
 
     #############################################################
-    def Alptext(self, data, patches):  # noqa: ANN001, ANN201, N802
+    def Alptext(self, data, patches):  # noqa: N802
         """Creates the necessary text for pressure bc for openfoam7
 
         Arguments:
@@ -92,7 +92,7 @@ class of7Alpboundary:
         return Alptext  # noqa: RET504
 
     #############################################################
-    def Alpheader(self):  # noqa: ANN201, N802, PLR6301
+    def Alpheader(self):  # noqa: N802, PLR6301
         """Creates the text for the header for pressure file
 
         Variable
@@ -117,7 +117,7 @@ FoamFile
         return header  # noqa: RET504
 
     #############################################################
-    def Alppatchtext(self, Alptype, patchname):  # noqa: ANN001, ANN201, ARG002, N802, N803, PLR6301
+    def Alppatchtext(self, Alptype, patchname):  # noqa: ARG002, N802, N803, PLR6301
         """Creates the text the pressure boundary condition
 
         Arguments:

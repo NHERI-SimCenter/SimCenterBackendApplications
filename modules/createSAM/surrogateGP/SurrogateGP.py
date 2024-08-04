@@ -48,7 +48,7 @@ import os
 import sys
 
 
-def create_SAM(AIM_file, SAM_file):  # noqa: ANN001, ANN201, N802, N803, D103
+def create_SAM(AIM_file, SAM_file):  # noqa: N802, N803, D103
     #
     # Find SAM.json info from surrogate model file
     #
