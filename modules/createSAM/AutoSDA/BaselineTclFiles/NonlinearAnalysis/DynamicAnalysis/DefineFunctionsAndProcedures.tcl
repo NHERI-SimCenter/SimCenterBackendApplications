@@ -69,7 +69,7 @@ proc NodesAroundPanelZone {ColPier Level XCoordinate YCoordinate PanelSize Maxim
 # Input argument explanation:
 # Level: the floor level for frame, ground floor is 1.
 # ColPier: the column ID, starting from 1 to the number of columns in each frame
-# XCoordinate: X coodinate of the column centerline
+# XCoordinate: X coordinate of the column centerline
 # YCoordinate: Y coordinate of the beam centerline
 # PanelSize: a list with two elements: {a b}:
 #            a: the depth of column
@@ -190,7 +190,7 @@ proc elemPanelZone2D {eleID nodeR E VerTransfTag HorTransfTag} {
     set x8 [expr $x1 + 7];  # top element on left side of panel zone
     
     set A_PZ 1.0e12; # area of panel zone element (make much larger than A of frame elements)
-    set Ipz 1.0e12;  # moment of intertia of panel zone element (make much larger than I of frame elements)
+    set Ipz 1.0e12;  # moment of inertia of panel zone element (make much larger than I of frame elements)
 
 # create panel zone elements
     #                            tag    ndI     ndJ     A_PZ    E   I_PZ    transfTag

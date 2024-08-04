@@ -444,31 +444,31 @@ c
 c
       if (rvec) then
 c
-c        %------------------------------------------------%
-c        | Get the converged Ritz value on the boundary.  |
-c        | This value will be used to dermine whether we  |
-c        | need to reorder the eigenvalues and            |
-c        | eigenvectors comupted by _steqr, and is        |
-c        | referred to as the "threshold" value.          |
-c        |                                                |
-c        | A Ritz value gamma is said to be a wanted      |
-c        | one, if                                        |
-c        | abs(gamma) .ge. threshold, when WHICH = 'LM';  |
-c        | abs(gamma) .le. threshold, when WHICH = 'SM';  |
-c        | gamma      .ge. threshold, when WHICH = 'LA';  |
-c        | gamma      .le. threshold, when WHICH = 'SA';  |
-c        | gamma .le. thres1 .or. gamma .ge. thres2       |
-c        |                            when WHICH = 'BE';  |
-c        |                                                |
-c        | Note: converged Ritz values and associated     |
-c        | Ritz estimates have been placed in the first   |
-c        | NCONV locations in workl(ritz) and             |
-c        | workl(bounds) respectively. They have been     |
-c        | sorted (in _saup2) according to the WHICH      |
-c        | selection criterion. (Except in the case       |
-c        | WHICH = 'BE', they are sorted in an increasing |
-c        | order.)                                        |
-c        %------------------------------------------------%
+c        %-------------------------------------------------%
+c        | Get the converged Ritz value on the boundary.   |
+c        | This value will be used to determine whether we |
+c        | need to reorder the eigenvalues and             |
+c        | eigenvectors comupted by _steqr, and is         |
+c        | referred to as the "threshold" value.           |
+c        |                                                 |
+c        | A Ritz value gamma is said to be a wanted       |
+c        | one, if                                         |
+c        | abs(gamma) .ge. threshold, when WHICH = 'LM';   |
+c        | abs(gamma) .le. threshold, when WHICH = 'SM';   |
+c        | gamma      .ge. threshold, when WHICH = 'LA';   |
+c        | gamma      .le. threshold, when WHICH = 'SA';   |
+c        | gamma .le. thres1 .or. gamma .ge. thres2        |
+c        |                            when WHICH = 'BE';   |
+c        |                                                 |
+c        | Note: converged Ritz values and associated      |
+c        | Ritz estimates have been placed in the first    |
+c        | NCONV locations in workl(ritz) and              |
+c        | workl(bounds) respectively. They have been      |
+c        | sorted (in _saup2) according to the WHICH       |
+c        | selection criterion. (Except in the case        |
+c        | WHICH = 'BE', they are sorted in an increasing  |
+c        | order.)                                         |
+c        %-------------------------------------------------%
 c
          if (which .eq. 'LM' .or. which .eq. 'SM'
      &       .or. which .eq. 'LA' .or. which .eq. 'SA' ) then
@@ -514,7 +514,7 @@ c        |    determine whether it is a wanted one.                 |
 c        |                                                          |
 c        | 2) If it is wanted, then check the corresponding Ritz    |
 c        |    estimate to see if it has converged.  If it has, set  |
-c        |    correponding entry in the logical array SELECT to     |
+c        |    corresponding entry in the logical array SELECT to    |
 c        |    .TRUE..                                               |
 c        |                                                          |
 c        | If SELECT(j) = .TRUE. and j > NCONV, then there is a     |

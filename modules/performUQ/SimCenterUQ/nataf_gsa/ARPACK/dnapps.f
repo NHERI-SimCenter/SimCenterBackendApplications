@@ -13,7 +13,7 @@ c
 c     A*(V_{k}*Q) - (V_{k}*Q)*(Q^T* H_{k}*Q) = r_{k+p}*e_{k+p}^T * Q
 c
 c  where Q is an orthogonal matrix which is the product of rotations
-c  and reflections resulting from the NP bulge chage sweeps.
+c  and reflections resulting from the NP bulge change sweeps.
 c  The updated Arnoldi factorization becomes:
 c
 c     A*VNEW_{k} - VNEW_{k}*HNEW_{k} = rnew_{k}*e_{k}^T.
@@ -30,7 +30,7 @@ c
 c  KEV     Integer.  (INPUT/OUTPUT)
 c          KEV+NP is the size of the input matrix H.
 c          KEV is the size of the updated matrix HNEW.  KEV is only 
-c          updated on ouput when fewer than NP shifts are applied in
+c          updated on output when fewer than NP shifts are applied in
 c          order to keep the conjugate pair together.
 c
 c  NP      Integer.  (INPUT)
@@ -205,9 +205,9 @@ c     %----------------------%
 c
       intrinsic  abs, max, min
 c
-c     %----------------%
-c     | Data statments |
-c     %----------------%
+c     %-----------------%
+c     | Data statements |
+c     %-----------------%
 c
       data       first / .true. /
 c
@@ -384,9 +384,9 @@ c
 c 
             do 80 i = istart, iend-1
 c
-c              %-----------------------------------------------------%
-c              | Contruct the plane rotation G to zero out the bulge |
-c              %-----------------------------------------------------%
+c              %------------------------------------------------------%
+c              | Construct the plane rotation G to zero out the bulge |
+c              %------------------------------------------------------%
 c
                call dlartg (f, g, c, s, r)
                if (i .gt. istart) then

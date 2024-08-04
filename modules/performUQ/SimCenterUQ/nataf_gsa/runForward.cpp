@@ -39,7 +39,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *  @author  Sang-ri Yi
  *  @date    8/2021
  *  @section DESCRIPTION
- *  Calcualtes the moments of QoIs and writes the results at dakotaTab.out
+ *  Calculates the moments of QoIs and writes the results at dakotaTab.out
  */
 
 #include "runForward.h"

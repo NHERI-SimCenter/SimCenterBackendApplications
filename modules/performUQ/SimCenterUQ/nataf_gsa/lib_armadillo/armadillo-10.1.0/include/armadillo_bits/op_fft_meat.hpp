@@ -96,7 +96,7 @@ op_fft_real::apply( Mat< std::complex<typename T1::pod_type> >& out, const mtOp<
     }
   else
     {
-    // process each column seperately
+    // process each column separately
     
     out.set_size(N_user, n_cols);
     
@@ -220,7 +220,7 @@ op_fft_cx::apply_noalias(Mat<typename T1::elem_type>& out, const Proxy<T1>& P, c
     }
   else
     {
-    // process each column seperately
+    // process each column separately
     
     out.set_size(N_user, n_cols);
     

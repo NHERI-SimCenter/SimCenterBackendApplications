@@ -377,11 +377,11 @@ c
      &                  '_naitr: B-norm of the current residual is')
          end if
 c 
-c        %---------------------------------------------------%
-c        | STEP 1: Check if the B norm of j-th residual      |
-c        | vector is zero. Equivalent to determing whether   |
-c        | an exact j-step Arnoldi factorization is present. |
-c        %---------------------------------------------------%
+c        %-----------------------------------------------------%
+c        | STEP 1: Check if the B norm of j-th residual        |
+c        | vector is zero. Equivalent to determining whether   |
+c        | an exact j-step Arnoldi factorization is present.   |
+c        %-----------------------------------------------------%
 c
          betaj = rnorm
          if (rnorm .gt. zero) go to 40

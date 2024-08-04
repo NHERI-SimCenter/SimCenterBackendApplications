@@ -5,7 +5,7 @@ set results []
 # get list of valid nodeTags
 set nodeTags [getNodeTags]
 
-# for each quanity in list of QoI passed
+# for each quantity in list of QoI passed
 #  - get nodeTag
 #  - get nodal displacement if valid node, output 0.0 if not
 #  - for valid node output displacement, note if dof not provided output 1'st dof

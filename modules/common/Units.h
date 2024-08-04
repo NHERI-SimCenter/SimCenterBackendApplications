@@ -43,13 +43,13 @@ TimeUnit ParseTimeUnit(const char* timeUnitString);
 // This method parses a string to a force enumerator
 ForceUnit ParseForceUnit(const char *forceUnit);
 
-//This method finds the convertion factor from one length unit to another
+//This method finds the conversion factor from one length unit to another
 double GetLengthFactor(UnitSystem& fromUnit, UnitSystem& toUnit);
 
-//This method finds the convertion factor from one time unit to another
+//This method finds the conversion factor from one time unit to another
 double GetTimeFactor(UnitSystem& fromUnit, UnitSystem& toUnit);
 
-//This method finds the convertion factor from one acceleration unit to another
+//This method finds the conversion factor from one acceleration unit to another
 double GetAccelerationFactor(UnitSystem& fromUnit, UnitSystem& toUnit);
 
 // This method finds the conversion factor from one force unit to another

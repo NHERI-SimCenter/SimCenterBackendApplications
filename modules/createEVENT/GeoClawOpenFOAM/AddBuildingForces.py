@@ -1,137 +1,142 @@
-#!/usr/bin/env python
-from __future__ import print_function
-import os, sys
+#!/usr/bin/env python  # noqa: CPY001, D100, EXE001
 import argparse
 import json
+import os
 
-def validateCaseDirectoryStructure(caseDir):
-    """
-    This method validates that the provided case directory is valid and contains the 0, constant and system directory
+
+def validateCaseDirectoryStructure(caseDir):  # noqa: N802, N803
+    """This method validates that the provided case directory is valid and contains the 0, constant and system directory
     It also checks that system directory contains the controlDict
-    """
-    if not os.path.isdir(caseDir):
-        return False
-    
-    caseDirList = os.listdir(caseDir)
-    necessaryDirs = ["0", "constant", "system"]
-    if any(not aDir in caseDirList for aDir in necessaryDirs):
+    """  # noqa: D205, D400, D401, D404
+    if not os.path.isdir(caseDir):  # noqa: PTH112
         return False
 
-    controlDictPath = os.path.join(caseDir, "system/controlDict")
-    if not os.path.exists(controlDictPath):
+    caseDirList = os.listdir(caseDir)  # noqa: N806
+    necessaryDirs = ['0', 'constant', 'system']  # noqa: N806
+    if any(aDir not in caseDirList for aDir in necessaryDirs):
         return False
-    
+
+    controlDictPath = os.path.join(caseDir, 'system/controlDict')  # noqa: PTH118, N806
+    if not os.path.exists(controlDictPath):  # noqa: SIM103, PTH110
+        return False
+
     return True
 
-def findFunctionsDictionary(controlDictLines):
-    """
-    This method will find functions dictionary in the controlDict 
-    """
+
+def findFunctionsDictionary(controlDictLines):  # noqa: N802, N803
+    """This method will find functions dictionary in the controlDict"""  # noqa: D400, D401, D404
     for line in controlDictLines:
-        if line.startswith("functions"):
+        if line.startswith('functions'):
             return (True, controlDictLines.index(line) + 2)
 
     return [False, len(controlDictLines)]
 
 
-def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):
-    """
-    This method will write the force dictionary
-    """
-
-    for line in ["\t\n", "\tbuildingsForces\n", "\t{\n", "\t}\n", "\n"]:
+def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):  # noqa: N802, N803
+    """This method will write the force dictionary"""  # noqa: D400, D401, D404
+    for line in ['\t\n', '\tbuildingsForces\n', '\t{\n', '\t}\n', '\n']:
         controlDictLines.insert(lineIndex, line)
-        lineIndex += 1
+        lineIndex += 1  # noqa: N806
 
-    forceDictionary = {
-        "type": "forces",
-        "libs": '("libforces.so")',
-        "writeControl": "timeStep",
-        "writeInterval": 1,
-        "patches": "({})".format(patches),
-        "rho": "rhoInf",
-        "log": "true",
-        "rhoInf": 1,
-        "CofR": "(0 0 0)",
+    forceDictionary = {  # noqa: N806
+        'type': 'forces',
+        'libs': '("libforces.so")',
+        'writeControl': 'timeStep',
+        'writeInterval': 1,
+        'patches': f'({patches})',
+        'rho': 'rhoInf',
+        'log': 'true',
+        'rhoInf': 1,
+        'CofR': '(0 0 0)',
     }
 
-    lineIndex -= 2
+    lineIndex -= 2  # noqa: N806
     for key, value in forceDictionary.items():
-        controlDictLines.insert(lineIndex, "\t\t" + key + "\t" + str(value)+ ";\n")
-        lineIndex += 1
+        controlDictLines.insert(lineIndex, '\t\t' + key + '\t' + str(value) + ';\n')
+        lineIndex += 1  # noqa: N806
 
-    for line in ["\n", "\t\tbinData\n", "\t\t{\n", "\t\t}\n", "\n"]:
+    for line in ['\n', '\t\tbinData\n', '\t\t{\n', '\t\t}\n', '\n']:
         controlDictLines.insert(lineIndex, line)
-        lineIndex += 1
+        lineIndex += 1  # noqa: N806
 
-    lineIndex -= 2
-    binDictionary = {
-        "nBin": str(floorsCount),
-        "direction": '(0 0 1)',
-        "cumulative": "no"
+    lineIndex -= 2  # noqa: N806
+    binDictionary = {  # noqa: N806
+        'nBin': str(floorsCount),
+        'direction': '(0 0 1)',
+        'cumulative': 'no',
     }
 
     for key, value in binDictionary.items():
-        controlDictLines.insert(lineIndex, "\t\t\t" + key + "\t" + str(value)+ ";\n")
-        lineIndex += 1
+        controlDictLines.insert(
+            lineIndex, '\t\t\t' + key + '\t' + str(value) + ';\n'
+        )
+        lineIndex += 1  # noqa: N806
 
-def AddBuildingsForces(floorsCount, patches):
-    """
-    First, we need to validate the case directory structure
-    """
+
+def AddBuildingsForces(floorsCount, patches):  # noqa: N802, N803
+    """First, we need to validate the case directory structure"""  # noqa: D400
     # if not validateCaseDirectoryStructure(caseDir):
     #     print("Invalid OpenFOAM Case Directory!")
     #     sys.exit(-1)
 
+    # controlDictPath = os.path.join(caseDir, "system/controlDict")
+    controlDictPath = 'system/controlDict'  # noqa: N806
+    with open(controlDictPath) as controlDict:  # noqa: N806, PLW1514, PTH123
+        controlDictLines = controlDict.readlines()  # noqa: N806
 
-    #controlDictPath = os.path.join(caseDir, "system/controlDict")
-    controlDictPath = "system/controlDict"
-    with open(controlDictPath, 'r') as controlDict:
-        controlDictLines = controlDict.readlines()
+    [isFound, lineIndex] = findFunctionsDictionary(controlDictLines)  # noqa: N806
 
-    [isFound, lineIndex] = findFunctionsDictionary(controlDictLines)
-
-    #If we cannot find the function dictionary, we will create one
+    # If we cannot find the function dictionary, we will create one
     if not isFound:
-        for line in ["\n", "functions\n", "{\n", "}\n"]:
+        for line in ['\n', 'functions\n', '{\n', '}\n']:
             controlDictLines.insert(lineIndex, line)
-            lineIndex += 1
+            lineIndex += 1  # noqa: N806
 
-
-    #Now we can add the building forces
+    # Now we can add the building forces
     writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches)
 
-    #Writing updated controlDict
-    with open(controlDictPath, 'w') as controlDict:
+    # Writing updated controlDict
+    with open(controlDictPath, 'w') as controlDict:  # noqa: N806, PLW1514, PTH123
         controlDict.writelines(controlDictLines)
 
-def GetFloorsCount(BIMFilePath):
-    with open(BIMFilePath,'r') as BIMFile:
-	    bim = json.load(BIMFile)
 
-    return int(bim["GeneralInformation"]["stories"])
+def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
+    with open(BIMFilePath) as BIMFile:  # noqa: N806, PLW1514, PTH123
+        bim = json.load(BIMFile)
 
-if __name__ == "__main__":
-    #CLI parser
-    parser = argparse.ArgumentParser(description="Add forces postprocessing to OpenFOAM controlDict")
-    #parser.add_argument('-c', '--case', help="OpenFOAM case directory", required=True)
-    parser.add_argument('-f', '--floors', help= "Number of Floors", type=int, required=False)
-    parser.add_argument('-b', '--bim', help= "path to BIM file", required=False)
-    parser.add_argument('-p', '--patches', help= "Patches used for extracting forces on building", required=False)
+    return int(bim['GeneralInformation']['stories'])
 
-    #Parsing arguments
+
+if __name__ == '__main__':
+    # CLI parser
+    parser = argparse.ArgumentParser(
+        description='Add forces postprocessing to OpenFOAM controlDict'
+    )
+    # parser.add_argument('-c', '--case', help="OpenFOAM case directory", required=True)
+    parser.add_argument(
+        '-f', '--floors', help='Number of Floors', type=int, required=False
+    )
+    parser.add_argument('-b', '--bim', help='path to BIM file', required=False)
+    parser.add_argument(
+        '-p',
+        '--patches',
+        help='Patches used for extracting forces on building',
+        required=False,
+    )
+
+    # Parsing arguments
     arguments, unknowns = parser.parse_known_args()
     floors = arguments.floors
     if not floors:
         if arguments.bim:
             floors = GetFloorsCount(arguments.bim)
-        else: 
+        else:
             floors = 1
 
     patches = arguments.patches
     if not patches:
-        patches = "Building"
+        patches = 'Building'
 
-    #Add building forces to post-processing
+    # Add building forces to post-processing
     # AddBuildingsForces(arguments.case, floors, patches)
     AddBuildingsForces(floors, patches)

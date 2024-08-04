@@ -35,13 +35,13 @@ CommandParser::CommandParser(int& number_of_arguments, char* arguments[]) {
 
   auto result = command_parser_.parse(clara::detail::Args(number_of_arguments, arguments));
   
-  // Check whether command line was succussfully parsed
+  // Check whether command line was successfully parsed
   if (!result) {
     std::cerr << "ERROR: In command line inputs: " << result.errorMessage() << std::endl;
     throw std::invalid_argument("ERROR: In CommandParser::CommandParser: Command line inputs error");
   }
 
-  // If help flag passed, pring usage and exit
+  // If help flag passed, print usage and exit
   if (configuration_.help) {
     std::cout << command_parser_ << std::endl;
   }

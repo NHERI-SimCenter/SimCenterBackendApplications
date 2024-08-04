@@ -1,28 +1,27 @@
-####################################################################
+# # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
-"""
-	LICENSE INFORMATION:
-	
-	Copyright (c) 2020-2030, The Regents of the University of California (Regents).
+"""LICENSE INFORMATION:
 
-	All rights reserved.
+Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
-	Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+All rights reserved.
 
-	1. Redistributions of source code must retain the above copyright notice, this 
-		list of conditions and the following disclaimer.
-	2. Redistributions in binary form must reproduce the above copyright notice,
-		this list of conditions and the following disclaimer in the documentation
-		and/or other materials provided with the distribution.
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+1. Redistributions of source code must retain the above copyright notice, this
+        list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+        this list of conditions and the following disclaimer in the documentation
+        and/or other materials provided with the distribution.
 
-	The views and conclusions contained in the software and documentation are those of the authors and should not be interpreted as representing official policies, either expressed or implied, of the FreeBSD Project.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-	REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
-	
-"""
+The views and conclusions contained in the software and documentation are those of the authors and should not be interpreted as representing official policies, either expressed or implied, of the FreeBSD Project.
+
+REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -32,116 +31,113 @@
 # Import all necessary modules
 ####################################################################
 # Standard python modules
-import os
 
 # Other custom modules
 from hydroUtils import hydroUtils
 
+
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
-class of7Alpboundary():
-	"""
-	This class includes the methods related to
-	alpha boundary conditions for openfoam7.
+class of7Alpboundary:
+    """This class includes the methods related to
+    alpha boundary conditions for openfoam7.
 
-	Methods
-	--------
-		Alptext: Get all the text for the p_rgh-file
-	"""
+    Methods
+    -------
+            Alptext: Get all the text for the p_rgh-file
 
-	#############################################################
-	def Alptext(self,data,patches):
-		'''
-		Creates the necessary text for pressure bc for openfoam7
+    """  # noqa: D205, D404
 
-		Arguments
-		-----------
-			data: all the JSON data
-		'''
+    #############################################################
+    def Alptext(self, data, patches):  # noqa: N802
+        """Creates the necessary text for pressure bc for openfoam7
 
-		# Create a utilities object
-		hydroutil = hydroUtils()
+        Arguments:
+        ---------
+                data: all the JSON data
 
-		# Get the header text for the U-file
-		Alptext = self.Alpheader()
+        """  # noqa: D400, D401
+        # Create a utilities object
+        hydroutil = hydroUtils()
 
-		# Start the outside 
-		Alptext = Alptext + "boundaryField\n{\n"
+        # Get the header text for the U-file
+        Alptext = self.Alpheader()  # noqa: N806
 
-		# Loop over all patches
-		for patchname in patches:
-			Alptext = Alptext + "\t" + patchname + "\n"
-			patch = hydroutil.extract_element_from_json(data, ["Events","PressureType_" + patchname])
-			if patch == [None]:
-				Alptype = -1
-			else:
-				Alptype = 0
-			Alptext = Alptext + self.Alppatchtext(Alptype,patchname)
+        # Start the outside
+        Alptext = Alptext + 'boundaryField\n{\n'  # noqa: N806, PLR6104
 
-		# Check for building and other building
-		Alptext = Alptext + '\tBuilding\n'
-		Alptext = Alptext + self.Alppatchtext(0,'Building')
-		Alptext = Alptext + '\tOtherBuilding\n'
-		Alptext = Alptext + self.Alppatchtext(0,'OtherBuilding')
+        # Loop over all patches
+        for patchname in patches:
+            Alptext = Alptext + '\t' + patchname + '\n'  # noqa: N806
+            patch = hydroutil.extract_element_from_json(
+                data, ['Events', 'PressureType_' + patchname]
+            )
+            if patch == [None]:
+                Alptype = -1  # noqa: N806
+            else:
+                Alptype = 0  # noqa: N806
+            Alptext = Alptext + self.Alppatchtext(Alptype, patchname)  # noqa: N806, PLR6104
 
-		# Close the outside
-		Alptext = Alptext + "}\n\n"
-		
-		# Return the text for velocity BC
-		return Alptext
-	
-	#############################################################
-	def Alpheader(self):
-		'''
-		Creates the text for the header for pressure file
+        # Check for building and other building
+        Alptext = Alptext + '\tBuilding\n'  # noqa: N806, PLR6104
+        Alptext = Alptext + self.Alppatchtext(0, 'Building')  # noqa: N806, PLR6104
+        Alptext = Alptext + '\tOtherBuilding\n'  # noqa: N806, PLR6104
+        Alptext = Alptext + self.Alppatchtext(0, 'OtherBuilding')  # noqa: N806, PLR6104
 
-		Variable
-		-----------
-			header: Header for the p_rgh-file
-		'''
+        # Close the outside
+        Alptext = Alptext + '}\n\n'  # noqa: N806, PLR6104
 
-		header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\ 
+        # Return the text for velocity BC
+        return Alptext  # noqa: RET504
+
+    #############################################################
+    def Alpheader(self):  # noqa: N802, PLR6301
+        """Creates the text for the header for pressure file
+
+        Variable
+        -----------
+                header: Header for the p_rgh-file
+        """  # noqa: D400, D401
+        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
 |======| D | Website: simcenter.designsafe-ci.org/research-tools/hydro-uq
 |	   | R | Version: 1.00
 |	   | O |
-\*---------------------------------------------------------------------------*/ 
+\\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tvolScalarField;\n\tlocation\t"0";\n\tobject\talpha.water;\n}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
-		header = header + "dimensions\t[0 0 0 0 0 0 0];\n\n"
-		header = header + "internalField\tuniform\t0;\n\n"
-		
-		# Return the header for U file
-		return header
+        header = header + 'dimensions\t[0 0 0 0 0 0 0];\n\n'  # noqa: PLR6104
+        header = header + 'internalField\tuniform\t0;\n\n'  # noqa: PLR6104
 
-	#############################################################
-	def Alppatchtext(self,Alptype,patchname):
-		'''
-		Creates the text the pressure boundary condition
+        # Return the header for U file
+        return header  # noqa: RET504
 
-		Arguments
-		-----------
-			patchname: Name of the patch
+    #############################################################
+    def Alppatchtext(self, Alptype, patchname):  # noqa: ARG002, N802, N803, PLR6301
+        """Creates the text the pressure boundary condition
 
-		Variable
-		-----------
-			Alptext: Text for the particular patch
-		'''
+        Arguments:
+        ---------
+                patchname: Name of the patch
 
-		if patchname == 'Top':
-			Alptext = "\t{\n\t\t"
-			Alptext = Alptext + "type\tinletOutlet;\n\t\t"
-			Alptext = Alptext + "inletValue\tuniform 0;\n\t\t"
-			Alptext = Alptext + "value\tuniform 0;\n\t}\n"
+        Variable
+        -----------
+                Alptext: Text for the particular patch
 
-		else:
-			Alptext = "\t{\n\t\t"
-			Alptext = Alptext + "type\tzeroGradient;\n\t}\n"
+        """  # noqa: D400, D401
+        if patchname == 'Top':
+            Alptext = '\t{\n\t\t'  # noqa: N806
+            Alptext = Alptext + 'type\tinletOutlet;\n\t\t'  # noqa: N806, PLR6104
+            Alptext = Alptext + 'inletValue\tuniform 0;\n\t\t'  # noqa: N806, PLR6104
+            Alptext = Alptext + 'value\tuniform 0;\n\t}\n'  # noqa: N806, PLR6104
 
-		
-		# Return the header for U file
-		return Alptext
+        else:
+            Alptext = '\t{\n\t\t'  # noqa: N806
+            Alptext = Alptext + 'type\tzeroGradient;\n\t}\n'  # noqa: N806, PLR6104
+
+        # Return the header for U file
+        return Alptext

@@ -5,7 +5,7 @@ simcenter_add_file(NAME nutFileTemplate)
 simcenter_add_file(NAME pFileTemplate)
 simcenter_add_file(NAME epsilonFileTemplate)
 
-#Files in "costant" directory
+#Files in "constant" directory
 simcenter_add_file(NAME physicalPropertiesTemplate)
 simcenter_add_file(NAME transportPropertiesTemplate)
 simcenter_add_file(NAME momentumTransportTemplate)

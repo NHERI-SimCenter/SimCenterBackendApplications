@@ -1,10 +1,8 @@
-from wntrfr.sim.results import SimulationResults
+from wntrfr.sim.results import SimulationResults  # noqa: CPY001, D100
 
 
 class SimulationResults(SimulationResults):
-    """
-    Water network simulation results class.
-    """
+    """Water network simulation results class."""
 
     def __init__(self):
         super().__init__()

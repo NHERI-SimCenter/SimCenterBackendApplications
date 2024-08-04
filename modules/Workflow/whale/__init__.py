@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+#  # noqa: D104
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -41,11 +40,11 @@
 # Michael Gardner
 # Chaofeng Wang
 
-name = "whale"
+name = 'whale'
 
 __version__ = '2.4.1'
 
 __copyright__ = """Copyright (c) 2018 The Regents of the University of
 California and Leland Stanford Junior University"""
 
-__license__ = "BSD 3-Clause License"
+__license__ = 'BSD 3-Clause License'

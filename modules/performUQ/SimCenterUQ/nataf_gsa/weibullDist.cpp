@@ -51,7 +51,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <iomanip>
 // bet is lamb, an, - follow ERA notation
 // alp is k
-// boost recieves in order (k,an)
+// boost receives in order (k,an)
 
 using std::vector;
 

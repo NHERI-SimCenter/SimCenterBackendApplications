@@ -12,7 +12,7 @@
 class CommandParser {
  public:
   /**
-   * @constructor Default contstructor
+   * @constructor Default constructor
    */
   CommandParser() = default;
   

@@ -670,7 +670,7 @@ double CB = (CB_init - time_passed); //seconds
         speedUp_list.push_back(speedUpNum/speedUpDenom);
 
         //
-		// Find the id of the most conservative QoI - that simulates HF largest amout
+		// Find the id of the most conservative QoI - that simulates HF largest amount
 		//
 
 

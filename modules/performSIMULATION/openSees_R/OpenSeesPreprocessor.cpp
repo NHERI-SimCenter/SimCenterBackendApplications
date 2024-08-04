@@ -579,7 +579,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 }
 
 
-// seperate for multi events
+// separate for multi events
 int
 OpenSeesPreprocessor::processEvent(ofstream &s,
 				   json_t *event,

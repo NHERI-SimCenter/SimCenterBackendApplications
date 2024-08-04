@@ -246,7 +246,7 @@ proc rotSpring2DModIKModel {eleID nodeR nodeC K asPos asNeg MyPos MyNeg LS LK LA
 	equalDOF 15 45 $dof1;	# Floor 5:  Pier 1 to Pier 4
 	equalDOF 15 55 $dof1;	# Floor 5:  Pier 1 to Pier 5
 
-# assign boundary condidtions 
+# assign boundary conditions
 	# command:  fix nodeID dxFixity dyFixity rzFixity
 	# fixity values: 1 = constrained; 0 = unconstrained
 	# fix the base of the building; pin P-delta column at base

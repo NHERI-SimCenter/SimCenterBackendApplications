@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2018 The Regents of the University of California
 #
 # This file is part of the SimCenter Backend Applications
@@ -37,107 +36,123 @@
 # Dr. Stevan Gavrilovic, UC Berkeley
 #
 
-import os
-import sys
+import argparse
 import importlib
-import subprocess
-import argparse, posixpath, json
-  
+import json
+import os
+import subprocess  # noqa: S404
+import sys
+
 if __name__ == '__main__':
-     
-    print('Pulling census data')
-    
-    
+    print('Pulling census data')  # noqa: T201
+
     # Get any missing dependencies
-    packageInstalled = False
+    packageInstalled = False  # noqa: N816
 
     import requests
-    if not hasattr(requests, 'get'):
-        print('Installing the requests package')
-        subprocess.check_call([sys.executable, "-m", "pip", "install", 'requests'])
-        packageInstalled = True
 
-    
+    if not hasattr(requests, 'get'):
+        print('Installing the requests package')  # noqa: T201
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'requests'])  # noqa: S603
+        packageInstalled = True  # noqa: N816
+
     packages = ['geopandas']
     for p in packages:
         if importlib.util.find_spec(p) is None:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", p])
-            packageInstalled = True
-            print('Installing the ' +p+ ' package')
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', p])  # noqa: S603
+            packageInstalled = True  # noqa: N816
+            print('Installing the ' + p + ' package')  # noqa: T201
 
-    if packageInstalled == True :
-        print('New packages were installed. Please restart the process.')
+    if packageInstalled == True:  # noqa: E712
+        print('New packages were installed. Please restart the process.')  # noqa: T201
         sys.exit(0)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--census_config')
     args = parser.parse_args()
-    with open(args.census_config) as f:
+    with open(args.census_config) as f:  # noqa: PLW1514, PTH123
         config_info = json.load(f)
 
     # Output directory
     output_dir = config_info['OutputDirectory']
-    
+
     try:
-        os.mkdir(f"{output_dir}")
-    except:
-        print('Output folder already exists.')
-    
-    
+        os.mkdir(f'{output_dir}')  # noqa: PTH102
+    except:  # noqa: E722
+        print('Output folder already exists.')  # noqa: T201
+
     # State counties, e.g., ['01001', '01003']
     state_counties = config_info['CountiesArray']
 
-
     # Population demographics vintage, e.g., "2010"
-    popDemoVintage = config_info['PopulationDemographicsVintage']
-    
+    popDemoVintage = config_info['PopulationDemographicsVintage']  # noqa: N816
+
     # Custom census vars
     census_vars = config_info['CensusVariablesArray']
-    
+
     # Custom ACS vars
     acs_vars = config_info['ACSVariablesArray']
-    
-    if popDemoVintage != '2000' and popDemoVintage != '2010' and popDemoVintage != '2020':
 
-        print('Only 2000, 2010, and 2020 decennial census data supported. The provided vintage ',popDemoVintage,' is not supported')
-        
+    if (
+        popDemoVintage != '2000'  # noqa: PLR1714
+        and popDemoVintage != '2010'
+        and popDemoVintage != '2020'
+    ):
+        print(  # noqa: T201
+            'Only 2000, 2010, and 2020 decennial census data supported. The provided vintage ',
+            popDemoVintage,
+            ' is not supported',
+        )
+
         sys.exit(-1)
-    
+
     # Vintage for household demographics
-    houseIncomeVintage = config_info['HouseholdIncomeVintage']
+    houseIncomeVintage = config_info['HouseholdIncomeVintage']  # noqa: N816
 
-    if houseIncomeVintage != '2010' and houseIncomeVintage != '2015' and houseIncomeVintage != '2020':
-
-        print('Only 2010, 2015, and 2020 ACS 5-yr data supported. The provided vintage ',houseIncomeVintage,' is not supported')
+    if (
+        houseIncomeVintage != '2010'  # noqa: PLR1714
+        and houseIncomeVintage != '2015'
+        and houseIncomeVintage != '2020'
+    ):
+        print(  # noqa: T201
+            'Only 2010, 2015, and 2020 ACS 5-yr data supported. The provided vintage ',
+            houseIncomeVintage,
+            ' is not supported',
+        )
         sys.exit(-1)
 
     from pyincore_data.censusutil import CensusUtil
 
     # Get the population demographics at the block level
-    CensusUtil.get_blockdata_for_demographics(state_counties,
-                                              census_vars,
-                                              popDemoVintage,out_csv=False,
-                                              out_shapefile=True,
-                                              out_geopackage=False,
-                                              out_geojson=False,
-                                              file_name="PopulationDemographicsCensus"+popDemoVintage,
-                                              output_dir=output_dir)
-    
-    #sys.exit(0)
-    
-    print('Done pulling census population demographics data')
+    CensusUtil.get_blockdata_for_demographics(
+        state_counties,
+        census_vars,
+        popDemoVintage,
+        out_csv=False,
+        out_shapefile=True,
+        out_geopackage=False,
+        out_geojson=False,
+        file_name='PopulationDemographicsCensus' + popDemoVintage,
+        output_dir=output_dir,
+    )
+
+    # sys.exit(0)
+
+    print('Done pulling census population demographics data')  # noqa: T201
 
     # Get the household income at the tract (2010 ACS) or block group level (2015 and 2020 ACS)
-    CensusUtil.get_blockgroupdata_for_income(state_counties,
-                                             acs_vars,
-                                             houseIncomeVintage,
-                                             out_csv=False,
-                                             out_shapefile=True,
-                                             out_geopackage=False,
-                                             out_geojson=False,
-                                             file_name="HouseholdIncomeACS"+houseIncomeVintage,
-                                             output_dir=output_dir)
-   
-    print('Done pulling ACS household income data')
-    
+    CensusUtil.get_blockgroupdata_for_income(
+        state_counties,
+        acs_vars,
+        houseIncomeVintage,
+        out_csv=False,
+        out_shapefile=True,
+        out_geopackage=False,
+        out_geojson=False,
+        file_name='HouseholdIncomeACS' + houseIncomeVintage,
+        output_dir=output_dir,
+    )
+
+    print('Done pulling ACS household income data')  # noqa: T201
+
     sys.exit(0)

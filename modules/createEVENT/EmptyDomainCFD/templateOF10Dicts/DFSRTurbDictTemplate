@@ -57,7 +57,7 @@ C                       (//x	y     z
 windProfile
 {	
 	//read scaling factors for I, L 
-	//that varies with hieght
+	//that varies with height
 	adjustProfile  	off;
 
 	//Factors to scale turbulence intensities and length scale profiles

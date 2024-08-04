@@ -77,7 +77,7 @@ main(int argc, char **argv) {
   
   json_t *inputEventsArray = json_object_get(input, "Events");  
   if (inputEventsArray == NULL) {
-    std::cerr << "FATAL ERROR - input file conatins no Events key-pair\n";
+    std::cerr << "FATAL ERROR - input file contains no Events key-pair\n";
     exit(-1);
   }
   
@@ -190,7 +190,7 @@ int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent,
     // for each floor we need to modify the time step and load factor
     // to reflect time step and forces .. data obtained for U=100m/s
     // forces factor = windSpeed^2/100^2, time step factor = 100/windSpeed
-    //  and if shape == 1 (square), we need to get forces from other file and swicth as no angle > 45
+    //  and if shape == 1 (square), we need to get forces from other file and switch as no angle > 45
     //
 
     json_t *dtJO = json_object_get(event, "dT");
@@ -306,7 +306,7 @@ int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent,
 	widthJO == NULL  ||
 	depthJO == NULL  ||
 	storiesJO == NULL ) {
-      std::cerr << "ERROR missing Information from GeneralInformation (height, width, stories all neeed)\n";
+      std::cerr << "ERROR missing Information from GeneralInformation (height, width, stories all needed)\n";
       return -1;        
     }
     
@@ -417,7 +417,7 @@ int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent,
 	modelHeightJO == NULL ||
 	modelExposureJO == NULL ||
 	windSpeedJO == NULL) {
-      std::cerr << "ERROR missing Information from Event (modelPlan, modelHeight, exposure, windSpeed all neeed)\n";
+      std::cerr << "ERROR missing Information from Event (modelPlan, modelHeight, exposure, windSpeed all needed)\n";
       return -1;        
     }
     

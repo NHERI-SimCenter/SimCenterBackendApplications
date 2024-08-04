@@ -46,7 +46,7 @@ size(const Base<typename T1::elem_type,T1>& X)
 
 
 
-// explicit overload to workround ADL issues with C++17 std::size()
+// explicit overload to workaround ADL issues with C++17 std::size()
 template<typename eT>
 arma_warn_unused
 inline
@@ -60,7 +60,7 @@ size(const Mat<eT>& X)
 
 
 
-// explicit overload to workround ADL issues with C++17 std::size()
+// explicit overload to workaround ADL issues with C++17 std::size()
 template<typename eT>
 arma_warn_unused
 inline
@@ -74,7 +74,7 @@ size(const Row<eT>& X)
 
 
 
-// explicit overload to workround ADL issues with C++17 std::size()
+// explicit overload to workaround ADL issues with C++17 std::size()
 template<typename eT>
 arma_warn_unused
 inline
@@ -130,7 +130,7 @@ size(const BaseCube<typename T1::elem_type, T1>& X)
 
 
 
-// explicit overload to workround ADL issues with C++17 std::size()
+// explicit overload to workaround ADL issues with C++17 std::size()
 template<typename eT>
 arma_warn_unused
 inline
@@ -174,7 +174,7 @@ size(const SpBase<typename T1::elem_type,T1>& X)
 
 
 
-// explicit overload to workround ADL issues with C++17 std::size()
+// explicit overload to workaround ADL issues with C++17 std::size()
 template<typename eT>
 arma_warn_unused
 inline

@@ -370,10 +370,10 @@ c
      &                  '_saitr: B-norm of the current residual =')
          end if
 c 
-c        %---------------------------------------------------------%
-c        | Check for exact zero. Equivalent to determing whether a |
-c        | j-step Arnoldi factorization is present.                |
-c        %---------------------------------------------------------%
+c        %-----------------------------------------------------------%
+c        | Check for exact zero. Equivalent to determining whether a |
+c        | j-step Arnoldi factorization is present.                  |
+c        %-----------------------------------------------------------%
 c
          if (rnorm .gt. zero) go to 40
 c

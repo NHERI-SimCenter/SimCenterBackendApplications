@@ -205,7 +205,7 @@ int WindFieldModel::ConfigSimu(std::string config_file, std::string stn_file,
     {
         this->Lat_w(i) = tmp_latw[i];
     }
-    // Calculate longitude of refence values (Long_w)
+    // Calculate longitude of reference values (Long_w)
     // This is done by interpolating
     int value;
     for (int ii = 0; ii < num_latw; ii++)
@@ -247,7 +247,7 @@ int WindFieldModel::PertubPath(std::string dpath_file)
         std::cout << "WinFieldModel: error - can't read the perturbation json file" << std::endl;
     }
 
-    // \delta Anlge
+    // \delta Angle
     this->del_par(2) = json_number_value(json_object_get(dpath_doc, "dAngle"));
     // \delta Latitude
     this->del_par(0) = json_number_value(json_object_get(dpath_doc, "dLatitude"));
@@ -275,7 +275,7 @@ int WindFieldModel::DefineTern(std::string refz0_file)
     json_t *feat = json_object_get(z0_doc, "features");
     this->num_region = int(json_array_size(feat));
 
-    // initialzing z0
+    // initializing z0
     this->z0r = Eigen::ArrayXd::Zero(this->num_region);
     this->Wr_sizes = Eigen::ArrayXd::Zero(this->num_region);
     // getting z0 values and sizes

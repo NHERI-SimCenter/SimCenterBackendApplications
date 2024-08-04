@@ -62,7 +62,7 @@ open (DAKOTA_PARAMS, "<$params_file") || die "Can't open $params_file: $!";
 # tag/value pairs in %values_p1.  Numeric fields from DAKOTA are either integral
 # or exponential notation and there is only one tag/value pair per line
 # (exception: standard format up to DAKOTA v3.3 uses "# variables # functions"
-# on the first line).  However, to accomodate the possibility that parameters
+# on the first line).  However, to accommodate the possibility that parameters
 # files may be generated from other sources, floats are also supported and
 # multiple tag/value pairs are allowed per line.  Compound expressions are not
 # currently allowed.
@@ -355,7 +355,7 @@ sub format_value {
   my $local_format = shift(@_);
  
   # optional $local_format for the field, extracted from template,
-  # takes precendence over optional $output_format defined by 
+  # takes precedence over optional $output_format defined by 
   # command line option
 
   if (defined $local_format) {

@@ -1030,7 +1030,7 @@ int OpenSeesConcreteShearWalls::processEvents(ofstream &s)
   return 0;
 }
 
-// seperate for multi events
+// separate for multi events
 int OpenSeesConcreteShearWalls::processEvent(ofstream &s,
                                        json_t *event,
                                        int &numPattern,
@@ -1040,7 +1040,7 @@ int OpenSeesConcreteShearWalls::processEvent(ofstream &s,
   json_t *pattern;
 
   const char *eventType = json_string_value(json_object_get(event, "type"));
-  if (strcmp(eventType, "Seismic") == 0 || strcmp(eventType, "Cyclic") == 0) // TODO: seperate Seismic with static cyclic
+  if (strcmp(eventType, "Seismic") == 0 || strcmp(eventType, "Cyclic") == 0) // TODO: separate Seismic with static cyclic
   {
     analysisType = 1;
     numSteps = json_integer_value(json_object_get(event, "numSteps"));

@@ -3035,7 +3035,7 @@ diskio::load_arma_binary(SpMat<eT>& x, std::istream& f, std::string& err_msg)
         {
         arma_extra_debug_print("detected inconsistent data while loading; re-reading integer parts as u32");
         
-        // inconstency could be due to a different uword size used during saving,
+        // inconsistency could be due to a different uword size used during saving,
         // so try loading the row_indices and col_ptrs under the assumption of 32 bit unsigned integers
         
         f.clear();
@@ -3820,7 +3820,7 @@ diskio::load_hdf5_binary(Cube<eT>& x, const hdf5_name& spec, std::string& err_ms
           return false;
           }
         
-        if(ndims == 1) { dims[1] = 1; dims[2] = 1; }  // Vector case; one row/colum, several slices
+        if(ndims == 1) { dims[1] = 1; dims[2] = 1; }  // Vector case; one row/column, several slices
         if(ndims == 2) {              dims[2] = 1; }  // Matrix case; one column, several rows/slices
         
         x.set_size(dims[2], dims[1], dims[0]);

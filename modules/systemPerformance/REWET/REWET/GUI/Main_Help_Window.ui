@@ -44,7 +44,7 @@
        </font>
       </property>
       <property name="text">
-       <string>REstoration of Water after an Event Tool (REWET) is created by Sina Naeimi and Rachel Davidson at University of Delaware. REWET is as it as and developers gurantee neither the usability of the software nor the validity of data it produce in any way.</string>
+       <string>REstoration of Water after an Event Tool (REWET) is created by Sina Naeimi and Rachel Davidson at University of Delaware. REWET is as it as and developers guarantee neither the usability of the software nor the validity of data it produce in any way.</string>
       </property>
       <property name="wordWrap">
        <bool>true</bool>

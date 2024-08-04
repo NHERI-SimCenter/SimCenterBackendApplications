@@ -217,7 +217,7 @@ double HazusSAM_Generator::GetAlpha1(int n)
 
 double HazusSAM_Generator::GetAlpha2(int n)
 {
-   // calculate the hight coefficient for the first natural mode
+   // calculate the height coefficient for the first natural mode
    // assuming shear deformation and the k and m are identical for each story.
    if(n<=1)
        return 1.0;

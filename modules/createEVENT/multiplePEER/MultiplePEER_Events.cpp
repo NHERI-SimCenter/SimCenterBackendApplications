@@ -342,7 +342,7 @@ int createSimCenterEvent(json_t *peerEvent) {
   json_t *peerRecord = 0;
   int index;
 
-  // loop over ths array of PEER events, creating a timeSeries and pattern for the event
+  // loop over this array of PEER events, creating a timeSeries and pattern for the event
   double dT =0.0;
   int numPoints =0;
   json_array_foreach(recordsArray, index, peerRecord) { 
