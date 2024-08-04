@@ -1,4 +1,4 @@
-####################################################################  # noqa: INP001
+# # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: D400, D415
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -37,7 +37,7 @@ import os
 ####################################################################
 # Hydro-UQ utilities class
 ####################################################################
-class hydroUtils:  # noqa: N801
+class hydroUtils:
     """This class includes all the general utilities that are
     required for the Hydro-UQ.
 
@@ -51,7 +51,7 @@ class hydroUtils:  # noqa: N801
     """  # noqa: D205, D404
 
     #############################################################
-    def extract(self, obj, path, ind, arr):  # noqa: ANN001, ANN201, C901, PLR0912
+    def extract(self, obj, path, ind, arr):  # noqa: ANN001, ANN201, C901
         """Extracts an element from a nested dictionary
         along a specified path and returns a list.
 
@@ -114,13 +114,13 @@ class hydroUtils:  # noqa: N801
             return outer_arr
 
     #############################################################
-    def general_header(self):  # noqa: ANN201
+    def general_header(self):  # noqa: ANN201, PLR6301
         """Used to create a general header for Hydro-UQ related files
 
         Variables
         -----------
                 header: Stores the general header for the Hydro-UQ files
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H  |
 |	   | Y  | HydroUQ: Water-based Natural Hazards Modeling Application
@@ -132,7 +132,7 @@ class hydroUtils:  # noqa: N801
         return header  # noqa: RET504
 
     ####################################################################
-    def of7header(self, OFclass, location, filename):  # noqa: ANN001, ANN201, N803
+    def of7header(self, OFclass, location, filename):  # noqa: ANN001, ANN201, N803, PLR6301
         """Method to create a header for the input dictionaries.
 
         Variables
@@ -159,7 +159,7 @@ FoamFile
         return header  # noqa: RET504
 
     #############################################################
-    def hydrolog(self, projname, fipath):  # noqa: ANN001, ANN201, D417
+    def hydrolog(self, projname, fipath):  # noqa: ANN001, ANN201
         """Used to initialize the log file for the Hydro-UQ program
 
         Arguments:
@@ -171,28 +171,28 @@ FoamFile
         -----------
                 flog: File pointer to the log file
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Open a log file to write the outputs
         # Use project name for the log file
         # If no project name is specified, call it Untitled
-        if projname != '':
+        if projname != '':  # noqa: PLC1901
             fname = ''.join(projname.split()) + '.h20log'
         else:
             fname = 'Untitled.h20log'
 
         # Path to the file
         filepath = os.path.join(fipath, fname)  # noqa: PTH118
-        self.flog = open(filepath, 'w')  # noqa: SIM115, PTH123
+        self.flog = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
 
     #############################################################
-    def getlist(self, data):  # noqa: ANN001, ANN201, D417
+    def getlist(self, data):  # noqa: ANN001, ANN201, PLR6301
         """Used to get the float from a list of negative string
 
         Arguments:
         ---------
                 userlist: Name of the project as given by the user
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # results = []
 
         # for line in data:

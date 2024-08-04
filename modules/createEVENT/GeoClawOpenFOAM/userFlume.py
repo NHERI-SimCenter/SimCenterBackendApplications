@@ -1,4 +1,4 @@
-####################################################################  # noqa: INP001
+# # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: D400, D415
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -42,7 +42,7 @@ from hydroUtils import hydroUtils
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
-class userFlume:  # noqa: N801
+class userFlume:
     """This class includes the methods related to
     creating a flume as specified by the user
 
@@ -50,17 +50,17 @@ class userFlume:  # noqa: N801
     -------
             creategeom: Create geometry and STL files
 
-    """  # noqa: D205, D400, D404, D415
+    """  # noqa: D205, D400, D404
 
     #############################################################
-    def creategeom(self, data, path):  # noqa: ANN001, ANN201, D417
+    def creategeom(self, data, path):  # noqa: ANN001, ANN201, PLR6301
         """Creates the geometry for user flume
 
         Arguments:
         ---------
                 data: all the JSON data
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -84,7 +84,7 @@ class userFlume:  # noqa: N801
         filename = 'FlumeData.txt'
         if os.path.exists(filename):  # noqa: PTH110
             os.remove(filename)  # noqa: PTH107
-        f = open(filename, 'a')  # noqa: SIM115, PTH123
+        f = open(filename, 'a')  # noqa: PLW1514, PTH123, SIM115
         for ii in range(int(numflumesegs)):
             f.write(str(nums[2 * ii]) + ',' + str(nums[2 * ii + 1]) + '\n')
         f.close()

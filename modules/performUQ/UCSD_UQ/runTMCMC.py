@@ -1,7 +1,7 @@
 """authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, and Prof. J.P. Conte
 affiliation: University of California, San Diego
 modified: Aakash Bangalore Satish, NHERI SimCenter, UC Berkeley
-"""  # noqa: INP001, D205, D400, D415
+"""  # noqa: CPY001, D205, D400, INP001
 
 import csv
 import multiprocessing as mp
@@ -14,7 +14,7 @@ from numpy.random import SeedSequence, default_rng
 from runFEM import runFEM
 
 
-def write_stage_start_info_to_logfile(  # noqa: ANN201, D103, PLR0913
+def write_stage_start_info_to_logfile(  # noqa: ANN201, D103
     logfile,  # noqa: ANN001
     stage_number,  # noqa: ANN001
     beta,  # noqa: ANN001
@@ -40,7 +40,7 @@ def write_stage_start_info_to_logfile(  # noqa: ANN201, D103, PLR0913
     os.fsync(logfile.fileno())
 
 
-def write_eval_data_to_logfile(  # noqa: ANN201, D103, PLR0913
+def write_eval_data_to_logfile(  # noqa: ANN201, D103
     logfile,  # noqa: ANN001
     parallelize_MCMC,  # noqa: ANN001, N803
     run_type,  # noqa: ANN001
@@ -75,7 +75,7 @@ def write_eval_data_to_logfile(  # noqa: ANN201, D103, PLR0913
         logfile.write(f'\n\t\t\tNumber of processors being used: {1}')
 
 
-def create_headings(  # noqa: ANN201, D103, PLR0913
+def create_headings(  # noqa: ANN201, D103
     logfile,  # noqa: ANN001
     model_number,  # noqa: ANN001
     model_parameters,  # noqa: ANN001
@@ -109,7 +109,7 @@ def get_prediction_from_workdirs(i, working_directory):  # noqa: ANN001, ANN201,
     return prediction  # noqa: RET504
 
 
-def write_data_to_tab_files(  # noqa: ANN201, D103, PLR0913
+def write_data_to_tab_files(  # noqa: ANN201, D103
     logfile,  # noqa: ANN001
     working_directory,  # noqa: ANN001
     model_number,  # noqa: ANN001
@@ -133,12 +133,12 @@ def write_data_to_tab_files(  # noqa: ANN201, D103, PLR0913
     )
 
     logfile.write(f'\n\t\t\tWriting to file {tab_file_full_path}')
-    with open(tab_file_full_path, 'a+') as f:  # noqa: PTH123
+    with open(tab_file_full_path, 'a+') as f:  # noqa: PLW1514, PTH123
         if model_number == 0:
             f.write(headings)
         for i in range(number_of_samples):
             row_string = (
-                f'{i + 1 + number_of_samples*model_number}\t{model_number+1}\t'
+                f'{i + 1 + number_of_samples * model_number}\t{model_number + 1}\t'
             )
             for j in range(len(model_parameters['names'])):
                 row_string += f'{dataToWrite[i, j]}\t'
@@ -154,7 +154,7 @@ def write_data_to_tab_files(  # noqa: ANN201, D103, PLR0913
     os.fsync(logfile.fileno())
 
 
-def write_data_to_csvfile(  # noqa: ANN201, D103, PLR0913
+def write_data_to_csvfile(  # noqa: ANN201, D103
     logfile,  # noqa: ANN001
     total_number_of_models_in_ensemble,  # noqa: ANN001
     stage_number,  # noqa: ANN001
@@ -167,7 +167,7 @@ def write_data_to_csvfile(  # noqa: ANN201, D103, PLR0913
     )
     if total_number_of_models_in_ensemble > 1:
         string_to_append = (
-            f'resultsStage{stage_number - 1}_Model_{model_number+1}.csv'
+            f'resultsStage{stage_number - 1}_Model_{model_number + 1}.csv'
         )
     else:
         string_to_append = f'resultsStage{stage_number - 1}.csv'
@@ -176,14 +176,14 @@ def write_data_to_csvfile(  # noqa: ANN201, D103, PLR0913
         string_to_append,
     )
 
-    with open(resultsFilePath, 'w', newline='') as csvfile:  # noqa: PTH123
+    with open(resultsFilePath, 'w', newline='') as csvfile:  # noqa: PLW1514, PTH123
         csvWriter = csv.writer(csvfile)  # noqa: N806
         csvWriter.writerows(data_to_write)
     logfile.write(f'\n\t\t\tWrote to file {resultsFilePath}')
     # Finished writing data
 
 
-def run_TMCMC(  # noqa: ANN201, N802, PLR0913, PLR0915
+def run_TMCMC(  # noqa: ANN201, N802, PLR0913, PLR0917
     number_of_samples,  # noqa: ANN001
     number_of_chains,  # noqa: ANN001
     all_distributions_list,  # noqa: ANN001
@@ -208,7 +208,7 @@ def run_TMCMC(  # noqa: ANN201, N802, PLR0913, PLR0915
     model_number=0,  # noqa: ANN001
     total_number_of_models_in_ensemble=1,  # noqa: ANN001
 ):
-    """Runs TMCMC Algorithm"""  # noqa: D400, D401, D415
+    """Runs TMCMC Algorithm"""  # noqa: D400, D401
     # Initialize (beta, effective sample size)
     beta = 0
     effective_sample_size = number_of_samples
@@ -280,7 +280,7 @@ def run_TMCMC(  # noqa: ANN201, N802, PLR0913, PLR0915
             log_likelihoods_list.append(output[0])
             predictions_list.append(output[1])
     else:
-        from mpi4py.futures import MPIPoolExecutor
+        from mpi4py.futures import MPIPoolExecutor  # noqa: PLC0415
 
         executor = MPIPoolExecutor(max_workers=MPI_size)
         write_eval_data_to_logfile(
@@ -336,7 +336,7 @@ def run_TMCMC(  # noqa: ANN201, N802, PLR0913, PLR0915
         )
         # beta, log_evidence, weights, effective_sample_size = tmcmcFunctions.compute_beta_evidence_old(beta, log_likelihood_values, logfile, int(effective_sample_size/2), threshold=1.0)
 
-        total_log_evidence = total_log_evidence + log_evidence
+        total_log_evidence = total_log_evidence + log_evidence  # noqa: PLR6104
 
         # seed to reproduce results
         ss = SeedSequence(seed)

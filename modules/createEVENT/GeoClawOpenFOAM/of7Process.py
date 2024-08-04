@@ -1,4 +1,4 @@
-####################################################################  # noqa: INP001
+# # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: D400, D415
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -43,7 +43,7 @@ from of7Solve import of7Solve
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
-class of7Process:  # noqa: N801
+class of7Process:
     """This class includes the methods related to
     post-processing for openfoam7.
 
@@ -54,14 +54,14 @@ class of7Process:  # noqa: N801
     """  # noqa: D205, D404
 
     #############################################################
-    def pprocesstext(self, data, path):  # noqa: ANN001, ANN201, D417
+    def pprocesstext(self, data, path):  # noqa: ANN001, ANN201, PLR6301
         """Creates the necessary files for post-processing for openfoam7
 
         Arguments:
         ---------
                 data: all the JSON data
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
         solver = of7Solve()
@@ -85,7 +85,7 @@ class of7Process:  # noqa: N801
                 + str(pp_data[ii, 2])
                 + ')\n'
             )
-        ptext = ptext + '\t\t);\n'
+        ptext = ptext + '\t\t);\n'  # noqa: PLR6104
 
         # Fields required
         value = 0
@@ -118,31 +118,31 @@ class of7Process:  # noqa: N801
         sampletext = solver.solverheader('sample')
 
         # Other information
-        sampletext = sampletext + '\ntype sets;\n'
-        sampletext = sampletext + 'libs\t("libsampling.so");\n\n'
-        sampletext = sampletext + 'interpolationScheme\tcellPoint;\n\n'
-        sampletext = sampletext + 'setFormat\traw;\n\n'
-        sampletext = sampletext + 'sets\n(\n\tdata\n\t{\n'
-        sampletext = sampletext + '\t\ttype\tpoints;\n'
-        sampletext = sampletext + '\t\tpoints\n'
-        sampletext = sampletext + ptext
-        sampletext = sampletext + '\t\tordered\tyes;\n'
-        sampletext = sampletext + '\t\taxis\tx;\n'
-        sampletext = sampletext + '\t}\n'
-        sampletext = sampletext + ');\n\n'
+        sampletext = sampletext + '\ntype sets;\n'  # noqa: PLR6104
+        sampletext = sampletext + 'libs\t("libsampling.so");\n\n'  # noqa: PLR6104
+        sampletext = sampletext + 'interpolationScheme\tcellPoint;\n\n'  # noqa: PLR6104
+        sampletext = sampletext + 'setFormat\traw;\n\n'  # noqa: PLR6104
+        sampletext = sampletext + 'sets\n(\n\tdata\n\t{\n'  # noqa: PLR6104
+        sampletext = sampletext + '\t\ttype\tpoints;\n'  # noqa: PLR6104
+        sampletext = sampletext + '\t\tpoints\n'  # noqa: PLR6104
+        sampletext = sampletext + ptext  # noqa: PLR6104
+        sampletext = sampletext + '\t\tordered\tyes;\n'  # noqa: PLR6104
+        sampletext = sampletext + '\t\taxis\tx;\n'  # noqa: PLR6104
+        sampletext = sampletext + '\t}\n'  # noqa: PLR6104
+        sampletext = sampletext + ');\n\n'  # noqa: PLR6104
         sampletext = sampletext + 'fields\t' + fieldtext + ';\n'
 
         return sampletext  # noqa: RET504
 
     #############################################################
-    def pprocesscdict(self, data, path):  # noqa: ANN001, ANN201, C901, D417, PLR0915
+    def pprocesscdict(self, data, path):  # noqa: ANN001, ANN201, C901, PLR6301
         """Creates the necessary files for new controldict for post-processing for openfoam7
 
         Arguments:
         ---------
                 data: all the JSON data
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
         solver = of7Solve()
@@ -155,29 +155,29 @@ class of7Process:  # noqa: N801
             hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
         )
         if int(simtype) == 4:  # noqa: PLR2004
-            cdicttext = cdicttext + '\napplication \t olaDyMFlow;\n\n'
+            cdicttext = cdicttext + '\napplication \t olaDyMFlow;\n\n'  # noqa: PLR6104
         else:
-            cdicttext = cdicttext + '\napplication \t olaFlow;\n\n'
+            cdicttext = cdicttext + '\napplication \t olaFlow;\n\n'  # noqa: PLR6104
 
         # Check restart situation and give start time
         restart = ', '.join(
             hydroutil.extract_element_from_json(data, ['Events', 'Restart'])
         )
         if restart == 'Yes':
-            cdicttext = cdicttext + 'startFrom \t latestTime;\n\n'
+            cdicttext = cdicttext + 'startFrom \t latestTime;\n\n'  # noqa: PLR6104
         elif restart == 'No':
             # Start time
             startT = ', '.join(  # noqa: N806
                 hydroutil.extract_element_from_json(data, ['Events', 'StartTime'])
             )
-            cdicttext = cdicttext + 'startFrom \t startTime;\n\n'
+            cdicttext = cdicttext + 'startFrom \t startTime;\n\n'  # noqa: PLR6104
             cdicttext = cdicttext + 'startTime \t' + startT + ';\n\n'
 
         # End time
         endT = ', '.join(  # noqa: N806
             hydroutil.extract_element_from_json(data, ['Events', 'EndTime'])
         )
-        cdicttext = cdicttext + 'stopAt \t endTime;\n\n'
+        cdicttext = cdicttext + 'stopAt \t endTime;\n\n'  # noqa: PLR6104
         cdicttext = cdicttext + 'endTime \t' + endT + ';\n\n'
 
         # Time interval
@@ -187,7 +187,7 @@ class of7Process:  # noqa: N801
         cdicttext = cdicttext + 'deltaT \t' + deltaT + ';\n\n'
 
         # Write control
-        cdicttext = cdicttext + 'writeControl \t adjustableRunTime;\n\n'
+        cdicttext = cdicttext + 'writeControl \t adjustableRunTime;\n\n'  # noqa: PLR6104
 
         # Write interval
         writeT = ', '.join(  # noqa: N806
@@ -196,17 +196,17 @@ class of7Process:  # noqa: N801
         cdicttext = cdicttext + 'writeInterval \t' + writeT + ';\n\n'
 
         # All others
-        cdicttext = cdicttext + 'purgeWrite \t 0;\n\n'
-        cdicttext = cdicttext + 'writeFormat \t ascii;\n\n'
-        cdicttext = cdicttext + 'writePrecision \t 6;\n\n'
-        cdicttext = cdicttext + 'writeCompression \t uncompressed;\n\n'
-        cdicttext = cdicttext + 'timeFormat \t general;\n\n'
-        cdicttext = cdicttext + 'timePrecision \t 6;\n\n'
-        cdicttext = cdicttext + 'runTimeModifiable \t yes;\n\n'
-        cdicttext = cdicttext + 'adjustTimeStep \t yes;\n\n'
-        cdicttext = cdicttext + 'maxCo \t 1.0;\n\n'
-        cdicttext = cdicttext + 'maxAlphaCo \t 1.0;\n\n'
-        cdicttext = cdicttext + 'maxDeltaT \t 1;\n\n'
+        cdicttext = cdicttext + 'purgeWrite \t 0;\n\n'  # noqa: PLR6104
+        cdicttext = cdicttext + 'writeFormat \t ascii;\n\n'  # noqa: PLR6104
+        cdicttext = cdicttext + 'writePrecision \t 6;\n\n'  # noqa: PLR6104
+        cdicttext = cdicttext + 'writeCompression \t uncompressed;\n\n'  # noqa: PLR6104
+        cdicttext = cdicttext + 'timeFormat \t general;\n\n'  # noqa: PLR6104
+        cdicttext = cdicttext + 'timePrecision \t 6;\n\n'  # noqa: PLR6104
+        cdicttext = cdicttext + 'runTimeModifiable \t yes;\n\n'  # noqa: PLR6104
+        cdicttext = cdicttext + 'adjustTimeStep \t yes;\n\n'  # noqa: PLR6104
+        cdicttext = cdicttext + 'maxCo \t 1.0;\n\n'  # noqa: PLR6104
+        cdicttext = cdicttext + 'maxAlphaCo \t 1.0;\n\n'  # noqa: PLR6104
+        cdicttext = cdicttext + 'maxDeltaT \t 1;\n\n'  # noqa: PLR6104
 
         # Point data from file
         pprocessfile = ', '.join(
@@ -227,7 +227,7 @@ class of7Process:  # noqa: N801
                 + str(pp_data[ii, 2])
                 + ')\n'
             )
-        ptext = ptext + '\t\t\t\t);\n'
+        ptext = ptext + '\t\t\t\t);\n'  # noqa: PLR6104
 
         # Fields required
         value = 0
@@ -257,35 +257,35 @@ class of7Process:  # noqa: N801
             fieldtext = '(U p_rgh)'
 
         # Get the library data
-        cdicttext = cdicttext + 'function\n{\n\tlinesample\n\t{\n'
-        cdicttext = cdicttext + '\t\ttype\tsets;\n'
-        cdicttext = cdicttext + '\t\tfunctionObjectLibs\t("libsampling.so");\n'
-        cdicttext = cdicttext + '\t\twriteControl\ttimeStep;\n'
-        cdicttext = cdicttext + '\t\toutputInterval\t1;\n'
-        cdicttext = cdicttext + '\t\tinterpolationScheme\tcellPoint;\n'
-        cdicttext = cdicttext + '\t\tsetFormat\traw;\n\n'
-        cdicttext = cdicttext + '\t\tsets\n\t\t(\n'
-        cdicttext = cdicttext + '\t\t\tdata\n\t\t\t{\n'
-        cdicttext = cdicttext + '\t\t\t\ttype\tpoints;\n'
-        cdicttext = cdicttext + '\t\t\t\tpoints\n'
-        cdicttext = cdicttext + ptext
-        cdicttext = cdicttext + '\t\t\t\tordered\tyes;\n'
-        cdicttext = cdicttext + '\t\t\t\taxis\tx;\n'
-        cdicttext = cdicttext + '\t\t\t}\n\t\t);\n'
+        cdicttext = cdicttext + 'function\n{\n\tlinesample\n\t{\n'  # noqa: PLR6104
+        cdicttext = cdicttext + '\t\ttype\tsets;\n'  # noqa: PLR6104
+        cdicttext = cdicttext + '\t\tfunctionObjectLibs\t("libsampling.so");\n'  # noqa: PLR6104
+        cdicttext = cdicttext + '\t\twriteControl\ttimeStep;\n'  # noqa: PLR6104
+        cdicttext = cdicttext + '\t\toutputInterval\t1;\n'  # noqa: PLR6104
+        cdicttext = cdicttext + '\t\tinterpolationScheme\tcellPoint;\n'  # noqa: PLR6104
+        cdicttext = cdicttext + '\t\tsetFormat\traw;\n\n'  # noqa: PLR6104
+        cdicttext = cdicttext + '\t\tsets\n\t\t(\n'  # noqa: PLR6104
+        cdicttext = cdicttext + '\t\t\tdata\n\t\t\t{\n'  # noqa: PLR6104
+        cdicttext = cdicttext + '\t\t\t\ttype\tpoints;\n'  # noqa: PLR6104
+        cdicttext = cdicttext + '\t\t\t\tpoints\n'  # noqa: PLR6104
+        cdicttext = cdicttext + ptext  # noqa: PLR6104
+        cdicttext = cdicttext + '\t\t\t\tordered\tyes;\n'  # noqa: PLR6104
+        cdicttext = cdicttext + '\t\t\t\taxis\tx;\n'  # noqa: PLR6104
+        cdicttext = cdicttext + '\t\t\t}\n\t\t);\n'  # noqa: PLR6104
         cdicttext = cdicttext + '\t\tfields\t' + fieldtext + ';\n'
-        cdicttext = cdicttext + '\t}\n}'
+        cdicttext = cdicttext + '\t}\n}'  # noqa: PLR6104
 
         return cdicttext  # noqa: RET504
 
     #############################################################
-    def scripts(self, data, path):  # noqa: ANN001, ANN201, ARG002, D417
+    def scripts(self, data, path):  # noqa: ANN001, ANN201, ARG002, PLR6301
         """Creates the necessary postprocessing in scripts
 
         Arguments:
         ---------
                 data: all the JSON data
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -305,13 +305,13 @@ class of7Process:  # noqa: N801
             elif pprocess == 'Yes':
                 caseruntext = 'echo postprocessing for EVT\n'
                 # Reconstruct case
-                caseruntext = caseruntext + 'reconstructPar > reconstruct.log \n'
+                caseruntext = caseruntext + 'reconstructPar > reconstruct.log \n'  # noqa: PLR6104
                 # Move new controlDict
                 cdictpppath = os.path.join('system', 'controlDict')  # noqa: PTH118
                 caseruntext = caseruntext + 'cp cdictpp ' + cdictpppath + '\n'
                 # Move the wavemakerfile (if exists)
                 if os.path.exists(os.path.join('constant', 'wavemakerMovement.txt')):  # noqa: PTH110, PTH118
-                    caseruntext = caseruntext + 'mkdir extras\n'
+                    caseruntext = caseruntext + 'mkdir extras\n'  # noqa: PLR6104
                     wavepath = os.path.join('constant', 'wavemakerMovement.txt')  # noqa: PTH118
                     wavepathnew = os.path.join('extras', 'wavemakerMovement.txt')  # noqa: PTH118
                     caseruntext = (
@@ -325,22 +325,22 @@ class of7Process:  # noqa: N801
                     + '\n'
                 )
                 # Start the postprocessing
-                caseruntext = caseruntext + 'postProcess -func sample \n\n'
+                caseruntext = caseruntext + 'postProcess -func sample \n\n'  # noqa: PLR6104
 
         # Write to caserun file
-        scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
+        scriptfile = open('caserun.sh', 'a')  # noqa: PLW1514, PTH123, SIM115
         scriptfile.write(caseruntext)
         scriptfile.close()  # noqa: RET503
 
     #############################################################
-    def pprocesscheck(self, data, path):  # noqa: ANN001, ANN201, D417
+    def pprocesscheck(self, data, path):  # noqa: ANN001, ANN201, PLR6301
         """Checks for material properties for openfoam7
 
         Arguments:
         ---------
                 data: all the JSON data
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 

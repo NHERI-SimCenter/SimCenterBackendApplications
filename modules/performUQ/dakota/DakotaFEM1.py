@@ -1,4 +1,4 @@
-# import functions for Python 2.X support  # noqa: INP001, D100
+# import functions for Python 2.X support  # noqa: CPY001, D100, INP001
 import os
 import sys
 
@@ -14,24 +14,24 @@ import argparse
 import platform
 import shutil
 import stat
-import subprocess
+import subprocess  # noqa: S404
 
 import numpy as np
 from preprocessJSON import preProcessDakota
 
 
-def main(args):  # noqa: ANN001, ANN201, D103, PLR0915
+def main(args):  # noqa: ANN001, ANN201, D103
     # First we need to set the path and environment
     home = os.path.expanduser('~')  # noqa: PTH111
     env = os.environ
     if os.getenv('PEGASUS_WF_UUID') is not None:
         print('Pegasus job detected - Pegasus will set up the env')  # noqa: T201
     elif platform.system() == 'Darwin':
-        env['PATH'] = env['PATH'] + f':{home}/bin'
-        env['PATH'] = env['PATH'] + f':{home}/dakota/bin'
+        env['PATH'] = env['PATH'] + f':{home}/bin'  # noqa: PLR6104
+        env['PATH'] = env['PATH'] + f':{home}/dakota/bin'  # noqa: PLR6104
     elif platform.system() == 'Linux':
-        env['PATH'] = env['PATH'] + f':{home}/bin'
-        env['PATH'] = env['PATH'] + f':{home}/dakota/dakota-6.5/bin'
+        env['PATH'] = env['PATH'] + f':{home}/bin'  # noqa: PLR6104
+        env['PATH'] = env['PATH'] + f':{home}/dakota/dakota-6.5/bin'  # noqa: PLR6104
     elif platform.system() == 'Windows':
         pass
     else:
@@ -49,7 +49,7 @@ def main(args):  # noqa: ANN001, ANN201, D103, PLR0915
 
     parser.add_argument('--method', default='LHS')
     parser.add_argument('--samples', type=int, default=None)
-    parser.add_argument('--seed', type=int, default=np.random.randint(1, 1000))  # noqa: NPY002
+    parser.add_argument('--seed', type=int, default=np.random.randint(1, 1000))
     parser.add_argument('--ismethod', default=None)
     parser.add_argument('--dataMethod', default=None)
 
@@ -65,7 +65,7 @@ def main(args):  # noqa: ANN001, ANN201, D103, PLR0915
     parser.add_argument('--keepSamples', default='True')
     parser.add_argument('--runType')
 
-    args, unknowns = parser.parse_known_args()
+    args, unknowns = parser.parse_known_args()  # noqa: F841
 
     # Reading input arguments
     aimName = args.filenameBIM  # noqa: N806
@@ -89,7 +89,7 @@ def main(args):  # noqa: ANN001, ANN201, D103, PLR0915
         trainingMethod=args.trainingMethod,
         concurrency=args.concurrency,
         keepSamples=args.keepSamples
-        not in ['False', 'False', 'false', 'false', False],
+        not in ['False', 'False', 'false', 'false', False],  # noqa: PLR6201
     )
 
     runDakota = args.runType  # noqa: N806

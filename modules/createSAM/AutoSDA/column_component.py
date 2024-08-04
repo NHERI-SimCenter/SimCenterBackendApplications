@@ -1,4 +1,4 @@
-# This file is used to define the class of column, which includes the axial, shear, and flexural strengths of column  # noqa: INP001, D100
+# This file is used to define the class of column, which includes the axial, shear, and flexural strengths of column  # noqa: CPY001, D100, INP001
 # Developed by GUAN, XINGQUAN @ UCLA in Apr. 2018
 # Updated in Oct. 2018
 
@@ -20,7 +20,7 @@ class Column:
     (4) Column flag, an integer with value of zero or nonzero. If it's zero, the column is feasible.
     """  # noqa: D205, D404
 
-    def __init__(  # noqa: ANN204, PLR0913
+    def __init__(  # noqa: ANN204
         self,
         section_size,  # noqa: ANN001
         axial_demand,  # noqa: ANN001
@@ -314,10 +314,8 @@ class Column:
             * (self.unbraced_length['x'] * 12.0 / self.section['ry']) ** (-0.4)
             * (1 - self.demand_capacity_ratio['axial']) ** (0.4)
         )
-        if McMy < 1.0:
-            McMy = 1.0  # noqa: N806
-        if McMy > 1.3:  # noqa: PLR2004
-            McMy = 1.3  # noqa: N806
+        McMy = max(McMy, 1.0)  # noqa: N806
+        McMy = min(McMy, 1.3)  # noqa: N806
         # Beam component rotational stiffness
         self.plastic_hinge['K0'] = (
             6 * steel.E * self.section['Ix'] / (self.unbraced_length['x'] * 12.0)
@@ -365,7 +363,7 @@ class Column:
         )
         self.plastic_hinge['theta_p'] = min(self.plastic_hinge['theta_p'], 0.20)
         # Pre-capping rotation is further revised to exclude the elastic deformation
-        self.plastic_hinge['theta_p'] = (
+        self.plastic_hinge['theta_p'] = (  # noqa: PLR6104
             self.plastic_hinge['theta_p']
             - (McMy - 1.0) * self.plastic_hinge['My'] / self.plastic_hinge['K0']
         )

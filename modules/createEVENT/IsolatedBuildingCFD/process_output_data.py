@@ -3,7 +3,7 @@
 code creates pressure probes for the main simulation. Three types of
 probes are created.
 
-"""  # noqa: INP001, D404
+"""  # noqa: CPY001, D404, INP001
 
 import json
 import sys
@@ -20,7 +20,7 @@ def write_wind_profiles(case_path):  # noqa: ANN001, ANN201, D103
     inf = cwe.VelocityData('cfd', inf_path, start_time=None, end_time=None)
 
     # Read JSON data for turbulence model
-    wc_json_file = open(case_path + '/constant/simCenter/windCharacteristics.json')  # noqa: SIM115, PTH123
+    wc_json_file = open(case_path + '/constant/simCenter/windCharacteristics.json')  # noqa: PLW1514, PTH123, SIM115
 
     # Returns JSON object as a dictionary
     wind_data = json.load(wc_json_file, 'r', encoding='utf-8')
@@ -64,7 +64,7 @@ def write_wind_profiles(case_path):  # noqa: ANN001, ANN201, D103
 def write_wind_loads(case_path):  # noqa: ANN001, ANN201, D103
     # Write base forces
     base_forces_path = case_path + '/postProcessing/baseForces/0/forces.dat'
-    base_o, base_t, base_f, base_m = cwe.read_forces_OF10(base_forces_path)
+    base_o, base_t, base_f, base_m = cwe.read_forces_OF10(base_forces_path)  # noqa: F841
 
     base_forces = np.zeros((len(base_t), 3))
 
@@ -73,7 +73,7 @@ def write_wind_loads(case_path):  # noqa: ANN001, ANN201, D103
 
     # Write story forces
     story_forces_path = case_path + '/postProcessing/storyForces/0/forces_bins.dat'
-    story_coord, story_t, story_f, story_m = cwe.read_bin_forces_OF10(
+    story_coord, story_t, story_f, story_m = cwe.read_bin_forces_OF10(  # noqa: F841
         story_forces_path
     )
 

@@ -1,7 +1,7 @@
 """Created on Tue Oct  4 16:07:24 2022
 
 @author: snaeimi
-"""  # noqa: N999, D400, D415
+"""  # noqa: CPY001, D400, N999
 
 import datetime
 
@@ -19,8 +19,8 @@ def parseTimeStamp(time_stamp):  # noqa: ANN001, ANN201, N802, D103
     return (hour, minute, minute)
 
 
-class Report_Reading:  # noqa: N801, D101
-    def __init__(self, file_addr):  # noqa: ANN001, ANN204, D107
+class Report_Reading:  # noqa: D101
+    def __init__(self, file_addr):  # noqa: ANN001, ANN204
         self.file_data = {}
         self.maximum_trial_time = []
         with open(file_addr, encoding='utf-8') as f:  # noqa: PTH123

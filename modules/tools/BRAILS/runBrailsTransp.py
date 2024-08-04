@@ -1,6 +1,6 @@
-# Import packages needed for setting up required packages:  # noqa: INP001, D100
+# Import packages needed for setting up required packages:  # noqa: CPY001, D100, INP001
 import importlib.metadata
-import subprocess
+import subprocess  # noqa: S404
 import sys
 
 # If not installed, install BRAILS, argparse, and requests:
@@ -49,9 +49,9 @@ def str2bool(v):  # noqa: ANN001, ANN201, D103
 
     if isinstance(v, bool):
         return v
-    if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):
+    if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):  # noqa: PLR6201
         return True
-    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):  # noqa: RET505
+    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):  # noqa: PLR6201, RET505
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')  # noqa: EM101, TRY003
@@ -64,7 +64,7 @@ def log_msg(msg):  # noqa: ANN001, ANN201, D103
 
 
 # Define a way to call BRAILS TranspInventoryGenerator:
-def runBrails(  # noqa: ANN201, N802, D103, PLR0913
+def runBrails(  # noqa: ANN201, N802, D103
     latMin,  # noqa: ANN001, N803
     latMax,  # noqa: ANN001, N803
     longMin,  # noqa: ANN001, N803

@@ -1,7 +1,7 @@
 """Created on Sat Dec 26 02:00:40 2020
 
 @author: snaeimi
-"""  # noqa: D400, D415
+"""  # noqa: CPY001, D400
 
 import logging
 
@@ -19,7 +19,7 @@ class Timeline:  # noqa: D101
     # We need to modify their codes, so their usage be safe and bug-free.
     # =============================================================================
 
-    def __init__(self, simulation_end_time, restoration, registry):  # noqa: ANN001, ANN204, D107
+    def __init__(self, simulation_end_time, restoration, registry):  # noqa: ANN001, ANN204
         if simulation_end_time < 0:
             raise ValueError('simulation end time must be zero or bigger than zero')  # noqa: EM101, TRY003
         self._current_time = 0
@@ -71,12 +71,12 @@ class Timeline:  # noqa: D101
             ]
 
             if minimum_simulation_time_satisfied == True:  # noqa: E712
-                if consider_last_sequence_termination == True:  # noqa: SIM102, E712
+                if consider_last_sequence_termination == True:  # noqa: E712
                     if self.restoration.iRestorationStopTime():
                         print('Last_sequence_termination')  # noqa: T201
                         return False
 
-                if consider_node_demand_temination == True:  # noqa: SIM102, E712
+                if consider_node_demand_temination == True:  # noqa: E712
                     if self.iFunctionalityRequirementReached():
                         print('FunctionalityRequirementReached')  # noqa: T201
                         return False
@@ -198,7 +198,7 @@ class Timeline:  # noqa: D101
         bool
             rResult if such data exist or not
 
-        """  # noqa: D205, D400, D401, D415
+        """  # noqa: D205, D400, D401
         if begin_time not in self._event_time_register.index:
             return False
         if self._event_time_register[event_type].loc[begin_time]:  # noqa: SIM103
@@ -237,7 +237,7 @@ class Timeline:  # noqa: D101
         # if self._event_time_register[self._event_time_register.index==self._simulation_end_time].empty==True:
         # self._event_time_register=self._event_time_register.append(pd.DataFrame(data = False , index = [self._simulation_end_time], columns = EVENT_TYPE))
 
-    def iFunctionalityRequirementReached(self):  # noqa: ANN201, C901, N802, D102, PLR0915
+    def iFunctionalityRequirementReached(self):  # noqa: ANN201, C901, N802, D102
         logger.debug('Func: node functionality')
         ratio_criteria = self.registry.settings.process[
             'node_demand_termination_ratio'

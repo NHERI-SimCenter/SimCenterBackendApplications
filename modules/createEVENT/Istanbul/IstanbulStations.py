@@ -1,4 +1,4 @@
-import json  # noqa: INP001, D100
+import json  # noqa: CPY001, D100, INP001
 import math
 import os
 
@@ -7,8 +7,8 @@ import pandas as pd
 from shapely.geometry import Point, Polygon
 
 
-def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, FBT002, C901, N802, PLR0912, PLR0915
-    """This function is used to retrieve the information of the Istanbul physics-based simulations"""  # noqa: D400, D401, D404, D415
+def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, FBT002, C901, N802
+    """This function is used to retrieve the information of the Istanbul physics-based simulations"""  # noqa: D400, D401, D404
     RegionFlag = information['RegionFlag']  # noqa: N806
     LocationFlag = information['LocationFlag']  # noqa: N806
 
@@ -125,7 +125,7 @@ def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, F
         )
 
     if plot:
-        import plotly.express as px
+        import plotly.express as px  # noqa: PLC0415
 
         # plot the sites
         if LocationFlag:
@@ -169,7 +169,7 @@ def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, F
     gdf.drop(columns=['geometry', 'Color', 'Selected Site']).to_csv(
         'TapisFiles/selectedSites.csv', index=True
     )
-    json.dump(information, open('TapisFiles/information.json', 'w'), indent=2)  # noqa: SIM115, PTH123
+    json.dump(information, open('TapisFiles/information.json', 'w'), indent=2)  # noqa: PLW1514, PTH123, SIM115
 
 
 def haversine(lat1, lon1, lat2, lon2):  # noqa: ANN001, ANN201

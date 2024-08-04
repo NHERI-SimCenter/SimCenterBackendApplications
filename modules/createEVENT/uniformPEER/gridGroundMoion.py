@@ -43,7 +43,7 @@
 #
 
 
-# TODO recommended ranges???  # noqa: FIX002, TD002, TD003, TD004
+# TODO recommended ranges???  # noqa: TD002, TD004
 
 
 # import matplotlib.pyplot as plt
@@ -63,14 +63,14 @@ def main(inputArgs, err):  # noqa: ANN001, ANN201, N803, D103
     gms = gmCluster(inputArgs, err)  # noqa: F841
 
 
-class gmCluster:  # noqa: N801, D101
-    def __init__(self, inputArgs, err):  # noqa: ANN001, ANN204, ARG002, C901, N803, D107, PLR0912, PLR0915
-        np.random.seed(seed=42)  # noqa: NPY002
+class gmCluster:  # noqa: D101
+    def __init__(self, inputArgs, err):  # noqa: ANN001, ANN204, ARG002, C901, N803, PLR0912, PLR0914, PLR0915
+        np.random.seed(seed=42)
         curDir = os.path.dirname(__file__)  # noqa: PTH120, N806
         gmDataBaseDir = os.path.join(curDir, 'gmdata.json')  # noqa: PTH118, N806
         inputJsonPath = inputArgs[1]  # noqa: N806
 
-        with open(inputJsonPath) as fj:  # noqa: PTH123
+        with open(inputJsonPath) as fj:  # noqa: PLW1514, PTH123
             inputJson = json.load(fj)  # noqa: N806
 
         nim = len(inputJson['IM'])
@@ -105,7 +105,7 @@ class gmCluster:  # noqa: N801, D101
 
         npergrid = int(inputJson['numSampPerBin'])
 
-        # TODO: Convert the units... Or fix the units......  # noqa: FIX002, TD002, TD003
+        # TODO: Convert the units... Or fix the units......  # noqa: TD002
 
         # nim = len(im_names)
         ngrid = np.prod(im_nbins)
@@ -129,25 +129,21 @@ class gmCluster:  # noqa: N801, D101
         found_scaling_anchor = False
         nim_eff = nim
 
-        ## For the scaling anchor, we prioritize PSA and PGA
+        # For the scaling anchor, we prioritize PSA and PGA
         for ni in range(len(im_names)):
-            if im_names[ni].startswith('PSA') or im_names[ni].startswith('PGA'):  # noqa: SIM102
+            if im_names[ni].startswith('PSA') or im_names[ni].startswith('PGA'):
                 # scaling anchor
                 if not found_scaling_anchor:
-                    id_im_scaling_ancher = (
-                        ni  # TODO  # noqa: FIX002, TD002, TD003, TD004
-                    )
+                    id_im_scaling_ancher = ni  # TODO  # noqa: TD002, TD004
                     found_scaling_anchor = True
                     nim_eff = nim - 1
 
-        ## Only if we didn't find PSA or PGA, we consider PGV, PGD, Ia as scaling anchor
+        # Only if we didn't find PSA or PGA, we consider PGV, PGD, Ia as scaling anchor
         if not found_scaling_anchor:
             for ni in range(len(im_names)):
-                if im_names[ni].startswith('PG') or im_names[ni].startswith('Ia'):  # noqa: SIM102
+                if im_names[ni].startswith('PG') or im_names[ni].startswith('Ia'):
                     if not found_scaling_anchor:
-                        id_im_scaling_ancher = (
-                            ni  # TODO  # noqa: FIX002, TD002, TD003, TD004
-                        )
+                        id_im_scaling_ancher = ni  # TODO  # noqa: TD002, TD004
                         found_scaling_anchor = True
                         nim_eff = nim - 1
 
@@ -254,7 +250,7 @@ class gmCluster:  # noqa: N801, D101
         #
         # Read Database
         #
-        with open(gmDataBaseDir) as fd:  # noqa: PTH123
+        with open(gmDataBaseDir) as fd:  # noqa: PLW1514, PTH123
             gmData = json.load(fd)  # noqa: N806
 
         RSN = gmData['RSN']  # noqa: N806
@@ -374,7 +370,7 @@ class gmCluster:  # noqa: N801, D101
             )
             IM_log_ref2 = IM_log_ref.copy()  # noqa: N806
 
-            scaling_exponent = (
+            scaling_exponent = (  # noqa: PLR6104
                 scaling_exponent / scaling_exponent[id_im_scaling_ancher]
             )
             scaling_exponent2 = np.delete(
@@ -421,7 +417,7 @@ class gmCluster:  # noqa: N801, D101
         nsas = list(nsa_tmp.reshape(-1)) * npergrid
         ngrs = list(ngr_tmp.reshape(-1)) * npergrid
 
-        randid = np.random.permutation(range(len(nsas)))  # noqa: NPY002
+        randid = np.random.permutation(range(len(nsas)))
 
         for nc in range(len(nsas)):
             nsa = nsas[randid[nc]]
@@ -506,7 +502,7 @@ class gmCluster:  # noqa: N801, D101
         my_results['gm_RSN'] = [int(RSN[int(flat_gm_ID[myid])]) for myid in idx]
         my_results['gm_scale'] = [flat_gm_scale[myid] for myid in idx]
 
-        with open('gridIM_output.json', 'w') as f:  # noqa: PTH123
+        with open('gridIM_output.json', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
             f.write(json.dumps(my_results))
 
         #
@@ -515,7 +511,7 @@ class gmCluster:  # noqa: N801, D101
 
         # import matplotlib.pyplot as plt
         # import matplotlib.ticker as mticker
-        from scipy import interpolate
+        from scipy import interpolate  # noqa: PLC0415
 
         # plt.style.use('default')
         #
@@ -741,7 +737,7 @@ class gmCluster:  # noqa: N801, D101
 
             xx = np.linspace(lowerboundX, upperboundX, 20)
             yy = np.linspace(lowerboundY, upperboundY, 20)
-            xxx, yyy = np.meshgrid(xx, yy)
+            xxx, yyy = np.meshgrid(xx, yy)  # noqa: F841
             f = interpolate.interp2d(
                 (X.reshape(-1)), (Y.reshape(-1)), flat_grid_error
             )
@@ -953,13 +949,13 @@ class gmCluster:  # noqa: N801, D101
 
         # plt.savefig('gridIM_coverage.png',bbox_inches='tight')
         if nim == 2 or nim == 3:  # noqa: PLR1714, PLR2004
-            with open(r'gridIM_coverage.html', 'w') as f:  # noqa: PTH123
+            with open(r'gridIM_coverage.html', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
                 f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
             f.close()
 
 
 if __name__ == '__main__':
-    errf = open('gridIM_log.err', 'w')  # noqa: SIM115, PTH123
+    errf = open('gridIM_log.err', 'w')  # noqa: PLW1514, PTH123, SIM115
     main(sys.argv, errf)
     # try:
     #     main(sys.argv,errf)

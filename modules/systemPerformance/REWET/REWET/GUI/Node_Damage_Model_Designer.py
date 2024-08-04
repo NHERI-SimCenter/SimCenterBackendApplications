@@ -1,7 +1,7 @@
 """Created on Tue Nov  1 20:36:29 2022
 
 @author: snaeimi
-"""  # noqa: N999, D400, D415
+"""  # noqa: CPY001, D400, N999
 
 from PyQt5 import QtGui, QtWidgets
 
@@ -9,8 +9,8 @@ from .Node_Damage_Model_Help_Designer import Node_Damage_Model_Help_Designer
 from .Node_Damage_Model_Window import Ui_Node_Damage_Model
 
 
-class Node_Damage_Model_Designer(Ui_Node_Damage_Model):  # noqa: N801, D101
-    def __init__(self, node_damage_model):  # noqa: ANN001, ANN204, D107, PLR0915
+class Node_Damage_Model_Designer(Ui_Node_Damage_Model):  # noqa: D101
+    def __init__(self, node_damage_model):  # noqa: ANN001, ANN204
         self._window = QtWidgets.QDialog()
         self.setupUi(self._window)
         self.node_damage_model = node_damage_model.copy()
@@ -170,11 +170,11 @@ class Node_Damage_Model_Designer(Ui_Node_Damage_Model):  # noqa: N801, D101
         self.buttonBox.accepted.connect(self.okButtonPressed)
         self.help_button.clicked.connect(self.showHelpByButton)
 
-    def showHelpByButton(self):  # noqa: ANN201, N802, D102
+    def showHelpByButton(self):  # noqa: ANN201, D102, N802, PLR6301
         help_dialog_box = Node_Damage_Model_Help_Designer()
         help_dialog_box._window.exec_()  # noqa: SLF001
 
-    def okButtonPressed(self):  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0915
+    def okButtonPressed(self):  # noqa: ANN201, C901, N802, D102
         a = self.a_line.text()
         b = self.b_line.text()
         c = self.c_line.text()
@@ -192,46 +192,46 @@ class Node_Damage_Model_Designer(Ui_Node_Damage_Model):  # noqa: N801, D101
 
         if_failed = False
 
-        if a == '':
+        if a == '':  # noqa: PLC1901
             self.errorMSG('Cannot Save data', 'A Field cannot be left empty')
             if_failed = True
-        elif aa == '':
+        elif aa == '':  # noqa: PLC1901
             self.errorMSG('Cannot Save data', 'AA Field cannot be left empty')
             if_failed = True
-        elif b == '':
+        elif b == '':  # noqa: PLC1901
             self.errorMSG('Cannot Save data', 'B Field cannot be left empty')
             if_failed = True
-        elif bb == '':
+        elif bb == '':  # noqa: PLC1901
             self.errorMSG('Cannot Save data', 'BB Field cannot be left empty')
             if_failed = True
-        elif c == '':
+        elif c == '':  # noqa: PLC1901
             self.errorMSG('Cannot Save data', 'C Field cannot be left empty')
             if_failed = True
-        elif cc == '':
+        elif cc == '':  # noqa: PLC1901
             self.errorMSG('Cannot Save data', 'CC Field cannot be left empty')
             if_failed = True
-        elif d == '':
+        elif d == '':  # noqa: PLC1901
             self.errorMSG('Cannot Save data', 'D Field cannot be left empty')
             if_failed = True
-        elif dd == '':
+        elif dd == '':  # noqa: PLC1901
             self.errorMSG('Cannot Save data', 'DD Field cannot be left empty')
             if_failed = True
-        elif e == '':
+        elif e == '':  # noqa: PLC1901
             self.errorMSG('Cannot Save data', 'E Field cannot be left empty')
             if_failed = True
-        elif ee1 == '':
+        elif ee1 == '':  # noqa: PLC1901
             self.errorMSG('Cannot Save data', 'EE1 Field cannot be left empty')
             if_failed = True
-        elif ee2 == '':
+        elif ee2 == '':  # noqa: PLC1901
             self.errorMSG('Cannot Save data', 'EE2 Field cannot be left empty')
             if_failed = True
-        elif f == '':
+        elif f == '':  # noqa: PLC1901
             self.errorMSG('Cannot Save data', 'F Field cannot be left empty')
             if_failed = True
-        elif ff1 == '':
+        elif ff1 == '':  # noqa: PLC1901
             self.errorMSG('Cannot Save data', 'FF1 Field cannot be left empty')
             if_failed = True
-        elif ff2 == '':
+        elif ff2 == '':  # noqa: PLC1901
             self.errorMSG('Cannot Save data', 'FF2 Field cannot be left empty')
             if_failed = True
 
@@ -260,7 +260,7 @@ class Node_Damage_Model_Designer(Ui_Node_Damage_Model):  # noqa: N801, D101
 
         self._window.accept()
 
-    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: ANN001, ANN201, N802, D102
+    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: ANN001, ANN201, D102, N802, PLR6301
         error_widget = QtWidgets.QMessageBox()
         error_widget.setIcon(QtWidgets.QMessageBox.Critical)
         error_widget.setText(error_msg)

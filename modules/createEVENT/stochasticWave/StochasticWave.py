@@ -1,4 +1,4 @@
-#!/usr/bin/env python3  # noqa: EXE001, D100
+#!/usr/bin/env python3  # noqa: CPY001, D100, EXE001
 
 import argparse
 import json
@@ -12,7 +12,7 @@ from welib.hydro.wavekin import *  # noqa: E402, F403
 
 
 class FloorForces:  # noqa: D101
-    def __init__(self, recorderID=-1):  # noqa: ANN001, ANN204, N803, D107
+    def __init__(self, recorderID=-1):  # noqa: ANN001, ANN204, N803
         if recorderID < 0:
             print(  # noqa: T201
                 'No recorder ID, or a negative ID, provided, defaulting to 0 for all forces.'
@@ -34,7 +34,7 @@ class FloorForces:  # noqa: D101
             # Read in forces.[out or evt] file and add to EVENT.json
             # now using intermediary forces.evt for output of preceding Python calcs,
             # prevents confusion with forces.out made by FEM tab
-            with open('forces.evt') as file:  # noqa: PTH123
+            with open('forces.evt') as file:  # noqa: PLW1514, PTH123
                 print('Reading forces from forces.evt to EVENT.json')  # noqa: T201
                 lines = file.readlines()
                 j = 0
@@ -59,7 +59,7 @@ class FloorForces:  # noqa: D101
                             self.X.append(float(clean_line[k]))
                             self.Y.append(0.0)
                             self.Z.append(0.0)
-                    j = j + 1
+                    j = j + 1  # noqa: PLR6104
 
                 # must not have empty lists for max and min
                 if len(self.X) == 0:
@@ -97,7 +97,7 @@ class FloorForces:  # noqa: D101
 
 
 def directionToDof(direction):  # noqa: ANN001, ANN201, N802
-    """Converts direction to degree of freedom"""  # noqa: D400, D401, D415
+    """Converts direction to degree of freedom"""  # noqa: D400, D401
     directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
 
     return directioMap[direction]
@@ -106,7 +106,7 @@ def directionToDof(direction):  # noqa: ANN001, ANN201, N802
 def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):  # noqa: ANN001, ANN201, N802, N803
     """Add force (one component) time series and pattern in the event file
     Use of Wind is just a placeholder for now, since its more developed than Hydro
-    """  # noqa: D205, D400, D415
+    """  # noqa: D205, D400
     seriesName = '1'  # noqa: N806
     patternName = '1'  # noqa: N806
     seriesName = 'WindForceSeries_' + str(floor) + direction  # noqa: N806
@@ -141,7 +141,7 @@ def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):
 
 
 def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):  # noqa: ANN001, ANN201, N802, N803
-    """This method writes the EVENT.json file"""  # noqa: D400, D401, D404, D415
+    """This method writes the EVENT.json file"""  # noqa: D400, D401, D404
     # Adding floor forces
     patternsArray = []  # noqa: N806
     timeSeriesArray = []  # noqa: N806

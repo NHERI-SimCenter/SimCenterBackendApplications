@@ -61,7 +61,7 @@ def create_stations(input_file, output_file, min_id, max_id):  # noqa: ANN001, A
         max_id: the max ID to end
     Output:
         run_tag: 0 - success, 1 - input failure, 2 - output failure
-    """  # noqa: D205, D400, D401, D415
+    """  # noqa: D205, D400, D401
     # Reading csv data
     run_tag = 1
     try:
@@ -94,7 +94,7 @@ def create_stations(input_file, output_file, min_id, max_id):  # noqa: ANN001, A
         stn_file['Stations'].append(tmp)
     # Saving data to the output file
     if output_file:
-        with open(output_file, 'w') as f:  # noqa: PTH123
+        with open(output_file, 'w') as f:  # noqa: PLW1514, PTH123
             json.dump(stn_file, f, indent=2)
     # Returning the final run state
     return stn_file

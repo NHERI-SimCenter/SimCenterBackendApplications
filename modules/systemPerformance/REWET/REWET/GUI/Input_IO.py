@@ -1,10 +1,10 @@
-import os  # noqa: N999, D100
-import pickle
+import os  # noqa: CPY001, D100, N999
+import pickle  # noqa: S403
 
 import pandas as pd
 
 
-##################### Read files From Pickle #####################
+# Read files From Pickle #####################
 def read_pipe_damage_seperate_pickle_file(directory, all_damages_file_name):  # noqa: ANN001, ANN201, D103
     file_dest = os.path.join(directory, all_damages_file_name)  # noqa: PTH118
     with open(file_dest, 'rb') as f:  # noqa: PTH123
@@ -37,7 +37,7 @@ def read_pump_damage_seperate_pickle_file(directory, pump_damages_file_name):  #
     return _pump_damages  # noqa: RET504
 
 
-##################### Read files From Excel #####################
+# Read files From Excel #####################
 
 
 def read_pipe_damage_seperate_EXCEL_file(directory, pipe_damages_file_name):  # noqa: ANN001, ANN201, N802, D103
@@ -92,7 +92,7 @@ def read_pump_damage_seperate_EXCEL_file(directory, pump_damages_file_name):  # 
     return ss
 
 
-##################### Save Results #####################
+# Save Results #####################
 
 
 def save_single(settings, result, name, restoration_data):  # noqa: ANN001, ANN201, D103

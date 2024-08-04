@@ -41,7 +41,7 @@ import argparse
 import importlib
 import json
 import os
-import subprocess
+import subprocess  # noqa: S404
 import sys
 import tarfile
 
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # read the hazard configuration file
-    with open(args.hazard_config) as f:  # noqa: PTH123
+    with open(args.hazard_config) as f:  # noqa: PLW1514, PTH123
         hazard_info = json.load(f)
 
     # directory (back compatibility here)
@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
     # parse job type for set up environment and constants
     try:
-        opensha_flag = hazard_info['Scenario']['EqRupture']['Type'] in [
+        opensha_flag = hazard_info['Scenario']['EqRupture']['Type'] in [  # noqa: PLR6201
             'PointSource',
             'ERF',
         ]
@@ -199,7 +199,7 @@ if __name__ == '__main__':
         if user_scenarios:
             load_earthquake_scenarios(scenario_info, stations, input_dir)
         # Creating earthquake scenarios
-        elif scenario_info['EqRupture']['Type'] in [
+        elif scenario_info['EqRupture']['Type'] in [  # noqa: PLR6201
             'PointSource',
             'ERF',
             'oqSourceXML',
@@ -211,7 +211,7 @@ if __name__ == '__main__':
         # Creating wind scenarios
         create_wind_scenarios(scenario_info, stations, input_dir)
     else:
-        # TODO: extending this to other hazards  # noqa: FIX002, TD002, TD003
+        # TODO: extending this to other hazards  # noqa: TD002
         print('HazardSimulation: currently only supports EQ and Wind simulations.')  # noqa: T201
     # print(scenarios)
     print('HazardSimulation: scenarios created.')  # noqa: T201

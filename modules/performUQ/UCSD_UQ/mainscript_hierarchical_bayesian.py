@@ -1,4 +1,4 @@
-import json  # noqa: INP001, D100
+import json  # noqa: CPY001, D100, INP001
 import sys
 from pathlib import Path
 
@@ -68,7 +68,7 @@ def loglikelihood_function(residual, error_variance_sample):  # noqa: ANN001, AN
     return ll
 
 
-def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
+def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0914
     # Initialize analysis
     working_directory = Path(input_args[0]).resolve()
     template_directory = Path(input_args[1]).resolve()  # noqa: F841
@@ -124,12 +124,12 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
         restart_file,
     )
 
-    # TODO: get_initial_states():  # noqa: FIX002, TD002, TD003
+    # TODO: get_initial_states():  # noqa: TD002
     # either:
     # read them from file or
     # use LHS to explore the space and find the best starting points out of
     # those sampled values for the different chains
-    # TODO: get_initial_proposal_covariance_matrix():  # noqa: FIX002, TD002, TD003
+    # TODO: get_initial_proposal_covariance_matrix():  # noqa: TD002
     # either:
     # read them from file or
     # adaptively tune the proposal covariance matrix by running the chain for
@@ -288,7 +288,7 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
     )
 
     if run_type == 'runningRemote':
-        from mpi4py import MPI
+        from mpi4py import MPI  # noqa: PLC0415
 
         MPI.COMM_WORLD.Abort(0)
 

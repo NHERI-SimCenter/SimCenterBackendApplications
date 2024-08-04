@@ -1,4 +1,4 @@
-#!/usr/bin/python  # noqa: EXE001, D100
+#!/usr/bin/python  # noqa: CPY001, D100, EXE001
 
 # written: fmk, adamzs 06/20
 # units kN & mm
@@ -76,7 +76,7 @@ def process_results(responses, node_disp):  # noqa: ANN001, ANN201, D103
             results.append('0.0')
 
     # save the results
-    with open('results.out', 'w') as f:  # noqa: PTH123
+    with open('results.out', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
         f.write(' '.join(results))
 
 

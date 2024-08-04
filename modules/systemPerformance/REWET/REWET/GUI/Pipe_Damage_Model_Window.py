@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Pipe_Damage_Model_Window.ui'  # noqa: D100, N999
+# Form implementation generated from reading ui file 'Pipe_Damage_Model_Window.ui'  # noqa: CPY001, D100, N999
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,8 +8,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Pipe_Damage_Model:  # noqa: N801, D101
-    def setupUi(self, Pipe_Damage_Model):  # noqa: ANN001, ANN201, N802, N803, D102, PLR0915
+class Ui_Pipe_Damage_Model:  # noqa: D101
+    def setupUi(self, Pipe_Damage_Model):  # noqa: ANN001, ANN201, N802, N803, D102
         Pipe_Damage_Model.setObjectName('Pipe_Damage_Model')
         Pipe_Damage_Model.resize(377, 372)
         self.buttonBox = QtWidgets.QDialogButtonBox(Pipe_Damage_Model)

@@ -1,4 +1,4 @@
-# written: UQ team @ SimCenter  # noqa: INP001, D100
+# written: UQ team @ SimCenter  # noqa: CPY001, D100, INP001
 
 # import functions for Python 2.X support
 import sys
@@ -13,7 +13,7 @@ import json
 import os
 import platform
 import stat
-import subprocess
+import subprocess  # noqa: S404
 import sys
 
 inputArgs = sys.argv  # noqa: N816
@@ -28,9 +28,7 @@ run_type = inputArgs[3]
 # which one you plan to use for the analysis.
 
 # run on local computer
-if run_type in [
-    'runningLocal',
-]:
+if run_type == 'runningLocal':
     # MAC
     if sys.platform == 'darwin':
         OpenSees = 'OpenSees'
@@ -54,9 +52,7 @@ if run_type in [
         osType = 'Windows'  # noqa: N816
 
 # Stampede @ DesignSafe, DON'T EDIT
-elif run_type in [
-    'runningRemote',
-]:
+elif run_type == 'runningRemote':
     OpenSees = '/home1/00477/tg457427/bin/OpenSees'
     Feap = '/home1/00477/tg457427/bin/feappv'
     Dakota = 'dakota'
@@ -70,7 +66,7 @@ cwd = os.getcwd()  # noqa: PTH109
 print(cwd)  # noqa: T201
 
 # open the dakota json file
-with open('dakota.json') as data_file:  # noqa: PTH123
+with open('dakota.json') as data_file:  # noqa: PLW1514, PTH123
     data = json.load(data_file)
 
 uq_data = data['UQ_Method']
@@ -98,7 +94,7 @@ for edp in my_edps:
 femProgram = fem_data['program']  # noqa: N816
 print(femProgram)  # noqa: T201
 
-if run_type in ['runningLocal']:
+if run_type == 'runningLocal':
     os.chmod(workflow_driver, stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)  # noqa: PTH101
 
 # command = Dakota + ' -input dakota.in -output dakota.out -error dakota.err'
@@ -113,7 +109,7 @@ os.chdir('../')
 cwd = os.getcwd()  # noqa: PTH109
 print(cwd)  # noqa: T201
 
-if run_type in ['runningLocal']:
+if run_type == 'runningLocal':
     #    p = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
     #    for line in p.stdout:
     #        print(str(line))

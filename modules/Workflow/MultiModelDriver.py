@@ -43,20 +43,24 @@ from copy import deepcopy
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
 
-from whale.main import _parse_app_registry, create_command, run_command
+from whale.main import (
+    _parse_app_registry,  # noqa: PLC2701
+    create_command,
+    run_command,
+)
 
 
-def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType):  # noqa: ANN001, ANN201, C901, N803, D103, PLR0912, PLR0913, PLR0915
+def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType):  # noqa: ANN001, ANN201, C901, N803, D103
     #
     # get some dir paths, load input file and get data for app, appKey
     #
 
     inputDir = os.path.dirname(inputFile)  # noqa: PTH120, N806
     inputFileName = os.path.basename(inputFile)  # noqa: PTH119, N806
-    if inputDir != '':
+    if inputDir != '':  # noqa: PLC1901
         os.chdir(inputDir)
 
-    with open(inputFileName) as f:  # noqa: PTH123
+    with open(inputFileName) as f:  # noqa: PLW1514, PTH123
         inputs = json.load(f)
 
     localAppDir = inputs['localAppDir']  # noqa: N806
@@ -66,7 +70,7 @@ def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType): 
     if runType == 'runningRemote':
         appDir = remoteAppDir  # noqa: N806
 
-    if 'referenceDir' in inputs:  # noqa: SIM108, SIM401
+    if 'referenceDir' in inputs:  # noqa: SIM401
         reference_dir = inputs['referenceDir']
     else:
         reference_dir = inputDir
@@ -103,14 +107,14 @@ def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType): 
         appData = model['ApplicationData']  # noqa: N806
         appRunData = model['data']  # noqa: N806
         beliefs.append(belief)
-        sumBeliefs = sumBeliefs + belief  # noqa: N806
+        sumBeliefs = sumBeliefs + belief  # noqa: N806, PLR6104
         appsInMultiModel.append(appName)
         appDataInMultiModel.append(appData)
         appRunDataInMultiModel.append(appRunData)
-        numModels = numModels + 1  # noqa: N806
+        numModels = numModels + 1  # noqa: N806, PLR6104
 
     for i in range(numModels):
-        beliefs[i] = beliefs[i] / sumBeliefs
+        beliefs[i] = beliefs[i] / sumBeliefs  # noqa: PLR6104
 
     appTypes = [appKey]  # noqa: N806
 
@@ -138,7 +142,7 @@ def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType): 
     }
     randomVariables.append(thisRV)
 
-    with open(inputFile, 'w') as outfile:  # noqa: PTH123
+    with open(inputFile, 'w') as outfile:  # noqa: PLW1514, PTH123
         json.dump(inputs, outfile)
 
     #
@@ -149,8 +153,8 @@ def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType): 
     exeFileName = 'runMultiModelDriver'  # noqa: N806
     if osType == 'Windows' and runType == 'runningLocal':
         driverFileBat = driverFile + '.bat'  # noqa: N806
-        exeFileName = exeFileName + '.exe'  # noqa: N806
-        with open(driverFileBat, 'wb') as f:  # noqa: PTH123
+        exeFileName = exeFileName + '.exe'  # noqa: N806, PLR6104
+        with open(driverFileBat, 'wb') as f:  # noqa: FURB103, PTH123
             f.write(
                 bytes(
                     os.path.join(appDir, 'applications', 'Workflow', exeFileName)  # noqa: PTH118
@@ -168,7 +172,7 @@ def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType): 
                 'UTF-8',
             )
     else:
-        with open(driverFile, 'wb') as f:  # noqa: PTH123
+        with open(driverFile, 'wb') as f:  # noqa: FURB103, PTH123
             f.write(
                 bytes(
                     os.path.join(appDir, 'applications', 'Workflow', exeFileName)  # noqa: PTH118
@@ -190,8 +194,8 @@ def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType): 
         # create input file for application
         #
 
-        modelInputFile = f'MultiModel_{modelToRun+1}_' + inputFile  # noqa: N806
-        modelDriverFile = f'MultiModel_{modelToRun+1}_' + driverFile  # noqa: N806
+        modelInputFile = f'MultiModel_{modelToRun + 1}_' + inputFile  # noqa: N806
+        modelDriverFile = f'MultiModel_{modelToRun + 1}_' + driverFile  # noqa: N806
 
         inputsTmp = deepcopy(inputs)  # noqa: N806
         inputsTmp[appKey] = appRunDataInMultiModel[modelToRun]
@@ -200,7 +204,7 @@ def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType): 
             'ApplicationData': appDataInMultiModel[modelToRun],
         }
 
-        with open(modelInputFile, 'w') as outfile:  # noqa: PTH123
+        with open(modelInputFile, 'w') as outfile:  # noqa: PLW1514, PTH123
             json.dump(inputsTmp, outfile)
 
         #

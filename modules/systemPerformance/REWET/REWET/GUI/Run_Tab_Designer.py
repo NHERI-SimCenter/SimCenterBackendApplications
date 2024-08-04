@@ -1,20 +1,20 @@
 """Created on Wed Nov  2 14:40:45 2022
 
 @author: snaeimi
-"""  # noqa: N999, D400, D415
+"""  # noqa: CPY001, D400, N999
 
-import subprocess
+import subprocess  # noqa: S404
 import threading
 
 from PyQt5.QtCore import QObject, pyqtSignal
 
 
-class Custom_Object(QObject):  # noqa: N801, D101
+class Custom_Object(QObject):  # noqa: D101
     outSignal = pyqtSignal(bytes)  # noqa: N815
 
 
-class Run_Tab_Designer:  # noqa: N801, D101
-    def __init__(self):  # noqa: ANN204, D107
+class Run_Tab_Designer:  # noqa: D101
+    def __init__(self):  # noqa: ANN204
         self.run_button.clicked.connect(self.runREWET)
         self.stop_button.clicked.connect(self.stopRun)
         self.cobject = Custom_Object()

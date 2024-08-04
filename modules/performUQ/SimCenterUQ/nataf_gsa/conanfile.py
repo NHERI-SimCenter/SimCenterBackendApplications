@@ -1,9 +1,9 @@
-import os  # noqa: INP001, D100
+import os  # noqa: CPY001, D100, INP001
 
 from conans import CMake, ConanFile
 
 
-class simCenterBackendApps(ConanFile):  # noqa: N801, D101
+class simCenterBackendApps(ConanFile):  # noqa: D101
     name = 'nataf_gsa_cpp_mpi'
     version = '1.0.0'
     description = 'Software for creating nataf_gsa'

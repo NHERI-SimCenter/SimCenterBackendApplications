@@ -1,11 +1,11 @@
-import json  # noqa: INP001, D100
+import json  # noqa: CPY001, D100, INP001
 import os
-import pickle
+import pickle  # noqa: S403
 
 import pandas as pd
 
 
-##################### Read files From json #####################
+# Read files From json #####################
 def read_pipe_damage_seperate_json_file(directory, pipe_file_name):  # noqa: ANN001, ANN201
     """Read pipe damage of a single scenario.
 
@@ -14,12 +14,12 @@ def read_pipe_damage_seperate_json_file(directory, pipe_file_name):  # noqa: ANN
         directory (path): damage scenarios path
         pipe_file_name (str): pipe damage file name
 
-    Raises:
+    Raises
     ------
         ValueError: _description_
         RuntimeError: _description_
 
-    Returns:
+    Returns
     -------
         Pandas.Series: Pipe Damage
 
@@ -29,11 +29,11 @@ def read_pipe_damage_seperate_json_file(directory, pipe_file_name):  # noqa: ANN
 
     file_dest = os.path.join(directory, pipe_file_name)  # noqa: PTH118
 
-    with open(file_dest) as f:  # noqa: PTH123
+    with open(file_dest) as f:  # noqa: PLW1514, PTH123
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
-        raise ValueError('Wrong input in PIPE damage file')  # noqa: EM101, TRY003, TRY004
+        raise ValueError('Wrong input in PIPE damage file')  # noqa: DOC501, EM101, TRY003, TRY004
 
     for each_damage in read_file:
         pipe_time.append(each_damage.get('time'))
@@ -50,7 +50,7 @@ def read_pipe_damage_seperate_json_file(directory, pipe_file_name):  # noqa: ANN
     return pd.Series(index=pipe_time, data=pipe_damaage)
 
 
-def read_node_damage_seperate_json_file(directory, node_file_name):  # noqa: ANN001, ANN201, D417
+def read_node_damage_seperate_json_file(directory, node_file_name):  # noqa: ANN001, ANN201
     """Read node damage of a single scenario.
 
     Args:
@@ -58,12 +58,12 @@ def read_node_damage_seperate_json_file(directory, node_file_name):  # noqa: ANN
         directory (path): damage scenarios path
         pipe_file_name (str): node damage file name
 
-    Raises:
+    Raises
     ------
         ValueError: _description_
         RuntimeError: _description_
 
-    Returns:
+    Returns
     -------
         Pandas.Series: node Damage
 
@@ -73,11 +73,11 @@ def read_node_damage_seperate_json_file(directory, node_file_name):  # noqa: ANN
 
     file_dest = os.path.join(directory, node_file_name)  # noqa: PTH118
 
-    with open(file_dest) as f:  # noqa: PTH123
+    with open(file_dest) as f:  # noqa: PLW1514, PTH123
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
-        raise ValueError('Wrong input in NODE damage file')  # noqa: EM101, TRY003, TRY004
+        raise ValueError('Wrong input in NODE damage file')  # noqa: DOC501, EM101, TRY003, TRY004
 
     for each_damage in read_file:
         node_time.append(each_damage.get('time'))
@@ -93,7 +93,7 @@ def read_node_damage_seperate_json_file(directory, node_file_name):  # noqa: ANN
     return pd.Series(index=node_time, data=node_damage)
 
 
-def read_tank_damage_seperate_json_file(directory, tank_file_name):  # noqa: ANN001, ANN201, D417
+def read_tank_damage_seperate_json_file(directory, tank_file_name):  # noqa: ANN001, ANN201
     """Read tank damage of a single scenario.
 
     Args:
@@ -101,12 +101,12 @@ def read_tank_damage_seperate_json_file(directory, tank_file_name):  # noqa: ANN
         directory (path): tank scenarios path
         pipe_file_name (str): tank damage file name
 
-    Raises:
+    Raises
     ------
         ValueError: _description_
         RuntimeError: _description_
 
-    Returns:
+    Returns
     -------
         Pandas.Series: tank Damage
 
@@ -116,11 +116,11 @@ def read_tank_damage_seperate_json_file(directory, tank_file_name):  # noqa: ANN
 
     file_dest = os.path.join(directory, tank_file_name)  # noqa: PTH118
 
-    with open(file_dest) as f:  # noqa: PTH123
+    with open(file_dest) as f:  # noqa: PLW1514, PTH123
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
-        raise ValueError('Wrong input in TANK damage file')  # noqa: EM101, TRY003, TRY004
+        raise ValueError('Wrong input in TANK damage file')  # noqa: DOC501, EM101, TRY003, TRY004
 
     for each_damage in read_file:
         tank_time.append(each_damage.get('time'))
@@ -135,7 +135,7 @@ def read_tank_damage_seperate_json_file(directory, tank_file_name):  # noqa: ANN
     return pd.Series(index=tank_time, data=tank_damage)
 
 
-def read_pump_damage_seperate_json_file(directory, pump_file_name):  # noqa: ANN001, ANN201, D417
+def read_pump_damage_seperate_json_file(directory, pump_file_name):  # noqa: ANN001, ANN201
     """Read pump damage of a single scenario.
 
     Args:
@@ -143,12 +143,12 @@ def read_pump_damage_seperate_json_file(directory, pump_file_name):  # noqa: ANN
         directory (path): pump scenarios path
         pipe_file_name (str): pump damage file name
 
-    Raises:
+    Raises
     ------
         ValueError: _description_
         RuntimeError: _description_
 
-    Returns:
+    Returns
     -------
         Pandas.Series: pump Damage
 
@@ -158,11 +158,11 @@ def read_pump_damage_seperate_json_file(directory, pump_file_name):  # noqa: ANN
 
     file_dest = os.path.join(directory, pump_file_name)  # noqa: PTH118
 
-    with open(file_dest) as f:  # noqa: PTH123
+    with open(file_dest) as f:  # noqa: PLW1514, PTH123
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
-        raise ValueError('Wrong input in PUMP damage file')  # noqa: EM101, TRY003, TRY004
+        raise ValueError('Wrong input in PUMP damage file')  # noqa: DOC501, EM101, TRY003, TRY004
 
     for each_damage in read_file:
         pump_time.append(each_damage.get('time'))
@@ -177,7 +177,7 @@ def read_pump_damage_seperate_json_file(directory, pump_file_name):  # noqa: ANN
     return pd.Series(index=pump_time, data=pump_damage)
 
 
-##################### Read files From Pickle #####################
+# Read files From Pickle #####################
 def read_pipe_damage_seperate_pickle_file(directory, all_damages_file_name):  # noqa: ANN001, ANN201, D103
     file_dest = os.path.join(directory, all_damages_file_name)  # noqa: PTH118
     with open(file_dest, 'rb') as f:  # noqa: PTH123
@@ -210,7 +210,7 @@ def read_pump_damage_seperate_pickle_file(directory, pump_damages_file_name):  #
     return _pump_damages  # noqa: RET504
 
 
-##################### Read files From Excel #####################
+# Read files From Excel #####################
 
 
 def read_pipe_damage_seperate_EXCEL_file(directory, pipe_damages_file_name):  # noqa: ANN001, ANN201, N802, D103
@@ -312,7 +312,7 @@ def read_damage_list(list_file_addr, file_directory, iCheck=False):  # noqa: ANN
     return damage_list
 
 
-##################### Save Results #####################
+# Save Results #####################
 
 
 def save_single(settings, result, name, restoration_data):  # noqa: ANN001, ANN201, D103

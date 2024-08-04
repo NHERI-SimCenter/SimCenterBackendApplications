@@ -70,7 +70,7 @@ class NumpyEncoder(json.JSONEncoder):  # noqa: D101
 def get_stats(arr: np.array) -> dict:  # noqa: D103
     # Returns a dictionary of summary stats from the array
 
-    if np.min(arr) > 0.0:  # noqa: SIM108
+    if np.min(arr) > 0.0:
         log_std = np.std(np.log(arr))
     else:
         log_std = ''
@@ -143,7 +143,7 @@ def get_first_value(val: dict, num_levels: int) -> int:  # noqa: D103
         return next_val
 
 
-def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
+def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0914, PLR0915
     print('***Running REDi Seismic Downtime engine***\n')  # noqa: T201
 
     pelicun_results_dir = Path(args.dirnameOutput)
@@ -283,14 +283,14 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
     replacementTime = float(DL_info['ReplacementTime']['Median'])  # noqa: N806
 
     # convert replacement time to days from worker_days
-    replacementTime = replacementTime / num_workers  # noqa: N806
+    replacementTime = replacementTime / num_workers  # noqa: N806, PLR6104
 
     rediInputDict['replacement_time'] = replacementTime
 
     final_results_dict = dict()  # noqa: C408
     log_output: List[str] = []  # noqa: FA100
 
-    for sample in range(num_samples):
+    for sample in range(num_samples):  # noqa: PLR1702
         if buildingirreparableOrCollapsed[sample]:
             # Convert the replacement time coming out of Pelicun (worker-days) into days by dividing by the number of workers
             replacement_time = DVReplacementDict['Time'][sample] / num_workers
@@ -300,7 +300,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
             )
             continue
 
-        ### REDi input map ###
+        # REDi input map ###
         # Assemble the component quantity vector
         # components object is a list of lists where each item is a list of component on a particular floor.
         # The components are a dictionary containing the component tag (NISTR) and an array of quantities (Qty) in each direction, i.e., [dir_1, dir_2]
@@ -312,7 +312,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
         #                   'Qty' : [dir_1, dir_2]}]
         components: List[List[Dict[str, Any]]] = [[] for i in range(nStories + 1)]  # noqa: FA100
 
-        ### Pelicun output map ###
+        # Pelicun output map ###
         #   "B1033.061b": { <- component nistr
         #     "4": {        <- floor
         #       "1": [      <- direction
@@ -349,7 +349,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
                 cmp_dict = {'NISTR': nistr, 'Qty': [dir_1, dir_2]}
                 components[floor - 1].append(cmp_dict)
 
-        ### REDi input map ###
+        # REDi input map ###
         # total_consequences = dict()
         # Assemble the component damage vector
         # component_damage object is a dictionary where each key is a component tag (NISTR) and the values is a list of a list.
@@ -358,7 +358,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
         # where ds_n = [num_dmg_units_floor_1, num_dmg_units_floor_2, ..., num_dmg_units_floor_n]
         component_damage: Dict[str, List[List[float]]] = {}  # noqa: FA100
 
-        ### Pelicun output map ###
+        # Pelicun output map ###
         #   "B1033.061b": { <- component nistr
         #     "4": {        <- floor
         #       "1": {      <- direction
@@ -417,7 +417,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
         time_dict = CMP_DV['Time']
         time_dict = clean_up_results(res=time_dict, keys_to_remove=['replacement'])
 
-        ### REDi input map ###
+        # REDi input map ###
         # Total_consequences is a list of lists of lists.
         # The highest-level list (always length 4) corresponds to the 4 types of consequences at the component level: (1) repair cost [dollars], (2) repair time [worker days], (3) injuries, (4) fatalities.
         # The second level list contains the number of stories, so a list with length 5 will be a 4-story building with a roof.
@@ -425,7 +425,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
 
         total_consequences: Dict[str, List[List[float]]] = {}  # noqa: FA100
 
-        ### Pelicun output map ###
+        # Pelicun output map ###
         #   "COST": {           <- cost/time key
         #     "B1033.061b": {   <- component nistr  *special case - this one to evaluate consequences (depends on occupancy type). Note that Component name will match in FEMA P-58 analysis (this case)
         #       "B1033.061b": { <- component nistr  *special case - this one tells you about damage (depends on perhaps location in building or something else). Note that Component name will match in FEMA P-58 analysis (this case)

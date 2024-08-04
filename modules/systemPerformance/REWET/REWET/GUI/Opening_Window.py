@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Opening.ui'  # noqa: N999, D100
+# Form implementation generated from reading ui file 'Opening.ui'  # noqa: CPY001, D100, N999
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,7 +8,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Opening_Window:  # noqa: N801, D101
+class Ui_Opening_Window:  # noqa: D101
     def setupUi(self, Opening_Window):  # noqa: ANN001, ANN201, N802, N803, D102, PLR0915
         Opening_Window.setObjectName('Opening_Window')
         Opening_Window.resize(830, 780)

@@ -1,3 +1,3 @@
-from REWET import Input  # noqa: N999, D104, F401
+from REWET import Input  # noqa: CPY001, D104, N999
 
 __version__ = '0.1.1'

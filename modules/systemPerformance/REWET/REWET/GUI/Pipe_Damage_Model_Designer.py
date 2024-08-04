@@ -1,15 +1,15 @@
 """Created on Tue Nov  1 18:32:32 2022
 
 @author: snaeimi
-"""  # noqa: N999, D400, D415
+"""  # noqa: CPY001, D400, N999
 
 from PyQt5 import QtGui, QtWidgets
 
 from .Pipe_Damage_Model_Window import Ui_Pipe_Damage_Model
 
 
-class Pipe_Damage_Model_Designer(Ui_Pipe_Damage_Model):  # noqa: N801, D101
-    def __init__(self, pipe_damage_model):  # noqa: ANN001, ANN204, D107
+class Pipe_Damage_Model_Designer(Ui_Pipe_Damage_Model):  # noqa: D101
+    def __init__(self, pipe_damage_model):  # noqa: ANN001, ANN204
         self._window = QtWidgets.QDialog()
         self.setupUi(self._window)
         self.pipe_damage_model = pipe_damage_model

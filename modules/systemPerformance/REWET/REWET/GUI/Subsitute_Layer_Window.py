@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Subsitute_Layer_Window.ui'  # noqa: D100, N999
+# Form implementation generated from reading ui file 'Subsitute_Layer_Window.ui'  # noqa: CPY001, D100, N999
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,8 +8,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_subsitite_layer_dialoge:  # noqa: N801, D101
-    def setupUi(self, subsitite_layer_dialoge):  # noqa: ANN001, ANN201, N802, D102, PLR0915
+class Ui_subsitite_layer_dialoge:  # noqa: D101
+    def setupUi(self, subsitite_layer_dialoge):  # noqa: ANN001, ANN201, N802, D102
         subsitite_layer_dialoge.setObjectName('subsitite_layer_dialoge')
         subsitite_layer_dialoge.resize(403, 407)
         self.Subsitute_buttonBox = QtWidgets.QDialogButtonBox(

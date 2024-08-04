@@ -1,4 +1,4 @@
-"""The wntrfr.morph.link module contains functions to split/break pipes."""  # noqa: INP001
+"""The wntrfr.morph.link module contains functions to split/break pipes."""  # noqa: CPY001, INP001
 
 import copy
 import logging
@@ -8,7 +8,7 @@ from wntrfr.network.elements import Pipe, Reservoir
 logger = logging.getLogger(__name__)
 
 
-def split_pipe(  # noqa: ANN201, PLR0913
+def split_pipe(  # noqa: ANN201
     wn,  # noqa: ANN001
     pipe_name_to_split,  # noqa: ANN001
     new_pipe_name,  # noqa: ANN001
@@ -80,7 +80,7 @@ def split_pipe(  # noqa: ANN201, PLR0913
     return wn2  # noqa: RET504
 
 
-def break_pipe(  # noqa: ANN201, PLR0913
+def break_pipe(  # noqa: ANN201
     wn,  # noqa: ANN001
     pipe_name_to_split,  # noqa: ANN001
     new_pipe_name,  # noqa: ANN001
@@ -159,7 +159,7 @@ def break_pipe(  # noqa: ANN201, PLR0913
     return wn2  # noqa: RET504
 
 
-def _split_or_break_pipe(  # noqa: ANN202, C901, PLR0912, PLR0913
+def _split_or_break_pipe(  # noqa: ANN202, C901
     wn,  # noqa: ANN001
     pipe_name_to_split,  # noqa: ANN001
     new_pipe_name,  # noqa: ANN001
@@ -169,7 +169,7 @@ def _split_or_break_pipe(  # noqa: ANN202, C901, PLR0912, PLR0913
     flag,  # noqa: ANN001
     return_copy,  # noqa: ANN001
 ):
-    if return_copy:  # Get a copy of the WaterNetworkModel  # noqa: SIM108
+    if return_copy:  # Get a copy of the WaterNetworkModel
         wn2 = copy.deepcopy(wn)
     else:
         wn2 = wn

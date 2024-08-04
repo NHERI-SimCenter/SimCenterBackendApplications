@@ -42,7 +42,7 @@ import importlib
 import json
 import os
 import shutil
-import subprocess
+import subprocess  # noqa: S404
 import sys
 import time
 
@@ -53,9 +53,9 @@ import psutil
 R2D = True
 
 
-def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
-    from CreateScenario import load_ruptures_openquake
-    from GMSimulators import simulate_ground_motion
+def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0914, PLR0915
+    from CreateScenario import load_ruptures_openquake  # noqa: PLC0415
+    from GMSimulators import simulate_ground_motion  # noqa: PLC0415
 
     try:
         # oq_flag = hazard_info['Scenario']['EqRupture']['Type'] in ['oqSourceXML']
@@ -87,7 +87,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
             rupFile = scenario_info['sourceFile']  # noqa: N806
             scenarios = load_earthquake_rupFile(scenario_info, rupFile)  # noqa: F405
     else:
-        # TODO: extending this to other hazards  # noqa: FIX002, TD002, TD003
+        # TODO: extending this to other hazards  # noqa: TD002
         print('HazardSimulation: currently only supports EQ and Wind simulations.')  # noqa: T201
     # print(scenarios)
     print('HazardSimulation: scenarios loaded.')  # noqa: T201
@@ -133,7 +133,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
                 sys.exit(
                     'HazardSimulation: errors in preparing the OpenQuake configuration file.'
                 )
-            if scenario_info['EqRupture']['Type'] in [
+            if scenario_info['EqRupture']['Type'] in [  # noqa: PLR6201
                 'OpenQuakeClassicalPSHA',
                 'OpenQuakeUserConfig',
                 'OpenQuakeClassicalPSHA-User',
@@ -149,7 +149,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
                 if oq_run_flag:
                     err_msg = 'HazardSimulation: OpenQuake Classical PSHA failed.'
                     if not new_db_sqlite3:
-                        err_msg = (
+                        err_msg = (  # noqa: PLR6104
                             err_msg
                             + ' Please see if there is leaked python threads in background still occupying {}.'.format(
                                 os.path.expanduser('~/oqdata/db.sqlite3')  # noqa: PTH111
@@ -265,7 +265,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
         else:
             num_gm_per_site = event_info['NumberPerSite']
         print('num_gm_per_site = ', num_gm_per_site)  # noqa: T201
-        if scenario_info['EqRupture']['Type'] not in [
+        if scenario_info['EqRupture']['Type'] not in [  # noqa: PLR6201
             'OpenQuakeClassicalPSHA',
             'OpenQuakeUserConfig',
             'OpenQuakeClassicalPSHA-User',
@@ -357,7 +357,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
         # print(np.exp(ln_im_mr[0][0, :, 1]))
         # print(np.exp(ln_im_mr[0][1, :, 1]))
     else:
-        # TODO: extending this to other hazards  # noqa: FIX002, TD002, TD003
+        # TODO: extending this to other hazards  # noqa: TD002
         print('HazardSimulation currently only supports earthquake simulations.')  # noqa: T201
     print('HazardSimulation: intensity measures computed.')  # noqa: T201
     # Selecting ground motion records
@@ -424,7 +424,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
     if 'GroundFailure' in hazard_info['Event'].keys():  # noqa: SIM118
         ground_failure_info = hazard_info['Event']['GroundFailure']
         if 'Liquefaction' in ground_failure_info.keys():  # noqa: SIM118
-            import liquefaction
+            import liquefaction  # noqa: PLC0415
 
             trigging_info = ground_failure_info['Liquefaction']['Triggering']
             trigging_model = getattr(liquefaction, trigging_info['Model'])(
@@ -498,7 +498,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # read the hazard configuration file
-    with open(args.hazard_config) as f:  # noqa: PTH123
+    with open(args.hazard_config) as f:  # noqa: PLW1514, PTH123
         hazard_info = json.load(f)
 
     # directory (back compatibility here)
@@ -512,14 +512,14 @@ if __name__ == '__main__':
 
     # parse job type for set up environment and constants
     try:
-        opensha_flag = hazard_info['Scenario']['EqRupture']['Type'] in [
+        opensha_flag = hazard_info['Scenario']['EqRupture']['Type'] in [  # noqa: PLR6201
             'PointSource',
             'ERF',
         ]
     except:  # noqa: E722
         opensha_flag = False
     try:
-        oq_flag = hazard_info['Scenario']['EqRupture']['Type'] in ['oqSourceXML']
+        oq_flag = hazard_info['Scenario']['EqRupture']['Type'] == 'oqSourceXML'
     except:  # noqa: E722
         oq_flag = False
 

@@ -2,11 +2,11 @@
 and Prof. J.P. Conte
 affiliation: SimCenter*; University of California, San Diego
 
-"""  # noqa: INP001, D205, D400, D415
+"""  # noqa: CPY001, D205, D400, INP001
 
 import os
 import shutil
-import subprocess
+import subprocess  # noqa: S404
 
 import numpy as np
 
@@ -32,7 +32,7 @@ def copytree(src, dst, symlinks=False, ignore=None):  # noqa: ANN001, ANN201, FB
     return '0'
 
 
-def runFEM(  # noqa: ANN201, N802, PLR0913
+def runFEM(  # noqa: ANN201, N802
     particleNumber,  # noqa: ANN001, N803
     parameterSampleValues,  # noqa: ANN001, N803
     variables,  # noqa: ANN001
@@ -50,7 +50,7 @@ def runFEM(  # noqa: ANN201, N802, PLR0913
     """This function runs FE model (model.tcl) for each parameter value (par)
     model.tcl should take parameter input
     model.tcl should output 'output$PN.txt' -> column vector of size 'Ny'
-    """  # noqa: D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404
     workdirName = 'workdir.' + str(particleNumber + 1)  # noqa: N806
     analysisPath = os.path.join(workdirMain, workdirName)  # noqa: PTH118, N806
 
@@ -70,7 +70,7 @@ def runFEM(  # noqa: ANN201, N802, PLR0913
     # write input file and covariance multiplier values list
     covarianceMultiplierList = []  # noqa: N806
     parameterNames = variables['names']  # noqa: N806
-    with open('params.in', 'w') as f:  # noqa: PTH123
+    with open('params.in', 'w') as f:  # noqa: PLW1514, PTH123
         f.write(f'{len(parameterSampleValues) - len(edpNamesList)}\n')
         for i in range(len(parameterSampleValues)):
             name = str(parameterNames[i])
@@ -91,7 +91,7 @@ def runFEM(  # noqa: ANN201, N802, PLR0913
 
     # Read in the model prediction
     if os.path.exists('results.out'):  # noqa: PTH110
-        with open('results.out') as f:  # noqa: PTH123
+        with open('results.out') as f:  # noqa: PLW1514, PTH123
             prediction = np.atleast_2d(np.genfromtxt(f)).reshape((1, -1))
         preds = prediction.copy()
         os.chdir('../')

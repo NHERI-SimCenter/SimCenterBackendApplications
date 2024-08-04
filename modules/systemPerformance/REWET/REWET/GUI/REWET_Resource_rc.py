@@ -1,4 +1,4 @@
-# Resource object code  # noqa: N999, D100
+# Resource object code  # noqa: CPY001, D100, N999
 #
 # Created by: The Resource Compiler for PyQt5 (Qt v5.12.9)
 #

@@ -1,11 +1,11 @@
 """Created on Tue Jun  1 21:04:18 2021
 
 @author: snaeimi
-"""  # noqa: D400, D415
+"""  # noqa: CPY001, D400
 
 import logging
 import os
-import pickle
+import pickle  # noqa: S403
 import time
 
 import Damage
@@ -24,7 +24,7 @@ logging.basicConfig(level=50)
 
 
 class Starter:  # noqa: D101
-    def createProjectFile(self, project_settings, damage_list, project_file_name):  # noqa: ANN001, ANN201, N802, D102
+    def createProjectFile(self, project_settings, damage_list, project_file_name):  # noqa: ANN001, ANN201, D102, N802, PLR6301
         project = Project(project_settings, damage_list)
         project_file_addr = os.path.join(  # noqa: PTH118
             project_settings.process['result_directory'], project_file_name
@@ -32,7 +32,7 @@ class Starter:  # noqa: D101
         with open(project_file_addr, 'wb') as f:  # noqa: PTH123
             pickle.dump(project, f)
 
-    def run(self, project_file=None):  # noqa: ANN001, ANN201, C901, PLR0912
+    def run(self, project_file=None):  # noqa: ANN001, ANN201, C901
         """Runs the ptogram. It initiates the Settings class and based on the
         settings, run the program in either single scenario, multiple serial or
         multiple parallel mode.
@@ -123,7 +123,7 @@ class Starter:  # noqa: D101
         else:
             raise ValueError('Number of processor must be equal to or more than 1')  # noqa: EM101, TRY003
 
-    def run_local_single(  # noqa: ANN201, C901, PLR0912, PLR0913
+    def run_local_single(  # noqa: ANN201, C901
         self,
         file_name,  # noqa: ANN001
         scenario_name,  # noqa: ANN001
@@ -253,7 +253,7 @@ class Starter:  # noqa: D101
         demand_node_name_list = []
         for junction_name, junction in wn.junctions():
             if junction.demand_timeseries_list[0].base_value > 0:
-                junction.demand_timeseries_list[0].base_value = (
+                junction.demand_timeseries_list[0].base_value = (  # noqa: PLR6104
                     junction.demand_timeseries_list[0].base_value
                     * settings.process['demand_ratio']
                 )
@@ -262,7 +262,7 @@ class Starter:  # noqa: D101
         registry = Registry(wn, settings, demand_node_name_list, scenario_name)
         self.registry = registry
         self.damage = Damage.Damage(registry, settings.scenario)
-        ##All these data can immigrate to registry
+        # All these data can immigrate to registry
         self.registry.damage = self.damage
         self.damage.pipe_all_damages = pipe_damages
         self.damage.node_damage = node_damages
@@ -293,9 +293,9 @@ class Starter:  # noqa: D101
         io.save_single(settings, result, scenario_name, registry)
         return 1
 
-    def run_mpi(self, settings):  # noqa: ANN001, ANN201, C901, D102, PLR0912, PLR0915
-        import mpi4py
-        from mpi4py import MPI
+    def run_mpi(self, settings):  # noqa: ANN001, ANN201, C901, D102
+        import mpi4py  # noqa: PLC0415
+        from mpi4py import MPI  # noqa: PLC0415
 
         comm = MPI.COMM_WORLD
         mpi4py.rc.recv_mprobe = False
@@ -331,7 +331,7 @@ class Starter:  # noqa: D101
         else:
             file_name_list = []
 
-        if comm.rank == 0:
+        if comm.rank == 0:  # noqa: PLR1702
             time_jobs_saved = time.time()
             jobs = pd.DataFrame(
                 columns=[
@@ -582,7 +582,7 @@ class Starter:  # noqa: D101
                 flush=True,
             )
 
-    def checkArgument(self, argv):  # noqa: ANN001, ANN201, N802, D102
+    def checkArgument(self, argv):  # noqa: ANN001, ANN201, D102, N802, PLR6301
         if len(argv) > 2:  # noqa: PLR2004
             print('REWET USAGE is as [./REWET Project.prj: optional]')  # noqa: T201
         if len(argv) == 1:  # noqa: SIM103

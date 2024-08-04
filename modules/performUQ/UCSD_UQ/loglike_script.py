@@ -1,4 +1,4 @@
-# from scipy.stats import multivariate_normal  # noqa: INP001, D100
+# from scipy.stats import multivariate_normal  # noqa: CPY001, D100, INP001
 
 # def log_likelihood(residuals, mean, cov):
 #     return multivariate_normal.logpdf(residuals, mean=mean, cov=cov)

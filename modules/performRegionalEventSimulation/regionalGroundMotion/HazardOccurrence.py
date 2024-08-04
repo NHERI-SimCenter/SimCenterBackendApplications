@@ -55,7 +55,7 @@ from tqdm import tqdm
 from USGS_API import *  # noqa: F403
 
 
-def configure_hazard_occurrence(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
+def configure_hazard_occurrence(  # noqa: ANN201, C901, D103
     input_dir,  # noqa: ANN001
     output_dir,  # noqa: ANN001
     IMfile,  # noqa: ANN001, N803
@@ -156,12 +156,12 @@ def configure_hazard_occurrence(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, 
         )
     elif hc_input == 'Inferred_sourceFile':
         period = hzo_config.get('Period', 0.0)
-        if im_type == 'SA':  # noqa: SIM108
+        if im_type == 'SA':
             cur_imt = f'SA({period!s})'
         else:
             cur_imt = im_type
         if IMfile.lower().endswith('.json'):
-            with open(IMfile) as f:  # noqa: PTH123
+            with open(IMfile) as f:  # noqa: PLW1514, PTH123
                 IMdata = json.load(f)  # noqa: N806
             hc_data = calc_hazard_curves(IMdata, site_config, cur_imt)
         elif IMfile.lower().endswith('.hdf5'):
@@ -203,7 +203,7 @@ def configure_hazard_occurrence(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, 
         'HazardCurves': hc_interp_list,
     }
     # output the hazard occurrence information file
-    with open(os.path.join(output_dir, 'HazardCurves.json'), 'w') as f:  # noqa: PTH118, PTH123
+    with open(os.path.join(output_dir, 'HazardCurves.json'), 'w') as f:  # noqa: PLW1514, PTH118, PTH123
         json.dump(occ_dict, f, indent=2)
     occ_dict = {
         'Model': model_type,
@@ -312,7 +312,7 @@ def calc_hazard_curves(IMdata, site_config, im):  # noqa: ANN001, ANN201, N803, 
             lnIM_std = lnIM['TotalStdDev'][im_ind]  # noqa: N806
             p_exceed = 1 - norm.cdf(np.log(IMRange), lnIM_mean, lnIM_std)
             rate_exceed = mar * p_exceed
-            exceedRate[:, site_ind] = exceedRate[:, site_ind] + rate_exceed
+            exceedRate[:, site_ind] = exceedRate[:, site_ind] + rate_exceed  # noqa: PLR6104
     exceedRate[exceedRate < 1e-20] = 1e-20  # noqa: PLR2004
     for site_ind, site in enumerate(site_config):
         hc_data[site_ind] = {
@@ -347,7 +347,7 @@ def calc_hazard_curves_hdf5(IMfile, im_list, site_config, im, scenarios):  # noq
                     np.log(IMRange), lnIM_mean[site_ind], lnIM_std[site_ind]
                 )
                 rate_exceed = mar * p_exceed
-                exceedRate[:, site_ind] = exceedRate[:, site_ind] + rate_exceed
+                exceedRate[:, site_ind] = exceedRate[:, site_ind] + rate_exceed  # noqa: PLR6104
     exceedRate[exceedRate < 1e-20] = 1e-20  # noqa: PLR2004
     for site_ind, site in enumerate(site_config):
         hc_data[site_ind] = {
@@ -378,13 +378,13 @@ def get_hazard_curves(input_dir=None, input_csv=None, input_json=None):  # noqa:
         return hc_data
 
     if input_json is not None:  # noqa: RET503
-        with open(input_json) as f:  # noqa: PTH123
+        with open(input_json) as f:  # noqa: PLW1514, PTH123
             hc_data = json.load(f)
         return hc_data  # noqa: RET504
 
 
 # KZ-08/23/22: adding a function for computing exceeding probability at an im level
-def get_im_exceedance_probility(  # noqa: ANN201, C901, D103, PLR0912, PLR0913
+def get_im_exceedance_probility(  # noqa: ANN201, C901, D103
     IMfile,  # noqa: ANN001, N803
     im_list,  # noqa: ANN001
     im_type,  # noqa: ANN001
@@ -400,7 +400,7 @@ def get_im_exceedance_probility(  # noqa: ANN201, C901, D103, PLR0912, PLR0913
 
     # initialize output
     if IMfile.lower().endswith('.json'):
-        with open(IMfile) as f:  # noqa: PTH123
+        with open(IMfile) as f:  # noqa: PLW1514, PTH123
             im_raw = json.load(f)
         num_sites = len(im_raw[scenario_idx[0]].get('GroundMotions'))
     elif IMfile.lower().endswith('.hdf5'):
@@ -471,7 +471,7 @@ def get_im_exceedance_probility(  # noqa: ANN201, C901, D103, PLR0912, PLR0913
     return im_exceedance_prob
 
 
-def get_im_exceedance_probability_gm(  # noqa: ANN201, D103, PLR0913
+def get_im_exceedance_probability_gm(  # noqa: ANN201, D103
     im_raw,  # noqa: ANN001
     im_list,  # noqa: ANN001
     im_type,  # noqa: ANN001
@@ -510,7 +510,7 @@ def get_im_exceedance_probability_gm(  # noqa: ANN201, D103, PLR0913
     return im_exceedance_prob, occurrence_rate
 
 
-def sample_earthquake_occurrence(  # noqa: ANN201, D103, PLR0913
+def sample_earthquake_occurrence(  # noqa: ANN201, D103
     model_type,  # noqa: ANN001
     num_target_eqs,  # noqa: ANN001
     return_periods,  # noqa: ANN001
@@ -566,7 +566,7 @@ def export_sampled_earthquakes(error, id_selected_eqs, eqdata, P, output_dir=Non
     }
 
     if output_dir is not None:
-        with open(os.path.join(output_dir, 'RupSampled.json'), 'w') as f:  # noqa: PTH118, PTH123
+        with open(os.path.join(output_dir, 'RupSampled.json'), 'w') as f:  # noqa: PLW1514, PTH118, PTH123
             json.dump(dict_selected_eqs, f, indent=2)
 
 
@@ -612,7 +612,7 @@ def export_sampled_earthquakes(error, id_selected_eqs, eqdata, P, output_dir=Non
 #             json.dump(dict_selected_eqs, f, indent=2)
 
 
-class OccurrenceModel_ManzourDavidson2016:  # noqa: N801, D101
+class OccurrenceModel_ManzourDavidson2016:  # noqa: D101
     def __init__(  # noqa: ANN204
         self,
         return_periods=[],  # noqa: ANN001, B006
@@ -626,7 +626,7 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: N801, D101
         :param earthquake_mafs: 1-D array of annual occurrence probability, MAF(j)
         :param im_exceedance_probs: 3-D array of exceedance probability of Sa, EP(i,j,r) for site #i, earthquake #j, return period #r
         :param num_scenarios: integer for number of target scenarios
-        """  # noqa: D205, D400, D415
+        """  # noqa: D205, D400
         # read input parameters
         self.return_periods = return_periods
         self.im_exceedance_probs = im_exceedance_probs
@@ -643,7 +643,7 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: N801, D101
             return
 
     def _input_check(self):  # noqa: ANN202
-        """_input_check: check of input parameters"""  # noqa: D400, D415
+        """_input_check: check of input parameters"""  # noqa: D400
         # number of return periods
         if len(self.return_periods) > 0:
             self.num_return_periods = len(self.return_periods)
@@ -693,7 +693,7 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: N801, D101
                 return False
 
     def _opt_initialization(self):  # noqa: ANN202
-        """_opt_initialization: initialization of optimization problem"""  # noqa: D400, D415
+        """_opt_initialization: initialization of optimization problem"""  # noqa: D400
         # the problem is mixed integer program
         self.prob = pulp.LpProblem('MIP', pulp.LpMinimize)
 
@@ -762,7 +762,7 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: N801, D101
     def solve_opt(self):  # noqa: ANN201
         """target_function: compute the target function to be minimized
         :param X: 2-D array of annual occurrence probability of earthquakes and corresponding binary variables (many values are reduced to zeros)
-        """  # noqa: D205, D400, D415
+        """  # noqa: D205, D400
         maximum_runtime = 1 * 60 * 60  # 1 hours maximum
         self.prob.solve(pulp.PULP_CBC_CMD(timeLimit=maximum_runtime, gapRel=0.001))
         print('Status:', pulp.LpStatus[self.prob.status])  # noqa: T201
@@ -802,12 +802,12 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: N801, D101
         }
 
         if output_dir is not None:
-            with open(os.path.join(output_dir, 'InfoSampledGM.json'), 'w') as f:  # noqa: PTH118, PTH123
+            with open(os.path.join(output_dir, 'InfoSampledGM.json'), 'w') as f:  # noqa: PLW1514, PTH118, PTH123
                 json.dump(dict_selected_gmms, f, indent=2)
 
 
-class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
-    def __init__(  # noqa: ANN204, PLR0913
+class OccurrenceModel_Wangetal2023:  # noqa: D101
+    def __init__(  # noqa: ANN204
         self,
         return_periods=[],  # noqa: ANN001, B006
         im_exceedance_probs=[],  # noqa: ANN001, B006
@@ -821,7 +821,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
         :param earthquake_mafs: 1-D array of annual occurrence probability, MAF(j)
         :param im_exceedance_probs: 3-D array of exceedance probability of Sa, EP(i,j,r) for site #i, earthquake #j, return period #r
         :param num_scenarios: integer for number of target scenarios
-        """  # noqa: D205, D400, D415
+        """  # noqa: D205, D400
         # read input parameters
         self.return_periods = return_periods
         self.im_exceedance_probs = im_exceedance_probs
@@ -842,7 +842,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
             return
 
     def _input_check(self):  # noqa: ANN202
-        """_input_check: check of input parameters"""  # noqa: D400, D415
+        """_input_check: check of input parameters"""  # noqa: D400
         # number of return periods
         if len(self.return_periods) > 0:
             self.num_return_periods = len(self.return_periods)
@@ -892,7 +892,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
                 return False
 
     def _opt_initialization(self):  # noqa: ANN202
-        """_opt_initialization: initialization of LASSO regression"""  # noqa: D400, D415
+        """_opt_initialization: initialization of LASSO regression"""  # noqa: D400
         # define X
         self.X_P = (
             self.im_exceedance_probs.transpose(1, 0, 2)
@@ -919,7 +919,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
         return True
 
     def solve_opt(self):  # noqa: ANN201
-        """LASSO regression"""  # noqa: D400, D415
+        """LASSO regression"""  # noqa: D400
         if self.alpha_path:
             self.alphas, self.coefs, _ = lasso_path(
                 X=self.X_weighted,
@@ -948,7 +948,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
         # find the selection such that the number of selected events is closest to the user defined target number of scenarios
         # the flip() is used to find the last one which has the closest number of selected events to the target value.
         self.selected_alpha_ind = (
-            self.num_selected.__len__()
+            self.num_selected.__len__()  # noqa: PLC2801
             - 1
             - np.abs(np.flip(self.num_selected) - self.num_scenarios).argmin()
         )
@@ -987,5 +987,5 @@ class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
         }
 
         if output_dir is not None:
-            with open(os.path.join(output_dir, 'InfoSampledGM.json'), 'w') as f:  # noqa: PTH118, PTH123
+            with open(os.path.join(output_dir, 'InfoSampledGM.json'), 'w') as f:  # noqa: PLW1514, PTH118, PTH123
                 json.dump(dict_selected_gmms, f, indent=2)

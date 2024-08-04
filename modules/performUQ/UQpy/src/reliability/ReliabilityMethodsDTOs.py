@@ -1,4 +1,4 @@
-from typing import Literal, Union  # noqa: INP001, D100
+from typing import Literal, Union  # noqa: CPY001, D100, INP001
 
 from pydantic import Field
 from src.sampling.mcmc.StretchDto import SamplingMethod
@@ -22,8 +22,12 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):  # noqa: D101
     # self.samplingMethod.n_chains=int(self.samples_per_subset*self.conditionalProbability)
 
     def init_to_text(self):  # noqa: ANN201, D102
-        from UQpy.reliability.SubsetSimulation import SubsetSimulation
-        from UQpy.sampling.MonteCarloSampling import MonteCarloSampling
+        from UQpy.reliability.SubsetSimulation import (  # noqa: PLC0415
+            SubsetSimulation,
+        )
+        from UQpy.sampling.MonteCarloSampling import (  # noqa: PLC0415
+            MonteCarloSampling,
+        )
 
         c = SubsetSimulation
 
@@ -109,7 +113,7 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):  # noqa: D101
             + "{index}')",
         ]
 
-        with open('postprocess_script.py', 'w') as f:  # noqa: PTH123
+        with open('postprocess_script.py', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
             f.write('\n'.join(postprocess_script_code))
 
 

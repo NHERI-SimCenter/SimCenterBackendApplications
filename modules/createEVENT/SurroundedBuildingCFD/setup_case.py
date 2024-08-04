@@ -1,7 +1,7 @@
 """This script writes BC and initial condition, and setups the OpenFoam case
 directory.
 
-"""  # noqa: INP001, D205, D404
+"""  # noqa: CPY001, D205, D404, INP001
 
 import json
 import os
@@ -58,7 +58,7 @@ def create_building_geometry(width, depth, height, center):  # noqa: ANN001, ANN
     return bldg
 
 
-def create_surroundings_geometry(  # noqa: ANN201, D103, PLR0913
+def create_surroundings_geometry(  # noqa: ANN201, D103
     main_bldg_width,  # noqa: ANN001
     main_bldg_depth,  # noqa: ANN001
     sur_bldg_width,  # noqa: ANN001
@@ -89,7 +89,7 @@ def create_surroundings_geometry(  # noqa: ANN201, D103, PLR0913
     min_h = 1.0 - randomness * 0.95
     max_h = 1.0 + randomness * 0.95
 
-    rand_f = np.random.uniform(min_h, max_h, (n_grid_x, n_grid_y))  # noqa: NPY002
+    rand_f = np.random.uniform(min_h, max_h, (n_grid_x, n_grid_y))
 
     x_max = (street_width_x + plan_x) * n_grid_x - street_width_x
     y_max = (street_width_y + plan_y) * n_grid_y - street_width_y
@@ -137,7 +137,7 @@ def create_surroundings_geometry(  # noqa: ANN201, D103, PLR0913
 
 def write_main_building_stl_file(input_json_path, case_path):  # noqa: ANN001, ANN201, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     geom_data = json_data['GeometricData']
@@ -181,7 +181,7 @@ def write_main_building_stl_file(input_json_path, case_path):  # noqa: ANN001, A
 
 def write_surrounding_buildings_stl_file(input_json_path, case_path):  # noqa: ANN001, ANN201, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     geom_data = json_data['GeometricData']
@@ -232,9 +232,9 @@ def write_surrounding_buildings_stl_file(input_json_path, case_path):  # noqa: A
     surroundings.save(case_path + '/constant/geometry/surroundings.stl', mode=fmt)
 
 
-def write_block_mesh_dict(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, D103, PLR0915
+def write_block_mesh_dict(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -290,7 +290,7 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):  # no
     z_max = z_min + Lz
 
     # Open the template blockMeshDict (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/blockMeshDictTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/blockMeshDictTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     # Export to OpenFOAM probe format
     dict_lines = dict_file.readlines()
@@ -338,15 +338,15 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):  # no
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
 
 
-def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, D103, PLR0915
+def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -390,7 +390,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
     inside_point = [x_min + Lf / 2.0, (y_min + y_max) / 2.0, (z_min + z_max) / 2.0]
 
     # Open the template blockMeshDict (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/snappyHexMeshDictTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/snappyHexMeshDictTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     # Export to OpenFOAM probe format
     dict_lines = dict_file.readlines()
@@ -400,7 +400,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
     start_index = foam.find_keyword_line(dict_lines, 'addLayers')
     dict_lines[start_index] = 'addLayers\t{};\n'.format('off')
 
-    ###################### Edit Geometry Section ##############################
+    # Edit Geometry Section ##############################
 
     # Add refinement box geometry
     start_index = foam.find_keyword_line(dict_lines, 'geometry') + 2
@@ -431,7 +431,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
     added_part += '    }\n'
     dict_lines.insert(start_index, added_part)
 
-    ################# Edit castellatedMeshControls Section ####################
+    # Edit castellatedMeshControls Section ####################
 
     # Write 'nCellsBetweenLevels'
     start_index = foam.find_keyword_line(dict_lines, 'nCellsBetweenLevels')
@@ -515,7 +515,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
     start_index = foam.find_keyword_line(dict_lines, 'refinementRegions') + 2
     dict_lines.insert(start_index, added_part)
 
-    ####################### Edit PrismLayer Section ##########################
+    # Edit PrismLayer Section ##########################
     if add_prism_layers:
         # Add surface layers (prism layers)
         added_part = ''
@@ -549,7 +549,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
@@ -557,7 +557,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
 
 def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -566,7 +566,7 @@ def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_pat
     surroundings_stl_name = domain_data['surroundingsSTLName']
 
     # Open the template blockMeshDict (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/surfaceFeaturesDictTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/surfaceFeaturesDictTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     # Export to OpenFOAM probe format
     dict_lines = dict_file.readlines()
@@ -584,7 +584,7 @@ def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_pat
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
@@ -595,7 +595,7 @@ def write_boundary_data_files(input_json_path, case_path):  # noqa: ANN001, ANN2
     if TInf options are used for the simulation.
     """  # noqa: D205, D401, D404
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -641,9 +641,9 @@ def write_boundary_data_files(input_json_path, case_path):  # noqa: ANN001, ANN2
         foam.write_foam_field(wind_profiles[:, 8:17], bd_path + 'L')
 
 
-def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103, PLR0915
+def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -659,12 +659,12 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/UFileTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/UFileTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     dict_lines = dict_file.readlines()
     dict_file.close()
 
-    ##################### Internal Field #########################
+    # Internal Field #########################
     # Initialize the internal fields frow a lower velocity to avoid Courant number
     # instability when the solver starts. Now %10 of roof-height wind speed is set
     start_index = foam.find_keyword_line(dict_lines, 'internalField')
@@ -673,7 +673,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     # Set the internal field to zero to make it easy for the solver to start
     dict_lines[start_index] = 'internalField   uniform (0 0 0);\n'
 
-    ###################### Inlet BC ##############################
+    # Inlet BC ##############################
     # Write uniform
     start_index = foam.find_keyword_line(dict_lines, 'inlet') + 2
 
@@ -705,7 +705,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Outlet BC ##############################
+    # Outlet BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'outlet') + 2
     added_part = ''
@@ -718,7 +718,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Ground BC ##############################
+    # Ground BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'ground') + 2
     added_part = ''
@@ -728,7 +728,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Top BC ##############################
+    # Top BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'top') + 2
     added_part = ''
@@ -736,7 +736,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Front BC ##############################
+    # Front BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'front') + 2
     added_part = ''
@@ -744,7 +744,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Back BC ##############################
+    # Back BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'back') + 2
     added_part = ''
@@ -752,14 +752,14 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Building BC ##############################
+    # Building BC ##############################
     start_index = foam.find_keyword_line(dict_lines, 'building') + 2
     added_part = ''
     added_part += '\t type \t {};\n'.format('noSlip')
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Surroundings BC ##############################
+    # Surroundings BC ##############################
     start_index = foam.find_keyword_line(dict_lines, 'surroundings') + 2
     added_part = ''
     added_part += '\t type \t {};\n'.format('noSlip')
@@ -772,7 +772,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
@@ -780,7 +780,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
 def write_p_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -790,19 +790,19 @@ def write_p_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     top_BC_type = boundary_data['topBoundaryCondition']  # noqa: N806
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/pFileTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/pFileTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     dict_lines = dict_file.readlines()
     dict_file.close()
 
     # BC and initial condition
     p0 = 0.0
-    ##################### Internal Field #########################
+    # Internal Field #########################
 
     start_index = foam.find_keyword_line(dict_lines, 'internalField')
     dict_lines[start_index] = f'internalField   uniform {p0:.4f};\n'
 
-    ###################### Inlet BC ##############################
+    # Inlet BC ##############################
     # Write uniform
     start_index = foam.find_keyword_line(dict_lines, 'inlet') + 2
     added_part = ''
@@ -810,7 +810,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Outlet BC ##############################
+    # Outlet BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'outlet') + 2
     added_part = ''
@@ -819,7 +819,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Ground BC ##############################
+    # Ground BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'ground') + 2
     added_part = ''
@@ -827,7 +827,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Top BC ##############################
+    # Top BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'top') + 2
     added_part = ''
@@ -835,7 +835,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Front BC ##############################
+    # Front BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'front') + 2
     added_part = ''
@@ -843,7 +843,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Back BC ##############################
+    # Back BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'back') + 2
     added_part = ''
@@ -851,7 +851,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Building BC ##############################
+    # Building BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'building') + 2
     added_part = ''
@@ -859,7 +859,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Surrounding BC ##############################
+    # Surrounding BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'surroundings') + 2
     added_part = ''
@@ -873,15 +873,15 @@ def write_p_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
 
 
-def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, C901, D103, PLR0915
+def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, C901, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -899,7 +899,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/nutFileTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/nutFileTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -907,12 +907,12 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN
     # BC and initial condition
     nut0 = 0.0
 
-    ##################### Internal Field #########################
+    # Internal Field #########################
 
     start_index = foam.find_keyword_line(dict_lines, 'internalField')
     dict_lines[start_index] = f'internalField   uniform {nut0:.4f};\n'
 
-    ###################### Inlet BC ##############################
+    # Inlet BC ##############################
     # Write uniform
     start_index = foam.find_keyword_line(dict_lines, 'inlet') + 2
     added_part = ''
@@ -920,7 +920,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Outlet BC ##############################
+    # Outlet BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'outlet') + 2
     added_part = ''
@@ -929,7 +929,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Ground BC ##############################
+    # Ground BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'ground') + 2
 
@@ -950,7 +950,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Top BC ##############################
+    # Top BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'top') + 2
     added_part = ''
@@ -958,7 +958,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Front BC ##############################
+    # Front BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'front') + 2
     added_part = ''
@@ -966,7 +966,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Back BC ################################
+    # Back BC ################################
 
     start_index = foam.find_keyword_line(dict_lines, 'back') + 2
     added_part = ''
@@ -974,7 +974,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Building BC ##############################
+    # Building BC ##############################
     start_index = foam.find_keyword_line(dict_lines, 'building') + 2
 
     if building_BC_type == 'noSlip':
@@ -996,7 +996,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Surrounding BC ##############################
+    # Surrounding BC ##############################
     start_index = foam.find_keyword_line(dict_lines, 'surroundings') + 2
 
     if surrounding_BC_type == 'noSlip':
@@ -1024,15 +1024,15 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
 
 
-def write_epsilon_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, D103, PLR0915
+def write_epsilon_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1048,7 +1048,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):  # noqa:
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/epsilonFileTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/epsilonFileTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1056,12 +1056,12 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):  # noqa:
     # BC and initial condition
     epsilon0 = 0.01
 
-    ##################### Internal Field #########################
+    # Internal Field #########################
 
     start_index = foam.find_keyword_line(dict_lines, 'internalField')
     dict_lines[start_index] = f'internalField   uniform {epsilon0:.4f};\n'
 
-    ###################### Inlet BC ##############################
+    # Inlet BC ##############################
     # Write uniform
     start_index = foam.find_keyword_line(dict_lines, 'inlet') + 2
     added_part = ''
@@ -1075,7 +1075,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):  # noqa:
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Outlet BC ##############################
+    # Outlet BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'outlet') + 2
     added_part = ''
@@ -1085,7 +1085,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):  # noqa:
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Ground BC ##############################
+    # Ground BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'ground') + 2
 
@@ -1112,7 +1112,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):  # noqa:
         added_part += f'\t value \t uniform {epsilon0:.4f};\n'
     dict_lines.insert(start_index, added_part)
 
-    ###################### Top BC ##############################
+    # Top BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'top') + 2
     added_part = ''
@@ -1120,7 +1120,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):  # noqa:
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Front BC ##############################
+    # Front BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'front') + 2
     added_part = ''
@@ -1128,7 +1128,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):  # noqa:
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Back BC ################################
+    # Back BC ################################
 
     start_index = foam.find_keyword_line(dict_lines, 'back') + 2
     added_part = ''
@@ -1142,15 +1142,15 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):  # noqa:
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
 
 
-def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, C901, D103, PLR0915
+def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, C901, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1168,7 +1168,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/kFileTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/kFileTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1179,12 +1179,12 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     I = 0.1  # noqa: N806, E741
     k0 = 1.5 * (I * wind_speed) ** 2
 
-    ##################### Internal Field #########################
+    # Internal Field #########################
 
     start_index = foam.find_keyword_line(dict_lines, 'internalField')
     dict_lines[start_index] = f'internalField \t uniform {k0:.4f};\n'
 
-    ###################### Inlet BC ##############################
+    # Inlet BC ##############################
     # Write uniform
     start_index = foam.find_keyword_line(dict_lines, 'inlet') + 2
     added_part = ''
@@ -1198,7 +1198,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Outlet BC ##############################
+    # Outlet BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'outlet') + 2
     added_part = ''
@@ -1208,7 +1208,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Ground BC ##############################
+    # Ground BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'ground') + 2
 
@@ -1228,7 +1228,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Top BC ##############################
+    # Top BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'top') + 2
     added_part = ''
@@ -1236,7 +1236,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Front BC ##############################
+    # Front BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'front') + 2
     added_part = ''
@@ -1244,7 +1244,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Back BC ################################
+    # Back BC ################################
 
     start_index = foam.find_keyword_line(dict_lines, 'back') + 2
     added_part = ''
@@ -1252,7 +1252,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Building BC ##############################
+    # Building BC ##############################
     start_index = foam.find_keyword_line(dict_lines, 'building') + 2
 
     if building_BC_type == 'noSlip':
@@ -1271,7 +1271,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
     dict_lines.insert(start_index, added_part)
 
-    ###################### Surroundings BC ##############################
+    # Surroundings BC ##############################
     start_index = foam.find_keyword_line(dict_lines, 'surroundings') + 2
 
     if surrounding_BC_type == 'noSlip':
@@ -1296,7 +1296,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
@@ -1304,7 +1304,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
 
 def write_controlDict_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1332,7 +1332,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
     purge_write = 3
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/controlDictTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/controlDictTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1381,7 +1381,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
     start_index = foam.find_keyword_line(dict_lines, 'purgeWrite')
     dict_lines[start_index] = f'purgeWrite \t{purge_write};\n'
 
-    ########################### Function Objects ##############################
+    # Function Objects ##############################
 
     # Find function object location
     start_index = foam.find_keyword_line(dict_lines, 'functions') + 2
@@ -1415,7 +1415,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
@@ -1423,7 +1423,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
 
 def write_fvSolution_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1436,7 +1436,7 @@ def write_fvSolution_file(input_json_path, template_dict_path, case_path):  # no
     num_outer_correctors = ns_data['numOuterCorrectors']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/fvSolutionTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/fvSolutionTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1474,7 +1474,7 @@ def write_fvSolution_file(input_json_path, template_dict_path, case_path):  # no
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
@@ -1482,7 +1482,7 @@ def write_fvSolution_file(input_json_path, template_dict_path, case_path):  # no
 
 def write_base_forces_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     air_density = 1.0
@@ -1497,7 +1497,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):  # n
     monitor_base_load = rm_data['monitorBaseLoad']  # noqa: F841
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/baseForcesTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/baseForcesTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1526,7 +1526,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):  # n
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
@@ -1534,7 +1534,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):  # n
 
 def write_story_forces_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     air_density = 1.0
@@ -1549,7 +1549,7 @@ def write_story_forces_file(input_json_path, template_dict_path, case_path):  # 
     monitor_base_load = rm_data['monitorBaseLoad']  # noqa: F841
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/storyForcesTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/storyForcesTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1586,7 +1586,7 @@ def write_story_forces_file(input_json_path, template_dict_path, case_path):  # 
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
@@ -1594,7 +1594,7 @@ def write_story_forces_file(input_json_path, template_dict_path, case_path):  # 
 
 def write_pressure_probes_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1604,7 +1604,7 @@ def write_pressure_probes_file(input_json_path, template_dict_path, case_path): 
     pressure_write_interval = rm_data['pressureWriteInterval']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/probeTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/probeTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1632,15 +1632,15 @@ def write_pressure_probes_file(input_json_path, template_dict_path, case_path): 
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
 
 
-def write_wind_profiles_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, C901, D103, PLR0915
+def write_wind_profiles_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, C901, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1663,7 +1663,7 @@ def write_wind_profiles_file(input_json_path, template_dict_path, case_path):  #
     # Write dict files for wind profiles
     for prof in wind_profiles:
         # Open the template file (OpenFOAM file) for manipulation
-        dict_file = open(template_dict_path + '/probeTemplate')  # noqa: SIM115, PTH123
+        dict_file = open(template_dict_path + '/probeTemplate')  # noqa: PLW1514, PTH123, SIM115
 
         dict_lines = dict_file.readlines()
         dict_file.close()
@@ -1733,15 +1733,15 @@ def write_wind_profiles_file(input_json_path, template_dict_path, case_path):  #
         if os.path.exists(write_file_name):  # noqa: PTH110
             os.remove(write_file_name)  # noqa: PTH107
 
-        output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+        output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
         for line in dict_lines:
             output_file.write(line)
         output_file.close()
 
 
-def write_vtk_plane_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
+def write_vtk_plane_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, C901, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1762,7 +1762,7 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):  # noq
     # Write dict files for wind profiles
     for pln in vtk_planes:
         # Open the template file (OpenFOAM file) for manipulation
-        dict_file = open(template_dict_path + '/vtkPlaneTemplate')  # noqa: SIM115, PTH123
+        dict_file = open(template_dict_path + '/vtkPlaneTemplate')  # noqa: PLW1514, PTH123, SIM115
 
         dict_lines = dict_file.readlines()
         dict_file.close()
@@ -1834,7 +1834,7 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):  # noq
         if os.path.exists(write_file_name):  # noqa: PTH110
             os.remove(write_file_name)  # noqa: PTH107
 
-        output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+        output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
         for line in dict_lines:
             output_file.write(line)
         output_file.close()
@@ -1842,7 +1842,7 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):  # noq
 
 def write_momentumTransport_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1854,7 +1854,7 @@ def write_momentumTransport_file(input_json_path, template_dict_path, case_path)
     DES_type = turb_data['DESModelType']  # noqa: N806
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/momentumTransportTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/momentumTransportTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1889,7 +1889,7 @@ def write_momentumTransport_file(input_json_path, template_dict_path, case_path)
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
@@ -1897,7 +1897,7 @@ def write_momentumTransport_file(input_json_path, template_dict_path, case_path)
 
 def write_physicalProperties_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1906,7 +1906,7 @@ def write_physicalProperties_file(input_json_path, template_dict_path, case_path
     kinematic_viscosity = wc_data['kinematicViscosity']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/physicalPropertiesTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/physicalPropertiesTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1921,7 +1921,7 @@ def write_physicalProperties_file(input_json_path, template_dict_path, case_path
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
@@ -1929,7 +1929,7 @@ def write_physicalProperties_file(input_json_path, template_dict_path, case_path
 
 def write_transportProperties_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1938,7 +1938,7 @@ def write_transportProperties_file(input_json_path, template_dict_path, case_pat
     kinematic_viscosity = wc_data['kinematicViscosity']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/transportPropertiesTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/transportPropertiesTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1953,7 +1953,7 @@ def write_transportProperties_file(input_json_path, template_dict_path, case_pat
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
@@ -1961,7 +1961,7 @@ def write_transportProperties_file(input_json_path, template_dict_path, case_pat
 
 def write_fvSchemes_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1970,7 +1970,7 @@ def write_fvSchemes_file(input_json_path, template_dict_path, case_path):  # noq
     simulation_type = turb_data['simulationType']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + f'/fvSchemesTemplate{simulation_type}')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + f'/fvSchemesTemplate{simulation_type}')  # noqa: PLW1514, PTH123, SIM115
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1981,7 +1981,7 @@ def write_fvSchemes_file(input_json_path, template_dict_path, case_path):  # noq
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
@@ -1989,7 +1989,7 @@ def write_fvSchemes_file(input_json_path, template_dict_path, case_path):  # noq
 
 def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1998,7 +1998,7 @@ def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):
     num_processors = ns_data['numProcessors']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/decomposeParDictTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/decomposeParDictTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -2021,7 +2021,7 @@ def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
@@ -2029,7 +2029,7 @@ def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):
 
 def write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path):  # noqa: ANN001, ANN201, N802, D103
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     fmax = 200.0
@@ -2042,10 +2042,10 @@ def write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path):  # 
     duration = ns_data['duration']
 
     # Generate a little longer duration to be safe
-    duration = duration * 1.010
+    duration = duration * 1.010  # noqa: PLR6104
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/DFSRTurbDictTemplate')  # noqa: SIM115, PTH123
+    dict_file = open(template_dict_path + '/DFSRTurbDictTemplate')  # noqa: PLW1514, PTH123, SIM115
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -2076,7 +2076,7 @@ def write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path):  # 
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
+    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
@@ -2091,7 +2091,7 @@ if __name__ == '__main__':
     case_path = sys.argv[3]
 
     # Read JSON data
-    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
+    with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary

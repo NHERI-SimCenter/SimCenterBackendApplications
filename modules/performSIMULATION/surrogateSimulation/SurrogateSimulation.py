@@ -114,14 +114,14 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ANN001, ANN201, AR
         root_AIM['Applications']['Simulation']['Application']
         != 'SurrogateRegionalPy'
     ):
-        with open('../workflow.err', 'w') as f:  # noqa: PTH123
+        with open('../workflow.err', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
             f.write(
                 'Do not select [None] in the FEM tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'
             )
         exit(-1)  # noqa: PLR1722
 
 
-def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):  # noqa: ANN001, ANN201, C901, N802, N803, D103, PLR0912, PLR0915
+def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):  # noqa: ANN001, ANN201, C901, N802, N803, D103
     with open(AIM_input_path, encoding='utf-8') as f:  # noqa: PTH123
         root_AIM = json.load(f)  # noqa: N806
 

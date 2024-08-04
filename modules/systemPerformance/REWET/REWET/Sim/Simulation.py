@@ -1,4 +1,4 @@
-import math  # noqa: INP001, D100
+import math  # noqa: CPY001, D100, INP001
 import os
 
 import numpy as np
@@ -7,8 +7,8 @@ from EnhancedWNTR.sim.epanet import EpanetSimulator
 from EnhancedWNTR.sim.results import SimulationResults
 
 
-class Hydraulic_Simulation:  # noqa: N801, D101
-    def __init__(  # noqa: ANN204, D107, PLR0913
+class Hydraulic_Simulation:  # noqa: D101
+    def __init__(  # noqa: ANN204
         self,
         wn,  # noqa: ANN001
         settings,  # noqa: ANN001
@@ -32,7 +32,7 @@ class Hydraulic_Simulation:  # noqa: N801, D101
             raise ValueError('temp folder type is not str')  # noqa: EM101, TRY003
 
         if settings['save_time_step'] == True:  # noqa: E712
-            if temp_folder == '':
+            if temp_folder == '':  # noqa: PLC1901
                 self.temp_directory = (
                     str(worker_rank) + '_' + repr(current_stop_time)
                 )
@@ -42,7 +42,7 @@ class Hydraulic_Simulation:  # noqa: N801, D101
                 )
 
         elif settings['save_time_step'] == False:  # noqa: E712
-            if temp_folder == '':
+            if temp_folder == '':  # noqa: PLC1901
                 self.temp_directory = str(worker_rank)
             else:
                 self.temp_directory = os.path.join(temp_folder, str(worker_rank))  # noqa: PTH118
@@ -70,7 +70,7 @@ class Hydraulic_Simulation:  # noqa: N801, D101
             )
 
             sim.manipulateTimeOrder(current_stop_time, current_stop_time)
-            rr, i_run_successful = sim.run_sim(
+            rr, i_run_successful = sim.run_sim(  # noqa: F841
                 file_prefix=temp_file_dest,
                 start_time=current_stop_time,
                 iModified=False,
@@ -129,7 +129,7 @@ class Hydraulic_Simulation:  # noqa: N801, D101
                 )
             )
             sim.manipulateTimeOrder(current_stop_time, current_stop_time)
-            rr, i_run_successful = sim.run_sim(
+            rr, i_run_successful = sim.run_sim(  # noqa: F841
                 file_prefix=temp_file_dest,
                 start_time=current_stop_time,
                 iModified=False,
@@ -231,7 +231,7 @@ class Hydraulic_Simulation:  # noqa: N801, D101
 
         return rr, i_run_successful
 
-    def estimateWithoutRun(self, result, next_event_time):  # noqa: ANN001, ANN201, N802, D102, PLR0915
+    def estimateWithoutRun(self, result, next_event_time):  # noqa: ANN001, ANN201, N802, D102
         current_stop_time = self.current_stop_time
         minimum_pressure = self.minimum_pressure  # noqa: F841
         required_pressure = self.required_pressure  # noqa: F841
@@ -443,7 +443,7 @@ class Hydraulic_Simulation:  # noqa: N801, D101
             head.loc[sim_time, tank_name] = new_head
             pressure.loc[sim_time, tank_name] = new_head - tank.elevation
 
-    def approximateNewResult(  # noqa: ANN201, N802, D102, PLR0915
+    def approximateNewResult(  # noqa: ANN201, N802, D102
         self,
         rr,  # noqa: ANN001
         current_stop_time,  # noqa: ANN001

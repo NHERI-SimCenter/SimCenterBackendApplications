@@ -7,7 +7,7 @@ REWET. In order to keep the backward compatibility, the initial.py is kepy,
 so one can run initial.py to run REWET. currently, REWET's GUI still works with
 initial.py. Main.py is going to be the most developed tool.
 
-"""  # noqa: D400, D415
+"""  # noqa: CPY001, D400
 
 import argparse
 import os

@@ -48,7 +48,7 @@ import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 
 
-def find_neighbors(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
+def find_neighbors(  # noqa: ANN201, C901, D103
     asset_file,  # noqa: ANN001
     event_grid_file,  # noqa: ANN001
     samples,  # noqa: ANN001
@@ -66,7 +66,7 @@ def find_neighbors(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
-            from mpi4py import MPI
+            from mpi4py import MPI  # noqa: PLC0415
 
             runParallel = True  # noqa: N806
             comm = MPI.COMM_WORLD
@@ -90,13 +90,13 @@ def find_neighbors(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     lon_E = grid_df['Longitude']  # noqa: N806
     X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])  # noqa: N806
 
-    if filter_label == '':
+    if filter_label == '':  # noqa: PLC1901
         grid_extra_keys = list(
             grid_df.drop(['GP_file', 'Longitude', 'Latitude'], axis=1).columns
         )
 
     # prepare the tree for the nearest neighbor search
-    if filter_label != '' or len(grid_extra_keys) > 0:
+    if filter_label != '' or len(grid_extra_keys) > 0:  # noqa: PLC1901
         neighbors_to_get = min(neighbors * 10, len(lon_E))
     else:
         neighbors_to_get = neighbors
@@ -123,7 +123,7 @@ def find_neighbors(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             AIM_df.iloc[count]['Longitude'] = asset_loc['longitude']
             AIM_df.iloc[count]['Latitude'] = asset_loc['latitude']
             AIM_df.iloc[count]['file'] = asset['file']
-            count = count + 1
+            count = count + 1  # noqa: PLR6104
 
     # store building locations in Y
     Y = np.array(  # noqa: N806
@@ -136,7 +136,7 @@ def find_neighbors(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
     # collect the neighbor indices and distances for every building
     distances, indices = nbrs.kneighbors(Y)
-    distances = distances + 1e-20
+    distances = distances + 1e-20  # noqa: PLR6104
 
     # initialize the random generator
     if seed is not None:
@@ -156,7 +156,7 @@ def find_neighbors(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         with open(asst_file, encoding='utf-8') as f:  # noqa: PTH123
             asset_data = json.load(f)
 
-        if filter_label != '':
+        if filter_label != '':  # noqa: PLC1901
             # soil type of building
             asset_label = asset_data['GeneralInformation'][filter_label]
             # soil types of all initial neighbors
@@ -268,7 +268,7 @@ def find_neighbors(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                     # IM collections are not scaled
                     scale_list.append(1.0)
 
-        # TODO: update the LLNL input data and remove this clause  # noqa: FIX002, TD002, TD003
+        # TODO: update the LLNL input data and remove this clause  # noqa: TD002
         else:
             event_list = []
             for e, i in zip(nbr_samples, ind_list):
@@ -290,7 +290,7 @@ def find_neighbors(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             event_list_json.append([f'{event}x{e_i:05d}', scale_list[e_i]])
 
         # save the event dictionary to the AIM
-        # TODO: we assume there is only one event  # noqa: FIX002, TD002, TD003
+        # TODO: we assume there is only one event  # noqa: TD002
         # handling multiple events will require more sophisticated inputs
 
         if 'Events' not in asset_data:

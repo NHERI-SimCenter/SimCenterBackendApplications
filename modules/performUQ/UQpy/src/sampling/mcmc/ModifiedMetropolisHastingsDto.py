@@ -1,4 +1,4 @@
-from typing import Literal  # noqa: INP001, D100
+from typing import Literal  # noqa: CPY001, D100, INP001
 
 from pydantic import Field
 from src.UQpyDTO import UQpyDTO
@@ -16,7 +16,7 @@ class ModifiedMetropolisHastingsDto(UQpyDTO):  # noqa: D101
     proposal_is_symmetric = False
 
     def init_to_text(self):  # noqa: ANN201, D102
-        from UQpy.sampling.mcmc.ModifiedMetropolisHastings import (
+        from UQpy.sampling.mcmc.ModifiedMetropolisHastings import (  # noqa: PLC0415
             ModifiedMetropolisHastings,
         )
 

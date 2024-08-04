@@ -1,4 +1,4 @@
-# written: Michael Gardner @ UNR  # noqa: INP001, D100
+# written: Michael Gardner @ UNR  # noqa: CPY001, D100, INP001
 
 import argparse
 import json
@@ -31,7 +31,7 @@ def main():  # noqa: ANN201, D103
     parser.add_argument('--driverFile')
     parser.add_argument('--runType')
 
-    args, unknowns = parser.parse_known_args()
+    args, unknowns = parser.parse_known_args()  # noqa: F841
 
     inputFile = args.workflowInput  # noqa: N806
     runType = args.runType  # noqa: N806
@@ -50,7 +50,7 @@ def main():  # noqa: ANN201, D103
 
     # Open input file
     inputdata = {}  # noqa: F841
-    with open(inputFile) as data_file:  # noqa: PTH123
+    with open(inputFile) as data_file:  # noqa: PLW1514, PTH123
         inputData = json.load(data_file)  # noqa: N806
 
     applicationsData = inputData['Applications']  # noqa: N806

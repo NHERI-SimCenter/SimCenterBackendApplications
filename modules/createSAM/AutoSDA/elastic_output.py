@@ -1,4 +1,4 @@
-# This file is used to define the class of Building  # noqa: INP001, D100
+# This file is used to define the class of Building  # noqa: CPY001, D100, INP001
 # Developed by GUAN, XINGQUAN @ UCLA in Aug. 2018
 # Updated on Sept. 28 2018
 
@@ -36,9 +36,9 @@ class ElasticOutput:
         Load combination #5: (0.9 - 0.2SDS)D + rho*E
         Load combination #6: (0.9 - 0.2SDS)D - rho*E
     (5) Determine governing load cases
-    """  # noqa: D205, D400, D404, D415
+    """  # noqa: D205, D400, D404
 
-    def __init__(self, building):  # noqa: ANN001, ANN204, D107
+    def __init__(self, building):  # noqa: ANN001, ANN204
         # Initialize attributes of elastic_output class
         self.raw_column_load = {}
         self.raw_beam_load = {}
@@ -65,7 +65,7 @@ class ElasticOutput:
         dead load, live load or earthquake load
         :param building: user-defined class in "building_information.py" file
         :return: a dictionary which contains load demands under three load scenarios
-        """  # noqa: D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404
         for load_type in LOAD_TYPE:
             # Define the directory where the column force output is stored
             path_output = (
@@ -187,7 +187,7 @@ class ElasticOutput:
                 self.earthquake_load_case['beam shear'] = shear_force
                 self.earthquake_load_case['beam moment'] = moment
 
-    def perform_load_combination(self, building):  # noqa: ANN001, ANN201, C901, PLR0912
+    def perform_load_combination(self, building):  # noqa: ANN001, ANN201, C901
         """This method is used to perform the load combinations, which will be used to extract the dominate load.
         There are six load combinations in total according to ASCE 7-10.
         :param building: user-defined class in "building_information.py" file
@@ -271,7 +271,7 @@ class ElasticOutput:
         """This method is used to determine the governing load for beam and column components.
         :return: a dictionary which includes all six keys and associated matrices.
                  six keys: column axial, column shear, column moment, beam axial, beam shear, beam moment
-        """  # noqa: D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404
         dominate_load = {}
         # Find the maximum load demand among six load cases
         for force in self.load_combination_1.keys():  # noqa: SIM118

@@ -1,4 +1,4 @@
-# %%  # noqa: INP001, D100
+# %%  # noqa: CPY001, D100, INP001
 import json
 import os
 
@@ -13,7 +13,7 @@ def M9(information):  # noqa: ANN001, ANN201, N802
     """The default is to select sites from all M9 sites, but
     grid type (options: A, B, C, D, E, Y, and Z, can be empty)
     (ref: https://sites.uw.edu/pnet/m9-simulations/about-m9-simulations/extent-of-model/)
-    """  # noqa: D205, D400, D401, D415
+    """  # noqa: D205, D400, D401
     LocationFlag = information['LocationFlag']  # noqa: N806
     numSiteGM = information['number_of_realizations']  # noqa: N806
     grid_type = information[  # noqa: F841
@@ -29,7 +29,7 @@ def M9(information):  # noqa: ANN001, ANN201, N802
     Realizations = [f'{i:03}' for i in range(1, 33)]  # noqa: N806
     indices = np.arange(32)
     if randomFLag:
-        np.random.shuffle(indices)  # noqa: NPY002
+        np.random.shuffle(indices)
     indices = indices[:numSiteGM]
 
     M9Path = '/home/jovyan/work/projects/PRJ-4603'  # noqa: N806
@@ -101,7 +101,7 @@ def write_motion(site_name, directory, i, motiondict, APIFLAG):  # noqa: ANN001,
         datatowrite['Data'] = 'Time history generated using M9 simulations'
         datatowrite['name'] = f'{site_name}_{i}'
 
-    with open(filename, 'w') as f:  # noqa: PTH123
+    with open(filename, 'w') as f:  # noqa: PLW1514, PTH123
         json.dump(datatowrite, f, indent=2)
 
 
@@ -109,6 +109,6 @@ if __name__ == '__main__':
     # change the directory to the directory of the current file
     os.chdir(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
 
-    with open('information.json') as file:  # noqa: PTH123
+    with open('information.json') as file:  # noqa: PLW1514, PTH123
         information = json.load(file)
     M9(information)

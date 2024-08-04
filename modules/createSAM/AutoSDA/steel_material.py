@@ -1,4 +1,4 @@
-# This file is used to define the class of Building  # noqa: INP001, D100
+# This file is used to define the class of Building  # noqa: CPY001, D100, INP001
 # Developed by GUAN, XINGQUAN @ UCLA in June 2018
 # Updated in Sept. 2018
 
@@ -15,7 +15,7 @@ class SteelMaterial:
     (2) Ultimate stress (Fu)
     (3) Young's modulus (E)
     (4) Ry value
-    """  # noqa: D205, D400, D404, D415
+    """  # noqa: D205, D400, D404
 
     def __init__(  # noqa: ANN204
         self,

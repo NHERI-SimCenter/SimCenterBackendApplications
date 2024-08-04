@@ -1,10 +1,11 @@
 """Created on Tue Jun  1 17:09:25 2021
 
 @author: snaeimi
-"""  # noqa: D400, D415
+"""  # noqa: CPY001, D400
 
 import itertools
 import logging
+import math
 from collections import OrderedDict
 
 import numpy as np
@@ -13,7 +14,7 @@ import wntrfr.epanet.io
 from Report_Reading import Report_Reading
 from wntrfr.network.io import write_inpfile
 from wntrfr.network.model import LinkStatus
-from wntrfr.sim.core import _get_csr_data_index
+from wntrfr.sim.core import _get_csr_data_index  # noqa: PLC2701
 from wntrfr.sim.epanet import EpanetSimulator
 from wntrfr.sim.network_isolation import check_for_isolated_junctions, get_long_size
 from wntrfr.utils.ordered_set import OrderedSet
@@ -57,7 +58,7 @@ class EpanetSimulator(EpanetSimulator):
 
     """
 
-    def __init__(self, wn):  # noqa: ANN001, ANN204, D107
+    def __init__(self, wn):  # noqa: ANN001, ANN204
         super(EpanetSimulator, self).__init__(wn)  # noqa: UP008
 
         # Sina added this for time manipulate function
@@ -70,7 +71,7 @@ class EpanetSimulator(EpanetSimulator):
         if long_size == 4:  # noqa: PLR2004
             self._int_dtype = np.int32
         else:
-            assert long_size == 8  # noqa: S101, PLR2004
+            assert long_size == 8  # noqa: PLR2004
             self._int_dtype = np.int64
         self._link_name_to_id = OrderedDict()
         self._link_id_to_name = OrderedDict()
@@ -107,8 +108,7 @@ class EpanetSimulator(EpanetSimulator):
                 self._wn.options.time.hydraulic_timestep,
                 self._wn.options.time.report_timestep,
             )
-            if min_step_time > time_step:
-                min_step_time = time_step
+            min_step_time = min(min_step_time, time_step)
             iFinished = False  # noqa: N806
             i = 1
             logger.debug('time_dif= ' + repr(time_dif))  # noqa: G003
@@ -127,7 +127,7 @@ class EpanetSimulator(EpanetSimulator):
                 raise RuntimeError('no timestep is found')  # noqa: EM101, TRY003
             self._wn.options.time.report_timestep = new_time_step
 
-    def run_sim(  # noqa: ANN201, C901, D417, PLR0912, PLR0913, PLR0915
+    def run_sim(  # noqa: ANN201, C901
         self,
         file_prefix='temp',  # noqa: ANN001
         save_hyd=False,  # noqa: ANN001, FBT002
@@ -231,14 +231,14 @@ class EpanetSimulator(EpanetSimulator):
 
         return result_data, run_successful
 
-    def _updateResultStartTime(self, result_data, start_time):  # noqa: ANN001, ANN202, N802
+    def _updateResultStartTime(self, result_data, start_time):  # noqa: ANN001, ANN202, N802, PLR6301
         for res_type, res in result_data.link.items():  # noqa: B007, PERF102
             # result_data.link[res_type].index = res
-            res.index = res.index + start_time
+            res.index = res.index + start_time  # noqa: PLR6104
 
         for res_type, res in result_data.node.items():  # noqa: B007, PERF102
             # result_data.link[res_type].index = res
-            res.index = res.index + start_time
+            res.index = res.index + start_time  # noqa: PLR6104
 
     def _get_isolated_junctions_and_links(  # noqa: ANN202
         self,
@@ -291,16 +291,16 @@ class EpanetSimulator(EpanetSimulator):
                 link._is_isolated = True  # noqa: SLF001
                 isolated_links.add(l)
 
-        if logger_level <= logging.DEBUG:  # noqa: SIM102
+        if logger_level <= logging.DEBUG:
             if len(isolated_junctions) > 0 or len(isolated_links) > 0:
                 raise ValueError(f'isolated junctions: {isolated_junctions}')  # noqa: EM102, TRY003
-                logger.debug(f'isolated links: {isolated_links}')  # noqa: G004
+                logger.debug(f'isolated links: {isolated_links}')
 
         self._prev_isolated_junctions = isolated_junctions
         self._prev_isolated_links = isolated_links
         return isolated_junctions, isolated_links
 
-    def _initialize_internal_graph(self):  # noqa: ANN202, C901, PLR0912, PLR0915
+    def _initialize_internal_graph(self):  # noqa: ANN202, C901
         n_links = OrderedDict()
         rows = []
         cols = []
@@ -317,20 +317,20 @@ class EpanetSimulator(EpanetSimulator):
                 n_links[(to_node_id, from_node_id)] = 0
             n_links[(from_node_id, to_node_id)] += 1
             n_links[(to_node_id, from_node_id)] += 1
-            rows.append(from_node_id)
-            cols.append(to_node_id)
+            rows.append(from_node_id)  # noqa: FURB113
+            cols.append(to_node_id)  # noqa: FURB113
             rows.append(to_node_id)
             cols.append(from_node_id)
             if link.initial_status == wntrfr.network.LinkStatus.closed:
-                vals.append(0)
+                vals.append(0)  # noqa: FURB113
                 vals.append(0)
                 # sina remove comment amrks
             elif link.link_type == 'Pipe':
                 if link.cv:
-                    vals.append(1)
+                    vals.append(1)  # noqa: FURB113
                     vals.append(0)
                 else:
-                    vals.append(1)
+                    vals.append(1)  # noqa: FURB113
                     vals.append(1)
             elif link.link_type == 'Valve':
                 if (
@@ -338,13 +338,13 @@ class EpanetSimulator(EpanetSimulator):
                     or link.valve_type == 'PSV'
                     or link.valve_type == 'FCV'
                 ):
-                    vals.append(1)
+                    vals.append(1)  # noqa: FURB113
                     vals.append(0)
                 else:
-                    vals.append(1)
+                    vals.append(1)  # noqa: FURB113
                     vals.append(1)
             else:
-                vals.append(1)
+                vals.append(1)  # noqa: FURB113
                 vals.append(1)
 
         rows = np.array(rows, dtype=self._int_dtype)
@@ -544,9 +544,9 @@ class EpanetSimulator(EpanetSimulator):
                         # pipe.initial_status = LinkStatus(0)
                         closed_pipes.append(pipe_name)
                 if not flag:
-                    i = i - 1
-                    c = c + 1
-                i = i + 1
+                    i = i - 1  # noqa: PLR6104
+                    c = c + 1  # noqa: PLR6104
+                i = i + 1  # noqa: PLR6104
         else:
             ifinish = True
         return closed_pipes, already_done_nodes, ifinish
@@ -630,7 +630,7 @@ class EpanetSimulator(EpanetSimulator):
         already_C = pipe.minor_loss  # noqa: N806
         # if already_C < 0.001:
         # already_C = 1
-        new_C = (1000 * 2 * 9.81 * (pipe.diameter**2 * 3.14 / 4) ** 2) / (  # noqa: N806
+        new_C = (1000 * 2 * 9.81 * (pipe.diameter**2 * math.pi / 4) ** 2) / (  # noqa: N806
             (biggest_flow_pipe_abs_flow) ** 2
         ) + already_C  # the last of 100 is to magnify the c choosing
         pipe.minor_loss = new_C

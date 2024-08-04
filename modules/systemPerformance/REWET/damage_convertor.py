@@ -45,7 +45,7 @@ import preprocessorIO
 CBIG_int = int(1e9)
 
 
-def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geojson):  # noqa: ANN001, ANN201, N802, D417
+def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geojson):  # noqa: ANN001, ANN201, N802
     """Creates REWET-style piep damage file.
 
     Parameters
@@ -139,7 +139,7 @@ def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geoj
     return pipe_damage_list  # noqa: RET504
 
 
-def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):  # noqa: ANN001, ANN201, N802, D417
+def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):  # noqa: ANN001, ANN201, N802
     """Creates REWET-style node damage file.
 
     Parameters
@@ -350,7 +350,7 @@ def getPumpRetsoreTime(damage_state):  # noqa: ANN001, ANN201, N802
     Retstor time : int
 
 
-    """  # noqa: D400, D415
+    """  # noqa: D400
     if damage_state == 1:
         restore_time = int(3 * 24 * 3600)
     elif damage_state == 2:  # noqa: PLR2004
@@ -383,7 +383,7 @@ def getTankRetsoreTime(tank_type, damage_state):  # noqa: ANN001, ANN201, ARG001
     Retstor time : int
 
 
-    """  # noqa: D400, D415
+    """  # noqa: D400
     if damage_state == 1:
         restore_time = int(3 * 24 * 3600)
     elif damage_state == 2:  # noqa: PLR2004
@@ -394,7 +394,7 @@ def getTankRetsoreTime(tank_type, damage_state):  # noqa: ANN001, ANN201, ARG001
     return restore_time
 
 
-def readDamagefile(file_addr, run_dir, event_time, sc_geojson):  # noqa: ANN001, ANN201, N802, D417
+def readDamagefile(file_addr, run_dir, event_time, sc_geojson):  # noqa: ANN001, ANN201, N802
     """Reads PELICUN damage files and create REWET-Style damage for all
     WaterDistributionNetwork elements
 
@@ -412,8 +412,8 @@ def readDamagefile(file_addr, run_dir, event_time, sc_geojson):  # noqa: ANN001,
     damage_data : dict
         Damage data in PELICUN dict format.
 
-    """  # noqa: D205, D400, D401, D415
-    # TODO: Make reading once for each scenario  # noqa: FIX002, TD002, TD003
+    """  # noqa: D205, D400, D401
+    # TODO: Make reading once for each scenario  # noqa: TD002
 
     # wn = wntrfr.network.WaterNetworkModel(REWET_input_data["inp_file"] )
 

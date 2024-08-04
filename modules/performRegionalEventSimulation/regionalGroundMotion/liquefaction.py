@@ -1,7 +1,8 @@
-import os  # noqa: INP001, D100
+import os  # noqa: CPY001, D100, INP001
 import sys
 import warnings
 from enum import Enum
+from itertools import starmap
 
 import geopandas as gpd
 import numpy as np
@@ -13,8 +14,8 @@ from scipy.interpolate import interp2d
 from scipy.spatial import ConvexHull
 
 
-## Helper functions
-def sampleRaster(  # noqa: ANN201, N802, PLR0913
+# Helper functions
+def sampleRaster(  # noqa: ANN201, N802
     raster_file_path,  # noqa: ANN001
     raster_crs,  # noqa: ANN001
     x,  # noqa: ANN001
@@ -22,7 +23,7 @@ def sampleRaster(  # noqa: ANN201, N802, PLR0913
     interp_scheme='nearest',  # noqa: ANN001
     dtype=None,  # noqa: ANN001
 ):
-    """Performs 2D interpolation at (x,y) pairs. Accepted interp_scheme = 'nearest', 'linear', 'cubic', and 'quintic'"""  # noqa: D400, D401, D415
+    """Performs 2D interpolation at (x,y) pairs. Accepted interp_scheme = 'nearest', 'linear', 'cubic', and 'quintic'"""  # noqa: D400, D401
     print(f'Sampling from the Raster File: {os.path.basename(raster_file_path)}...')  # noqa: T201, PTH119
     invalid_value = np.nan
     xy_crs = CRS.from_user_input(4326)
@@ -84,9 +85,9 @@ def sampleRaster(  # noqa: ANN201, N802, PLR0913
     return sample
 
 
-## Helper functions
+# Helper functions
 def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ANN001, ANN201, ARG001, N802
-    """Performs spatial join of vector_file with xy'"""  # noqa: D400, D401, D415
+    """Performs spatial join of vector_file with xy'"""  # noqa: D400, D401
     print(f'Sampling from the Vector File: {os.path.basename(vector_file_path)}...')  # noqa: T201, PTH119
     invalid_value = np.nan  # noqa: F841
     xy_crs = CRS.from_user_input(4326)
@@ -111,7 +112,7 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ANN00
         vertices = hull.vertices
         vertices = sites[np.append(vertices, vertices[0])]
         centroid = np.mean(vertices, axis=0)
-        vertices = vertices + 0.05 * (vertices - centroid)
+        vertices = vertices + 0.05 * (vertices - centroid)  # noqa: PLR6104
         RoI = shapely.geometry.Polygon(vertices)  # noqa: N806
     except:  # noqa: E722
         centroid = shapely.geometry.Point(np.mean(x), np.mean(y))
@@ -144,7 +145,7 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ANN00
         data['geometry'].append(new_geom)
     del vector_gdf
     gdf_roi = gpd.GeoDataFrame(data, geometry='geometry', crs=4326)
-    geometry = [shapely.geometry.Point(lon, lat) for lon, lat in zip(x, y)]
+    geometry = list(starmap(shapely.geometry.Point, zip(x, y)))
     gdf_sites = gpd.GeoDataFrame(geometry=geometry, crs=4326).reset_index()
     merged = gpd.GeoDataFrame.sjoin(
         gdf_roi, gdf_sites, how='inner', predicate='contains'
@@ -178,7 +179,7 @@ def find_additional_output_req(liq_info, current_step):  # noqa: ANN001, ANN201,
     return additional_output_keys
 
 
-class liq_susc_enum(Enum):  # noqa: N801, D101
+class liq_susc_enum(Enum):  # noqa: D101
     very_high = 5
     high = 4
     moderate = 3
@@ -187,9 +188,9 @@ class liq_susc_enum(Enum):  # noqa: N801, D101
     none = 0
 
 
-## Triggering:
+# Triggering:
 class Liquefaction:  # noqa: D101
-    def __init__(self) -> None:  # noqa: D107
+    def __init__(self) -> None:
         pass
 
 
@@ -242,9 +243,9 @@ class ZhuEtal2017(Liquefaction):
     ----------
     .. [1] Zhu, J., Baise, L.G., and Thompson, E.M., 2017, An Updated Geospatial Liquefaction Model for Global Application, Bulletin of the Seismological Society of America, vol. 107, no. 3, pp. 1365-1385.
 
-    """  # noqa: D400, D415
+    """  # noqa: D400
 
-    def __init__(self, parameters, stations) -> None:  # noqa: ANN001, D107
+    def __init__(self, parameters, stations) -> None:  # noqa: ANN001
         self.stations = stations
         self.parameters = parameters
         self.dist_to_water = None  # (km)
@@ -341,7 +342,7 @@ class ZhuEtal2017(Liquefaction):
                     for i, key in enumerate(output_keys):
                         im_data_scen[:, len(im_list) + i, rlz_id] = model_output[key]
                 ln_im_data[scenario_id] = im_data_scen
-            im_list = im_list + output_keys
+            im_list = im_list + output_keys  # noqa: PLR6104
             additional_output = dict()  # noqa: C408
             for key in additional_output_keys:
                 item = getattr(self, key, None)
@@ -362,7 +363,7 @@ class ZhuEtal2017(Liquefaction):
         return ln_im_data, eq_data, im_list, additional_output
 
     def model(self, pgv, pga, mag):  # noqa: ANN001, ANN201
-        """Model"""  # noqa: D400, D415
+        """Model"""  # noqa: D400
         # zero prob_liq
         zero_prob_liq = 1e-5  # decimal
 
@@ -481,9 +482,9 @@ class Hazus2020(Liquefaction):
     .. [1] Federal Emergency Management Agency (FEMA), 2020, Hazus Earthquake Model - Technical Manual, Hazus 4.2 SP3, 436 pp. https://www.fema.gov/flood-maps/tools-resources/flood-map-products/hazus/user-technical-manuals.
     .. [2] Liao, S.S., Veneziano, D., and Whitman, R.V., 1988, Regression Models for Evaluating Liquefaction Probability, Journal of Geotechnical Engineering, vol. 114, no. 4, pp. 389-411.
 
-    """  # noqa: D205, D400, D415
+    """  # noqa: D205, D400
 
-    def __init__(self, parameters, stations) -> None:  # noqa: ANN001, D107
+    def __init__(self, parameters, stations) -> None:  # noqa: ANN001
         self.stations = stations
         self.parameters = parameters
         self.gw_depth = None  # (m)
@@ -558,7 +559,7 @@ class Hazus2020(Liquefaction):
                     for i, key in enumerate(output_keys):
                         im_data_scen[:, len(im_list) + i, rlz_id] = model_output[key]
                 ln_im_data[scenario_id] = im_data_scen
-            im_list = im_list + output_keys
+            im_list = im_list + output_keys  # noqa: PLR6104
             additional_output = dict()  # noqa: C408
             for key in additional_output_keys:
                 item = getattr(self, key, None)
@@ -583,7 +584,7 @@ class Hazus2020(Liquefaction):
         liq_susc,  # fixed/toggles  # noqa: ANN001
         return_inter_params=False,  # to get intermediate params  # noqa: ANN001, ARG004, FBT002
     ):
-        """Model"""  # noqa: D400, D415
+        """Model"""  # noqa: D400
         # zero prob_liq
         zero_prob_liq = 1e-5  # decimal
 
@@ -654,7 +655,7 @@ class Hazus2020(Liquefaction):
 
 
 # -----------------------------------------------------------
-class Hazus2020_with_ZhuEtal2017(ZhuEtal2017):  # noqa: N801
+class Hazus2020_with_ZhuEtal2017(ZhuEtal2017):
     """Compute probability of liquefaction using Hazus (FEMA, 2020), with liq. susc. category from Zhu et al. (2017).
 
     Parameters
@@ -697,7 +698,7 @@ class Hazus2020_with_ZhuEtal2017(ZhuEtal2017):  # noqa: N801
     """
 
     def model(self, pgv, pga, mag):  # noqa: ANN001, ANN201
-        """Model"""  # noqa: D400, D415
+        """Model"""  # noqa: D400
         # zero prob_liq
         zero_prob_liq = 1e-5  # decimal
 
@@ -816,9 +817,9 @@ class Hazus2020_with_ZhuEtal2017(ZhuEtal2017):  # noqa: N801
         return {'liq_prob': prob_liq, 'liq_susc': liq_susc}
 
 
-## Lateral Spreading:
+# Lateral Spreading:
 class LateralSpread:  # noqa: D101
-    def __init__(self) -> None:  # noqa: D107
+    def __init__(self) -> None:
         pass
 
 
@@ -857,7 +858,7 @@ class Hazus2020Lateral(LateralSpread):
 
     """
 
-    def __init__(self, stations, parameters):  # noqa: ANN001, ANN204, D107
+    def __init__(self, stations, parameters):  # noqa: ANN001, ANN204
         super().__init__()
         self.stations = stations
         dist_to_water = parameters.get('DistWater')
@@ -909,7 +910,7 @@ class Hazus2020Lateral(LateralSpread):
                     for i, key in enumerate(output_keys):
                         im_data_scen[:, len(im_list) + i, rlz_id] = model_output[key]
                 ln_im_data[scenario_id] = im_data_scen
-            im_list = im_list + output_keys
+            im_list = im_list + output_keys  # noqa: PLR6104
         else:
             sys.exit(
                 "At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."
@@ -918,7 +919,7 @@ class Hazus2020Lateral(LateralSpread):
 
     @staticmethod
     # @njit
-    def model(  # noqa: ANN205, PLR0913
+    def model(  # noqa: ANN205
         pga,  # noqa: ANN001
         mag,  # upstream PBEE RV  # noqa: ANN001
         prob_liq,  # noqa: ANN001
@@ -926,7 +927,7 @@ class Hazus2020Lateral(LateralSpread):
         liq_susc,  # fixed/toggles  # noqa: ANN001
         extrapolate_expected_pgdef=True,  # noqa: ANN001, FBT002
     ):
-        """Model"""  # noqa: D400, D415
+        """Model"""  # noqa: D400
         # initialize arrays
 
         # get threshold pga against liquefaction
@@ -963,7 +964,7 @@ class Hazus2020Lateral(LateralSpread):
 
         # susceptibility to lateral spreading only for deposits found near water body (dw < dw_cutoff)
         pgdef = k_delta * expected_pgdef * prob_liq
-        pgdef = pgdef / 100  # also convert from cm to m
+        pgdef = pgdef / 100  # also convert from cm to m  # noqa: PLR6104
         pgdef[dist_water > 25] = 1e-5  # noqa: PLR2004
 
         # keep pgdef to minimum of 1e-5 m
@@ -982,9 +983,9 @@ class Hazus2020Lateral(LateralSpread):
         return output  # noqa: RET504
 
 
-## Settlement:
+# Settlement:
 class GroundSettlement:  # noqa: D101
-    def __init__(self) -> None:  # noqa: D107
+    def __init__(self) -> None:
         pass
 
 
@@ -1025,7 +1026,7 @@ class Hazus2020Vertical(GroundSettlement):
         liq_susc,  # fixed/toggles  # noqa: ANN001
         return_inter_params=False,  # to get intermediate params  # noqa: ANN001, FBT002
     ):
-        """Model"""  # noqa: D400, D415
+        """Model"""  # noqa: D400
         # initialize arrays
         # get threshold pga against liquefaction, in cm
         pgdef = np.ones(liq_susc.shape) * np.nan
@@ -1037,10 +1038,10 @@ class Hazus2020Vertical(GroundSettlement):
         pgdef[liq_susc == liq_susc_enum['none'].value] = 1e-3
 
         # condition with prob_liq
-        pgdef = pgdef * prob_liq
+        pgdef = pgdef * prob_liq  # noqa: PLR6104
 
         # convert from cm to m
-        pgdef = pgdef / 100
+        pgdef = pgdef / 100  # noqa: PLR6104
 
         # limit deformations to 1e-5
         pgdef = np.maximum(pgdef, 1e-5)
@@ -1078,7 +1079,7 @@ class Hazus2020Vertical(GroundSettlement):
                     for i, key in enumerate(output_keys):
                         im_data_scen[:, len(im_list) + i, rlz_id] = model_output[key]
                 ln_im_data[scenario_id] = im_data_scen
-            im_list = im_list + output_keys
+            im_list = im_list + output_keys  # noqa: PLR6104
         else:
             sys.exit(
                 "At least one of 'liq_susc' and 'liq_prob' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."

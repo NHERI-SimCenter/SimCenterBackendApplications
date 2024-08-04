@@ -1,6 +1,6 @@
-#!/usr/bin/env python3  # noqa: EXE001
+#!/usr/bin/env python3  # noqa: CPY001, EXE001
 
-"""Generate wave time series based on the Jonswap spectrum"""  # noqa: D400, D415
+"""Generate wave time series based on the Jonswap spectrum"""  # noqa: D400
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,7 +17,7 @@ from welib.hydro.wavekin import elevation2d, wavenumber  # noqa: E402
 from welib.tools.spectral import fft_wrap  # noqa: E402
 
 # --- Random seed
-seed(None)  # noqa: NPY002
+seed(None)
 
 # --- Parameters
 # t  = np.linspace(0,600,601) # time vector  [s]
@@ -39,7 +39,7 @@ k = wavenumber(freq, h, g)
 
 # --- Compute wave elevation based on amplitudes and random phases
 # random phases between 0 and 2pi
-eps = uniform(0, 2 * np.pi, len(freq))  # noqa: NPY002
+eps = uniform(0, 2 * np.pi, len(freq))
 a = np.sqrt(2 * S * df)  # wave amplitudes based on spectrum
 x = 0  # longitudinal distance where wave is evaluated [m]
 eta = elevation2d(a, freq, k, eps, t, x)

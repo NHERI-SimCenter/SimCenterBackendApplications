@@ -56,8 +56,8 @@ sys.path.insert(0, str(main_dir / 'common'))
 from simcenter_common import *  # noqa: E402, F403
 
 
-def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901, PLR0912
-    """Determine the scale factor to convert input event to internal event data"""  # noqa: D400, D415
+def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901
+    """Determine the scale factor to convert input event to internal event data"""  # noqa: D400
     # special case: if the input unit is not specified then do not do any scaling
     if input_units is None:
         scale_factors = {'ALL': 1.0}
@@ -69,28 +69,26 @@ def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901,
         unit_length = output_units.get('length', 'inch')
         f_length = globals().get(unit_length, None)
         if f_length is None:
-            raise ValueError(f'Specified length unit not recognized: {unit_length}')  # noqa: EM102, TRY003
+            raise ValueError(f'Specified length unit not recognized: {unit_length}')  # noqa: DOC501, EM102, TRY003
 
         # if no time unit is specified, 'sec' is assumed
         unit_time = output_units.get('time', 'sec')
         f_time = globals().get(unit_time, None)
         if f_time is None:
-            raise ValueError(f'Specified time unit not recognized: {unit_time}')  # noqa: EM102, TRY003
+            raise ValueError(f'Specified time unit not recognized: {unit_time}')  # noqa: DOC501, EM102, TRY003
 
         scale_factors = {}
 
         for input_name, input_unit in input_units.items():
             # exceptions
-            if input_name in [
-                'factor',
-            ]:
+            if input_name == 'factor':
                 f_scale = 1.0
 
             else:
                 # get the scale factor to standard units
                 f_in = globals().get(input_unit, None)
                 if f_in is None:
-                    raise ValueError(  # noqa: TRY003
+                    raise ValueError(  # noqa: DOC501, TRY003
                         f'Input unit for event files not recognized: {input_unit}'  # noqa: EM102
                     )
 
@@ -100,7 +98,7 @@ def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901,
                         unit_type = base_unit_type
 
                 if unit_type is None:
-                    raise ValueError(f'Failed to identify unit type: {input_unit}')  # noqa: EM102, TRY003
+                    raise ValueError(f'Failed to identify unit type: {input_unit}')  # noqa: DOC501, EM102, TRY003
 
                 # the output unit depends on the unit type
                 if unit_type == 'acceleration':
@@ -113,7 +111,7 @@ def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901,
                     f_out = 1.0 / f_length
 
                 else:
-                    raise ValueError(  # noqa: TRY003
+                    raise ValueError(  # noqa: DOC501, TRY003
                         f'Unexpected unit type in workflow: {unit_type}'  # noqa: EM102
                     )
 
@@ -125,7 +123,7 @@ def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901,
     return scale_factors
 
 
-def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: ANN001, ANN201, C901, N802, N803, D103, PLR0912, PLR0915
+def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: ANN001, ANN201, C901, D103, N802, N803, PLR0914, PLR0915
     if not os.path.isdir(inputDir):  # noqa: PTH112
         print(f'input dir: {inputDir} does not exist')  # noqa: T201
         return 0
@@ -215,7 +213,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: ANN00
         )
         dict_im_site.update({f'1-SA({Ti}s)-0-1': [], f'1-SA({Ti}s)-0-2': []})
 
-    for site in siteFiles:
+    for site in siteFiles:  # noqa: PLR1702
         dict_im = {
             ('type', 'loc', 'dir', 'stat'): [],
             ('PGA', 0, 1, 'median'): [],
@@ -250,7 +248,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: ANN00
             )
             dict_im_site.update({f'1-SA({Ti}s)-0-1': [], f'1-SA({Ti}s)-0-2': []})
 
-        with open(site) as f:  # noqa: PTH123
+        with open(site) as f:  # noqa: PLW1514, PTH123
             All_json = json.load(f)  # noqa: N806
             generalInfo = All_json['GeneralInformation']  # noqa: N806
             Longitude.append(generalInfo['Longitude'])
@@ -297,7 +295,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: ANN00
             pgd_y = []
 
             for workdir in workdirs:
-                head, sep, sampleID = workdir.partition('workdir.')  # noqa: N806
+                head, sep, sampleID = workdir.partition('workdir.')  # noqa: F841, N806
                 # print(sampleID)
 
                 eventName = f'Event_{siteID}_{sampleID}'  # noqa: N806
@@ -308,7 +306,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: ANN00
                 siteEventFactors.append(1.0)
 
                 # compute ground motion intensity measures
-                with open(f'{outputDir}/{eventName}.json') as f:  # noqa: PTH123, PLW2901
+                with open(f'{outputDir}/{eventName}.json') as f:  # noqa: PLW1514, PLW2901, PTH123
                     cur_gm = json.load(f)
                 cur_seismograms = cur_gm['Events'][0]['timeSeries']
                 num_seismograms = len(cur_seismograms)  # noqa: F841
@@ -321,7 +319,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: ANN00
                     my_response_spectrum_calc = NewmarkBeta(  # noqa: F405
                         acc, dt, periods, damping=0.05, units='g'
                     )
-                    tmp, time_series, accel, vel, disp = (
+                    tmp, time_series, accel, vel, disp = (  # noqa: F841
                         my_response_spectrum_calc.run()
                     )
                     psa = tmp.get('Pseudo-Acceleration')

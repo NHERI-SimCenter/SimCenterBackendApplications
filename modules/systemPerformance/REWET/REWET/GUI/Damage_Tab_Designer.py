@@ -1,10 +1,10 @@
 """Created on Fri Oct 28 12:50:24 2022
 
 @author: snaeimi
-"""  # noqa: N999, D400, D415
+"""  # noqa: CPY001, D400, N999
 
 import os
-import pickle
+import pickle  # noqa: S403
 
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets
@@ -14,7 +14,7 @@ from .Pipe_Damage_Model_Designer import Pipe_Damage_Model_Designer
 from .Scenario_Dialog_Designer import Scenario_Dialog_Designer
 
 
-class Damage_Tab_Designer:  # noqa: N801, D101
+class Damage_Tab_Designer:  # noqa: D101
     def __init__(self):  # noqa: ANN204
         # self.pipe_damage_model = {"CI":{"alpha":-0.0038, "beta":0.1096, "gamma":0.0196, "a":2, "b":1 }, "DI":{"alpha":-0.0038, "beta":0.05, "gamma":0.04, "a":2, "b":1 } }
         # self.node_damage_model = {'a':0.0036, 'aa':1, 'b':0, 'bb':0, 'c':-0.877, 'cc':1, 'd':0, 'dd':0, 'e':0.0248, 'ee1':1, 'ee2':1, 'f':0, 'ff1':0, 'ff2':0, "damage_node_model": "equal_diameter_emitter"}
@@ -69,7 +69,7 @@ class Damage_Tab_Designer:  # noqa: N801, D101
         if len(self.scenario_list) < 1:
             self.errorMSG('REWET', 'Damage scenario list is empty.')
             return False
-        if self.damage_input_directory == '':
+        if self.damage_input_directory == '':  # noqa: PLC1901
             self.errorMSG('REWET', 'No Damage Input Directory is selected.')
             return False
 
@@ -200,7 +200,7 @@ class Damage_Tab_Designer:  # noqa: N801, D101
             self.current_xlsx_directory,
             'scenrario file (*.xlsx)',
         )
-        if file[0] == '':
+        if file[0] == '':  # noqa: PLC1901
             return
         split_addr = os.path.split(file[0])
 
@@ -228,7 +228,7 @@ class Damage_Tab_Designer:  # noqa: N801, D101
 
         self.scenario_list.to_excel(file[0])
 
-    def validateScenarioByButton(self):  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0915
+    def validateScenarioByButton(self):  # noqa: ANN201, C901, N802, D102
         self.status_text.setText('Validating Damage Scnearios')
         if_validate_successful = True
         text_output = ''
@@ -503,7 +503,7 @@ class Damage_Tab_Designer:  # noqa: N801, D101
         directory = QtWidgets.QFileDialog.getExistingDirectory(
             self.asli_MainWindow, 'Select Directory', self.current_xlsx_directory
         )
-        if directory == '':
+        if directory == '':  # noqa: PLC1901
             return
         self.current_xlsx_directory = self.current_xlsx_directory
         self.damage_input_directory = directory

@@ -40,7 +40,7 @@ import argparse
 import importlib
 import json
 import os
-import subprocess
+import subprocess  # noqa: S404
 import sys
 
 if __name__ == '__main__':
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--census_config')
     args = parser.parse_args()
-    with open(args.census_config) as f:  # noqa: PTH123
+    with open(args.census_config) as f:  # noqa: PLW1514, PTH123
         config_info = json.load(f)
 
     # Output directory

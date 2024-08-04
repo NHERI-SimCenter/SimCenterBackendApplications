@@ -62,7 +62,7 @@ def run_DL_calc(aim_file_path, saveDir, output_name):  # noqa: ANN001, ANN201, N
     print('Loading the pipeline json file...')  # noqa: T201
 
     # Open the AIM file
-    with open(aim_file_path) as f:  # noqa: PTH123
+    with open(aim_file_path) as f:  # noqa: PLW1514, PTH123
         pipe = AIM_data = json.load(f)  # noqa: N806, F841
 
     add_failrate2pipe(pipe)  # noqa: F405

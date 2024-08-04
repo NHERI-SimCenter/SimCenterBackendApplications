@@ -1,11 +1,11 @@
 """Created on Wed Apr  8 20:19:10 2020
 
 @author: snaeimi
-"""  # noqa: N999, D400, D415
+"""  # noqa: CPY001, D400, N999
 
 import logging
 import os
-import pickle
+import pickle  # noqa: S403
 import sys
 
 import Damage
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class StochasticModel:  # noqa: D101
-    def __init__(  # noqa: ANN204, D107, PLR0913
+    def __init__(  # noqa: ANN204
         self,
         water_network,  # noqa: ANN001
         damage_model,  # noqa: ANN001
@@ -68,7 +68,7 @@ class StochasticModel:  # noqa: D101
         self._prev_isolated_links = OrderedSet()
         self.first_leak_flag = True
 
-    def runLinearScenario(self, damage, settings, worker_rank=None):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
+    def runLinearScenario(self, damage, settings, worker_rank=None):  # noqa: ANN001, ANN201, C901, N802
         """Runs a simple linear analysis of water damage scenario
         Parameters
 
@@ -80,8 +80,8 @@ class StochasticModel:  # noqa: D101
         -------
         Result.
 
-        """  # noqa: D205, D400, D401, D415
-        while self.timeline.iContinue():
+        """  # noqa: D205, D400, D401
+        while self.timeline.iContinue():  # noqa: PLR1702
             sys.stdout.flush()
             current_stop_time = self.timeline.getCurrentStopTime()
             print('--------------------------------------')  # noqa: T201
@@ -375,7 +375,7 @@ class StochasticModel:  # noqa: D101
 
         return self._linear_result
 
-    def KeepLinearResult(  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0915
+    def KeepLinearResult(  # noqa: ANN201, C901, N802, D102
         self,
         result,  # noqa: ANN001
         isolated_nodes,  # noqa: ANN001
@@ -558,7 +558,7 @@ class StochasticModel:  # noqa: D101
                     result.link[att]
                 )
 
-    def dumpPartOfResult(self):  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0915
+    def dumpPartOfResult(self):  # noqa: ANN201, C901, N802, D102
         limit_size = self.registry.settings['limit_result_file_size']
         limit_size_byte = limit_size * 1024 * 1024
 
@@ -644,7 +644,7 @@ class StochasticModel:  # noqa: D101
 
             dump_file_index = len(self.registry.result_dump_file_list) + 1
 
-            if dump_file_index >= 1:  # noqa: SIM108
+            if dump_file_index >= 1:
                 list_file_opening_mode = 'at'
             else:
                 list_file_opening_mode = 'wt'

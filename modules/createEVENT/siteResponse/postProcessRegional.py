@@ -1,4 +1,4 @@
-# This script create evt.j for workflow  # noqa: INP001, D100
+# This script create evt.j for workflow  # noqa: CPY001, D100, INP001
 import json
 import os
 
@@ -32,7 +32,7 @@ def postProcess(evtName):  # noqa: ANN001, ANN201, N802, N803, D103
 
     dataToWrite = dict(Events=[evts])  # noqa: C408, N806
 
-    with open(evtName, 'w') as outfile:  # noqa: PTH123
+    with open(evtName, 'w') as outfile:  # noqa: PLW1514, PTH123
         json.dump(dataToWrite, outfile, indent=4)
 
     return 0

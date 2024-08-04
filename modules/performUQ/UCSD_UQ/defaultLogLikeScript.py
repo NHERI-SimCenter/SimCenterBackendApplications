@@ -1,4 +1,4 @@
-import numpy as np  # noqa: INP001, D100
+import numpy as np  # noqa: CPY001, D100, INP001
 
 
 class CovError(Exception):
@@ -10,11 +10,11 @@ class CovError(Exception):
 
     """
 
-    def __init__(self, message):  # noqa: ANN001, ANN204, D107
+    def __init__(self, message):  # noqa: ANN001, ANN204
         self.message = message
 
 
-def log_likelihood(  # noqa: ANN201, PLR0913
+def log_likelihood(  # noqa: ANN201
     calibrationData,  # noqa: ANN001, N803
     prediction,  # noqa: ANN001
     numExperiments,  # noqa: ANN001, N803
@@ -67,7 +67,7 @@ def log_likelihood(  # noqa: ANN201, PLR0913
     distribution and a user-supplied covariance structure. Block-diagonal covariance structures are supported. The value
     of multipliers on the covariance block corresponding to each response quantity is also calibrated.
     :rtype: float
-    """  # noqa: D400, D415
+    """  # noqa: D400
     # Check if the correct number of covariance terms has been passed in
     numResponses = len(edpLengthsList)  # noqa: N806
     if len(covarianceMatrixList) != numExperiments * numResponses:
@@ -75,7 +75,7 @@ def log_likelihood(  # noqa: ANN201, PLR0913
             f'ERROR: The expected number of covariance matrices is {numExperiments * numResponses}, but only {len(covarianceMatrixList)} were passed '
             'in.'
         )
-        raise CovError(  # noqa: TRY003
+        raise CovError(  # noqa: DOC501, TRY003
             f'ERROR: The expected number of covariance matrices is {numExperiments * numResponses}, but only {len(covarianceMatrixList)} were passed '  # noqa: EM102
             'in.'
         )
@@ -83,15 +83,15 @@ def log_likelihood(  # noqa: ANN201, PLR0913
     # Shift and normalize the prediction
     currentPosition = 0  # noqa: N806
     for j in range(len(edpLengthsList)):
-        prediction[:, currentPosition : currentPosition + edpLengthsList[j]] = (
+        prediction[:, currentPosition : currentPosition + edpLengthsList[j]] = (  # noqa: PLR6104
             prediction[:, currentPosition : currentPosition + edpLengthsList[j]]
             + shiftFactors[j]
         )
-        prediction[:, currentPosition : currentPosition + edpLengthsList[j]] = (
+        prediction[:, currentPosition : currentPosition + edpLengthsList[j]] = (  # noqa: PLR6104
             prediction[:, currentPosition : currentPosition + edpLengthsList[j]]
             / scaleFactors[j]
         )
-        currentPosition = currentPosition + edpLengthsList[j]  # noqa: N806
+        currentPosition = currentPosition + edpLengthsList[j]  # noqa: N806, PLR6104
 
     # Compute the normalized residuals
     allResiduals = prediction - calibrationData  # noqa: N806
@@ -105,14 +105,14 @@ def log_likelihood(  # noqa: ANN201, PLR0913
             # Get the residuals corresponding to this response variable
             length = edpLengthsList[j]
             residuals = allResiduals[i, currentPosition : currentPosition + length]
-            currentPosition = currentPosition + length  # noqa: N806
+            currentPosition = currentPosition + length  # noqa: N806, PLR6104
 
             # Get the covariance matrix corresponding to this response variable
             cov = np.atleast_2d(covarianceMatrixList[covListIndex])
-            covListIndex = covListIndex + 1  # noqa: N806
+            covListIndex = covListIndex + 1  # noqa: N806, PLR6104
 
             # Multiply the covariance matrix by the value of the covariance multiplier
-            cov = cov * covarianceMultiplierList[j]
+            cov = cov * covarianceMultiplierList[j]  # noqa: PLR6104
 
             if np.shape(cov)[0] == np.shape(cov)[1] == 1:
                 # If there is a single variance value that is constant for all residual terms, then this is the case of

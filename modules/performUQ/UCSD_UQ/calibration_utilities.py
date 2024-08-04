@@ -1,4 +1,4 @@
-import os  # noqa: INP001, D100
+import os  # noqa: CPY001, D100, INP001
 import shutil
 import sys
 import time
@@ -20,12 +20,12 @@ class DataProcessingError(Exception):
 
     """
 
-    def __init__(self, message):  # noqa: ANN001, ANN204, D107
+    def __init__(self, message):  # noqa: ANN001, ANN204
         self.message = message
 
 
 class CovarianceMatrixPreparer:  # noqa: D101
-    def __init__(  # noqa: D107, PLR0913
+    def __init__(
         self,
         calibrationData: np.ndarray,  # noqa: N803
         edpLengthsList: list[int],  # noqa: FA102, N803
@@ -92,7 +92,7 @@ class CovarianceMatrixPreparer:  # noqa: D101
                 currentIndex += self.edpLengthsList[i]  # noqa: N806
         self.defaultErrorVariances = defaultErrorVariances
 
-    def createCovarianceMatrix(self):  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0915
+    def createCovarianceMatrix(self):  # noqa: ANN201, C901, N802, D102
         covarianceMatrixList = []  # noqa: N806
         covarianceTypeList = []  # noqa: N806
 
@@ -103,7 +103,7 @@ class CovarianceMatrixPreparer:  # noqa: D101
 
         logFile.write('\n\nLooping over the experiments and EDPs')
         # First, check if the user has passed in any covariance matrix data
-        for expNum in range(1, numExperiments + 1):  # noqa: N806
+        for expNum in range(1, numExperiments + 1):  # noqa: N806, PLR1702
             logFile.write(f'\n\nExperiment number: {expNum}')
             for i, edpName in enumerate(edpNamesList):  # noqa: N806
                 logFile.write(f'\n\tEDP: {edpName}')
@@ -132,8 +132,8 @@ class CovarianceMatrixPreparer:  # noqa: D101
                     numRows = 0  # noqa: N806
                     numCols = 0  # noqa: N806
                     linenum = 0
-                    with open(tmpCovFile, 'w') as f1:  # noqa: SIM117, PTH123
-                        with open(covarianceFile) as f:  # noqa: PTH123
+                    with open(tmpCovFile, 'w') as f1:  # noqa: PLW1514, PTH123, SIM117
+                        with open(covarianceFile) as f:  # noqa: PLW1514, PTH123
                             for line in f:
                                 linenum += 1
                                 if len(line.strip()) == 0:
@@ -244,7 +244,7 @@ class CovarianceMatrixPreparer:  # noqa: D101
 
 
 class CalDataPreparer:  # noqa: D101
-    def __init__(  # noqa: D107, PLR0913
+    def __init__(
         self,
         workdirMain: str,  # noqa: N803
         workdirTemplate: str,  # noqa: N803
@@ -284,13 +284,13 @@ class CalDataPreparer:  # noqa: D101
         self.tempCalDataFile = os.path.join(  # noqa: PTH118
             self.workdirMain, 'quoFEMTempCalibrationDataFile.cal'
         )
-        f1 = open(self.tempCalDataFile, 'w')  # noqa: SIM115, PTH123
+        f1 = open(self.tempCalDataFile, 'w')  # noqa: PLW1514, PTH123, SIM115
         headings = self.createHeadings()
         f1.write(headings)
         interface = 1
         self.numExperiments = 0
         linenum = 0
-        with open(calDataFile) as f:  # noqa: PTH123
+        with open(calDataFile) as f:  # noqa: PLW1514, PTH123
             for line in f:
                 linenum += 1
                 if len(line.strip()) == 0:
@@ -350,7 +350,7 @@ def transform_data_function(  # noqa: ANN201, D103
             :,
             currentPosition : currentPosition + list_of_data_segment_lengths[j],
         ]
-        slice_of_data = slice_of_data + list_of_shift_factors[j]
+        slice_of_data = slice_of_data + list_of_shift_factors[j]  # noqa: PLR6104
         data_to_transform[
             :,
             currentPosition : currentPosition + list_of_data_segment_lengths[j],
@@ -360,7 +360,7 @@ def transform_data_function(  # noqa: ANN201, D103
 
 
 class DataTransformer:  # noqa: D101
-    def __init__(self, transformStrategy: str, logFile: TextIO) -> None:  # noqa: N803, D107
+    def __init__(self, transformStrategy: str, logFile: TextIO) -> None:  # noqa: N803
         self.logFile = logFile
         self.transformStrategyList = ['absMaxScaling', 'standardize']
         if transformStrategy not in self.transformStrategyList:
@@ -388,7 +388,7 @@ class DataTransformer:  # noqa: D101
         scaleFactors = []  # noqa: N806
         currentPosition = 0  # noqa: N806
         locShift = 0.0  # noqa: N806
-        if self.transformStrategy in ['absMaxScaling']:
+        if self.transformStrategy == 'absMaxScaling':
             # Compute the scale factors - absolute maximum of the data for each response variable
             self.logFile.write(
                 '\n\nComputing scale and shift factors. '
@@ -444,7 +444,7 @@ class DataTransformer:  # noqa: D101
 
 
 def createLogFile(where: str, logfile_name: str):  # noqa: ANN201, N802, D103
-    logfile = open(os.path.join(where, logfile_name), 'w')  # noqa: SIM115, PTH118, PTH123
+    logfile = open(os.path.join(where, logfile_name), 'w')  # noqa: PLW1514, PTH118, PTH123, SIM115
     logfile.write(
         'Starting analysis at: {}'.format(
             time.strftime('%a, %d %b %Y %H:%M:%S', time.localtime())
@@ -460,7 +460,7 @@ def syncLogFile(logFile: TextIO):  # noqa: ANN201, N802, N803, D103
     os.fsync(logFile.fileno())
 
 
-def make_distributions(variables):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
+def make_distributions(variables):  # noqa: ANN001, ANN201, C901, D103
     all_distributions_list = []
 
     for i in range(len(variables['names'])):
@@ -583,7 +583,7 @@ def make_distributions(variables):  # noqa: ANN001, ANN201, C901, D103, PLR0912,
 
 
 class LogLikelihoodHandler:  # noqa: D101
-    def __init__(  # noqa: D107, PLR0913
+    def __init__(
         self,
         data: NDArray,
         covariance_matrix_blocks_list: list[NDArray],  # noqa: FA102
@@ -638,7 +638,7 @@ class LogLikelihoodHandler:  # noqa: D101
         except:  # noqa: E722
             msg = f"\n\t\t\t\tERROR: The log-likelihood script '{os.path.join(self.workdir_main, self.log_likelihood_file_name)}' cannot be imported."  # noqa: PTH118
             raise ImportError(msg)  # noqa: B904
-        return module  # type: ignore  # noqa: PGH003
+        return module  # type: ignore
 
     def get_log_likelihood_function(self) -> Callable:  # noqa: D102
         log_likelihood_module_name = os.path.splitext(self.log_likelihood_file_name)[  # noqa: PTH122
@@ -686,7 +686,7 @@ class LogLikelihoodHandler:  # noqa: D101
                 residuals = allResiduals[
                     i, currentPosition : currentPosition + length
                 ]
-                currentPosition = currentPosition + length  # noqa: N806
+                currentPosition = currentPosition + length  # noqa: N806, PLR6104
                 cov = self._make_covariance(j, list_of_covariance_multipliers[j])
                 mean = self._make_mean(j)
                 ll = self.log_likelihood_function(residuals, mean, cov)

@@ -1,9 +1,9 @@
-import argparse  # noqa: INP001, D100
+import argparse  # noqa: CPY001, D100, INP001
 import os
 import platform
 import shlex
 import stat
-import subprocess
+import subprocess  # noqa: S404
 import sys
 from pathlib import Path
 
@@ -16,17 +16,17 @@ def main(args):  # noqa: ANN001, ANN201, D103
     parser.add_argument('--driverFile')
     parser.add_argument('--runType')
 
-    args, unknowns = parser.parse_known_args()
+    args, unknowns = parser.parse_known_args()  # noqa: F841
 
     workflowInput = args.workflowInput  # noqa: N806
     workflowOutput = args.workflowOutput  # noqa: N806, F841
     driverFile = args.driverFile  # noqa: N806
     runType = args.runType  # noqa: N806
 
-    if runType in ['runningLocal']:
+    if runType == 'runningLocal':
         if platform.system() == 'Windows':
             pythonCommand = 'python'  # noqa: N806
-            driverFile = driverFile + '.bat'  # noqa: N806
+            driverFile = driverFile + '.bat'  # noqa: N806, PLR6104
         else:
             pythonCommand = 'python3'  # noqa: N806
 
@@ -64,7 +64,7 @@ def main(args):  # noqa: ANN001, ANN201, D103
         try:
             result.check_returncode()
         except subprocess.CalledProcessError:
-            with open(err_file, 'a') as f:  # noqa: PTH123
+            with open(err_file, 'a') as f:  # noqa: PLW1514, PTH123
                 f.write(f'ERROR: {result.stderr}\n\n')
                 f.write(f'The command was: {result.args}\n\n')
                 f.write(f'The return code was: {result.returncode}\n\n')

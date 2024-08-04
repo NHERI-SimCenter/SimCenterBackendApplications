@@ -61,12 +61,12 @@ def readPressureProbes(fileName):  # noqa: ANN001, ANN201, N802, N803
     for each time step.
 
     @author: Abiy
-    """  # noqa: D400, D401, D415
+    """  # noqa: D400, D401
     probes = []
     p = []
     time = []
 
-    with open(fileName) as f:  # noqa: PTH123
+    with open(fileName) as f:  # noqa: PLW1514, PTH123
         for line in f:
             if line.startswith('#'):
                 if line.startswith('# Probe'):
@@ -91,7 +91,7 @@ def readPressureProbes(fileName):  # noqa: ANN001, ANN201, N802, N803
     return probes, time, p
 
 
-def read_pressure_data(file_names):  # noqa: ANN001, ANN201, D417
+def read_pressure_data(file_names):  # noqa: ANN001, ANN201
     """This functions takes names of different OpenFOAM pressure measurements and connect
     them into one file removing overlaps if any. All the probes must be in the same
     location, otherwise an error might show up.
@@ -144,9 +144,9 @@ class PressureData:
     """A class that holds a pressure data and performs the following operations:
     - mean and rms pressure coefficients
     - peak pressure coefficients
-    """  # noqa: D205, D400, D415
+    """  # noqa: D205, D400
 
-    def __init__(  # noqa: ANN204, D107, PLR0913
+    def __init__(  # noqa: ANN204
         self,
         path,  # noqa: ANN001
         u_ref=0.0,  # noqa: ANN001
@@ -265,7 +265,7 @@ def write_open_foam_vector_field(p, file_name):  # noqa: ANN001, ANN201
     format.
 
     """  # noqa: D205, D401
-    f = open(file_name, 'w+')  # noqa: SIM115, PTH123
+    f = open(file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
     f.write('%d' % len(p[:, 2]))
     f.write('\n(')
     for i in range(len(p[:, 2])):
@@ -279,7 +279,7 @@ def read_openFoam_scalar_field(file_name):  # noqa: ANN001, ANN201, N802
     """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""  # noqa: D401
     sField = []  # noqa: N806
 
-    with open(file_name) as f:  # noqa: PTH123
+    with open(file_name) as f:  # noqa: PLW1514, PTH123
         itrf = iter(f)
         next(itrf)
         for line in itrf:
@@ -298,7 +298,7 @@ def read_openFoam_vector_field(file_name):  # noqa: ANN001, ANN201, N802
     """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""  # noqa: D401
     vField = []  # noqa: N806
 
-    with open(file_name) as f:  # noqa: PTH123
+    with open(file_name) as f:  # noqa: PLW1514, PTH123
         for line in f:
             if line.startswith('('):
                 line = line.replace('(', '')  # noqa: PLW2901
@@ -321,7 +321,7 @@ def read_openFoam_tensor_field(file_name):  # noqa: ANN001, ANN201, N802
 
     row_count = 9
 
-    with open(file_name) as f:  # noqa: PTH123
+    with open(file_name) as f:  # noqa: PLW1514, PTH123
         for line in f:
             if line.startswith('('):
                 line = line.replace('(', '')  # noqa: PLW2901
@@ -349,7 +349,7 @@ def read_openFoam_symmetric_tensor_field(file_name):  # noqa: ANN001, ANN201, N8
 
     row_count = 6
 
-    with open(file_name) as f:  # noqa: PTH123
+    with open(file_name) as f:  # noqa: PLW1514, PTH123
         for line in f:
             if line.startswith('('):
                 line = line.replace('(', '')  # noqa: PLW2901
@@ -370,7 +370,7 @@ def read_openFoam_symmetric_tensor_field(file_name):  # noqa: ANN001, ANN201, N8
     return vField  # noqa: RET504
 
 
-def read_velocity_data(path):  # noqa: ANN001, ANN201, D417
+def read_velocity_data(path):  # noqa: ANN001, ANN201
     """This functions takes names of different OpenFOAM velocity measurements and connect
     them into one file removing overlaps if any. All the probes must be in the same
     location, otherwise an error might showup.
@@ -426,12 +426,12 @@ def read_velocity_probes(fileName):  # noqa: ANN001, ANN201, N803
 
     Reads velocity probe data from OpenFOAM and return the probe location, time,
     and the velocity vector for each time step.
-    """  # noqa: D400, D401, D415
+    """  # noqa: D400, D401
     probes = []
     U = []  # noqa: N806
     time = []
 
-    with open(fileName) as f:  # noqa: PTH123
+    with open(fileName) as f:  # noqa: PLW1514, PTH123
         for line in f:
             if line.startswith('#'):
                 if line.startswith('# Probe'):
@@ -467,7 +467,7 @@ def read_velocity_probes(fileName):  # noqa: ANN001, ANN201, N803
 
 def calculate_length_scale(u, uav, dt, min_corr=0.0):  # noqa: ANN001, ANN201
     """Calculates the length scale of a velocity time history given."""  # noqa: D401
-    u = u - np.mean(u)
+    u = u - np.mean(u)  # noqa: PLR6104
 
     corr = signal.correlate(u, u, mode='full')
 
@@ -516,9 +516,9 @@ class VelocityData:
     - mean velocity profile
     - turbulence intensity profiles
     - integral scale of turbulence profiles
-    """  # noqa: D205, D400, D415
+    """  # noqa: D205, D400
 
-    def __init__(  # noqa: ANN204, D107, PLR0913
+    def __init__(  # noqa: ANN204
         self,
         path,  # noqa: ANN001
         sampling_rate=400,  # noqa: ANN001
@@ -635,7 +635,7 @@ class VelocityData:
         self.Rw = np.var(self.U[:, 2, :], axis=1)  # gets reynolds stress
 
         for i in range(self.component_count):
-            self.I[:, i] = self.I[:, i] / self.Uav
+            self.I[:, i] = self.I[:, i] / self.Uav  # noqa: PLR6104
 
         # Calculate the length scale profiles.
         self.L = np.zeros((self.probe_count, self.component_count))
@@ -655,7 +655,7 @@ class VelocityData:
             self.uw_bar[i] = np.cov(self.U[i, 0, :], self.U[i, 2, :])[0, 1]
 
     def get_Uav(self, z):  # noqa: ANN001, ANN201, N802, D102
-        from scipy import interpolate
+        from scipy import interpolate  # noqa: PLC0415
 
         f = interpolate.interp1d(self.z, self.Uav)
 
@@ -706,12 +706,12 @@ def copy_vtk_planes_and_order(input_path, output_path, field):  # noqa: ANN001, 
                 print(f'Copied path: {old_path}')  # noqa: T201
 
 
-def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):  # noqa: ANN001, ANN201, D103, PLR0915
+def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):  # noqa: ANN001, ANN201, D103
     # Read JSON data
     json_path = os.path.join(  # noqa: PTH118
         case_path, 'constant', 'simCenter', 'input', 'EmptyDomainCFD.json'
     )
-    with open(json_path) as json_file:  # noqa: PTH123
+    with open(json_path) as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1333,7 +1333,7 @@ if __name__ == '__main__':
     json_path = os.path.join(  # noqa: PTH118
         case_path, 'constant', 'simCenter', 'input', 'EmptyDomainCFD.json'
     )
-    with open(json_path) as json_file:  # noqa: PTH123
+    with open(json_path) as json_file:  # noqa: PLW1514, PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary

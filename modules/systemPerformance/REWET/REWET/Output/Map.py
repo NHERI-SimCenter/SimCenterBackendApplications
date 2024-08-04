@@ -13,7 +13,7 @@ Class:
 }
 
 @author: snaeimi
-"""  # noqa: INP001, D205
+"""  # noqa: CPY001, D205, INP001
 
 import warnings
 
@@ -27,18 +27,18 @@ from Output import Helper
 
 
 class Map:  # noqa: D101
-    def __init__(self):  # noqa: ANN204, D107
+    def __init__(self):  # noqa: ANN204
         pass
 
     # def loadShapeFile(shapeFileAddr='Northridge\GIS\Demand\demand_polygons.shp'):
-    def loadShapeFile(  # noqa: ANN201, N802, D102
+    def loadShapeFile(  # noqa: ANN201, D102, N802, PLR6301
         self,
         shapeFileAddr=r'Northridge\GIS\Demand\demand_polygons.shp',  # noqa: ANN001, N803
     ):
         shape_file = gpd.read_file(shapeFileAddr)
         return shape_file  # noqa: RET504
 
-    def joinTwoShapeFiles(self, first, second):  # noqa: ANN001, ANN201, N802, D102
+    def joinTwoShapeFiles(self, first, second):  # noqa: ANN001, ANN201, D102, N802, PLR6301
         second = second.set_crs(crs=first.crs)
         joined_map = gpd.sjoin(first, second)
 
@@ -56,7 +56,7 @@ class Map:  # noqa: D101
         s.geometry = point_list
         return s
 
-    def getDLQNExceedenceProbabilityMap(self, data_frame, ihour, param):  # noqa: ANN001, ANN201, N802, D102, PLR0915
+    def getDLQNExceedenceProbabilityMap(self, data_frame, ihour, param):  # noqa: ANN001, ANN201, N802, D102
         data = data_frame.transpose()
         scn_prob_list = self.scenario_prob
         # DLQN_dmg = pd.DataFrame(data=0, index=data.index, columns=data.columns)
@@ -157,7 +157,7 @@ class Map:  # noqa: D101
         print(tt)  # noqa: T201
         return s
 
-    def getOutageTimeGeoPandas_4(  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0915
+    def getOutageTimeGeoPandas_4(  # noqa: ANN201, C901, N802, D102
         self,
         scn_name,  # noqa: ANN001
         LOS='DL',  # noqa: ANN001, N803
@@ -257,7 +257,7 @@ class Map:  # noqa: D101
 
         return geopandas_df
 
-    def getOutageTimeGeoPandas_5(  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0913, PLR0915
+    def getOutageTimeGeoPandas_5(  # noqa: ANN201, C901, N802, D102
         self,
         scn_name,  # noqa: ANN001
         bsc='DL',  # noqa: ANN001
@@ -422,7 +422,7 @@ class Map:  # noqa: D101
             )
             map_res.loc[never_reported_nodes] = end_time
 
-        map_res = map_res / (3600 * 24)
+        map_res = map_res / (3600 * 24)  # noqa: PLR6104
         return map_res  # noqa: RET504
 
         s = gpd.GeoDataFrame(index=self.demand_node_name_list)
@@ -446,7 +446,7 @@ class Map:  # noqa: D101
 
         return joined_map  # noqa: RET504
 
-    def percentOfEffectNodes(  # noqa: ANN201, C901, N802, D102, PLR0915
+    def percentOfEffectNodes(  # noqa: ANN201, C901, N802, D102
         self,
         scn_name,  # noqa: ANN001
         bsc='QN',  # noqa: ANN001
@@ -601,6 +601,6 @@ class Map:  # noqa: D101
             )
             map_res.loc[never_reported_nodes] = end_time
 
-        map_res = map_res / (3600 * 24)
+        map_res = map_res / (3600 * 24)  # noqa: PLR6104
         percent = (map_res.loc[non_incident] > 0).sum() / number_of_good_nodes * 100
         return np.round(percent_init, 2), np.round(percent, 2)

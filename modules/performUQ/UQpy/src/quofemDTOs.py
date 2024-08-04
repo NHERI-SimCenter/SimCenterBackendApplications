@@ -1,4 +1,4 @@
-from __future__ import annotations  # noqa: INP001, D100
+from __future__ import annotations  # noqa: CPY001, D100, INP001
 
 from typing import Any, Dict, List
 

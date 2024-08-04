@@ -1,4 +1,4 @@
-# This script contains functions for reading and writing  # noqa: INP001, D100
+# This script contains functions for reading and writing  # noqa: CPY001, D100, INP001
 # OpenFoam dictionaries and filses.
 #
 import os
@@ -29,11 +29,11 @@ def write_foam_field(field, file_name):  # noqa: ANN001, ANN201
         vectorField,
         tensorField,
         symmTensorField
-    """  # noqa: D205, D400, D401, D415
+    """  # noqa: D205, D400, D401
     if os.path.exists(file_name):  # noqa: PTH110
         os.remove(file_name)  # noqa: PTH107
 
-    foam_file = open(file_name, 'w+')  # noqa: SIM115, PTH123
+    foam_file = open(file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
 
     size = np.shape(field)
 
@@ -58,7 +58,7 @@ def write_scalar_field(field, file_name):  # noqa: ANN001, ANN201
     if os.path.exists(file_name):  # noqa: PTH110
         os.remove(file_name)  # noqa: PTH107
 
-    foam_file = open(file_name, 'w+')  # noqa: SIM115, PTH123
+    foam_file = open(file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
 
     size = np.shape(field)
 

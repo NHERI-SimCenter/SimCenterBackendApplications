@@ -1,7 +1,7 @@
 """Created on Thu Jan  5 16:31:32 2023
 
 @author: snaeimi
-"""  # noqa: N999, D400, D415
+"""  # noqa: CPY001, D400, N999
 
 import os
 
@@ -11,8 +11,8 @@ from GUI.Subsitute_Layer_Window import Ui_subsitite_layer_dialoge
 from PyQt5 import QtWidgets
 
 
-class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: N801, D101
-    def __init__(  # noqa: ANN204, D107
+class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: D101
+    def __init__(  # noqa: ANN204
         self,
         subsitute_layer_addr,  # noqa: ANN001
         subsitute_layer,  # noqa: ANN001
@@ -71,7 +71,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: N801, D101
             'Shapefile file (*.shp)',
         )
 
-        if file[0] == '':
+        if file[0] == '':  # noqa: PLC1901
             return
         split_addr = os.path.split(file[0])
         self.current_substitute_directory = split_addr[0]
@@ -93,7 +93,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: N801, D101
 
         number_list = pd.Series(index=self.demand_node_layers.index, data=0)
         for ind, val in joined_map['index_right'].iteritems():  # noqa: B007
-            number_list.loc[val] = number_list.loc[val] + 1
+            number_list.loc[val] = number_list.loc[val] + 1  # noqa: PLR6104
 
         number_list = number_list[number_list > 1]
         number_list = number_list.sort_values(ascending=False)
@@ -111,7 +111,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: N801, D101
             index=self.subsitute_layer.index.unique(), data=0
         )
         for ind in joined_map.index.to_list():
-            index_number_list.loc[ind] = index_number_list.loc[ind] + 1
+            index_number_list.loc[ind] = index_number_list.loc[ind] + 1  # noqa: PLR6104
 
         index_number_list = index_number_list[index_number_list > 1]
         index_number_list = index_number_list.sort_values(ascending=False)

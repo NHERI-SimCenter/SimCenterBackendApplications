@@ -1,4 +1,4 @@
-# written: UQ team @ SimCenter  # noqa: INP001, D100
+# written: UQ team @ SimCenter  # noqa: CPY001, D100, INP001
 
 # import functions for Python 2.X support
 import sys
@@ -12,7 +12,7 @@ else:
 import os
 import platform
 import stat
-import subprocess
+import subprocess  # noqa: S404
 import sys
 
 import click
@@ -42,9 +42,7 @@ def main(workflowinput, workflowoutput, driverfile, runtype):  # noqa: ANN001, A
 
     # get os type
     osType = platform.system()  # noqa: N806
-    if runtype in [
-        'runningLocal',
-    ]:
+    if runtype == 'runningLocal':
         if (
             sys.platform == 'darwin'
             or sys.platform == 'linux'
@@ -52,11 +50,9 @@ def main(workflowinput, workflowoutput, driverfile, runtype):  # noqa: ANN001, A
         ):
             osType = 'Linux'  # noqa: N806
         else:
-            driverfile = driverfile + '.bat'
+            driverfile = driverfile + '.bat'  # noqa: PLR6104
             osType = 'Windows'  # noqa: N806
-    elif runtype in [
-        'runningRemote',
-    ]:
+    elif runtype == 'runningRemote':
         osType = 'Linux'  # noqa: N806
 
     thisScriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N806
@@ -71,7 +67,7 @@ def main(workflowinput, workflowoutput, driverfile, runtype):  # noqa: ANN001, A
 
     subprocess.run(preprocessorCommand, shell=True, check=False)  # noqa: S602
 
-    if runtype in ['runningLocal']:
+    if runtype == 'runningLocal':
         os.chmod(  # noqa: PTH101
             driverfile, stat.S_IWUSR | stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH
         )
@@ -83,7 +79,7 @@ def main(workflowinput, workflowoutput, driverfile, runtype):  # noqa: ANN001, A
     st = os.stat(driverfile)  # noqa: PTH116
     os.chmod(driverfile, st.st_mode | stat.S_IEXEC)  # noqa: PTH101
 
-    if runtype in ['runningLocal']:
+    if runtype == 'runningLocal':
         print('running UQpy: ', UQpycommand)  # noqa: T201
         subprocess.run(  # noqa: S602
             UQpycommand, stderr=subprocess.STDOUT, shell=True, check=False

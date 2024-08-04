@@ -66,17 +66,17 @@ convert_EDP = {  # noqa: N816
 def write_RV():  # noqa: ANN201, N802, D103
     pass
 
-    # TODO: check simulation data exists and contains all important fields  # noqa: FIX002, TD002, TD003
-    # TODO: get simulation data & write to SIM file  # noqa: FIX002, TD002, TD003
+    # TODO: check simulation data exists and contains all important fields  # noqa: TD002
+    # TODO: get simulation data & write to SIM file  # noqa: TD002
 
 
-def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path, EDP_input_path):  # noqa: ANN001, ANN201, C901, N802, N803, D103, PLR0915
+def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path, EDP_input_path):  # noqa: ANN001, ANN201, C901, N802, N803, D103
     # these imports are here to save time when the app is called without
     # the -getRV flag
-    import sys
+    import sys  # noqa: PLC0415
 
-    import numpy as np
-    import openseespy.opensees as ops
+    import numpy as np  # noqa: PLC0415
+    import openseespy.opensees as ops  # noqa: PLC0415
 
     log_msg('Startring simulation script...')  # noqa: F405
 
@@ -126,7 +126,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path, EDP_input_p
 
     event_list = EVENT_in['timeSeries']
     pattern_list = EVENT_in['pattern']
-    # TODO: use dictionary  # noqa: FIX002, TD002, TD003
+    # TODO: use dictionary  # noqa: TD002
     pattern_ts_link = [p['timeSeries'] for p in pattern_list]
 
     TS_list = []  # noqa: N806
@@ -236,7 +236,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path, EDP_input_p
     #    print(edp_name, edp_data)
 
     # run the analysis
-    # TODO: default analysis script  # noqa: FIX002, TD002, TD003
+    # TODO: default analysis script  # noqa: TD002
     EDP_res = run_analysis(  # noqa: N806
         GM_dt=EVENT_in['dT'],
         GM_npts=EVENT_in['numSteps'],

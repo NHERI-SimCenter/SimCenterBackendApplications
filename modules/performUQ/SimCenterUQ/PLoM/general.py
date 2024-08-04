@@ -1,4 +1,4 @@
-# Constants, variables, and methods that are commonly used  # noqa: D100
+# Constants, variables, and methods that are commonly used  # noqa: CPY001, D100
 
 import os
 from collections import Counter
@@ -81,7 +81,7 @@ class Logfile:  # noqa: D101
         - logfile_dir: default is the same path of the PLoM package
         - logfile_name: default is the "plom.log"
         - screen_msg: default is to show message on screen
-        """  # noqa: D205, D400, D401, D415
+        """  # noqa: D205, D400, D401
         self.logfile_dir = logfile_dir
         self.logfile_name = logfile_name
         self.logfile_path = os.path.join(self.logfile_dir, self.logfile_name)  # noqa: PTH118
@@ -94,7 +94,7 @@ class Logfile:  # noqa: D101
         - msg: the message
         - msg_type: the type of message 'RUNNING', 'WARNING', 'ERROR'
         - msg_level: how many indent tags
-        """  # noqa: D205, D400, D401, D415
+        """  # noqa: D205, D400, D401
         indent_tabs = ''.join(['\t'] * msg_level)
         decorated_msg = f'{datetime.utcnow()} {indent_tabs} {msg_type}-MSG {msg} '  # noqa: DTZ003
         if self.screen_msg:
@@ -103,7 +103,7 @@ class Logfile:  # noqa: D101
             f.write('\n' + decorated_msg)
 
     def delete_logfile(self):  # noqa: ANN201
-        """Deleting the log file"""  # noqa: D400, D401, D415
+        """Deleting the log file"""  # noqa: D400, D401
         if os.path.exists(self.logfile_path):  # noqa: PTH110
             os.remove(self.logfile_path)  # noqa: PTH107
         else:
@@ -115,7 +115,7 @@ class DBServer:  # noqa: D101
         """Initializing the database
         - db_dir: default is the same path of the PLoM package
         - db_name: default is "plom.h5"
-        """  # noqa: D205, D400, D401, D415
+        """  # noqa: D205, D400, D401
         self.db_dir = db_dir
         self.db_name = db_name
         self.db_path = os.path.join(self.db_dir, self.db_name)  # noqa: PTH118
@@ -130,7 +130,7 @@ class DBServer:  # noqa: D101
         self._item_adds = ITEM_ADDS
 
     def basic(self):  # noqa: ANN201
-        """Writing basic info"""  # noqa: D400, D401, D415
+        """Writing basic info"""  # noqa: D400, D401
         df = pd.DataFrame.from_dict(  # noqa: PD901
             {
                 'InitializedTime': [self.init_time],
@@ -145,7 +145,7 @@ class DBServer:  # noqa: D101
         self.add_item(item=[''], data_type='ConstraintsFile')
 
     def _create_export_dir(self):  # noqa: ANN202
-        """Creating a export folder"""  # noqa: D400, D401, D415
+        """Creating a export folder"""  # noqa: D400, D401
         dir_export = os.path.join(self.db_dir, 'DataOut')  # noqa: PTH118
         try:
             os.makedirs(dir_export, exist_ok=True)  # noqa: PTH103
@@ -154,7 +154,7 @@ class DBServer:  # noqa: D101
             return None
 
     def get_item_adds(self):  # noqa: ANN201
-        """Returning the full list of data items"""  # noqa: D400, D401, D415
+        """Returning the full list of data items"""  # noqa: D400, D401
         return self._item_adds
 
     def add_item(  # noqa: ANN201
@@ -165,7 +165,7 @@ class DBServer:  # noqa: D101
         data_shape=None,  # noqa: ANN001
         data_type='Data',  # noqa: ANN001
     ):
-        """Adding a new data item into database"""  # noqa: D400, D415
+        """Adding a new data item into database"""  # noqa: D400
         if data_type == 'Data':
             if item.size > 1:
                 df = pd.DataFrame(item, columns=col_names)  # noqa: PD901
@@ -193,7 +193,7 @@ class DBServer:  # noqa: D101
             return False
 
     def get_item(self, item_name=None, table_like=False, data_type='Data'):  # noqa: ANN001, ANN201, FBT002
-        """Getting a specific data item"""  # noqa: D400, D401, D415
+        """Getting a specific data item"""  # noqa: D400, D401
         if data_type == 'Data':  # noqa: RET503
             if item_name is not None:  # noqa: RET503
                 store = pd.HDFStore(self.db_path, 'r')
@@ -227,7 +227,7 @@ class DBServer:  # noqa: D101
             return item.values.tolist()[0][0]  # noqa: PD011
 
     def remove_item(self, item_name=None):  # noqa: ANN001, ANN201
-        """Removing an item"""  # noqa: D400, D401, D415
+        """Removing an item"""  # noqa: D400, D401
         if item_name is not None:
             store = pd.HDFStore(self.db_path, 'r')
             try:
@@ -238,7 +238,7 @@ class DBServer:  # noqa: D101
                 store.close()
 
     def get_item_shape(self, item_name=None):  # noqa: ANN001, ANN201
-        """Getting the shape of a specific data item"""  # noqa: D400, D401, D415
+        """Getting the shape of a specific data item"""  # noqa: D400, D401
         if item_name is not None:  # noqa: RET503
             store = pd.HDFStore(self.db_path, 'r')
             try:
@@ -250,7 +250,7 @@ class DBServer:  # noqa: D101
             return item_shape
 
     def get_name_list(self):  # noqa: ANN201
-        """Returning the keys of the database"""  # noqa: D400, D401, D415
+        """Returning the keys of the database"""  # noqa: D400, D401
         store = pd.HDFStore(self.db_path, 'r')
         try:
             name_list = store.keys()
@@ -263,7 +263,7 @@ class DBServer:  # noqa: D101
         """Exporting the specific data item
         - data_name: data tag
         - format: data format
-        """  # noqa: D205, D400, D401, D415
+        """  # noqa: D205, D400, D401
         d = self.get_item(item_name=data_name[1:], table_like=True)
         if d is None:
             return 1
@@ -288,12 +288,12 @@ class DBServer:  # noqa: D101
 class Task:
     """This is a class for managering an individual task in
     the PLoM running process
-    """  # noqa: D205, D400, D404, D415
+    """  # noqa: D205, D400, D404
 
     def __init__(self, task_name=None):  # noqa: ANN001, ANN204
         """Initialization
         - task_name: name of the task
-        """  # noqa: D205, D400, D401, D415
+        """  # noqa: D205, D400, D401
         self.task_name = task_name  # task name
         self.pre_task = None  # previous task
         self.next_task = None  # next task
@@ -304,9 +304,9 @@ class Task:
     def refresh_status(self):  # noqa: ANN201
         """Refreshing the current status of the task
         If any of the previous tasks is not completed, the current task is also not reliable
-        """  # noqa: D205, D400, D401, D415
+        """  # noqa: D205, D400, D401
         # check the previous task if any
-        if self.pre_task:  # noqa: SIM102
+        if self.pre_task:
             if not self.pre_task.refresh_status():
                 # previous task not completed -> this task also needs to rerun
                 self.status = False
@@ -327,9 +327,9 @@ class Task:
 class TaskList:
     """This is a class for managering a set of tasks
     in a specific order
-    """  # noqa: D205, D400, D404, D415
+    """  # noqa: D205, D400, D404
 
-    def __init__(self):  # noqa: ANN204, D107
+    def __init__(self):  # noqa: ANN204
         self.head_task = None  # first task
         self.tail_task = None  # last task
         self.status = False  # status
@@ -349,7 +349,7 @@ class TaskList:
             self.tail_task = new_task
 
     def refresh_status(self):  # noqa: ANN201
-        """Refreshing the tasks' status"""  # noqa: D400, D401, D415
+        """Refreshing the tasks' status"""  # noqa: D400, D401
         if self.head_task:  # noqa: RET503
             cur_task = self.head_task
             if not cur_task.status:

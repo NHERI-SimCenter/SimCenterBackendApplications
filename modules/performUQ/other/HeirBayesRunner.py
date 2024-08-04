@@ -1,4 +1,4 @@
-# written: Aakash Bangalore Satish @ NHERI SimCenter, UC Berkeley  # noqa: D100, INP001
+# written: Aakash Bangalore Satish @ NHERI SimCenter, UC Berkeley  # noqa: CPY001, D100, INP001
 
 import importlib
 import json
@@ -10,7 +10,7 @@ from uqRunner import UqRunner
 
 
 class HeirBayesRunner(UqRunner):  # noqa: D101
-    def __init__(self) -> None:  # noqa: D107
+    def __init__(self) -> None:
         super().__init__()
         self.n_samples = 0
         self.n_burn_in = 0
@@ -118,7 +118,7 @@ class HeirBayesRunner(UqRunner):  # noqa: D101
         cwd = os.getcwd()  # noqa: PTH109
         save_file_dir = os.path.dirname(cwd)  # noqa: PTH120
         save_file_full_path = os.path.join(save_file_dir, save_file_name)  # noqa: PTH118
-        with open(save_file_full_path, 'w') as f:  # noqa: PTH123
+        with open(save_file_full_path, 'w') as f:  # noqa: PLW1514, PTH123
             f.write(self.headingRow)
             f.write('\n')
             for sample_num, sample in enumerate(self.trace):
@@ -155,7 +155,7 @@ class HeirBayesRunner(UqRunner):  # noqa: D101
     def printEndMessages():  # noqa: ANN205, N802, D102
         print('Heirarchical Bayesian estimation done!')  # noqa: T201
 
-    def runUQ(  # noqa: ANN201, N802, PLR0913
+    def runUQ(  # noqa: ANN201, N802
         self,
         uqData,  # noqa: ANN001, N803
         simulationData,  # noqa: ANN001, ARG002, N803
@@ -181,7 +181,7 @@ class HeirBayesRunner(UqRunner):  # noqa: D101
         runType:        Specifies whether computations are being run locally or on an HPC cluster
         localAppDir:    Directory containing apps for local run
         remoteAppDir:   Directory containing apps for remote run
-        """  # noqa: D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404
         self.startTimer()
         self.storeUQData(uqData=uqData)
         os.chdir(workingDir)
@@ -192,15 +192,15 @@ class HeirBayesRunner(UqRunner):  # noqa: D101
         self.printEndMessages()
 
 
-class testRunUQ:  # noqa: N801, D101
-    def __init__(self, json_file_path_string) -> None:  # noqa: ANN001, D107
+class testRunUQ:  # noqa: D101
+    def __init__(self, json_file_path_string) -> None:  # noqa: ANN001
         self.json_file_path_string = json_file_path_string
         self.getUQData()
         self.createRunner()
         self.runTest()
 
     def getUQData(self):  # noqa: ANN201, N802, D102
-        with open(os.path.abspath(self.json_file_path_string)) as f:  # noqa: PTH100, PTH123
+        with open(os.path.abspath(self.json_file_path_string)) as f:  # noqa: PLW1514, PTH100, PTH123
             input_data = json.load(f)
 
         self.ApplicationData = input_data['Applications']

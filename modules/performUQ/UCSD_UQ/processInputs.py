@@ -1,9 +1,9 @@
-import argparse  # noqa: INP001, D100
+import argparse  # noqa: CPY001, D100, INP001
 import json
 import os
 import platform
 import stat
-import subprocess
+import subprocess  # noqa: S404
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     # Change permission of workflow driver
     if platform.system() != 'Windows':
         workflowDriverFile = os.path.join(templateDir, workflowDriver)  # noqa: PTH118, N816
-        if runType in ['runningLocal']:
+        if runType == 'runningLocal':
             os.chmod(  # noqa: PTH101
                 workflowDriverFile,
                 stat.S_IWUSR | stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH,
@@ -46,12 +46,12 @@ if __name__ == '__main__':
 
     else:
         pythonCommand = 'python'  # noqa: N816
-        workflowDriver = workflowDriver + '.bat'  # noqa: N816
+        workflowDriver = workflowDriver + '.bat'  # noqa: N816, PLR6104
 
-    if runType in ['runningLocal']:
+    if runType == 'runningLocal':
         # Get path to python from dakota.json file
         dakotaJsonFile = os.path.join(os.path.abspath(templateDir), inputFile)  # noqa: PTH100, PTH118, N816
-        with open(dakotaJsonFile) as f:  # noqa: PTH123
+        with open(dakotaJsonFile) as f:  # noqa: PLW1514, PTH123
             jsonInputs = json.load(f)  # noqa: N816
 
         if 'python' in jsonInputs.keys():  # noqa: SIM118

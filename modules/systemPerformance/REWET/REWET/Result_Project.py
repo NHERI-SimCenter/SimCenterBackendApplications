@@ -1,11 +1,11 @@
 """Created on Sun Oct 23 15:00:31 2022
 
 @author: snaeimi
-"""  # noqa: N999, D400, D415
+"""  # noqa: CPY001, D400, N999
 
 import copy
 import os
-import pickle
+import pickle  # noqa: S403
 from collections import OrderedDict
 
 import numpy as np
@@ -20,8 +20,8 @@ from Output.Raw_Data import Raw_Data
 from Output.Result_Time import Result_Time
 
 
-class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N801, D101
-    def __init__(  # noqa: ANN204, D107, PLR0913
+class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D101
+    def __init__(  # noqa: ANN204
         self,
         project_file_addr,  # noqa: ANN001
         result_directory=None,  # noqa: ANN001
@@ -250,7 +250,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
             """
             print(str(scn_name) + ' loaded')  # noqa: T201
 
-    def remove_maximum_trials(self, data):  # noqa: ANN001, ANN201, D102
+    def remove_maximum_trials(self, data):  # noqa: ANN001, ANN201, D102, PLR6301
         all_time_list = data.maximum_trial_time
         result_time_list = data.node['demand'].index.to_list()
         result_time_max_trailed_list = [
@@ -312,7 +312,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
                 att_data.drop(result_time_max_trailed_list, inplace=True)  # noqa: PD002
                 data.link[att] = att_data
 
-    def remove_maximum_trials_demand_flow(self, data):  # noqa: ANN001, ANN201, D102
+    def remove_maximum_trials_demand_flow(self, data):  # noqa: ANN001, ANN201, D102, PLR6301
         flow_balance = data.node['demand'].sum(axis=1)
 
         time_to_drop = flow_balance[abs(flow_balance) >= 0.01].index  # noqa: PLR2004
@@ -374,7 +374,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
         req_node_demand : Pandas DataFrame
             Demand for all nodes and in all time
 
-        """  # noqa: D205, D400, D415
+        """  # noqa: D205, D400
         self.loadScneariodata(scn_name)
         demand_ratio = self.demand_ratio
         if type(self._RequiredDemandForAllNodesandtime[scn_name]) != type(None):  # noqa: E721
@@ -563,7 +563,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
 
         for t in range(0, int(max_time), 3600):
             satisfies_nodes_scnearios = data_frame <= t
-            satisfies_nodes_scnearios = (
+            satisfies_nodes_scnearios = (  # noqa: PLR6104
                 satisfies_nodes_scnearios * population_dataframe
             )
             scenario_percentages = (
@@ -603,7 +603,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
 
         return restore_data
 
-    def PR_getCurveExcedence(  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0915
+    def PR_getCurveExcedence(  # noqa: ANN201, C901, N802, D102
         self,
         data_frame,  # noqa: ANN001
         result_type='mean',  # noqa: ANN001
@@ -683,7 +683,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
 
         return res
 
-    def getResultSeperatedDaily(self, data, begin_time=0):  # noqa: ANN001, ANN201, N802, D102
+    def getResultSeperatedDaily(self, data, begin_time=0):  # noqa: ANN001, ANN201, D102, N802, PLR6301
         data = data[data.index >= begin_time]
         data.index = (data.index - begin_time) / (24 * 3600)
 

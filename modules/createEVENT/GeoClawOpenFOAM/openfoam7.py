@@ -1,4 +1,4 @@
-####################################################################  # noqa: INP001
+# # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: D400, D415
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -56,7 +56,7 @@ from of7Uboundary import of7Uboundary
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
-class openfoam7:  # noqa: N801
+class openfoam7:
     """This class includes the methods related to openfoam7.
 
     Methods
@@ -66,7 +66,7 @@ class openfoam7:  # noqa: N801
     """  # noqa: D404
 
     #############################################################
-    def createfolder(self, data, path, args):  # noqa: ANN001, ANN201, D417, PLR0915
+    def createfolder(self, data, path, args):  # noqa: ANN001, ANN201, PLR6301
         """Creates the necessary folders for openfoam7
 
         Arguments:
@@ -74,7 +74,7 @@ class openfoam7:  # noqa: N801
                 data: all the JSON data
                 path: Path where the new folder needs to be created
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -144,12 +144,12 @@ class openfoam7:  # noqa: N801
         )
 
         # Load all modules
-        caseruntext = caseruntext + 'echo Loading modules on Stampede2\n'
-        caseruntext = caseruntext + 'module load intel/18.0.2\n'
-        caseruntext = caseruntext + 'module load impi/18.0.2\n'
-        caseruntext = caseruntext + 'module load openfoam/7.0\n'
-        caseruntext = caseruntext + 'module load dakota/6.8.0\n'
-        caseruntext = caseruntext + 'module load python3\n\n'
+        caseruntext = caseruntext + 'echo Loading modules on Stampede2\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'module load intel/18.0.2\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'module load impi/18.0.2\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'module load openfoam/7.0\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'module load dakota/6.8.0\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'module load python3\n\n'  # noqa: PLR6104
 
         # Move the case files to the present folder
         zerofldr = os.path.join(path, '0.org')  # noqa: PTH118
@@ -157,14 +157,14 @@ class openfoam7:  # noqa: N801
         cstfldr = os.path.join(path, 'constant')  # noqa: PTH118
         systfldr = os.path.join(path, 'system')  # noqa: PTH118
         caseruntext = caseruntext + 'cp -r ' + zerofldr + ' .\n'
-        caseruntext = caseruntext + 'cp -r 0.org 0\n'
+        caseruntext = caseruntext + 'cp -r 0.org 0\n'  # noqa: PLR6104
         caseruntext = caseruntext + 'cp -r ' + cstfldr + ' .\n'
         caseruntext = caseruntext + 'cp -r ' + systfldr + ' .\n\n'
 
         # Create the caserun file
         if os.path.exists('caserun.sh'):  # noqa: PTH110
             os.remove('caserun.sh')  # noqa: PTH107
-        scriptfile = open('caserun.sh', 'w')  # noqa: SIM115, PTH123
+        scriptfile = open('caserun.sh', 'w')  # noqa: PLW1514, PTH123, SIM115
         scriptfile.write(caseruntext)
         scriptfile.close()
 
@@ -172,7 +172,7 @@ class openfoam7:  # noqa: N801
         return 0
 
     #############################################################
-    def creategeometry(self, data, path):  # noqa: ANN001, ANN201, PLR0911
+    def creategeometry(self, data, path):  # noqa: ANN001, ANN201, PLR6301
         """Creates the necessary folders for openfoam7
 
         Arguments:
@@ -180,7 +180,7 @@ class openfoam7:  # noqa: N801
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -224,7 +224,7 @@ class openfoam7:  # noqa: N801
         return 0
 
     #############################################################
-    def createmesh(self, data, path):  # noqa: ANN001, ANN201
+    def createmesh(self, data, path):  # noqa: ANN001, ANN201, PLR6301
         """Creates the mesh dictionaries for openfoam7
 
         Arguments:
@@ -232,7 +232,7 @@ class openfoam7:  # noqa: N801
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -251,21 +251,21 @@ class openfoam7:  # noqa: N801
             bmeshtext = Meshing.bmeshtext(data)
             fname = 'blockMeshDict'
             filepath = os.path.join(path, 'system', fname)  # noqa: PTH118
-            bmeshfile = open(filepath, 'w')  # noqa: SIM115, PTH123
+            bmeshfile = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
             bmeshfile.write(bmeshtext)
             bmeshfile.close()
             # surfaceFeatureExtract
             sfetext = Meshing.sfetext()
             fname = 'surfaceFeatureExtractDict'
             filepath = os.path.join(path, 'system', fname)  # noqa: PTH118
-            sfefile = open(filepath, 'w')  # noqa: SIM115, PTH123
+            sfefile = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
             sfefile.write(sfetext)
             sfefile.close()
             # snappyHexMesh
             shmtext = Meshing.shmtext(data)
             fname = 'snappyHexMeshDict'
             filepath = os.path.join(path, 'system', fname)  # noqa: PTH118
-            shmfile = open(filepath, 'w')  # noqa: SIM115, PTH123
+            shmfile = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
             shmfile.write(shmtext)
             shmfile.close()
 
@@ -282,7 +282,7 @@ class openfoam7:  # noqa: N801
         return 0
 
     #############################################################
-    def materials(self, data, path):  # noqa: ANN001, ANN201
+    def materials(self, data, path):  # noqa: ANN001, ANN201, PLR6301
         """Creates the material files for openfoam7
 
         Arguments:
@@ -290,7 +290,7 @@ class openfoam7:  # noqa: N801
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create the transportProperties file
         Materials = of7Materials()  # noqa: N806
         matcode = Materials.matcheck(data)
@@ -300,14 +300,14 @@ class openfoam7:  # noqa: N801
             mattext = Materials.mattext(data)
             fname = 'transportProperties'
             filepath = os.path.join(path, 'constant', fname)  # noqa: PTH118
-            matfile = open(filepath, 'w')  # noqa: SIM115, PTH123
+            matfile = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
             matfile.write(mattext)
             matfile.close()
 
         return 0
 
     #############################################################
-    def initial(self, data, path):  # noqa: ANN001, ANN201
+    def initial(self, data, path):  # noqa: ANN001, ANN201, PLR6301
         """Creates the initial condition files for openfoam7
 
         Arguments:
@@ -315,7 +315,7 @@ class openfoam7:  # noqa: N801
                 data: all the JSON data
                 path: Path where the geometry files dakota.json lies
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create the setFields file
         Inicond = of7Initial()  # noqa: N806
         initcode = Inicond.alphacheck(data, path)
@@ -325,7 +325,7 @@ class openfoam7:  # noqa: N801
             alphatext = Inicond.alphatext(data, path)
             fname = 'setFieldsDict'
             filepath = os.path.join(path, 'system', fname)  # noqa: PTH118
-            alphafile = open(filepath, 'w')  # noqa: SIM115, PTH123
+            alphafile = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
             alphafile.write(alphatext)
             alphafile.close()
 
@@ -335,7 +335,7 @@ class openfoam7:  # noqa: N801
         return 0
 
     #############################################################
-    def boundary(self, data, path):  # noqa: ANN001, ANN201
+    def boundary(self, data, path):  # noqa: ANN001, ANN201, PLR6301
         """Creates the bc condition files for openfoam7
 
         Arguments:
@@ -343,7 +343,7 @@ class openfoam7:  # noqa: N801
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Initialize the patches
         patches = ['Entry', 'Exit', 'Top', 'Bottom', 'Right', 'Left']
 
@@ -361,7 +361,7 @@ class openfoam7:  # noqa: N801
             # Path to the file
             fname = 'U'
             filepath = os.path.join(path, '0.org', fname)  # noqa: PTH118
-            Ufile = open(filepath, 'w')  # noqa: SIM115, PTH123, N806
+            Ufile = open(filepath, 'w')  # noqa: N806, PLW1514, PTH123, SIM115
             Ufile.write(utext)
             Ufile.close()
 
@@ -372,7 +372,7 @@ class openfoam7:  # noqa: N801
         prtext = Prboundary.Prtext(data, patches)
         fname = 'p_rgh'
         filepath = os.path.join(path, '0.org', fname)  # noqa: PTH118
-        pr_file = open(filepath, 'w')  # noqa: SIM115, PTH123
+        pr_file = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
         pr_file.write(prtext)
         pr_file.close()
 
@@ -383,7 +383,7 @@ class openfoam7:  # noqa: N801
         Alptext = Alpboundary.Alptext(data, patches)  # noqa: N806
         fname = 'alpha.water'
         filepath = os.path.join(path, '0.org', fname)  # noqa: PTH118
-        Alpfile = open(filepath, 'w')  # noqa: SIM115, PTH123, N806
+        Alpfile = open(filepath, 'w')  # noqa: N806, PLW1514, PTH123, SIM115
         Alpfile.write(Alptext)
         Alpfile.close()
 
@@ -396,14 +396,14 @@ class openfoam7:  # noqa: N801
             pdtext = PtDboundary.PtDtext(data, path, patches)
             fname = 'pointDisplacement'
             filepath = os.path.join(path, '0.org', fname)  # noqa: PTH118
-            ptDfile = open(filepath, 'w')  # noqa: SIM115, PTH123, N806
+            ptDfile = open(filepath, 'w')  # noqa: N806, PLW1514, PTH123, SIM115
             ptDfile.write(pdtext)
             ptDfile.close()
 
         return 0
 
     #############################################################
-    def turbulence(self, data, path):  # noqa: ANN001, ANN201
+    def turbulence(self, data, path):  # noqa: ANN001, ANN201, PLR6301
         """Creates the turbulenceDict and other files for openfoam7
 
         Arguments:
@@ -411,20 +411,20 @@ class openfoam7:  # noqa: N801
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create the domain decomposition file
         Turb = of7Turbulence()  # noqa: N806
         turbtext = Turb.turbtext(data)
         fname = 'turbulenceProperties'
         filepath = os.path.join(path, 'constant', fname)  # noqa: PTH118
-        turbfile = open(filepath, 'w')  # noqa: SIM115, PTH123
+        turbfile = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
         turbfile.write(turbtext)
         turbfile.close()
 
         return 0
 
     #############################################################
-    def parallelize(self, data, path):  # noqa: ANN001, ANN201
+    def parallelize(self, data, path):  # noqa: ANN001, ANN201, PLR6301
         """Creates the domain decomposition files for openfoam7
 
         Arguments:
@@ -432,13 +432,13 @@ class openfoam7:  # noqa: N801
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create the domain decomposition file
         Decomp = of7Decomp()  # noqa: N806
         decomptext = Decomp.decomptext(data)
         fname = 'decomposeParDict'
         filepath = os.path.join(path, 'system', fname)  # noqa: PTH118
-        decompfile = open(filepath, 'w')  # noqa: SIM115, PTH123
+        decompfile = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
         decompfile.write(decomptext)
         decompfile.close()
 
@@ -448,7 +448,7 @@ class openfoam7:  # noqa: N801
         return 0
 
     #############################################################
-    def solve(self, data, path):  # noqa: ANN001, ANN201
+    def solve(self, data, path):  # noqa: ANN001, ANN201, PLR6301
         """Creates the solver related files for openfoam7
 
         Arguments:
@@ -456,14 +456,14 @@ class openfoam7:  # noqa: N801
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create the solver files
         Solve = of7Solve()  # noqa: N806
         # fvSchemes
         fvschemetext = Solve.fvSchemetext(data)
         fname = 'fvSchemes'
         filepath = os.path.join(path, 'system', fname)  # noqa: PTH118
-        fvschemefile = open(filepath, 'w')  # noqa: SIM115, PTH123
+        fvschemefile = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
         fvschemefile.write(fvschemetext)
         fvschemefile.close()
 
@@ -471,7 +471,7 @@ class openfoam7:  # noqa: N801
         fvsolntext = Solve.fvSolntext(data)
         fname = 'fvSolution'
         filepath = os.path.join(path, 'system', fname)  # noqa: PTH118
-        fvsolnfile = open(filepath, 'w')  # noqa: SIM115, PTH123
+        fvsolnfile = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
         fvsolnfile.write(fvsolntext)
         fvsolnfile.close()
 
@@ -483,21 +483,21 @@ class openfoam7:  # noqa: N801
             cdicttext = Solve.cdicttext(data)
             fname = 'controlDict'
             filepath = os.path.join(path, 'system', fname)  # noqa: PTH118
-            cdictfile = open(filepath, 'w')  # noqa: SIM115, PTH123
+            cdictfile = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
             cdictfile.write(cdicttext)
             cdictfile.close()
 
             # Create CdictForce
             cdictFtext = Solve.cdictFtext(data)  # noqa: N806
             fname = 'cdictforce'
-            cdictFfile = open(fname, 'w')  # noqa: SIM115, PTH123, N806
+            cdictFfile = open(fname, 'w')  # noqa: N806, PLW1514, PTH123, SIM115
             cdictFfile.write(cdictFtext)
             cdictFfile.close()
 
         return 0
 
     #############################################################
-    def others(self, data, path):  # noqa: ANN001, ANN201
+    def others(self, data, path):  # noqa: ANN001, ANN201, PLR6301
         """Creates the other auxiliary files for openfoam7
 
         Arguments:
@@ -505,28 +505,28 @@ class openfoam7:  # noqa: N801
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create the auxiliary files
         Others = of7Others()  # noqa: N806
         # g-file
         gfiletext = Others.gfiletext(data)
         fname = 'g'
         filepath = os.path.join(path, 'constant', fname)  # noqa: PTH118
-        gfile = open(filepath, 'w')  # noqa: SIM115, PTH123
+        gfile = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
         gfile.write(gfiletext)
         gfile.close()
 
         return 0
 
     #############################################################
-    def dakota(self, args):  # noqa: ANN001, ANN201
+    def dakota(self, args):  # noqa: ANN001, ANN201, PLR6301
         """Creates the dakota scripts for openfoam7
 
         Arguments:
         ---------
                 args: all arguments
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create the solver files
         dakota = of7Dakota()
 
@@ -536,7 +536,7 @@ class openfoam7:  # noqa: N801
         return 0
 
     #############################################################
-    def postprocessing(self, data, path):  # noqa: ANN001, ANN201
+    def postprocessing(self, data, path):  # noqa: ANN001, ANN201, PLR6301
         """Creates the postprocessing related files for openfoam7
 
         Arguments:
@@ -544,7 +544,7 @@ class openfoam7:  # noqa: N801
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create the solver files
         pprocess = of7Process()
         # controlDict
@@ -558,14 +558,14 @@ class openfoam7:  # noqa: N801
             pprocesstext = pprocess.pprocesstext(data, path)
             fname = 'sample'
             filepath = os.path.join(fname)  # noqa: PTH118
-            samplefile = open(filepath, 'w')  # noqa: SIM115, PTH123
+            samplefile = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
             samplefile.write(pprocesstext)
             samplefile.close()
             # Controldict
             pprocesstext = pprocess.pprocesscdict(data, path)
             fname = 'cdictpp'
             filepath = os.path.join(fname)  # noqa: PTH118
-            samplefile = open(filepath, 'w')  # noqa: SIM115, PTH123
+            samplefile = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
             samplefile.write(pprocesstext)
             samplefile.close()
 
@@ -575,14 +575,14 @@ class openfoam7:  # noqa: N801
         return 0
 
     #############################################################
-    def cleaning(self, args, path):  # noqa: ANN001, ANN201, D417
+    def cleaning(self, args, path):  # noqa: ANN001, ANN201, PLR6301
         """Creates the cleaning scripts for openfoam7
 
         Arguments:
         ---------
                 args: all arguments
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create the solver files
         cleaner = of7Dakota()
 

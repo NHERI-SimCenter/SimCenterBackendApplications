@@ -59,7 +59,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--hazard_config')
     args = parser.parse_args()
-    with open(args.hazard_config) as f:  # noqa: PTH123
+    with open(args.hazard_config) as f:  # noqa: PLW1514, PTH123
         hazard_info = json.load(f)
 
     # Directory

@@ -1,7 +1,7 @@
 """Created on Fri Jan  6 00:08:01 2023
 
 @author: snaeimi
-"""  # noqa: N999, D400, D415
+"""  # noqa: CPY001, D400, N999
 
 import sys
 
@@ -14,8 +14,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvas
 from PyQt5 import QtCore, QtWidgets
 
 
-class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: N801, D101
-    def __init__(self, sym, data, val_column):  # noqa: ANN001, ANN204, D107
+class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
+    def __init__(self, sym, data, val_column):  # noqa: ANN001, ANN204
         super().__init__()
         self._window = QtWidgets.QDialog()
         self.setupUi(self._window)
@@ -115,7 +115,7 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: N801, D101
         self.updateLegendSample()
 
     def updateLegendSample(self):  # noqa: ANN201, N802, D102
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots()  # noqa: F841
         self.plotted_map.plot(
             ax=ax,
             cax=self.ax1,

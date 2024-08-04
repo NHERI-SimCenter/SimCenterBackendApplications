@@ -1,7 +1,7 @@
 """Created on Thu Nov 10 18:29:50 2022
 
 @author: snaeimi
-"""  # noqa: N999, D400, D415
+"""  # noqa: CPY001, D400, N999
 
 import pandas as pd
 from PyQt5 import QtGui, QtWidgets
@@ -72,8 +72,8 @@ curve_settings = {
 }
 
 
-class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: N801, D101
-    def __init__(self):  # noqa: ANN204, D107
+class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: D101
+    def __init__(self):  # noqa: ANN204
         super().__init__()
         time_units = ['second', 'hour', 'day']
 
@@ -95,7 +95,7 @@ class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: N801, D101
         if time_unit == 'second':
             pass
         elif time_unit == 'hour':
-            data.index = data.index / 3600
+            data.index = data.index / 3600  # noqa: PLR6104
         elif time_unit == 'day':
             data.index = data.index / 3600 / 24
         else:
@@ -104,14 +104,14 @@ class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: N801, D101
         return data
 
 
-class Yes_No_Combo(QtWidgets.QComboBox):  # noqa: N801, D101
-    def __init__(self):  # noqa: ANN204, D107
+class Yes_No_Combo(QtWidgets.QComboBox):  # noqa: D101
+    def __init__(self):  # noqa: ANN204
         super().__init__()
         self.addItems(['No', 'Yes'])
 
 
-class Result_Designer:  # noqa: N801, D101
-    def __init__(self):  # noqa: ANN204, D107
+class Result_Designer:  # noqa: D101
+    def __init__(self):  # noqa: ANN204
         self.current_raw_curve = None
         self.current_curve = None
         self.curve_settings_widgets = {}
@@ -199,7 +199,7 @@ class Result_Designer:  # noqa: N801, D101
         self.setCurveSettingBox(text)
         self.calculateCurrentCurve()
 
-    def calculateCurrentCurve(self):  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0915
+    def calculateCurrentCurve(self):  # noqa: ANN201, C901, N802, D102
         curve_type = self.current_curve_type
         if curve_type == 'Quantity Exceedance':
             iPopulation = self.curve_settings_widgets['Population'].currentText()  # noqa: N806
@@ -211,17 +211,17 @@ class Result_Designer:  # noqa: N801, D101
             min_time = self.curve_settings_widgets['Min time'].text()
             max_time = self.curve_settings_widgets['Max time'].text()
 
-            if iConsider_leak == 'Yes':  # noqa: SIM108
+            if iConsider_leak == 'Yes':
                 iConsider_leak = True  # noqa: N806
             else:
                 iConsider_leak = False  # noqa: N806
 
-            if iRatio == 'Yes':  # noqa: SIM108
+            if iRatio == 'Yes':
                 iRatio = True  # noqa: N806
             else:
                 iRatio = False  # noqa: N806
 
-            if daily_bin == 'Yes':  # noqa: SIM108
+            if daily_bin == 'Yes':
                 daily_bin = True
             else:
                 daily_bin = False
@@ -255,17 +255,17 @@ class Result_Designer:  # noqa: N801, D101
             min_time = self.curve_settings_widgets['Min time'].text()
             max_time = self.curve_settings_widgets['Max time'].text()
 
-            if iConsider_leak == 'Yes':  # noqa: SIM108
+            if iConsider_leak == 'Yes':
                 iConsider_leak = True  # noqa: N806
             else:
                 iConsider_leak = False  # noqa: N806
 
-            if iRatio == 'Yes':  # noqa: SIM108
+            if iRatio == 'Yes':
                 iRatio = True  # noqa: N806
             else:
                 iRatio = False  # noqa: N806
 
-            if daily_bin == 'Yes':  # noqa: SIM108
+            if daily_bin == 'Yes':
                 daily_bin = True
             else:
                 daily_bin = False
@@ -295,12 +295,12 @@ class Result_Designer:  # noqa: N801, D101
             iConsider_leak = self.curve_settings_widgets['LDN leak'].currentText()  # noqa: N806
             leak_ratio = self.curve_settings_widgets['leak Criteria'].text()
 
-            if iConsider_leak == 'Yes':  # noqa: SIM108
+            if iConsider_leak == 'Yes':
                 iConsider_leak = True  # noqa: N806
             else:
                 iConsider_leak = False  # noqa: N806
 
-            if iRatio == 'Yes':  # noqa: SIM108
+            if iRatio == 'Yes':
                 iRatio = True  # noqa: N806
             else:
                 iRatio = False  # noqa: N806
@@ -326,12 +326,12 @@ class Result_Designer:  # noqa: N801, D101
             iConsider_leak = self.curve_settings_widgets['LDN leak'].currentText()  # noqa: N806
             leak_ratio = self.curve_settings_widgets['leak Criteria'].text()
 
-            if iConsider_leak == 'Yes':  # noqa: SIM108
+            if iConsider_leak == 'Yes':
                 iConsider_leak = True  # noqa: N806
             else:
                 iConsider_leak = False  # noqa: N806
 
-            if iRatio == 'Yes':  # noqa: SIM108
+            if iRatio == 'Yes':
                 iRatio = True  # noqa: N806
             else:
                 iRatio = False  # noqa: N806
@@ -373,7 +373,7 @@ class Result_Designer:  # noqa: N801, D101
             pass
             # raise ValueError("Unknown Curve type: "+repr(curve_type))
 
-    def populateCurveSettingsTable(self, settings_content):  # noqa: ANN001, ANN201, C901, N802, D102, PLR0912, PLR0915
+    def populateCurveSettingsTable(self, settings_content):  # noqa: ANN001, ANN201, C901, N802, D102
         self.curve_settings_widgets.clear()
         vertical_header = []
         cell_type_list = []
@@ -495,7 +495,7 @@ class Result_Designer:  # noqa: N801, D101
             self.project_file_addr,
             'Excel Workbook (*.xlsx)',
         )
-        if file_addr[0] == '':
+        if file_addr[0] == '':  # noqa: PLC1901
             return
 
         # self.current_curve_data[1].to_excel(file_addr[0])

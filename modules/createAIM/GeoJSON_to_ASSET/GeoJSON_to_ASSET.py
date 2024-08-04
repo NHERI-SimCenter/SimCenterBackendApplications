@@ -1,4 +1,4 @@
-import argparse  # noqa: INP001, D100
+import argparse  # noqa: CPY001, D100, INP001
 import importlib
 import json
 import os
@@ -26,7 +26,7 @@ class NpEncoder(json.JSONEncoder):  # noqa: D101
         return super(NpEncoder, self).default(obj)  # noqa: UP008
 
 
-class generalAIMGenerator:  # noqa: N801
+class generalAIMGenerator:
     """The generator of general AIM such as buildings, bridges, tunnels
     :param : The arg is used for ...
     :type arg: str
@@ -34,9 +34,9 @@ class generalAIMGenerator:  # noqa: N801
     :param `**kwargs`: The keyword arguments are used for ...
     :ivar arg: This is where we store arg
     :vartype arg: str
-    """  # noqa: D205, D400, D415
+    """  # noqa: D205, D400
 
-    def __init__(self, output_file):  # noqa: ANN001, ANN204, D107
+    def __init__(self, output_file):  # noqa: ANN001, ANN204
         self.output_file = output_file
         self.gdf = None
         self.filter = None
@@ -112,7 +112,7 @@ class generalAIMGenerator:  # noqa: N801
         return AIM_file_name
 
 
-class lineAIMGenerator(generalAIMGenerator):  # noqa: N801, D101
+class lineAIMGenerator(generalAIMGenerator):  # noqa: D101
     def breakDownLongLines(self, delta, tolerance=10e-3):  # noqa: ANN001, ANN201, N802, D102
         edges = self.gdf
         dropedEdges = []  # noqa: N806
@@ -182,11 +182,11 @@ class lineAIMGenerator(generalAIMGenerator):  # noqa: N801, D101
         graph = momepy.gdf_to_nx(edges.to_crs('epsg:6500'), approach='primal')
         with warnings.catch_warnings():  # Suppress the warning of disconnected components in the graph
             warnings.simplefilter('ignore')
-            nodes, edges, sw = momepy.nx_to_gdf(
+            nodes, edges, sw = momepy.nx_to_gdf(  # noqa: F841
                 graph, points=True, lines=True, spatial_weights=True
             )
         # edges = edges.set_index('ind')
-        ### Some edges has start_node as the last point in the geometry and end_node as the first point, check and reorder
+        # Some edges has start_node as the last point in the geometry and end_node as the first point, check and reorder
         for ind in edges.index:
             start = nodes.loc[edges.loc[ind, 'node_start'], 'geometry']
             end = nodes.loc[edges.loc[ind, 'node_end'], 'geometry']
@@ -240,7 +240,7 @@ class lineAIMGenerator(generalAIMGenerator):  # noqa: N801, D101
         self.gdf = edges
 
 
-def split_and_select_components(input_config, asset_source_file):  # noqa: ANN001, ANN201, C901, D103, PLR0912
+def split_and_select_components(input_config, asset_source_file):  # noqa: ANN001, ANN201, C901, D103
     component_dict = dict()  # noqa: C408
     with open(asset_source_file, encoding='utf-8') as f:  # noqa: PTH123
         source_data = json.load(f)
@@ -253,7 +253,7 @@ def split_and_select_components(input_config, asset_source_file):  # noqa: ANN00
             if filterString is None:
                 continue
             assets_requested = []
-            if filterString == '':
+            if filterString == '':  # noqa: PLC1901
                 assets_requested = np.array(assets_requested)
                 requested_dict.update({key: assets_requested})
                 component_dict.update({key: []})
@@ -279,7 +279,7 @@ def split_and_select_components(input_config, asset_source_file):  # noqa: ANN00
             if feat_id in requested_dict[component_type]:
                 feat['properties'].update({'id': feat_id})
                 component_dict[component_type].append(feat)
-    for component in component_dict:
+    for component in component_dict:  # noqa: PLC0206
         component_dict[component] = gpd.GeoDataFrame.from_features(
             component_dict[component], crs=crs['properties']['name']
         ).set_index('id')
@@ -302,7 +302,7 @@ def init_workdir(component_dict, outDir):  # noqa: ANN001, ANN201, N803, D103
     return component_dir
 
 
-def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
+def create_asset_files(  # noqa: ANN201, C901, D103
     output_file,  # noqa: ANN001
     asset_source_file,  # noqa: ANN001
     asset_type,  # noqa: ANN001
@@ -318,7 +318,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
         mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
-            from mpi4py import MPI
+            from mpi4py import MPI  # noqa: PLC0415
 
             runParallel = True  # noqa: N806
             comm = MPI.COMM_WORLD
@@ -345,13 +345,13 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
     assets_array = []
     for component_type, component_data in component_dict.items():
         geom_type = type(component_data['geometry'].values[0])  # noqa: PD011
-        if geom_type in [shapely.Point, shapely.Polygon]:
+        if geom_type in [shapely.Point, shapely.Polygon]:  # noqa: PLR6201
             # if component_type in ["HwyBridge", "HwyTunnel"]:
             AIMgenerator = generalAIMGenerator(output_file)  # noqa: N806
             AIMgenerator.set_asset_gdf(component_data)
             selected_Asset_idxs = AIMgenerator.selectAssets(None)  # noqa: N806
         # elif component_type in ["Roadway"]:
-        elif geom_type in [shapely.LineString]:
+        elif geom_type == shapely.LineString:
             AIMgenerator = lineAIMGenerator(output_file)  # noqa: N806
             AIMgenerator.set_asset_gdf(component_data)
             selected_Asset_idxs = AIMgenerator.selectAssets(None)  # noqa: N806
@@ -379,7 +379,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
                         id=AIM_i['GeneralInformation']['AIM_id'], file=AIM_file_name
                     )
                 )
-            count = count + 1
+            count = count + 1  # noqa: PLR6104
     if procID != 0:
         # if not P0, write data to output file with procID in name and barrier
         output_file_p = os.path.join(outDir, f'tmp_{procID}.json')  # noqa: PTH118
@@ -392,7 +392,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
             comm.Barrier()
             for i in range(1, numP):
                 fileToAppend = os.path.join(outDir, f'tmp_{i}.json')  # noqa: PTH118, N806
-                with open(fileToAppend, encoding='utf-8') as data_file:  # noqa: PTH123
+                with open(fileToAppend, encoding='utf-8') as data_file:  # noqa: FURB101, PTH123
                     json_data = data_file.read()
                 assetsToAppend = json.loads(json_data)  # noqa: N806
                 assets_array += assetsToAppend

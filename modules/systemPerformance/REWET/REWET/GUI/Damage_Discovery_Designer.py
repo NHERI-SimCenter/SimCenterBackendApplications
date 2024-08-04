@@ -1,7 +1,7 @@
 """Created on Tue Nov  1 23:25:30 2022
 
 @author: snaeimi
-"""  # noqa: N999, D400, D415
+"""  # noqa: CPY001, D400, N999
 
 import pandas as pd
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -9,8 +9,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from .Damage_Discovery_Window import Ui_damage_discovery
 
 
-class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: N801, D101
-    def __init__(self, damage_discovery_model):  # noqa: ANN001, ANN204, D107
+class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: D101
+    def __init__(self, damage_discovery_model):  # noqa: ANN001, ANN204
         self._window = QtWidgets.QDialog()
         self.setupUi(self._window)
         self.damage_discovery_model = damage_discovery_model.copy()
@@ -100,10 +100,10 @@ class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: N801, D101
             leak_amount = self.leak_amount_line.text()
             leak_time = self.leak_time_line.text()
 
-            if leak_amount == '':
+            if leak_amount == '':  # noqa: PLC1901
                 self.errorMSG('Empty Vlaue', "Please fill the 'Leak Amont' field.")
                 return
-            elif leak_time == '':  # noqa: RET505
+            elif leak_time == '':  # noqa: PLC1901, RET505
                 self.errorMSG('Empty Vlaue', "Please fill the 'Leak Time' field.")
                 return
 
@@ -175,7 +175,7 @@ class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: N801, D101
         time = self.time_line.text()
         discovery_ratio = self.discovery_ratio_line.text()
 
-        if time == '' or discovery_ratio == '':
+        if time == '' or discovery_ratio == '':  # noqa: PLC1901
             return
         if 'time_discovery_ratio' not in self.damage_discovery_model:
             self.damage_discovery_model['time_discovery_ratio'] = pd.Series()
@@ -228,7 +228,7 @@ class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: N801, D101
         elif self.time_based_radio.isChecked():
             self.enableTimeBased()
 
-    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: ANN001, ANN201, N802, D102
+    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: ANN001, ANN201, D102, N802, PLR6301
         error_widget = QtWidgets.QMessageBox()
         error_widget.setIcon(QtWidgets.QMessageBox.Critical)
         error_widget.setText(error_msg)

@@ -1,6 +1,6 @@
-#!/usr/bin/env python3  # noqa: EXE001
+#!/usr/bin/env python3  # noqa: CPY001, EXE001
 
-"""Compute inline/total hydrodynamic force and moments on a monopile using Morison's equation"""  # noqa: D400, D415
+"""Compute inline/total hydrodynamic force and moments on a monopile using Morison's equation"""  # noqa: D400
 
 import argparse
 from fractions import Fraction

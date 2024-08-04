@@ -49,15 +49,15 @@ def write_RV(AIM_file, EVENT_file, EDP_file, EDP_specs):  # noqa: ANN001, ANN201
 
 
 def write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs):  # noqa: ANN001, ANN201, N802, N803, D103
-    with open(AIM_file) as f:  # noqa: PTH123
+    with open(AIM_file) as f:  # noqa: PLW1514, PTH123
         bim_file = json.load(f)
 
-    with open(EVENT_file) as f:  # noqa: PTH123
+    with open(EVENT_file) as f:  # noqa: PLW1514, PTH123
         event_file = json.load(f)  # noqa: F841
 
     stories = bim_file['GeneralInformation']['NumberOfStories']
 
-    with open(EDP_specs) as f:  # noqa: PTH123
+    with open(EDP_specs) as f:  # noqa: PLW1514, PTH123
         edp_specs = json.load(f)
 
     EDP_locs = edp_specs['locations']  # noqa: N806
@@ -106,7 +106,7 @@ def write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs):  # noqa: ANN001, ANN20
         'EngineeringDemandParameters': [{'name': '...', 'responses': EDP_list}],
     }
 
-    with open(EDP_file, 'w') as f:  # noqa: PTH123
+    with open(EDP_file, 'w') as f:  # noqa: PLW1514, PTH123
         json.dump(edp_file, f, indent=2)
 
 

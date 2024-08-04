@@ -1,7 +1,7 @@
 """Created on Fri Dec 25 05:09:25 2020
 
 @author: snaeimi
-"""  # noqa: INP001, D400, D415
+"""  # noqa: CPY001, D400, INP001
 
 import logging
 import random
@@ -19,8 +19,8 @@ from restoration.base import get_node_name
 logger = logging.getLogger(__name__)
 
 
-class Restoration:  # noqa: D101
-    def __init__(self, conifg_file_name, registry, damage):  # noqa: ANN001, ANN204, D107
+class Restoration:  # noqa: D101, PLR0904
+    def __init__(self, conifg_file_name, registry, damage):  # noqa: ANN001, ANN204
         self.ELEMENTS = ['PIPE', 'DISTNODE', 'GNODE', 'TANK', 'PUMP', 'RESERVOIR']
         self._CONDITIONS = ['EQ', 'BG', 'LT', 'BG-EQ', 'LT-EQ', 'NOTEQ']
         self.reserved_priority_names = [
@@ -84,7 +84,7 @@ class Restoration:  # noqa: D101
                     point_group_name
                 ]
 
-    def perform_action(self, wn, stop_time):  # noqa: ANN001, ANN201, C901, D102, PLR0912, PLR0915
+    def perform_action(self, wn, stop_time):  # noqa: ANN001, ANN201, C901, D102
         logger.debug(stop_time)
 
         # checks if the restoration is started
@@ -118,8 +118,8 @@ class Restoration:  # noqa: D101
             # logger.warning(tank_list)
             self.repair.restoreTanks(tank_list, wn)
 
-        if self._isHardEvent(stop_time, 'agent'):
-            ##logger.debug('INSIDE RELEASE')
+        if self._isHardEvent(stop_time, 'agent'):  # noqa: PLR1702
+            # logger.debug('INSIDE RELEASE')
             released_agents = self.getHardEventDetails(stop_time, 'agent')
 
             logger.warning('-----------------')
@@ -332,7 +332,7 @@ class Restoration:  # noqa: D101
 
         return new_events
 
-    def perform_action_helper(  # noqa: ANN201, C901, D102, PLR0912, PLR0913, PLR0915
+    def perform_action_helper(  # noqa: ANN201, C901, D102
         self,
         typed_ready_agent,  # noqa: ANN001
         entity_data,  # noqa: ANN001
@@ -385,10 +385,10 @@ class Restoration:  # noqa: D101
                 )
             )
 
-            ##---------------------------------
-            ##for agent_name, d_agent in typed_ready_agent.iterrows():
-            ##distnace_agent_entity.loc[agent_name] = d_agent['data'].getDistanceFromCoordinate(coord)
-            ##---------------------------------
+            # ---------------------------------
+            # for agent_name, d_agent in typed_ready_agent.iterrows():
+            # distnace_agent_entity.loc[agent_name] = d_agent['data'].getDistanceFromCoordinate(coord)
+            # ---------------------------------
 
             distnace_agent_entity.sort_values(ascending=True, inplace=True)  # noqa: PD002
             if self.entity[entity] == 'PIPE':
@@ -587,7 +587,7 @@ class Restoration:  # noqa: D101
             # -----------------------------------------------------------
         # self._registry.updatePipeDamageTableTimeSeries(stop_time)
 
-    def assignVacantJob(  # noqa: ANN201, N802, D102, PLR0913
+    def assignVacantJob(  # noqa: ANN201, N802, D102
         self,
         vacant_job_list,  # noqa: ANN001
         typed_ready_agent,  # noqa: ANN001
@@ -624,7 +624,7 @@ class Restoration:  # noqa: D101
             flag=True,
         )
 
-    def applyEffect(  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0913, PLR0915
+    def applyEffect(  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0915
         self,
         damage_node_name,  # noqa: ANN001
         single_effect_data,  # noqa: ANN001
@@ -641,7 +641,7 @@ class Restoration:  # noqa: D101
         if element_type == 'PIPE':
             damage_type = damage_data.loc[damage_node_name, 'damage_type']
 
-        if effect_type == 'CHECK':
+        if effect_type == 'CHECK':  # noqa: PLR1702
             if element_type == 'DISTNODE':
                 result = self._registry.result.node
                 # damage_table = self._registry.getDamageData('DISTNODE', iCopy=False)
@@ -907,12 +907,12 @@ class Restoration:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         if type(time) != int and type(time) != float:  # noqa: E721
-            raise ValueError('Time must be integer not ' + str(type(time)))
+            raise ValueError('Time must be integer not ' + str(type(time)))  # noqa: DOC501
         time = int(time)
         if time < 0:
-            raise ValueError('Time must be bigger than zero')  # noqa: EM101, TRY003
+            raise ValueError('Time must be bigger than zero')  # noqa: DOC501, EM101, TRY003
         next_shift_time = self.shifting.getNextShiftTime(time)
         # logger.debug('next shitt time = ' + str(next_shift_time))
         self._addHardEvent(int(next_shift_time), 'shift')
@@ -956,8 +956,7 @@ class Restoration:  # noqa: D101
                 av_r = self.agents.getAvailabilityRatio(
                     agent_type, time - self.eq_time
                 )
-                if av_r > 1:
-                    av_r = 1
+                av_r = min(av_r, 1)
 
             available_typed_table = availible_agent_table[
                 availible_agent_table['type'].eq(agent_type)
@@ -1227,7 +1226,7 @@ class Restoration:  # noqa: D101
             in_list[0] = union_list
             return self._unionOfAll(in_list)
 
-    def _getRefinedElementList(  # noqa: ANN202, N802, PLR0913
+    def _getRefinedElementList(  # noqa: ANN202, N802
         self,
         WaterNetwork,  # noqa: ANN001, N803
         attribute,  # noqa: ANN001
@@ -1249,7 +1248,7 @@ class Restoration:  # noqa: D101
                 WaterNetwork, attribute, condition, condition_value
             )
 
-        elif element_type in ['DISTNODE', 'GNODE', 'TANK', 'PUMP', 'RESERVOIR']:
+        elif element_type in ['DISTNODE', 'GNODE', 'TANK', 'PUMP', 'RESERVOIR']:  # noqa: PLR6201
             res, node_res = self._getRefinedNodeElementList(
                 WaterNetwork, attribute, condition, condition_value, element_type, wn
             )
@@ -1258,7 +1257,7 @@ class Restoration:  # noqa: D101
 
         return res, node_res
 
-    def refineEntityDamageTable(  # noqa: ANN201, N802, D102
+    def refineEntityDamageTable(  # noqa: ANN201, D102, N802, PLR6301
         self,
         damaged_table,  # noqa: ANN001
         group_name,  # noqa: ANN001
@@ -1292,7 +1291,7 @@ class Restoration:  # noqa: D101
 
         return ret
 
-    def _refine_table(self, table, attribute, condition, condition_value):  # noqa: ANN001, ANN202, C901, PLR0912
+    def _refine_table(self, table, attribute, condition, condition_value):  # noqa: ANN001, ANN202, C901, PLR6301
         refined_table = None
 
         if type(condition_value) == str:  # noqa: E721
@@ -1322,7 +1321,7 @@ class Restoration:  # noqa: D101
 
         return refined_table
 
-    def _getRefinedNodeElementList(  # noqa: ANN202, C901, N802, PLR0912, PLR0913
+    def _getRefinedNodeElementList(  # noqa: ANN202, C901, N802
         self,
         WaterNetwork,  # noqa: ANN001, ARG002, N803
         attribute,  # noqa: ANN001
@@ -1363,7 +1362,7 @@ class Restoration:  # noqa: D101
                     res.extend(temp.index.tolist())
                     ichosen = True
 
-                if ichosen == False:  # noqa: SIM102, E712
+                if ichosen == False:  # noqa: E712
                     if org_file_name in wn.node_name_list:
                         ichosen = True
                         node_res.append(org_file_name)
@@ -1451,7 +1450,7 @@ class Restoration:  # noqa: D101
                 res.append(temp)
         return res
 
-    def _getRefinedPipeList(  # noqa: ANN202, C901, N802, PLR0912
+    def _getRefinedPipeList(  # noqa: ANN202, C901, N802
         self,
         WaterNetwork,  # noqa: ANN001, N803
         attribute,  # noqa: ANN001
@@ -1461,7 +1460,7 @@ class Restoration:  # noqa: D101
         res = []
 
         # if condition in self._CONDITIONS:
-        if attribute.upper() in ['DIAMETER']:
+        if attribute.upper() == 'DIAMETER':
             # for pipe_name in WaterNetwork.pipe_name_list:
             for damage_name, line in self._registry.getDamageData('PIPE').iterrows():
                 if attribute.upper() == 'DIAMETER':
@@ -1485,7 +1484,7 @@ class Restoration:  # noqa: D101
                 elif condition == 'BG-EQ':
                     if pipe_value >= condition_value:
                         res.append(damage_name)
-                elif condition == 'LT-EQ':  # noqa: SIM102
+                elif condition == 'LT-EQ':
                     if pipe_value <= condition_value:
                         res.append(damage_name)
 
@@ -1536,7 +1535,7 @@ class Restoration:  # noqa: D101
         else:
             self._reminder_time_hard_event[name] += int(time)
 
-    def _addHardEvent(self, next_time, requester, detail=None, current_time=None):  # noqa: ANN001, ANN202, N802, D417
+    def _addHardEvent(self, next_time, requester, detail=None, current_time=None):  # noqa: ANN001, ANN202, N802
         """Adds a hard event
 
         Parameters
@@ -1550,24 +1549,24 @@ class Restoration:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         time = int(next_time)
         next_time = int(next_time)
         if type(next_time) != int and type(next_time) != float:  # noqa: E721
-            raise ValueError('time must be int, not ' + str(type(next_time)))
+            raise ValueError('time must be int, not ' + str(type(next_time)))  # noqa: DOC501
         if detail != None and current_time == None:  # noqa: E711
-            raise ValueError('When detail is provided, current time cannot be None')  # noqa: EM101, TRY003
+            raise ValueError('When detail is provided, current time cannot be None')  # noqa: DOC501, EM101, TRY003
 
         minimum_time_devision = int(self._registry.settings['simulation_time_step'])
         if current_time != None:  # noqa: E711
             if next_time < current_time:
-                raise ValueError('Time is smaller than current time')  # noqa: EM101, TRY003
+                raise ValueError('Time is smaller than current time')  # noqa: DOC501, EM101, TRY003
             if detail == None:  # noqa: E711
-                raise ValueError(  # noqa: TRY003
+                raise ValueError(  # noqa: DOC501, TRY003
                     'When current time is provided, detail cannot be None'  # noqa: EM101
                 )
             if minimum_time_devision < 0:
-                raise ValueError('Minimum time division cannot be negative')  # noqa: EM101, TRY003
+                raise ValueError('Minimum time division cannot be negative')  # noqa: DOC501, EM101, TRY003
 
             name = requester + '-' + detail
 
@@ -1663,7 +1662,7 @@ class Restoration:  # noqa: D101
         else:  # noqa: RET505
             return seq_list[i + 1]
 
-    def initialize(self, wn, stop_time, delay=0, earthquake=None):  # noqa: ANN001, ANN201, C901, D102, PLR0912
+    def initialize(self, wn, stop_time, delay=0, earthquake=None):  # noqa: ANN001, ANN201, C901, D102
         self.if_initiated = True
         self.eq_time = stop_time
         if delay < 0:
@@ -1675,12 +1674,12 @@ class Restoration:  # noqa: D101
 
         # refined_pump = self.pump_restoration[self.pump_restoration['Restore_time']>=stop_time]
         if not self.pump_restoration.empty:
-            self.pump_restoration['Restore_time'] = (
+            self.pump_restoration['Restore_time'] = (  # noqa: PLR6104
                 self.pump_restoration['Restore_time'] + stop_time
             )
 
         if not self.tank_restoration.empty:
-            self.tank_restoration['Restore_time'] = (
+            self.tank_restoration['Restore_time'] = (  # noqa: PLR6104
                 self.tank_restoration['Restore_time'] + stop_time
             )
 
@@ -1760,7 +1759,7 @@ class Restoration:  # noqa: D101
         logger.debug('reservoir: ' + repr(reservoir_damage_end))  # noqa: G003
 
         if (  # noqa: SIM103
-            pipe_damage_end
+            pipe_damage_end  # noqa: PLR0916
             and node_damage_end
             and pump_damage_end
             and GNODE_damage_end

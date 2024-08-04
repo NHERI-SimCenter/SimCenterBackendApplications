@@ -44,7 +44,7 @@
 import json
 import os
 import shutil
-import subprocess
+import subprocess  # noqa: S404
 import sys
 
 import numpy as np
@@ -54,7 +54,7 @@ from PLoM.PLoM import *  # noqa: F403
 # ==========================================================================================
 
 
-class runPLoM:  # noqa: N801
+class runPLoM:
     """runPLoM: class for run a PLoM job
     methods:
         __init__: initialization
@@ -64,9 +64,9 @@ class runPLoM:  # noqa: N801
         _load_variables: load training data
         train_model: model training
         save_model: model saving
-    """  # noqa: D205, D400, D415
+    """  # noqa: D205, D400
 
-    def __init__(  # noqa: ANN204, PLR0913
+    def __init__(  # noqa: ANN204
         self,
         work_dir,  # noqa: ANN001
         run_type,  # noqa: ANN001
@@ -83,7 +83,7 @@ class runPLoM:  # noqa: N801
             os_type: operating system type
             job_config: configuration (dtype = dict)
             errlog: error log object
-        """  # noqa: D205, D400, D415
+        """  # noqa: D205, D400
         # read inputs
         self.work_dir = work_dir
         self.run_type = run_type
@@ -145,14 +145,14 @@ class runPLoM:  # noqa: N801
             msg = 'runPLoM.__init__: Error in loading variables.'
             self.errlog.exit(msg)
 
-    def _run_simulation(self):  # noqa: ANN202, C901, PLR0912, PLR0915
+    def _run_simulation(self):  # noqa: ANN202, C901
         """_run_simulation: running simulation to get training data
         input:
             job_config: job configuration dictionary
         output:
             None
-        """  # noqa: D205, D400, D415
-        import platform
+        """  # noqa: D205, D400
+        import platform  # noqa: PLC0415
 
         job_config = self.job_config
 
@@ -197,14 +197,14 @@ class runPLoM:  # noqa: N801
         print('dakotaScript = ', dakotaScript)  # noqa: T201
 
         # write a new dakota.json for forward propagation
-        ## KZ modified 0331
+        # KZ modified 0331
         with open(self.input_file, encoding='utf-8') as f:  # noqa: PTH123
             tmp = json.load(f)
         tmp['UQ']['uqType'] = 'Forward Propagation'
         tmp['UQ']['parallelExecution'] = True
         samplingObj = tmp['UQ']['surrogateMethodInfo']['samplingMethod']  # noqa: N806
         tmp['UQ']['samplingMethodData'] = dict()  # noqa: C408
-        ## KZ modified 0331
+        # KZ modified 0331
         tmp['UQ']['uqEngine'] = 'Dakota'
         tmp['Applications']['UQ']['Application'] = 'Dakota-UQ'
         for key, item in samplingObj.items():
@@ -213,7 +213,7 @@ class runPLoM:  # noqa: N801
             json.dump(tmp, f, indent=2)
 
         # command line
-        ## KZ modified 0331
+        # KZ modified 0331
         command_line = f'{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType {runType}'  # noqa: PTH122
         print(command_line)  # noqa: T201
         # run command
@@ -248,7 +248,7 @@ class runPLoM:  # noqa: N801
         # remove the new dakota.json
         # os.remove('sc_dakota_plom.json')
 
-        if runType in ['run', 'runningLocal']:
+        if runType in ['run', 'runningLocal']:  # noqa: PLR6201
             # create the response.csv file from the dakotaTab.out file
             os.chdir(run_dir)
             if bldg_id is not None:
@@ -271,10 +271,10 @@ class runPLoM:  # noqa: N801
                     )
             self.job_config = job_config
 
-        elif self.run_type in ['set_up', 'runningRemote']:
+        elif self.run_type in ['set_up', 'runningRemote']:  # noqa: PLR6201
             pass
 
-    def _prepare_training_data(self, run_dir):  # noqa: ANN001, ANN202, C901, PLR0912, PLR0915
+    def _prepare_training_data(self, run_dir):  # noqa: ANN001, ANN202, C901
         # load IM.csv if exists
         df_IM = pd.DataFrame()  # noqa: N806
         if os.path.exists(os.path.join(run_dir, 'IM.csv')):  # noqa: PTH110, PTH118
@@ -302,7 +302,7 @@ class runPLoM:  # noqa: N801
         ) as f:
             tmp = json.load(f)
         rVs = tmp.get('randomVariables', None)  # noqa: N806
-        if rVs is None:  # noqa: SIM108
+        if rVs is None:
             rv_names = []
         else:
             rv_names = [x.get('name') for x in rVs]
@@ -323,7 +323,7 @@ class runPLoM:  # noqa: N801
             self.multipleEvent = None
 
         # concat df_RV and df_IM
-        if not df_IM.empty:  # noqa: SIM108
+        if not df_IM.empty:
             df_X = pd.concat([df_IM, df_RV], axis=1)  # noqa: N806
         else:
             df_X = df_RV  # noqa: N806
@@ -359,7 +359,7 @@ class runPLoM:  # noqa: N801
 
         return inpData, outData
 
-    def _compute_IM(self, run_dir, pythonEXE):  # noqa: ANN001, ANN202, N802, N803
+    def _compute_IM(self, run_dir, pythonEXE):  # noqa: ANN001, ANN202, N802, N803, PLR6301
         # find workdirs
         workdir_list = [x for x in os.listdir(run_dir) if x.startswith('workdir')]
 
@@ -417,7 +417,7 @@ class runPLoM:  # noqa: N801
             y_dim: dimension of Y data
             rv_name: random variable name (X data)
             g_name: variable name (Y data)
-        """  # noqa: D205, D400, D415
+        """  # noqa: D205, D400
         job_config = self.job_config
 
         # initialization
@@ -432,18 +432,18 @@ class runPLoM:  # noqa: N801
 
         # read X and Y variable names
         for rv in job_config['randomVariables']:
-            rv_name = rv_name + [rv['name']]  # noqa: RUF005
+            rv_name = rv_name + [rv['name']]  # noqa: PLR6104, RUF005
             x_dim += 1
         if x_dim == 0:
             msg = 'Error reading json: RV is empty'
             self.errlog.exit(msg)
         for g in job_config['EDP']:
             if g['length'] == 1:  # scalar
-                g_name = g_name + [g['name']]  # noqa: RUF005
+                g_name = g_name + [g['name']]  # noqa: PLR6104, RUF005
                 y_dim += 1
             else:  # vector
                 for nl in range(g['length']):
-                    g_name = g_name + ['{}_{}'.format(g['name'], nl + 1)]  # noqa: RUF005
+                    g_name = g_name + ['{}_{}'.format(g['name'], nl + 1)]  # noqa: PLR6104, RUF005
                     y_dim += 1
         if y_dim == 0:
             msg = 'Error reading json: EDP(QoI) is empty'
@@ -471,13 +471,13 @@ class runPLoM:  # noqa: N801
         else:
             self.multipleEvent = None
 
-    def _parse_plom_parameters(self, surrogateInfo):  # noqa: ANN001, ANN202, C901, N803, PLR0912
+    def _parse_plom_parameters(self, surrogateInfo):  # noqa: ANN001, ANN202, C901, N803
         """_parse_plom_parameters: parse PLoM parameters from surrogateInfo
         input:
             surrogateInfo: surrogate information dictionary
         output:
             run_flag: 0 - success, 1: failure
-        """  # noqa: D205, D400, D415
+        """  # noqa: D205, D400
         run_flag = 0
         try:
             self.n_mc = int(surrogateInfo['newSampleRatio'])
@@ -570,17 +570,17 @@ class runPLoM:  # noqa: N801
             none
         output:
             run_flag: 0 - success, 1 - failure
-        """  # noqa: D205, D400, D415
+        """  # noqa: D205, D400
         run_flag = 0
         try:
             if self.run_type.lower() == 'runninglocal':
                 self.n_processor = os.cpu_count()
-                from multiprocessing import Pool
+                from multiprocessing import Pool  # noqa: PLC0415
 
                 self.pool = Pool(self.n_processor)
             else:
-                from mpi4py import MPI
-                from mpi4py.futures import MPIPoolExecutor
+                from mpi4py import MPI  # noqa: PLC0415
+                from mpi4py.futures import MPIPoolExecutor  # noqa: PLC0415
 
                 self.world = MPI.COMM_WORLD
                 self.pool = MPIPoolExecutor()
@@ -594,7 +594,7 @@ class runPLoM:  # noqa: N801
         # return
         return run_flag
 
-    def _load_variables(self, do_sampling, do_simulation):  # noqa: ANN001, ANN202, C901, PLR0912
+    def _load_variables(self, do_sampling, do_simulation):  # noqa: ANN001, ANN202, C901
         """_load_variables: load variables
         input:
             do_sampling: sampling flag
@@ -602,7 +602,7 @@ class runPLoM:  # noqa: N801
             job_config: job configuration dictionary
         output:
             run_flag: 0 - success, 1 - failure
-        """  # noqa: D205, D400, D415
+        """  # noqa: D205, D400
         job_config = self.job_config
 
         run_flag = 0
@@ -651,14 +651,14 @@ class runPLoM:  # noqa: N801
             try:
                 for nx in range(self.x_dim):
                     rvInfo = job_config['randomVariables'][nx]  # noqa: N806
-                    self.rvName = self.rvName + [rvInfo['name']]  # noqa: RUF005
-                    self.rvDist = self.rvDist + [rvInfo['distribution']]  # noqa: RUF005
+                    self.rvName = self.rvName + [rvInfo['name']]  # noqa: PLR6104, RUF005
+                    self.rvDist = self.rvDist + [rvInfo['distribution']]  # noqa: PLR6104, RUF005
                     if do_sampling:
-                        self.rvVal = self.rvVal + [  # noqa: RUF005
+                        self.rvVal = self.rvVal + [  # noqa: PLR6104, RUF005
                             (rvInfo['upperbound'] + rvInfo['lowerbound']) / 2
                         ]
                     else:
-                        self.rvVal = self.rvVal + [np.mean(self.X[:, nx])]  # noqa: RUF005
+                        self.rvVal = self.rvVal + [np.mean(self.X[:, nx])]  # noqa: PLR6104, RUF005
             except:  # noqa: E722
                 msg = 'Warning: randomVariables attributes in configuration file are not consistent with x_dim'
                 print(msg)  # noqa: T201
@@ -756,7 +756,7 @@ class runPLoM:  # noqa: N801
         if self.constraintsFlag:
             self.Errors = self.modelPLoM.errors
 
-    def save_model(self):  # noqa: ANN201, C901, D102, PLR0912, PLR0915
+    def save_model(self):  # noqa: ANN201, C901, D102
         # copy the h5 model file to the main work dir
         shutil.copy2(
             os.path.join(  # noqa: PTH118
@@ -830,7 +830,7 @@ class runPLoM:  # noqa: N801
                 rvs['name'] = self.rvName[nx]
                 rvs['distribution'] = self.rvDist[nx]
                 rvs['value'] = self.rvVal[nx]
-                rv_list = rv_list + [rvs]  # noqa: RUF005
+                rv_list = rv_list + [rvs]  # noqa: PLR6104, RUF005
             results['randomVariables'] = rv_list
         except:  # noqa: E722
             msg = 'Warning: randomVariables attributes in configuration file are not consistent with x_dim'
@@ -919,19 +919,19 @@ def read_txt(text_dir, errlog):  # noqa: ANN001, ANN201, D103
         errlog.exit(msg)
 
     header_line = []
-    with open(text_dir) as f:  # noqa: PTH123
+    with open(text_dir) as f:  # noqa: PLW1514, PTH123
         # Iterate through the file until the table starts
         header_count = 0
         for line in f:
             if line.startswith('%'):
-                header_count = header_count + 1
+                header_count = header_count + 1  # noqa: PLR6104
                 header_line = line[1:]  # remove '%'
         try:
-            with open(text_dir) as f:  # noqa: PTH123, PLW2901
+            with open(text_dir) as f:  # noqa: PLW1514, PLW2901, PTH123
                 X = np.loadtxt(f, skiprows=header_count)  # noqa: N806
         except ValueError:
             try:
-                with open(text_dir) as f:  # noqa: PTH123, PLW2901
+                with open(text_dir) as f:  # noqa: PLW1514, PLW2901, PTH123
                     X = np.genfromtxt(f, skip_header=header_count, delimiter=',')  # noqa: N806
                 # if there are extra delimiter, remove nan
                 if np.isnan(X[-1, -1]):
@@ -956,9 +956,9 @@ def read_txt(text_dir, errlog):  # noqa: ANN001, ANN201, D103
     return df_X
 
 
-class errorLog:  # noqa: N801, D101
-    def __init__(self, work_dir):  # noqa: ANN001, ANN204, D107
-        self.file = open(f'{work_dir}/dakota.err', 'w')  # noqa: SIM115, PTH123
+class errorLog:  # noqa: D101
+    def __init__(self, work_dir):  # noqa: ANN001, ANN204
+        self.file = open(f'{work_dir}/dakota.err', 'w')  # noqa: PLW1514, PTH123, SIM115
 
     def exit(self, msg):  # noqa: ANN001, ANN201, D102
         print(msg)  # noqa: T201
@@ -973,12 +973,12 @@ def build_surrogate(work_dir, os_type, run_type, input_file, workflow_driver):  
         work_dir: working directory
         run_type: job type
         os_type: operating system type
-    """  # noqa: D205, D400, D415
+    """  # noqa: D205, D400
     # t_total = time.process_time()
     # default filename
     filename = 'PLoM_Model'  # noqa: F841
     # read the configuration file
-    f = open(work_dir + '/templatedir/' + input_file)  # noqa: SIM115, PTH123
+    f = open(work_dir + '/templatedir/' + input_file)  # noqa: PLW1514, PTH123, SIM115
     try:
         job_config = json.load(f)
     except ValueError:

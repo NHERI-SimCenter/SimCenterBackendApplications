@@ -1,4 +1,4 @@
-import click  # noqa: EXE002, INP001, D100
+import click  # noqa: CPY001, D100, EXE002, INP001
 from src.quofemDTOs import Model
 from src.runmodel.RunModelDTOs import RunModelDTO
 
@@ -32,7 +32,7 @@ def preprocess(workflowinput, driverfile, runtype, ostype):  # noqa: ANN001, ANN
 
     # 2. Generate code
     code = []
-    code.append('import time\n')
+    code.append('import time\n')  # noqa: FURB113
     code.append('t1 = time.time()\n')
 
     # Create commands for defining distributions
@@ -43,23 +43,23 @@ def preprocess(workflowinput, driverfile, runtype, ostype):  # noqa: ANN001, ANN
         code.append(distribution_code)
         marginals_code += input + ', '
     marginals_code += '])'
-    code.append(marginals_code)
+    code.append(marginals_code)  # noqa: FURB113
     code.append(f'numRV = {len(model.randomVariables)}\n')
 
     # Create files and commands for runmodel
     runmodel_code = RunModelDTO.create_runmodel_with_variables_driver(
         variables=model.randomVariables, driver_filename=driverfile
     )
-    code.append('#\n# Creating the model\n#')
+    code.append('#\n# Creating the model\n#')  # noqa: FURB113
     code.append(runmodel_code)
 
     # Create commands for the UQ method
     (uqmethod_code, _) = model.UQ.methodData.generate_code()
-    code.append('#\n# Defining and running the UQ analysis\n#')
+    code.append('#\n# Defining and running the UQ analysis\n#')  # noqa: FURB113
     code.append(uqmethod_code)
 
     # 3. Write code to analysis script
-    with open('UQpyAnalysis.py', 'w') as outfile:  # noqa: PTH123
+    with open('UQpyAnalysis.py', 'w') as outfile:  # noqa: FURB103, PLW1514, PTH123
         outfile.write('\n'.join(code))
 
 

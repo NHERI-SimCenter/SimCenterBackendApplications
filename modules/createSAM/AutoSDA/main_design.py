@@ -1,4 +1,4 @@
-# This file is the main file that calls function to perform seismic design  # noqa: D100, INP001
+# This file is the main file that calls function to perform seismic design  # noqa: CPY001, D100, INP001
 # Users need to specify the system argument in this file.
 # Users also need to specify the variables in "global_variables.py"
 

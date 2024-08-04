@@ -122,17 +122,17 @@ def chooseARandomPreefix(damage_input_dir):  # noqa: ANN001, ANN201, N802
     prefix_dir_list = [dir_name for dir_name in dir_list if dir_name.find('_') > 0]
     prefix_list = [dir_name.split('_')[0] for dir_name in prefix_dir_list]
 
-    random_prefix = random.choices(string.ascii_letters, k=number_of_prefix)  # noqa: S311
+    random_prefix = random.choices(string.ascii_letters, k=number_of_prefix)
     s = ''
     for letter in random_prefix:
-        s = s + letter
+        s = s + letter  # noqa: PLR6104
     random_prefix = s
 
     while random_prefix in prefix_list:
-        random_prefix = random.choices(string.ascii_letters, k=number_of_prefix)  # noqa: S311
+        random_prefix = random.choices(string.ascii_letters, k=number_of_prefix)
         s = ''
         for letter in random_prefix:
-            s = s + letter
+            s = s + letter  # noqa: PLR6104
         random_prefix = s
 
     return random_prefix
@@ -158,7 +158,7 @@ def chooseARandomPreefix(damage_input_dir):  # noqa: ANN001, ANN201, N802
     """  # noqa: RET503, W291
 
 
-def getDLFileName(run_dir, dl_file_path, scn_number):  # noqa: ANN001, ANN201, N802, D417
+def getDLFileName(run_dir, dl_file_path, scn_number):  # noqa: ANN001, ANN201, N802
     """If dl_file_path is not given, the path is acquired from rwhale input data.
 
     Parameters
@@ -187,7 +187,7 @@ def getDLFileName(run_dir, dl_file_path, scn_number):  # noqa: ANN001, ANN201, N
     return file_path, file_dir
 
 
-def setSettingsData(input_json, REWET_input_data):  # noqa: ANN001, ANN201, ARG001, N802, N803, D103, PLR0915
+def setSettingsData(input_json, REWET_input_data):  # noqa: ANN001, ANN201, ARG001, N802, N803, D103
     policy_file_name = rwhale_input_Data['SystemPerformance'][
         'WaterDistributionNetwork'
     ]['Policy Definition']
@@ -228,7 +228,7 @@ def setSettingsData(input_json, REWET_input_data):  # noqa: ANN001, ANN201, ARG0
         'SystemPerformance'
     ]['WaterDistributionNetwork']['minimum_job_time']
     REWET_input_data['settings']['Restortion_config_file'] = (
-        policy_config_file  # TODO: SINA unmark it  # noqa: FIX002, TD002, TD003
+        policy_config_file  # TODO: SINA unmark it  # noqa: TD002
     )
 
     p = rwhale_input_Data['SystemPerformance']['WaterDistributionNetwork'][
@@ -347,9 +347,9 @@ def setSettingsData(input_json, REWET_input_data):  # noqa: ANN001, ANN201, ARG0
         'SystemPerformance'
     ]['WaterDistributionNetwork']['required_pressure']
 
-    ############ Not Supposed to be in R2DTool GUI ############
+    # Not Supposed to be in R2DTool GUI ############
     REWET_input_data['settings']['minimum_simulation_time'] = (
-        0  # TODO : HERE #REWET_input_data["event_time"] + REWET_input_data["settings"]["simulation_time_step"]  # noqa: FIX002, TD002, TD003
+        0  # TODO : HERE #REWET_input_data["event_time"] + REWET_input_data["settings"]["simulation_time_step"]  # noqa: TD002
     )
     REWET_input_data['settings']['save_time_step'] = True
     REWET_input_data['settings']['record_restoration_agent_logs'] = True
@@ -584,7 +584,7 @@ if __name__ == '__main__':
     )
 
     system_std_out = sys.stdout
-    with open(rewet_log_path, 'w') as log_file:  # noqa: PTH123
+    with open(rewet_log_path, 'w') as log_file:  # noqa: PLW1514, PTH123
         sys.stdout = log_file
         REWET_starter = Starter()
         REWET_starter.run(settings_json_file_path)
@@ -653,7 +653,7 @@ if __name__ == '__main__':
                         consider_leak=False,
                         leak_ratio=1,
                     )
-                    time_series_result[single_requested_result][
+                    time_series_result[single_requested_result][  # noqa: PLR6104
                         realization_number
                     ].index = (
                         time_series_result[single_requested_result][
@@ -695,7 +695,7 @@ if __name__ == '__main__':
                 / cur_json_file_name
             )
 
-            with open(cur_json_file_path) as f:  # noqa: PTH123
+            with open(cur_json_file_path) as f:  # noqa: PLW1514, PTH123
                 json_data = json.load(f)
 
             for single_requested_result in requested_result:
@@ -720,7 +720,7 @@ if __name__ == '__main__':
                     junction_json_data
                 )
 
-            with open(cur_json_file_path, 'w') as f:  # noqa: PTH123
+            with open(cur_json_file_path, 'w') as f:  # noqa: PLW1514, PTH123
                 json_data = json.dump(json_data, f, indent=2)
 
         res_agg_mean = dict()  # noqa: C408
@@ -790,7 +790,7 @@ if __name__ == '__main__':
                     {id: {'GeneralInformation': generalInfo, 'R2Dres': R2Dres}}
                 )
         det_json['WaterDistributionNetwork'].update({WDNtype: json_to_attach})
-    with open(det_json_path, 'w') as f:  # noqa: PTH123
+    with open(det_json_path, 'w') as f:  # noqa: PLW1514, PTH123
         json.dump(det_json, f, indent=2)
 
     ts_result_json_path = cur_json_file_path = (
@@ -814,6 +814,6 @@ if __name__ == '__main__':
                 i
             ] = time_series_result[single_requested_result][i].to_dict()
 
-    with open(ts_result_json_path, 'w') as f:  # noqa: PTH123
+    with open(ts_result_json_path, 'w') as f:  # noqa: PLW1514, PTH123
         json.dump(time_series_result_struc, f, indent=2)
     print('here')  # noqa: T201

@@ -1,4 +1,4 @@
-####################################################################  # noqa: INP001
+# # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: D400, D415
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -40,7 +40,7 @@ from hydroUtils import hydroUtils
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
-class of7Initial:  # noqa: N801
+class of7Initial:
     """This class includes the methods related to
     initial conditions for openfoam7.
 
@@ -51,14 +51,14 @@ class of7Initial:  # noqa: N801
     """  # noqa: D205, D404
 
     #############################################################
-    def alphatext(self, data, fipath):  # noqa: ANN001, ANN201, D417
+    def alphatext(self, data, fipath):  # noqa: ANN001, ANN201
         """Creates the necessary files for alpha - setFields for openfoam7
 
         Arguments:
         ---------
                 data: all the JSON data
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -74,7 +74,7 @@ class of7Initial:  # noqa: N801
         if int(simtype) == 1:
             fname = 'SWAlpha.txt'
             swalphafile = os.path.join(fipath, fname)  # noqa: PTH118
-            with open(swalphafile) as f:  # noqa: PTH123
+            with open(swalphafile) as f:  # noqa: PLW1514, PTH123
                 gloalpha, localalpha, x1, y1, z1, x2, y2, z2 = (
                     float(x) for x in next(f).split(',')
                 )
@@ -86,8 +86,8 @@ class of7Initial:  # noqa: N801
                 + '\n);\n\n'
             )
 
-            alphatext = alphatext + 'regions\n(\n'
-            alphatext = alphatext + '\tboxToCell\n\t{\n\t\t'
+            alphatext = alphatext + 'regions\n(\n'  # noqa: PLR6104
+            alphatext = alphatext + '\tboxToCell\n\t{\n\t\t'  # noqa: PLR6104
             alphatext = (
                 alphatext
                 + 'box\t('
@@ -131,7 +131,7 @@ class of7Initial:  # noqa: N801
                 + '\n);\n\n'
             )
 
-            alphatext = alphatext + 'regions\n(\n'
+            alphatext = alphatext + 'regions\n(\n'  # noqa: PLR6104
 
             # Check for each alpha region
             for ii in range(int(numregs)):
@@ -147,7 +147,7 @@ class of7Initial:  # noqa: N801
                 # Convert the regions to list of floats
                 nums = [float(n) for n in regsegs.split()]
 
-                alphatext = alphatext + '\tboxToCell\n\t{\n\t\t'
+                alphatext = alphatext + '\tboxToCell\n\t{\n\t\t'  # noqa: PLR6104
                 alphatext = (
                     alphatext
                     + 'box\t('
@@ -171,18 +171,18 @@ class of7Initial:  # noqa: N801
                     + '\n\t\t);\n\t}\n\n'
                 )
 
-        alphatext = alphatext + '\n);'
+        alphatext = alphatext + '\n);'  # noqa: PLR6104
 
         return alphatext  # noqa: RET504
 
     #############################################################
-    def alphaheader(self):  # noqa: ANN201
+    def alphaheader(self):  # noqa: ANN201, PLR6301
         """Creates the text for the header
 
         Variable
         -----------
                 header: Header for the setFields-file
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
@@ -198,14 +198,14 @@ FoamFile
         return header  # noqa: RET504
 
     #############################################################
-    def alphacheck(self, data, fipath):  # noqa: ANN001, ANN201, D417, PLR0911
+    def alphacheck(self, data, fipath):  # noqa: ANN001, ANN201, PLR6301
         """Checks for initial conditions for openfoam7
 
         Arguments:
         ---------
                 data: all the JSON data
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -273,7 +273,7 @@ FoamFile
         return 0
 
     #############################################################
-    def scripts(self, data, path):  # noqa: ANN001, ANN201, ARG002
+    def scripts(self, data, path):  # noqa: ANN001, ANN201, ARG002, PLR6301
         """Create the scripts for caserun.sh
 
         Arguments:
@@ -281,12 +281,12 @@ FoamFile
                 data: all the JSON data
                 path: Path where dakota.json file is located
 
-        """  # noqa: D400, D415
+        """  # noqa: D400
         # Setfields
         caseruntext = 'echo Setting fields...\n'
-        caseruntext = caseruntext + 'setFields > setFields.log\n\n'
+        caseruntext = caseruntext + 'setFields > setFields.log\n\n'  # noqa: PLR6104
 
         # Write to caserun file
-        scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
+        scriptfile = open('caserun.sh', 'a')  # noqa: PLW1514, PTH123, SIM115
         scriptfile.write(caseruntext)
         scriptfile.close()

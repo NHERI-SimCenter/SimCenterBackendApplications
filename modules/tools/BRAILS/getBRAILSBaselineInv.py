@@ -55,7 +55,7 @@ def log_msg(msg):  # noqa: ANN001, ANN201, D103
 
 
 # Define a way to call BRAILS FootprintHandler and NSIParser:
-def runBrails(  # noqa: ANN201, N802, D103, PLR0913
+def runBrails(  # noqa: ANN201, N802, D103
     latMin,  # noqa: ANN001, N803
     latMax,  # noqa: ANN001, N803
     longMin,  # noqa: ANN001, N803
@@ -80,7 +80,7 @@ def runBrails(  # noqa: ANN201, N802, D103, PLR0913
             location = fpSrc
             fpSrc = 'osm'  # noqa: N806
             fpUserSpecified = True  # noqa: N806
-        elif locationStr == '':
+        elif locationStr == '':  # noqa: PLC1901
             location = (longMin, latMin, longMax, latMax)
             fpUserSpecified = False  # noqa: N806
         else:
@@ -91,7 +91,7 @@ def runBrails(  # noqa: ANN201, N802, D103, PLR0913
         if outputDataType == 'raw':
             if not fpUserSpecified:
                 # Run FootprintHandler to generate the boundary polygon for the entered location:
-                if locationStr == '':
+                if locationStr == '':  # noqa: PLC1901
                     (
                         bpoly,
                         _,

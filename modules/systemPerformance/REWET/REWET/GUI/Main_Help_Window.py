@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Main_Help_Window.ui'  # noqa: D100, N999
+# Form implementation generated from reading ui file 'Main_Help_Window.ui'  # noqa: CPY001, D100, N999
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,7 +8,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Main_Help_Window:  # noqa: N801, D101
+class Ui_Main_Help_Window:  # noqa: D101
     def setupUi(self, Main_Help_Window):  # noqa: ANN001, ANN201, N802, N803, D102
         Main_Help_Window.setObjectName('Main_Help_Window')
         Main_Help_Window.resize(680, 320)

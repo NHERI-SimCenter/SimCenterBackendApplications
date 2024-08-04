@@ -42,7 +42,7 @@ from datetime import datetime
 
 
 # Monkeypatch warnings to get prettier messages
-def _warning(message, category, filename, lineno, file=None, line=None):  # noqa: ANN001, ANN202, ARG001, PLR0913
+def _warning(message, category, filename, lineno, file=None, line=None):  # noqa: ANN001, ANN202, ARG001
     if '\\' in filename:
         file_path = filename.split('\\')
     elif '/' in filename:
@@ -58,7 +58,7 @@ def show_warning(warning_msg):  # noqa: ANN001, ANN201, D103
     warnings.warn(UserWarning(warning_msg))  # noqa: B028
 
 
-def log_msg(msg='', prepend_timestamp=True):  # noqa: ANN001, ANN201, FBT002, D417
+def log_msg(msg='', prepend_timestamp=True):  # noqa: ANN001, ANN201, FBT002
     """Print a message to the screen with the current time as prefix
 
     The time is in ISO-8601 format, e.g. 2018-06-16T20:24:04Z
@@ -68,7 +68,7 @@ def log_msg(msg='', prepend_timestamp=True):  # noqa: ANN001, ANN201, FBT002, D4
     msg: string
        Message to print.
 
-    """  # noqa: D400, D415
+    """  # noqa: D400
     if prepend_timestamp:
         formatted_msg = '{} {}'.format(
             datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S:%fZ')[:-4],  # noqa: DTZ003
@@ -80,7 +80,7 @@ def log_msg(msg='', prepend_timestamp=True):  # noqa: ANN001, ANN201, FBT002, D4
     print(formatted_msg)  # noqa: T201
 
     if globals().get('log_file', None) is not None:
-        with open(globals()['log_file'], 'a') as f:  # noqa: PTH123
+        with open(globals()['log_file'], 'a') as f:  # noqa: PLW1514, PTH123
             f.write('\n' + formatted_msg)
 
 
@@ -216,8 +216,8 @@ unit_bases = {
 unit_decoupling_type_list = ['TH_file']
 
 
-def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901, PLR0912
-    """Determine the scale factor to convert input event to internal event data"""  # noqa: D400, D415
+def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901
+    """Determine the scale factor to convert input event to internal event data"""  # noqa: D400
     # special case: if the input unit is not specified then do not do any scaling
     if input_units is None:
         scale_factors = {'ALL': 1.0}
@@ -231,21 +231,19 @@ def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901,
             unit_length = 'inch'
         f_length = globals().get(unit_length, None)
         if f_length is None:
-            raise ValueError(f'Specified length unit not recognized: {unit_length}')  # noqa: EM102, TRY003
+            raise ValueError(f'Specified length unit not recognized: {unit_length}')  # noqa: DOC501, EM102, TRY003
 
         # if no time unit is specified, 'sec' is assumed
         unit_time = output_units.get('time', 'sec')
         f_time = globals().get(unit_time, None)
         if f_time is None:
-            raise ValueError(f'Specified time unit not recognized: {unit_time}')  # noqa: EM102, TRY003
+            raise ValueError(f'Specified time unit not recognized: {unit_time}')  # noqa: DOC501, EM102, TRY003
 
         scale_factors = {}
 
         for input_name, input_unit in input_units.items():
             # exceptions
-            if input_name in [
-                'factor',
-            ]:
+            if input_name == 'factor':
                 f_scale = 1.0
 
             else:
@@ -255,7 +253,7 @@ def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901,
 
                 f_in = globals().get(input_unit, None)
                 if f_in is None:
-                    raise ValueError(f'Input unit not recognized: {input_unit}')  # noqa: EM102, TRY003
+                    raise ValueError(f'Input unit not recognized: {input_unit}')  # noqa: DOC501, EM102, TRY003
 
                 unit_type = None
                 for base_unit_type, unit_set in globals()['unit_types'].items():
@@ -263,7 +261,7 @@ def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901,
                         unit_type = base_unit_type
 
                 if unit_type is None:
-                    raise ValueError(f'Failed to identify unit type: {input_unit}')  # noqa: EM102, TRY003
+                    raise ValueError(f'Failed to identify unit type: {input_unit}')  # noqa: DOC501, EM102, TRY003
 
                 # the output unit depends on the unit type
                 if unit_type == 'acceleration':
@@ -276,7 +274,7 @@ def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901,
                     f_out = 1.0 / f_length
 
                 else:
-                    raise ValueError(  # noqa: TRY003
+                    raise ValueError(  # noqa: DOC501, TRY003
                         f'Unexpected unit type in workflow: {unit_type}'  # noqa: EM102
                     )
 
@@ -289,9 +287,9 @@ def get_scale_factors(input_units, output_units):  # noqa: ANN001, ANN201, C901,
 
 
 def get_unit_bases(input_units):  # noqa: ANN001, ANN201
-    """Decouple input units"""  # noqa: D400, D415
+    """Decouple input units"""  # noqa: D400
     # special case: if the input unit is not specified then do nothing
-    if input_units is None:
+    if input_units is None:  # noqa: PLR1702
         input_unit_bases = {}
 
     else:

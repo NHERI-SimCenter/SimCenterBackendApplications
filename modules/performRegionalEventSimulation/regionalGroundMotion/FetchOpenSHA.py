@@ -86,7 +86,7 @@ from org.opensha.sha.gcim.imr.param.EqkRuptureParams import *  # noqa: F403
 from org.opensha.sha.gcim.imr.param.IntensityMeasureParams import *  # noqa: F403
 
 
-def getERF(scenario_info, update_flag=True):  # noqa: ANN001, ANN201, FBT002, C901, N802, D103, PLR0912, PLR0915
+def getERF(scenario_info, update_flag=True):  # noqa: ANN001, ANN201, FBT002, C901, N802, D103
     # Initialization
     erf = None
     erf_name = scenario_info['EqRupture']['Model']
@@ -477,7 +477,7 @@ def get_PointSource_info_CY2014(source_info, siteList):  # noqa: ANN001, ANN201,
     return site_rup_info, siteList
 
 
-def export_to_json(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
+def export_to_json(  # noqa: ANN201, C901, D103
     erf,  # noqa: ANN001
     site_loc,  # noqa: ANN001
     outfile=None,  # noqa: ANN001
@@ -560,7 +560,7 @@ def export_to_json(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             # Properties
             cur_dict['properties'] = dict()  # noqa: C408
             name = str(rupSource.getName())
-            if EqName is not None:  # noqa: SIM102
+            if EqName is not None:
                 if EqName not in name:
                     continue
             cur_dict['properties'].update({'Name': name})
@@ -639,7 +639,7 @@ def export_to_json(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         print(  # noqa: T201
             f'The collected ruptures are sorted by MeanAnnualRate and saved in {outfile}'
         )
-        with open(outfile, 'w') as f:  # noqa: PTH123
+        with open(outfile, 'w') as f:  # noqa: PLW1514, PTH123
             ujson.dump(erf_data, f, indent=2)
     # print(f"Time consumed by json dump is {(time.process_time_ns()-startTime)/1e9}s")
 
@@ -699,7 +699,7 @@ def get_DataSource(paramName, siteData):  # noqa: ANN001, ANN201, N802, N803, D1
     return 1
 
 
-def get_site_prop(gmpe_name, siteSpec):  # noqa: ANN001, ANN201, C901, N803, D103, PLR0912, PLR0915
+def get_site_prop(gmpe_name, siteSpec):  # noqa: ANN001, ANN201, C901, N803, D103
     # GMPE
     try:
         imr = CreateIMRInstance(gmpe_name)
@@ -811,7 +811,7 @@ def get_site_prop(gmpe_name, siteSpec):  # noqa: ANN001, ANN201, C901, N803, D10
     return siteSpec, sites, site_prop
 
 
-def get_IM(  # noqa: ANN201, C901, N802, D103, PLR0912, PLR0913, PLR0915
+def get_IM(  # noqa: ANN201, C901, N802, D103
     gmpe_info,  # noqa: ANN001
     erf,  # noqa: ANN001
     sites,  # noqa: ANN001

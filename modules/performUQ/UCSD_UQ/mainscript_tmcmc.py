@@ -1,7 +1,7 @@
 """authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, Aakash Bangalore Satish*
 affiliation: University of California, San Diego, *SimCenter, University of California, Berkeley
 
-"""  # noqa: INP001, D205, D400, D415
+"""  # noqa: CPY001, D205, D400, INP001
 
 # ======================================================================================================================
 import os
@@ -42,8 +42,8 @@ def computeModelPosteriorProbabilitiesUsingLogEvidences(  # noqa: ANN201, N802, 
 # ======================================================================================================================
 
 
-class TMCMC_Data:  # noqa: N801, D101
-    def __init__(  # noqa: D107, PLR0913
+class TMCMC_Data:  # noqa: D101
+    def __init__(
         self,
         mainscriptPath: str,  # noqa: N803
         workdirMain: str,  # noqa: N803
@@ -67,7 +67,7 @@ class TMCMC_Data:  # noqa: N801, D101
 
     def getMPI_size(self):  # noqa: ANN201, N802, D102
         if self.runType == 'runningRemote':
-            from mpi4py import MPI
+            from mpi4py import MPI  # noqa: PLC0415
 
             self.comm = MPI.COMM_WORLD
             self.MPI_size = self.comm.Get_size()
@@ -78,11 +78,11 @@ class TMCMC_Data:  # noqa: N801, D101
 
     def findNumProcessorsAvailable(self):  # noqa: ANN201, N802, D102
         if self.runType == 'runningLocal':
-            import multiprocessing as mp
+            import multiprocessing as mp  # noqa: PLC0415
 
             self.numProcessors = mp.cpu_count()
         elif self.runType == 'runningRemote':
-            from mpi4py import MPI
+            from mpi4py import MPI  # noqa: PLC0415
 
             self.comm = MPI.COMM_WORLD
             self.numProcessors = self.comm.Get_size()
@@ -97,8 +97,7 @@ class TMCMC_Data:  # noqa: N801, D101
         else:
             self.numChains = self.recommendedNumChains
 
-        if self.numChains < numberOfSamples:
-            self.numChains = numberOfSamples
+        self.numChains = max(self.numChains, numberOfSamples)
 
     def getNumStepsPerChainAfterBurnIn(self, numParticles, numChains):  # noqa: ANN001, ANN201, N802, N803, D102
         self.numStepsAfterBurnIn = (
@@ -111,7 +110,7 @@ class TMCMC_Data:  # noqa: N801, D101
 
 
 # ======================================================================================================================
-def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
+def main(input_args):  # noqa: ANN001, ANN201, D103
     t1 = time.time()
 
     # Initialize analysis
@@ -150,12 +149,12 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
         number_of_samples,
         seed_value,
         calibration_data_filename,
-        loglikelihood_module,
-        write_outputs,
+        loglikelihood_module,  # noqa: F841
+        write_outputs,  # noqa: F841
         variables_list,
         edp_names_list,
         edp_lengths_list,
-        models_dict,
+        models_dict,  # noqa: F841
         total_number_of_models_in_ensemble,
     ) = parseDataFunction(
         input_json_filename_full_path,
@@ -299,12 +298,12 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
         logfile.write('\n\t==========================')
 
         # set the seed
-        np.random.seed(tmcmc_data_instance.seedVal)  # noqa: NPY002
+        np.random.seed(tmcmc_data_instance.seedVal)
         logfile.write(f'\n\tSeed: {tmcmc_data_instance.seedVal}')
 
         syncLogFile(logfile)
 
-        mytrace, log_evidence = run_TMCMC(
+        mytrace, log_evidence = run_TMCMC(  # noqa: F841
             number_of_samples,
             number_of_samples,
             all_distributions_list,
@@ -386,7 +385,7 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
     logfile.write('\nThe posterior model probabilities are:')
     for model_number in range(len(variables_list)):
         logfile.write(
-            f'\nModel number {model_number+1}: {modelPosteriorProbabilities[model_number]*100:15g}%'
+            f'\nModel number {model_number + 1}: {modelPosteriorProbabilities[model_number] * 100:15g}%'
         )
 
     # ======================================================================================================================

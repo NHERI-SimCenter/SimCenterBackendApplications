@@ -64,7 +64,7 @@ def readJSONFile(file_addr):  # noqa: ANN001, ANN201, N802
     if not os.path.exists(file_addr):  # noqa: PTH110
         raise ValueError('INPUT WHALE FILE is not found.', repr(file_addr))  # noqa: EM101, TRY003
 
-    with open(file_addr) as f:  # noqa: PTH123
+    with open(file_addr) as f:  # noqa: PLW1514, PTH123
         data = json.load(f)
 
     return data  # noqa: RET504
@@ -174,7 +174,7 @@ def update_scenario_table(scenario_table, cur_damage_file_name_list, scn_number)
     return scenario_table
 
 
-def save_scenario_table(scenario_table, scenario_table_file_path):  # noqa: ANN001, ANN201, D417
+def save_scenario_table(scenario_table, scenario_table_file_path):  # noqa: ANN001, ANN201
     """Saves the scenario data including scenario table and damage data according
     to the table data
 
@@ -187,13 +187,13 @@ def save_scenario_table(scenario_table, scenario_table_file_path):  # noqa: ANN0
     -------
     None.
 
-    """  # noqa: D205, D400, D401, D415
+    """  # noqa: D205, D400, D401
     if isinstance(scenario_table, pd.core.frame.DataFrame):
         pass
     elif isinstance(scenario_table, list):
         scenario_table = pd.DataFrame(scenario_table)
     else:
-        raise ValueError('This is an unknown behavior.')  # noqa: EM101, TRY003, TRY004
+        raise ValueError('This is an unknown behavior.')  # noqa: DOC501, EM101, TRY003, TRY004
 
     scenario_table = scenario_table.set_index('Scenario Name')
 
@@ -202,7 +202,7 @@ def save_scenario_table(scenario_table, scenario_table_file_path):  # noqa: ANN0
     scenario_table.to_excel(scenario_table_file_path)
 
 
-def saveSettingsFile(REWET_input_data, save_directory, prefix):  # noqa: ANN001, ANN201, N802, N803, D417
+def saveSettingsFile(REWET_input_data, save_directory, prefix):  # noqa: ANN001, ANN201, N802, N803
     """Saves settings data that REWET NEEDs.
 
     Parameters
@@ -221,7 +221,7 @@ def saveSettingsFile(REWET_input_data, save_directory, prefix):  # noqa: ANN001,
     else:
         settings_file_name = prefix + '_' + 'settings.json'
     damage_save_path = save_directory / settings_file_name
-    with open(damage_save_path, 'w') as f:  # noqa: PTH123
+    with open(damage_save_path, 'w') as f:  # noqa: PLW1514, PTH123
         json.dump(settings, f, indent=4)
 
     return damage_save_path

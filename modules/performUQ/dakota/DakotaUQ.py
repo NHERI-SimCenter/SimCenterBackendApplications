@@ -1,4 +1,4 @@
-# written: UQ team @ SimCenter  # noqa: INP001, D100
+# written: UQ team @ SimCenter  # noqa: CPY001, D100, INP001
 
 # import functions for Python 2.X support
 # from __future__ import division, print_function
@@ -15,11 +15,11 @@ import os
 import platform
 import shutil
 import stat
-import subprocess
+import subprocess  # noqa: S404
 import sys
 
 
-def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
+def main(args):  # noqa: ANN001, ANN201, C901, D103
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--workflowInput')
@@ -27,7 +27,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
     parser.add_argument('--driverFile')
     parser.add_argument('--runType')
 
-    args, unknowns = parser.parse_known_args()
+    args, unknowns = parser.parse_known_args()  # noqa: F841
 
     inputFile = args.workflowInput  # noqa: N806
     runType = args.runType  # noqa: N806
@@ -46,9 +46,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
 
     # run on local computer
     osType = platform.system()  # noqa: N806
-    if runType in [
-        'runningLocal',
-    ]:
+    if runType == 'runningLocal':
         if (
             sys.platform == 'darwin'
             or sys.platform == 'linux'
@@ -59,13 +57,11 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
             osType = 'Linux'  # noqa: N806
         else:
             Dakota = 'dakota'  # noqa: N806
-            workflow_driver = workflow_driver + '.bat'
+            workflow_driver = workflow_driver + '.bat'  # noqa: PLR6104
             workflow_driver1 = 'workflow_driver1.bat'
             osType = 'Windows'  # noqa: N806
 
-    elif runType in [
-        'runningRemote',
-    ]:
+    elif runType == 'runningRemote':
         Dakota = 'dakota'  # noqa: N806
         workflow_driver1 = 'workflow_driver1'
         osType = 'Linux'  # noqa: N806
@@ -79,7 +75,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
 
     subprocess.Popen(preprocessorCommand, shell=True).wait()  # noqa: S602
 
-    if runType in ['runningLocal']:
+    if runType == 'runningLocal':
         os.chmod(  # noqa: PTH101
             workflow_driver,
             stat.S_IWUSR | stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH,
@@ -101,7 +97,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
 
     # If calibration data files exist, copy to the main working directory
     if os.path.isfile('calibrationDataFilesToMove.cal'):  # noqa: PTH113
-        calDataFileList = open('calibrationDataFilesToMove.cal')  # noqa: SIM115, PTH123, N806
+        calDataFileList = open('calibrationDataFilesToMove.cal')  # noqa: N806, PLW1514, PTH123, SIM115
         datFileList = calDataFileList.readlines()  # noqa: N806
         for line in datFileList:
             datFile = line.strip()  # noqa: N806
@@ -117,7 +113,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
 
     cwd = os.getcwd()  # noqa: PTH109
 
-    if runType in ['runningLocal']:
+    if runType == 'runningLocal':
         #    p = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
         #    for line in p.stdout:
         #        print(str(line))
@@ -149,7 +145,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
         checkOutFile = os.path.exists(dakotaOutFile)  # noqa: PTH110, N806
 
         if checkOutFile == False and checkErrFile == 0:  # noqa: E712
-            with open(dakotaErrFile, 'a') as file:  # noqa: PTH123
+            with open(dakotaErrFile, 'a') as file:  # noqa: PLW1514, PTH123
                 file.write(result.decode('utf-8'))
         else:
             pass

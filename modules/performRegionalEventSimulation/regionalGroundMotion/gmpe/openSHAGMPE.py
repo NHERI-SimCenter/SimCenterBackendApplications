@@ -45,17 +45,17 @@ import numpy as np
 import pandas as pd
 
 
-############### Chiou and Young (2014)
-class chiou_youngs_2013:  # noqa: N801, D101
+# Chiou and Young (2014)
+class chiou_youngs_2013:  # noqa: D101
     timeSetImt = 0  # noqa: N815
     timeCalc = 0  # noqa: N815
     supportedImt = None  # noqa: N815
 
-    def __init__(self):  # noqa: ANN204, D107
+    def __init__(self):  # noqa: ANN204
         self.coeff = pd.read_csv(
             os.path.join(os.path.dirname(__file__), 'data', 'CY14.csv')  # noqa: PTH118, PTH120
         )
-        self.coeff.iloc[:-2, 0] = self.coeff.iloc[:-2, 0].apply(lambda x: float(x))
+        self.coeff.iloc[:-2, 0] = self.coeff.iloc[:-2, 0].apply(lambda x: float(x))  # noqa: PLW0108
         self.coeff = self.coeff.set_index('T')
         self.supportedImt = list(self.coeff.index)
         self.coeff = self.coeff.to_dict()
@@ -110,10 +110,10 @@ class chiou_youngs_2013:  # noqa: N801, D101
         return True
 
     # Center zTop on the zTop-M relation -- Equations 4, 5
-    def calcMwZtop(self, style, Mw):  # noqa: ANN001, ANN201, N802, N803, D102
+    def calcMwZtop(self, style, Mw):  # noqa: ANN001, ANN201, D102, N802, N803, PLR6301
         mzTop = 0.0  # noqa: N806
         if style == 'REVERSE':
-            if Mw <= 5.849:  # noqa: SIM108, PLR2004
+            if Mw <= 5.849:  # noqa: PLR2004
                 mzTop = 2.704  # noqa: N806
             else:
                 mzTop = max(2.704 - 1.226 * (Mw - 5.849), 0)  # noqa: N806
@@ -121,7 +121,7 @@ class chiou_youngs_2013:  # noqa: N801, D101
             mzTop = 2.673 if (Mw <= 4.970) else max(2.673 - 1.136 * (Mw - 4.970), 0)  # noqa: N806, PLR2004
         return mzTop * mzTop
 
-    def calcSAref(self, Mw, rJB, rRup, rX, dip, zTop, style):  # noqa: ANN001, ANN201, N802, N803, D102, PLR0913
+    def calcSAref(self, Mw, rJB, rRup, rX, dip, zTop, style):  # noqa: ANN001, ANN201, N802, N803, D102
         # Magnitude scaling
         r1 = (
             self.c1
@@ -204,7 +204,7 @@ class chiou_youngs_2013:  # noqa: N801, D101
         phiSq = sigmaNL0 * sigmaNL0  # noqa: N806
         return phiSq  # noqa: RET504
 
-    def calc(self, Mw, rJB, rRup, rX, dip, zTop, vs30, vsInf, z1p0, style):  # noqa: ANN001, ANN201, N803, PLR0913
+    def calc(self, Mw, rJB, rRup, rX, dip, zTop, vs30, vsInf, z1p0, style):  # noqa: ANN001, ANN201, N803
         """Preliminary implementation of the Chiou & Youngs (2013) next generation
         attenuation relationship developed as part of NGA West II.
         Input
@@ -224,7 +224,7 @@ class chiou_youngs_2013:  # noqa: N801, D101
         TotalStdDev
         InterEvStdDev
         IntraEvStdDev
-        """  # noqa: D205, D400, D415
+        """  # noqa: D205, D400
         saRef = self.calcSAref(Mw, rJB, rRup, rX, dip, zTop, style)  # noqa: N806
         soilNonLin = self.calcSoilNonLin(vs30)  # noqa: N806
         mean = self.calcMean(vs30, z1p0, soilNonLin, saRef)
@@ -243,8 +243,8 @@ class chiou_youngs_2013:  # noqa: N801, D101
         return mean, stdDev, np.sqrt(tauSq), np.sqrt(phiSq)
 
     # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/imr/attenRelImpl/ngaw2/NGAW2_Wrapper.java#L220
-    def getFaultFromRake(self, rake):  # noqa: ANN001, ANN201, N802, D102
-        if rake >= 135 or rake <= -135 or rake >= -45 and rake <= 45:  # noqa: PLR2004
+    def getFaultFromRake(self, rake):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+        if rake >= 135 or rake <= -135 or (rake >= -45 and rake <= 45):  # noqa: PLR2004
             return 'STRIKE_SLIP'
         elif rake >= 45 and rake <= 135:  # noqa: RET505, PLR2004
             return 'REVERSE'
@@ -302,17 +302,17 @@ class chiou_youngs_2013:  # noqa: N801, D101
         # for i in range(len(site_list)):
 
 
-############## Abrahamson, Silva, and Kamai (2014)
-class abrahamson_silva_kamai_2014:  # noqa: N801, D101
+# Abrahamson, Silva, and Kamai (2014)
+class abrahamson_silva_kamai_2014:  # noqa: D101
     timeSetImt = 0  # noqa: N815
     timeCalc = 0  # noqa: N815
     supportedImt = None  # noqa: N815
 
-    def __init__(self):  # noqa: ANN204, D107
+    def __init__(self):  # noqa: ANN204
         self.coeff = pd.read_csv(
             os.path.join(os.path.dirname(__file__), 'data', 'ASK14.csv')  # noqa: PTH118, PTH120
         )
-        self.coeff.iloc[:-2, 0] = self.coeff.iloc[:-2, 0].apply(lambda x: float(x))
+        self.coeff.iloc[:-2, 0] = self.coeff.iloc[:-2, 0].apply(lambda x: float(x))  # noqa: PLW0108
         self.coeff = self.coeff.set_index('T')
         self.supportedImt = list(self.coeff.index)
         self.coeff = self.coeff.to_dict()
@@ -394,7 +394,7 @@ class abrahamson_silva_kamai_2014:  # noqa: N801, D101
         z1c = np.interp(vs30, VS_BINS, vsCoeff)
         return z1c * np.log((z1p0 + 0.01) / (z1ref + 0.01))
 
-    def getPhiA(self, Mw, s1, s2):  # noqa: ANN001, ANN201, N802, N803, D102
+    def getPhiA(self, Mw, s1, s2):  # noqa: ANN001, ANN201, D102, N802, N803, PLR6301
         if Mw < 4.0:  # noqa: PLR2004
             return s1
         if Mw > 6.0:  # noqa: PLR2004
@@ -402,7 +402,7 @@ class abrahamson_silva_kamai_2014:  # noqa: N801, D101
         else:  # noqa: RET505
             return s1 + ((s2 - s1) / 2) * (Mw - 4.0)
 
-    def getTauA(self, Mw, s3, s4):  # noqa: ANN001, ANN201, N802, N803, D102
+    def getTauA(self, Mw, s3, s4):  # noqa: ANN001, ANN201, D102, N802, N803, PLR6301
         if Mw < 5.0:  # noqa: PLR2004
             return s3
         if Mw > 7.0:  # noqa: PLR2004
@@ -416,7 +416,7 @@ class abrahamson_silva_kamai_2014:  # noqa: N801, D101
             saRock + c * np.power(vs30 / vLin, self.N)
         )
 
-    def calcValues(  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0913, PLR0915
+    def calcValues(  # noqa: ANN201, C901, N802, D102
         self,
         Mw,  # noqa: ANN001, N803
         rJB,  # noqa: ANN001, N803
@@ -511,7 +511,7 @@ class abrahamson_silva_kamai_2014:  # noqa: N801, D101
         # Site term -- Equation 7
         saRock = 0.0  # calc Sa1180 (rock reference) if necessary  # noqa: N806
         if vs30 < self.Vlin:
-            if v1 > self.VS_RK:  # noqa: SIM108
+            if v1 > self.VS_RK:
                 vs30s_rk = self.VS_RK
             else:
                 vs30s_rk = v1
@@ -550,8 +550,8 @@ class abrahamson_silva_kamai_2014:  # noqa: N801, D101
 
         return mean, stdDev, np.sqrt(phiSq), tau
 
-    def getFaultFromRake(self, rake):  # noqa: ANN001, ANN201, N802, D102
-        if rake >= 135 or rake <= -135 or rake >= -45 and rake <= 45:  # noqa: PLR2004
+    def getFaultFromRake(self, rake):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+        if rake >= 135 or rake <= -135 or (rake >= -45 and rake <= 45):  # noqa: PLR2004
             return 'STRIKE_SLIP'
         elif rake >= 45 and rake <= 135:  # noqa: RET505, PLR2004
             return 'REVERSE'
@@ -606,17 +606,17 @@ class abrahamson_silva_kamai_2014:  # noqa: N801, D101
         return saResult  # noqa: RET504
 
 
-############### Boore, Stewart, Seyhan, Atkinson (2014)
-class boore_etal_2014:  # noqa: N801, D101
+# Boore, Stewart, Seyhan, Atkinson (2014)
+class boore_etal_2014:  # noqa: D101
     timeSetImt = 0  # noqa: N815
     timeCalc = 0  # noqa: N815
     supportedImt = None  # noqa: N815
 
-    def __init__(self):  # noqa: ANN204, D107
+    def __init__(self):  # noqa: ANN204
         self.coeff = pd.read_csv(
             os.path.join(os.path.dirname(__file__), 'data', 'BSSA14.csv')  # noqa: PTH118, PTH120
         )
-        self.coeff.iloc[:-2, 0] = self.coeff.iloc[:-2, 0].apply(lambda x: float(x))
+        self.coeff.iloc[:-2, 0] = self.coeff.iloc[:-2, 0].apply(lambda x: float(x))  # noqa: PLW0108
         self.coeff = self.coeff.set_index('T')
         self.supportedImt = list(self.coeff.index)
         self.coeff = self.coeff.to_dict()
@@ -668,8 +668,8 @@ class boore_etal_2014:  # noqa: N801, D101
         self.tau1 = self.coeff['tau1'][imt]
         self.tau2 = self.coeff['tau2'][imt]
 
-    def getFaultFromRake(self, rake):  # noqa: ANN001, ANN201, N802, D102
-        if rake >= 135 or rake <= -135 or rake >= -45 and rake <= 45:  # noqa: PLR2004
+    def getFaultFromRake(self, rake):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+        if rake >= 135 or rake <= -135 or (rake >= -45 and rake <= 45):  # noqa: PLR2004
             return 'STRIKE_SLIP'
         elif rake >= 45 and rake <= 135:  # noqa: RET505, PLR2004
             return 'REVERSE'
@@ -689,7 +689,7 @@ class boore_etal_2014:  # noqa: N801, D101
         if Mw <= self.Mh:
             Fe = Fe + self.e4 * MwMh + self.e5 * MwMh * MwMh  # noqa: N806
         else:
-            Fe = Fe + self.e6 * MwMh  # noqa: N806
+            Fe = Fe + self.e6 * MwMh  # noqa: N806, PLR6104
         return Fe
 
     def calcPathTerm(self, Mw, R):  # noqa: ANN001, ANN201, N802, N803, D102
@@ -718,7 +718,7 @@ class boore_etal_2014:  # noqa: N801, D101
     def calcFdz1(self, vs30, z1p0):  # noqa: ANN001, ANN201, N802, D102
         DZ1 = self.calcDeltaZ1(z1p0, vs30)  # noqa: N806
         if self.imt != 'PGA' and self.imt != 'PGV' and self.imt >= 0.65:  # noqa: PLR1714, PLR2004
-            if (self.f7 / self.f6) >= DZ1:  # noqa: SIM108
+            if (self.f7 / self.f6) >= DZ1:
                 Fdz1 = self.f6 * DZ1  # noqa: N806
             else:
                 Fdz1 = self.f7  # noqa: N806
@@ -735,7 +735,7 @@ class boore_etal_2014:  # noqa: N801, D101
         vsPow4 = np.power(vs30, 4)  # noqa: N806
         return np.exp(-7.15 / 4.0 * np.log((vsPow4 + self.A) / self.B)) / 1000.0
 
-    def calcMean(self, Mw, rJB, vs30, z1p0, style, pgaRock):  # noqa: ANN001, ANN201, N802, N803, D102, PLR0913
+    def calcMean(self, Mw, rJB, vs30, z1p0, style, pgaRock):  # noqa: ANN001, ANN201, N802, N803, D102
         Fe = self.calcSourceTerm(Mw, style)  # noqa: N806
         R = np.sqrt(rJB * rJB + self.h * self.h)  # noqa: N806
         Fp = self.calcPathTerm(Mw, R)  # noqa: N806
@@ -780,7 +780,7 @@ class boore_etal_2014:  # noqa: N801, D101
     #     tau = self.calcTau(Mw)
     #     phiMRV = self.calcPhi(Mw, rJB, vs30)
     #     return np.sqrt(phiMRV * phiMRV + tau * tau)
-    def calcStdDev(self, phiMRV, tau):  # noqa: ANN001, ANN201, N802, N803, D102
+    def calcStdDev(self, phiMRV, tau):  # noqa: ANN001, ANN201, D102, N802, N803, PLR6301
         return np.sqrt(phiMRV * phiMRV + tau * tau)
 
     def calc(self, Mw, rJB, vs30, z1p0, style):  # noqa: ANN001, ANN201, N803, D102
@@ -835,17 +835,17 @@ class boore_etal_2014:  # noqa: N801, D101
         return saResult  # noqa: RET504
 
 
-############### Campbell & Bozorgnia (2014)
-class campbell_bozorgnia_2014:  # noqa: N801, D101
+# Campbell & Bozorgnia (2014)
+class campbell_bozorgnia_2014:  # noqa: D101
     timeSetImt = 0  # noqa: N815
     timeCalc = 0  # noqa: N815
     supportedImt = None  # noqa: N815
 
-    def __init__(self):  # noqa: ANN204, D107
+    def __init__(self):  # noqa: ANN204
         self.coeff = pd.read_csv(
             os.path.join(os.path.dirname(__file__), 'data', 'CB14.csv')  # noqa: PTH118, PTH120
         )
-        self.coeff.iloc[:-2, 0] = self.coeff.iloc[:-2, 0].apply(lambda x: float(x))
+        self.coeff.iloc[:-2, 0] = self.coeff.iloc[:-2, 0].apply(lambda x: float(x))  # noqa: PLW0108
         self.coeff = self.coeff.set_index('T')
         self.supportedImt = list(self.coeff.index)
         self.coeff = self.coeff.to_dict()
@@ -904,18 +904,18 @@ class campbell_bozorgnia_2014:  # noqa: N801, D101
         self.tau2 = self.coeff['tau2'][imt]
         self.rho = self.coeff['rho'][imt]
 
-    def getFaultFromRake(self, rake):  # noqa: ANN001, ANN201, N802, D102
-        if rake >= 135 or rake <= -135 or rake >= -45 and rake <= 45:  # noqa: PLR2004
+    def getFaultFromRake(self, rake):  # noqa: ANN001, ANN201, D102, N802, PLR6301
+        if rake >= 135 or rake <= -135 or (rake >= -45 and rake <= 45):  # noqa: PLR2004
             return 'STRIKE_SLIP'
         elif rake >= 45 and rake <= 135:  # noqa: RET505, PLR2004
             return 'REVERSE'
         else:
             return 'NORMAL'
 
-    def calcZ25ref(self, vs30):  # noqa: ANN001, ANN201, N802, D102
+    def calcZ25ref(self, vs30):  # noqa: ANN001, ANN201, D102, N802, PLR6301
         return np.exp(7.089 - 1.144 * np.log(vs30))
 
-    def calcMean(  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0913, PLR0915
+    def calcMean(  # noqa: ANN201, C901, N802, D102
         self,
         Mw,  # noqa: ANN001, N803
         rJB,  # noqa: ANN001, N803
@@ -1000,7 +1000,7 @@ class campbell_bozorgnia_2014:  # noqa: N801, D101
             Fdip = self.c19 * (5.5 - Mw) * dip  # noqa: N806
         else:
             Fdip = self.c19 * dip  # noqa: N806
-        if rRup > 80.0:  # noqa: SIM108, PLR2004
+        if rRup > 80.0:  # noqa: PLR2004
             Fatn = self.c20 * (rRup - 80.0)  # noqa: N806
         else:
             Fatn = 0.0  # noqa: N806
@@ -1021,7 +1021,7 @@ class campbell_bozorgnia_2014:  # noqa: N801, D101
             alpha = 0.0
         return alpha
 
-    def stdMagDep(self, lo, hi, Mw):  # noqa: ANN001, ANN201, N802, N803, D102
+    def stdMagDep(self, lo, hi, Mw):  # noqa: ANN001, ANN201, D102, N802, N803, PLR6301
         return hi + (lo - hi) * (5.5 - Mw)
 
     def calcPhiSq(self, Mw, alpha):  # noqa: ANN001, ANN201, N802, N803, D102
@@ -1062,7 +1062,7 @@ class campbell_bozorgnia_2014:  # noqa: N801, D101
         )
         return tauSq  # noqa: RET504
 
-    def calc(self, Mw, rJB, rRup, rX, dip, width, zTop, zHyp, vs30, z2p5, style):  # noqa: ANN001, ANN201, N803, D102, PLR0913
+    def calc(self, Mw, rJB, rRup, rX, dip, width, zTop, zHyp, vs30, z2p5, style):  # noqa: ANN001, ANN201, N803, D102
         if vs30 < self.k1:
             imt_tmp = self.imt
             self.setIMT('PGA')

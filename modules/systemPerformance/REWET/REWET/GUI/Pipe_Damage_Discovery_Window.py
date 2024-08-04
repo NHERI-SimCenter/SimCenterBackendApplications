@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Pipe_Damage_Discovery_Window.ui'  # noqa: N999, D100
+# Form implementation generated from reading ui file 'Pipe_Damage_Discovery_Window.ui'  # noqa: CPY001, D100, N999
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,8 +8,8 @@
 from PyQt5 import QtCore, QtWidgets
 
 
-class Ui_pipe_damage_discovery:  # noqa: N801, D101
-    def setupUi(self, pipe_damage_discovery):  # noqa: ANN001, ANN201, N802, D102, PLR0915
+class Ui_pipe_damage_discovery:  # noqa: D101
+    def setupUi(self, pipe_damage_discovery):  # noqa: ANN001, ANN201, N802, D102
         pipe_damage_discovery.setObjectName('pipe_damage_discovery')
         pipe_damage_discovery.resize(450, 400)
         pipe_damage_discovery.setMinimumSize(QtCore.QSize(450, 400))

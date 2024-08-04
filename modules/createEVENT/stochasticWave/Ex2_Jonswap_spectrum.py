@@ -1,6 +1,6 @@
-#!/usr/bin/env python3  # noqa: EXE001
+#!/usr/bin/env python3  # noqa: CPY001, EXE001
 
-"""Plot the JONSWAP spectrum for a given sea state"""  # noqa: D400, D415
+"""Plot the JONSWAP spectrum for a given sea state"""  # noqa: D400
 
 import matplotlib.pyplot as plt
 import numpy as np

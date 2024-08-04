@@ -57,7 +57,7 @@ def abrahamson_silva_ds_1999(  # noqa: ANN201
     Output:
     log(ds_median): log(median) significant duration prediction
     ds_sigma: logarithmic standard deviation of the prediction
-    """  # noqa: D205, D400, D415
+    """  # noqa: D205, D400
     # map the duration_type to integer key
     dur_map = {'DS575H': 0, 'DS575V': 1, 'DS595H': 2, 'DS595V': 3}
     dur_tag = dur_map.get(duration_type.upper(), None)
@@ -132,7 +132,7 @@ def bommer_stafford_alarcon_ds_2009(  # noqa: ANN201
     ds_sigma: logarithmic standard deviation of the prediction
     ds_tau: within-event logarithmic standard deviation
     ds_phi: between-event logarithmic standard deviation
-    """  # noqa: D205, D400, D415
+    """  # noqa: D205, D400
     # duration type map
     dur_map = {'DS575H': 0, 'DS595H': 1}
     dur_tag = dur_map.get(duration_type.upper(), None)
@@ -173,7 +173,7 @@ def bommer_stafford_alarcon_ds_2009(  # noqa: ANN201
     return np.log(ds_median), ds_sigma, ds_tau, ds_phi
 
 
-def afshari_stewart_ds_2016(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
+def afshari_stewart_ds_2016(  # noqa: ANN201, C901
     magnitude=7.0,  # noqa: ANN001
     distance=10.0,  # noqa: ANN001
     vs30=760.0,  # noqa: ANN001
@@ -197,7 +197,7 @@ def afshari_stewart_ds_2016(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
     ds_sigma: logarithmic standard deviation of the prediction
     ds_tau: within-event logarithmic standard deviation
     ds_phi: between-event logarithmic standard deviation
-    """  # noqa: D205, D400, D415
+    """  # noqa: D205, D400
     # mechanism map
     mech_map = {'unknown': 0, 'normal': 1, 'reverse': 2, 'strike-slip': 3}
     mech_tag = mech_map.get(mechanism.lower(), None)
@@ -269,7 +269,7 @@ def afshari_stewart_ds_2016(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
             -5.23 / 4 * np.log((vs30**4 + 412.39**4) / (1360**4 + 412.39**4))
         )
     # differential basin depth
-    if z1 is None or z1 < 0 or reg_tag == 2:  # noqa: SIM108, PLR2004
+    if z1 is None or z1 < 0 or reg_tag == 2:  # noqa: PLR2004
         dz1 = 0
     else:
         dz1 = z1 - mu_z1

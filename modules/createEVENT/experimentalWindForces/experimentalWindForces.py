@@ -1,4 +1,4 @@
-import json  # noqa: INP001, D100
+import json  # noqa: CPY001, D100, INP001
 import os
 import time
 
@@ -17,9 +17,9 @@ except:  # noqa: E722
 from convertWindMat import *  # noqa: F403
 
 
-def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PLR0912, PLR0915
+def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, D103, N803, PLR0914, PLR0915
     # THIS IS PERFORMED ONLY ONCE with open(aimName, 'r', encoding='utf-8') as f:
-    with open(aimName) as f:  # noqa: PTH123
+    with open(aimName) as f:  # noqa: PLW1514, PTH123
         aim_data = json.load(f)
 
     evt_data = aim_data['Events'][0]
@@ -194,7 +194,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
     #
 
     if case == 'timeHistory':
-        [s_target, f_target, norm_all, comp_CFmean, Fx_full, Fy_full, Tz_full] = (  # noqa: N806
+        [s_target, f_target, norm_all, comp_CFmean, Fx_full, Fy_full, Tz_full] = (  # noqa: F841, N806
             learn_CPSD(
                 Fx,
                 Fy,
@@ -465,7 +465,7 @@ def perform_POD(s_target, f_target, ncomp, l_mo):  # noqa: ANN001, ANN201, N802,
     return V, D1, SpeN
 
 
-def learn_CPSD(  # noqa: ANN201, N802, D103, PLR0913
+def learn_CPSD(  # noqa: ANN201, D103, N802, PLR0913, PLR0917
     Fx,  # noqa: ANN001, N803
     Fy,  # noqa: ANN001, N803
     Tz,  # noqa: ANN001, N803
@@ -535,7 +535,7 @@ def learn_CPSD(  # noqa: ANN201, N802, D103, PLR0913
     return s_target, f_target, norm_all, comp_CFmean, Fx_full, Fy_full, Tz_full
 
 
-def cpsd_matlab(Components1, Components2, wind_size, nover, nfft, fp):  # noqa: ANN001, ANN201, N803, D103, PLR0913
+def cpsd_matlab(Components1, Components2, wind_size, nover, nfft, fp):  # noqa: ANN001, ANN201, N803, D103
     window = windows.hann(int(wind_size))
 
     ncombs1 = Components1.shape[1]
@@ -559,7 +559,7 @@ def cpsd_matlab(Components1, Components2, wind_size, nover, nfft, fp):  # noqa: 
     return s_target, f_target
 
 
-def simulation_gaussian(  # noqa: ANN201, D103, PLR0913
+def simulation_gaussian(  # noqa: ANN201, D103, PLR0913, PLR0917
     ncomp,  # noqa: ANN001
     N_t,  # noqa: ANN001, N803
     V_vH,  # noqa: ANN001, N803
@@ -587,9 +587,9 @@ def simulation_gaussian(  # noqa: ANN201, D103, PLR0913
     sampNum = folderName.split('.')[-1]  # noqa: N806
 
     if sampNum == 'templatedir':
-        np.random.seed(seed[seed_num])  # noqa: NPY002
+        np.random.seed(seed[seed_num])
     else:
-        np.random.seed(seed[seed_num] + int(sampNum))  # noqa: NPY002
+        np.random.seed(seed[seed_num] + int(sampNum))
 
     # force coefficients initialize matrix
     F_jzm = np.zeros((ncomp, N_t))  # noqa: N806
@@ -610,7 +610,7 @@ def simulation_gaussian(  # noqa: ANN201, D103, PLR0913
         )  # product of eigenvector X
 
         # Generate  random phase  angle for each frequency SpeN
-        varth = (2 * np.pi) * np.random.random(size=(1, N_f))  # noqa: NPY002
+        varth = (2 * np.pi) * np.random.random(size=(1, N_f))
 
         # Loop over floors
         # g_jm = np.zeros((N_t, ncomp),dtype = 'complex_')
@@ -640,14 +640,14 @@ def simulation_gaussian(  # noqa: ANN201, D103, PLR0913
             F_jm[j, :] = np.real(g_jm * coef2)
 
         # sum up F from different modes (zero - mean)
-        F_jzm = F_jzm + F_jm  # noqa: N806
+        F_jzm = F_jzm + F_jm  # noqa: N806, PLR6104
 
     return F_jzm
 
 
 def err_exit(msg):  # noqa: ANN001, ANN201, D103
     print(msg)  # noqa: T201
-    with open('../workflow.err', 'w') as f:  # noqa: PTH123
+    with open('../workflow.err', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
         f.write(msg)
     exit(-1)  # noqa: PLR1722
 
@@ -668,7 +668,7 @@ if __name__ == '__main__':
             getRV = True  # noqa: N816
 
     if error_tag and getRV:
-        with open('../workflow.err', 'w') as f:  # noqa: PTH123
+        with open('../workflow.err', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
             print('Failed to import module ' + moduleName)  # noqa: T201
             f.write(
                 'Failed to import module '
@@ -686,7 +686,7 @@ if __name__ == '__main__':
         import traceback
 
         if getRV:
-            with open('../workflow.err', 'w') as f:  # noqa: PTH123
+            with open('../workflow.err', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
                 f.write(
                     'Failed in wind load generator preprocessor:'
                     + str(err)
@@ -701,7 +701,7 @@ if __name__ == '__main__':
                 )
             exit(-1)  # noqa: PLR1722
         else:
-            with open('../dakota.err', 'w') as f:  # noqa: PTH123
+            with open('../dakota.err', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
                 f.write(
                     'Failed to generate wind load: '
                     + str(err)

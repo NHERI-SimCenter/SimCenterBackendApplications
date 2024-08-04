@@ -1,4 +1,4 @@
-# This file is used to define helpful functions that are used in either main program or user defined class  # noqa: INP001, D100
+# This file is used to define helpful functions that are used in either main program or user defined class  # noqa: CPY001, D100, INP001
 # Developed by GUAN, XINGQUAN @ UCLA in June 2018
 # Updated in Sept. 2018
 
@@ -9,12 +9,12 @@ import numpy as np
 from global_variables import SECTION_DATABASE
 
 
-def determine_Fa_coefficient(site_class, Ss):  # noqa: ANN001, ANN201, C901, N802, N803, PLR0912
+def determine_Fa_coefficient(site_class, Ss):  # noqa: ANN001, ANN201, C901, N802, N803
     """This function is used to determine Fa coefficient, which is based on ASCE 7-10 Table 11.4-1
     :param Ss: a scalar given in building class
     :param site_class: a string: 'A', 'B', 'C', 'D', or 'E' given in building information
     :return: a scalar which is Fa coefficient
-    """  # noqa: D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404
     if site_class == 'A':
         Fa = 0.8  # noqa: N806
     elif site_class == 'B':
@@ -53,12 +53,12 @@ def determine_Fa_coefficient(site_class, Ss):  # noqa: ANN001, ANN201, C901, N80
     return Fa
 
 
-def determine_Fv_coefficient(site_class, S1):  # noqa: ANN001, ANN201, C901, N802, N803, PLR0912
+def determine_Fv_coefficient(site_class, S1):  # noqa: ANN001, ANN201, C901, N802, N803
     """This function is used to determine Fv coefficient, which is based on ASCE 7-10 Table 11.4-2
     :param S1: a scalar given in building class
     :param site_class: a string 'A', 'B', 'C', 'D' or 'E' given in building class
     :return: a scalar which is Fv coefficient
-    """  # noqa: D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404
     if site_class == 'A':
         Fv = 0.8  # noqa: N806
     elif site_class == 'B':
@@ -106,7 +106,7 @@ def calculate_DBE_acceleration(Ss, S1, Fa, Fv):  # noqa: ANN001, ANN201, N802, N
     :param Fa: a scalar computed from determine_Fa_coefficient
     :param Fv: a scalar computed from determine_Fv_coefficient
     :return: SMS, SM1, SDS, SD1: four scalars which are required for lateral force calculation
-    """  # noqa: D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404
     SMS = Fa * Ss  # noqa: N806
     SM1 = Fv * S1  # noqa: N806
     SDS = 2 / 3 * SMS  # noqa: N806
@@ -119,7 +119,7 @@ def determine_Cu_coefficient(SD1):  # noqa: ANN001, ANN201, N802, N803
     Note: All notations for these variables can be found in ASCE 7-10.
     :param SD1: a scalar calculated from function determine_DBE_acceleration
     :return: Cu: a scalar
-    """  # noqa: D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404
     if SD1 <= 0.1:  # noqa: PLR2004
         Cu = 1.7  # noqa: N806
     elif SD1 <= 0.15:  # noqa: PLR2004
@@ -149,7 +149,7 @@ def determine_floor_height(  # noqa: ANN201
     :param typical_story_height: a scalar which describes the typical story height for other stories
            except 1st story
     :return: an array which includes the height for each floor level (ground to roof)
-    """  # noqa: D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404
     floor_height = np.zeros([number_of_story + 1, 1])
     for level in range(1, number_of_story + 2):
         if level == 1:
@@ -164,7 +164,7 @@ def determine_floor_height(  # noqa: ANN201
     return floor_height
 
 
-def calculate_Cs_coefficient(SDS, SD1, S1, T, TL, R, Ie):  # noqa: ANN001, ANN201, N802, N803, PLR0913
+def calculate_Cs_coefficient(SDS, SD1, S1, T, TL, R, Ie):  # noqa: ANN001, ANN201, N802, N803
     """This function is used to calculate the seismic response coefficient based on ASCE 7-10 Section 12.8.1
     Unit: kips, g (gravity constant), second
     Note: All notations for these variables can be found in ASCE 7-10.
@@ -177,18 +177,18 @@ def calculate_Cs_coefficient(SDS, SD1, S1, T, TL, R, Ie):  # noqa: ANN001, ANN20
     :param R: a scalar given in building information
     :param Ie: a scalar given in building information
     :return: Cs: seismic response coefficient; determined using Equations 12.8-2 to 12.8-6
-    """  # noqa: D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404
     # Equation 12.8-2
     Cs_initial = SDS / (R / Ie)  # noqa: N806
 
     # Equation 12.8-3 or 12.8-4, Cs coefficient should not exceed the following value
-    if T <= TL:  # noqa: SIM108
+    if T <= TL:
         Cs_upper = SD1 / (T * (R / Ie))  # noqa: N806
     else:
         Cs_upper = SD1 * TL / (T**2 * (R / Ie))  # noqa: N806
 
     # Equation 12.8-2 results shall be smaller than upper bound of Cs
-    if Cs_initial <= Cs_upper:  # noqa: SIM108
+    if Cs_initial <= Cs_upper:
         Cs = Cs_initial  # noqa: N806
     else:
         Cs = Cs_upper  # noqa: N806
@@ -219,7 +219,7 @@ def determine_k_coeficient(period):  # noqa: ANN001, ANN201
     """This function is used to determine the coefficient k based on ASCE 7-10 Section 12.8.3
     :param period: building period;
     :return: k: a scalar will be used in Equation 12.8-12 in ASCE 7-10
-    """  # noqa: D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404
     if period <= 0.5:  # noqa: PLR2004
         k = 1
     elif period >= 2.5:  # noqa: PLR2004
@@ -238,7 +238,7 @@ def calculate_seismic_force(base_shear, floor_weight, floor_height, k):  # noqa:
     :param floor_height: a vector with a length of (number_of_story+1)
     :param k: a scalar given by "determine_k_coefficient"
     :return: Fx: a vector describes the lateral force for each floor level
-    """  # noqa: D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404
     # Calculate the product of floor weight and floor height
     # Note that floor height includes ground floor, which will not be used in the actual calculation.
     # Ground floor is stored here for completeness.
@@ -260,7 +260,7 @@ def find_section_candidate(target_depth, section_database):  # noqa: ANN001, ANN
     :param target_depth: a string which defines the depth of columns or beams, e.g. W14
     :param section_database: a dataframe read from SMF_Section_Property.csv in Library folder
     :return: a pandas Series of strings which denotes all possible sizes based on depth
-    """  # noqa: D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404
     candidate_index = []
     for indx in section_database['index']:
         match = re.search(target_depth, section_database.loc[indx, 'section size'])
@@ -278,7 +278,7 @@ def search_member_size(target_name, target_quantity, candidate, section_database
     :param candidate: a list of strings which defines potential section sizes for beams or columns
     :param section_database: a dataframe read from "Library" SMF_Section_Property.csv
     :return: a string which states the member sizes (e.g., W14X730)
-    """  # noqa: D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404
     # Find the index for the candidate
     candidate_index = list(
         section_database.loc[
@@ -329,7 +329,7 @@ def decrease_member_size(candidate, current_size):  # noqa: ANN001, ANN201
     :param candidate: a list of strings which defines the possible sizes
     :param current_size: a string which defines current member size
     :return: optimized_size: a string which defines the member size after decrease
-    """  # noqa: D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404
     # Find the index of the current section size in candidate pool and move it to the next one
     candidate_pool_index = candidate.index(current_size)
     if candidate_pool_index + 1 > len(candidate):
@@ -343,7 +343,7 @@ def extract_depth(size):  # noqa: ANN001, ANN201
     """This function is used to extract the depth of a section size when a size string is given.
     :param size: a string denoting a member size, e.g. 'W14X550'
     :return: a integer which denotes the depth of section. e.g. 'W14X550' ==> 14
-    """  # noqa: D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404
     # Use Python regular expression to extract the char between 'W' and 'X', which then become depth
     output = re.findall(r'.*W(.*)X.*', size)
     return int(output[0])
@@ -353,14 +353,14 @@ def extract_weight(size):  # noqa: ANN001, ANN201
     """This function is used to extract the weight of a section size when a size string is given.
     :param size: a string denoting a member size, e.g. 'W14X550'
     :return: a integer which denotes the weight of the section, e.g. 'W14X550' ==> 550
-    """  # noqa: D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404
     # Use Python regular expression to extract the char after 'W' to the end of the string,
     # which then becomes weight
     output = re.findall(r'.X(.*)', size)
     return int(output[0])
 
 
-def constructability_helper(  # noqa: ANN201, C901, PLR0912, PLR0915
+def constructability_helper(  # noqa: ANN201, C901
     section_size,  # noqa: ANN001
     identical_size_per_story,  # noqa: ANN001
     total_story,  # noqa: ANN001
@@ -374,7 +374,7 @@ def constructability_helper(  # noqa: ANN201, C901, PLR0912, PLR0915
     :param sorted_quantity：a string to indicate the members are sorted based on which quantity,
            options: 'Ix' or 'Zx'
     :return: a list whose every adjacent N stories have same strings and the whole list is in descending order
-    """  # noqa: D205, D400, D401, D404, D415, RUF002
+    """  # noqa: D205, D400, D401, D404, RUF002
     # Determine the number of stories that have the identical member size for constructability
     if identical_size_per_story > total_story:
         per_story = total_story
@@ -449,7 +449,7 @@ def constructability_helper(  # noqa: ANN201, C901, PLR0912, PLR0915
     # It is better to trace the story from top to bottom of the building.
     starting_index = total_story - 1
     ending_index = variation_story[-1]
-    while starting_index > 0:
+    while starting_index > 0:  # noqa: PLR1702
         # For stories within "identical story block"
         for indx in range(starting_index, ending_index, -1):
             # Only revise those size that are not identical
@@ -590,7 +590,7 @@ def increase_member_size(candidate, current_size):  # noqa: ANN001, ANN201
     :param candidate: a list of strings which defines the possible sizes
     :param current_size: a string which denotes current member size
     :return: a string which denotes the member size after one step upward
-    """  # noqa: D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404
     # Find the index of current section size in candidate pool and move it to previous one
     candidate_pool_index = candidate.index(current_size)
     if candidate_pool_index - 1 < 0:  # Make sure the index does not exceed the bound

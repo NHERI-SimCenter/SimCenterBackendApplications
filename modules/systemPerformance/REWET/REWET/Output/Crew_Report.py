@@ -1,13 +1,13 @@
 """Created on Thu Oct 27 15:45:10 2022
 
 @author: snaeimi
-"""  # noqa: INP001, D400, D415
+"""  # noqa: CPY001, D400, INP001
 
 import pandas as pd
 
 
-class Crew_Report:  # noqa: N801, D101
-    def __init__(self):  # noqa: ANN204, D107
+class Crew_Report:  # noqa: D101
+    def __init__(self):  # noqa: ANN204
         pass
 
     def getCrewForTime(self, scn_name, time):  # noqa: ANN001, ANN201, N802, D102

@@ -1,6 +1,6 @@
-# %%  # noqa: INP001, D100
+# %%  # noqa: CPY001, D100, INP001
 
-import subprocess
+import subprocess  # noqa: S404
 import sys
 from importlib import metadata as importlib_metadata
 
@@ -53,11 +53,11 @@ from shapely.geometry import Point, Polygon  # noqa: E402
 
 
 # %%
-def M9(information):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
+def M9(information):  # noqa: ANN001, ANN201, C901, N802
     """The default is to select sites from all M9 sites, but
     grid type (options: A, B, C, D, E, Y, and Z, can be empty)
     (ref: https://sites.uw.edu/pnet/m9-simulations/about-m9-simulations/extent-of-model/)
-    """  # noqa: D205, D400, D401, D415
+    """  # noqa: D205, D400, D401
     site_location = information['LocationFlag']
 
     if site_location:
@@ -94,7 +94,7 @@ def M9(information):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
     # changing realizations order
     indices = list(range(maxnumSiteGM))
     if randomFLag:
-        np.random.shuffle(indices)  # noqa: NPY002
+        np.random.shuffle(indices)
     indices = indices[:numSiteGM]
 
     directory = information['directory']  # directory to save the data
@@ -102,7 +102,7 @@ def M9(information):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
     if not os.path.exists(directory):  # noqa: PTH110
         os.makedirs(directory)  # noqa: PTH103
 
-    ## remove the files in the directory
+    # remove the files in the directory
     # os.system(f'rm -r {directory}/*')
 
     # load the sites information
@@ -238,7 +238,7 @@ def M9(information):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
             while not (res_success) and (iter_num < max_iter):
                 res = requests.get(jobURL)  # noqa: S113
                 res_success = res.status_code == 200  # noqa: PLR2004
-                iter_num = iter_num + 1
+                iter_num = iter_num + 1  # noqa: PLR6104
 
             if res_success:
                 gmData = res.json()  # noqa: N806
@@ -310,7 +310,7 @@ def write_motion(site_name, directory, i, motiondict, APIFLAG):  # noqa: ANN001,
         datatowrite['Data'] = 'Time history generated using M9 simulations'
         datatowrite['name'] = f'{site_name}_{i}'
 
-    with open(filename, 'w') as f:  # noqa: PTH123
+    with open(filename, 'w') as f:  # noqa: PLW1514, PTH123
         json.dump(datatowrite, f, indent=2)
 
 

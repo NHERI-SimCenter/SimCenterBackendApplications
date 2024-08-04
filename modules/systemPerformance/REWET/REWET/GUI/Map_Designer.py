@@ -1,7 +1,7 @@
 """Created on Thu Nov 10 18:29:50 2022
 
 @author: snaeimi
-"""  # noqa: N999, D400, D415
+"""  # noqa: CPY001, D400, N999
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -90,8 +90,8 @@ norm = plt.Normalize(1, 4)
 cmap = plt.cm.RdYlGn
 
 
-class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: N801, D101
-    def __init__(self):  # noqa: ANN204, D107
+class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: D101
+    def __init__(self):  # noqa: ANN204
         super().__init__()
         time_units = ['second', 'hour', 'day']
 
@@ -108,7 +108,7 @@ class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: N801, D101
         if time_unit == 'second':
             return raw_time_map.copy()
         elif time_unit == 'hour':  # noqa: RET505
-            data = data / 3600
+            data = data / 3600  # noqa: PLR6104
         elif time_unit == 'day':
             data = data / 3600 / 24
         else:
@@ -119,14 +119,14 @@ class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: N801, D101
         return time_justified_map
 
 
-class Yes_No_Combo(QtWidgets.QComboBox):  # noqa: N801, D101
-    def __init__(self):  # noqa: ANN204, D107
+class Yes_No_Combo(QtWidgets.QComboBox):  # noqa: D101
+    def __init__(self):  # noqa: ANN204
         super().__init__()
         self.addItems(['No', 'Yes'])
 
 
-class Map_Designer:  # noqa: N801, D101
-    def __init__(self):  # noqa: ANN204, D107
+class Map_Designer:  # noqa: D101, PLR0904
+    def __init__(self):  # noqa: ANN204
         self.current_raw_map = None
         self.current_map = None
         self.annotation_map = None
@@ -230,7 +230,7 @@ class Map_Designer:  # noqa: N801, D101
     def annotationRadiusChanegd(self):  # noqa: ANN201, N802, D102
         annotation_radius = self.annotation_radius_line.text()
         self.annotation_map = self.plotted_map.copy(deep=True)
-        if annotation_radius == '':
+        if annotation_radius == '':  # noqa: PLC1901
             annotation_radius = 0
             self.annotation_radius_line.settext('0')
         annotation_radius = float(annotation_radius)
@@ -367,7 +367,7 @@ class Map_Designer:  # noqa: N801, D101
         self.mpl_map.canvas.draw()
         self.mpl_map.canvas.fig.tight_layout()
 
-    def prepareForLegend(self, data, value_columns_name):  # noqa: ANN001, ANN201, N802, D102
+    def prepareForLegend(self, data, value_columns_name):  # noqa: ANN001, ANN201, D102, N802, PLR6301
         return data.copy(deep=True)
         data = data.copy(deep=True)
         min_value = data[value_columns_name].min()
@@ -417,7 +417,7 @@ class Map_Designer:  # noqa: N801, D101
         self.setMapSettingBox(text)
         self.calculateCurrentMap()
 
-    def calculateCurrentMap(self):  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0915
+    def calculateCurrentMap(self):  # noqa: ANN201, C901, N802, D102
         map_type = self.current_map_type
         if map_type == 'Quantity Outage vs. Exceedance':
             iConsider_leak = self.map_settings_widgets['LDN leak'].currentText()  # noqa: N806
@@ -425,7 +425,7 @@ class Map_Designer:  # noqa: N801, D101
             time_window = self.map_settings_widgets['Time Window'].text()
             exeedance_probability = self.map_settings_widgets['Ex. Prob.'].text()
 
-            if iConsider_leak == 'Yes':  # noqa: SIM108
+            if iConsider_leak == 'Yes':
                 iConsider_leak = True  # noqa: N806
             else:
                 iConsider_leak = False  # noqa: N806
@@ -461,7 +461,7 @@ class Map_Designer:  # noqa: N801, D101
             time_window = self.map_settings_widgets['Time Window'].text()
             exeedance_probability = self.map_settings_widgets['Ex. Prob.'].text()
 
-            if iConsider_leak == 'Yes':  # noqa: SIM108
+            if iConsider_leak == 'Yes':
                 iConsider_leak = True  # noqa: N806
             else:
                 iConsider_leak = False  # noqa: N806
@@ -497,7 +497,7 @@ class Map_Designer:  # noqa: N801, D101
             time_window = self.map_settings_widgets['Time Window'].text()
             outage_time = self.map_settings_widgets['Outage Time'].text()
 
-            if iConsider_leak == 'Yes':  # noqa: SIM108
+            if iConsider_leak == 'Yes':
                 iConsider_leak = True  # noqa: N806
             else:
                 iConsider_leak = False  # noqa: N806
@@ -533,7 +533,7 @@ class Map_Designer:  # noqa: N801, D101
             time_window = self.map_settings_widgets['Time Window'].text()
             outage_time = self.map_settings_widgets['Outage Time'].text()
 
-            if iConsider_leak == 'Yes':  # noqa: SIM108
+            if iConsider_leak == 'Yes':
                 iConsider_leak = True  # noqa: N806
             else:
                 iConsider_leak = False  # noqa: N806
@@ -568,7 +568,7 @@ class Map_Designer:  # noqa: N801, D101
             leak_ratio = self.map_settings_widgets['leak Criteria'].text()
             time_window = self.map_settings_widgets['Time Window'].text()
 
-            if iConsider_leak == 'Yes':  # noqa: SIM108
+            if iConsider_leak == 'Yes':
                 iConsider_leak = True  # noqa: N806
             else:
                 iConsider_leak = False  # noqa: N806
@@ -597,7 +597,7 @@ class Map_Designer:  # noqa: N801, D101
             leak_ratio = self.map_settings_widgets['leak Criteria'].text()
             time_window = self.map_settings_widgets['Time Window'].text()
 
-            if iConsider_leak == 'Yes':  # noqa: SIM108
+            if iConsider_leak == 'Yes':
                 iConsider_leak = True  # noqa: N806
             else:
                 iConsider_leak = False  # noqa: N806
@@ -635,7 +635,7 @@ class Map_Designer:  # noqa: N801, D101
                 self.current_raw_map
             )
             self.plotMap('SSI', 'Time')
-        elif map_type == '':
+        elif map_type == '':  # noqa: PLC1901
             return
         else:
             raise  # noqa: PLE0704
@@ -653,7 +653,7 @@ class Map_Designer:  # noqa: N801, D101
             pass
             # raise ValueError("Unknown Map type: "+repr(map_type))
 
-    def populateMapSettingsTable(self, settings_content):  # noqa: ANN001, ANN201, C901, N802, D102, PLR0912, PLR0915
+    def populateMapSettingsTable(self, settings_content):  # noqa: ANN001, ANN201, C901, N802, D102
         self.map_settings_widgets.clear()
         vertical_header = []
         cell_type_list = []
@@ -801,7 +801,7 @@ class Map_Designer:  # noqa: N801, D101
             self.project_file_addr,
             'Shapefile (*.shp)',
         )
-        if file_addr[0] == '':
+        if file_addr[0] == '':  # noqa: PLC1901
             return
 
         # self.current_map_data[1].to_excel(file_addr[0])

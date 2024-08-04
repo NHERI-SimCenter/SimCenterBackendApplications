@@ -52,7 +52,7 @@ def convert_HDF(HDF_path):  # noqa: ANN001, ANN201, N802, N803, D103
     store = pd.HDFStore(HDF_path)
 
     for key in store.keys():  # noqa: SIM118
-        store[key].to_csv(f'{CSV_base}_{key[1:].replace("/","_")}.csv')
+        store[key].to_csv(f'{CSV_base}_{key[1:].replace("/", "_")}.csv')
 
     store.close()
 

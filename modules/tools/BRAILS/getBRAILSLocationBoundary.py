@@ -54,13 +54,13 @@ def log_msg(msg):  # noqa: ANN001, ANN201, D103
 
 
 # Define a way to call BRAILS FootprintHandler:
-def runBrails(latMin, latMax, longMin, longMax, locationStr, outputfile):  # noqa: ANN001, ANN201, N802, N803, D103, PLR0913
+def runBrails(latMin, latMax, longMin, longMax, locationStr, outputfile):  # noqa: ANN001, ANN201, N802, N803, D103
     # Initialize FootprintHandler:
     fpHandler = FootprintHandler()  # noqa: N806
     if locationStr == '""':
         locationStr = ''  # noqa: N806
     # Run FootprintHandler to generate the boundary GeoJSON file for the entered location:
-    if locationStr == '':
+    if locationStr == '':  # noqa: PLC1901
         fpHandler._FootprintHandler__bbox2poly(  # noqa: SLF001
             (longMin, latMin, longMax, latMax), outfile=outputfile
         )

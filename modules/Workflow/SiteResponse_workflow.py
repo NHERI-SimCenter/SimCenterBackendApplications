@@ -1,4 +1,4 @@
-# Site response workflow  # noqa: INP001, D100
+# Site response workflow  # noqa: CPY001, D100, INP001
 
 import argparse
 import json
@@ -13,7 +13,7 @@ import whale.main as whale
 from whale.main import log_div, log_msg
 
 
-def main(  # noqa: ANN201, D103, PLR0913
+def main(  # noqa: ANN201, D103
     run_type,  # noqa: ANN001
     input_file,  # noqa: ANN001
     app_registry,  # noqa: ANN001
@@ -25,9 +25,9 @@ def main(  # noqa: ANN201, D103, PLR0913
     log_file,  # noqa: ANN001
 ):
     # initialize the log file
-    with open(input_file) as f:  # noqa: PTH123
+    with open(input_file) as f:  # noqa: PLW1514, PTH123
         inputs = json.load(f)
-    if working_dir is not None:  # noqa: SIM108
+    if working_dir is not None:
         runDir = working_dir  # noqa: N806
     else:
         runDir = inputs['runDir']  # noqa: N806
@@ -38,7 +38,7 @@ def main(  # noqa: ANN201, D103, PLR0913
         whale.log_file = runDir + '/log.txt'
     else:
         whale.log_file = log_file
-    with open(whale.log_file, 'w') as f:  # noqa: PTH123
+    with open(whale.log_file, 'w') as f:  # noqa: FURB103, PLW1514, PTH123
         f.write('RDT workflow\n')
 
     whale.print_system_info()
@@ -87,8 +87,8 @@ def main(  # noqa: ANN201, D103, PLR0913
     building_file = WF.create_building_files()
     WF.perform_regional_mapping(building_file)
 
-    # TODO: not elegant code, fix later  # noqa: FIX002, TD002, TD003
-    with open(WF.building_file_path) as f:  # noqa: PTH123
+    # TODO: not elegant code, fix later  # noqa: TD002
+    with open(WF.building_file_path) as f:  # noqa: PLW1514, PTH123
         bldg_data = json.load(f)
 
     for bldg in bldg_data:  # [:1]:
@@ -131,7 +131,7 @@ def main(  # noqa: ANN201, D103, PLR0913
 
 
 def collect_surface_motion(runDir, bldg_data, surfaceMoDir=''):  # noqa: ANN001, ANN201, N803, D103
-    if surfaceMoDir == '':
+    if surfaceMoDir == '':  # noqa: PLC1901
         surfaceMoDir = f'{runDir}/surface_motions/'  # noqa: N806
 
     for bldg in bldg_data:  # [:1]:
@@ -152,7 +152,7 @@ def collect_surface_motion(runDir, bldg_data, surfaceMoDir=''):  # noqa: ANN001,
                 # shutil.copyfile(p, f"{surfMoTmpDir}/EVENT-{simID}.json")
                 newEVENT = {}  # noqa: N806
                 # load the event file
-                with open(p) as f:  # noqa: PTH123
+                with open(p) as f:  # noqa: PLW1514, PTH123
                     EVENT_in_All = json.load(f)  # noqa: N806
 
                     newEVENT['name'] = EVENT_in_All['Events'][0]['event_id'].replace(
@@ -174,7 +174,7 @@ def collect_surface_motion(runDir, bldg_data, surfaceMoDir=''):  # noqa: ANN001,
                         ]['data']
                         newEVENT['PGA_y'] = max(newEVENT['data_y'])
 
-                    with open(  # noqa: PTH123
+                    with open(  # noqa: PLW1514, PTH123
                         f"{surfMoTmpDir}/EVENT-{newEVENT['name']}.json", 'w'
                     ) as outfile:
                         json.dump(newEVENT, outfile)
@@ -250,7 +250,7 @@ if __name__ == '__main__':
         workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
         wfArgs.appDir = workflow_dir.parents[1]
 
-    if wfArgs.check:  # noqa: SIM108
+    if wfArgs.check:
         run_type = 'set_up'
     else:
         run_type = 'run'

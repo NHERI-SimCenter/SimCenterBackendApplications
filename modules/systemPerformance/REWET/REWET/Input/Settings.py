@@ -1,5 +1,5 @@
-import json  # noqa: INP001, D100
-import pickle
+import json  # noqa: CPY001, D100, INP001
+import pickle  # noqa: S403
 import warnings
 
 import numpy as np
@@ -17,8 +17,8 @@ list_default_headers = [
 acceptable_override_list = ['POINTS']
 
 
-class base:  # noqa: N801, D101
-    def __init__(self):  # noqa: ANN204, D107
+class base:  # noqa: D101
+    def __init__(self):  # noqa: ANN204
         self.settings = {}
 
     def __getitem__(self, key):  # noqa: ANN001, ANN204, D105
@@ -28,8 +28,8 @@ class base:  # noqa: N801, D101
         self.settings[key] = data
 
 
-class Process_Settings(base):  # noqa: N801, D101
-    def __init__(self):  # noqa: ANN204, D107
+class Process_Settings(base):  # noqa: D101
+    def __init__(self):  # noqa: ANN204
         super().__init__()
         """
         simulation settings
@@ -66,7 +66,7 @@ class Process_Settings(base):  # noqa: N801, D101
         Hydraulic settings
         """
         self.settings['WN_INP'] = (
-            'Example/net3.inp'  #'giraffe386-4-1.inp' #"Anytown.inp"#'giraffe386-4-1.inp' #"Net3/net3.inp"
+            'Example/net3.inp'  # 'giraffe386-4-1.inp' #"Anytown.inp"#'giraffe386-4-1.inp' #"Net3/net3.inp"
         )
         self.settings['demand_ratio'] = 1
         self.settings['solver'] = (
@@ -83,7 +83,7 @@ class Process_Settings(base):  # noqa: N801, D101
             'Example/example_list.xlsx'  # "Nafiseh Damage Data/9_final_akhar/list_1_final.xlsx" #"preprocess/list2-3.xlsx"#"preprocess/list2-3.xlsx" #"list_akhar_with_prob_pgv_epicenter_1.xlsx"#"preprocess/list2-3.xlsx" #"Net3/list.xlsx" #"preprocess/list2-3.xlsx" #"list_W147_6.xlsx" #'Nafiseh Damage Data/list.xlsx'
         )
         self.settings['pipe_damage_file_directory'] = (
-            r'Example\Damages'  #'Nafiseh Damage Data/9_final_akhar'#"" #'Net3' #'Nafiseh Damage Data/out'"X:\\Sina Naeimi\\anytown_damage\\"
+            r'Example\Damages'  # 'Nafiseh Damage Data/9_final_akhar'#"" #'Net3' #'Nafiseh Damage Data/out'"X:\\Sina Naeimi\\anytown_damage\\"
         )
         self.settings['pump_damage_relative_time'] = (
             True  # needs to be implemented in the code
@@ -107,7 +107,7 @@ class Process_Settings(base):  # noqa: N801, D101
 
         self.settings['dmg_rst_data_save'] = True
         self.settings['Parameter_override'] = (
-            True  #'starter/settings.xlsx' #this is for settings sensitivity analysis
+            True  # 'starter/settings.xlsx' #this is for settings sensitivity analysis
         )
         self.settings['mpi_resume'] = True  # ignores the scenarios that are done
         self.settings['ignore_empty_damage'] = False
@@ -123,8 +123,8 @@ class Process_Settings(base):  # noqa: N801, D101
         self.settings['limit_result_file_size'] = -1  # in Mb. 0 means no limit
 
 
-class Scenario_Settings(base):  # noqa: N801, D101
-    def __init__(self):  # noqa: ANN204, D107
+class Scenario_Settings(base):  # noqa: D101
+    def __init__(self):  # noqa: ANN204
         super().__init__()
         """
         Hydraulic settings
@@ -249,7 +249,7 @@ class Scenario_Settings(base):  # noqa: N801, D101
 
 
 class Settings:  # noqa: D101
-    def __init__(self):  # noqa: ANN204, D107
+    def __init__(self):  # noqa: ANN204
         self.process = Process_Settings()
         self.scenario = Scenario_Settings()
         self.overrides = {}
@@ -264,7 +264,7 @@ class Settings:  # noqa: D101
 
     def __getitem__(self, key):  # noqa: ANN001, ANN204, D105
         if key in self.process.settings:
-            if self.scenario != None:  # noqa: SIM102, E711
+            if self.scenario != None:  # noqa: E711
                 if key in self.scenario.settings:
                     raise ValueError(
                         str(key) + ' in both the process and scenario settings.'
@@ -280,7 +280,7 @@ class Settings:  # noqa: D101
     def __contains__(self, key):  # noqa: ANN001, ANN204, D105
         if key in self.process.settings:
             return True
-        elif self.scenario != None:  # noqa: RET505, SIM102, E711
+        elif self.scenario != None:  # noqa: RET505, E711
             if key in self.scenario.settings:
                 return True
 
@@ -293,25 +293,25 @@ class Settings:  # noqa: D101
         ----
             json_file_path (path): JSON file path
 
-        """  # noqa: D400, D415
-        with open(json_file_path) as f:  # noqa: PTH123
+        """  # noqa: D400
+        with open(json_file_path) as f:  # noqa: PLW1514, PTH123
             settings_data = json.load(f)
 
         if not isinstance(settings_data, dict):
-            raise ValueError(  # noqa: TRY003, TRY004
+            raise ValueError(  # noqa: DOC501, TRY003, TRY004
                 'Wrong JSON file type for the settings. The settings JSOn file must be an OBJECT file type.'  # noqa: EM101
             )
 
         for key, val in settings_data.items():
             if key not in self:
-                raise ValueError(  # noqa: TRY003
+                raise ValueError(  # noqa: DOC501, TRY003
                     f'REWET settinsg does not have "{key}" as a settings key'  # noqa: EM102
                 )
 
             print(key, val)  # noqa: T201
             if (
                 key
-                in [
+                in [  # noqa: PLR6201
                     'pipe_damage_discovery_model',
                     'node_damage_discovery_model',
                     'pump_damage_discovery_model',
@@ -336,7 +336,7 @@ class Settings:  # noqa: D101
         self.process = project.project_settings.process
         self.scenario = project.project_settings.scenario
 
-    def initializeScenarioSettings(self, scenario_index):  # noqa: ANN001, ANN201, C901, N802, D102, PLR0912, PLR0915
+    def initializeScenarioSettings(self, scenario_index):  # noqa: ANN001, ANN201, C901, N802, D102
         if self.process['Parameter_override'] == False:  # noqa: E712
             return
 
@@ -366,7 +366,7 @@ class Settings:  # noqa: D101
                 except:  # noqa: S110, E722
                     pass
 
-                if override_value == '':
+                if override_value == '':  # noqa: PLC1901
                     warnings.warn(  # noqa: B028
                         'REWET Input ERROR in scenario: '
                         + repr(scenario_name)
@@ -431,7 +431,7 @@ class Settings:  # noqa: D101
                 except:  # noqa: S110, E722
                     pass
 
-                if override_value == '':
+                if override_value == '':  # noqa: PLC1901
                     warnings.warn(  # noqa: B028
                         'REWET Input ERROR in scenario: '
                         + repr(scenario_name)
@@ -482,7 +482,7 @@ class Settings:  # noqa: D101
                 else:
                     raise ValueError('Unknown overrise key')  # noqa: EM101, TRY003
 
-    def getOverridePointsList(self, points_list_str, scenario_name):  # noqa: ANN001, ANN201, N802, D102
+    def getOverridePointsList(self, points_list_str, scenario_name):  # noqa: ANN001, ANN201, D102, N802, PLR6301
         point_list = []
 
         points_list_str = points_list_str.strip()
@@ -554,7 +554,7 @@ class Settings:  # noqa: D101
 
         return point_list
 
-    def getOverrideCrewSpeed(self, crew_speed_str, scenario_name):  # noqa: ANN001, ANN201, N802, D102
+    def getOverrideCrewSpeed(self, crew_speed_str, scenario_name):  # noqa: ANN001, ANN201, D102, N802, PLR6301
         crew_speed_str = crew_speed_str.strip()
 
         if len(crew_speed_str.split()) > 1:

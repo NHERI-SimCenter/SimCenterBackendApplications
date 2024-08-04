@@ -45,7 +45,7 @@ from pathlib import Path, PurePath
 import numpy as np
 
 
-def write_RV(EVENT_input_path):  # noqa: ANN001, ANN201, C901, N802, N803, D103, PLR0912, PLR0915
+def write_RV(EVENT_input_path):  # noqa: ANN001, ANN201, C901, N802, N803, D103
     # open the event file and get the list of events
     with open(EVENT_input_path, encoding='utf-8') as f:  # noqa: PTH123
         EVENT_in = json.load(f)  # noqa: N806
@@ -159,7 +159,7 @@ def write_RV(EVENT_input_path):  # noqa: ANN001, ANN201, C901, N802, N803, D103,
     )
 
 
-# TODO: consider removing this function  # noqa: FIX002, TD002, TD003
+# TODO: consider removing this function  # noqa: TD002
 # It is not used currently
 def create_EDP(EVENT_input_path, EDP_input_path):  # noqa: ANN001, ANN201, N802, N803, D103
     # load the EDP file

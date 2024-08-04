@@ -1,7 +1,7 @@
 """Created on Fri Dec 25 04:00:43 2020
 
 @author: snaeimi
-"""  # noqa: INP001, D400, D415
+"""  # noqa: CPY001, D400, INP001
 
 import copy
 import logging
@@ -18,7 +18,7 @@ def get_node_name(node_name, table):  # noqa: ANN001, ANN201, D103
     if 'virtual_of' in table.columns:
         real_node_name = table.loc[node_name, 'virtual_of']
         if (
-            real_node_name == None or real_node_name == np.nan  # noqa: E711, PLR1714
+            real_node_name == None or real_node_name == np.nan  # noqa: E711, PLR1714, PLW0177
         ):  # SINA: probably NP.NAN does not work here. Correct it.
             real_node_name = node_name
         return real_node_name
@@ -27,7 +27,7 @@ def get_node_name(node_name, table):  # noqa: ANN001, ANN201, D103
 
 
 class Coordination:  # noqa: D101
-    def __init__(self, X=None, Y=None, system=None):  # noqa: ANN001, ANN204, N803, D107
+    def __init__(self, X=None, Y=None, system=None):  # noqa: ANN001, ANN204, N803
         self.x = X
         self.y = Y
         self.system = system
@@ -44,7 +44,7 @@ class Coordination:  # noqa: D101
 
 
 class Location:  # noqa: D101
-    def __init__(self, name, x, y):  # noqa: ANN001, ANN204, D107
+    def __init__(self, name, x, y):  # noqa: ANN001, ANN204
         self.name = name
         self.coord = Coordination(x, y)
 
@@ -60,7 +60,7 @@ class Location:  # noqa: D101
 
 
 class AgentData:  # noqa: D101
-    def __init__(  # noqa: ANN204, D107, PLR0913
+    def __init__(  # noqa: ANN204
         self,
         agent_name,  # noqa: ANN001
         agent_type,  # noqa: ANN001
@@ -117,21 +117,21 @@ class AgentData:  # noqa: D101
         bool
             Is true if the time is on the agent's shift.
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         shift_name = self.shift._shift_name  # noqa: SLF001
         (time_start, time_finish) = self._shifting.getShiftTimes(shift_name)
 
         if type(time) != int and type(time) != float:  # noqa: E721
-            raise ValueError('time must be integer ' + type(time))
+            raise ValueError('time must be integer ' + type(time))  # noqa: DOC501
 
         time = int(time)
-        time = time % (24 * 3600)
+        time = time % (24 * 3600)  # noqa: PLR6104
 
         if time_start > time_finish:
             new_time_finish = time_finish + 24 * 3600
             time_finish = new_time_finish
             if time < time_start:
-                time = time + 24 * 3600
+                time = time + 24 * 3600  # noqa: PLR6104
 
         if time >= time_start and time < time_finish:  # noqa: SIM103
             return True
@@ -177,7 +177,7 @@ class AgentData:  # noqa: D101
         else:  # noqa: RET505
             return 24 * 3600 - time_start + time_finish
 
-    def setJob(  # noqa: ANN201, N802, D102, PLR0913
+    def setJob(  # noqa: ANN201, N802, D102
         self,
         node_name,  # noqa: ANN001
         action,  # noqa: ANN001
@@ -203,7 +203,7 @@ class AgentData:  # noqa: D101
 
 
 class Agents:  # noqa: D101
-    def __init__(self, registry, shifting, jobs, restoration_log_book):  # noqa: ANN001, ANN204, D107
+    def __init__(self, registry, shifting, jobs, restoration_log_book):  # noqa: ANN001, ANN204
         # data:    is the
         # type:    agent type
         # sybtype: agent sub type
@@ -218,7 +218,7 @@ class Agents:  # noqa: D101
         self.restoration_log_book = restoration_log_book
         self.registry = registry
 
-    def addAgent(self, agent_name, agent_type, definition):  # noqa: ANN001, ANN201, N802, D417
+    def addAgent(self, agent_name, agent_type, definition):  # noqa: ANN001, ANN201, N802
         """Adds agent to the agent list
 
         Parameters
@@ -232,7 +232,7 @@ class Agents:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # number_of_agents = int(definition['Number'])
         agent_speed = self.registry.settings['crew_travel_speed']
         temp_agent_data = AgentData(
@@ -270,7 +270,7 @@ class Agents:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D415
+        """  # noqa: D400
         for active_agent_ID in active_agent_ID_list:  # noqa: N806
             self._agents['active'].loc[active_agent_ID] = True
 
@@ -304,7 +304,7 @@ class Agents:  # noqa: D101
     def setChangeShift(self, time, working_check=True):  # noqa: ANN001, ANN201, FBT002, ARG002, N802, D102
         for name, agent in self._agents.iterrows():  # noqa: B007
             if self._agents.loc[name, 'data'].isOnShift(time):
-                if (  # noqa: SIM102
+                if (
                     self._agents.loc[name, 'active'] == False  # noqa: E712
                 ):  # if agent is active already and is on shift, it means that the agent has been active before the shift change event
                     if self._agents.loc[name, 'available'] == True:  # noqa: E712
@@ -345,7 +345,7 @@ class Agents:  # noqa: D101
 
         return temp
 
-    def getAvailabilityRatio(self, agent_type, time):  # noqa: ANN001, ANN201, N802, D102
+    def getAvailabilityRatio(self, agent_type, time):  # noqa: ANN001, ANN201, D102, N802, PLR6301
         if agent_type == 'WQOperator' or agent_type == 'WQWorker':  # noqa: PLR1714
             av_data = pd.Series(data=[0, 0.5, 1], index=[0, 4, 24])
         elif agent_type == 'CONT':
@@ -353,7 +353,7 @@ class Agents:  # noqa: D101
         else:
             av_data = pd.Series(data=[1, 0.5, 1], index=[0, 4, 48])
         temp = av_data
-        time = time / 3600
+        time = time / 3600  # noqa: PLR6104
         if time in temp:
             return temp[time]
         if time > temp.index.max():
@@ -370,7 +370,7 @@ class Agents:  # noqa: D101
         else:  # noqa: RET505
             return 1
 
-    def assignsJobToAgent(  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0913, PLR0915
+    def assignsJobToAgent(  # noqa: ANN201, C901, N802, D102
         self,
         agent_name,  # noqa: ANN001
         node_name,  # noqa: ANN001
@@ -563,14 +563,14 @@ class Agents:  # noqa: D101
 
 class AgentShift:  # noqa: D101
     # , shifting_obj):
-    def __init__(self, agent_name, name):  # noqa: ANN001, ANN204, D107
+    def __init__(self, agent_name, name):  # noqa: ANN001, ANN204
         self._agent_name = agent_name
         self._shift_name = name
         # shifting_obj.addAgentShift(self._agent_name, self._shift_name)
 
 
 class Shifting:  # noqa: D101
-    def __init__(self):  # noqa: ANN204, D107
+    def __init__(self):  # noqa: ANN204
         self._all_agent_shift_data = {}
         self._shift_data = pd.DataFrame(columns=['begining', 'end'])
 
@@ -600,7 +600,7 @@ class Shifting:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         if name in self._shift_data:
             raise ValueError('Shift name already registered')  # noqa: EM101, TRY003
         if type(beginning) != int and type(beginning) != float:  # noqa: E721
@@ -673,7 +673,7 @@ class Shifting:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         if agent_ID in self._all_agent_shift_data:
             raise ValueError('The agent ID currently in Agent ALl Shifts')  # noqa: EM101, TRY003
         if shift_name not in self._shift_data:
@@ -683,7 +683,7 @@ class Shifting:  # noqa: D101
 
 
 class DispatchRule:  # noqa: D101
-    def __init__(self, settings, method='deterministic', exclude=None):  # noqa: ANN001, ANN204, D107
+    def __init__(self, settings, method='deterministic', exclude=None):  # noqa: ANN001, ANN204
         self.settings = settings
         self._rules = {}
         self._cumulative = {}
@@ -743,7 +743,7 @@ class DispatchRule:  # noqa: D101
 
 
 class Dispatch:  # noqa: D101
-    def __init__(self, restoration, settings, discovery_interval=0, method='old'):  # noqa: ANN001, ANN204, D107
+    def __init__(self, restoration, settings, discovery_interval=0, method='old'):  # noqa: ANN001, ANN204
         self.settings = settings
         self.method = method
         self.discovery_interval = discovery_interval
@@ -783,7 +783,7 @@ class Dispatch:  # noqa: D101
         self._rm._registry.addAttrToPipeDamageTable('discovered', False)  # noqa: FBT003, SLF001
         self._rm._registry.addAttrToDistNodeDamageTable('discovered', False)  # noqa: FBT003, SLF001
 
-    def updateDiscovery(self, time):  # noqa: ANN001, ANN201, C901, N802, D102, PLR0912, PLR0915
+    def updateDiscovery(self, time):  # noqa: ANN001, ANN201, C901, N802, D102
         if time < self._rm.restoration_start_time:
             print('Time is less than init time')  # noqa: T201
 
@@ -1040,7 +1040,7 @@ class Dispatch:  # noqa: D101
 
 
 class Priority:  # noqa: D101
-    def __init__(self, restoration):  # noqa: ANN001, ANN204, D107
+    def __init__(self, restoration):  # noqa: ANN001, ANN204
         self._data = {}
         self._rm = restoration
 
@@ -1093,7 +1093,7 @@ class Priority:  # noqa: D101
                 i += 1  # noqa: SIM113
         return damage_group_list
 
-    def sortDamageTable(  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0913, PLR0915
+    def sortDamageTable(  # noqa: ANN201, C901, N802, D102
         self,
         wn,  # noqa: ANN001
         entity_data,  # noqa: ANN001
@@ -1140,7 +1140,7 @@ class Priority:  # noqa: D101
             min_dist_entity_table = dist_only_entity_table.min(axis=1)
             entity_data.loc[:, name_sugest] = min_dist_entity_table
             entity_data.sort_values(by=name_sugest, ascending=True, inplace=True)  # noqa: PD002
-            columns_to_drop.append(name_sugest)
+            columns_to_drop.append(name_sugest)  # noqa: FURB113
             columns_to_drop.append('X_COORD')
             columns_to_drop.append('Y_COORD')
             entity_data.drop(columns=columns_to_drop, inplace=True)  # noqa: PD002
@@ -1378,7 +1378,7 @@ class Priority:  # noqa: D101
 
 
 class Jobs:  # noqa: D101
-    def __init__(self, restoration):  # noqa: ANN001, ANN204, D107
+    def __init__(self, restoration):  # noqa: ANN001, ANN204
         self._rm = restoration
         self._job_list = pd.DataFrame(
             columns=['agent_type', 'entity', 'action', 'time_argument']
@@ -1393,7 +1393,7 @@ class Jobs:  # noqa: D101
         if effect_name not in self._effect_data:
             self._effect_data[effect_name] = None
 
-        if self._effect_data[effect_name] != None:  # noqa: SIM102, E711
+        if self._effect_data[effect_name] != None:  # noqa: E711
             if method_name in self._effect_data[effect_name]:
                 raise ValueError(
                     'Dupplicate method_name is given. Effect name: '
@@ -1434,7 +1434,7 @@ class Jobs:  # noqa: D101
             )
         return temp
 
-    def getAJobEstimate(  # noqa: ANN201, N802, D102, PLR0913
+    def getAJobEstimate(  # noqa: ANN201, N802, D102
         self,
         orginal_element,  # noqa: ANN001
         agent_type,  # noqa: ANN001
@@ -1461,7 +1461,7 @@ class Jobs:  # noqa: D101
         # raise ValueError('Unknow time argument: '+str(type(time_arg)))
 
         once_flag = False
-        if operation_name in self._once:  # noqa: SIM102
+        if operation_name in self._once:
             if method_name in self._once[operation_name]:
                 once_flag = True
 
@@ -1573,7 +1573,7 @@ class Jobs:  # noqa: D101
                 pass
         return returned_method
 
-    def _getProbability(self, method, iCondition, element_type):  # noqa: ANN001, ANN202, ARG002, N802, N803
+    def _getProbability(self, method, iCondition, element_type):  # noqa: ANN001, ANN202, ARG002, N802, N803, PLR6301
         if iCondition == True:  # noqa: E712
             if 'METHOD_PROBABILITY' in method:  # noqa: SIM401
                 probability = method['METHOD_PROBABILITY']
@@ -1582,7 +1582,7 @@ class Jobs:  # noqa: D101
         # else:
         # if 'METHOD_PROBABILITY' in method:
 
-    def _iConditionHolds(self, val1, con, val2):  # noqa: ANN001, ANN202, C901, N802, PLR0911, PLR0912
+    def _iConditionHolds(self, val1, con, val2):  # noqa: ANN001, ANN202, C901, N802, PLR6301
         if con == 'BG':
             if val1 > val2:  # noqa: SIM103
                 return True
@@ -1729,7 +1729,7 @@ class Jobs:  # noqa: D101
                         )
                         raise ValueError(e)  # noqa: B904
 
-        _rand = random.random()  # noqa: S311
+        _rand = random.random()
         # if effects_definition_name == 'MJTRreroute':
         # print(str(method_name) + ' - ' + repr(_prob))
         logger.debug(_prob)
@@ -1737,7 +1737,7 @@ class Jobs:  # noqa: D101
             return True
         return False
 
-    def _check_probability(self, _prob):  # noqa: ANN001, ANN202
+    def _check_probability(self, _prob):  # noqa: ANN001, ANN202, PLR6301
         mes = None  # noqa: F841
         _prob = float(_prob)
         if _prob < 0:

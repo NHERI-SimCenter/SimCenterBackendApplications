@@ -1,4 +1,4 @@
-import argparse  # noqa: INP001, D100
+import argparse  # noqa: CPY001, D100, INP001
 import json
 import os
 from textwrap import wrap
@@ -7,7 +7,7 @@ from scipy import spatial
 
 
 def ReadSMC(smcFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
-    with open(smcFilePath, 'r+') as smcFile:  # noqa: PTH123, N806
+    with open(smcFilePath, 'r+') as smcFile:  # noqa: N806, PLW1514, PTH123
         series = []
         smcLines = smcFile.readlines()  # noqa: N806
         dT = 1.0 / float(smcLines[17].strip().split()[1])  # noqa: N806
@@ -21,7 +21,7 @@ def ReadSMC(smcFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
 
 
 def ReadCOSMOS(cosmosFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
-    with open(cosmosFilePath, 'r+') as cosmosFile:  # noqa: PTH123, N806
+    with open(cosmosFilePath, 'r+') as cosmosFile:  # noqa: N806, PLW1514, PTH123
         series = []
         cosmosLines = cosmosFile.readlines()  # noqa: N806
         headerSize = int(cosmosLines[0][46:48])  # noqa: N806
@@ -84,7 +84,7 @@ def createEvent(recordsFolder, h1File, h2File, eventFilePath):  # noqa: ANN001, 
     eventsDict['Events'] = [event]
     eventsDict['RandomVariables'] = []
 
-    with open(eventFilePath, 'w') as eventFile:  # noqa: PTH123, N806
+    with open(eventFilePath, 'w') as eventFile:  # noqa: N806, PLW1514, PTH123
         json.dump(eventsDict, eventFile, indent=4)
 
 
@@ -136,11 +136,11 @@ def main():  # noqa: ANN201, D103
     gmConfigPath = gmArgs.groundMotions  # noqa: N806
     recordsFolder = gmArgs.recordsFolder  # noqa: N806
 
-    with open(gmConfigPath) as gmConfigFile:  # noqa: PTH123, N806
+    with open(gmConfigPath) as gmConfigFile:  # noqa: N806, PLW1514, PTH123
         gmConfig = json.load(gmConfigFile)  # noqa: N806
 
     # We need to read the building location
-    with open(bimFilePath) as bimFile:  # noqa: PTH123, N806
+    with open(bimFilePath) as bimFile:  # noqa: N806, PLW1514, PTH123
         bim = json.load(bimFile)
         location = [
             bim['GI']['location']['latitude'],

@@ -1,4 +1,4 @@
-####################################################################  # noqa: INP001
+# # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: D400, D415
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -39,7 +39,7 @@ from hydroUtils import hydroUtils
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
-class of7Materials:  # noqa: N801
+class of7Materials:
     """This class includes the methods related to
     material properties for openfoam7.
 
@@ -57,7 +57,7 @@ class of7Materials:  # noqa: N801
         ---------
                 data: all the JSON data
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -65,7 +65,7 @@ class of7Materials:  # noqa: N801
         mattext = self.matheader()
 
         # Start by stating phases
-        mattext = mattext + 'phases (water air);\n\n'
+        mattext = mattext + 'phases (water air);\n\n'  # noqa: PLR6104
 
         # Water phase
         # Viscosity
@@ -83,13 +83,13 @@ class of7Materials:  # noqa: N801
             hydroutil.extract_element_from_json(data, ['Events', 'WaterDensity'])
         )
 
-        mattext = mattext + 'water\n{\n'
-        mattext = mattext + '\ttransportModel\tNewtonian;\n'
+        mattext = mattext + 'water\n{\n'  # noqa: PLR6104
+        mattext = mattext + '\ttransportModel\tNewtonian;\n'  # noqa: PLR6104
         mattext = (
             mattext + '\tnu\t[0 2 -1 0 0 0 0]\t' + nuwater + 'e' + nuwaterexp + ';\n'
         )
         mattext = mattext + '\trho\t[1 -3 0 0 0 0 0]\t' + rhowater + ';\n'
-        mattext = mattext + '}\n\n'
+        mattext = mattext + '}\n\n'  # noqa: PLR6104
 
         # Air properties
         # Viscosity
@@ -105,13 +105,13 @@ class of7Materials:  # noqa: N801
             hydroutil.extract_element_from_json(data, ['Events', 'AirDensity'])
         )
 
-        mattext = mattext + 'air\n{\n'
-        mattext = mattext + '\ttransportModel\tNewtonian;\n'
+        mattext = mattext + 'air\n{\n'  # noqa: PLR6104
+        mattext = mattext + '\ttransportModel\tNewtonian;\n'  # noqa: PLR6104
         mattext = (
             mattext + '\tnu\t[0 2 -1 0 0 0 0]\t' + nuair + 'e' + nuairexp + ';\n'
         )
         mattext = mattext + '\trho\t[1 -3 0 0 0 0 0]\t' + rhoair + ';\n'
-        mattext = mattext + '}\n\n'
+        mattext = mattext + '}\n\n'  # noqa: PLR6104
 
         # Surface tension between water and air
         sigma = ', '.join(
@@ -123,13 +123,13 @@ class of7Materials:  # noqa: N801
         return mattext  # noqa: RET504
 
     #############################################################
-    def matheader(self):  # noqa: ANN201
+    def matheader(self):  # noqa: ANN201, PLR6301
         """Creates the text for the header
 
         Variable
         -----------
                 header: Header for the transportProp-file
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
@@ -145,14 +145,14 @@ FoamFile
         return header  # noqa: RET504
 
     #############################################################
-    def matcheck(self, data):  # noqa: ANN001, ANN201, PLR0911
+    def matcheck(self, data):  # noqa: ANN001, ANN201, PLR6301
         """Checks for material properties for openfoam7
 
         Arguments:
         ---------
                 data: all the JSON data
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 

@@ -1,7 +1,7 @@
 """Created on Thu Nov 10 21:46:04 2022
 
 @author: snaeimi
-"""  # noqa: N999, D400, D415
+"""  # noqa: CPY001, D400, N999
 
 import os
 import sys

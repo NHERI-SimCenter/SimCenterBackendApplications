@@ -1,7 +1,7 @@
-import glob  # noqa: INP001, D100
+import glob  # noqa: CPY001, D100, INP001
 import os
 import shutil
-import subprocess
+import subprocess  # noqa: S404
 import sys
 import traceback
 from dataclasses import dataclass
@@ -39,7 +39,7 @@ def _copytree(src, dst, symlinks=False, ignore=None):  # noqa: ANN001, ANN202, F
 
 def _append_msg_in_out_file(msg, out_file_name: str = 'ops.out'):  # noqa: ANN001, ANN202
     if glob.glob(out_file_name):  # noqa: PTH207
-        with open(out_file_name) as text_file:  # noqa: PTH123
+        with open(out_file_name) as text_file:  # noqa: FURB101, PLW1514, PTH123
             error_FEM = text_file.read()  # noqa: N806
 
         startingCharId = error_FEM.lower().find('error')  # noqa: N806
@@ -59,12 +59,12 @@ def _append_msg_in_out_file(msg, out_file_name: str = 'ops.out'):  # noqa: ANN00
 
 
 class ModelEvaluationError(Exception):  # noqa: D101
-    def __init__(self, msg: str) -> None:  # noqa: D107
+    def __init__(self, msg: str) -> None:
         super().__init__(msg)
 
 
 class SimCenterWorkflowDriver:  # noqa: D101
-    def __init__(  # noqa: D107, PLR0913
+    def __init__(
         self,
         full_path_of_tmpSimCenter_dir: str,  # noqa: N803
         list_of_dir_names_to_copy_files_from: list[str],  # noqa: FA102
@@ -143,7 +143,7 @@ class SimCenterWorkflowDriver:  # noqa: D101
         for i, rv in enumerate(self.list_of_rv_names):
             list_of_strings_to_write.append(f'{rv} {sample_values[0][i]}')
         try:
-            with open(os.path.join(workdir, 'params.in'), 'w') as f:  # noqa: PTH118, PTH123
+            with open(os.path.join(workdir, 'params.in'), 'w') as f:  # noqa: FURB103, PLW1514, PTH118, PTH123
                 f.write('\n'.join(list_of_strings_to_write))
         except Exception as ex:  # noqa: BLE001
             raise ModelEvaluationError(  # noqa: B904, TRY003
@@ -162,7 +162,7 @@ class SimCenterWorkflowDriver:  # noqa: D101
             completed_process.check_returncode()
         except subprocess.CalledProcessError as ex:
             returnStringList = ['Failed to run the model.']  # noqa: N806
-            returnStringList.append(
+            returnStringList.append(  # noqa: FURB113
                 'The command to run the model was                            '
                 f'         {ex.cmd}'
             )
@@ -192,7 +192,7 @@ class SimCenterWorkflowDriver:  # noqa: D101
             msg = _append_msg_in_out_file(msg, out_file_name='ops.out')
             raise ModelEvaluationError(msg)
 
-        if not self.ignore_nans:  # noqa: SIM102
+        if not self.ignore_nans:
             if np.isnan(np.sum(outputs)):
                 msg = f'Error running FEM: Response value in {workdir} is NaN'
                 raise ModelEvaluationError(msg)
@@ -225,12 +225,12 @@ class SimCenterWorkflowDriver:  # noqa: D101
 
 
 class ParallelRunnerMultiprocessing:  # noqa: D101
-    def __init__(self, run_type: str = 'runningLocal') -> None:  # noqa: D107
+    def __init__(self, run_type: str = 'runningLocal') -> None:
         self.run_type = run_type
         self.num_processors = self.get_num_processors()
         self.pool = self.get_pool()
 
-    def get_num_processors(self) -> int:  # noqa: D102
+    def get_num_processors(self) -> int:  # noqa: D102, PLR6301
         num_processors = os.cpu_count()
         if num_processors is None:
             num_processors = 1
@@ -282,7 +282,7 @@ def make_ERANataf_object(list_of_ERADist, correlation_matrix) -> ERANataf:  # no
 
 
 class ERANatafJointDistribution:  # noqa: D101
-    def __init__(  # noqa: D107
+    def __init__(
         self,
         list_of_random_variables_data: list,
         correlation_matrix_data: NDArray,
@@ -351,7 +351,7 @@ def get_list_of_pseudo_random_number_generators(entropy, num_spawn):  # noqa: AN
 
 def get_parallel_pool_instance(run_type: str):  # noqa: ANN201, D103
     if run_type == 'runningRemote':
-        from parallel_runner_mpi4py import ParallelRunnerMPI4PY
+        from parallel_runner_mpi4py import ParallelRunnerMPI4PY  # noqa: PLC0415
 
         return ParallelRunnerMPI4PY(run_type)
     else:  # noqa: RET505
@@ -372,7 +372,7 @@ def get_length_of_results(edp_data):  # noqa: ANN001, ANN201, D103
     return length_of_results
 
 
-def create_default_model(  # noqa: ANN201, D103, PLR0913
+def create_default_model(  # noqa: ANN201, D103
     run_directory,  # noqa: ANN001
     list_of_dir_names_to_copy_files_from,  # noqa: ANN001
     list_of_rv_names,  # noqa: ANN001
@@ -410,7 +410,7 @@ def get_std_normal_to_rv_transformation_function(joint_distribution):  # noqa: A
     return transformation_function  # noqa: RET504
 
 
-def get_default_model(  # noqa: ANN201, D103, PLR0913
+def get_default_model(  # noqa: ANN201, D103
     list_of_rv_data,  # noqa: ANN001
     edp_data,  # noqa: ANN001
     list_of_dir_names_to_copy_files_from,  # noqa: ANN001
@@ -493,7 +493,7 @@ def _get_tabular_results_file_name_for_dataset(  # noqa: ANN202
 
     tabular_results_file = (
         tabular_results_parent
-        / f'{tabular_results_stem}_dataset_{dataset_number+1}{tabular_results_extension}'
+        / f'{tabular_results_stem}_dataset_{dataset_number + 1}{tabular_results_extension}'
     )
     return tabular_results_file  # noqa: RET504
 

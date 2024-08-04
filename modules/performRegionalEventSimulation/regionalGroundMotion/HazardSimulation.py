@@ -42,7 +42,7 @@ import importlib
 import json
 import os
 import shutil
-import subprocess
+import subprocess  # noqa: S404
 import sys
 import time
 
@@ -52,7 +52,7 @@ import psutil
 R2D = True
 
 
-def site_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912
+def site_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103
     # Sites and stations
     print('HazardSimulation: creating stations.')  # noqa: T201
     site_info = hazard_info['Site']
@@ -122,7 +122,7 @@ def site_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912
         exit()  # noqa: PLR1722
 
 
-def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
+def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0914, PLR0915
     # Sites and stations
     print('HazardSimulation: creating stations.')  # noqa: T201
     site_info = hazard_info['Site']
@@ -175,7 +175,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
         if user_scenarios:
             scenarios = load_earthquake_scenarios(scenario_info, stations, dir_info)  # noqa: F405
         # Creating earthquake scenarios
-        elif scenario_info['EqRupture']['Type'] in ['PointSource', 'ERF']:
+        elif scenario_info['EqRupture']['Type'] in ['PointSource', 'ERF']:  # noqa: PLR6201
             scenarios = create_earthquake_scenarios(  # noqa: F405
                 scenario_info, stations, dir_info
             )
@@ -183,7 +183,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
         # Creating wind scenarios
         scenarios = create_wind_scenarios(scenario_info, stations, input_dir)  # noqa: F405
     else:
-        # TODO: extending this to other hazards  # noqa: FIX002, TD002, TD003
+        # TODO: extending this to other hazards  # noqa: TD002
         print('HazardSimulation: currently only supports EQ and Wind simulations.')  # noqa: T201
     # print(scenarios)
     print('HazardSimulation: scenarios created.')  # noqa: T201
@@ -215,7 +215,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
                 sys.exit(
                     'HazardSimulation: errors in preparing the OpenQuake configuration file.'
                 )
-            if scenario_info['EqRupture']['Type'] in [
+            if scenario_info['EqRupture']['Type'] in [  # noqa: PLR6201
                 'OpenQuakeClassicalPSHA',
                 'OpenQuakeUserConfig',
                 'OpenQuakeClassicalPSHA-User',
@@ -231,7 +231,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
                 if oq_run_flag:
                     err_msg = 'HazardSimulation: OpenQuake Classical PSHA failed.'
                     if not new_db_sqlite3:
-                        err_msg = (
+                        err_msg = (  # noqa: PLR6104
                             err_msg
                             + ' Please see if there is leaked python threads in background still occupying {}.'.format(
                                 os.path.expanduser('~/oqdata/db.sqlite3')  # noqa: PTH111
@@ -335,7 +335,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
         else:
             num_gm_per_site = event_info['NumberPerSite']
         print('num_gm_per_site = ', num_gm_per_site)  # noqa: T201
-        if scenario_info['EqRupture']['Type'] not in [
+        if scenario_info['EqRupture']['Type'] not in [  # noqa: PLR6201
             'OpenQuakeClassicalPSHA',
             'OpenQuakeUserConfig',
             'OpenQuakeClassicalPSHA-User',
@@ -381,7 +381,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
                 sampled_im_gmms[:, :, count] = ln_im_mr[id_selected_scens[i]][
                     :, :, id_selected_simus[i]
                 ].tolist()
-                count = count + 1
+                count = count + 1  # noqa: PLR6104
             ln_im_mr_sampled = [sampled_im_gmms]
             ln_im_mr = ln_im_mr_sampled
             mag_maf = [[0, 0, 0, 0]]
@@ -403,7 +403,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
         # print(np.exp(ln_im_mr[0][0, :, 1]))
         # print(np.exp(ln_im_mr[0][1, :, 1]))
     else:
-        # TODO: extending this to other hazards  # noqa: FIX002, TD002, TD003
+        # TODO: extending this to other hazards  # noqa: TD002
         print('HazardSimulation currently only supports earthquake simulations.')  # noqa: T201
     print('HazardSimulation: intensity measures computed.')  # noqa: T201
     # Selecting ground motion records
@@ -478,7 +478,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # read the hazard configuration file
-    with open(args.hazard_config) as f:  # noqa: PTH123
+    with open(args.hazard_config) as f:  # noqa: PLW1514, PTH123
         hazard_info = json.load(f)
 
     # directory (back compatibility here)
@@ -511,7 +511,7 @@ if __name__ == '__main__':
 
     # parse job type for set up environment and constants
     try:
-        opensha_flag = hazard_info['Scenario']['EqRupture']['Type'] in [
+        opensha_flag = hazard_info['Scenario']['EqRupture']['Type'] in [  # noqa: PLR6201
             'PointSource',
             'ERF',
         ]

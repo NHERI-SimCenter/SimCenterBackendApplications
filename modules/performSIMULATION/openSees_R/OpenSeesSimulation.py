@@ -1,5 +1,5 @@
-import os  # noqa: INP001, D100
-import subprocess
+import os  # noqa: CPY001, D100, INP001
+import subprocess  # noqa: S404
 import sys
 
 inputArgs = sys.argv  # noqa: N816

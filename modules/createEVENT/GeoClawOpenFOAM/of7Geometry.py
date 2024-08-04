@@ -1,4 +1,4 @@
-####################################################################  # noqa: INP001
+# # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: D400, D415
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -46,7 +46,7 @@ from userFlume import userFlume
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
-class of7Geometry:  # noqa: N801
+class of7Geometry:
     """This class includes the methods related to
     creating the geometry for openfoam7.
 
@@ -58,7 +58,7 @@ class of7Geometry:  # noqa: N801
     """  # noqa: D205, D404
 
     #############################################################
-    def geomcheck(self, data, path):  # noqa: ANN001, ANN201, C901, PLR0911, PLR0912, PLR0915
+    def geomcheck(self, data, path):  # noqa: ANN001, ANN201, C901, PLR0911, PLR6301
         """Checks if all files required for creating the geometry exists
 
         Arguments:
@@ -66,7 +66,7 @@ class of7Geometry:  # noqa: N801
                 data: all the JSON data
                 path: Path to where the dakota.json exists
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -227,7 +227,7 @@ class of7Geometry:  # noqa: N801
         return 0
 
     #############################################################
-    def createOFSTL(self, data, path):  # noqa: ANN001, ANN201, C901, N802
+    def createOFSTL(self, data, path):  # noqa: ANN001, ANN201, C901, N802, PLR6301
         """Creates the STL files
 
         Arguments:
@@ -235,7 +235,7 @@ class of7Geometry:  # noqa: N801
                 data: all the JSON data
                 path: Path to where the dakota.json exists
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -291,14 +291,14 @@ class of7Geometry:  # noqa: N801
         return 0
 
     #############################################################
-    def scripts(self, data):  # noqa: ANN001, ANN201, D417
+    def scripts(self, data):  # noqa: ANN001, ANN201, PLR6301
         """Add to caserun.sh
 
         Arguments:
         ---------
                 NONE
 
-        """  # noqa: D400, D415
+        """  # noqa: D400
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -317,9 +317,9 @@ class of7Geometry:  # noqa: N801
             # If translate file exists, use it
             if os.path.exists('translate.sh'):  # noqa: PTH110
                 caseruntext = 'echo Translating building STL files...\n'
-                caseruntext = caseruntext + 'chmod +x translate.sh\n'
-                caseruntext = caseruntext + './translate.sh\n\n'
-                caseruntext = caseruntext + 'echo Combining STL files for usage...\n'
+                caseruntext = caseruntext + 'chmod +x translate.sh\n'  # noqa: PLR6104
+                caseruntext = caseruntext + './translate.sh\n\n'  # noqa: PLR6104
+                caseruntext = caseruntext + 'echo Combining STL files for usage...\n'  # noqa: PLR6104
             else:
                 caseruntext = 'echo Combining STL files for usage...\n'
 
@@ -380,6 +380,6 @@ class of7Geometry:  # noqa: N801
                     + '\n\n'
                 )
             # Write to caserun file
-            scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
+            scriptfile = open('caserun.sh', 'a')  # noqa: PLW1514, PTH123, SIM115
             scriptfile.write(caseruntext)
             scriptfile.close()

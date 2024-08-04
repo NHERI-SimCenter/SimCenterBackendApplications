@@ -1,4 +1,4 @@
-# python code to open the TPU .mat file  # noqa: INP001, D100
+# python code to open the TPU .mat file  # noqa: CPY001, D100, INP001
 # and put data into a SimCenter JSON file for
 # wind tunnel data
 
@@ -20,8 +20,8 @@ dataDir = os.getcwd()  # noqa: PTH109, N816
 scriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N816
 
 
-def parseTPU_LowRise_MatFile(matFileIn, windFileOutName):  # noqa: ANN001, ANN201, C901, N802, N803, D103, PLR0912, PLR0915
-    file = open(windFileOutName, 'w')  # noqa: SIM115, PTH123
+def parseTPU_LowRise_MatFile(matFileIn, windFileOutName):  # noqa: ANN001, ANN201, C901, N802, N803, D103
+    file = open(windFileOutName, 'w')  # noqa: PLW1514, PTH123, SIM115
     file.write('{\n')
     mat_contents = sio.loadmat(matFileIn)
     breadth = mat_contents['Building_breadth'][0][0]

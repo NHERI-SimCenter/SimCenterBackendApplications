@@ -1,4 +1,4 @@
-# JGA  # noqa: D100, N999
+# JGA  # noqa: CPY001, D100, N999
 # from matplotlib import pyplot as plt
 import os
 import platform
@@ -62,7 +62,7 @@ c_lib.gradient_rho.argtypes = [
 ]
 
 
-def rhoctypes(y, eta, nu, N, s_v, hat_s_v):  # noqa: ANN001, ANN201, N803, D103, PLR0913
+def rhoctypes(y, eta, nu, N, s_v, hat_s_v):  # noqa: ANN001, ANN201, N803, D103
     return c_lib.rho(
         np.array(y, np.float64), np.array(eta, np.float64), nu, N, s_v, hat_s_v
     )
@@ -84,7 +84,7 @@ def scaling(x):  # noqa: ANN001, ANN201, D103
     return x_scaled, alpha, x_min
 
 
-def gradient_rhoctypes(gradient, y, eta, nu, N, s_v, hat_s_v):  # noqa: ANN001, ANN201, N803, D103, PLR0913
+def gradient_rhoctypes(gradient, y, eta, nu, N, s_v, hat_s_v):  # noqa: ANN001, ANN201, N803, D103
     return c_lib.gradient_rho(
         np.array(gradient, np.float64),
         np.array(y, np.float64),
@@ -99,7 +99,7 @@ def gradient_rhoctypes(gradient, y, eta, nu, N, s_v, hat_s_v):  # noqa: ANN001, 
 def kernel(x, y, epsilon):  # noqa: ANN001, ANN201
     """>>> kernel(np.array([1,0]), np.array([1,0]), 0.5)
     1.0
-    """  # noqa: D205, D400, D402, D415
+    """  # noqa: D205, D400
     dist = np.linalg.norm(x - y) ** 2
     k = np.exp(-dist / (4 * epsilon))
     return k  # noqa: RET504
@@ -110,7 +110,7 @@ def K(eta, epsilon):  # noqa: ANN001, ANN201, N802
     (array([[1., 1.],
            [1., 1.]]), array([[2., 0.],
            [0., 2.]]))
-    """  # noqa: D205, D400, D402, D415
+    """  # noqa: D205, D400
     N = eta.shape[1]  # noqa: N806
     K = np.zeros((N, N))  # noqa: N806
     b = np.zeros((N, N))
@@ -119,10 +119,10 @@ def K(eta, epsilon):  # noqa: ANN001, ANN201, N802
         for j in range(N):
             if j != i:
                 K[i, j] = kernel((eta[:, i]), (eta[:, j]), epsilon)
-                row_sum = row_sum + K[i, j]
+                row_sum = row_sum + K[i, j]  # noqa: PLR6104
             else:
                 K[i, j] = 1
-                row_sum = row_sum + 1
+                row_sum = row_sum + 1  # noqa: PLR6104
         b[i, i] = row_sum
     return K, b
 
@@ -131,7 +131,7 @@ def g(K, b):  # noqa: ANN001, ANN201, N803
     """>>> g((np.array([[1,0.5],[0.5,1]])), np.array([[1.5, 0.], [0., 1.5]]))
     (array([[ 0.57735027, -0.57735027],
            [ 0.57735027,  0.57735027]]), array([1.        , 0.33333333]))
-    """  # noqa: D205, D400, D402, D415
+    """  # noqa: D205, D400
     invb = np.diag(1 / np.diag(b))
     inv_sqrt_b = np.sqrt(invb)
     xi = np.linalg.eigh(inv_sqrt_b.dot(K).dot(inv_sqrt_b))
@@ -148,13 +148,13 @@ def g(K, b):  # noqa: ANN001, ANN201, N803
 def m(eigenvalues, tol=0.1):  # noqa: ANN001, ANN201
     """>>> m(np.array([1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.05, 0.025]))
     11
-    """  # noqa: D205, D400, D402, D415
+    """  # noqa: D205, D400
     i = 2
     m = 0
     while i < len(eigenvalues) and m == 0:
         if eigenvalues[i] <= eigenvalues[1] * tol:
             return i + 1
-        i = i + 1
+        i = i + 1  # noqa: PLR6104
     if m == 0:
         return max(round(len(eigenvalues) / 10), 3)
     return m
@@ -165,7 +165,7 @@ def mean(x):  # noqa: ANN001, ANN201
     array([[1. ],
            [0.5],
            [3. ]])
-    """  # noqa: D205, D400, D402, D415
+    """  # noqa: D205, D400
     dim = x.shape[0]
     x_mean = np.zeros((dim, 1))
     for i in range(dim):
@@ -178,13 +178,13 @@ def covariance(x):  # noqa: ANN001, ANN201
     array([[0. , 0. , 0. ],
            [0. , 0.5, 1. ],
            [0. , 1. , 2. ]])
-    """  # noqa: D205, D400, D402, D415
+    """  # noqa: D205, D400
     dim = x.shape[0]
     N = x.shape[1]  # noqa: N806
     C = np.zeros((dim, dim))  # noqa: N806
     x_mean = mean(x)
     for i in range(N):
-        C = C + (np.resize(x[:, i], x_mean.shape) - x_mean).dot(  # noqa: N806
+        C = C + (np.resize(x[:, i], x_mean.shape) - x_mean).dot(  # noqa: N806, PLR6104
             np.transpose(np.resize(x[:, i], x_mean.shape) - x_mean)
         )
     return C / (N - 1)
@@ -195,10 +195,10 @@ def PCA(x, tol):  # noqa: ANN001, ANN201, N802
     (array([[-0.70710678,  0.70710678]]), array([1.58113883]), array([[-1.13483031e-17],
            [ 4.47213595e-01],
            [ 8.94427191e-01]]))
-    """  # noqa: D205, D400, D402, D415
+    """  # noqa: D205, D400
     x_mean = mean(x)
-    (phi, mu, v) = np.linalg.svd(x - x_mean)
-    mu = mu / sqrt(len(x[0]) - 1)
+    (phi, mu, v) = np.linalg.svd(x - x_mean)  # noqa: F841
+    mu = mu / sqrt(len(x[0]) - 1)  # noqa: PLR6104
     # plt.figure()
     # plt.plot(np.arange(len(mu)), mu)
     # plt.xlabel('# eigenvalue of X covariance')
@@ -207,13 +207,13 @@ def PCA(x, tol):  # noqa: ANN001, ANN201, N802
     i = 0
     errors = [1]
     while error > tol and i < len(mu):
-        error = error - (mu[i] ** 2) / sum(mu**2)
-        i = i + 1
+        error = error - (mu[i] ** 2) / sum(mu**2)  # noqa: PLR6104
+        i = i + 1  # noqa: PLR6104
         nu = i
         errors.append(error)
     while i < len(mu):
-        error = error - (mu[i] ** 2) / sum(mu**2)
-        i = i + 1
+        error = error - (mu[i] ** 2) / sum(mu**2)  # noqa: PLR6104
+        i = i + 1  # noqa: PLR6104
         errors.append(error)
     # plt.figure()
     # plt.semilogy(np.arange(len(mu)+1), errors)
@@ -237,7 +237,7 @@ def PCA(x, tol):  # noqa: ANN001, ANN201, N802
 def parameters_kde(eta):  # noqa: ANN001, ANN201
     """>>> parameters_kde(np.array([[1,1],[0,1],[2,4]]))
     (0.8773066621237415, 0.13452737030512696, 0.7785858648409519)
-    """  # noqa: D205, D400, D402, D415
+    """  # noqa: D205, D400
     nu = eta.shape[0]
     N = eta.shape[1]  # noqa: N806
     s_v = (4 / (N * (2 + nu))) ** (1 / (nu + 4))  # (4/(N*(2+nu)))**(1/(nu+4))
@@ -249,7 +249,7 @@ def parameters_kde(eta):  # noqa: ANN001, ANN201
 def kde(y, eta, s_v=None, c_v=None, hat_s_v=None):  # noqa: ANN001, ANN201
     """>>> kde(np.array([[1, 2, 3]]), np.array([[1,1],[0,1],[2,4]]))
     0.01940049487135241
-    """  # noqa: D205, D400, D402, D415
+    """  # noqa: D205, D400
     nu = eta.shape[0]
     N = eta.shape[1]  # noqa: N806
     if s_v == None or c_v == None or hat_s_v == None:  # noqa: E711
@@ -270,7 +270,7 @@ def PCA2(C_h_hat_eta, beta, tol):  # noqa: N802, ANN201, N803, ANN001
     (array([-4.53648062,  5.2236145 ]), array([[-0.28104828,  0.42570005],
            [-0.85525695, -0.51768266],
            [-0.43537043,  0.74214832]]))
-    """  # noqa: D205, D400, D402, D415
+    """  # noqa: D205, D400
     (lambda_c, psi) = np.linalg.eig(
         C_h_hat_eta
     )  # eigenvalue decomposition as the dimensions are not so big
@@ -283,7 +283,7 @@ def PCA2(C_h_hat_eta, beta, tol):  # noqa: N802, ANN201, N803, ANN001
     while i < len(lambda_c) and not (
         lambda_c[i - 1] > tol * lambda_c[0] and lambda_c[i] <= tol * lambda_c[0]
     ):
-        i = i + 1
+        i = i + 1  # noqa: PLR6104
         nu_c = i
     lambda_c = lambda_c[0:nu_c]
     psi = psi[:, 0:nu_c]
@@ -291,17 +291,17 @@ def PCA2(C_h_hat_eta, beta, tol):  # noqa: N802, ANN201, N803, ANN001
     return b_c, psi
 
 
-def h_c(eta, g_c, phi, mu, psi, x_mean):  # noqa: ANN001, ANN201, D103, PLR0913
+def h_c(eta, g_c, phi, mu, psi, x_mean):  # noqa: ANN001, ANN201, D103
     return np.transpose(psi).dot(g_c(x_mean + phi.dot(np.diag(mu)).dot(eta)))
 
 
-def gradient_gamma(b_c, eta_lambda, g_c, phi, mu, psi, x_mean):  # noqa: ANN001, ANN201, D103, PLR0913
+def gradient_gamma(b_c, eta_lambda, g_c, phi, mu, psi, x_mean):  # noqa: ANN001, ANN201, D103
     return (b_c) - mean(
         h_c(eta_lambda, g_c, phi, mu, psi, x_mean)
     )  # the mean is the empirical expectation
 
 
-def hessian_gamma(eta_lambda, psi, g_c, phi, mu, x_mean):  # noqa: ANN001, ANN201, D103, PLR0913
+def hessian_gamma(eta_lambda, psi, g_c, phi, mu, x_mean):  # noqa: ANN001, ANN201, D103
     return covariance(h_c(eta_lambda, g_c, phi, mu, psi, x_mean))
 
 
@@ -322,7 +322,7 @@ def solve_inverse(matrix):  # noqa: ANN001, ANN201, D103
         return inverse
 
 
-def generator(  # noqa: ANN201, D103, PLR0913
+def generator(  # noqa: ANN201, D103, PLR0913, PLR0917
     z_init,  # noqa: ANN001
     y_init,  # noqa: ANN001
     a,  # noqa: ANN001
@@ -341,7 +341,7 @@ def generator(  # noqa: ANN201, D103, PLR0913
     seed_num=None,  # noqa: ANN001
 ):
     if seed_num:
-        np.random.seed(seed_num)  # noqa: NPY002
+        np.random.seed(seed_num)
     delta_t = 2 * pi * hat_s_v / 20
     print('delta t: ', delta_t)  # noqa: T201
     f_0 = 1.5
@@ -361,7 +361,7 @@ def generator(  # noqa: ANN201, D103, PLR0913
     nu_lambda[:, 0:N] = y_init.dot(np.transpose(g))
     for i in range(l_0):  # noqa: B007
         z_l_half = z_l + delta_t * 0.5 * y_l
-        w_l_1 = np.random.normal(scale=sqrt(delta_t), size=(nu, N)).dot(  # noqa: NPY002
+        w_l_1 = np.random.normal(scale=sqrt(delta_t), size=(nu, N)).dot(
             a
         )  # wiener process
         L_l_half = L(  # noqa: N806
@@ -386,7 +386,7 @@ def generator(  # noqa: ANN201, D103, PLR0913
         y_l = y_l_1
     for l in range(M_0, M_0 * (n_mc + 1)):  # noqa: E741
         z_l_half = z_l + delta_t * 0.5 * y_l
-        w_l_1 = np.random.normal(scale=sqrt(delta_t), size=(nu, N)).dot(  # noqa: NPY002
+        w_l_1 = np.random.normal(scale=sqrt(delta_t), size=(nu, N)).dot(
             a
         )  # wiener process
         L_l_half = L(  # noqa: N806
@@ -433,12 +433,12 @@ def generator(  # noqa: ANN201, D103, PLR0913
 
 
 def ac(sig):  # noqa: ANN001, ANN201, D103
-    sig = sig - np.mean(sig)
+    sig = sig - np.mean(sig)  # noqa: PLR6104
     sft = np.fft.rfft(np.concatenate((sig, 0 * sig)))
     return np.fft.irfft(np.conj(sft) * sft)
 
 
-def L(  # noqa: ANN201, N802, D103, PLR0913
+def L(  # noqa: ANN201, N802, D103
     y,  # noqa: ANN001
     g_c,  # noqa: ANN001, ARG001
     x_mean,  # noqa: ANN001
@@ -459,7 +459,7 @@ def L(  # noqa: ANN201, N802, D103, PLR0913
         rho_ = rhoctypes(
             yl, np.resize(np.transpose(eta), (nu * N, 1)), nu, N, s_v, hat_s_v
         )
-        rho_ = 1e250 * rho_
+        rho_ = 1e250 * rho_  # noqa: PLR6104
         # compute the D_x_g_c if D_x_g_c is not 0 (KZ)
         if D_x_g_c:
             grad_g_c = D_x_g_c(
@@ -524,13 +524,13 @@ def err(gradient, b_c):  # noqa: ANN001, ANN201, D103
     return np.linalg.norm(gradient) / np.linalg.norm(b_c)
 
 
-def gamma(lambda_i, eta, s_v, hat_s_v, g_c, phi, mu, psi, x_mean, b_c):  # noqa: ANN001, ANN201, D103, PLR0913
+def gamma(lambda_i, eta, s_v, hat_s_v, g_c, phi, mu, psi, x_mean, b_c):  # noqa: ANN001, ANN201, D103
     return np.transpose(lambda_i).dot(b_c) + log(
         inv_c_0(lambda_i, eta, s_v, hat_s_v, g_c, phi, mu, psi, x_mean)
     )
 
 
-def func(x, y, eta, s_v, hat_s_v, g_c, phi, mu, psi, x_mean, lambda_i):  # noqa: ANN001, ANN201, D103, PLR0913
+def func(x, y, eta, s_v, hat_s_v, g_c, phi, mu, psi, x_mean, lambda_i):  # noqa: ANN001, ANN201, D103
     nu = eta.shape[0]
     N = eta.shape[1]  # noqa: N806
     return rhoctypes(
@@ -551,8 +551,8 @@ def gaussian_bell(x, y):  # noqa: ANN001, ANN201, D103
     return exp(-(x**2 + y**2) / 2) / (2 * pi)
 
 
-def inv_c_0(lambda_i, eta, s_v, hat_s_v, g_c, phi, mu, psi, x_mean):  # noqa: ANN001, ANN201, D103, PLR0913
-    c, error = integrate.dblquad(
+def inv_c_0(lambda_i, eta, s_v, hat_s_v, g_c, phi, mu, psi, x_mean):  # noqa: ANN001, ANN201, D103
+    c, error = integrate.dblquad(  # noqa: F841
         func,
         -3,
         3,

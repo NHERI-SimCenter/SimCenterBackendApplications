@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Scenario_Dialog_Window.ui'  # noqa: D100, N999
+# Form implementation generated from reading ui file 'Scenario_Dialog_Window.ui'  # noqa: CPY001, D100, N999
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,7 +8,7 @@
 from PyQt5 import QtCore, QtWidgets
 
 
-class Ui_Scenario_Dialog:  # noqa: N801, D101
+class Ui_Scenario_Dialog:  # noqa: D101
     def setupUi(self, Scenario_Dialog):  # noqa: ANN001, ANN201, N802, N803, D102
         Scenario_Dialog.setObjectName('Scenario_Dialog')
         Scenario_Dialog.resize(351, 241)

@@ -53,7 +53,7 @@ import whale.main as whale
 from whale.main import log_div, log_msg
 
 
-def runSWhale(  # noqa: ANN201, N802, D103, PLR0913
+def runSWhale(  # noqa: ANN201, N802, D103
     inputs,  # noqa: ANN001
     WF,  # noqa: ANN001, N803
     assetID=None,  # noqa: ANN001, N803
@@ -147,13 +147,13 @@ def runSWhale(  # noqa: ANN201, N802, D103, PLR0913
     log_div(prepend_blank_space=False)
 
 
-def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):  # noqa: ANN001, ANN201, ARG001, D103, PLR0913
+def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):  # noqa: ANN001, ANN201, ARG001, D103
     # update the runDir, if needed
     with open(input_file, encoding='utf-8') as f:  # noqa: PTH123
         inputs = json.load(f)
     runDir = inputs['runDir']  # noqa: N806
 
-    if working_dir is not None:  # noqa: SIM108
+    if working_dir is not None:
         runDir = working_dir  # noqa: N806
     else:
         runDir = inputs['runDir']  # noqa: N806

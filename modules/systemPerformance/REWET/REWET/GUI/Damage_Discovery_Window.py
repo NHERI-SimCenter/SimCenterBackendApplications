@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Damage_Discovery_Window.ui'  # noqa: D100, N999
+# Form implementation generated from reading ui file 'Damage_Discovery_Window.ui'  # noqa: CPY001, D100, N999
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,8 +8,8 @@
 from PyQt5 import QtCore, QtWidgets
 
 
-class Ui_damage_discovery:  # noqa: N801, D101
-    def setupUi(self, damage_discovery):  # noqa: ANN001, ANN201, N802, D102, PLR0915
+class Ui_damage_discovery:  # noqa: D101
+    def setupUi(self, damage_discovery):  # noqa: ANN001, ANN201, N802, D102
         damage_discovery.setObjectName('damage_discovery')
         damage_discovery.resize(450, 400)
         damage_discovery.setMinimumSize(QtCore.QSize(450, 400))

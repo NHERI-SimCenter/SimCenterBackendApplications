@@ -49,11 +49,13 @@
 # tropical cyclone boundary layer. Journal of Wind Engineering and Industrial
 # Aerodynamics, 171, pp. 248-260.
 
+from itertools import starmap
+
 import numpy as np
 from shapely.geometry import Point, Polygon
 
 
-class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
+class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
     def __init__(self, cyclone_param=[], storm_track=[]):  # noqa: ANN001, ANN204, B006
         """__init__: initializing the tropical cyclone
         cyclone_param: 6-dimensional array
@@ -66,7 +68,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
         storm_track:
         - storm_track['Latitude']: latitude values of the storm track
         - storm_track['Longittude']: longitude values of the storm track
-        """  # noqa: D205, D400, D415
+        """  # noqa: D205, D400
         # constants
         self.R = 6371.0 * 1e3
         self.EDDY_VISCOCITY = 75.0
@@ -126,7 +128,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
         self.mesh_info = []
 
     def set_delta_path(self, delta_path):  # noqa: ANN001, ANN201
-        """set_delta_path: perturbing the path coordinates and heading angle of the storm track"""  # noqa: D400, D415
+        """set_delta_path: perturbing the path coordinates and heading angle of the storm track"""  # noqa: D400
         if len(delta_path) == 3:  # noqa: PLR2004
             self.delta_path = delta_path
         else:
@@ -135,7 +137,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
             )
 
     def set_delta_feat(self, delta_feat):  # noqa: ANN001, ANN201
-        """set_delta_feat: perturbing the central pressure difference, traslational speed, and max-wind-speed radius"""  # noqa: D400, D415
+        """set_delta_feat: perturbing the central pressure difference, traslational speed, and max-wind-speed radius"""  # noqa: D400
         if len(delta_feat) == 3:  # noqa: PLR2004
             self.cyclone_pres = delta_feat[0] * 100.0
             self.cyclone_sped = delta_feat[1] * 1000.0 / 3600.0
@@ -152,7 +154,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
             )
 
     def __interp_z0(self, lat, lon):  # noqa: ANN001, ANN202
-        """__interp_z0: finding the z0 at (lat, lon) by interpolating reference terrain polygons"""  # noqa: D400, D415
+        """__interp_z0: finding the z0 at (lat, lon) by interpolating reference terrain polygons"""  # noqa: D400
         z0 = []
         if not self.terrain_z0:
             # no reference terrain provided, using default reference z0 = 0.03
@@ -171,7 +173,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
     def add_reference_terrain(self, terrain_info):  # noqa: ANN001, ANN201
         """add_reference_terrainL specifying reference z0 values for a set of polygons
         terrain_info: geojson formatted polygon and z0 data
-        """  # noqa: D205, D400, D415
+        """  # noqa: D205, D400
         for p in terrain_info['features']:
             if p['geometry']['type'] == 'Polygon':
                 # creating a new polygon
@@ -188,7 +190,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
         mesh_info[3]: starting angle (usually 0)
         mesh_info[4]: interval angle
         mesh_info[5]: ending angle (usually 360)
-        """  # noqa: D205, D400, D415
+        """  # noqa: D205, D400
         try:
             self.mesh_info = mesh_info
             self.r = np.arange(
@@ -206,7 +208,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
         mesh_lat[0]: starting latitude value of the meshed track
         mesh_lat[1]: interval latitude value
         mesh_lat[2]: ending latitude value of the meshed track
-        """  # noqa: D205, D400, D415
+        """  # noqa: D205, D400
         try:
             lat0 = mesh_lat[0]
             dlat = mesh_lat[1]
@@ -238,7 +240,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
         mesh_lat[0]: starting latitude value of the meshed track
         mesh_lat[1]: interval latitude value
         mesh_lat[2]: ending latitude value of the meshed track
-        """  # noqa: D205, D400, D415
+        """  # noqa: D205, D400
         # computing meshed track's Latitude and Longitude values
         self.track_lat_m = track_lat
         self.track_lon_m = np.abs(
@@ -247,7 +249,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
         print('WindFieldSimulation: track defined.')  # noqa: T201
 
     def set_measure_height(self, measure_info):  # noqa: ANN001, ANN201
-        """set_measure_height: defining the height for calculating wind speed"""  # noqa: D400, D415
+        """set_measure_height: defining the height for calculating wind speed"""  # noqa: D400
         try:
             self.zp = np.arange(
                 measure_info[0], measure_info[2] + measure_info[1], measure_info[1]
@@ -262,7 +264,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
         - station_list['Latitude']: latitude values of stations
         - station_list['Longitude']: longitude values of stations
         - station_list['z0']: surface roughness (optional)
-        """  # noqa: D205, D400, D415
+        """  # noqa: D205, D400
         # z0 default
         if 'z0' not in station_list.keys():  # noqa: SIM118
             # default value = 0 (no specified z0)
@@ -283,7 +285,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
             self.station_num += 1
 
     def __calculate_heading(self):  # noqa: ANN202
-        """__calculate_heading: computing the heading path"""  # noqa: D400, D415
+        """__calculate_heading: computing the heading path"""  # noqa: D400
         self.beta_c = np.zeros(len(self.track_lat_m))
         for i in range(len(self.track_lat_m) - 1):
             Delta = self.track_lon_m[i + 1] - self.track_lon_m[i] + self.EPS**2  # noqa: N806
@@ -306,8 +308,8 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
         # fixing the last value
         self.beta_c[-1] = self.beta_c[-2]
 
-    def compute_wind_field(self):  # noqa: ANN201, PLR0915
-        """compute_wind_field: computing the peak wind speed (10-min gust duraiton)"""  # noqa: D400, D415
+    def compute_wind_field(self):  # noqa: ANN201, PLR0914
+        """compute_wind_field: computing the peak wind speed (10-min gust duraiton)"""  # noqa: D400
         print('WindFieldSimulation: running linear analytical model.')  # noqa: T201
         # checking if all parameters are defined
 
@@ -422,14 +424,14 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
                 )
                 GAMMA = 1.0 / (2.0 * self.EDDY_VISCOCITY) * vg1[j, :] / self.r  # noqa: N806
                 ALPHA = np.array(  # noqa: N806
-                    [complex(x, y) for x, y in zip(np.real(ALPHA), np.imag(ALPHA))]
+                    list(starmap(complex, zip(np.real(ALPHA), np.imag(ALPHA))))
                 )
                 BETA = np.array(  # noqa: N806
-                    [complex(x, y) for x, y in zip(np.real(BETA), np.imag(BETA))]
+                    list(starmap(complex, zip(np.real(BETA), np.imag(BETA))))
                 )
                 XXX = -((ALPHA * BETA) ** 0.25)  # noqa: N806
                 YYY = -((ALPHA * BETA) ** 0.25)  # noqa: N806
-                PP_zero = np.array([complex(x, y) for x, y in zip(XXX, YYY)])  # noqa: N806
+                PP_zero = np.array(list(starmap(complex, zip(XXX, YYY))))  # noqa: N806
                 PP_one = -complex(1, 1) * (  # noqa: N806
                     (GAMMA + np.sqrt(ALPHA * BETA) - BB) ** 0.5
                 )
@@ -550,7 +552,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
             # wind speed components
             v1 = v
             for m in range(v.shape[2]):
-                v1[:, :, m] = v1[:, :, m] + vg1
+                v1[:, :, m] = v1[:, :, m] + vg1  # noqa: PLR6104
             U = (v1**2.0 + u**2.0) ** 0.5  # noqa: N806
 
             # mapping to staitons
@@ -581,9 +583,9 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
             for ii in range(len(self.zp)):
                 tmp = U[:, :, ii].tolist()
                 wind_speed = [tmp[jtag][ktag] for jtag, ktag in zip(jj, kk)]
-                station_umax[:, ii] = [
-                    max(x, y) for x, y in zip(wind_speed, station_umax[:, ii])
-                ]
+                station_umax[:, ii] = list(
+                    starmap(max, zip(wind_speed, station_umax[:, ii]))
+                )
 
         # copying results
         self.station['PWS']['height'] = self.zp
@@ -591,6 +593,6 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
         print('WindFieldSimulation: linear analytical simulation completed.')  # noqa: T201
 
     def get_station_data(self):  # noqa: ANN201
-        """get_station_data: returning station data"""  # noqa: D400, D415
+        """get_station_data: returning station data"""  # noqa: D400
         # return station dictionary
         return self.station

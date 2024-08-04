@@ -1,4 +1,4 @@
-# JGA  # noqa: D100, N999
+# JGA  # noqa: CPY001, D100, N999
 import importlib
 import os
 import sys
@@ -15,7 +15,7 @@ from general import *  # noqa: F403
 
 
 class PLoM:  # noqa: D101
-    def __init__(  # noqa: ANN204, D107, PLR0913
+    def __init__(  # noqa: ANN204
         self,
         model_name='plom',  # noqa: ANN001
         data='',  # noqa: ANN001
@@ -56,7 +56,7 @@ class PLoM:  # noqa: D101
                 plt.savefig(os.path.join(self.vl_path,'ScatterMatrix_X0.png'),dpi=480)
                 self.logfile.write_msg(msg='PLoM: {} saved in {}.'.format('ScatterMatrix_X0.png',self.vl_path),msg_type='RUNNING',msg_level=0)
             """
-        if not self.constraints:  # noqa: SIM102
+        if not self.constraints:
             if self.add_constraints(constraints_file=constraints):
                 self.logfile.write_msg(
                     msg='PLoM: constraints input failed.',
@@ -96,7 +96,7 @@ class PLoM:  # noqa: D101
     def _basic_config(self, model_name=None, db_path=None):  # noqa: ANN001, ANN202
         """Basic setups
         - model_name: job name (used for database name)
-        """  # noqa: D205, D400, D401, D415
+        """  # noqa: D205, D400, D401
         if not db_path:
             self.dir_log = os.path.join(  # noqa: PTH118
                 os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
@@ -188,7 +188,7 @@ class PLoM:  # noqa: D101
                 msg_level=0,
             )
             return 1
-        self.num_constraints = self.num_constraints + 1
+        self.num_constraints = self.num_constraints + 1  # noqa: PLR6104
         try:
             self.constraints.update(
                 {
@@ -225,7 +225,7 @@ class PLoM:  # noqa: D101
     def switch_constraints(self, constraint_tag=1):  # noqa: ANN001, ANN201
         """Selecting different constraints
         - constraint_tag: the tag of selected constraint
-        """  # noqa: D205, D400, D401, D415
+        """  # noqa: D205, D400, D401
         if constraint_tag > self.num_constraints:
             self.logfile.write_msg(
                 msg=f'PLoM.switch_constraints: sorry the maximum constraint tag is {self.num_constraints}',
@@ -261,20 +261,20 @@ class PLoM:  # noqa: D101
             )
 
     def delete_constraints(self):  # noqa: ANN201
-        """Removing all current constraints"""  # noqa: D400, D401, D415
+        """Removing all current constraints"""  # noqa: D400, D401
         self.g_c = None
         self.D_x_g_c = None
         self.beta_c = []
         self.dbserver.add_item(item=[''], data_type='ConstraintsFile')
 
-    def load_data(self, filename, separator=',', col_header=False):  # noqa: ANN001, ANN201, FBT002, C901, D102, PLR0912
+    def load_data(self, filename, separator=',', col_header=False):  # noqa: ANN001, ANN201, FBT002, C901, D102
         # initialize the matrix and data size
         X = []  # noqa: N806
         N = 0  # noqa: N806
         n = 0
 
         # check if the file exist
-        import os
+        import os  # noqa: PLC0415
 
         if not os.path.exists(filename):  # noqa: PTH110
             self.logfile.write_msg(
@@ -285,7 +285,7 @@ class PLoM:  # noqa: D101
             return X, N, n
 
         # read data
-        if os.path.splitext(filename)[-1] in ['.csv', '.dat', '.txt']:  # noqa: PTH122
+        if os.path.splitext(filename)[-1] in ['.csv', '.dat', '.txt']:  # noqa: PLR6201, PTH122
             # txt data
             col = None
             if col_header:
@@ -297,10 +297,10 @@ class PLoM:  # noqa: D101
                     self.X0.drop(columns=cur_col)
             X = self.X0.to_numpy()  # noqa: N806
 
-        elif os.path.splitext(filename)[-1] in ['.mat', '.json']:  # noqa: PTH122
+        elif os.path.splitext(filename)[-1] in ['.mat', '.json']:  # noqa: PLR6201, PTH122
             # json or mat
             if os.path.splitext(filename)[-1] == '.mat':  # noqa: PTH122
-                import scipy.io as scio
+                import scipy.io as scio  # noqa: PLC0415
 
                 matdata = scio.loadmat(filename)
                 var_names = [
@@ -321,7 +321,7 @@ class PLoM:  # noqa: D101
                     X = X[0, :, :]  # noqa: N806
                     self.X0 = pd.DataFrame(X, columns=var_names)
             else:
-                import json
+                import json  # noqa: PLC0415
 
                 with open(filename, encoding='utf-8') as f:  # noqa: PTH123
                     jsondata = json.load(f)
@@ -332,7 +332,7 @@ class PLoM:  # noqa: D101
                 X = np.array(X).T  # noqa: N806
                 self.X0 = pd.DataFrame(X, columns=var_names)
 
-        elif os.path.splitext(filename)[-1] in ['.h5']:  # noqa: PTH122
+        elif os.path.splitext(filename)[-1] == '.h5':  # noqa: PTH122
             # this h5 can be either formatted by PLoM or not
             # a separate method to deal with this file
             X = self.load_h5(filename)  # noqa: N806
@@ -367,7 +367,7 @@ class PLoM:  # noqa: D101
         return self.X, self.N, self.n
 
     def _load_h5_plom(self, filename):  # noqa: ANN001, ANN202
-        """Loading PLoM-formatted h5 database"""  # noqa: D400, D401, D415
+        """Loading PLoM-formatted h5 database"""  # noqa: D400, D401
         try:
             store = pd.HDFStore(filename, 'r')
             for cur_var in store.keys():  # noqa: SIM118
@@ -406,7 +406,7 @@ class PLoM:  # noqa: D101
             )
 
     def _load_h5_data_X(self, filename):  # noqa: ANN001, ANN202, N802
-        """Loading a h5 data which is expected to contain X data"""  # noqa: D400, D401, D415
+        """Loading a h5 data which is expected to contain X data"""  # noqa: D400, D401
         try:
             store = pd.HDFStore(filename, 'r')
             # Note a table is expected for the variable
@@ -421,7 +421,7 @@ class PLoM:  # noqa: D101
             return None
 
     def _sync_data(self):  # noqa: ANN202
-        """Sync database data to current attributes"""  # noqa: D400, D415
+        """Sync database data to current attributes"""  # noqa: D400
         avail_name_list = self.dbserver.get_name_list()
         if not avail_name_list:
             # empty database
@@ -436,7 +436,7 @@ class PLoM:  # noqa: D101
                     # skipping the data-shape attributes
                     continue
                 if type(ATTR_MAP[cur_item]) is str:  # noqa: F405
-                    self.__setattr__(
+                    self.__setattr__(  # noqa: PLC2801
                         ATTR_MAP[cur_item],  # noqa: F405
                         self.dbserver.get_item(cur_item[1:]),
                     )
@@ -454,7 +454,7 @@ class PLoM:  # noqa: D101
                     )
 
     def _sync_constraints(self):  # noqa: ANN202
-        """Sync constraints from dbserver to the attributes"""  # noqa: D400, D415
+        """Sync constraints from dbserver to the attributes"""  # noqa: D400
         avail_name_list = self.dbserver.get_name_list()
         if '/constraints_file' not in avail_name_list:
             # empty constraints
@@ -470,7 +470,7 @@ class PLoM:  # noqa: D101
             self.add_constraints(constraints_file=cfile)
 
     def load_h5(self, filename):  # noqa: ANN001, ANN201
-        """Loading h5 database"""  # noqa: D400, D401, D415
+        """Loading h5 database"""  # noqa: D400, D401
         try:
             self._load_h5_plom(filename)
             self.logfile.write_msg(
@@ -524,7 +524,7 @@ class PLoM:  # noqa: D101
         else:
             # update the X and N
             self.X = np.concatenate((self.X, new_X))
-            self.N = self.N + new_N
+            self.N = self.N + new_N  # noqa: PLR6104
             self.X0.append(pd.DataFrame(new_X.T, columns=list(self.X0.columns)))
 
         self.logfile.write_msg(
@@ -574,14 +574,14 @@ class PLoM:  # noqa: D101
         return 0
 
     def _init_indv_tasks(self):  # noqa: ANN202
-        """Initializing tasks"""  # noqa: D400, D401, D415
+        """Initializing tasks"""  # noqa: D400, D401
         for cur_task in FULL_TASK_LIST:  # noqa: F405
-            self.__setattr__('task_' + cur_task, Task(task_name=cur_task))  # noqa: F405
+            self.__setattr__('task_' + cur_task, Task(task_name=cur_task))  # noqa: F405, PLC2801
 
     def ConfigTasks(self, task_list=FULL_TASK_LIST):  # noqa: ANN001, ANN201, C901, N802, F405
         """Creating a task list object
         - task_list: a string list of tasks to run
-        """  # noqa: D205, D400, D401, D415
+        """  # noqa: D205, D400, D401
         config_flag = True
         self.cur_task_list = task_list
         # check task orders
@@ -634,19 +634,19 @@ class PLoM:  # noqa: D101
         # initializing individual tasks and refreshing status
         self._init_indv_tasks()
         for cur_task in FULL_TASK_LIST:  # noqa: F405
-            self.__getattribute__('task_' + cur_task).full_var_list = TASK_ITEM_MAP[  # noqa: F405
+            self.__getattribute__('task_' + cur_task).full_var_list = TASK_ITEM_MAP[  # noqa: F405, PLC2801
                 cur_task
             ]
             for cur_item in TASK_ITEM_MAP[cur_task]:  # noqa: F405
                 if '/' + cur_item in self.dbserver.get_name_list():
-                    self.__getattribute__('task_' + cur_task).avail_var_list.append(
+                    self.__getattribute__('task_' + cur_task).avail_var_list.append(  # noqa: PLC2801
                         cur_item
                     )
-                self.__getattribute__('task_' + cur_task).refresh_status()
+                self.__getattribute__('task_' + cur_task).refresh_status()  # noqa: PLC2801
         # create the task list
         for cur_task in self.cur_task_list:
             self.task_list.add_task(
-                new_task=self.__getattribute__('task_' + cur_task)
+                new_task=self.__getattribute__('task_' + cur_task)  # noqa: PLC2801
             )
 
         self.task_list.refresh_status()
@@ -655,7 +655,7 @@ class PLoM:  # noqa: D101
         pre_task_list = FULL_TASK_LIST[: FULL_TASK_LIST.index(self.cur_task_list[0])]  # noqa: F405
         if len(pre_task_list):
             for cur_task in pre_task_list:
-                if not self.__getattribute__('task_' + cur_task).refresh_status():
+                if not self.__getattribute__('task_' + cur_task).refresh_status():  # noqa: PLC2801
                     config_flag = False
                     self.logfile.write_msg(
                         msg=f'PLoM.config_tasks: configuration failed with dependent task {cur_task} not completed.',
@@ -672,7 +672,7 @@ class PLoM:  # noqa: D101
                 msg_level=0,
             )
 
-    def RunAlgorithm(  # noqa: ANN201, C901, N802, PLR0912, PLR0913, PLR0915
+    def RunAlgorithm(  # noqa: ANN201, C901, N802
         self,
         n_mc=5,  # noqa: ANN001
         epsilon_pca=1e-6,  # noqa: ANN001
@@ -691,7 +691,7 @@ class PLoM:  # noqa: D101
         - epsilon_kde: smoothing parameter in the kernel density estimation
         - tol: tolerance in the PLoM iterations
         - max_iter: maximum number of iterations of the PLoM algorithm
-        """  # noqa: D205, D400, D401, D415
+        """  # noqa: D205, D400, D401
         if runDiffMaps == None:  # noqa: E711
             runDiffMaps = self.runDiffMaps  # noqa: N806
         else:
@@ -702,7 +702,7 @@ class PLoM:  # noqa: D101
         cur_task = self.task_list.head_task
         while cur_task:
             if cur_task.task_name == 'DataNormalization':
-                self.__getattribute__(
+                self.__getattribute__(  # noqa: PLC2801
                     'task_' + cur_task.task_name
                 ).avail_var_list = []
                 # data normalization
@@ -741,7 +741,7 @@ class PLoM:  # noqa: D101
                     msg_level=0,
                 )
             elif cur_task.task_name == 'RunPCA':
-                self.__getattribute__(
+                self.__getattribute__(  # noqa: PLC2801
                     'task_' + cur_task.task_name
                 ).avail_var_list = []
                 # PCA
@@ -784,7 +784,7 @@ class PLoM:  # noqa: D101
                     msg_level=0,
                 )
             elif cur_task.task_name == 'RunKDE':
-                self.__getattribute__(
+                self.__getattribute__(  # noqa: PLC2801
                     'task_' + cur_task.task_name
                 ).avail_var_list = []
                 # parameters KDE
@@ -814,7 +814,7 @@ class PLoM:  # noqa: D101
                 )
                 # diff maps
                 if runDiffMaps:
-                    self.__getattribute__(
+                    self.__getattribute__(  # noqa: PLC2801
                         'task_' + cur_task.task_name
                     ).avail_var_list = []
                     # diff maps
@@ -888,7 +888,7 @@ class PLoM:  # noqa: D101
                         msg_level=0,
                     )
             elif cur_task.task_name == 'ISDEGeneration':
-                self.__getattribute__(
+                self.__getattribute__(  # noqa: PLC2801
                     'task_' + cur_task.task_name
                 ).avail_var_list = []
                 # ISDE generation
@@ -925,7 +925,7 @@ class PLoM:  # noqa: D101
             # refresh status
             for cur_item in TASK_ITEM_MAP[cur_task.task_name]:  # noqa: F405
                 if '/' + cur_item in self.dbserver.get_name_list():
-                    self.__getattribute__(
+                    self.__getattribute__(  # noqa: PLC2801
                         'task_' + cur_task.task_name
                     ).avail_var_list.append(cur_item)
             if not cur_task.refresh_status():
@@ -953,10 +953,10 @@ class PLoM:  # noqa: D101
                 msg_level=0,
             )
 
-    def DataNormalization(self, X):  # noqa: ANN001, ANN201, N802, N803
+    def DataNormalization(self, X):  # noqa: ANN001, ANN201, N802, N803, PLR6301
         """Normalizing the X
         - X: the data matrix to be normalized
-        """  # noqa: D205, D400, D401, D415
+        """  # noqa: D205, D400, D401
         # scaling
         X_scaled, alpha, x_min = plom.scaling(X)  # noqa: N806
         x_mean = plom.mean(X_scaled)
@@ -987,11 +987,11 @@ class PLoM:  # noqa: D101
         """
         return H, mu, phi, nu, errors
 
-    def RunKDE(self, X, epsilon_kde):  # noqa: ANN001, ANN201, N802, N803
+    def RunKDE(self, X, epsilon_kde):  # noqa: ANN001, ANN201, N802, N803, PLR6301
         """Running Kernel Density Estimation
         - X: the data matrix to be reduced
         - epsilon_kde: smoothing parameter in the kernel density estimation
-        """  # noqa: D205, D400, D401, D415
+        """  # noqa: D205, D400, D401
         (s_v, c_v, hat_s_v) = plom.parameters_kde(X)
         K, b = plom.K(X, epsilon_kde)  # noqa: N806
 
@@ -1038,9 +1038,9 @@ class PLoM:  # noqa: D101
         max_iter=50,  # noqa: ANN001
         seed_num=None,  # noqa: ANN001
     ):
-        """The construction of a nonlinear Ito Stochastic Differential Equation (ISDE) to generate realizations of random variable H"""  # noqa: D400, D401, D415
+        """The construction of a nonlinear Ito Stochastic Differential Equation (ISDE) to generate realizations of random variable H"""  # noqa: D400, D401
         if seed_num:
-            np.random.seed(seed_num)  # noqa: NPY002
+            np.random.seed(seed_num)
         # constraints
         if self.g_c:
             self.C_h_hat_eta = plom.covariance(
@@ -1069,7 +1069,7 @@ class PLoM:  # noqa: D101
 
             self.errors = [plom.err(self.gradient, self.b_c)]
             iteration = 0
-            nu_init = np.random.normal(size=(int(self.nu), int(self.N)))  # noqa: NPY002
+            nu_init = np.random.normal(size=(int(self.nu), int(self.N)))
             self.Y = nu_init.dot(self.a)
 
             error_ratio = 0
@@ -1117,7 +1117,7 @@ class PLoM:  # noqa: D101
                 )
                 self.inverse = plom.solve_inverse(self.hessian)
 
-                self.lambda_i = self.lambda_i - 0.3 * (self.inverse).dot(
+                self.lambda_i = self.lambda_i - 0.3 * (self.inverse).dot(  # noqa: PLR6104
                     self.gradient
                 )
 
@@ -1148,9 +1148,9 @@ class PLoM:  # noqa: D101
 
         # no constraints
         else:
-            nu_init = np.random.normal(size=(int(self.nu), int(self.N)))  # noqa: NPY002
+            nu_init = np.random.normal(size=(int(self.nu), int(self.N)))
             self.Y = nu_init.dot(self.a)
-            Hnewvalues, nu_lambda, x_, x_2 = plom.generator(  # noqa: N806
+            Hnewvalues, nu_lambda, x_, x_2 = plom.generator(  # noqa: F841, N806
                 self.Z,
                 self.Y,
                 self.a,
@@ -1188,7 +1188,7 @@ class PLoM:  # noqa: D101
         """Exporting results by the data names
         - data_list: list of data names
         - file_format_list: list of output formats
-        """  # noqa: D205, D400, D401, D415
+        """  # noqa: D205, D400, D401
         avail_name_list = self.dbserver.get_name_list()
         if not data_list:
             # print available data names

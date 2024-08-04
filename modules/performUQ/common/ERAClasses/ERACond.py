@@ -1,4 +1,4 @@
-# import of modules  # noqa: INP001, D100
+# import of modules  # noqa: CPY001, D100, INP001
 import types
 
 import numpy as np
@@ -135,7 +135,7 @@ class ERACond:
         if opt.upper() == 'PAR' or opt.upper() == 'MOM':
             self.Opt = opt.upper()
         else:
-            raise RuntimeError(  # noqa: TRY003
+            raise RuntimeError(  # noqa: DOC501, TRY003
                 'Conditional distributions can only be defined '  # noqa: EM101
                 "by moments (opt = 'MOM') or by parameters (opt = 'PAR')."
             )
@@ -146,7 +146,7 @@ class ERACond:
         if type(param) == types.LambdaType:  # noqa: E721
             self.Param = param
         else:
-            raise RuntimeError('The input param must be a lambda function.')  # noqa: EM101, TRY003
+            raise RuntimeError('The input param must be a lambda function.')  # noqa: DOC501, EM101, TRY003
 
         self.modParam = param
 
@@ -194,7 +194,7 @@ class ERACond:
             elif self.Name == 'pareto':
                 Par = [1 / par[1], par[0] / par[1], par[0]]  # noqa: N806
             elif self.Name == 'poisson':
-                if isinstance(par, list):  # noqa: SIM108
+                if isinstance(par, list):
                     Par = par[0] * par[1]  # noqa: N806
                 else:
                     Par = par  # noqa: N806
@@ -301,7 +301,7 @@ class ERACond:
             x_m = par[0] * (alpha - 1) / alpha
             Par = [1 / alpha, x_m / alpha, x_m]  # noqa: N806
         elif self.Name == 'poisson':
-            if isinstance(par, list):  # noqa: SIM108
+            if isinstance(par, list):
                 Par = par[0]  # noqa: N806
             else:
                 Par = par  # noqa: N806
@@ -391,7 +391,7 @@ class ERACond:
         return Par
 
     # %%
-    def condCDF(self, x, cond):  # noqa: ANN001, ANN201, C901, N802, PLR0912
+    def condCDF(self, x, cond):  # noqa: ANN001, ANN201, C901, N802
         """Evaluates the CDF of the conditional distribution at x for
         the given conditions.
         This method is used by the ERARosen method X2U.
@@ -445,7 +445,7 @@ class ERACond:
         return CDF
 
     # %%
-    def condiCDF(self, y, cond):  # noqa: ANN001, ANN201, C901, N802, PLR0912
+    def condiCDF(self, y, cond):  # noqa: ANN001, ANN201, C901, N802
         """Evaluates the inverse CDF of the conditional distribution at
         y for the given conditions.
         This method is used by the ERARosen method U2X.
@@ -499,7 +499,7 @@ class ERACond:
         return iCDF
 
     # %%
-    def condPDF(self, x, cond):  # noqa: ANN001, ANN201, C901, N802, PLR0912
+    def condPDF(self, x, cond):  # noqa: ANN001, ANN201, C901, N802
         """Evaluates the PDF of the conditional distribution at x for
         the given conditions.
         This method is used by the ERARosen method pdf.
@@ -553,7 +553,7 @@ class ERACond:
         return PDF
 
     # %%
-    def condRandom(self, cond):  # noqa: ANN001, ANN201, C901, N802, PLR0912
+    def condRandom(self, cond):  # noqa: ANN001, ANN201, C901, N802
         """Creates one random sample for each given condition.
         This method is used by the ERARosen method random.
         """  # noqa: D205, D401

@@ -22,10 +22,10 @@ logger = globals.LOGGER
 
 
 class CensusUtil:
-    """Utility methods for Census data and API"""  # noqa: D400, D415
+    """Utility methods for Census data and API"""  # noqa: D400
 
     @staticmethod
-    def generate_census_api_url(  # noqa: ANN205, PLR0913
+    def generate_census_api_url(  # noqa: ANN205
         state: str = None,  # noqa: RUF013
         county: str = None,  # noqa: RUF013
         year: str = None,  # noqa: RUF013
@@ -47,7 +47,7 @@ class CensusUtil:
             geo_type (str): Name of geo area. e.g, 'tract:*' or 'block%20group:*'
             data_name (str): Optional for getting different dataset. e.g, 'component'
 
-        Returns:
+        Returns
         -------
             string: A string for representing census api url
 
@@ -56,13 +56,13 @@ class CensusUtil:
         if state is None:
             error_msg = 'State value must be provided.'
             logger.error(error_msg)
-            raise Exception(error_msg)  # noqa: TRY002
+            raise Exception(error_msg)  # noqa: DOC501, TRY002
 
-        if geo_type is not None:  # noqa: SIM102
+        if geo_type is not None:
             if county is None:
                 error_msg = 'State and county value must be provided when geo_type is provided.'
                 logger.error(error_msg)
-                raise Exception(error_msg)  # noqa: TRY002
+                raise Exception(error_msg)  # noqa: DOC501, TRY002
 
         # Set up url for Census API
         base_url = f'https://api.census.gov/data/{year}/{data_source}'
@@ -93,14 +93,14 @@ class CensusUtil:
         Returns:
             dict, object: A json list and a dataframe for census api result
 
-        """  # noqa: D400, D415
+        """  # noqa: D400
         # Obtain Census API JSON Data
         request_json = requests.get(data_url)  # noqa: S113
 
         if request_json.status_code != 200:  # noqa: PLR2004
             error_msg = 'Failed to download the data from Census API. Please check your parameters.'
             # logger.error(error_msg)
-            raise Exception(error_msg)  # noqa: TRY002
+            raise Exception(error_msg)  # noqa: DOC501, TRY002
 
         # Convert the requested json into pandas dataframe
 
@@ -110,7 +110,7 @@ class CensusUtil:
         return api_df  # noqa: RET504
 
     @staticmethod
-    def get_blockdata_for_demographics(  # noqa: ANN205, C901, D417, PLR0912, PLR0913, PLR0915
+    def get_blockdata_for_demographics(  # noqa: ANN205, C901
         state_counties: list,
         census_vars: list,
         vintage: str = '2010',
@@ -135,7 +135,7 @@ class CensusUtil:
             file_name (str): Name of the output files.
             output_dir (str): Name of directory used to save output files.
 
-        """  # noqa: D400, D415
+        """  # noqa: D400
         # ***********************
         # Get the population data
         # ***********************
@@ -474,7 +474,7 @@ class CensusUtil:
         return cen_block[save_columns]
 
     @staticmethod
-    def get_blockgroupdata_for_income(  # noqa: ANN205, C901, D417, PLR0912, PLR0913, PLR0915
+    def get_blockgroupdata_for_income(  # noqa: ANN205, C901
         state_counties: list,
         acs_vars: list,
         vintage: str = '2010',
@@ -499,7 +499,7 @@ class CensusUtil:
             file_name (str): Name of the output files.
             output_dir (str): Name of directory used to save output files.
 
-        """  # noqa: D400, D415
+        """  # noqa: D400
         # dataset_name (str): ACS dataset name.
         dataset_name = 'acs/acs5'
 

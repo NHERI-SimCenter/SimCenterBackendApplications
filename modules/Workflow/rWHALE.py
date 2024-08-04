@@ -59,7 +59,7 @@ from sWHALE import runSWhale
 from whale.main import log_div, log_msg
 
 
-def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
+def main(  # noqa: ANN201, C901, D103
     run_type,  # noqa: ANN001
     input_file,  # noqa: ANN001
     app_registry,  # noqa: ANN001
@@ -90,7 +90,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     mpi_spec = importlib.util.find_spec('mpi4py')
     found = mpi_spec is not None
     if found and parallelType == 'parRUN':
-        from mpi4py import MPI
+        from mpi4py import MPI  # noqa: PLC0415
 
         comm = MPI.COMM_WORLD
         numP = comm.Get_size()  # noqa: N806
@@ -106,13 +106,13 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     with open(input_file, encoding='utf-8') as f:  # noqa: PTH123
         inputs = json.load(f)  # noqa: F841
 
-    # TODO: if the ref dir is needed, do NOT save it to the input file, store it  # noqa: FIX002, TD002, TD003
+    # TODO: if the ref dir is needed, do NOT save it to the input file, store it  # noqa: TD002
     # somewhere else in a file that i not shared among processes
     # inputs['refDir'] = reference_dir
     # with open(input_file, 'w') as f:
     #    json.dump(inputs, f, indent=2)
 
-    # TODO: remove the commented section below, I only kept it for now to make  # noqa: FIX002, TD002, TD003
+    # TODO: remove the commented section below, I only kept it for now to make  # noqa: TD002
     # sure it is not needed
 
     # if working_dir is not None:
@@ -213,7 +213,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         # perform the regional mapping
         # WF.perform_regional_mapping(assetIt, asset_type)
 
-        # TODO: not elegant code, fix later  # noqa: FIX002, TD002, TD003
+        # TODO: not elegant code, fix later  # noqa: TD002
         with open(assetIt, encoding='utf-8') as f:  # noqa: PTH123
             asst_data = json.load(f)
 
@@ -255,7 +255,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                     force_cleanup=force_cleanup,
                 )
 
-            count = count + 1
+            count = count + 1  # noqa: PLR6104
 
         # wait for every process to finish
         if doParallel == True:  # noqa: E712
@@ -413,7 +413,7 @@ if __name__ == '__main__':
         workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
         wfArgs.appDir = workflow_dir.parents[1]
 
-    if wfArgs.check:  # noqa: SIM108
+    if wfArgs.check:
         run_type = 'set_up'
     else:
         run_type = 'runningLocal'

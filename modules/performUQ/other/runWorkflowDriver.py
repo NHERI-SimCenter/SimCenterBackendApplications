@@ -1,4 +1,4 @@
-import os  # noqa: INP001, D100
+import os  # noqa: CPY001, D100, INP001
 import shutil
 from sys import platform
 

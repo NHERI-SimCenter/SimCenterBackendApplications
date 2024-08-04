@@ -1,4 +1,4 @@
-####################################################################  # noqa: INP001
+# # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -18,7 +18,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: D400, D415
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -42,7 +42,7 @@ from openfoam7 import openfoam7
 ####################################################################
 # Main function
 ####################################################################
-def main():  # noqa: ANN201, C901, PLR0912, PLR0915
+def main():  # noqa: ANN201, C901
     """This is the primary function
 
     Objects:
@@ -53,7 +53,7 @@ def main():  # noqa: ANN201, C901, PLR0912, PLR0915
 
     Variables:
             fipath: Path to dakota.json
-    """  # noqa: D400, D401, D404, D415
+    """  # noqa: D400, D401, D404
     # Get the system argument
     # Create a parser Object
     h2oparser = argparse.ArgumentParser(description='Get the Dakota.json file')
@@ -111,7 +111,7 @@ def main():  # noqa: ANN201, C901, PLR0912, PLR0915
     fipath = str(fipath)
 
     # Open the JSON file and load all objects
-    with open(args.b) as f:  # noqa: PTH123
+    with open(args.b) as f:  # noqa: PLW1514, PTH123
         data = json.load(f)
 
     # Create a utilities object
@@ -341,7 +341,7 @@ def main():  # noqa: ANN201, C901, PLR0912, PLR0915
 
     # Write to caserun file
     caseruntext = 'echo HydroUQ complete'
-    scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
+    scriptfile = open('caserun.sh', 'a')  # noqa: PLW1514, PTH123, SIM115
     scriptfile.write(caseruntext)
     scriptfile.close()
 

@@ -1,4 +1,4 @@
-from typing import Literal, Union  # noqa: INP001, D100
+from typing import Literal, Union  # noqa: CPY001, D100, INP001
 
 from pydantic import BaseModel, Field
 from src.reliability.ReliabilityMethodsDTOs import ReliabilityMethod

@@ -1,9 +1,9 @@
-# %%  # noqa: INP001, D100
+# %%  # noqa: CPY001, D100, INP001
 import json
 import os
 import time
 from datetime import datetime
-from subprocess import PIPE, run
+from subprocess import PIPE, run  # noqa: S404
 
 # change the directory to the current directory
 os.chdir(os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
@@ -21,8 +21,8 @@ def call(command):  # noqa: ANN001, ANN201, D103
 
 
 # %%
-def Submit_tapis_job():  # noqa: ANN201, N802, D103, PLR0915
-    with open('TapisFiles/information.json') as file:  # noqa: PTH123
+def Submit_tapis_job():  # noqa: ANN201, N802, D103
+    with open('TapisFiles/information.json') as file:  # noqa: PLW1514, PTH123
         information = json.load(file)
     file.close()
 
@@ -80,7 +80,7 @@ def Submit_tapis_job():  # noqa: ANN201, N802, D103, PLR0915
 
     # submit the job
     jobfile = './TapisFiles/job.json'
-    json.dump(jobdict, open(jobfile, 'w'), indent=2)  # noqa: SIM115, PTH123
+    json.dump(jobdict, open(jobfile, 'w'), indent=2)  # noqa: PLW1514, PTH123, SIM115
     res = call(f'tapis jobs submit -F {jobfile}')
 
     # delete the job file

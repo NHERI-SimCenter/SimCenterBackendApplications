@@ -54,7 +54,7 @@ def log_msg(msg):  # noqa: ANN001, ANN201, D103
 
 
 # Define a way to call BRAILS FootprintHandler:
-def runBrails(  # noqa: ANN201, N802, D103, PLR0913
+def runBrails(  # noqa: ANN201, N802, D103
     latMin,  # noqa: ANN001, N803
     latMax,  # noqa: ANN001, N803
     longMin,  # noqa: ANN001, N803
@@ -74,13 +74,13 @@ def runBrails(  # noqa: ANN201, N802, D103, PLR0913
     if 'geojson' in fpSrc.lower() or 'csv' in fpSrc.lower():
         location = fpSrc
         fpSrc = 'osm'  # noqa: N806
-    elif locationStr == '':
+    elif locationStr == '':  # noqa: PLC1901
         location = (longMin, latMin, longMax, latMax)
     else:
         location = locationStr
 
     # Run FootprintHandler to get GeoJSON file for the footprints of the entered location:
-    if fpSourceAttrMap == '':
+    if fpSourceAttrMap == '':  # noqa: PLC1901
         fpHandler.fetch_footprint_data(
             location, fpSource=fpSrc, lengthUnit=lengthunit, outputFile=outputfile
         )

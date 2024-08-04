@@ -12,9 +12,10 @@ model.
     NodeRegistry
     LinkRegistry
 
-"""  # noqa: D205
+"""  # noqa: CPY001, D205
 
 import logging
+import math
 from collections import OrderedDict
 
 import numpy as np
@@ -38,12 +39,12 @@ class WaterNetworkModel(WaterNetworkModel):
 
     """
 
-    def __init__(self, inp_file_name=None):  # noqa: ANN001, ANN204, D107
+    def __init__(self, inp_file_name=None):  # noqa: ANN001, ANN204
         super().__init__(inp_file_name)
         self.breakage_link = {}
         self.expicit_leak = []
 
-    def updateWaterNetworkModelWithResult(  # noqa: ANN201, C901, N802, D417, PLR0912
+    def updateWaterNetworkModelWithResult(  # noqa: ANN201, C901, N802
         self,
         result,  # noqa: ANN001
         registry,  # noqa: ANN001, ARG002
@@ -98,11 +99,9 @@ class WaterNetworkModel(WaterNetworkModel):
             head = result.node['head'].loc[max_time, tank_name]
 
             tank_level = head - cur_node.elevation
-            if tank_level < 0:
-                tank_level = 0
+            tank_level = max(tank_level, 0)
 
-            if tank_level < cur_node.min_level:
-                tank_level = cur_node.min_level
+            tank_level = max(tank_level, cur_node.min_level)
 
             if tank_level - cur_node.max_level > 0:
                 tank_level = cur_node.max_level
@@ -157,7 +156,7 @@ class WaterNetworkModel(WaterNetworkModel):
         filename : string
             Name of the INP file.
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         inpfile = InpFile()
         inpfile.read(filename, wn=self)
         self._inpfile = inpfile
@@ -172,7 +171,7 @@ class WaterNetworkModel(WaterNetworkModel):
         units : str, int or FlowUnits
             Name of the units being written to the inp file.
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         if self._inpfile is None:
             logger.warning(
                 'Writing a minimal INP file without saved non-WNTR options (energy, etc.)'
@@ -215,7 +214,7 @@ class WaterNetworkModel(WaterNetworkModel):
                 )
 
                 cd = node.leak_area * (2) ** 0.5  # (m^3ps/(KPa^0.5))
-                cd = cd / (0.145038**0.5)  # (gpm/(Psi^0.5))
+                cd = cd / (0.145038**0.5)  # (gpm/(Psi^0.5))  # noqa: PLR6104
                 # When writing to emitter, function from_si changes m^3ps to GPM
 
                 new_node._emitter_coefficient = cd  # noqa: SLF001
@@ -253,7 +252,7 @@ class WaterNetworkModel(WaterNetworkModel):
                 )
 
                 new_pipe_name = node_name + '-rlk'
-                diameter = np.sqrt(node.leak_area * 4 / 3.14)
+                diameter = np.sqrt(node.leak_area * 4 / math.pi)
                 self.add_pipe(
                     new_pipe_name,
                     node_name,
@@ -301,7 +300,7 @@ class WaterNetworkModel(WaterNetworkModel):
         for damage_node, row in broken_pipe_damage_table.iterrows():  # noqa: B007
             if registry.getPipeDamageAttribute('repair', damage_node) == True:  # noqa: E712
                 continue
-            pipe_A, pipe_B, orginal_pipe, node_A, node_B = registry.getBreakData(  # noqa: N806
+            pipe_A, pipe_B, orginal_pipe, node_A, node_B = registry.getBreakData(  # noqa: F841, N806
                 damage_node
             )
 

@@ -1,10 +1,10 @@
-from cmath import exp, pi, sqrt  # noqa: INP001, D100
+from cmath import exp, pi, sqrt  # noqa: CPY001, D100, INP001
 
 import numpy as np
 
 
-class gauss1D:  # noqa: N801, D101
-    def __init__(self, Ly, Ny, sigma=1.0, d=1.0):  # noqa: ANN001, ANN204, N803, D107
+class gauss1D:  # noqa: D101
+    def __init__(self, Ly, Ny, sigma=1.0, d=1.0):  # noqa: ANN001, ANN204, N803
         # overall length in x-direction
         self.Lx = 1
         # overall length in y-direction
@@ -33,8 +33,8 @@ class gauss1D:  # noqa: N801, D101
 
     def calculate(self):  # noqa: ANN201, D102
         # matrix of random phase angles
-        phi = 2 * pi * np.random.rand(self.Mx, self.My)  # noqa: NPY002
-        psi = 2 * pi * np.random.rand(self.Mx, self.My)  # noqa: NPY002
+        phi = 2 * pi * np.random.rand(self.Mx, self.My)
+        psi = 2 * pi * np.random.rand(self.Mx, self.My)
         self.f = np.zeros([self.Mx, self.My])
         f1 = f3 = np.zeros(self.Mx, dtype=complex)
         f2 = f4 = np.zeros(self.My, dtype=complex)

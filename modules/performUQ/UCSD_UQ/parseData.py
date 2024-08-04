@@ -1,7 +1,7 @@
 """authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, and Aakash Bangalore Satish*
 affiliation: University of California, San Diego, *SimCenter, University of California, Berkeley
 
-"""  # noqa: INP001, D205, D400, D415
+"""  # noqa: CPY001, D205, D400, INP001
 
 import itertools
 import json
@@ -19,14 +19,14 @@ class DataProcessingError(Exception):
 
     """
 
-    def __init__(self, message):  # noqa: ANN001, ANN204, D107
+    def __init__(self, message):  # noqa: ANN001, ANN204
         self.message = message
 
 
-def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):  # noqa: ANN001, ANN201, C901, N802, N803, D103, PLR0912, PLR0915
+def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):  # noqa: ANN001, ANN201, C901, N802, N803, D103, PLR0915
     # Read in the json object
     logFile.write('\n\tReading the json file')
-    with open(dakotaJsonFile) as f:  # noqa: PTH123
+    with open(dakotaJsonFile) as f:  # noqa: PLW1514, PTH123
         jsonInputs = json.load(f)  # noqa: N806
     logFile.write(' ... Done')
 
@@ -142,11 +142,11 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
     applications = jsonInputs['Applications']
     for app, appInputs in applications.items():  # noqa: N806
         logFile.write(f'\n\t\t\tApp: {app}')
-        if app.lower() not in ['events']:
+        if app.lower() != 'events':
             appl = appInputs['Application'].lower()
         else:
             appl = appInputs[0]['Application'].lower()
-        if appl in ['multimodel']:
+        if appl == 'multimodel':
             # runMultiModel = True
             logFile.write(
                 f'\n\t\t\t\tFound a multimodel application - {app}: {appInputs["Application"]}'
@@ -167,7 +167,7 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
             logFile.write('\n\t\t\t\tNot a multimodel application')
     nModels = 1  # noqa: N806
     for _, data in modelsDict.items():  # noqa: PERF102
-        nModels = nModels * data['nModels']  # noqa: N806
+        nModels = nModels * data['nModels']  # noqa: N806, PLR6104
     cartesianProductOfModelIndices = list(itertools.product(*modelIndicesList))  # noqa: N806
     # logFile.write("\n\t\t\tNO LONGER Getting the number of models")
     # inputFileList = []

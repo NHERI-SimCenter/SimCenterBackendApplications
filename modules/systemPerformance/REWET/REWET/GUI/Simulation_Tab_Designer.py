@@ -1,7 +1,7 @@
 """Created on Thu Oct 27 19:00:30 2022
 
 @author: snaeimi
-"""  # noqa: N999, D400, D415
+"""  # noqa: CPY001, D400, N999
 
 import os
 import tempfile
@@ -9,7 +9,7 @@ import tempfile
 from PyQt5 import QtGui, QtWidgets
 
 
-class Simulation_Tab_Designer:  # noqa: N801, D101
+class Simulation_Tab_Designer:  # noqa: D101
     def __init__(self):  # noqa: ANN204
         """These are variables that are shared between ui and settings."""  # noqa: D401
         self.setSimulationSettings(self.settings)
@@ -50,10 +50,10 @@ class Simulation_Tab_Designer:  # noqa: N801, D101
         )
 
     def getSimulationSettings(self):  # noqa: ANN201, N802, D102
-        if self.result_folder_addr == '':
+        if self.result_folder_addr == '':  # noqa: PLC1901
             self.errorMSG('REWET', 'Result folder must be provided')
             return False
-        if self.temp_folder_addr == '':
+        if self.temp_folder_addr == '':  # noqa: PLC1901
             self.errorMSG('REWET', 'Temp folder must be provided')
             return False
 
@@ -122,7 +122,7 @@ class Simulation_Tab_Designer:  # noqa: N801, D101
         directory = QtWidgets.QFileDialog.getExistingDirectory(
             self.asli_MainWindow, 'Select Directory'
         )
-        if directory == '':
+        if directory == '':  # noqa: PLC1901
             return
         self.result_folder_addr = directory
         self.result_folder_addr_line.setText(self.result_folder_addr)
@@ -131,7 +131,7 @@ class Simulation_Tab_Designer:  # noqa: N801, D101
         directory = QtWidgets.QFileDialog.getExistingDirectory(
             self.asli_MainWindow, 'Select Directory'
         )
-        if directory == '':
+        if directory == '':  # noqa: PLC1901
             return
         self.temp_folder_addr = directory
         self.temp_folder_addr_line.setText(self.temp_folder_addr)

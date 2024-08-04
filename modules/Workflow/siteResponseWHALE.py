@@ -56,7 +56,7 @@ from sWHALE import runSWhale
 from whale.main import log_div, log_msg
 
 
-def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
+def main(  # noqa: ANN201, C901, D103
     run_type,  # noqa: ANN001
     input_file,  # noqa: ANN001
     app_registry,  # noqa: ANN001
@@ -78,7 +78,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     mpi_spec = importlib.util.find_spec('mpi4py')
     found = mpi_spec is not None
     if found:
-        from mpi4py import MPI
+        from mpi4py import MPI  # noqa: PLC0415
 
         comm = MPI.COMM_WORLD
         numP = comm.Get_size()  # noqa: N806
@@ -107,7 +107,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
     print('WORKING_DIR', working_dir)  # noqa: T201
 
-    if procID == 0:  # noqa: SIM102
+    if procID == 0:
         if not os.path.exists(working_dir):  # noqa: PTH110
             os.mkdir(working_dir)  # noqa: PTH102
 
@@ -162,9 +162,9 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
     remoteAppDir = inputs.get('remoteAppDir', '')  # noqa: N806
     localAppDir = inputs.get('localAppDir', '')  # noqa: N806
-    if localAppDir == '':
+    if localAppDir == '':  # noqa: PLC1901
         localAppDir = remoteAppDir  # noqa: N806
-    if remoteAppDir == '':
+    if remoteAppDir == '':  # noqa: PLC1901
         remoteAppDir = localAppDir  # noqa: N806
 
     siteResponseInput = {  # noqa: N806
@@ -234,7 +234,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     )
 
     if procID == 0:
-        with open(siteResponseInputFile, 'w') as json_file:  # noqa: PTH123
+        with open(siteResponseInputFile, 'w') as json_file:  # noqa: FURB103, PLW1514, PTH123
             json_file.write(json.dumps(siteResponseInput, indent=2))
 
     WF = whale.Workflow(  # noqa: N806
@@ -288,7 +288,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
     count = 0
     for asset_type, assetIt in asset_files.items():  # noqa: N806
-        # TODO: not elegant code, fix later  # noqa: FIX002, TD002, TD003
+        # TODO: not elegant code, fix later  # noqa: TD002
         with open(assetIt, encoding='utf-8') as f:  # noqa: PTH123
             asst_data = json.load(f)
 
@@ -321,7 +321,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                     force_cleanup=force_cleanup,
                 )
 
-            count = count + 1
+            count = count + 1  # noqa: PLR6104
 
     if doParallel == True:  # noqa: E712
         comm.Barrier()
@@ -342,7 +342,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         comm.Barrier()
 
     # clean up intermediate files from the working directory
-    if force_cleanup:  # noqa: SIM102
+    if force_cleanup:
         if procID == 0:
             WF.cleanup_workdir()
 
@@ -468,7 +468,7 @@ if __name__ == '__main__':
         workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
         wfArgs.appDir = workflow_dir.parents[1]
 
-    if wfArgs.check:  # noqa: SIM108
+    if wfArgs.check:
         run_type = 'set_up'
     else:
         # run_type = 'run'

@@ -1,4 +1,4 @@
-# written: UQ team @ SimCenter  # noqa: INP001, D100
+# written: UQ team @ SimCenter  # noqa: CPY001, D100, INP001
 
 # import functions for Python 2.X support
 import sys
@@ -13,12 +13,12 @@ import argparse
 import json
 import os
 import stat
-import subprocess
+import subprocess  # noqa: S404
 import sys
 from pathlib import Path
 
 
-def main(args):  # noqa: ANN001, ANN201, D103, PLR0915
+def main(args):  # noqa: ANN001, ANN201, D103
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--workflowInput')
@@ -26,7 +26,7 @@ def main(args):  # noqa: ANN001, ANN201, D103, PLR0915
     parser.add_argument('--driverFile')
     parser.add_argument('--runType')
 
-    args, unknowns = parser.parse_known_args()
+    args, unknowns = parser.parse_known_args()  # noqa: F841
 
     inputFile = args.workflowInput  # noqa: N806
     runType = args.runType  # noqa: N806
@@ -36,9 +36,7 @@ def main(args):  # noqa: ANN001, ANN201, D103, PLR0915
     with open(inputFile, encoding='utf-8') as f:  # noqa: PTH123
         data = json.load(f)
 
-    if runType in [
-        'runningLocal',
-    ]:
+    if runType == 'runningLocal':
         if (
             sys.platform == 'darwin'
             or sys.platform == 'linux'
@@ -58,7 +56,7 @@ def main(args):  # noqa: ANN001, ANN201, D103, PLR0915
             plom = 'runPLoM.py'  # KZ: main script of PLoM
             # natafExe = os.path.join('nataf_gsa','nataf_gsa.exe')
             natafExe = 'nataf_gsa.exe'  # noqa: N806
-            workflowDriver = workflowDriver + '.bat'  # noqa: N806
+            workflowDriver = workflowDriver + '.bat'  # noqa: N806, PLR6104
             workflowDriver1 = 'workflowDriver1.bat'  # noqa: N806, F841
             osType = 'Windows'  # noqa: N806
             python = 'python'

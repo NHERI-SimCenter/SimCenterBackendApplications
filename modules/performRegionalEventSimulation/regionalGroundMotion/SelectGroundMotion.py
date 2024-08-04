@@ -51,8 +51,8 @@ import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
 
-class GM_Selector:  # noqa: N801, D101
-    def __init__(  # noqa: ANN204, D107
+class GM_Selector:  # noqa: D101
+    def __init__(  # noqa: ANN204
         self,
         gmdb_im_df=dict(),  # noqa: ANN001, B006, C408
         num_records=1,  # noqa: ANN001
@@ -103,7 +103,7 @@ class GM_Selector:  # noqa: N801, D101
             cur_im_table = copy.copy(im_table)
             for i in range(cur_im_table.shape[1]):
                 if self.scalable[i]:
-                    cur_im_table.iloc[:, i] = cur_im_table.iloc[:, i] * s
+                    cur_im_table.iloc[:, i] = cur_im_table.iloc[:, i] * s  # noqa: PLR6104
             err = np.linalg.norm(
                 np.exp(self.target_im) - cur_im_table.to_numpy(), axis=1
             )
@@ -118,7 +118,7 @@ class GM_Selector:  # noqa: N801, D101
         self.sf = sf
 
 
-def select_ground_motion(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
+def select_ground_motion(  # noqa: ANN201, C901, D103
     im_list,  # noqa: ANN001
     target_ln_im,  # noqa: ANN001
     gmdb_file,  # noqa: ANN001
@@ -186,9 +186,9 @@ def select_ground_motion(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         # Looping over all scenarios
         for cur_target in target_ln_im:
             tmp_scen = eq_ids[count] + 1
-            count = count + 1
+            count = count + 1  # noqa: PLR6104
             print('-Scenario #' + str(tmp_scen))  # noqa: T201
-            num_stations, num_periods, num_simu = cur_target.shape
+            num_stations, num_periods, num_simu = cur_target.shape  # noqa: F841
             tmp_id = np.zeros((num_stations, num_simu))
             tmp_sf = np.zeros((num_stations, num_simu))
             tmp_min_err = np.zeros((num_stations, num_simu))
@@ -210,7 +210,7 @@ def select_ground_motion(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                     tmp_min_err[j, i] = gm_selector.min_err
                     tmp_id[j, i] = int(gmdb['RecId'][gm_selector.loc_tag])
                     tmp_sf[j, i] = gm_selector.sf
-                    tmp_filename.append(
+                    tmp_filename.append(  # noqa: FURB113
                         'RSN'
                         + str(int(tmp_id[j, i]))
                         + '_'
@@ -280,11 +280,11 @@ def output_all_ground_motion_info(gm_id, gm_file, output_dir, filename):  # noqa
     # Writing all record names to a csv file
     print(gm_file)  # noqa: T201
     try:
-        with open(os.path.join(output_dir, filename), 'w') as f:  # noqa: PTH118, PTH123
+        with open(os.path.join(output_dir, filename), 'w') as f:  # noqa: PLW1514, PTH118, PTH123
             w = csv.writer(f)
             if gm_file:
                 w.writerow(gm_file)
-        with open(os.path.join(output_dir, 'RSN.csv'), 'w') as f:  # noqa: PTH118, PTH123
+        with open(os.path.join(output_dir, 'RSN.csv'), 'w') as f:  # noqa: PLW1514, PTH118, PTH123
             w = csv.writer(f)
             if gm_id:
                 w.writerow(gm_id)

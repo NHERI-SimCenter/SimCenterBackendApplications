@@ -1,8 +1,9 @@
 """Created on Tue Feb  2 20:22:09 2021
 
 @author: snaeimi
-"""  # noqa: D400, D415
+"""  # noqa: CPY001, D400
 
+import math
 from collections import OrderedDict
 
 from wntrfr.network.model import LinkStatus
@@ -50,7 +51,7 @@ NC_FALSE_FLAG = {
 
 
 class Repair:  # noqa: D101
-    def __init__(self, registry):  # noqa: ANN001, ANN204, D107
+    def __init__(self, registry):  # noqa: ANN001, ANN204
         self._registry = registry
 
     def closeSecondLeakingPipe(self, damage_node_name, wn):  # noqa: ANN001, ANN201, N802, D102
@@ -62,7 +63,7 @@ class Repair:  # noqa: D101
         ):
             raise ValueError('Damage type is not leak in node ' + damage_node_name)
 
-        pipe_A_name, pipe_B_name, orginal_pipe_name = self._registry.getLeakData(  # noqa: N806
+        pipe_A_name, pipe_B_name, orginal_pipe_name = self._registry.getLeakData(  # noqa: F841, N806
             damage_node_name
         )
         pipe_B = wn.get_link(pipe_B_name)  # noqa: N806
@@ -70,7 +71,7 @@ class Repair:  # noqa: D101
         pipe_B.status = LinkStatus.Closed
         pipe_B.initial_status = LinkStatus.Closed
 
-    def bypassPipe(  # noqa: ANN201, N802, D102, PLR0913
+    def bypassPipe(  # noqa: ANN201, N802, D102
         self,
         damage_node_name,  # noqa: ANN001
         middle_pipe_size,  # noqa: ANN001
@@ -87,7 +88,7 @@ class Repair:  # noqa: D101
                 damage_node_name
             )
         elif damage_type == 'break':
-            pipe_A_name, pipe_B_name, orginal_pipe_name, node_A_name, node_B_name = (  # noqa: N806
+            pipe_A_name, pipe_B_name, orginal_pipe_name, node_A_name, node_B_name = (  # noqa: F841, N806
                 self._registry.getBreakData(damage_node_name)
             )
         org_pipe_data = self._registry.getOriginalPipenodes(orginal_pipe_name)
@@ -97,12 +98,12 @@ class Repair:  # noqa: D101
         orginal_pipe_length = org_pipe_data['length']
         orginal_pipe_roughness = org_pipe_data['roughness']
 
-        if length != None:  # noqa: SIM108, E711
+        if length != None:  # noqa: E711
             pipe_length = length
         else:
             pipe_length = orginal_pipe_length
 
-        if friction != None:  # noqa: SIM108, E711
+        if friction != None:  # noqa: E711
             pipe_friction = friction
         else:
             pipe_friction = orginal_pipe_roughness
@@ -133,7 +134,7 @@ class Repair:  # noqa: D101
 
             cur_damage_type = cur_damage['damage_type']
             if cur_damage_type == 'leak':
-                pipe_A_name, pipe_B_name, orginal_pipe_name = (  # noqa: N806
+                pipe_A_name, pipe_B_name, orginal_pipe_name = (  # noqa: F841, N806
                     self._registry.getLeakData(cur_damage_node_name)
                 )
 
@@ -189,7 +190,7 @@ class Repair:  # noqa: D101
             history['NON_COL_ADDED_PIPE'] = new_pipe_name
 
         elif damage_type == 'break':
-            pipe_A_name, pipe_B_name, orginal_pipe_name, node_A_name, node_B_name = (  # noqa: N806
+            pipe_A_name, pipe_B_name, orginal_pipe_name, node_A_name, node_B_name = (  # noqa: F841, N806
                 self._registry.getBreakData(damage_node_name)
             )
 
@@ -223,7 +224,7 @@ class Repair:  # noqa: D101
             damage_node_name, history, 'reconnect'
         )
 
-    def removeLeak(self, damage_node_name, damage_type, wn, factor=1):  # noqa: ANN001, ANN201, C901, N802, D102, PLR0912, PLR0915
+    def removeLeak(self, damage_node_name, damage_type, wn, factor=1):  # noqa: ANN001, ANN201, C901, N802, D102
         history = OrderedDict()
 
         opening = 1 - factor
@@ -269,7 +270,7 @@ class Repair:  # noqa: D101
 
             elif cur_damage_type == 'break':
                 (
-                    pipe_A_name,  # noqa: N806
+                    pipe_A_name,  # noqa: F841, N806
                     pipe_B_name,  # noqa: N806
                     orginal_pipe_name,
                     node_A_name,  # noqa: N806
@@ -318,7 +319,7 @@ class Repair:  # noqa: D101
             damage_node_name, history, 'removeLeak'
         )
 
-    def addReservoir(self, damage_node_name, damage_type, _type, pump, wn):  # noqa: ANN001, ANN201, C901, N802, D102, PLR0912, PLR0915
+    def addReservoir(self, damage_node_name, damage_type, _type, pump, wn):  # noqa: ANN001, ANN201, C901, N802, D102
         history = OrderedDict()
 
         if damage_type == 'leak':
@@ -326,7 +327,7 @@ class Repair:  # noqa: D101
                 damage_node_name
             )
         elif damage_type == 'break':
-            pipe_A_name, pipe_B_name, orginal_pipe_name, node_A_name, node_B_name = (  # noqa: N806
+            pipe_A_name, pipe_B_name, orginal_pipe_name, node_A_name, node_B_name = (  # noqa: F841, N806
                 self._registry.getBreakData(damage_node_name)
             )
         else:
@@ -484,8 +485,8 @@ class Repair:  # noqa: D101
             res_A = wn.get_node(new_reservoir_A)  # noqa: N806
             res_B = wn.get_node(new_reservoir_B)  # noqa: N806
 
-            res_A.base_head = res_A.base_head + 20
-            res_B.base_head = res_B.base_head + 20
+            res_A.base_head = res_A.base_head + 20  # noqa: PLR6104
+            res_B.base_head = res_B.base_head + 20  # noqa: PLR6104
 
             history['MIDDLE_NODE_A'] = (
                 new_RP_middle_name1  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed
@@ -623,13 +624,13 @@ class Repair:  # noqa: D101
         if if_damage_removed == False:  # noqa: E712
             self.removeDISTNodeExplicitLeak(damage_node_name, wn)
 
-    def removePipeRepair(self, damaged_node_name, wn, action):  # noqa: ANN001, ANN201, C901, N802, D102, PLR0912
+    def removePipeRepair(self, damaged_node_name, wn, action):  # noqa: ANN001, ANN201, C901, N802, D102
         restoration_table = self._registry._restoration_table  # noqa: SLF001
         selected_restoration_table = restoration_table[
             restoration_table['node_name'] == damaged_node_name
         ]
 
-        for ind, rec_id in selected_restoration_table.record_index.items():
+        for ind, rec_id in selected_restoration_table.record_index.items():  # noqa: PLR1702
             change_list = self._registry._record_registry[rec_id]  # noqa: SLF001
 
             to_pop_list = []
@@ -658,7 +659,7 @@ class Repair:  # noqa: D101
                     if (refined_damage_data[action] == True).all():  # noqa: E712
                         if i_link_collective:
                             if (
-                                change == 'BYPASS_PIPE'  # noqa: PLR1714
+                                change == 'BYPASS_PIPE'  # noqa: PLR0916, PLR1714
                                 or change == 'ADDED_PIPE_A'
                                 or (
                                     change == 'ADDED_PIPE_B'  # noqa: PLR1714
@@ -755,11 +756,11 @@ class Repair:  # noqa: D101
             wn.remove_node(node_A_name, with_control=True)
             wn.remove_node(node_B_name, with_control=True)
 
-    def restorePumps(self, pump_name_list, wn):  # noqa: ANN001, ANN201, N802, D102
+    def restorePumps(self, pump_name_list, wn):  # noqa: ANN001, ANN201, D102, N802, PLR6301
         for pump_name in pump_name_list:
             wn.get_link(pump_name).initial_status = LinkStatus(1)
 
-    def restoreTanks(self, tank_name_list, wn):  # noqa: ANN001, ANN201, N802, D102
+    def restoreTanks(self, tank_name_list, wn):  # noqa: ANN001, ANN201, D102, N802, PLR6301
         for tank_name in tank_name_list:
             made_up_mid_node_name = tank_name + '_tank_mid'
             made_up_pipe_name = tank_name + '_tank_mid_pipe'
@@ -859,7 +860,7 @@ class Repair:  # noqa: D101
         new_node_name = nodal_data['new_node_name']
         orginal_flow = nodal_data['orginal_flow']
         number_of_damages = total_number - repaired_number
-        cd, mp0 = self._registry.damage.getEmitterCdAndElevation(
+        cd, mp0 = self._registry.damage.getEmitterCdAndElevation(  # noqa: F841
             real_node_name,
             wn,
             number_of_damages,
@@ -898,7 +899,7 @@ class Repair:  # noqa: D101
         pipe_name = nodal_data['new_pipe_name']
         orginal_flow = nodal_data['orginal_flow']
         number_of_damages = total_number - repaired_number
-        cd, mp0 = self._registry.damage.getEmitterCdAndElevation(
+        cd, mp0 = self._registry.damage.getEmitterCdAndElevation(  # noqa: F841
             real_node_name,
             wn,
             number_of_damages,
@@ -913,12 +914,12 @@ class Repair:  # noqa: D101
             mean_pressure, number_of_damages, total_number
         )
         equavalant_pipe_diameter = (  # noqa: F841
-            ((nd - 1) * q) ** 2 / (0.125 * 9.81 * 3.14**2 * mean_pressure)
+            ((nd - 1) * q) ** 2 / (0.125 * 9.81 * math.pi**2 * mean_pressure)
         ) ** (1 / 4) * 1
         pipe = wn.get_link(pipe_name)
         # if equavalant_pipe_diameter >= pipe.diameter:
         # raise ValueError("something wrong here: "+repr(equavalant_pipe_diameter)+" - "+repr(pipe.diameter))
-        pipe.diameter = pipe.diameter / 2
+        pipe.diameter = pipe.diameter / 2  # noqa: PLR6104
 
     def modifyDISTNodeExplicitLeak(  # noqa: ANN201, N802, D102
         self,

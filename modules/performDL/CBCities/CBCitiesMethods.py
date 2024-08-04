@@ -52,12 +52,12 @@ def ckdnearest(gdfA, gdfB, gdfB_cols=['pgv']):  # noqa: ANN001, ANN201, B006, N8
     B = [np.array(geom.coords) for geom in gdfB.geometry.to_list()]  # noqa: N806
     B_ix = tuple(  # noqa: N806
         itertools.chain.from_iterable(
-            [itertools.repeat(i, x) for i, x in enumerate(list(map(len, B)))]
+            list(itertools.starmap(itertools.repeat, enumerate(list(map(len, B)))))
         )
     )
     B = np.concatenate(B)  # noqa: N806
     ckd_tree = cKDTree(B)
-    dist, idx = ckd_tree.query(A, k=1)
+    dist, idx = ckd_tree.query(A, k=1)  # noqa: F841
     idx = itemgetter(*idx)(B_ix)
     gdf = pd.concat([gdfA, gdfB.loc[idx, gdfB_cols].reset_index(drop=True)], axis=1)
     return gdf  # noqa: RET504
@@ -218,7 +218,7 @@ def get_bar_ranges(space):  # noqa: ANN001, ANN201, D103
 
 def get_failure_groups(fail_probs, min_thre=1e-3, num_groups=10):  # noqa: ANN001, ANN201, D103
     valid_fails = [fail_prob for fail_prob in fail_probs if fail_prob > min_thre]
-    count, space = np.histogram(valid_fails, num_groups)
+    count, space = np.histogram(valid_fails, num_groups)  # noqa: F841
     ranges = get_bar_ranges(space)
     return ranges  # noqa: RET504
 
@@ -234,7 +234,7 @@ def get_failed_pipes_mask(pipe_info, groups):  # noqa: ANN001, ANN201, D103
         valid_indices = np.nonzero(pipes_mask)[0]
         num_fails = int(np.mean(r) * sum(pipes_mask))
 
-        fail_indices = np.random.choice(valid_indices, num_fails, replace=False)  # noqa: NPY002
+        fail_indices = np.random.choice(valid_indices, num_fails, replace=False)
 
         broken_pipes[fail_indices] = 1
 
@@ -242,7 +242,7 @@ def get_failed_pipes_mask(pipe_info, groups):  # noqa: ANN001, ANN201, D103
 
 
 def generate_leak_diameter(pipe_diam, min_ratio=0.05, max_ratio=0.25):  # noqa: ANN001, ANN201, D103
-    r = np.random.uniform(min_ratio, max_ratio)  # noqa: NPY002
+    r = np.random.uniform(min_ratio, max_ratio)
     return pipe_diam * r
 
 

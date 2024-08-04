@@ -1,4 +1,4 @@
-import argparse  # noqa: INP001, D100
+import argparse  # noqa: CPY001, D100, INP001
 import json
 import posixpath
 import sys
@@ -7,7 +7,7 @@ import numpy as np
 
 
 def write_RV(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N802, N803, D103
-    with open(BIM_file) as f:  # noqa: PTH123
+    with open(BIM_file) as f:  # noqa: PLW1514, PTH123
         bim_data = json.load(f)
 
     event_file = {'randomVariables': [], 'Events': []}
@@ -47,14 +47,14 @@ def write_RV(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N802, N80
         load_record(events[0]['fileName'], data_dir, empty=True)
     )
 
-    with open(EVENT_file, 'w') as f:  # noqa: PTH123
+    with open(EVENT_file, 'w') as f:  # noqa: PLW1514, PTH123
         json.dump(event_file, f, indent=2)
 
 
 def load_record(fileName, data_dir, scale_factor=1.0, empty=False):  # noqa: ANN001, ANN201, FBT002, N803, D103
     fileName = fileName.split('x')[0]  # noqa: N806
 
-    with open(posixpath.join(data_dir, f'{fileName}.json')) as f:  # noqa: PTH123
+    with open(posixpath.join(data_dir, f'{fileName}.json')) as f:  # noqa: PLW1514, PTH123
         event_data = json.load(f)
 
     event_dic = {
@@ -90,10 +90,10 @@ def load_record(fileName, data_dir, scale_factor=1.0, empty=False):  # noqa: ANN
 
 
 def get_records(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N803, D103
-    with open(BIM_file) as f:  # noqa: PTH123
+    with open(BIM_file) as f:  # noqa: PLW1514, PTH123
         bim_file = json.load(f)
 
-    with open(EVENT_file) as f:  # noqa: PTH123
+    with open(EVENT_file) as f:  # noqa: PLW1514, PTH123
         event_file = json.load(f)
 
     event_id = event_file['Events'][0]['event_id']
@@ -107,7 +107,7 @@ def get_records(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N803, 
 
     event_file['Events'][0].update(load_record(event_id, data_dir, scale_factor))
 
-    with open(EVENT_file, 'w') as f:  # noqa: PTH123
+    with open(EVENT_file, 'w') as f:  # noqa: PLW1514, PTH123
         json.dump(event_file, f, indent=2)
 
 

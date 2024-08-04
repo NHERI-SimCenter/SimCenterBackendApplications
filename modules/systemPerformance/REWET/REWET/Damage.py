@@ -2,10 +2,11 @@
 This module is responsible for calculating damage to t=different componenst of
 the system, including pipe lines. pupmo and so.
 @author: snaeimi
-"""  # noqa: N999, D205, D400, D415
+"""  # noqa: CPY001, D205, D400, N999
 
 import logging
-import pickle
+import math
+import pickle  # noqa: S403
 
 import numpy as np
 import pandas as pd
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class EarthquakeScenario:  # noqa: D101
-    def __init__(self, magnitude, depth, x_coord, y_coord, eq_time):  # noqa: ANN001, ANN204, D107
+    def __init__(self, magnitude, depth, x_coord, y_coord, eq_time):  # noqa: ANN001, ANN204
         self.M = abs(magnitude)
         self.depth = abs(depth)
         self.coordinate = {}
@@ -32,8 +33,8 @@ class EarthquakeScenario:  # noqa: D101
         )
 
 
-class Damage:  # noqa: D101
-    def __init__(self, registry, scenario_set):  # noqa: ANN001, ANN204, D107
+class Damage:  # noqa: D101, PLR0904
+    def __init__(self, registry, scenario_set):  # noqa: ANN001, ANN204
         self.scenario_set = scenario_set
         self.pipe_leak = pd.Series(dtype='O')
         self.pipe_break = pd.Series(dtype='O')
@@ -56,7 +57,7 @@ class Damage:  # noqa: D101
         # self._nodal_damage_method = None
         self._pipe_damage_method = 1
 
-    def readDamageFromPickleFile(  # noqa: ANN201, N802, D417
+    def readDamageFromPickleFile(  # noqa: ANN201, N802
         self,
         pickle_file_name,  # noqa: ANN001
         csv_file_name,  # noqa: ANN001
@@ -74,7 +75,7 @@ class Damage:  # noqa: D101
         Returns
         -------
 
-        """  # noqa: D205, D400, D401, D404, D414, D415
+        """  # noqa: D205, D400, D401, D404, D414
         with open(pickle_file_name, 'rb') as pckf:  # noqa: PTH123
             w = pickle.load(pckf)  # noqa: S301
 
@@ -142,11 +143,11 @@ class Damage:  # noqa: D101
         temp_leak_pipe_ID = leak_temp['PipeID']  # noqa: N806
 
         if temp_break_pipe_ID.dtype != 'O':
-            temp_break_pipe_ID = temp_break_pipe_ID.apply(lambda x: str(x))  # noqa: N806
+            temp_break_pipe_ID = temp_break_pipe_ID.apply(lambda x: str(x))  # noqa: N806, PLW0108
             break_temp['PipeID'] = temp_break_pipe_ID
 
         if temp_leak_pipe_ID.dtype != 'O':
-            temp_leak_pipe_ID = temp_leak_pipe_ID.apply(lambda x: str(x))  # noqa: N806
+            temp_leak_pipe_ID = temp_leak_pipe_ID.apply(lambda x: str(x))  # noqa: N806, PLW0108
             leak_temp['PipeID'] = temp_leak_pipe_ID
 
         temp1 = break_temp[['PipeID', 'BreakRatio']]
@@ -232,7 +233,7 @@ class Damage:  # noqa: D101
             else:
                 raise ValueError('There is an unknown damage type')  # noqa: EM101, TRY003
 
-    def readDamageFromTextFile(self, path):  # noqa: ANN001, ANN201, N802, D417
+    def readDamageFromTextFile(self, path):  # noqa: ANN001, ANN201, N802
         """Reads a damage from scenario from a text file and add the information
             to the damage class object.
 
@@ -243,8 +244,8 @@ class Damage:  # noqa: D101
 
         """  # noqa: D205, D401
         if path == None:  # noqa: E711
-            raise ValueError('None in path')  # noqa: EM101, TRY003
-        file = open(path)  # noqa: SIM115, PTH123
+            raise ValueError('None in path')  # noqa: DOC501, EM101, TRY003
+        file = open(path)  # noqa: PLW1514, PTH123, SIM115
         lines = file.readlines()
         line_cnt = 0
         for line in lines:
@@ -256,7 +257,7 @@ class Damage:  # noqa: D101
                 # print(len(sline))
                 temp_leak = {}
                 if line_length < 4:  # noqa: PLR2004
-                    raise OSError(
+                    raise OSError(  # noqa: DOC501
                         'There must be at least 4 arguments in line' + repr(line_cnt)
                     )
                     # print('Probelm 1')
@@ -275,7 +276,7 @@ class Damage:  # noqa: D101
 
             elif sline[0].lower() == 'break':
                 if line_length < 3:  # noqa: PLR2004
-                    raise OSError('Line cannot have more than three arguments')  # noqa: EM101, TRY003
+                    raise OSError('Line cannot have more than three arguments')  # noqa: DOC501, EM101, TRY003
                 # print('Probelm 2')
                 temp_break = {}
                 temp_break['pipe_id'] = sline[1]
@@ -300,7 +301,7 @@ class Damage:  # noqa: D101
                 )
         file.close()
 
-    def applyNodalDamage(self, WaterNetwork, current_time):  # noqa: ANN001, ANN201, C901, N802, N803, D417, PLR0912, PLR0915
+    def applyNodalDamage(self, WaterNetwork, current_time):  # noqa: ANN001, ANN201, C901, N802, N803
         """Apply Nodal Damage
 
         Parameters
@@ -312,7 +313,7 @@ class Damage:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D415
+        """  # noqa: D400
         if self.node_damage.empty:
             print('no node damage at all')  # noqa: T201
             return
@@ -328,7 +329,7 @@ class Damage:  # noqa: D101
                 print('No node damage at time ' + str(current_time))  # noqa: T201
                 return
         else:
-            raise ValueError(
+            raise ValueError(  # noqa: DOC501
                 'Node damage has a unknown type: '
                 + str(type(curren_time_node_damage))
                 + ' at time: '
@@ -382,7 +383,7 @@ class Damage:  # noqa: D101
                 pipe_length = val['node_Pipe_Length'] * 1000
 
                 if node_name not in WaterNetwork.node_name_list:
-                    raise ValueError(
+                    raise ValueError(  # noqa: DOC501
                         'Node name of damages not in node name list: ' + node_name
                     )
 
@@ -419,7 +420,7 @@ class Damage:  # noqa: D101
                 number_of_damages = val['Number_of_damages']
                 pipe_length = val['node_Pipe_Length'] * 1000
                 if node_name not in WaterNetwork.node_name_list:
-                    raise ValueError(
+                    raise ValueError(  # noqa: DOC501
                         'Node name of damages not in node name list: ' + node_name
                     )
                 maximum_node_demand = 10
@@ -430,7 +431,7 @@ class Damage:  # noqa: D101
                 over_designed_diameter = (
                     10.67 * (maximum_node_demand / _C) ** 1.852 * (pipe_length / _hl)
                 )
-                over_designed_diameter = over_designed_diameter ** (1 / 4.8704)
+                over_designed_diameter = over_designed_diameter ** (1 / 4.8704)  # noqa: PLR6104
 
                 equavalant_damaged_pipe_diameter = self.scenario_set[
                     'equavalant_damage_diameter'
@@ -483,7 +484,7 @@ class Damage:  # noqa: D101
                     over_designed_diameter,
                 }
         else:
-            raise ValueError('Unknown nodal damage method')  # noqa: EM101, TRY003
+            raise ValueError('Unknown nodal damage method')  # noqa: DOC501, EM101, TRY003
 
         # return WaterNetwork
 
@@ -554,7 +555,7 @@ class Damage:  # noqa: D101
 
         return nd  # noqa: RET504
 
-    def getEmitterCdAndElevation(  # noqa: ANN201, N802, D102, PLR0913
+    def getEmitterCdAndElevation(  # noqa: ANN201, N802, D102
         self,
         real_node_name,  # noqa: ANN001
         wn,  # noqa: ANN001
@@ -563,7 +564,9 @@ class Damage:  # noqa: D101
         mp,  # noqa: ANN001
         q,  # noqa: ANN001
     ):
-        mp = mp * 1.4223  # this is because our CURRENT relationship is base on psi
+        mp = (  # noqa: PLR6104
+            mp * 1.4223
+        )  # this is because our CURRENT relationship is base on psi
         rr = number_of_damages / sum_of_length * 1000  # noqa: F841
         nd = self.getNd(mp, number_of_damages, sum_of_length)
         # equavalant_pipe_diameter = ( ((nd-1)*q)**2 /(0.125*9.81*3.14**2 * mp/1.4223) )**(1/4) * 1
@@ -576,17 +579,17 @@ class Damage:  # noqa: D101
         node = wn.get_node(real_node_name)  # noqa: F841
         # new_elavation = node.elevation
 
-        nd = nd - 1
+        nd = nd - 1  # noqa: PLR6104
         # nd0 = 0.0036*0 + 0.9012 + (0.0248*0-0.877)*rr
         nd0 = self.getNd(0, number_of_damages, sum_of_length)
         if real_node_name == 'CC1381':
             print(nd0)  # noqa: T201
             nd02 = self.getNd2(0, number_of_damages, sum_of_length)
             print(nd02)  # noqa: T201
-        nd0 = nd0 - 1
+        nd0 = nd0 - 1  # noqa: PLR6104
         alpha = (nd - nd0) / (mp)
         mp0 = -1 * (nd0) / alpha
-        mp0 = mp0 / 1.4223
+        mp0 = mp0 / 1.4223  # noqa: PLR6104
         cd = alpha * q
         return cd, mp0
 
@@ -648,7 +651,7 @@ class Damage:  # noqa: D101
             elif method == 'equal_diameter_reservoir':
                 nd = self.getNd(mp, number_of_damages, sum_of_length)
                 equavalant_pipe_diameter = (
-                    ((nd - 1) * q) ** 2 / (0.125 * 9.81 * 3.14**2 * mp)
+                    ((nd - 1) * q) ** 2 / (0.125 * 9.81 * math.pi**2 * mp)
                 ) ** (1 / 4) * 1
                 wn.add_reservoir(
                     new_node_name, base_head=new_elavation, coordinates=new_coord
@@ -713,7 +716,7 @@ class Damage:  # noqa: D101
         damaged_pipe_name_list = list(set(damaged_pipe_name_list))
         return damaged_pipe_name_list  # noqa: RET504
 
-    def applyPipeDamages(self, WaterNetwork, current_time):  # noqa: ANN001, ANN201, C901, N802, N803, PLR0912, PLR0915
+    def applyPipeDamages(self, WaterNetwork, current_time):  # noqa: ANN001, ANN201, C901, N802, N803
         """Apply the damage that we have in damage object. the damage is either
             predicted or read from somewhere.
 
@@ -745,7 +748,7 @@ class Damage:  # noqa: D101
                 print('No Pipe damages at time ' + str(current_time))  # noqa: T201
                 return
         else:
-            raise ValueError(
+            raise ValueError(  # noqa: DOC501
                 'Pipe damage has a unknown type: '
                 + str(type(current_time_pipe_damages))
                 + ' at time: '
@@ -772,7 +775,7 @@ class Damage:  # noqa: D101
                 area = None
                 if 'leakD' in cur_damage:
                     diam = cur_damage['leakD']
-                    area = 3.14 * (diam / 2) ** 2
+                    area = math.pi * (diam / 2) ** 2
                 else:
                     # diam = 100*WaterNetwork.get_link(pipe_id).diameter
                     # area= 0.6032*diam/10000
@@ -795,16 +798,16 @@ class Damage:  # noqa: D101
                     b = damage_parameters['b']
 
                     dd = alpha * diam_m**a + beta * diam_m**b + gamma
-                    dd = dd * 1.2
+                    dd = dd * 1.2  # noqa: PLR6104
 
-                    area = 3.14 * dd**2 / 4
+                    area = math.pi * dd**2 / 4
                 last_ratio = 1
                 if pipe_id in self._pipe_last_ratio:
                     last_ratio = self._pipe_last_ratio.loc[pipe_id]
 
                 ratio = cur_damage['damage_loc'] / last_ratio
                 if ratio >= 1:
-                    raise ValueError(
+                    raise ValueError(  # noqa: DOC501
                         'IN LEAK: ratio is bigger than or equal to 1 for pipe:'
                         + repr(pipe_id)
                         + '  '
@@ -860,7 +863,7 @@ class Damage:  # noqa: D101
 
                 ratio = cur_damage['damage_loc'] / last_ratio
                 if ratio >= 1:
-                    raise ValueError(
+                    raise ValueError(  # noqa: DOC501
                         'IN BREAK: ratio is bigger than or equal to 1 for pipe:'
                         + repr(pipe_id)
                         + '  '
@@ -902,7 +905,7 @@ class Damage:  # noqa: D101
                 )
 
                 diam = WaterNetwork.get_link(pipe_id).diameter
-                area = (diam**2) * 3.14 / 4
+                area = (diam**2) * math.pi / 4
                 break_node_for_old_pipe = WaterNetwork.get_node(
                     new_node_id_for_old_pipe
                 )
@@ -937,7 +940,7 @@ class Damage:  # noqa: D101
                 )
                 # self._registry.addPipeDamageToDamageRestorationData(pipe_id, 'break', damage_time)
             else:
-                raise ValueError(
+                raise ValueError(  # noqa: DOC501
                     'undefined damage type: '
                     + repr(cur_damage['type'])
                     + ". Accpetale type of famages are either 'creack' or 'break'."
@@ -1040,11 +1043,11 @@ class Damage:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D205
+        """  # noqa: D205, DOC502
         if type(earthquake_file_name) != str:  # noqa: E721
             raise ValueError('string is wanted for earthqiake fie name')  # noqa: EM101, TRY003
 
-        file = open(earthquake_file_name)  # noqa: SIM115, PTH123
+        file = open(earthquake_file_name)  # noqa: PLW1514, PTH123, SIM115
         lines = file.readlines()
         ct = 0
         for line in lines:
@@ -1052,7 +1055,7 @@ class Damage:  # noqa: D101
             sline = line.split()
             line_length = len(sline)
             if line_length != 5:  # noqa: PLR2004
-                raise OSError(
+                raise OSError(  # noqa: DOC501
                     'there should be 5 values in line '
                     + repr(ct)
                     + '\n M[SPACE]depth[SPACE]X coordinate[SPACE]Y coordinate{SPACE]Time'
@@ -1077,11 +1080,11 @@ class Damage:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D401, D404, D415
+        """  # noqa: D400, D401, D404
         self._earthquake.sort_index()
         self.is_timely_sorted = True
 
-    def predictDamage(self, wn, iClear=False):  # noqa: ANN001, ANN201, FBT002, N802, N803, D417
+    def predictDamage(self, wn, iClear=False):  # noqa: ANN001, ANN201, FBT002, N802, N803
         """This function predict the water network model damage based on  probabilistic method.
 
         Parameters
@@ -1148,7 +1151,7 @@ class Damage:  # noqa: D101
         damage_time_list : list
             Distinct time for all kind of damages
 
-        """  # noqa: D400, D415
+        """  # noqa: D400
         pipe_damage_unique_time = self.pipe_all_damages.index.unique().tolist()
         node_damage_unique_time = self.node_damage.index.unique().tolist()
         tank_damage_unique_time = self.tank_damage.index.unique().tolist()
@@ -1181,7 +1184,7 @@ class Damage:  # noqa: D101
         pandas.Series()
             a list of distinct time of earthquake.
 
-        """  # noqa: D205, D400, D401, D415
+        """  # noqa: D205, D400, D401, DOC502
         reg = []
         if self.is_timely_sorted == False:  # noqa: E712
             self.sortEarthquakeListTimely()

@@ -1,9 +1,9 @@
-import os  # noqa: D100
+import os  # noqa: D100, CPY001
 
 from conans import CMake, ConanFile
 
 
-class simCenterBackendApps(ConanFile):  # noqa: N801, D101
+class simCenterBackendApps(ConanFile):  # noqa: D101
     name = 'SimCenterBackendApplications'
     version = '1.2.2'
     description = 'Backend applications for SimCenter software'

@@ -1,22 +1,22 @@
-import argparse  # noqa: INP001, D100
+import argparse  # noqa: CPY001, D100, INP001
 import json
 
 
 class FloorForces:  # noqa: D101
-    def __init__(self):  # noqa: ANN204, D107
+    def __init__(self):  # noqa: ANN204
         self.X = [0]
         self.Y = [0]
         self.Z = [0]
 
 
 def directionToDof(direction):  # noqa: ANN001, ANN201, N802
-    """Converts direction to degree of freedom"""  # noqa: D400, D401, D415
+    """Converts direction to degree of freedom"""  # noqa: D400, D401
     directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
 
     return directioMap[direction]
 
 
-def addFloorForceToEvent(  # noqa: ANN201, N802, PLR0913
+def addFloorForceToEvent(  # noqa: ANN201, N802
     timeSeriesArray,  # noqa: ANN001, N803
     patternsArray,  # noqa: ANN001, N803
     force,  # noqa: ANN001
@@ -24,7 +24,7 @@ def addFloorForceToEvent(  # noqa: ANN201, N802, PLR0913
     floor,  # noqa: ANN001
     dT,  # noqa: ANN001, N803
 ):
-    """Add force (one component) time series and pattern in the event file"""  # noqa: D400, D415
+    """Add force (one component) time series and pattern in the event file"""  # noqa: D400
     seriesName = 'HydroForceSeries_' + str(floor) + direction  # noqa: N806
     timeSeries = {'name': seriesName, 'dT': dT, 'type': 'Value', 'data': force}  # noqa: N806
 
@@ -42,7 +42,7 @@ def addFloorForceToEvent(  # noqa: ANN201, N802, PLR0913
 
 
 def addFloorForceToEvent(patternsArray, force, direction, floor):  # noqa: ANN001, ANN201, ARG001, N802, N803, F811
-    """Add force (one component) time series and pattern in the event file"""  # noqa: D400, D415
+    """Add force (one component) time series and pattern in the event file"""  # noqa: D400
     seriesName = 'HydroForceSeries_' + str(floor) + direction  # noqa: N806
     patternName = 'HydroForcePattern_' + str(floor) + direction  # noqa: N806
     pattern = {
@@ -57,14 +57,14 @@ def addFloorForceToEvent(patternsArray, force, direction, floor):  # noqa: ANN00
 
 
 def addFloorPressure(pressureArray, floor):  # noqa: ANN001, ANN201, N802, N803
-    """Add floor pressure in the event file"""  # noqa: D400, D415
+    """Add floor pressure in the event file"""  # noqa: D400
     floorPressure = {'story': str(floor), 'pressure': [0.0, 0.0]}  # noqa: N806
 
     pressureArray.append(floorPressure)
 
 
 def writeEVENT(forces, eventFilePath):  # noqa: ANN001, ANN201, N802, N803
-    """This method writes the EVENT.json file"""  # noqa: D400, D401, D404, D415
+    """This method writes the EVENT.json file"""  # noqa: D400, D401, D404
     timeSeriesArray = []  # noqa: N806, F841
     patternsArray = []  # noqa: N806
     pressureArray = []  # noqa: N806

@@ -1,4 +1,4 @@
-#!/usr/bin/env python  # noqa: EXE001, D100
+#!/usr/bin/env python  # noqa: EXE001, D100, CPY001
 
 from bincrafters import build_template_default
 

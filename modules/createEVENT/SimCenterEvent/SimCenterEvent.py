@@ -72,7 +72,7 @@ def write_RV(AIM_file, EVENT_file):  # noqa: ANN001, ANN201, N802, N803, D103
     input_unit_bases = get_unit_bases(input_units)
 
     # get the location of the event input files
-    # TODO: assuming a single event for now  # noqa: FIX002, TD002, TD003
+    # TODO: assuming a single event for now  # noqa: TD002
     aim_event_input = aim_file['Events'][0]
     data_dir = Path(aim_event_input['EventFolderPath'])
 
@@ -126,7 +126,7 @@ def write_RV(AIM_file, EVENT_file):  # noqa: ANN001, ANN201, N802, N803, D103
         # initialize the Events part of the EVENT file
         event_file['Events'].append(
             {
-                #'type': 'Seismic',
+                # 'type': 'Seismic',
                 'type': aim_event_input['type'],
                 'event_id': events[0][0],
                 'unitScaleFactor': f_scale_units,
@@ -136,7 +136,7 @@ def write_RV(AIM_file, EVENT_file):  # noqa: ANN001, ANN201, N802, N803, D103
         )
 
     # if time histories are used, then load the first event
-    # TODO: this is needed by some other code that should be fixed and this  # noqa: FIX002, TD002, TD003
+    # TODO: this is needed by some other code that should be fixed and this  # noqa: TD002
     #  part should be removed.
 
     if aim_event_input['type'] == 'timeHistory':
@@ -172,7 +172,7 @@ def load_record(  # noqa: ANN201, D103
 
     # check if Event File is already in EVENT format
     isEventFile = False  # noqa: N806
-    if event_data.__contains__('Events'):
+    if event_data.__contains__('Events'):  # noqa: PLC2801
         event_dic = event_data['Events'][0]
         # event_dic['dT'] = event_data['Events'][0]['dT']
         # event_dic['numSteps'] = event_data['Events'][0]['numSteps']
@@ -200,7 +200,7 @@ def load_record(  # noqa: ANN201, D103
         f_scale = float(f_scale_units) * float(f_scale_user)
 
         # generate the event files
-        # TODO: add 'z' later  # noqa: FIX002, TD002, TD003
+        # TODO: add 'z' later  # noqa: TD002
         for i, dir_ in enumerate(['x', 'y']):
             src_label = 'data_' + dir_
             tar_label = src_label
@@ -221,7 +221,7 @@ def load_record(  # noqa: ANN201, D103
                 if empty:
                     event_dic['timeSeries'][-1]['data'] = []
 
-                # TODO: We will need to generalize this as soon as we add  # noqa: FIX002, TD002, TD003
+                # TODO: We will need to generalize this as soon as we add  # noqa: TD002
                 # different types of time histories
                 # Assuming acceleration time history for now.
                 event_dic['pattern'].append(

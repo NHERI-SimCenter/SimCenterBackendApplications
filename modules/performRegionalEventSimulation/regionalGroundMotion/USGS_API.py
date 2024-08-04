@@ -44,8 +44,8 @@ import numpy as np
 import requests
 
 
-class USGS_HazardCurve:  # noqa: N801, D101
-    def __init__(  # noqa: ANN204, D107, PLR0911, PLR0913
+class USGS_HazardCurve:  # noqa: D101
+    def __init__(  # noqa: ANN204
         self,
         longitude=None,  # noqa: ANN001
         latitude=None,  # noqa: ANN001
@@ -113,7 +113,7 @@ class USGS_HazardCurve:  # noqa: N801, D101
         cur_path = os.path.dirname(os.path.abspath(__file__))  # noqa: PTH100, PTH120
         config_file = os.path.join(cur_path, 'lib', 'USGS_HazardCurveConfig.json')  # noqa: PTH118
         try:
-            with open(config_file) as f:  # noqa: PTH123
+            with open(config_file) as f:  # noqa: PLW1514, PTH123
                 self.config = json.load(f)
             return True  # noqa: TRY300
         except:  # noqa: E722
@@ -146,7 +146,7 @@ class USGS_HazardCurve:  # noqa: N801, D101
             len(self.config.get('parameters').get('region').get('values'))
         ):
             cur_region = self.config.get('parameters').get('region').get('values')[i]
-            if long >= cur_region.get('minlongitude') and long <= cur_region.get(  # noqa: SIM102
+            if long >= cur_region.get('minlongitude') and long <= cur_region.get(
                 'maxlongitude'
             ):
                 if lat >= cur_region.get('minlatitude') and lat <= cur_region.get(

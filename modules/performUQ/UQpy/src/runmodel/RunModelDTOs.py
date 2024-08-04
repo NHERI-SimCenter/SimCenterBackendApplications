@@ -1,4 +1,4 @@
-from pathlib import Path  # noqa: INP001, D100
+from pathlib import Path  # noqa: CPY001, D100, INP001
 from typing import List
 
 from src.quofemDTOs import RandomVariable
@@ -35,7 +35,7 @@ class RunModelDTO:  # noqa: D101
         for rv in variables:
             template_code.append(f'{rv.name} <{rv.name}>')  # noqa: PERF401
 
-        with open('params_template.in', 'w') as f:  # noqa: PTH123
+        with open('params_template.in', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
             f.write('\n'.join(template_code))
 
     @staticmethod
@@ -57,7 +57,7 @@ class RunModelDTO:  # noqa: D101
             '\tfire.Fire(model)',
         ]
 
-        with open('model_script.py', 'w') as f:  # noqa: PTH123
+        with open('model_script.py', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
             f.write('\n'.join(model_script_code))
 
     @staticmethod
@@ -80,5 +80,5 @@ class RunModelDTO:  # noqa: D101
             + "{index}')",
         ]
 
-        with open('postprocess_script.py', 'w') as f:  # noqa: PTH123
+        with open('postprocess_script.py', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
             f.write('\n'.join(postprocess_script_code))

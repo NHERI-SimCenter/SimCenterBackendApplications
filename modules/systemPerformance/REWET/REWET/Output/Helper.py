@@ -1,7 +1,7 @@
 """Created on Mon Oct 24 18:10:31 2022
 
 @author: snaeimi
-"""  # noqa: INP001, D400, D415
+"""  # noqa: CPY001, D400, INP001
 
 # import numba
 import operator

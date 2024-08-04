@@ -1,4 +1,4 @@
-# written: fmk, adamzs  # noqa: INP001, D100
+# written: fmk, adamzs  # noqa: CPY001, D100, INP001
 
 # import functions for Python 2.X support
 import sys
@@ -10,12 +10,12 @@ else:
     string_types = str
 
 import os
-import subprocess
+import subprocess  # noqa: S404
 from time import gmtime, strftime
 
 
 class WorkFlowInputError(Exception):  # noqa: D101
-    def __init__(self, value):  # noqa: ANN001, ANN204, D107
+    def __init__(self, value):  # noqa: ANN001, ANN204
         self.value = value
 
     def __str__(self):  # noqa: ANN204, D105

@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Node_Damage_Model_Help_Window.ui'  # noqa: N999, D100
+# Form implementation generated from reading ui file 'Node_Damage_Model_Help_Window.ui'  # noqa: CPY001, D100, N999
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,7 +8,7 @@
 from PyQt5 import QtCore, QtWidgets
 
 
-class Ui_Node_Damage_Model_Help:  # noqa: N801, D101
+class Ui_Node_Damage_Model_Help:  # noqa: D101
     def setupUi(self, Node_Damage_Model_Help):  # noqa: ANN001, ANN201, N802, N803, D102
         Node_Damage_Model_Help.setObjectName('Node_Damage_Model_Help')
         Node_Damage_Model_Help.resize(340, 130)

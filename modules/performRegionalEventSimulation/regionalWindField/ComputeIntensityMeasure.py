@@ -41,7 +41,7 @@ import json
 import multiprocessing as mp
 import os
 import shutil
-import subprocess
+import subprocess  # noqa: S404
 import sys
 
 import numpy as np
@@ -49,7 +49,7 @@ import pandas as pd
 from WindFieldSimulation import *  # noqa: F403
 
 
-def run_model(scen, p, t, path_perturb, feat_perturb, res_mp):  # noqa: ANN001, ANN201, D103, PLR0913
+def run_model(scen, p, t, path_perturb, feat_perturb, res_mp):  # noqa: ANN001, ANN201, D103
     model = LinearAnalyticalModel_SnaikiWu_2017(cyclone_param=p, storm_track=t)  # noqa: F405
     if scen['Terrain']:
         model.add_reference_terrain(scen['Terrain'])
@@ -57,8 +57,8 @@ def run_model(scen, p, t, path_perturb, feat_perturb, res_mp):  # noqa: ANN001, 
     model.set_measure_height(scen['MeasureHeight'])
     model.define_track(scen['TrackSimu'])
     model.add_stations(scen['StationList'])
-    delta_path = (np.random.rand(3) - 0.5) * path_perturb  # noqa: NPY002
-    delta_feat = np.array(p[3:6]) + (np.random.rand(3) - 0.5) * feat_perturb  # noqa: NPY002
+    delta_path = (np.random.rand(3) - 0.5) * path_perturb
+    delta_feat = np.array(p[3:6]) + (np.random.rand(3) - 0.5) * feat_perturb
     # this just an engineering judgement that the pressure difference, moving speed, and max-wind-speed radius
     # should not be less than 0.0 in the value.
     delta_feat[delta_feat < 0.0] = 0.0
@@ -95,7 +95,7 @@ def simulate_storm(scenarios, event_info, model_type):  # noqa: ANN001, ANN201, 
             cur_scen = scenarios[i]
             param = cur_scen['CycloneParam']
             track = cur_scen['StormTrack']
-            np.random.seed(100)  # noqa: NPY002
+            np.random.seed(100)
             # parallel
             with mp.Manager() as manager:
                 res_mp = manager.list([])
@@ -131,7 +131,7 @@ def simulate_storm(scenarios, event_info, model_type):  # noqa: ANN001, ANN201, 
     return res
 
 
-def simulate_storm_cpp(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
+def simulate_storm_cpp(  # noqa: ANN201, C901, D103
     site_info,  # noqa: ANN001
     scenario_info,  # noqa: ANN001
     scenario_data,  # noqa: ANN001
@@ -162,7 +162,7 @@ def simulate_storm_cpp(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
         config = {'Scenario': scenario_info, 'Event': event_info}
         abs_path_config = os.path.abspath(os.path.join(input_dir, 'SimuConfig.json'))  # noqa: PTH100, PTH118
-        with open(abs_path_config, 'w') as f:  # noqa: PTH123
+        with open(abs_path_config, 'w') as f:  # noqa: PLW1514, PTH123
             json.dump(config, f)
         # site file
         abs_path_site = os.path.abspath(  # noqa: PTH100
@@ -233,7 +233,7 @@ def simulate_storm_cpp(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                     }
                 ],
             }
-            with open(abs_path_terrain, 'w') as f:  # noqa: PTH123
+            with open(abs_path_terrain, 'w') as f:  # noqa: PLW1514, PTH123
                 json.dump(dict_dt, f, indent=2)
 
         # configuring perturbation
@@ -257,7 +257,7 @@ def simulate_storm_cpp(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                     'ComputeIntensityMeasure: currently supporting single scenario simulation only.'
                 )
                 return -1
-            np.random.seed(100)  # noqa: NPY002
+            np.random.seed(100)
             res = []
             # parallel
             pert_list = []
@@ -267,10 +267,10 @@ def simulate_storm_cpp(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                 windsimu_bin = os.path.dirname(__file__) + '/WindFieldSimulation.exe'  # noqa: PTH120
             else:
                 windsimu_bin = os.path.dirname(__file__) + '/WindFieldSimulation'  # noqa: PTH120
-            ## preparing files
+            # preparing files
             for j in range(num_per_site):
-                delta_path = (np.random.rand(3) - 0.5) * path_perturb  # noqa: NPY002
-                delta_feat = (np.random.rand(3) - 0.5) * feat_perturb  # noqa: NPY002
+                delta_path = (np.random.rand(3) - 0.5) * path_perturb
+                delta_feat = (np.random.rand(3) - 0.5) * feat_perturb
                 pert_dict = {
                     'dLatitude': delta_path[0],
                     'dLongitude': delta_path[1],
@@ -282,7 +282,7 @@ def simulate_storm_cpp(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                 abs_path_pert = os.path.abspath(  # noqa: PTH100
                     os.path.join(input_dir, 'Perturbation' + str(j) + '.json')  # noqa: PTH118
                 )
-                with open(abs_path_pert, 'w') as f:  # noqa: PTH123
+                with open(abs_path_pert, 'w') as f:  # noqa: PLW1514, PTH123
                     json.dump(pert_dict, f)
                 print('dLatitude, dLongtitude, dAngle = ', delta_path)  # noqa: T201
                 print('dP, dv, dR = ', delta_feat)  # noqa: T201
@@ -315,7 +315,7 @@ def simulate_storm_cpp(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                 pert_list.append(abs_path_pert)
                 args_list.append(args)
                 odir_list.append(output_subdir)
-            ## running
+            # running
             print('ComputeIntensityMeaure: running analysis.')  # noqa: T201
             procs_list = [
                 subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # noqa: S603
@@ -323,7 +323,7 @@ def simulate_storm_cpp(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             ]
             for proc in procs_list:
                 proc.communicate()
-            ## loading output
+            # loading output
             print('ComputeIntensityMeaure: postprocessing simulation data.')  # noqa: T201
             for j in range(num_per_site):
                 os.remove(pert_list[j])  # noqa: PTH107
@@ -378,7 +378,7 @@ def convert_wind_speed(event_info, simu_res):  # noqa: ANN001, ANN201, D103
         gust_duration = 3.0
     else:
         exposure = event_info['IntensityMeasure']['Exposure']
-        if exposure not in ['A', 'B', 'C', 'D']:
+        if exposure not in ['A', 'B', 'C', 'D']:  # noqa: PLR6201
             print('ComputeIntensityMeasure: the Exposure should be A, B, C, or D.')  # noqa: T201
             return -1
         gust_duration = event_info['IntensityMeasure']['GustDuration']
@@ -423,7 +423,7 @@ def convert_wind_speed(event_info, simu_res):  # noqa: ANN001, ANN201, D103
         # computing gradient-height wind speed
         pws_tmp = pws_raw * (zg / reference_height) ** (1.0 / alpha)
         # converting exposure
-        pws_tmp = pws_tmp * (reference_height / zg_t) ** (1.0 / alpha_t)
+        pws_tmp = pws_tmp * (reference_height / zg_t) ** (1.0 / alpha_t)  # noqa: PLR6104
         pws = pws_tmp * gust_factor_ESDU(gust_duration_simu, gust_duration)
         print(np.max(pws))  # noqa: T201
         # appending to pws_mr
@@ -435,7 +435,7 @@ def convert_wind_speed(event_info, simu_res):  # noqa: ANN001, ANN201, D103
 
 
 def interp_wind_by_height(pws_ip, height_simu, height_ref):  # noqa: ANN001, ANN201
-    """interp_wind_by_height: interpolating the wind simulation results by the reference height"""  # noqa: D400, D415
+    """interp_wind_by_height: interpolating the wind simulation results by the reference height"""  # noqa: D400
     num_stat = pws_ip.shape[0]
     pws_op = np.zeros(num_stat)
     for i in range(num_stat):
@@ -452,7 +452,7 @@ def interp_wind_by_height(pws_ip, height_simu, height_ref):  # noqa: ANN001, ANN
 
 
 def gust_factor_ESDU(gd_c, gd_t):  # noqa: ANN001, ANN201, N802
-    """gust_factor_ESDU: return a gust facto between gd_c and gd_t"""  # noqa: D400, D415
+    """gust_factor_ESDU: return a gust facto between gd_c and gd_t"""  # noqa: D400
     # gust duration (sec)
     gd = [
         1.0,

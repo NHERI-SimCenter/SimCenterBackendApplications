@@ -1,4 +1,4 @@
-import json  # noqa: INP001, D100
+import json  # noqa: CPY001, D100, INP001
 import os
 import time
 
@@ -21,7 +21,7 @@ except:  # noqa: E722
 from convertWindMat import *  # noqa: F403
 
 errPath = './workflow.err'  # error file name  # noqa: N816
-sys.stderr = open(  # noqa: SIM115, PTH123, F405
+sys.stderr = open(  # noqa: F405, PLW1514, PTH123, SIM115
     errPath, 'w'
 )  # redirecting stderr (this way we can capture all sorts of python errors)
 
@@ -35,7 +35,7 @@ def err_exit(msg):  # noqa: ANN001, ANN201, D103
     exit(-1)  # exit with non-zero exit code  # noqa: PLR1722
 
 
-def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PLR0912, PLR0915
+def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, D103, N803, PLR0914, PLR0915
     with open(aimName, encoding='utf-8') as f:  # noqa: PTH123
         aim_data = json.load(f)
 
@@ -52,7 +52,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
     T_full = evt_data[  # noqa: N806
         'fullScaleDuration'
     ]  # 1600, Duration of wind pressure realization at full scale (s)
-    # TODO check if there is recommended modes  # noqa: FIX002, TD002, TD003, TD004
+    # TODO check if there is recommended modes  # noqa: TD002, TD004
     perc_mod = (
         evt_data['modePercent'] / 100
     )  # percentage of modes to include in the simulation
@@ -100,7 +100,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
             #
 
             if runType == 'runningLocal':
-                from multiprocessing import Pool
+                from multiprocessing import Pool  # noqa: PLC0415
 
                 n_processor = os.cpu_count()
                 print('Starting pool')  # noqa: T201
@@ -108,8 +108,8 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
                 pool = Pool(n_processor)
                 print(f' - Elapsed time: {time.time() - tmp:.3f} seconds.\n')  # noqa: T201
             else:
-                from mpi4py import MPI
-                from mpi4py.futures import MPIPoolExecutor
+                from mpi4py import MPI  # noqa: PLC0415
+                from mpi4py.futures import MPIPoolExecutor  # noqa: PLC0415
 
                 world = MPI.COMM_WORLD
                 n_processor = world.Get_size()
@@ -232,13 +232,13 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
         if out > 0:
             d = np.concatenate([d, np.array([d[-1] + out])])
 
-        # TODO: dealing with gpuArray, gather  # noqa: FIX002, TD002, TD003
+        # TODO: dealing with gpuArray, gather  # noqa: TD002
         nSampPoints = int(nfft / 2 + 1)  # noqa: N806
         s_target = np.zeros(
             (len(selected_taps), len(selected_taps), nSampPoints), dtype='complex_'
         )
         startTime = time.time()  # noqa: N806, F841
-        # TODO: works only if the selected taps are is continuous  # noqa: FIX002, TD002, TD003
+        # TODO: works only if the selected taps are is continuous  # noqa: TD002
         selected_taps_tmp = np.concatenate(
             [selected_taps, [selected_taps[-1] + 1]]
         )  # zero is dummy that will not appear in the analysis
@@ -659,12 +659,12 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
     """  # noqa: W291
 
 
-def genCP(Cp_temp, Cp_sim_temp, nl, nu, my_cdf_vect, my_cdf_x_range):  # noqa: ANN001, ANN201, N802, N803, D103, PLR0913
+def genCP(Cp_temp, Cp_sim_temp, nl, nu, my_cdf_vect, my_cdf_x_range):  # noqa: ANN001, ANN201, N802, N803, D103
     #
     # combining the loops to directly send temp instead of dist_kde
     #
 
-    # TODO; why double?  # noqa: FIX002, TD002, TD003, TD004
+    # TODO; why double?  # noqa: TD002, TD004
 
     meanCp = np.mean(Cp_sim_temp)  # noqa: N806
     stdCp = np.std(Cp_sim_temp)  # noqa: N806
@@ -677,7 +677,7 @@ def genCP(Cp_temp, Cp_sim_temp, nl, nu, my_cdf_vect, my_cdf_x_range):  # noqa: A
     cdf_vvv[cdf_vvv < 0.00001] = 0.00001  # noqa: PLR2004
     cdf_vvv[cdf_vvv > 0.99999] = 0.99999  # noqa: PLR2004
     # map F_vvv into F_nongauss through inverse cdf of the mix distribution
-    # TODO why single precision for cdf_vv?  # noqa: FIX002, TD002, TD003, TD004
+    # TODO why single precision for cdf_vv?  # noqa: TD002, TD004
 
     return paretotails_icdf(cdf_vvv, nl, nu, Cp_temp, my_cdf_vect, my_cdf_x_range)
 
@@ -687,7 +687,7 @@ def getCDF(Cp_temp):  # noqa: ANN001, ANN201, N802, N803, D103
     kernel_cdf = np.vectorize(lambda x: kernel.integrate_box_1d(-np.inf, x))
     my_cdf_x = np.linspace(
         min(Cp_temp), max(Cp_temp), 1000
-    )  # TODO is 1000 enough?  # noqa: FIX002, TD002, TD003, TD004
+    )  # TODO is 1000 enough?  # noqa: TD002, TD004
 
     my_cdf_vects = kernel_cdf(my_cdf_x)  # Takes too long to evaluate
     my_cdf_x_range = [min(Cp_temp), max(Cp_temp)]
@@ -695,7 +695,7 @@ def getCDF(Cp_temp):  # noqa: ANN001, ANN201, N802, N803, D103
     return my_cdf_vects, my_cdf_x_range
 
 
-def paretotails_icdf(pf, nl, nu, temp, my_cdf_vect, my_cdf_x):  # noqa: ANN001, ANN201, D103, PLR0913
+def paretotails_icdf(pf, nl, nu, temp, my_cdf_vect, my_cdf_x):  # noqa: ANN001, ANN201, D103
     #
     # Pareto percentile
     #
@@ -728,7 +728,7 @@ def paretotails_icdf(pf, nl, nu, temp, my_cdf_vect, my_cdf_x):  # noqa: ANN001, 
     my_cdf_x = np.linspace(my_cdf_x[0], my_cdf_x[1], my_cdf_vect.shape[0])
     idx2 = np.where((pf >= nl) * (pf < nu))  # not to have duplicates in x
 
-    unique_val, unique_id = np.unique(my_cdf_vect, return_index=True)
+    unique_val, unique_id = np.unique(my_cdf_vect, return_index=True)  # noqa: F841
 
     kernel_icdf = interpolate.interp1d(
         my_cdf_vect[unique_id], my_cdf_x[unique_id], kind='cubic', bounds_error=False
@@ -783,7 +783,7 @@ def paretotails_icdf(pf, nl, nu, temp, my_cdf_vect, my_cdf_x):  # noqa: ANN001, 
     return kernel, gpareto_param_lower, gpareto_param_upper  # noqa: F405
 
 
-def cpsd_matlab(Components1, Components2, wind_size, nover, nfft, fp):  # noqa: ANN001, ANN201, N803, D103, PLR0913
+def cpsd_matlab(Components1, Components2, wind_size, nover, nfft, fp):  # noqa: ANN001, ANN201, N803, D103
     window = windows.hann(int(wind_size))
 
     ncombs1 = Components1.shape[1]
@@ -857,7 +857,7 @@ def perform_POD(s_target, f_target, ncomp, l_mo, pool):  # noqa: ANN001, ANN201,
     return V, D1, SpeN
 
 
-def simulation_gaussian(  # noqa: ANN201, D103, PLR0913
+def simulation_gaussian(  # noqa: ANN201, D103, PLR0913, PLR0917
     ncomp,  # noqa: ANN001
     N_t,  # noqa: ANN001, N803
     V_vH,  # noqa: ANN001, N803
@@ -885,9 +885,9 @@ def simulation_gaussian(  # noqa: ANN201, D103, PLR0913
     sampNum = folderName.split('.')[-1]  # noqa: N806
 
     if not sampNum.isnumeric():
-        np.random.seed(seed[seed_num])  # noqa: NPY002
+        np.random.seed(seed[seed_num])
     else:
-        np.random.seed(seed[seed_num] + int(sampNum))  # noqa: NPY002
+        np.random.seed(seed[seed_num] + int(sampNum))
 
     #
     # Start the loop
@@ -912,7 +912,7 @@ def simulation_gaussian(  # noqa: ANN201, D103, PLR0913
         )  # product of eigenvector X
 
         # Generate  random phase  angle for each frequency SpeN
-        varth = (2 * np.pi) * np.random.random(size=(1, N_f))  # noqa: NPY002
+        varth = (2 * np.pi) * np.random.random(size=(1, N_f))
 
         # Loop over floors
         # g_jm = np.zeros((N_t, ncomp),dtype = 'complex_')
@@ -941,9 +941,9 @@ def simulation_gaussian(  # noqa: ANN201, D103, PLR0913
             g_jm = np.fft.ifft(B_jm) * N_t
             F_jm[j, :] = np.real(g_jm * coef2)
 
-        # TODO it is hard to tell whether they are similar or not  # noqa: FIX002, TD002, TD003, TD004
+        # TODO it is hard to tell whether they are similar or not  # noqa: TD002, TD004
         # sum up F from different modes (zero - mean)
-        F_jzm = F_jzm + F_jm  # noqa: N806
+        F_jzm = F_jzm + F_jm  # noqa: N806, PLR6104
 
     return F_jzm
 

@@ -43,13 +43,13 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
 
 from whale.main import (
-    _parse_app_registry,
+    _parse_app_registry,  # noqa: PLC2701
     create_command,
     run_command,
 )
 
 
-def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
+def main(  # noqa: ANN201, C901, D103
     inputFile,  # noqa: ANN001, N803
     appKey,  # noqa: ANN001, N803
     getRV,  # noqa: ANN001, N803
@@ -66,13 +66,13 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
     inputDir = os.path.dirname(inputFile)  # noqa: PTH120, N806
     inputFileName = os.path.basename(inputFile)  # noqa: PTH119, N806
-    if inputDir != '':
+    if inputDir != '':  # noqa: PLC1901
         os.chdir(inputDir)
 
-    with open(inputFileName) as f:  # noqa: PTH123
+    with open(inputFileName) as f:  # noqa: PLW1514, PTH123
         inputs = json.load(f)
 
-    if 'referenceDir' in inputs:  # noqa: SIM108, SIM401
+    if 'referenceDir' in inputs:  # noqa: SIM401
         reference_dir = inputs['referenceDir']
     else:
         reference_dir = inputDir
@@ -116,7 +116,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         if isinstance(modelToRun, str):
             rvName = 'MultiModel-' + appKey  # noqa: N806
             # if not here, try opening params.in and getting var from there
-            with open('params.in') as params:  # noqa: PTH123
+            with open('params.in') as params:  # noqa: PLW1514, PTH123
                 # Read the file line by line
                 for line in params:
                     values = line.strip().split()
@@ -140,21 +140,21 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         appData = model['ApplicationData']  # noqa: N806
         appRunData = model['data']  # noqa: N806
         beliefs.append(belief)
-        sumBeliefs = sumBeliefs + belief  # noqa: N806
+        sumBeliefs = sumBeliefs + belief  # noqa: N806, PLR6104
         appsInMultiModel.append(appName)
         appDataInMultiModel.append(appData)
         appRunDataInMultiModel.append(appRunData)
-        numModels = numModels + 1  # noqa: N806
+        numModels = numModels + 1  # noqa: N806, PLR6104
 
     for i in range(numModels):
-        beliefs[i] = beliefs[i] / sumBeliefs
+        beliefs[i] = beliefs[i] / sumBeliefs  # noqa: PLR6104
 
     #
     # parse WorkflowApplications to get possible applications
     # need the 2 ifs, as appKey needs to be Events, but switch in WorkflowApplications needs to be Event!
     #
 
-    if appKey == 'Events':  # noqa: SIM108
+    if appKey == 'Events':
         appTypes = ['Event']  # noqa: N806
     else:
         appTypes = [appKey]  # noqa: N806
@@ -229,7 +229,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         #     newCorrMat[0:nrv,0:nrv] = corrMat
         #     inputs['correlationMatrix'] = newCorrMat.flatten().tolist()
 
-        with open(inputFile, 'w') as outfile:  # noqa: PTH123
+        with open(inputFile, 'w') as outfile:  # noqa: PLW1514, PTH123
             json.dump(inputs, outfile)
 
         print('UPDATING INPUT FILE:', inputFile)  # noqa: T201
@@ -243,7 +243,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         tmpFile = 'MultiModel.' + appKey + '.json'  # noqa: N806
         inputs[appKey] = appRunDataInMultiModel[numModels - 1]
 
-        with open(tmpFile, 'w') as outfile:  # noqa: PTH123
+        with open(tmpFile, 'w') as outfile:  # noqa: PLW1514, PTH123
             json.dump(inputs, outfile)
 
         # run the application
@@ -257,7 +257,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
     else:
         print('MultiModel - run')  # noqa: T201
-        modelToRun = modelToRun - 1  # noqa: N806
+        modelToRun = modelToRun - 1  # noqa: N806, PLR6104
         # get app data given model
         appName = appsInMultiModel[modelToRun]  # noqa: N806
         application = appsRegistry[appName]
@@ -275,7 +275,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
         print('model to run:', modelToRun)  # noqa: T201
 
-        with open(tmpFile, 'w') as outfile:  # noqa: PTH123
+        with open(tmpFile, 'w') as outfile:  # noqa: PLW1514, PTH123
             json.dump(inputs, outfile)
 
         print('INPUTS', inputs)  # noqa: T201

@@ -122,7 +122,7 @@ def remove2neibourEdges(nodesID_to_remove, nodes_to_remove, edges, graph):  # no
 
 
 # Break down long roads according to delta
-def breakDownLongEdges(edges, delta, roadDF, nodesDF, tolerance=10e-3):  # noqa: ANN001, ANN201, N802, N803, D103, PLR0915
+def breakDownLongEdges(edges, delta, roadDF, nodesDF, tolerance=10e-3):  # noqa: ANN001, ANN201, N802, N803, D103
     dropedEdges = []  # noqa: N806
     newEdges = []  # noqa: N806
     crs = edges.crs
@@ -159,7 +159,7 @@ def breakDownLongEdges(edges, delta, roadDF, nodesDF, tolerance=10e-3):  # noqa:
         newNodes = newNodes[  # noqa: N806
             1:-1
         ]  # The first and last points already exists in the nodes DF. delete them
-        nodes_dict = nodes_dict + newNodes
+        nodes_dict = nodes_dict + newNodes  # noqa: PLR6104
         for sLS_ind, sLS in enumerate(splittedLS):  # noqa: N806
             # create new edge
             if sLS_ind == 0:
@@ -169,7 +169,7 @@ def breakDownLongEdges(edges, delta, roadDF, nodesDF, tolerance=10e-3):  # noqa:
                     currentEdge['ID'].split('_')[0] + '_' + str(num_segExisting + 1)
                 )
                 num_segExisting += 1  # noqa: N806
-                num_segExistingMap[currentEdge['ID'].split('_')[0]] = (
+                num_segExistingMap[currentEdge['ID'].split('_')[0]] = (  # noqa: PLR6104
                     num_segExistingMap[currentEdge['ID'].split('_')[0]] + 1
                 )
             newGeom = sLS  # noqa: N806
@@ -205,7 +205,7 @@ def breakDownLongEdges(edges, delta, roadDF, nodesDF, tolerance=10e-3):  # noqa:
     return edges, nodesDF
 
 
-def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
+def create_asset_files(  # noqa: ANN201, C901, D103, PLR0914, PLR0915
     output_file,  # noqa: ANN001
     asset_source_file,  # noqa: ANN001
     bridge_filter,  # noqa: ANN001
@@ -226,7 +226,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
-            from mpi4py import MPI
+            from mpi4py import MPI  # noqa: PLC0415
 
             runParallel = True  # noqa: N806
             comm = MPI.COMM_WORLD
@@ -361,7 +361,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         graph = momepy.gdf_to_nx(roadGDF.to_crs('epsg:6500'), approach='primal')
         with warnings.catch_warnings():  # Suppress the warning of disconnected components in the graph
             warnings.simplefilter('ignore')
-            nodes, edges, sw = momepy.nx_to_gdf(
+            nodes, edges, sw = momepy.nx_to_gdf(  # noqa: F841
                 graph, points=True, lines=True, spatial_weights=True
             )
         # Oneway or twoway is not considered in D&L, remove duplicated edges
@@ -369,7 +369,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             edges.duplicated(['node_start', 'node_end'], keep='first') == False  # noqa: E712
         ]
         edges = edges.reset_index(drop=True).drop('mm_len', axis=1)
-        ### Some edges has start_node as the last point in the geometry and end_node as the first point, check and reorder
+        # Some edges has start_node as the last point in the geometry and end_node as the first point, check and reorder
         for ind in edges.index:
             start = nodes.loc[edges.loc[ind, 'node_start'], 'geometry']
             end = nodes.loc[edges.loc[ind, 'node_end'], 'geometry']
@@ -497,7 +497,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
             assets_array.append(dict(id=str(asset_id), file=AIM_file_name))  # noqa: C408
 
-        count = count + 1
+        count = count + 1  # noqa: PLR6104
 
     ind = 0
     for asset in selected_tunnels:
@@ -530,7 +530,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
             assets_array.append(dict(id=str(asset_id), file=AIM_file_name))  # noqa: C408
 
-        count = count + 1
+        count = count + 1  # noqa: PLR6104
 
     ind = 0
     for row_ind in edges.index:
@@ -571,7 +571,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
             assets_array.append(dict(id=str(asset_id), file=AIM_file_name))  # noqa: C408
 
-        count = count + 1
+        count = count + 1  # noqa: PLR6104
 
     if procID != 0:
         # if not P0, write data to output file with procID in name and barrier
@@ -590,7 +590,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
             for i in range(1, numP):
                 fileToAppend = os.path.join(outDir, f'tmp_{i}.json')  # noqa: PTH118, N806
-                with open(fileToAppend, encoding='utf-8') as data_file:  # noqa: PTH123
+                with open(fileToAppend, encoding='utf-8') as data_file:  # noqa: FURB101, PTH123
                     json_data = data_file.read()
                 assetsToAppend = json.loads(json_data)  # noqa: N806
                 assets_array += assetsToAppend

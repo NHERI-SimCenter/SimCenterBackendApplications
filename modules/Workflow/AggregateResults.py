@@ -52,7 +52,7 @@ def log_msg(msg):  # noqa: ANN001, ANN201, D103
     )
 
 
-def main(threads=1):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
+def main(threads=1):  # noqa: ANN001, ANN201, C901, D103
     headers = dict(  # noqa: C408
         IM=[0, 1, 2, 3],
         BIM=[
@@ -68,10 +68,10 @@ def main(threads=1):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
     if use_dask:
         log_msg(f'{threads} threads requested. Using DASK.')
 
-        import math
+        import math  # noqa: PLC0415
 
-        from dask import delayed
-        from dask.distributed import Client, LocalCluster
+        from dask import delayed  # noqa: PLC0415
+        from dask.distributed import Client, LocalCluster  # noqa: PLC0415
 
         @delayed
         def read_csv_files(file_list, header):  # noqa: ANN001, ANN202

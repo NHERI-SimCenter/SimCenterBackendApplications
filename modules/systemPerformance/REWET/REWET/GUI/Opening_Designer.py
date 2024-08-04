@@ -1,10 +1,10 @@
 """Created on Thu Oct 27 18:06:01 2022
 
 @author: snaeimi
-"""  # noqa: N999, D400, D415
+"""  # noqa: CPY001, D400, N999
 
 import os
-import pickle
+import pickle  # noqa: S403
 import sys
 
 from Input.Settings import Settings
@@ -24,7 +24,7 @@ from .Run_Tab_Designer import Run_Tab_Designer
 from .Simulation_Tab_Designer import Simulation_Tab_Designer
 
 
-class Opening_Designer(  # noqa: N801, D101
+class Opening_Designer(  # noqa: D101
     Ui_Opening_Window,
     Simulation_Tab_Designer,
     Hydraulic_Tab_Designer,
@@ -35,7 +35,7 @@ class Opening_Designer(  # noqa: N801, D101
     Result_Designer,
     Map_Designer,
 ):
-    def __init__(self):  # noqa: ANN204, D107
+    def __init__(self):  # noqa: ANN204
         self.project = None
         self.scenario_list = None
         self.settings = Settings()
@@ -80,7 +80,7 @@ class Opening_Designer(  # noqa: N801, D101
         self.asli_MainWindow.show()
         sys.exit(self.asli_app.exec_())
 
-    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: ANN001, ANN201, N802, D102
+    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: ANN001, ANN201, D102, N802, PLR6301
         error_widget = QtWidgets.QMessageBox()
         error_widget.setIcon(QtWidgets.QMessageBox.Critical)
         error_widget.setText(error_msg)
@@ -90,7 +90,7 @@ class Opening_Designer(  # noqa: N801, D101
             error_widget.setInformativeText(error_more_msg)
         error_widget.exec_()
 
-    def questionPrompt(self, title, msg, more_msg=None):  # noqa: ANN001, ANN201, N802, D102
+    def questionPrompt(self, title, msg, more_msg=None):  # noqa: ANN001, ANN201, D102, N802, PLR6301
         prompt_widget = QtWidgets.QMessageBox()
         prompt_widget.setIcon(QtWidgets.QMessageBox.Question)
         prompt_widget.setText(msg)
@@ -111,7 +111,7 @@ class Opening_Designer(  # noqa: N801, D101
             self.current_project_directory,
             'REWET Project File (*.prj)',
         )
-        if file[0] == '':
+        if file[0] == '':  # noqa: PLC1901
             return
         split_addr = os.path.split(file[0])
         self.current_project_directory = split_addr
@@ -132,9 +132,9 @@ class Opening_Designer(  # noqa: N801, D101
 
     def saveProject(self, save_as=False):  # noqa: ANN001, ANN201, FBT002, N802, D102
         data_retrived = False
-        if self.getSimulationSettings():  # noqa: SIM102
-            if self.getHydraulicSettings():  # noqa: SIM102
-                if self.getDamageSettings():  # noqa: SIM102
+        if self.getSimulationSettings():
+            if self.getHydraulicSettings():
+                if self.getDamageSettings():
                     if self.getRestorationSettings():
                         data_retrived = True
 
@@ -149,7 +149,7 @@ class Opening_Designer(  # noqa: N801, D101
                     self.project_file_addr,
                     'Project file (*.prj)',
                 )
-                if file_addr[0] == '':
+                if file_addr[0] == '':  # noqa: PLC1901
                     return False
                 split_addr = os.path.split(file_addr[0])
                 self.current_project_directory = split_addr[0]
@@ -173,7 +173,7 @@ class Opening_Designer(  # noqa: N801, D101
             self.project_file_addr,
             'Project file (*.prj)',
         )
-        if file_addr[0] == '':
+        if file_addr[0] == '':  # noqa: PLC1901
             return
         split_addr = os.path.split(file_addr[0])
         self.current_project_directory = split_addr[0]
@@ -184,7 +184,7 @@ class Opening_Designer(  # noqa: N801, D101
         with open(self.project_file_addr, 'wb') as f:  # noqa: PTH123
             pickle.dump(project, f)
 
-    def showHelpWindow(self):  # noqa: ANN201, N802, D102
+    def showHelpWindow(self):  # noqa: ANN201, D102, N802, PLR6301
         help_window = Main_Help_Designer()
         help_window._window.exec_()  # noqa: SLF001
 

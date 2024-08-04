@@ -1,4 +1,4 @@
-# This file is the main file that calls functions to generate the nonlinear  # noqa: D100, INP001
+# This file is the main file that calls functions to generate the nonlinear  # noqa: CPY001, D100, INP001
 # OpenSees models
 # Users need to specify the system argument in this file.
 # Users also need to specify the variables in "global_variables.py"

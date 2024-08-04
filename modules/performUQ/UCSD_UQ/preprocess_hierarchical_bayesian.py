@@ -1,4 +1,4 @@
-import argparse  # noqa: INP001, D100
+import argparse  # noqa: CPY001, D100, INP001
 import json
 import shutil
 import sys
@@ -36,7 +36,7 @@ def _handle_arguments(
     run_type = command_line_arguments.run_type
     driver_file = command_line_arguments.driver_file
     input_file = command_line_arguments.input_file
-    with open(input_file) as f:  # noqa: PTH123
+    with open(input_file) as f:  # noqa: PLW1514, PTH123
         inputs = json.load(f)
     return (
         working_directory_path,

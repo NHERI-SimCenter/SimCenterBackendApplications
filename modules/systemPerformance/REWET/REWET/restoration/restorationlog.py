@@ -1,7 +1,7 @@
 """Created on Sun Jan 31 21:54:19 2021
 
 @author: snaeimi
-"""  # noqa: INP001, D400, D415
+"""  # noqa: CPY001, D400, INP001
 
 from collections import OrderedDict
 
@@ -9,7 +9,7 @@ import pandas as pd
 
 
 class RestorationLog:  # noqa: D101
-    def __init__(self, settings):  # noqa: ANN001, ANN204, D107
+    def __init__(self, settings):  # noqa: ANN001, ANN204
         self.settings = settings
         self._agent_state_log_book = pd.DataFrame(
             columns=[
@@ -97,7 +97,7 @@ class RestorationLog:  # noqa: D101
                 temp, ignore_index=True
             )
 
-    def addAgentActionToLogBook(  # noqa: ANN201, N802, D102, PLR0913
+    def addAgentActionToLogBook(  # noqa: ANN201, N802, D102
         self,
         agent_name,  # noqa: ANN001
         node_name,  # noqa: ANN001

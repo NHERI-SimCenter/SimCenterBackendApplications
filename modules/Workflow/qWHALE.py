@@ -52,13 +52,13 @@ import whale.main as whale
 from whale.main import log_div, log_msg
 
 
-def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):  # noqa: ANN001, ANN201, ARG001, D103, PLR0913
+def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):  # noqa: ANN001, ANN201, ARG001, D103
     # initialize the log file
-    with open(input_file) as f:  # noqa: PTH123
+    with open(input_file) as f:  # noqa: PLW1514, PTH123
         inputs = json.load(f)
     runDir = inputs['runDir']  # noqa: N806
 
-    if working_dir is not None:  # noqa: SIM108
+    if working_dir is not None:
         runDir = working_dir  # noqa: N806
     else:
         runDir = inputs['runDir']  # noqa: N806

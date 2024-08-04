@@ -1,4 +1,4 @@
-# This file is used to define the class of beam-column connection, which includes beam/column depth  # noqa: INP001, D100
+# This file is used to define the class of beam-column connection, which includes beam/column depth  # noqa: CPY001, D100, INP001
 # check, RBS dimensions, moment capacity at column face, strong-column-weak-beam check, and panel zone
 # thickness (doubler plate)
 
@@ -39,9 +39,9 @@ class Connection:
     (8) Check shear strength of beam
     (9) Check whether strong column weak beam is satisfied
     (10) Calculate doubler plate thickness
-    """  # noqa: D205, D400, D404, D415
+    """  # noqa: D205, D400, D404
 
-    def __init__(  # noqa: ANN204, PLR0913
+    def __init__(  # noqa: ANN204
         self,
         connection_type,  # noqa: ANN001
         steel,  # noqa: ANN001
@@ -111,7 +111,7 @@ class Connection:
             connection_type, steel, left_beam, right_beam, bottom_column, top_column
         )
 
-    def check_column_beam(  # noqa: ANN201, PLR0912
+    def check_column_beam(  # noqa: ANN201
         self,
         connection_type,  # noqa: ANN001
         left_beam,  # noqa: ANN001
@@ -181,7 +181,7 @@ class Connection:
                 bottom_column.section['section size']
             )
             if (
-                left_beam_depth <= 36  # noqa: PLR2004
+                left_beam_depth <= 36  # noqa: PLR0916, PLR2004
                 and right_beam_depth <= 36  # noqa: PLR2004
                 and left_beam_weight <= 300  # noqa: PLR2004
                 and right_beam_weight <= 300  # noqa: PLR2004
@@ -255,10 +255,9 @@ class Connection:
     ):
         """This method is used to compute section modulus at RBS center (step 2 and 3 in ANSI Section 5.8)
         :return: a dictionary which includes the probable moment at RBS center
-        """  # noqa: D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404
         Cpr = (steel.Fy + steel.Fu) / (2 * steel.Fy)  # noqa: N806
-        if Cpr >= 1.2:  # noqa: PLR2004
-            Cpr = 1.2  # noqa: N806
+        Cpr = min(1.2, Cpr)  # noqa: N806
         if (
             connection_type == 'typical exterior'  # noqa: PLR1714
             or connection_type == 'top exterior'
@@ -301,7 +300,7 @@ class Connection:
     ):
         """This method calculates the shear force at the center of RBS (step 4 in ANSI Section 5.8)
         :return: a dictionary which includes the shear forces
-        """  # noqa: D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404
         # Be cautious: beam_dead_load read here is in the unit of lb/ft
         # The unit should be converted from lb/ft to kips/inch
         wu = (
@@ -331,7 +330,7 @@ class Connection:
     def compute_probable_moment_column_face(self, connection_type):  # noqa: ANN001, ANN201
         """This method calculates the probable maximum moment at the face of the column. (step 5 in ANSI Section 5.8)
         :return: Store probable maximum moment at column face into the dictionary
-        """  # noqa: D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404
         Sh = self.left_RBS_dimension['a'] + self.left_RBS_dimension['b'] / 2  # noqa: N806
         if (
             connection_type == 'typical exterior'  # noqa: PLR1714
@@ -457,7 +456,7 @@ class Connection:
             )
             sys.exit(2)
 
-    def check_column_beam_relationships(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
+    def check_column_beam_relationships(  # noqa: ANN201, C901
         self,
         connection_type,  # noqa: ANN001
         steel,  # noqa: ANN001
@@ -634,7 +633,7 @@ class Connection:
             )
             sys.exit(2)
 
-    def determine_doubler_plate(  # noqa: ANN201, PLR0913
+    def determine_doubler_plate(  # noqa: ANN201
         self,
         connection_type,  # noqa: ANN001
         steel,  # noqa: ANN001

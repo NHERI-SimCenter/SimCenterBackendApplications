@@ -1,23 +1,23 @@
-import argparse  # noqa: INP001, D100
+import argparse  # noqa: CPY001, D100, INP001
 import json
 
 
 class FloorForces:  # noqa: D101
-    def __init__(self):  # noqa: ANN204, D107
+    def __init__(self):  # noqa: ANN204
         self.X = [0]
         self.Y = [0]
         self.Z = [0]
 
 
 def directionToDof(direction):  # noqa: ANN001, ANN201, N802
-    """Converts direction to degree of freedom"""  # noqa: D400, D401, D415
+    """Converts direction to degree of freedom"""  # noqa: D400, D401
     directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
 
     return directioMap[direction]
 
 
 def addFloorForceToEvent(patternsArray, force, direction, floor):  # noqa: ANN001, ANN201, ARG001, N802, N803
-    """Add force (one component) time series and pattern in the event file"""  # noqa: D400, D415
+    """Add force (one component) time series and pattern in the event file"""  # noqa: D400
     seriesName = 'WindForceSeries_' + str(floor) + direction  # noqa: N806
     patternName = 'WindForcePattern_' + str(floor) + direction  # noqa: N806
     pattern = {
@@ -32,7 +32,7 @@ def addFloorForceToEvent(patternsArray, force, direction, floor):  # noqa: ANN00
 
 
 def writeEVENT(forces, eventFilePath):  # noqa: ANN001, ANN201, N802, N803
-    """This method writes the EVENT.json file"""  # noqa: D400, D401, D404, D415
+    """This method writes the EVENT.json file"""  # noqa: D400, D401, D404
     patternsArray = []  # noqa: N806
     windEventJson = {  # noqa: N806
         'type': 'Wind',
@@ -52,12 +52,12 @@ def writeEVENT(forces, eventFilePath):  # noqa: ANN001, ANN201, N802, N803
         addFloorForceToEvent(patternsArray, floorForces.X, 'X', floor)
         addFloorForceToEvent(patternsArray, floorForces.Y, 'Y', floor)
 
-    with open(eventFilePath, 'w') as eventsFile:  # noqa: PTH123, N806
+    with open(eventFilePath, 'w') as eventsFile:  # noqa: N806, PLW1514, PTH123
         json.dump(eventDict, eventsFile)
 
 
 def GetFloorsCount(BIMFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
-    with open(BIMFilePath) as BIMFile:  # noqa: PTH123, N806
+    with open(BIMFilePath) as BIMFile:  # noqa: N806, PLW1514, PTH123
         bim = json.load(BIMFile)
 
     return int(bim['GeneralInformation']['stories'])

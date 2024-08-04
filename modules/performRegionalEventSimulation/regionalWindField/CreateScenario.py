@@ -44,7 +44,7 @@ import numpy as np
 import pandas as pd
 
 
-def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
+def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noqa: ANN001, ANN201, C901, D103
     # Number of scenarios
     source_num = scenario_info.get('Number', 1)
     # Directly defining earthquake ruptures
@@ -87,14 +87,14 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
         # Reading Terrain info (if provided)
         terrain_file = scenario_info.get('Terrain', None)
         if terrain_file:
-            with open(os.path.join(data_dir, terrain_file)) as f:  # noqa: PTH118, PTH123
+            with open(os.path.join(data_dir, terrain_file)) as f:  # noqa: PLW1514, PTH118, PTH123
                 terrain_data = json.load(f)
         else:
             terrain_data = []
         # Parsing storm properties
         param = []
         try:
-            param.append(scenario_info['Storm']['Landfall']['Latitude'])
+            param.append(scenario_info['Storm']['Landfall']['Latitude'])  # noqa: FURB113
             param.append(scenario_info['Storm']['Landfall']['Longitude'])
             param.append(scenario_info['Storm']['Landfall']['LandingAngle'])
             param.append(scenario_info['Storm']['Landfall']['Pressure'])
@@ -191,7 +191,7 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
         # Reading Terrain info (if provided)
         terrain_file = scenario_info.get('Terrain', None)
         if terrain_file:
-            with open(os.path.join(data_dir, terrain_file)) as f:  # noqa: PTH118, PTH123
+            with open(os.path.join(data_dir, terrain_file)) as f:  # noqa: PLW1514, PTH118, PTH123
                 terrain_data = json.load(f)
         else:
             terrain_data = []
@@ -248,7 +248,7 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
         except:  # noqa: E722
             print('CreateScenario: error - no landing angle is found.')  # noqa: T201
         if landfall_ang > 180.0:  # noqa: PLR2004
-            landfall_ang = landfall_ang - 360.0
+            landfall_ang = landfall_ang - 360.0  # noqa: PLR6104
         landfall_prs = (
             1013.0
             - np.min(

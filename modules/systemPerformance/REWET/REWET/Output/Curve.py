@@ -1,7 +1,7 @@
 """Created on Tue Oct 25 14:30:01 2022
 
 @author: snaeimi
-"""  # noqa: INP001, D400, D415
+"""  # noqa: CPY001, D400, INP001
 
 import pandas as pd
 
@@ -9,7 +9,7 @@ from .Helper import hhelper
 
 
 class Curve:  # noqa: D101
-    def __init__():  # noqa: ANN204, D107
+    def __init__():  # noqa: ANN204
         pass
 
     def getPipeStatusByAction(self, scn_name, action):  # noqa: ANN001, ANN201, N802, D102
@@ -123,7 +123,7 @@ class Curve:  # noqa: D101
 
         return pd.Series(time_action_done)
 
-    def getInputWaterFlowCurve(  # noqa: ANN201, C901, N802, D102, PLR0912
+    def getInputWaterFlowCurve(  # noqa: ANN201, C901, N802, D102
         self,
         scn_name,  # noqa: ANN001
         tank_name_list=None,  # noqa: ANN001
@@ -287,8 +287,8 @@ class Curve:  # noqa: D101
         sat_node_demands = sat_node_demands.applymap(hhelper)
 
         if iPopulation == 'Yes':
-            s4 = s4 * self._population_data
-            sat_node_demands = sat_node_demands * self._population_data
+            s4 = s4 * self._population_data  # noqa: PLR6104
+            sat_node_demands = sat_node_demands * self._population_data  # noqa: PLR6104
         elif iPopulation == 'No':
             pass
         else:
@@ -305,7 +305,7 @@ class Curve:  # noqa: D101
 
         return s
 
-    def getBSCIndexPopulation_4(  # noqa: ANN201, N802, D102, PLR0913
+    def getBSCIndexPopulation_4(  # noqa: ANN201, N802, D102
         self,
         scn_name,  # noqa: ANN001
         bsc='DL',  # noqa: ANN001
@@ -333,7 +333,7 @@ class Curve:  # noqa: D101
         else:
             raise ValueError(f'BSC input is not recognizable: {bsc}')  # noqa: EM102, TRY003
 
-    def getDLIndexPopulation_4(  # noqa: ANN201, C901, N802, D102, PLR0912
+    def getDLIndexPopulation_4(  # noqa: ANN201, C901, N802, D102
         self,
         scn_name,  # noqa: ANN001
         iPopulation='No',  # noqa: ANN001, N803
@@ -391,9 +391,9 @@ class Curve:  # noqa: D101
                     if leak_data_name.loc[time] == True:  # noqa: E712
                         s.loc[time, name] = False
 
-        s = s * pop[s.columns]
+        s = s * pop[s.columns]  # noqa: PLR6104
 
-        if ratio == False:  # noqa: SIM108, E712
+        if ratio == False:  # noqa: E712
             total_pop = 1
         else:
             total_pop = pop.sum()
@@ -402,7 +402,7 @@ class Curve:  # noqa: D101
 
         return result  # noqa: RET504
 
-    def getQNIndexPopulation_4(  # noqa: ANN201, C901, N802, D102, PLR0912
+    def getQNIndexPopulation_4(  # noqa: ANN201, C901, N802, D102
         self,
         scn_name,  # noqa: ANN001
         iPopulation=False,  # noqa: ANN001, FBT002, N803
@@ -457,8 +457,8 @@ class Curve:  # noqa: D101
                     if leak_data_name.loc[time] == True:  # noqa: E712
                         s.loc[time, name] = False
 
-        s = s * pop[s.columns]
-        if ratio == False:  # noqa: SIM108, E712
+        s = s * pop[s.columns]  # noqa: PLR6104
+        if ratio == False:  # noqa: E712
             total_pop = 1
         else:
             total_pop = pop.sum()
@@ -467,7 +467,7 @@ class Curve:  # noqa: D101
 
         return result  # noqa: RET504
 
-    def getQuantityExceedanceCurve(  # noqa: ANN201, N802, D102, PLR0913
+    def getQuantityExceedanceCurve(  # noqa: ANN201, N802, D102
         self,
         iPopulation='No',  # noqa: ANN001, ARG002, N803
         ratio=False,  # noqa: ANN001, FBT002
@@ -501,7 +501,7 @@ class Curve:  # noqa: D101
             dmg_vs_ep_list[dmg_col] = ep_col
         res = {}
 
-        for dmg_col in dmg_vs_ep_list:
+        for dmg_col in dmg_vs_ep_list:  # noqa: PLC0206
             ep_col = dmg_vs_ep_list[dmg_col]
             exceedance_curve_temp = exceedance_curve.set_index(dmg_col)
             exceedance_curve_temp = exceedance_curve_temp[ep_col]
@@ -509,7 +509,7 @@ class Curve:  # noqa: D101
 
         return res
 
-    def getDeliveryExceedanceCurve(  # noqa: ANN201, N802, D102, PLR0913
+    def getDeliveryExceedanceCurve(  # noqa: ANN201, N802, D102
         self,
         iPopulation='No',  # noqa: ANN001, N803
         ratio=False,  # noqa: ANN001, FBT002
@@ -543,7 +543,7 @@ class Curve:  # noqa: D101
             dmg_vs_ep_list[dmg_col] = ep_col
         res = {}
 
-        for dmg_col in dmg_vs_ep_list:
+        for dmg_col in dmg_vs_ep_list:  # noqa: PLC0206
             ep_col = dmg_vs_ep_list[dmg_col]
             exceedance_curve_temp = exceedance_curve.set_index(dmg_col)
             exceedance_curve_temp = exceedance_curve_temp[ep_col]

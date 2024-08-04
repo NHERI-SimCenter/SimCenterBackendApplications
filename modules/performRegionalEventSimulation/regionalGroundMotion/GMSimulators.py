@@ -66,7 +66,7 @@ IM_CORR_INTRA = {
 IM_CORR = {'INTER': IM_CORR_INTER, 'INTRA': IM_CORR_INTRA}
 
 
-def simulate_ground_motion(  # noqa: ANN201, D103, PLR0913
+def simulate_ground_motion(  # noqa: ANN201, D103
     stations,  # noqa: ANN001
     im_raw_path,  # noqa: ANN001
     im_list,  # noqa: ANN001
@@ -82,7 +82,7 @@ def simulate_ground_motion(  # noqa: ANN201, D103, PLR0913
     t_start = time.time()
     im_sampled = dict()  # noqa: C408
     if im_raw_path.endswith('.json'):
-        with open(im_raw_path) as f:  # noqa: PTH123
+        with open(im_raw_path) as f:  # noqa: PLW1514, PTH123
             im_raw = ujson.load(f)
         for i in eq_ids:
             im_sampled.update({i: im_raw[str(i)]})
@@ -157,8 +157,8 @@ def simulate_ground_motion(  # noqa: ANN201, D103, PLR0913
     return ln_im_mr, mag_maf
 
 
-class GM_Simulator:  # noqa: N801, D101
-    def __init__(  # noqa: ANN204, D107, PLR0913
+class GM_Simulator:  # noqa: D101
+    def __init__(  # noqa: ANN204
         self,
         site_info=[],  # noqa: ANN001, B006
         im_list=[],  # noqa: ANN001, B006
@@ -222,7 +222,7 @@ class GM_Simulator:  # noqa: N801, D101
         for i in range(self.num_sites):
             tmp_im_data = []
             for cur_im_type in self.im_type_list:
-                tmp_im_data = (
+                tmp_im_data = (  # noqa: PLR6104
                     tmp_im_data + self.im_data[i][f'ln{cur_im_type}']['Mean']
                 )
             ln_im.append(tmp_im_data)
@@ -233,7 +233,7 @@ class GM_Simulator:  # noqa: N801, D101
         for i in range(self.num_sites):
             tmp_im_data = []
             for cur_im_type in self.im_type_list:
-                tmp_im_data = (
+                tmp_im_data = (  # noqa: PLR6104
                     tmp_im_data
                     + self.im_data[i][f'ln{cur_im_type}']['InterEvStdDev']
                 )
@@ -245,7 +245,7 @@ class GM_Simulator:  # noqa: N801, D101
         for i in range(self.num_sites):
             tmp_im_data = []
             for cur_im_type in self.im_type_list:
-                tmp_im_data = (
+                tmp_im_data = (  # noqa: PLR6104
                     tmp_im_data
                     + self.im_data[i][f'ln{cur_im_type}']['IntraEvStdDev']
                 )
@@ -303,7 +303,7 @@ class GM_Simulator:  # noqa: N801, D101
                 'GM_Simulator: no intra-event correlation information not found - results will be uncorrelated motions.'
             )
 
-    def cross_check_im_correlation(self):  # noqa: ANN201, C901, D102, PLR0912
+    def cross_check_im_correlation(self):  # noqa: ANN201, C901, D102
         # because each correlation model only applies to certain intensity measure
         # so hear we check if the correlation models are applicable for the required intensity measures
         self.im_cm_inter_flag = True
@@ -347,7 +347,7 @@ class GM_Simulator:  # noqa: N801, D101
                         self.im_cm_intra_flag = False
                         continue
 
-    def compute_inter_event_residual_ij(self, cm, im_name_list_1, im_name_list_2):  # noqa: ANN001, ANN201, D102
+    def compute_inter_event_residual_ij(self, cm, im_name_list_1, im_name_list_2):  # noqa: ANN001, ANN201, D102, PLR6301
         if cm == 'Baker & Jayaram (2008)':
             rho = np.array(
                 [
@@ -365,13 +365,13 @@ class GM_Simulator:  # noqa: N801, D101
                 ]
             ).reshape([len(im_name_list_1), len(im_name_list_2)])
         else:
-            # TODO: extending this to more inter-event correlation models  # noqa: FIX002, TD002, TD003
+            # TODO: extending this to more inter-event correlation models  # noqa: TD002
             sys.exit(
                 'GM_Simulator.compute_inter_event_residual: currently supporting Baker & Jayaram (2008), Baker & Bradley (2017)'
             )
         return rho
 
-    def replace_submatrix(self, mat, ind1, ind2, mat_replace):  # noqa: ANN001, ANN201, D102
+    def replace_submatrix(self, mat, ind1, ind2, mat_replace):  # noqa: ANN001, ANN201, D102, PLR6301
         for i, index in enumerate(ind1):
             mat[index, ind2] = mat_replace[i, :]
         return mat
@@ -433,7 +433,7 @@ class GM_Simulator:  # noqa: N801, D101
                 'ignore',
                 message='covariance is not symmetric positive-semidefinite.',
             )
-            residuals = np.random.multivariate_normal(  # noqa: NPY002
+            residuals = np.random.multivariate_normal(
                 np.zeros(self.num_im), rho, self.num_simu
             ).T
         # return
@@ -454,7 +454,7 @@ class GM_Simulator:  # noqa: N801, D101
             # Simulating residuals
             residuals = np.zeros((self.num_sites, len(im_name_list), num_simu))
             for k in range(self.num_im):
-                residuals[:, k, :] = np.random.multivariate_normal(  # noqa: NPY002
+                residuals[:, k, :] = np.random.multivariate_normal(
                     np.zeros(self.num_sites), rho[:, :, k], num_simu
                 ).T
         elif cm == 'Loth & Baker (2013)':
@@ -472,7 +472,7 @@ class GM_Simulator:  # noqa: N801, D101
                 self.sites, im_name_list, num_simu, num_pc
             )
         else:
-            # TODO: extending this to more inter-event correlation models  # noqa: FIX002, TD002, TD003
+            # TODO: extending this to more inter-event correlation models  # noqa: TD002
             sys.exit(
                 'GM_Simulator.compute_intra_event_residual: currently supporting Jayaram & Baker (2009), Loth & Baker (2013),Markhvida et al. (2017), Du & Ning (2021)'
             )
@@ -513,8 +513,8 @@ class GM_Simulator:  # noqa: N801, D101
         return residuals
 
 
-class GM_Simulator_hdf5(GM_Simulator):  # noqa: N801, D101
-    def __init__(  # noqa: ANN204, D107
+class GM_Simulator_hdf5(GM_Simulator):  # noqa: D101
+    def __init__(  # noqa: ANN204
         self,
         site_info=[],  # noqa: ANN001, B006
         im_list=[],  # noqa: ANN001, B006

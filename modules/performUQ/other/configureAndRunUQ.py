@@ -1,9 +1,9 @@
-# written: Michael Gardner @ UNR, Aakash Bangalore Satish @ UCB  # noqa: INP001, D100
+# written: Michael Gardner @ UNR, Aakash Bangalore Satish @ UCB  # noqa: CPY001, D100, INP001
 
 # Use the UQpy driver as a starting point if you want to add other UQ capabilities
 
 
-def configureAndRunUQ(  # noqa: ANN201, N802, PLR0913
+def configureAndRunUQ(  # noqa: ANN201, N802
     uqData,  # noqa: ANN001, N803
     simulationData,  # noqa: ANN001, N803
     randomVarsData,  # noqa: ANN001, N803
@@ -28,7 +28,7 @@ def configureAndRunUQ(  # noqa: ANN201, N802, PLR0913
     runType:        Specifies whether computations are being run locally or on an HPC cluster
     localAppDir:    Directory containing apps for local run
     remoteAppDir:   Directory containing apps for remote run
-    """  # noqa: D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404
     uqDriverOptions = ['UQpy', 'HeirBayes']  # noqa: N806
 
     for val in uqData['Parameters']:
@@ -36,14 +36,14 @@ def configureAndRunUQ(  # noqa: ANN201, N802, PLR0913
             uqDriver = val['value']  # noqa: N806
 
     if uqDriver not in uqDriverOptions:
-        raise ValueError(
+        raise ValueError(  # noqa: DOC501
             'ERROR: configureAndRunUQ.py: UQ driver not recognized.'  # noqa: ISC003
             + ' Either input incorrectly or class to run UQ driver not'
             + ' implemented: ',
             uqDriver,
         )
     else:  # noqa: RET506
-        if uqDriver in ['UQpy'] or uqDriver in ['HeirBayes']:
+        if uqDriver == 'UQpy' or uqDriver == 'HeirBayes':  # noqa: PLR1714
             pass
 
         uqDriverClass = locals()[uqDriver + 'Runner']  # noqa: N806

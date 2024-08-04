@@ -1,7 +1,7 @@
 """Created on Wed May 26 16:11:36 2021
 
 @author: snaeimi
-"""  # noqa: D400, D415
+"""  # noqa: CPY001, D400
 
 import ctypes
 import logging
@@ -21,7 +21,7 @@ class EpanetException(Exception):  # noqa: N818, D101
 
 
 class ENepanet(wntrfr.epanet.toolkit.ENepanet):  # noqa: D101
-    def __init__(  # noqa: ANN204, C901, D107, PLR0912
+    def __init__(  # noqa: ANN204, C901
         self,
         inpfile='',  # noqa: ANN001
         rptfile='',  # noqa: ANN001
@@ -52,13 +52,13 @@ class ENepanet(wntrfr.epanet.toolkit.ENepanet):  # noqa: D101
                     libnames.insert(0, 'epanet22_amd64_mod')
             for lib in libnames:
                 try:
-                    if os.name in ['nt', 'dos']:
+                    if os.name in ['nt', 'dos']:  # noqa: PLR6201
                         libepanet = resource_filename(
                             __name__,
                             'Windows/%s.dll' % lib,  # noqa: UP031
                         )
                         self.ENlib = ctypes.windll.LoadLibrary(libepanet)
-                    elif sys.platform in ['darwin']:
+                    elif sys.platform == 'darwin':
                         libepanet = resource_filename(
                             __name__,
                             'Darwin/lib%s.dylib' % lib,  # noqa: UP031
@@ -94,9 +94,9 @@ class ENepanet(wntrfr.epanet.toolkit.ENepanet):  # noqa: D101
         binfile : str
             Binary output file to create (default to constructor value)
 
-        """  # noqa: D400, D401, D415
+        """  # noqa: D400, D401
         inpfile = inpfile.encode('ascii')
-        rptfile = rptfile.encode('ascii')  #''.encode('ascii')
+        rptfile = rptfile.encode('ascii')  # ''.encode('ascii')
         binfile = binfile.encode('ascii')
         s = 's'
         self.errcode = self.ENlib.EN_runproject(inpfile, rptfile, binfile, s)
@@ -104,7 +104,7 @@ class ENepanet(wntrfr.epanet.toolkit.ENepanet):  # noqa: D101
         if self.errcode < 100:  # noqa: PLR2004
             self.fileLoaded = True
 
-    def ENSetIgnoreFlag(self, ignore_flag=0):  # noqa: ANN001, ANN201, N802, D102
+    def ENSetIgnoreFlag(self, ignore_flag=0):  # noqa: ANN001, ANN201, D102, N802, PLR6301
         if abs(ignore_flag - np.round(ignore_flag)) > 0.00001 or ignore_flag < 0:  # noqa: PLR2004
             logger.error(
                 'ignore_flag must be int value and bigger than zero'  # noqa: G003

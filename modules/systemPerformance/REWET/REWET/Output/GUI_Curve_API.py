@@ -1,9 +1,9 @@
 """Created on Thu Nov 10 19:12:46 2022
 
 @author: snaeimi
-"""  # noqa: INP001, D400, D415
+"""  # noqa: CPY001, D400, INP001
 
-import pickle
+import pickle  # noqa: S403
 
 
 def getDummyDataForQNExeedanceCurve():  # noqa: ANN201, N802, D103
@@ -24,7 +24,7 @@ This section is for multi-scenarios (probabilistic) results.
 """
 
 
-def QNExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: ANN001, ANN201, N802, D417
+def QNExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: ANN001, ANN201, N802
     """Gets Project Result object, and returns Exceedance probability and Quantity
     outage for the given percentages. Caution: the current version only accept
     one percentage in the percentage list.
@@ -46,17 +46,17 @@ def QNExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: AN
     data = getDummyDataForQNExeedanceCurve()
 
     if len(percentage_list) > 1:
-        raise ValueError(  # noqa: TRY003
+        raise ValueError(  # noqa: DOC501, TRY003
             'the current version only accept one percentage in the percentage list'  # noqa: EM101
         )
 
     if type(time_shift) != int:  # noqa: E721
-        raise ValueError(
+        raise ValueError(  # noqa: DOC501
             'Time shift must be integer type: ' + repr(type(time_shift)) + '.'
         )
 
     if time_shift < 0:
-        raise ValueError('Time shift ust be bigger than or equal to zero.')  # noqa: EM101, TRY003
+        raise ValueError('Time shift ust be bigger than or equal to zero.')  # noqa: DOC501, EM101, TRY003
 
     res = {}
     for percentage in percentage_list:
@@ -69,13 +69,13 @@ def QNExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: AN
         elif time_type.lower() == 'day':
             pr.convertTimeSecondToDay(temp_res, 'restore_time', time_shift)
         else:
-            raise ValueError('Uknown time_type: ' + repr(time_type))
+            raise ValueError('Uknown time_type: ' + repr(time_type))  # noqa: DOC501
 
         res[percentage] = temp_res
     return res
 
 
-def DLExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: ANN001, ANN201, N802, D417
+def DLExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: ANN001, ANN201, N802
     """Gets Project Result object, and returns Exceedance probability and Delivery
     outage for the given percentages. Caution: the current version only accept
     one percentage in the percentage list.
@@ -97,17 +97,17 @@ def DLExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: AN
     data = getDummyDataForQNExeedanceCurve()
 
     if len(percentage_list) > 1:
-        raise ValueError(  # noqa: TRY003
+        raise ValueError(  # noqa: DOC501, TRY003
             'the current version only accept one percentage in the percentage list'  # noqa: EM101
         )
 
     if type(time_shift) != int:  # noqa: E721
-        raise ValueError(
+        raise ValueError(  # noqa: DOC501
             'Time shift must be integer type: ' + repr(type(time_shift)) + '.'
         )
 
     if time_shift < 0:
-        raise ValueError('Time shift ust be bigger than or equal to zero.')  # noqa: EM101, TRY003
+        raise ValueError('Time shift ust be bigger than or equal to zero.')  # noqa: DOC501, EM101, TRY003
 
     res = {}
     for percentage in percentage_list:
@@ -120,7 +120,7 @@ def DLExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: AN
         elif time_type.lower() == 'day':
             pr.convertTimeSecondToDay(temp_res, 'restore_time', time_shift)
         else:
-            raise ValueError('Uknown time_type: ' + repr(time_type))
+            raise ValueError('Uknown time_type: ' + repr(time_type))  # noqa: DOC501
 
         res[percentage] = temp_res
     return res

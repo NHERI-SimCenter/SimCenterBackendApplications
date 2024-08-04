@@ -1,4 +1,4 @@
-# This file is used to define the class of beam, which includes the axial, shear, and flexural strengths of column  # noqa: INP001, D100
+# This file is used to define the class of beam, which includes the axial, shear, and flexural strengths of column  # noqa: CPY001, D100, INP001
 # Developed by GUAN, XINGQUAN @ UCLA in Apr. 2018
 # Updated in Oct. 2018
 
@@ -19,7 +19,7 @@ class Beam:
     (4) Beam flag, a boolean variable with True or False. If it is True, the beam is feasible.
     """  # noqa: D205, D404
 
-    def __init__(  # noqa: ANN204, PLR0913
+    def __init__(  # noqa: ANN204
         self,
         section_size,  # noqa: ANN001
         length,  # noqa: ANN001
@@ -140,7 +140,7 @@ class Beam:
         """This method is used to check whether the shear strength of column is sufficient or not
         :param steel: a class defined in "steel_material.py" file
         :return: a float number denoting the shear strength and a flag denoting whether shear strength is sufficient
-        """  # noqa: D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404
         # Compute shear strength of beam
         Cv = 1.0  # noqa: N806
         Vn = 0.6 * steel.Fy * (self.section['tw'] * self.section['d']) * Cv  # noqa: N806
@@ -155,7 +155,7 @@ class Beam:
     def check_flexural_strength(self, steel):  # noqa: ANN001, ANN201
         """This method is used to check whether the beam has enough flexural strength.
         :return: a float number denoting flexural strength and a flag denoting whether the flexural strength is enough
-        """  # noqa: D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404
         # Compute plastic modulus at center of RBS
         Z_RBS = self.section['Zx'] - 2 * self.RBS_dimension['c'] * self.section[  # noqa: N806
             'tf'
@@ -176,7 +176,7 @@ class Beam:
     def check_flag(self):  # noqa: ANN201
         """This method is used to test whether beam passes all checks.
         :return: a bool variable. True ==> passed
-        """  # noqa: D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404
         self.flag = True
         for key in self.is_feasible.keys():  # noqa: SIM118
             if self.is_feasible[key] == False:  # noqa: E712
@@ -244,7 +244,7 @@ class Beam:
             * (c2 * steel.Fy / 355) ** (-0.070)
         )
         # Pre-capping rotation is further revised to exclude the elastic deformation
-        self.plastic_hinge['theta_p'] = (
+        self.plastic_hinge['theta_p'] = (  # noqa: PLR6104
             self.plastic_hinge['theta_p']
             - (McMy - 1.0) * self.plastic_hinge['My'] / self.plastic_hinge['K0']
         )

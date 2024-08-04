@@ -1,11 +1,11 @@
-import argparse  # noqa: INP001, D100
+import argparse  # noqa: CPY001, D100, INP001
 import json
 import sys
 
 
 def create_building_files(output_file, building_source_file, min_id, max_id):  # noqa: ANN001, ANN201, D103
     # check if the min and max values are provided in the right order
-    if (min_id is not None) and (max_id is not None):  # noqa: SIM102
+    if (min_id is not None) and (max_id is not None):
         if min_id > max_id:
             tmp = min_id
             min_id = max_id

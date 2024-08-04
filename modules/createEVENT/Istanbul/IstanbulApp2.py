@@ -1,4 +1,4 @@
-# %%  # noqa: INP001, D100
+# %%  # noqa: CPY001, D100, INP001
 import json
 import os
 import time
@@ -10,9 +10,9 @@ from agavepy.agave import Agave
 os.chdir(os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
 
 
-def Submit_tapis_job():  # noqa: ANN201, N802, D103, PLR0915
+def Submit_tapis_job():  # noqa: ANN201, N802, D103
     ag = Agave.restore()
-    with open('TapisFiles/information.json') as file:  # noqa: PTH123
+    with open('TapisFiles/information.json') as file:  # noqa: PLW1514, PTH123
         information = json.load(file)
     file.close()
 
@@ -121,6 +121,6 @@ def Submit_tapis_job():  # noqa: ANN201, N802, D103, PLR0915
             res = ag.files.download(
                 filePath=path, systemId='designsafe.storage.default'
             )
-            with open(f'{savingDirectory}/{filename}', 'wb') as f:  # noqa: PTH123
+            with open(f'{savingDirectory}/{filename}', 'wb') as f:  # noqa: FURB103, PTH123
                 f.write(res.content)
     # %%

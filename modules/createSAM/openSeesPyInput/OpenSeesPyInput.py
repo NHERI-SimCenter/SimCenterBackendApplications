@@ -42,7 +42,7 @@ import json
 import sys
 
 
-def create_SAM(  # noqa: ANN201, N802, D103, PLR0913
+def create_SAM(  # noqa: ANN201, N802, D103
     BIM_file,  # noqa: ANN001, N803
     EVENT_file,  # noqa: ANN001, ARG001, N803
     SAM_file,  # noqa: ANN001, N803
@@ -84,7 +84,7 @@ def create_SAM(  # noqa: ANN201, N802, D103, PLR0913
         'NodeMapping': node_map,
         'numStory': stories,
         'ndm': ndm,
-        # TODO: improve this if we want random vars in the structure  # noqa: FIX002, TD002, TD003
+        # TODO: improve this if we want random vars in the structure  # noqa: TD002
         'randomVar': [],
     }
 

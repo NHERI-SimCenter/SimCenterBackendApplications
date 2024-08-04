@@ -44,14 +44,14 @@ import os
 import sys
 
 
-def create_asset_files(output_file, asset_source_file, asset_filter, doParallel):  # noqa: ANN001, ANN201, C901, N803, D103, PLR0912, PLR0915
+def create_asset_files(output_file, asset_source_file, asset_filter, doParallel):  # noqa: ANN001, ANN201, C901, N803, D103
     # these imports are here to save time when the app is called without
     # the -getRV flag
-    import importlib
-    import json
+    import importlib  # noqa: PLC0415
+    import json  # noqa: PLC0415
 
-    import numpy as np
-    import pandas as pd
+    import numpy as np  # noqa: PLC0415
+    import pandas as pd  # noqa: PLC0415
 
     # check if running parallel
     numP = 1  # noqa: N806
@@ -62,7 +62,7 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
         mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
-            from mpi4py import MPI
+            from mpi4py import MPI  # noqa: PLC0415
 
             runParallel = True  # noqa: N806
             comm = MPI.COMM_WORLD
@@ -135,7 +135,7 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
 
             assets_array.append(dict(id=str(asset_id), file=AIM_file_name))  # noqa: C408
 
-        count = count + 1
+        count = count + 1  # noqa: PLR6104
 
     if procID != 0:
         # if not P0, write data to output file with procID in name and barrier
@@ -154,7 +154,7 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
 
             for i in range(1, numP):
                 fileToAppend = os.path.join(outDir, f'tmp_{i}.json')  # noqa: PTH118, N806
-                with open(fileToAppend, encoding='utf-8') as data_file:  # noqa: PTH123
+                with open(fileToAppend, encoding='utf-8') as data_file:  # noqa: FURB101, PTH123
                     json_data = data_file.read()
                 assetsToAppend = json.loads(json_data)  # noqa: N806
                 assets_array += assetsToAppend

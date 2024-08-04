@@ -1,4 +1,4 @@
-# Modified by: Stevan Gavrilovic @ SimCenter, UC Berkeley  # noqa: INP001, D100
+# Modified by: Stevan Gavrilovic @ SimCenter, UC Berkeley  # noqa: CPY001, D100, INP001
 # Last revision: 09/2020
 
 ##########################################################################
@@ -26,7 +26,7 @@ from model_generation import model_generation
 from seismic_design import seismic_design
 
 
-def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):  # noqa: ANN001, ANN201, ARG001, C901, N803, D103, PLR0912, PLR0913, PLR0915
+def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):  # noqa: ANN001, ANN201, ARG001, C901, N803, D103
     start_time = time.time()
 
     # Get the current directory
@@ -144,7 +144,7 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):  # noqa: 
         node_entry['floor'] = f'{i - 1}'
         node_map.append(node_entry)
 
-        ## KZ & AZ: Add centroid for roof drift
+        # KZ & AZ: Add centroid for roof drift
         node_entry_c = {}
         node_entry_c['node'] = nodeTagBot
         node_entry_c['cline'] = 'centroid'
@@ -157,7 +157,7 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):  # noqa: 
     # Go back to the current directory before saving the SAM file
     os.chdir(workingDirectory)
 
-    with open(SAM_file, 'w') as f:  # noqa: PTH123
+    with open(SAM_file, 'w') as f:  # noqa: PLW1514, PTH123
         json.dump(root_SAM, f, indent=2)
 
     # Copy over the .tcl files of the building model into the working directory

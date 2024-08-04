@@ -114,7 +114,7 @@ import threading  # noqa: E402
 import ujson  # noqa: E402
 
 
-class IM_Calculator:  # noqa: N801, D101
+class IM_Calculator:  # noqa: D101
     # Chiou & Youngs (2014) GMPE class
     CY = None
     # Abrahamson, Silvar, & Kamai (2014)
@@ -128,7 +128,7 @@ class IM_Calculator:  # noqa: N801, D101
     timeGetRuptureInfo = 0  # noqa: N815
     timeGetIM = 0  # noqa: N815
 
-    def __init__(  # noqa: ANN204, D107, PLR0913
+    def __init__(  # noqa: ANN204
         self,
         source_info=dict(),  # noqa: ANN001, B006, C408, ARG002
         im_dict=dict(),  # noqa: ANN001, B006, C408
@@ -175,7 +175,7 @@ class IM_Calculator:  # noqa: N801, D101
                     source_info, self.site_info
                 )
                 # self.timeGetRuptureInfo += time.process_time_ns() - start
-        elif source_info['Type'] == 'oqSourceXML':  # noqa: SIM102
+        elif source_info['Type'] == 'oqSourceXML':
             if (
                 'Chiou & Youngs (2014)' in gmpe_list
                 or 'Abrahamson, Silva & Kamai (2014)' in gmpe_list
@@ -214,7 +214,7 @@ class IM_Calculator:  # noqa: N801, D101
         # set sites
         self.site_info = site_info
 
-    def calculate_im(self):  # noqa: ANN201, C901, D102, PLR0912
+    def calculate_im(self):  # noqa: ANN201, C901, D102
         # set up intensity measure calculations
         # current im type
         im_type = self.im_type
@@ -299,7 +299,7 @@ class IM_Calculator:  # noqa: N801, D101
         # return
         return res
 
-    def get_im_from_opensha(  # noqa: ANN201, D102, PLR0913
+    def get_im_from_opensha(  # noqa: ANN201, D102, PLR6301
         self,
         source_info,  # noqa: ANN001
         gmpe_list,  # noqa: ANN001
@@ -341,7 +341,7 @@ class IM_Calculator:  # noqa: N801, D101
         # return
         return res
 
-    def get_im_from_local(  # noqa: ANN201, C901, D102, PLR0912, PLR0915
+    def get_im_from_local(  # noqa: ANN201, C901, D102
         self,
         source_info,  # noqa: ANN001
         gmpe_list,  # noqa: ANN001
@@ -376,7 +376,7 @@ class IM_Calculator:  # noqa: N801, D101
         elif source_info['Type'] == 'ERF':
             source_index = source_info.get('SourceIndex', None)
             rupture_index = source_info.get('RuptureIndex', None)
-            if None in [source_index, rupture_index]:
+            if None in [source_index, rupture_index]:  # noqa: PLR6201
                 print(  # noqa: T201
                     'ComputeIntensityMeasure.get_im_from_local: error - source/rupture index not given.'
                 )
@@ -391,7 +391,7 @@ class IM_Calculator:  # noqa: N801, D101
         elif source_info['Type'] == 'oqSourceXML':
             source_index = source_info.get('SourceIndex', None)
             rupture_index = source_info.get('RuptureIndex', None)
-            if None in [source_index, rupture_index]:
+            if None in [source_index, rupture_index]:  # noqa: PLR6201
                 print(  # noqa: T201
                     'ComputeIntensityMeasure.get_im_from_local: error - source/rupture index not given.'
                 )
@@ -508,7 +508,7 @@ class IM_Calculator:  # noqa: N801, D101
         return res
 
 
-def collect_multi_im_res(res_dict):  # noqa: ANN001, ANN201, C901, D103, PLR0912
+def collect_multi_im_res(res_dict):  # noqa: ANN001, ANN201, C901, D103
     res_list = []
     if 'PGA' in res_dict.keys():  # noqa: SIM118
         res_list.append(res_dict['PGA'])
@@ -527,18 +527,18 @@ def collect_multi_im_res(res_dict):  # noqa: ANN001, ANN201, C901, D103, PLR0912
             res['IM'] = [cur_res['IM']]
             if cur_res.get('Periods', None) is None:
                 res['Periods'] = [None]
-            elif type(cur_res.get('Periods')) in [float, int]:
+            elif type(cur_res.get('Periods')) in [float, int]:  # noqa: PLR6201
                 res['Periods'] = [cur_res.get('Periods')]
             else:
                 res['Periods'] = cur_res.get('Periods')
         else:
             res['IM'].append(cur_res['IM'])
             if cur_res.get('Periods', None) is None:
-                res['Periods'] = res['Periods'] + [None]
-            elif type(cur_res.get('Periods')) in [float, int]:
-                res['Periods'] = res['Periods'] + [cur_res.get('Periods')]
+                res['Periods'] = res['Periods'] + [None]  # noqa: PLR6104
+            elif type(cur_res.get('Periods')) in [float, int]:  # noqa: PLR6201
+                res['Periods'] = res['Periods'] + [cur_res.get('Periods')]  # noqa: PLR6104
             else:
-                res['Periods'] = res['Periods'] + cur_res.get('Periods')
+                res['Periods'] = res['Periods'] + cur_res.get('Periods')  # noqa: PLR6104
             # combine ground motion characteristics
             for j in range(len(cur_res['GroundMotions'])):
                 tmp_res = cur_res['GroundMotions'][j].get(
@@ -705,7 +705,7 @@ def get_gmpe_from_im_legency(im_info, gmpe_info, gmpe_weights=None):  # noqa: AN
     return gmpe_dict, gmpe_weights_dict
 
 
-def compute_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
+def compute_im(  # noqa: ANN201, C901, D103
     scenarios,  # noqa: ANN001
     stations,  # noqa: ANN001
     EqRupture_info,  # noqa: ANN001, N803
@@ -747,7 +747,7 @@ def compute_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             station_list[j].update({'Vs30': int(stations[j]['vs30'])})
     station_info = {'Type': 'SiteList', 'SiteList': station_list}
     # hazard occurrent model
-    if generator_info['method'] == 'Subsampling':  # noqa: SIM102
+    if generator_info['method'] == 'Subsampling':
         # check if the period in the hazard curve is in the period list in the intensity measure
         if generator_info['Parameters'].get('IntensityMeasure') == 'SA':
             ho_period = generator_info['Parameters'].get('Period')
@@ -769,7 +769,7 @@ def compute_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                 tmp_periods.sort()
                 im_info['SA']['Periods'] = tmp_periods
     # prepare gmpe list for intensity measure
-    if gmpe_info['Type'] in ['Vector']:
+    if gmpe_info['Type'] == 'Vector':
         gmpe_dict, gmpe_weights_dict = get_gmpe_from_im_vector(im_info, gmpe_info)
     else:
         gmpe_dict, gmpe_weights_dict = get_gmpe_from_im_legency(im_info, gmpe_info)
@@ -786,7 +786,7 @@ def compute_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             gmpe_weights_dict=gmpe_weights_dict,
             site_info=stations,
         )
-        if EqRupture_info['EqRupture']['Type'] in ['ERF']:
+        if EqRupture_info['EqRupture']['Type'] == 'ERF':
             im_calculator.erf = getERF(EqRupture_info)  # noqa: F405
         else:
             im_calculator.erf = None
@@ -887,13 +887,13 @@ def compute_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     )
 
     if saveInJson:
-        with open(filename, 'w') as f:  # noqa: PTH123
+        with open(filename, 'w') as f:  # noqa: PLW1514, PTH123
             ujson.dump(im_raw, f, indent=1)
     # return
     return filename, im_list
 
 
-def compute_im_para(  # noqa: ANN201, D103, PLR0913
+def compute_im_para(  # noqa: ANN201, D103
     ids,  # noqa: ANN001
     scenario_infos,  # noqa: ANN001
     im_dict,  # noqa: ANN001
@@ -928,7 +928,7 @@ def compute_im_para(  # noqa: ANN201, D103, PLR0913
     # return
 
 
-def export_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
+def export_im(  # noqa: ANN201, C901, D103, PLR0912
     stations,  # noqa: ANN001
     im_list,  # noqa: ANN001
     im_data,  # noqa: ANN001
@@ -974,7 +974,7 @@ def export_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         for i in range(num_stations):
             tmp = []
             for j in range(num_scenarios):
-                tmp.append(stations[i]['lat'])
+                tmp.append(stations[i]['lat'])  # noqa: FURB113
                 tmp.append(stations[i]['lon'])
                 tmp.append(int(stations[i]['vs30']))
                 tmp.append(eq_data[j][0])
@@ -1014,15 +1014,15 @@ def export_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             res.append(tmp)
         maf_out = []
         for ind, cur_eq in enumerate(eq_data):
-            if cur_eq[1]:  # noqa: SIM108
+            if cur_eq[1]:
                 mar = cur_eq[1]
             else:
                 mar = 'N/A'
-            if cur_eq[2]:  # noqa: SIM108
+            if cur_eq[2]:
                 ssd = cur_eq[2]
             else:
                 ssd = 'N/A'
-            if len(cur_eq) > 3 and cur_eq[3]:  # noqa: SIM108, PLR2004
+            if len(cur_eq) > 3 and cur_eq[3]:  # noqa: PLR2004
                 srd = cur_eq[3]
             else:
                 srd = 'N/A'
@@ -1036,7 +1036,7 @@ def export_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             maf_out.append(tmp)
         res = {'Station_lnIM': res, 'Earthquake_MAF': maf_out}
         # save SiteIM.json
-        with open(os.path.join(output_dir, filename), 'w') as f:  # noqa: PTH118, PTH123
+        with open(os.path.join(output_dir, filename), 'w') as f:  # noqa: PLW1514, PTH118, PTH123
             json.dump(res, f, indent=2)
     # export the event grid and station csv files
     if csv_flag:
@@ -1093,7 +1093,7 @@ def export_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                 # Loop over all intensity measures
                 for cur_im_tag in range(len(csvHeader)):
                     if (csvHeader[cur_im_tag].startswith('SA')) or (
-                        csvHeader[cur_im_tag] in ['PGA', 'PGV']
+                        csvHeader[cur_im_tag] in ['PGA', 'PGV']  # noqa: PLR6201
                     ):
                         df.update(
                             {
@@ -1138,7 +1138,7 @@ def export_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                 for col in df.columns:
                     if (
                         (not col.startswith('SA'))
-                        and (col not in ['PGA', 'PGV', 'PGD_h', 'PGD_v'])
+                        and (col not in ['PGA', 'PGV', 'PGD_h', 'PGD_v'])  # noqa: PLR6201
                         and (col not in gf_im_list)
                     ):
                         colToDrop.append(col)  # noqa: PERF401
@@ -1160,11 +1160,11 @@ def export_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                     tmp_list = []
                     # loop over all scenarios
                     for cur_scen in range(len(im_data)):
-                        tmp_list = (
+                        tmp_list = (  # noqa: PLR6104
                             tmp_list + im_data[cur_scen][i, cur_im_tag, :].tolist()
                         )
                     if (csvHeader[cur_im_tag].startswith('SA')) or (
-                        csvHeader[cur_im_tag] in ['PGA', 'PGV']
+                        csvHeader[cur_im_tag] in ['PGA', 'PGV']  # noqa: PLR6201
                     ):
                         df.update({csvHeader[cur_im_tag]: np.exp(tmp_list)})
                     else:
@@ -1201,7 +1201,7 @@ def export_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                 for col in df.columns:
                     if (
                         (not col.startswith('SA'))
-                        and (col not in ['PGA', 'PGV', 'PGD_h', 'PGD_v'])
+                        and (col not in ['PGA', 'PGV', 'PGD_h', 'PGD_v'])  # noqa: PLR6201
                         and (col not in gf_im_list)
                     ):
                         colToDrop.append(col)
@@ -1215,7 +1215,7 @@ def export_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     # return 1
 
 
-def compute_weighted_res(res_list, gmpe_weights):  # noqa: ANN001, ANN201, C901, D103, PLR0912
+def compute_weighted_res(res_list, gmpe_weights):  # noqa: ANN001, ANN201, C901, D103
     # compute weighted average of gmpe results
     # initialize the return res (these three attributes are identical in different gmpe results)
     res = {
@@ -1237,7 +1237,7 @@ def compute_weighted_res(res_list, gmpe_weights):  # noqa: ANN001, ANN201, C901,
     num_site = len(res_list[0]['GroundMotions'])
     # loop over different sites
     gm_collector = []
-    for site_tag in range(num_site):
+    for site_tag in range(num_site):  # noqa: PLR1702
         # loop over different GMPE
         tmp_res = {}
         for i, cur_res in enumerate(res_list):
@@ -1246,11 +1246,11 @@ def compute_weighted_res(res_list, gmpe_weights):  # noqa: ANN001, ANN201, C901,
             im_keys = list(cur_gmResults.keys())
             for cur_im in im_keys:
                 if cur_im not in list(tmp_res.keys()):
-                    if cur_im in ['Location', 'SiteData']:
+                    if cur_im in ['Location', 'SiteData']:  # noqa: PLR6201
                         tmp_res.update({cur_im: cur_gmResults[cur_im]})
                     else:
                         tmp_res.update({cur_im: {}})
-                if cur_im not in ['Location', 'SiteData']:
+                if cur_im not in ['Location', 'SiteData']:  # noqa: PLR6201
                     # get components
                     comp_keys = list(cur_gmResults[cur_im].keys())
                     # loop over different components
@@ -1280,7 +1280,7 @@ def compute_weighted_res(res_list, gmpe_weights):  # noqa: ANN001, ANN201, C901,
                                     )
                                 else:
                                     # mean
-                                    tmp_res[cur_im][cur_comp][j] = (
+                                    tmp_res[cur_im][cur_comp][j] = (  # noqa: PLR6104
                                         tmp_res[cur_im][cur_comp][j]
                                         + cur_value * gmpe_weights[i]
                                     )

@@ -1,4 +1,4 @@
-import json  # noqa: INP001, D100
+import json  # noqa: CPY001, D100, INP001
 from pathlib import Path
 
 import numpy as np
@@ -43,7 +43,7 @@ def _update_parameters_of_inverse_gamma_distribution(  # noqa: ANN202
     return alpha_n, beta_n
 
 
-def _draw_one_sample(  # noqa: ANN202, PLR0913, PLR0915
+def _draw_one_sample(  # noqa: ANN202, PLR0913, PLR0914, PLR0917
     sample_number,  # noqa: ANN001
     random_state,  # noqa: ANN001
     num_rv,  # noqa: ANN001
@@ -166,7 +166,7 @@ def _draw_one_sample(  # noqa: ANN202, PLR0913, PLR0915
             )
             list_of_log_likes.append(log_likelihood_at_proposed_state)
             list_of_log_priors.append(prior_logpdf_at_proposed_state)
-            num_accepts_list[dataset_number] = num_accepts_list[dataset_number] + 1
+            num_accepts_list[dataset_number] = num_accepts_list[dataset_number] + 1  # noqa: PLR6104
         else:
             new_state = current_state
             list_of_log_posteriors.append(
@@ -210,7 +210,7 @@ def _draw_one_sample(  # noqa: ANN202, PLR0913, PLR0915
     ).reshape((-1, 1))
     s = np.zeros((num_rv, num_rv))
     for new_state in list_of_new_states:
-        s = s + (new_state - theta_bar) @ (new_state - theta_bar).T
+        s = s + (new_state - theta_bar) @ (new_state - theta_bar).T  # noqa: PLR6104
     mu_n, lambda_n, nu_n, psi_n = (
         _update_parameters_of_normal_inverse_wishart_distribution(
             niw_prior_parameters,
@@ -265,8 +265,8 @@ def _draw_one_sample(  # noqa: ANN202, PLR0913, PLR0915
         x.append(list_of_error_variance_samples[dataset_number])
         y = list_of_model_outputs[dataset_number]
         list_of_strings_to_write = []
-        list_of_strings_to_write.append(f'{sample_number+1}')
-        list_of_strings_to_write.append(f'{dataset_number+1}')
+        list_of_strings_to_write.append(f'{sample_number + 1}')  # noqa: FURB113
+        list_of_strings_to_write.append(f'{dataset_number + 1}')
         x_string_list = []
         for x_val in x:
             x_string_list.append(f'{x_val}')  # noqa: PERF401
@@ -286,7 +286,7 @@ def _draw_one_sample(  # noqa: ANN202, PLR0913, PLR0915
             tabular_results_file_name, string_to_write
         )
 
-    with open(results_directory_path / f'sample_{sample_number+1}.json', 'w') as f:  # noqa: PTH123
+    with open(results_directory_path / f'sample_{sample_number + 1}.json', 'w') as f:  # noqa: PLW1514, PTH123
         json.dump(results_to_write, f, indent=4)
 
     return one_sample, results_to_write
@@ -315,7 +315,7 @@ def get_states_from_samples_list(samples_list, dataset_number):  # noqa: ANN001,
     return sample_values
 
 
-def tune(scale, acc_rate):  # noqa: ANN001, ANN201, PLR0911
+def tune(scale, acc_rate):  # noqa: ANN001, ANN201
     """Tunes the scaling parameter for the proposal distribution
     according to the acceptance rate over the last tune_interval:
     Rate    Variance adaptation
@@ -326,7 +326,7 @@ def tune(scale, acc_rate):  # noqa: ANN001, ANN201, PLR0911
     >0.5          x 1.1
     >0.75         x 2
     >0.95         x 10
-    """  # noqa: D205, D400, D415
+    """  # noqa: D205, D400
     if acc_rate < 0.01:  # noqa: PLR2004
         return scale * 0.01
     elif acc_rate < 0.05:  # noqa: RET505, PLR2004
@@ -342,7 +342,7 @@ def tune(scale, acc_rate):  # noqa: ANN001, ANN201, PLR0911
     return scale
 
 
-def metropolis_within_gibbs_sampler(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
+def metropolis_within_gibbs_sampler(  # noqa: ANN201, C901, D103, PLR0913, PLR0914, PLR0917
     uq_inputs,  # noqa: ANN001
     parallel_evaluation_function,  # noqa: ANN001
     function_to_evaluate,  # noqa: ANN001
@@ -404,11 +404,11 @@ def metropolis_within_gibbs_sampler(  # noqa: ANN201, C901, D103, PLR0912, PLR09
         error_var_string_list.append(f'{edp["name"]}.PredictionErrorVariance')
         edp_components_list = []
         for edp_component in range(edp['length']):
-            edp_components_list.append(f'{edp["name"]}_{edp_component+1}')  # noqa: PERF401
+            edp_components_list.append(f'{edp["name"]}_{edp_component + 1}')  # noqa: PERF401
         edp_string_list.append('\t'.join(edp_components_list))
 
         list_of_header_strings = []
-        list_of_header_strings.append('eval_id')
+        list_of_header_strings.append('eval_id')  # noqa: FURB113
         list_of_header_strings.append('interface')
         list_of_header_strings.append('\t'.join(rv_string_list))
         list_of_header_strings.append('\t'.join(error_var_string_list))
@@ -420,7 +420,7 @@ def metropolis_within_gibbs_sampler(  # noqa: ANN201, C901, D103, PLR0912, PLR09
         )
 
     list_of_hyperparameter_header_strings = []
-    list_of_hyperparameter_header_strings.append('eval_id')
+    list_of_hyperparameter_header_strings.append('eval_id')  # noqa: FURB113
     list_of_hyperparameter_header_strings.append('interface')
     rv_mean_string_list = []
     rv_names_list = []
@@ -452,7 +452,7 @@ def metropolis_within_gibbs_sampler(  # noqa: ANN201, C901, D103, PLR0912, PLR09
     )
 
     list_of_predictive_distribution_sample_header_strings = []
-    list_of_predictive_distribution_sample_header_strings.append('eval_id')
+    list_of_predictive_distribution_sample_header_strings.append('eval_id')  # noqa: FURB113
     list_of_predictive_distribution_sample_header_strings.append('interface')
 
     list_of_predictive_distribution_sample_header_strings.append(
@@ -569,7 +569,7 @@ def metropolis_within_gibbs_sampler(  # noqa: ANN201, C901, D103, PLR0912, PLR09
             adaptivity_results['list_of_proposal_covariance_kernels'] = (
                 cov_kernels_list
             )
-            with open(  # noqa: PTH123
+            with open(  # noqa: PLW1514, PTH123
                 results_directory_path.parent
                 / f'adaptivity_results_{sample_number}.json',
                 'w',
@@ -586,7 +586,7 @@ def metropolis_within_gibbs_sampler(  # noqa: ANN201, C901, D103, PLR0912, PLR09
             for j in range(i, len(rv_names_list)):
                 hyper_covariance_string_list.append(f'{hyper_covariance[i][j]}')  # noqa: PERF401
         list_of_hyperparameter_value_strings = []
-        list_of_hyperparameter_value_strings.append(f'{sample_number+1}')
+        list_of_hyperparameter_value_strings.append(f'{sample_number + 1}')  # noqa: FURB113
         list_of_hyperparameter_value_strings.append('0')
         list_of_hyperparameter_value_strings.append(
             '\t'.join(hyper_mean_string_list)
@@ -615,7 +615,7 @@ def metropolis_within_gibbs_sampler(  # noqa: ANN201, C901, D103, PLR0912, PLR09
         - n_samples_for_mean_of_updated_predictive_distribution_parameters,
         num_samples,
     ):
-        with open(results_directory_path / f'sample_{i+1}.json') as f:  # noqa: PTH123
+        with open(results_directory_path / f'sample_{i + 1}.json') as f:  # noqa: PLW1514, PTH123
             data = json.load(f)
             updated_parameters = data[
                 'updated_parameters_of_normal_inverse_wishart_distribution'
@@ -652,8 +652,8 @@ def metropolis_within_gibbs_sampler(  # noqa: ANN201, C901, D103, PLR0912, PLR09
         for val in sample_from_predictive_distribution:
             predictive_distribution_sample_values_list.append(f'{val}')  # noqa: PERF401
         list_of_predictive_distribution_sample_value_strings = []
-        list_of_predictive_distribution_sample_value_strings.append(
-            f'{sample_number+1}'
+        list_of_predictive_distribution_sample_value_strings.append(  # noqa: FURB113
+            f'{sample_number + 1}'
         )
         list_of_predictive_distribution_sample_value_strings.append('0')
         list_of_predictive_distribution_sample_value_strings.append(

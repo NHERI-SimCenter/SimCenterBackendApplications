@@ -1,14 +1,14 @@
 """Created on Thu Oct 27 19:19:02 2022
 
 @author: snaeimi
-"""  # noqa: N999, D400, D415
+"""  # noqa: CPY001, D400, N999
 
 import os
 
 from PyQt5 import QtGui, QtWidgets
 
 
-class Hydraulic_Tab_Designer:  # noqa: N801, D101
+class Hydraulic_Tab_Designer:  # noqa: D101
     def __init__(self):  # noqa: ANN204
         """These are variables that are shared between ui and settings."""  # noqa: D401
         self.setHydraulicSettings(self.settings)
@@ -44,7 +44,7 @@ class Hydraulic_Tab_Designer:  # noqa: N801, D101
         self.current_inp_directory = os.getcwd()  # noqa: PTH109
 
     def getHydraulicSettings(self):  # noqa: ANN201, N802, D102
-        if self.wn_inp == '':
+        if self.wn_inp == '':  # noqa: PLC1901
             self.errorMSG(
                 'REWET', 'Water distribution network File must be provided'
             )
@@ -113,7 +113,7 @@ class Hydraulic_Tab_Designer:  # noqa: N801, D101
             self.current_inp_directory,
             'inp file (*.inp)',
         )
-        if file[0] == '':
+        if file[0] == '':  # noqa: PLC1901
             return
         split_addr = os.path.split(file[0])
         self.current_inp_directory = split_addr[0]

@@ -1,7 +1,7 @@
 """authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, and Prof. J.P. Conte
 affiliation: University of California, San Diego
 
-"""  # noqa: INP001, D205, D400, D415
+"""  # noqa: CPY001, D205, D400, INP001
 
 import numpy as np
 from runFEM import runFEM
@@ -18,12 +18,12 @@ def initial_population(N, p):  # noqa: ANN001, ANN201, N803, D103
 def log_prior(s, p):  # noqa: ANN001, ANN201, D103
     logP = 0  # noqa: N806
     for i in range(len(s)):
-        logP = logP + p[i].log_pdf_eval(s[i])  # noqa: N806
+        logP = logP + p[i].log_pdf_eval(s[i])  # noqa: N806, PLR6104
     return logP
 
 
 def propose(current, covariance, n):  # noqa: ANN001, ANN201, D103
-    return np.random.multivariate_normal(current, covariance, n)  # noqa: NPY002
+    return np.random.multivariate_normal(current, covariance, n)
 
 
 def compute_beta(beta, likelihoods, prev_ESS, threshold):  # noqa: ANN001, ANN201, N803, D103
@@ -117,7 +117,7 @@ def compute_beta_evidence_old(  # noqa: ANN201, D103
 
 
 # MCMC
-def MCMC_MH_old(  # noqa: ANN201, N802, D103, PLR0913
+def MCMC_MH_old(  # noqa: ANN201, D103, N802, PLR0913, PLR0917
     ParticleNum,  # noqa: ANN001, N803
     Em,  # noqa: ANN001, N803
     Nm_steps,  # noqa: ANN001, N803
@@ -204,7 +204,7 @@ def MCMC_MH_old(  # noqa: ANN201, N802, D103, PLR0913
 
 
 # MCMC
-def MCMC_MH(  # noqa: ANN201, N802, D103, PLR0913
+def MCMC_MH(  # noqa: ANN201, D103, N802, PLR0913, PLR0917
     ParticleNum,  # noqa: ANN001, N803
     Em,  # noqa: ANN001, N803
     Nm_steps,  # noqa: ANN001, N803
@@ -349,7 +349,7 @@ def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):  # noq
     weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
 
     while cov_weights > (threshold) or (std_weights == 0):
-        dBeta = dBeta * 0.99  # noqa: N806
+        dBeta = dBeta * 0.99  # noqa: N806, PLR6104
 
         # while (cov_weights > (threshold+0.00000005) or (std_weights == 0)):
         #     if ((cov_weights > (threshold+1.0)) or  (std_weights == 0)):
@@ -377,7 +377,7 @@ def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):  # noq
             break
         weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
 
-    beta = beta + dBeta
+    beta = beta + dBeta  # noqa: PLR6104
     if beta > 0.95:  # noqa: PLR2004
         beta = 1
     log_evidence = logsumexp(dBeta * log_likelihoods) - np.log(len(log_likelihoods))

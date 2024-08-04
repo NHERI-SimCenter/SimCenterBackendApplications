@@ -1,11 +1,11 @@
-"""@author: Mukesh, Maitreya, Conte, Aakash"""  # noqa: INP001, D400, D415
+"""@author: Mukesh, Maitreya, Conte, Aakash"""  # noqa: CPY001, D400, INP001
 
 import numpy as np
 from scipy import stats
 
 
 class Dist:  # noqa: D101
-    def __init__(self, dist_name, params=None, moments=None, data=None):  # noqa: ANN001, ANN204, D107
+    def __init__(self, dist_name, params=None, moments=None, data=None):  # noqa: ANN001, ANN204
         self.dist_name = dist_name
         self.params = params
         self.moments = moments
@@ -18,7 +18,7 @@ class Dist:  # noqa: D101
 
 class Uniform:  # noqa: D101
     # Method with in this uniform class
-    def __init__(  # noqa: ANN204, D107
+    def __init__(  # noqa: ANN204
         self,
         lower,  # noqa: ANN001
         upper,  # noqa: ANN001
@@ -29,7 +29,7 @@ class Uniform:  # noqa: D101
 
     # Method to generate random numbers
     def generate_rns(self, N):  # noqa: ANN001, ANN201, N803, D102
-        return (self.upper - self.lower) * np.random.rand(N) + self.lower  # noqa: NPY002
+        return (self.upper - self.lower) * np.random.rand(N) + self.lower
 
     # Method to compute log of the pdf at x
     def log_pdf_eval(self, x):  # noqa: ANN001, ANN201, D102
@@ -41,11 +41,11 @@ class Uniform:  # noqa: D101
 
 
 class Halfnormal:  # noqa: D101
-    def __init__(self, sig):  # noqa: ANN001, ANN204, D107
+    def __init__(self, sig):  # noqa: ANN001, ANN204
         self.sig = sig
 
     def generate_rns(self, N):  # noqa: ANN001, ANN201, N803, D102
-        return self.sig * np.abs(np.random.randn(N))  # noqa: NPY002
+        return self.sig * np.abs(np.random.randn(N))
 
     def log_pdf_eval(self, x):  # noqa: ANN001, ANN201, D102
         if x >= 0:
@@ -60,12 +60,12 @@ class Halfnormal:  # noqa: D101
 
 
 class Normal:  # noqa: D101
-    def __init__(self, mu, sig):  # noqa: ANN001, ANN204, D107
+    def __init__(self, mu, sig):  # noqa: ANN001, ANN204
         self.mu = mu
         self.sig = sig
 
     def generate_rns(self, N):  # noqa: ANN001, ANN201, N803, D102
-        return self.sig * np.random.randn(N) + self.mu  # noqa: NPY002
+        return self.sig * np.random.randn(N) + self.mu
 
     def log_pdf_eval(self, x):  # noqa: ANN001, ANN201, D102
         lp = (
@@ -77,7 +77,7 @@ class Normal:  # noqa: D101
 
 
 class TrunNormal:  # noqa: D101
-    def __init__(self, mu, sig, a, b):  # noqa: ANN001, ANN204, D107
+    def __init__(self, mu, sig, a, b):  # noqa: ANN001, ANN204
         self.mu = mu
         self.sig = sig
         self.a = a
@@ -101,8 +101,8 @@ class TrunNormal:  # noqa: D101
         return lp  # noqa: RET504
 
 
-class mvNormal:  # noqa: N801, D101
-    def __init__(self, mu, E):  # noqa: ANN001, ANN204, N803, D107
+class mvNormal:  # noqa: D101
+    def __init__(self, mu, E):  # noqa: ANN001, ANN204, N803
         self.mu = mu
         self.E = E
         self.d = len(mu)
@@ -110,7 +110,7 @@ class mvNormal:  # noqa: N801, D101
         self.Einv = np.linalg.inv(E)
 
     def generate_rns(self, N):  # noqa: ANN001, ANN201, N803, D102
-        return np.random.multivariate_normal(self.mu, self.E, N)  # noqa: NPY002
+        return np.random.multivariate_normal(self.mu, self.E, N)
 
     def log_pdf_eval(self, x):  # noqa: ANN001, ANN201, D102
         xc = x - self.mu
@@ -122,7 +122,7 @@ class mvNormal:  # noqa: N801, D101
 
 
 class InvGamma:  # noqa: D101
-    def __init__(self, a, b):  # noqa: ANN001, ANN204, D107
+    def __init__(self, a, b):  # noqa: ANN001, ANN204
         self.a = a
         self.b = b
         self.dist = stats.invgamma(self.a, scale=self.b)
@@ -135,7 +135,7 @@ class InvGamma:  # noqa: D101
 
 
 class BetaDist:  # noqa: D101
-    def __init__(self, alpha, beta, lowerbound, upperbound):  # noqa: ANN001, ANN204, D107
+    def __init__(self, alpha, beta, lowerbound, upperbound):  # noqa: ANN001, ANN204
         self.alpha = alpha
         self.beta = beta
         self.lowerbound = lowerbound
@@ -152,7 +152,7 @@ class BetaDist:  # noqa: D101
 
 
 class LogNormDist:  # noqa: D101
-    def __init__(self, mu, sigma):  # noqa: ANN001, ANN204, D107
+    def __init__(self, mu, sigma):  # noqa: ANN001, ANN204
         # self.sigma = np.sqrt(np.log(zeta**2/lamda**2 + 1))
         # self.mu = np.log(lamda) - 1/2*self.sigma**2
         self.s = sigma
@@ -168,7 +168,7 @@ class LogNormDist:  # noqa: D101
 
 
 class GumbelDist:  # noqa: D101
-    def __init__(self, alpha, beta):  # noqa: ANN001, ANN204, D107
+    def __init__(self, alpha, beta):  # noqa: ANN001, ANN204
         self.alpha = alpha
         self.beta = beta
         self.dist = stats.gumbel_r(loc=self.beta, scale=(1 / self.alpha))
@@ -181,7 +181,7 @@ class GumbelDist:  # noqa: D101
 
 
 class WeibullDist:  # noqa: D101
-    def __init__(self, shape, scale):  # noqa: ANN001, ANN204, D107
+    def __init__(self, shape, scale):  # noqa: ANN001, ANN204
         self.shape = shape
         self.scale = scale
         self.dist = stats.weibull_min(c=self.shape, scale=self.scale)
@@ -194,7 +194,7 @@ class WeibullDist:  # noqa: D101
 
 
 class ExponentialDist:  # noqa: D101
-    def __init__(self, lamda):  # noqa: ANN001, ANN204, D107
+    def __init__(self, lamda):  # noqa: ANN001, ANN204
         self.lamda = lamda
         self.scale = 1 / self.lamda
         self.dist = stats.expon(scale=self.scale)
@@ -207,7 +207,7 @@ class ExponentialDist:  # noqa: D101
 
 
 class TruncatedExponentialDist:  # noqa: D101
-    def __init__(self, lamda, lower, upper):  # noqa: ANN001, ANN204, D107
+    def __init__(self, lamda, lower, upper):  # noqa: ANN001, ANN204
         self.lower = lower
         self.upper = upper
         self.lamda = lamda
@@ -224,7 +224,7 @@ class TruncatedExponentialDist:  # noqa: D101
 
 
 class GammaDist:  # noqa: D101
-    def __init__(self, k, lamda):  # noqa: ANN001, ANN204, D107
+    def __init__(self, k, lamda):  # noqa: ANN001, ANN204
         self.k = k
         self.lamda = lamda
         self.alpha = k
@@ -240,7 +240,7 @@ class GammaDist:  # noqa: D101
 
 
 class ChiSquareDist:  # noqa: D101
-    def __init__(self, k):  # noqa: ANN001, ANN204, D107
+    def __init__(self, k):  # noqa: ANN001, ANN204
         self.k = k
         self.dist = stats.chi2(k=self.k)
 
@@ -252,7 +252,7 @@ class ChiSquareDist:  # noqa: D101
 
 
 class DiscreteDist:  # noqa: D101
-    def __init__(self, values, weights):  # noqa: ANN001, ANN204, D107
+    def __init__(self, values, weights):  # noqa: ANN001, ANN204
         self.values = values
         self.weights = weights
         self.probabilities = self.weights / np.sum(self.weights)
@@ -281,11 +281,11 @@ class DiscreteDist:  # noqa: D101
 
 
 class ConstantInteger:  # noqa: D101
-    def __init__(self, value) -> None:  # noqa: ANN001, D107
+    def __init__(self, value) -> None:  # noqa: ANN001
         self.value = value
 
     def generate_rns(self, N):  # noqa: ANN001, ANN201, N803, D102
         return np.array([self.value for _ in range(N)], dtype=int)
 
-    def log_pdf_eval(self, x):  # noqa: ANN001, ANN201, ARG002, D102
+    def log_pdf_eval(self, x):  # noqa: ANN001, ANN201, ARG002, D102, PLR6301
         return 0.0
