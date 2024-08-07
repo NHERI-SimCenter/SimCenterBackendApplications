@@ -528,7 +528,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       std::string pyArgs = "HighRiseTPU.py tmpSimCenterHighRiseTPU.mat tmpSimCenterHighRiseTPU.json";
       std::string command = "python3 ";
 #ifdef _WIN32
-      command = "python "
+      command = "python ";
 #endif
       command += pyArgs;
       system(command.c_str());

@@ -451,12 +451,53 @@ class runPLoM:
         try:
             self.n_mc = int(surrogateInfo['newSampleRatio'])
             self.epsilonPCA = surrogateInfo.get("epsilonPCA",1e-6)
-            self.smootherKDE = surrogateInfo.get("smootherKDE",25)
+            # KZ, 07/24: adding customized option for smootherKDE factor
+            self.smootherKDE_Customize = surrogateInfo.get("smootherKDE_Customize",False)
+            if self.smootherKDE_Customize:
+                # KZ, 07/24: taking in user-defined function filepath and directory
+                self.smootherKDE_file = surrogateInfo.get("smootherKDE_path",False)
+                self.smootherKDE_dir = surrogateInfo.get("smootherKDE_pathPath",False)
+                if self.smootherKDE_file and self.smootherKDE_dir:
+                    # KZ, 07/24: both file and file path received
+                    # Note that the file is saved by the frontend to the work_dir -> overwrite self.smootherKDE_file
+                    self.smootherKDE_file = os.path.join(work_dir, "templatedir", self.smootherKDE_file)
+                    if not os.path.isfile(self.smootherKDE_file):
+                        # not found the file
+                        msg = 'Error finding user-defined function file for KDE: {}.'.format(self.smootherKDE_file)
+                        errlog.exit(msg)
+                else:
+                    # KZ, 07/24: missing user-defined file
+                    msg = 'Error loading user-defined function file for KDE.'
+                    errlog.exit(msg)
+            else:
+                # KZ, 07/24: get user defined smootherKDE
+                self.smootherKDE = surrogateInfo.get("smootherKDE",25)
+            #self.smootherKDE = surrogateInfo.get("smootherKDE",25)
             self.randomSeed = surrogateInfo.get("randomSeed",None)
             self.diffMap = surrogateInfo.get("diffusionMaps",True)
             self.logTransform = surrogateInfo.get("logTransform",False)
             self.constraintsFlag = surrogateInfo.get("constraints",False)
-            self.kdeTolerance = surrogateInfo.get("kdeTolerance",0.1)
+            # KZ: 07/24: adding customized option for kdeTolerance
+            self.kdeTolerance_Customize = surrogateInfo.get("tolKDE_Customize",False)
+            if self.kdeTolerance_Customize:
+                # KZ, 07/24: taking in user-defined function filepath and directory
+                self.kdeTolerance_file = surrogateInfo.get("tolKDE_path",False)
+                self.kdeTolerance_dir = surrogateInfo.get("tolKDE_pathPath",False)
+                if self.kdeTolerance_file and self.kdeTolerance_dir:
+                    # KZ, 07/24: both file and file path received
+                    # Note that the file is saved by the frontend to the work_dir -> overwrite self.kdeTolerance_file
+                    self.kdeTolerance_file = os.path.join(work_dir, "templatedir", self.kdeTolerance_file)
+                    if not os.path.isfile(self.kdeTolerance_file):
+                        # not found the file
+                        msg = 'Error finding user-defined function file for KDE: {}.'.format(self.kdeTolerance_file)
+                        errlog.exit(msg)
+                else:
+                    # KZ, 07/24: missing user-defined file
+                    msg = 'Error loading user-defined function file for KDE tolerance.'
+                    errlog.exit(msg)
+            else:
+                self.kdeTolerance = surrogateInfo.get("kdeTolerance",0.1)
+            #self.kdeTolerance = surrogateInfo.get("kdeTolerance",0.1)
             if self.constraintsFlag:
                 self.constraintsFile = os.path.join(work_dir, "templatedir/plomConstraints.py")
             self.numIter = surrogateInfo.get("numIter",50)
@@ -464,6 +505,12 @@ class runPLoM:
             self.preTrained = surrogateInfo.get("preTrained",False)
             if self.preTrained:
                 self.preTrainedModel = os.path.join(work_dir, "templatedir/surrogatePLoM.h5")
+
+            # KZ, 07/24: loading hyperparameter functions (evaluating self.kdeTolerance and self.smootherKDE from user-defined case)
+            if self._load_hyperparameter():
+                msg = 'runPLoM._parse_plom_parameters: Error in loading hyperparameter functions.'
+                self.errlog.exit(msg)
+
         except:
             run_flag = 1
 
@@ -577,6 +624,39 @@ class runPLoM:
         #    run_flag = 1
 
         # return
+        return run_flag
+    
+
+    # KZ, 07/24: loading user-defined hyper-parameter files
+    def _load_hyperparameter(self):
+        run_flag = 0
+        try:
+            # load constraints first
+            constr_file = Path(self.constraintsFile).resolve()
+            sys.path.insert(0, str(constr_file.parent) + '/')
+            constr_script = importlib.__import__(constr_file.name[:-3], globals(), locals(), [], 0)
+            self.beta_c = constr_script.beta_c()
+            print("beta_c = ", self.beta_c)
+            # if smootherKDE
+            if self.smootherKDE_Customize:
+                kde_file = Path(self.smootherKDE_file).resolve()
+                sys.path.insert(0, str(kde_file.parent) + '/')
+                kde_script = importlib.__import__(kde_file.name[:-3], globals(), locals(), [], 0)
+                self.get_epsilon_k = kde_script.get_epsilon_k
+                # evaluating the function
+                self.smootherKDE = self.get_epsilon_k(self.beta_c)
+                print('epsilon_k = ',self.smootherKDE)
+            # if tolKDE
+            if self.kdeTolerance_Customize:
+                beta_file = Path(self.kdeTolerance_file).resolve()
+                sys.path.insert(0, str(beta_file.parent) + '/')
+                beta_script = importlib.__import__(beta_file.name[:-3], globals(), locals(), [], 0)
+                self.get_epsilon_db = beta_script.get_epsilon_db
+                # evaluating the function
+                self.kdeTolerance = self.get_epsilon_db(self.beta_c)
+                print('epsilon_db = ',self.kdeTolerance)
+        except:
+            run_flag = 1
         return run_flag
 
 
