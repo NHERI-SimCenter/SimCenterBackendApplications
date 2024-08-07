@@ -370,7 +370,8 @@ def create_stations(input_file, output_file, filterIDs, vs30Config, z1Config, z2
         else:
             tmp.update({'vsInferred': (1 if vs30Config['Parameters']['vsInferred'] else 0) })
         for key in ['liqSusc', 'gwDepth', 'distWater', 'distCoast', 'distRiver',\
-                    'precipitation']:
+                    'precipitation', 'slope', 'slopeThickness', 'gammaSoil', 'phiSoil',\
+                        'cohesionSoil']:
             if stn.get(key, None) is not None:
                 tmp.update({key:stn.get(key)})
                 ground_failure_input_keys.add(key)
