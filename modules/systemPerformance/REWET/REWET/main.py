@@ -33,8 +33,11 @@ if __name__ == "__main__":
     # No file is pecified, so the default values in settinsg file is going to
     # be ran.
     
-    if parse_namespace.json == None and parse_namespace.project == None: 
-        starter.run()
+    if parse_namespace.json == None and parse_namespace.project == None:
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter(action='ignore', category=FutureWarning)
+            starter.run()
         sys.exit(0)
     elif parse_namespace.json != None and parse_namespace.project == None:
         if parse_namespace.json.split(".")[-1].upper() != "JSON":
