@@ -62,8 +62,14 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype = None):
     invalid_value = np.nan
     xy_crs = CRS.from_user_input(4326)
     vector_gdf = gpd.read_file(vector_file_path)
-    if vector_gdf.crs != vector_crs:
-        sys.exit(f"The CRS of vector file {vector_file_path} is {vector_gdf.crs}, and doesn't match the input CRS ({xy_crs}) defined for liquefaction triggering models")
+    try:
+        user_crs_input = CRS.from_user_input(vector_crs).to_epsg()
+        if vector_gdf.crs.to_epsg() != user_crs_input:
+            sys.exit(f"The CRS of vector file {vector_file_path} is {vector_gdf.crs}, and doesn't match the input CRS ({xy_crs}) defined for liquefaction triggering models")
+    except:
+        print("The input CRS ({xy_crs}) defined for liquefaction triggering models is invalid. The CRS of vector files are used")
+    # if vector_gdf.crs != vector_crs:
+    #     sys.exit(f"The CRS of vector file {vector_file_path} is {vector_gdf.crs}, and doesn't match the input CRS ({xy_crs}) defined for liquefaction triggering models")
     if xy_crs != vector_crs:
         # make transformer for reprojection
         transformer_xy_to_data = Transformer.from_crs(xy_crs, vector_crs,\
