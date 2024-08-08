@@ -1,15 +1,14 @@
-import numpy as np
-from scipy.linalg import block_diag
 import os
 import shutil
-import time
-from numpy.typing import NDArray
-from typing import Callable
-from typing import TextIO
-from importlib import import_module
 import sys
+import time
+from importlib import import_module
+from typing import Callable, TextIO
 
+import numpy as np
 import pdfs
+from numpy.typing import NDArray
+from scipy.linalg import block_diag
 
 
 class DataProcessingError(Exception):
@@ -63,9 +62,7 @@ class CovarianceMatrixPreparer:
         # calibrated. There will be one such error variance value per response quantity. If there is only data from one
         # experiment,then the default error std.dev. value is assumed to be 5% of the absolute maximum value of the data
         # corresponding to that response quantity.
-        defaultErrorVariances = 1e-12 * np.ones_like(
-            self.edpLengthsList, dtype=float
-        )
+        defaultErrorVariances = 1e-12 * np.ones_like(self.edpLengthsList, dtype=float)
         # defaultErrorVariances = np.zeros_like(self.edpLengthsList, dtype=float)
         if (
             np.shape(self.calibrationData)[0] > 1
@@ -222,9 +219,7 @@ class CovarianceMatrixPreparer:
                             )
                         elif numCols == self.edpLengthsList[i]:
                             covarianceTypeList.append("matrix")
-                            logFile.write(
-                                "\n\t\tA full covariance matrix provided."
-                            )
+                            logFile.write("\n\t\tA full covariance matrix provided.")
                         else:
                             logFile.write(
                                 "\nERROR: The number of columns of data in the covariance matrix file {}"
@@ -255,9 +250,7 @@ class CovarianceMatrixPreparer:
                                 covarianceFile, self.edpLengthsList[i], numCols
                             )
                         )
-                    logFile.write(
-                        "\n\t\tCovariance matrix: {}".format(covMatrix)
-                    )
+                    logFile.write("\n\t\tCovariance matrix: {}".format(covMatrix))
                 else:
                     logFile.write(
                         "\n\t\tDid not find a user supplied file. Using the default variance value."
@@ -268,14 +261,10 @@ class CovarianceMatrixPreparer:
                     scalarVariance = np.array(self.defaultErrorVariances[i])
                     covarianceMatrixList.append(scalarVariance)
                     covarianceTypeList.append("scalar")
-                    logFile.write(
-                        "\n\t\tCovariance matrix: {}".format(scalarVariance)
-                    )
+                    logFile.write("\n\t\tCovariance matrix: {}".format(scalarVariance))
         self.covarianceMatrixList = covarianceMatrixList
         self.covarianceTypeList = covarianceTypeList
-        logFile.write(
-            f"\n\nThe covariance matrix for prediction errors being used is:"
-        )
+        logFile.write("\n\nThe covariance matrix for prediction errors being used is:")
         tmp = block_diag(*covarianceMatrixList)
         for row in tmp:
             rowString = " ".join([f"{col:14.8g}" for col in row])
@@ -341,9 +330,7 @@ class CalDataPreparer:
                     words = line.split()
                     if len(words) == self.lineLength:
                         self.numExperiments += 1
-                        tempLine = "{} {} ".format(
-                            self.numExperiments, interface
-                        )
+                        tempLine = "{} {} ".format(self.numExperiments, interface)
                         for w in words:
                             tempLine += "{} ".format(w)
                         self.logFile.write(
@@ -385,9 +372,7 @@ class CalDataPreparer:
     def getCalibrationData(self):
         calDataFile = os.path.join(self.workdirMain, self.calDataFileName)
         self.logFile.write(
-            "\nCalibration data file being processed: \n\t{}\n".format(
-                calDataFile
-            )
+            "\nCalibration data file being processed: \n\t{}\n".format(calDataFile)
         )
         self.createTempCalDataFile(calDataFile)
         self.readCleanedCalData()
@@ -404,17 +389,13 @@ def transform_data_function(
     for j in range(len(list_of_data_segment_lengths)):
         slice_of_data = data_to_transform[
             :,
-            currentPosition : currentPosition
-            + list_of_data_segment_lengths[j],
+            currentPosition : currentPosition + list_of_data_segment_lengths[j],
         ]
         slice_of_data = slice_of_data + list_of_shift_factors[j]
         data_to_transform[
             :,
-            currentPosition : currentPosition
-            + list_of_data_segment_lengths[j],
-        ] = (
-            slice_of_data / list_of_scale_factors[j]
-        )
+            currentPosition : currentPosition + list_of_data_segment_lengths[j],
+        ] = slice_of_data / list_of_scale_factors[j]
         currentPosition += list_of_data_segment_lengths[j]
     return data_to_transform
 
@@ -461,9 +442,7 @@ class DataTransformer:
                     currentPosition : currentPosition + self.edpLengthsList[j],
                 ]
                 absMax = np.absolute(np.max(calibrationDataSlice))
-                if (
-                    absMax == 0
-                ):  # This is to handle the case if abs max of data = 0.
+                if absMax == 0:  # This is to handle the case if abs max of data = 0.
                     locShift = 1.0
                     absMax = 1.0
                 shiftFactors.append(locShift)
@@ -484,9 +463,7 @@ class DataTransformer:
                 ]
                 meanValue = np.nanmean(calibrationDataSlice)
                 stdValue = np.nanstd(calibrationDataSlice)
-                if (
-                    stdValue == 0
-                ):  # This is to handle the case if stdev of data = 0.
+                if stdValue == 0:  # This is to handle the case if stdev of data = 0.
                     stdValue = 1.0
                 scaleFactors.append(stdValue)
                 shiftFactors.append(-meanValue)
@@ -523,11 +500,9 @@ def syncLogFile(logFile: TextIO):
 
 
 def make_distributions(variables):
-
     all_distributions_list = []
 
     for i in range(len(variables["names"])):
-
         if variables["distributions"][i] == "Uniform":
             lower_limit = float(variables["Par1"][i])
             upper_limit = float(variables["Par2"][i])
@@ -540,16 +515,12 @@ def make_distributions(variables):
             mean = float(variables["Par1"][i])
             standard_deviation = float(variables["Par2"][i])
 
-            all_distributions_list.append(
-                pdfs.Normal(mu=mean, sig=standard_deviation)
-            )
+            all_distributions_list.append(pdfs.Normal(mu=mean, sig=standard_deviation))
 
         if variables["distributions"][i] == "Half-Normal":
             standard_deviation = float(variables["Par1"][i])
 
-            all_distributions_list.append(
-                pdfs.Halfnormal(sig=standard_deviation)
-            )
+            all_distributions_list.append(pdfs.Halfnormal(sig=standard_deviation))
 
         if variables["distributions"][i] == "Truncated-Normal":
             mean = float(variables["Par1"][i])
@@ -597,17 +568,13 @@ def make_distributions(variables):
             alpha = float(variables["Par1"][i])
             beta = float(variables["Par2"][i])
 
-            all_distributions_list.append(
-                pdfs.GumbelDist(alpha=alpha, beta=beta)
-            )
+            all_distributions_list.append(pdfs.GumbelDist(alpha=alpha, beta=beta))
 
         if variables["distributions"][i] == "Weibull":
             shape = float(variables["Par1"][i])
             scale = float(variables["Par2"][i])
 
-            all_distributions_list.append(
-                pdfs.WeibullDist(shape=shape, scale=scale)
-            )
+            all_distributions_list.append(pdfs.WeibullDist(shape=shape, scale=scale))
 
         if variables["distributions"][i] == "Exponential":
             lamda = float(variables["Par1"][i])
@@ -641,9 +608,7 @@ def make_distributions(variables):
         if variables["distributions"][i] == "Discrete":
             if variables["Par2"][i] is None:
                 value = variables["Par1"][i]
-                all_distributions_list.append(
-                    pdfs.ConstantInteger(value=value)
-                )
+                all_distributions_list.append(pdfs.ConstantInteger(value=value))
             else:
                 values = float(variables["Par1"][i])
                 weights = float(variables["Par2"][i])
@@ -672,9 +637,7 @@ class LogLikelihoodHandler:
         self.list_of_scale_factors = list_of_scale_factors
         self.list_of_shift_factors = list_of_shift_factors
         self.workdir_main = workdir_main
-        self.full_path_to_tmcmc_code_directory = (
-            full_path_to_tmcmc_code_directory
-        )
+        self.full_path_to_tmcmc_code_directory = full_path_to_tmcmc_code_directory
         self.log_likelihood_file_name = log_likelihood_file_name
         sys.path.append(self.workdir_main)
         self._copy_log_likelihood_module()
@@ -691,9 +654,7 @@ class LogLikelihoodHandler:
                 self.full_path_to_tmcmc_code_directory,
                 self.log_likelihood_file_name,
             )
-            dst = os.path.join(
-                self.workdir_main, self.log_likelihood_file_name
-            )
+            dst = os.path.join(self.workdir_main, self.log_likelihood_file_name)
             try:
                 shutil.copyfile(src, dst)
             except Exception:
@@ -719,9 +680,7 @@ class LogLikelihoodHandler:
         return module  # type: ignore
 
     def get_log_likelihood_function(self) -> Callable:
-        log_likelihood_module_name = os.path.splitext(
-            self.log_likelihood_file_name
-        )[0]
+        log_likelihood_module_name = os.path.splitext(self.log_likelihood_file_name)[0]
         module = self._import_log_likelihood_module(log_likelihood_module_name)
         return module.log_likelihood
 
@@ -740,9 +699,7 @@ class LogLikelihoodHandler:
         return np.zeros((self.list_of_data_segment_lengths[response_num]))
 
     def _make_covariance(self, response_num, cov_multiplier) -> NDArray:
-        return cov_multiplier * np.atleast_2d(
-            self.covariance_matrix_list[response_num]
-        )
+        return cov_multiplier * np.atleast_2d(self.covariance_matrix_list[response_num])
 
     def _make_input_for_log_likelihood_function(self, prediction) -> list:
         return [
@@ -761,13 +718,9 @@ class LogLikelihoodHandler:
             currentPosition = 0
             for j in range(self.num_response_quantities):
                 length = self.list_of_data_segment_lengths[j]
-                residuals = allResiduals[
-                    i, currentPosition : currentPosition + length
-                ]
+                residuals = allResiduals[i, currentPosition : currentPosition + length]
                 currentPosition = currentPosition + length
-                cov = self._make_covariance(
-                    j, list_of_covariance_multipliers[j]
-                )
+                cov = self._make_covariance(j, list_of_covariance_multipliers[j])
                 mean = self._make_mean(j)
                 ll = self.log_likelihood_function(residuals, mean, cov)
                 if not np.isnan(ll):

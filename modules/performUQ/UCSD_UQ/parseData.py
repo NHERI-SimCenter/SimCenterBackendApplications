@@ -4,15 +4,9 @@ affiliation: University of California, San Diego, *SimCenter, University of Cali
 
 """
 
+import itertools
 import json
 import os
-import sys
-import time
-from importlib import import_module
-from shutil import copyfile
-
-import numpy as np
-import itertools
 
 
 class DataProcessingError(Exception):
@@ -219,9 +213,7 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
     for ind in range(nModels):
         logFile.write("\n\t\t\t\tModel number: {}".format(ind))
         # Processing RV inputs
-        logFile.write(
-            "\n\t\t\t\t\tCreating priors for model number {}".format(ind)
-        )
+        logFile.write("\n\t\t\t\t\tCreating priors for model number {}".format(ind))
         logFile.write("\n\t\t\t\t\t\tProcessing RV inputs")
         for i, rv in enumerate(rvInputs):
             variablesList[ind]["names"].append(rv["name"])
@@ -287,9 +279,7 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
                 variablesList[ind]["Par2"].append(rv["betaparam"])
                 variablesList[ind]["Par3"].append(None)
                 variablesList[ind]["Par4"].append(None)
-                paramString = "params: {}, {}".format(
-                    rv["alphaparam"], rv["betaparam"]
-                )
+                paramString = "params: {}, {}".format(rv["alphaparam"], rv["betaparam"])
             elif rv["distribution"] == "Weibull":
                 variablesList[ind]["Par1"].append(rv["shapeparam"])
                 variablesList[ind]["Par2"].append(rv["scaleparam"])

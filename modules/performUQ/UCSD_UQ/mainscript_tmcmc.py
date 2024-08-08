@@ -9,26 +9,24 @@ import os
 import sys
 import time
 from typing import TextIO
-import numpy as np
 
+import numpy as np
+from calibration_utilities import (
+    CalDataPreparer,
+    CovarianceMatrixPreparer,
+    DataTransformer,
+    LogLikelihoodHandler,
+    createLogFile,
+    make_distributions,
+    syncLogFile,
+)
 from parseData import parseDataFunction
 from runTMCMC import run_TMCMC
-from calibration_utilities import (
-    CovarianceMatrixPreparer,
-    CalDataPreparer,
-    DataTransformer,
-    createLogFile,
-    syncLogFile,
-    make_distributions,
-    LogLikelihoodHandler,
-)
 
 # ======================================================================================================================
 
 
-def computeModelPosteriorProbabilities(
-    modelPriorProbabilities, modelEvidences
-):
+def computeModelPosteriorProbabilities(modelPriorProbabilities, modelEvidences):
     denominator = np.dot(modelPriorProbabilities, modelEvidences)
     return modelPriorProbabilities * modelEvidences / denominator
 
@@ -148,9 +146,7 @@ def main(input_args):
     input_json_filename_full_path = input_json_filename
     logfile.write("\n\n==========================")
     logfile.write(
-        "\nParsing the json input file {}".format(
-            input_json_filename_full_path
-        )
+        "\nParsing the json input file {}".format(input_json_filename_full_path)
     )
     (
         number_of_samples,
@@ -243,12 +239,8 @@ def main(input_args):
         logfile,
         run_type,
     )
-    defaultErrorVariances = (
-        cov_matrix_options_instance.getDefaultErrorVariances()
-    )
-    covariance_matrix_list = (
-        cov_matrix_options_instance.createCovarianceMatrix()
-    )
+    defaultErrorVariances = cov_matrix_options_instance.getDefaultErrorVariances()
+    covariance_matrix_list = cov_matrix_options_instance.createCovarianceMatrix()
 
     # ======================================================================================================================
     # Get log-likelihood function
@@ -278,14 +270,11 @@ def main(input_args):
 
     # number of max MCMC steps
     number_of_MCMC_steps = (
-        tmcmc_data_instance.numBurnInSteps
-        + tmcmc_data_instance.numStepsAfterBurnIn
+        tmcmc_data_instance.numBurnInSteps + tmcmc_data_instance.numStepsAfterBurnIn
     )
     max_number_of_MCMC_steps = 10
     logfile.write(
-        "\n\tNumber of MCMC steps in first stage: {}".format(
-            number_of_MCMC_steps
-        )
+        "\n\tNumber of MCMC steps in first stage: {}".format(number_of_MCMC_steps)
     )
     logfile.write(
         "\n\tMax. number of MCMC steps in any stage: {}".format(
@@ -297,9 +286,7 @@ def main(input_args):
 
     # ======================================================================================================================
     # Initialize variables to store prior model probability and evidence
-    model_prior_probabilities = np.ones((len(variables_list),)) / len(
-        variables_list
-    )
+    model_prior_probabilities = np.ones((len(variables_list),)) / len(variables_list)
     model_evidences = np.ones_like(model_prior_probabilities)
 
     logfile.write("\n\n==========================")
@@ -307,18 +294,12 @@ def main(input_args):
     # For each model:
     for model_number, parameters_of_model in enumerate(variables_list):
         logfile.write("\n\n\t==========================")
-        logfile.write(
-            "\n\tStarting analysis for model {}".format(model_number + 1)
-        )
+        logfile.write("\n\tStarting analysis for model {}".format(model_number + 1))
         logfile.write("\n\t==========================")
 
         # Assign probability distributions to the parameters of the model
-        logfile.write(
-            "\n\t\tAssigning probability distributions to the parameters"
-        )
-        all_distributions_list = make_distributions(
-            variables=parameters_of_model
-        )
+        logfile.write("\n\t\tAssigning probability distributions to the parameters")
+        all_distributions_list = make_distributions(variables=parameters_of_model)
 
         # Run the Algorithm
         logfile.write("\n\n\t==========================")
@@ -397,9 +378,7 @@ def main(input_args):
         model_evidences[model_number] = evidence
 
         logfile.write("\n\n\t==========================")
-        logfile.write(
-            "\n\tCompleted analysis for model {}".format(model_number + 1)
-        )
+        logfile.write("\n\tCompleted analysis for model {}".format(model_number + 1))
         logfile.write("\n\t==========================")
 
         syncLogFile(logfile)
@@ -420,9 +399,7 @@ def main(input_args):
 
     # ======================================================================================================================
     logfile.write("\nUCSD_UQ engine workflow complete!\n")
-    logfile.write(
-        "\nTime taken: {:0.2f} minutes\n\n".format((time.time() - t1) / 60)
-    )
+    logfile.write("\nTime taken: {:0.2f} minutes\n\n".format((time.time() - t1) / 60))
 
     syncLogFile(logfile)
 

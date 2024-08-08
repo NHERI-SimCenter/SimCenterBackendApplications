@@ -45,6 +45,7 @@ def main(args):
             f'"{pythonCommand}" "{mainScript}" "{tmpSimCenterDir}"'
             f' "{templateDir}" {runType} {driverFile} {workflowInput}'
         )
+        print(command)
 
         command_list = shlex.split(command)
 

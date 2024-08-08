@@ -4,20 +4,19 @@ affiliation: University of California, San Diego, *SimCenter, University of Cali
 
 """
 
+import json
+import shlex
+
 # ======================================================================================================================
 import sys
-import json
 from pathlib import Path
-import shlex
 
 path_to_common_uq = Path(__file__).parent.parent / "common"
 sys.path.append(str(path_to_common_uq))
-import uq_utilities
 
 
 # ======================================================================================================================
 def main(input_args):
-
     # # Initialize analysis
     # path_to_UCSD_UQ_directory = Path(input_args[2]).resolve().parent
     # path_to_working_directory = Path(input_args[3]).resolve()

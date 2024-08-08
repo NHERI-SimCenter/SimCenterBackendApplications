@@ -4,18 +4,20 @@ import shutil
 import subprocess
 import sys
 import traceback
+from dataclasses import dataclass
 from multiprocessing.pool import Pool
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 import numpy as np
+import numpy.typing as npt
 import quoFEM_RV_models
+import scipy.stats
 from ERAClasses.ERADist import ERADist
 from ERAClasses.ERANataf import ERANataf
 from numpy.typing import NDArray
 
-import scipy.stats
-import numpy.typing as npt
-from dataclasses import dataclass
+if quoFEM_RV_models not in sys.modules:
+    import quoFEM_RV_models
 
 
 def _copytree(src, dst, symlinks=False, ignore=None):
@@ -34,9 +36,7 @@ def _copytree(src, dst, symlinks=False, ignore=None):
                 ):
                     shutil.copy2(s, d)
             except Exception as ex:
-                msg = (
-                    f"Could not copy {s}. The following error occurred: \n{ex}"
-                )
+                msg = f"Could not copy {s}. The following error occurred: \n{ex}"
                 return msg
     return "0"
 
@@ -57,9 +57,7 @@ def _append_msg_in_out_file(msg, out_file_name: str = "ops.out"):
             msg += "\n"
             msg += "your model says...\n"
             msg += "........\n" + errmsg + "\n........ \n"
-            msg += "to read more, see " + os.path.join(
-                os.getcwd(), out_file_name
-            )
+            msg += "to read more, see " + os.path.join(os.getcwd(), out_file_name)
 
     return msg
 
@@ -81,9 +79,7 @@ class SimCenterWorkflowDriver:
         ignore_nans: bool = True,
     ) -> None:
         self.full_path_of_tmpSimCenter_dir = full_path_of_tmpSimCenter_dir
-        self.list_of_dir_names_to_copy_files_from = (
-            list_of_dir_names_to_copy_files_from
-        )
+        self.list_of_dir_names_to_copy_files_from = list_of_dir_names_to_copy_files_from
         self.list_of_rv_names = list_of_rv_names
         self.driver_filename = driver_filename
         self.length_of_results = length_of_results
@@ -143,9 +139,7 @@ class SimCenterWorkflowDriver:
                 raise ModelEvaluationError(msg)
         return workdir
 
-    def _create_params_file(
-        self, sample_values: NDArray, workdir: str
-    ) -> None:
+    def _create_params_file(self, sample_values: NDArray, workdir: str) -> None:
         list_of_strings_to_write = []
         list_of_strings_to_write.append(f"{self.num_rv}")
         for i, rv in enumerate(self.list_of_rv_names):
@@ -176,7 +170,7 @@ class SimCenterWorkflowDriver:
             )
             returnStringList.append(f"The return code was {ex.returncode}")
             returnStringList.append(f"The following error occurred: \n{ex}")
-            raise ModelEvaluationError(f"\n\n".join(returnStringList))
+            raise ModelEvaluationError("\n\n".join(returnStringList))
 
     def _read_outputs_from_results_file(self, workdir: str) -> NDArray:
         if glob.glob("results.out"):
@@ -303,9 +297,7 @@ class ERANatafJointDistribution:
             self.correlation_matrix_data, self.num_rvs
         )
         self.marginal_ERAdistribution_objects_list = (
-            make_list_of_marginal_distributions(
-                self.list_of_random_variables_data
-            )
+            make_list_of_marginal_distributions(self.list_of_random_variables_data)
         )
         self.ERANataf_object = make_ERANataf_object(
             self.marginal_ERAdistribution_objects_list, self.correlation_matrix
@@ -316,7 +308,9 @@ class ERANatafJointDistribution:
     ) -> Union[tuple[NDArray[np.float64], Any], NDArray[np.float64]]:
         return self.ERANataf_object.U2X(U=u, Jacobian=jacobian)
 
-    def x_to_u(self, x: NDArray, jacobian: bool = False) -> Union[
+    def x_to_u(
+        self, x: NDArray, jacobian: bool = False
+    ) -> Union[
         tuple[NDArray[np.floating[Any]], NDArray[np.floating[Any]]],
         NDArray[np.floating[Any]],
     ]:
@@ -347,9 +341,7 @@ class ERANatafJointDistribution:
 
 def get_list_of_pseudo_random_number_generators(entropy, num_spawn):
     seed_sequence = np.random.SeedSequence(entropy=entropy).spawn(num_spawn)
-    prngs = [
-        np.random.Generator(np.random.PCG64DXSM(s)) for s in seed_sequence
-    ]
+    prngs = [np.random.Generator(np.random.PCG64DXSM(s)) for s in seed_sequence]
     return prngs
 
 
@@ -399,9 +391,7 @@ def get_default_model_evaluation_function(model):
     return model.evaluate_model_once
 
 
-def get_ERANataf_joint_distribution_instance(
-    list_of_rv_data, correlation_matrix_data
-):
+def get_ERANataf_joint_distribution_instance(list_of_rv_data, correlation_matrix_data):
     joint_distribution = ERANatafJointDistribution(
         list_of_rv_data, correlation_matrix_data
     )
@@ -454,9 +444,7 @@ def get_standard_normal_random_variates(list_of_prngs, size=1):
 
 
 def get_inverse_gamma_random_variate(prng, shape, scale, size=1):
-    return scipy.stats.invgamma.rvs(
-        shape, scale=scale, size=size, random_state=prng
-    )
+    return scipy.stats.invgamma.rvs(shape, scale=scale, size=size, random_state=prng)
 
 
 def multivariate_normal_logpdf(x, mean, cov):

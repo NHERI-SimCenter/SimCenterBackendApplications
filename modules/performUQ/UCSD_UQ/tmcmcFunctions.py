@@ -61,9 +61,7 @@ def compute_beta(beta, likelihoods, prev_ESS, threshold):
     return new_beta, Wm, ESS
 
 
-def compute_beta_evidence_old(
-    beta, log_likelihoods, log_evidence, prev_ESS, threshold
-):
+def compute_beta_evidence_old(beta, log_likelihoods, log_evidence, prev_ESS, threshold):
     old_beta = beta
     min_beta = beta
     max_beta = 2.0
@@ -149,9 +147,7 @@ def MCMC_MH_old(
         proposal = current + delta
         prior_proposal = log_prior(proposal, AllPars)
 
-        if np.isfinite(
-            prior_proposal
-        ):  # proposal satisfies the prior constraints
+        if np.isfinite(prior_proposal):  # proposal satisfies the prior constraints
             # likelihood_proposal = log_likelihood(ParticleNum, proposal, variables, resultsLocation)
             likelihood_proposal, prediction_proposal = runFEM(
                 ParticleNum,
@@ -179,14 +175,10 @@ def MCMC_MH_old(
 
         log_acceptance = posterior_proposal - posterior_current
         all_proposals.append(proposal)
-        all_PLP.append(
-            [prior_proposal, likelihood_proposal, posterior_proposal]
-        )
+        all_PLP.append([prior_proposal, likelihood_proposal, posterior_proposal])
 
         # if np.isfinite(log_acceptance) and (np.log(np.random.uniform()) < log_acceptance):
-        if np.isfinite(log_acceptance) and (
-            np.log(rng.uniform()) < log_acceptance
-        ):
+        if np.isfinite(log_acceptance) and (np.log(rng.uniform()) < log_acceptance):
             # accept
             current = proposal
             posterior_current = posterior_proposal
@@ -242,9 +234,7 @@ def MCMC_MH(
         proposal = current + delta
         prior_proposal = log_prior(proposal, AllPars)
 
-        if np.isfinite(
-            prior_proposal
-        ):  # proposal satisfies the prior constraints
+        if np.isfinite(prior_proposal):  # proposal satisfies the prior constraints
             # likelihood_proposal = log_likelihood(ParticleNum, proposal, variables, resultsLocation)
             likelihood_proposal, prediction_proposal = runFEM(
                 ParticleNum,
@@ -272,14 +262,10 @@ def MCMC_MH(
 
         log_acceptance = posterior_proposal - posterior_current
         all_proposals.append(proposal)
-        all_PLP.append(
-            [prior_proposal, likelihood_proposal, posterior_proposal]
-        )
+        all_PLP.append([prior_proposal, likelihood_proposal, posterior_proposal])
 
         # if np.isfinite(log_acceptance) and (np.log(np.random.uniform()) < log_acceptance):
-        if np.isfinite(log_acceptance) and (
-            np.log(rng.uniform()) < log_acceptance
-        ):
+        if np.isfinite(log_acceptance) and (np.log(rng.uniform()) < log_acceptance):
             # accept
             current = proposal
             posterior_current = posterior_proposal
@@ -382,18 +368,14 @@ def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):
 
         if dBeta < 1e-3:
             dBeta = 1e-3
-            weights, cov_weights, std_weights = get_weights(
-                dBeta, log_likelihoods
-            )
+            weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
             break
         weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
 
     beta = beta + dBeta
     if beta > 0.95:
         beta = 1
-    log_evidence = logsumexp(dBeta * log_likelihoods) - np.log(
-        len(log_likelihoods)
-    )
+    log_evidence = logsumexp(dBeta * log_likelihoods) - np.log(len(log_likelihoods))
 
     try:
         ESS = int(1 / np.sum((weights / np.sum(weights)) ** 2))

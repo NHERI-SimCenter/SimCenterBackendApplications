@@ -4,14 +4,15 @@ affiliation: University of California, San Diego
 modified: Aakash Bangalore Satish, NHERI SimCenter, UC Berkeley
 """
 
+import csv
+import multiprocessing as mp
+import os
+from multiprocessing import Pool
+
 import numpy as np
 import tmcmcFunctions
-import multiprocessing as mp
-from multiprocessing import Pool
-from runFEM import runFEM
 from numpy.random import SeedSequence, default_rng
-import os
-import csv
+from runFEM import runFEM
 
 
 def write_stage_start_info_to_logfile(
@@ -58,9 +59,7 @@ def write_eval_data_to_logfile(
             else:
                 logfile.write("\n\n\t\tLocal run - MCMC steps")
             logfile.write(
-                "\n\t\t\tNumber of processors being used: {}".format(
-                    proc_count
-                )
+                "\n\t\t\tNumber of processors being used: {}".format(proc_count)
             )
         else:
             if stage_num == 0:
@@ -109,9 +108,7 @@ def create_headings(
 def get_prediction_from_workdirs(i, working_directory):
     workdir_string = "workdir." + str(i + 1)
     prediction = np.atleast_2d(
-        np.genfromtxt(
-            os.path.join(working_directory, workdir_string, "results.out")
-        )
+        np.genfromtxt(os.path.join(working_directory, workdir_string, "results.out"))
     ).reshape((1, -1))
     return prediction
 
@@ -128,7 +125,6 @@ def write_data_to_tab_files(
     tab_file_name,
     predictions,
 ):
-
     tab_file_full_path = os.path.join(working_directory, tab_file_name)
     write_outputs = True
     headings = create_headings(
@@ -145,9 +141,7 @@ def write_data_to_tab_files(
         if model_number == 0:
             f.write(headings)
         for i in range(number_of_samples):
-            row_string = (
-                f"{i + 1 + number_of_samples*model_number}\t{model_number+1}\t"
-            )
+            row_string = f"{i + 1 + number_of_samples*model_number}\t{model_number+1}\t"
             for j in range(len(model_parameters["names"])):
                 row_string += f"{dataToWrite[i, j]}\t"
             if write_outputs:  # write the output data
@@ -171,19 +165,13 @@ def write_data_to_csvfile(
     data_to_write,
 ):
     logfile.write(
-        "\n\n\t\tWriting samples from stage {} to csv file".format(
-            stage_number - 1
-        )
+        "\n\n\t\tWriting samples from stage {} to csv file".format(stage_number - 1)
     )
     if total_number_of_models_in_ensemble > 1:
-        string_to_append = (
-            f"resultsStage{stage_number - 1}_Model_{model_number+1}.csv"
-        )
+        string_to_append = f"resultsStage{stage_number - 1}_Model_{model_number+1}.csv"
     else:
         string_to_append = f"resultsStage{stage_number - 1}.csv"
-    resultsFilePath = os.path.join(
-        os.path.abspath(working_directory), string_to_append
-    )
+    resultsFilePath = os.path.join(os.path.abspath(working_directory), string_to_append)
 
     with open(resultsFilePath, "w", newline="") as csvfile:
         csvWriter = csv.writer(csvfile)
@@ -249,14 +237,9 @@ def run_TMCMC(
 
     # Evaluate posterior at Sm
     prior_pdf_values = np.array(
-        [
-            tmcmcFunctions.log_prior(s, all_distributions_list)
-            for s in sample_values
-        ]
+        [tmcmcFunctions.log_prior(s, all_distributions_list) for s in sample_values]
     ).squeeze()
-    unnormalized_posterior_pdf_values = (
-        prior_pdf_values  # prior = post for beta = 0
-    )
+    unnormalized_posterior_pdf_values = prior_pdf_values  # prior = post for beta = 0
 
     iterables = [
         (
@@ -312,9 +295,7 @@ def run_TMCMC(
             log_likelihoods_list.append(output[0])
             predictions_list.append(output[1])
     log_likelihood_values = np.array(log_likelihoods_list).squeeze()
-    prediction_values = np.array(predictions_list).reshape(
-        (number_of_samples, -1)
-    )
+    prediction_values = np.array(predictions_list).reshape((number_of_samples, -1))
 
     total_number_of_model_evaluations = number_of_samples
     logfile.write(
@@ -380,12 +361,10 @@ def run_TMCMC(
 
         resampled_values = sample_values[resample_ids]
         resampled_log_likelihood_values = log_likelihood_values[resample_ids]
-        resampled_unnormalized_posterior_pdf_values = (
-            unnormalized_posterior_pdf_values[resample_ids]
-        )
-        resampled_prediction_values = np.atleast_2d(
-            prediction_values[resample_ids, :]
-        )
+        resampled_unnormalized_posterior_pdf_values = unnormalized_posterior_pdf_values[
+            resample_ids
+        ]
+        resampled_prediction_values = np.atleast_2d(prediction_values[resample_ids, :])
 
         # save to trace
         # stage m: samples, likelihood, weights, next stage ESS, next stage beta, resampled samples
@@ -491,18 +470,14 @@ def run_TMCMC(
         sample_values = np.asarray(samples_list)
         log_likelihood_values = np.asarray(loglikes_list)
         unnormalized_posterior_pdf_values = np.asarray(posterior_pdf_vals_list)
-        prediction_values = np.asarray(preds_list).reshape(
-            (number_of_samples, -1)
-        )
+        prediction_values = np.asarray(preds_list).reshape((number_of_samples, -1))
 
         num_accepts = np.asarray(num_accepts)
         number_of_accepted_states_in_this_stage = sum(num_accepts)
         all_proposals = np.asarray(all_proposals)
         all_PLP = np.asarray(all_PLP)
 
-        total_number_of_model_evaluations += (
-            number_of_model_evaluations_in_this_stage
-        )
+        total_number_of_model_evaluations += number_of_model_evaluations_in_this_stage
         logfile.write(
             "\n\n\t\tTotal number of model evaluations so far: {}".format(
                 total_number_of_model_evaluations
@@ -527,9 +502,7 @@ def run_TMCMC(
             number_of_MCMC_steps = min(
                 number_of_MCMC_steps + 1, max_number_of_MCMC_steps
             )
-            logfile.write(
-                "\n\t\tadapted max MCMC steps = %d" % number_of_MCMC_steps
-            )
+            logfile.write("\n\t\tadapted max MCMC steps = %d" % number_of_MCMC_steps)
 
             acc_rate = max(1.0 / number_of_model_evaluations_in_this_stage, R)
             number_of_MCMC_steps = min(
@@ -580,16 +553,12 @@ def run_TMCMC(
         if run_type == "runningLocal":
             pool.close()
             logfile.write(
-                "\n\tClosed multiprocessing pool for runType: {}".format(
-                    run_type
-                )
+                "\n\tClosed multiprocessing pool for runType: {}".format(run_type)
             )
         else:
             executor.shutdown()
             logfile.write(
-                "\n\tShutdown mpi4py executor pool for runType: {}".format(
-                    run_type
-                )
+                "\n\tShutdown mpi4py executor pool for runType: {}".format(run_type)
             )
 
     return mytrace, total_log_evidence

@@ -6,8 +6,9 @@ affiliation: SimCenter*; University of California, San Diego
 """
 
 import os
-import subprocess
 import shutil
+import subprocess
+
 import numpy as np
 
 
@@ -27,9 +28,7 @@ def copytree(src, dst, symlinks=False, ignore=None):
                 ):
                     shutil.copy2(s, d)
             except Exception as ex:
-                msg = (
-                    f"Could not copy {s}. The following error occurred: \n{ex}"
-                )
+                msg = f"Could not copy {s}. The following error occurred: \n{ex}"
                 return msg
     return "0"
 
@@ -105,4 +104,5 @@ def runFEM(
         preds = np.atleast_2d([-np.inf] * sum(edpLengthsList)).reshape((1, -1))
         ll = -np.inf
 
+    return (ll, preds)
     return (ll, preds)

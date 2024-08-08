@@ -71,34 +71,22 @@ def log_likelihood(
     if len(covarianceMatrixList) != numExperiments * numResponses:
         print(
             "ERROR: The expected number of covariance matrices is {}, but only {} were passed "
-            "in.".format(
-                numExperiments * numResponses, len(covarianceMatrixList)
-            )
+            "in.".format(numExperiments * numResponses, len(covarianceMatrixList))
         )
         raise CovError(
             "ERROR: The expected number of covariance matrices is {}, but only {} were passed "
-            "in.".format(
-                numExperiments * numResponses, len(covarianceMatrixList)
-            )
+            "in.".format(numExperiments * numResponses, len(covarianceMatrixList))
         )
 
     # Shift and normalize the prediction
     currentPosition = 0
     for j in range(len(edpLengthsList)):
-        prediction[
-            :, currentPosition : currentPosition + edpLengthsList[j]
-        ] = (
-            prediction[
-                :, currentPosition : currentPosition + edpLengthsList[j]
-            ]
+        prediction[:, currentPosition : currentPosition + edpLengthsList[j]] = (
+            prediction[:, currentPosition : currentPosition + edpLengthsList[j]]
             + shiftFactors[j]
         )
-        prediction[
-            :, currentPosition : currentPosition + edpLengthsList[j]
-        ] = (
-            prediction[
-                :, currentPosition : currentPosition + edpLengthsList[j]
-            ]
+        prediction[:, currentPosition : currentPosition + edpLengthsList[j]] = (
+            prediction[:, currentPosition : currentPosition + edpLengthsList[j]]
             / scaleFactors[j]
         )
         currentPosition = currentPosition + edpLengthsList[j]
@@ -114,9 +102,7 @@ def log_likelihood(
         for j in range(numResponses):
             # Get the residuals corresponding to this response variable
             length = edpLengthsList[j]
-            residuals = allResiduals[
-                i, currentPosition : currentPosition + length
-            ]
+            residuals = allResiduals[i, currentPosition : currentPosition + length]
             currentPosition = currentPosition + length
 
             # Get the covariance matrix corresponding to this response variable

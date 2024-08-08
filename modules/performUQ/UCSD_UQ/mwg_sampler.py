@@ -1,8 +1,8 @@
 import json
+from pathlib import Path
+
 import numpy as np
 import scipy
-
-from pathlib import Path
 
 path_to_common_uq = Path(__file__).parent.parent / "common"
 import sys
@@ -87,16 +87,14 @@ def _draw_one_sample(
             uq_utilities.get_standard_normal_random_variates(prngs_rvs)
         )
         cholesky_decomposition_of_proposal_covariance_matrix = (
-            list_of_cholesky_decomposition_of_proposal_covariance_matrix[
-                dataset_number
-            ]
+            list_of_cholesky_decomposition_of_proposal_covariance_matrix[dataset_number]
         )
         move = cholesky_decomposition_of_proposal_covariance_matrix @ np.array(
             standard_normal_random_variates
         ).reshape((-1, 1))
-        current_state = np.array(
-            list_of_current_states[dataset_number]
-        ).reshape((-1, 1))
+        current_state = np.array(list_of_current_states[dataset_number]).reshape(
+            (-1, 1)
+        )
         proposed_state = current_state + move
         x = transformation_function(proposed_state)
         model_iterable = [0, x]
@@ -126,22 +124,18 @@ def _draw_one_sample(
 
     for dataset_number, dataset in enumerate(list_of_datasets):
         proposed_state = list_of_proposed_states[dataset_number]
-        prior_logpdf_at_proposed_state = (
-            uq_utilities.multivariate_normal_logpdf(
-                proposed_state,
-                current_mean_sample,
-                current_cov_sample,
-            )
+        prior_logpdf_at_proposed_state = uq_utilities.multivariate_normal_logpdf(
+            proposed_state,
+            current_mean_sample,
+            current_cov_sample,
         )
-        list_of_logpdf_of_proposed_states.append(
-            prior_logpdf_at_proposed_state
+        list_of_logpdf_of_proposed_states.append(prior_logpdf_at_proposed_state)
+        scaled_residual = (list_of_model_outputs[dataset_number] - dataset) / np.std(
+            dataset
         )
-        scaled_residual = (
-            list_of_model_outputs[dataset_number] - dataset
-        ) / np.std(dataset)
-        error_variance_sample_scaled = (
-            list_of_current_error_variance_samples_scaled[dataset_number]
-        )
+        error_variance_sample_scaled = list_of_current_error_variance_samples_scaled[
+            dataset_number
+        ]
         log_likelihood_at_proposed_state = loglikelihood_function(
             scaled_residual,
             error_variance_sample_scaled,
@@ -150,9 +144,7 @@ def _draw_one_sample(
             log_likelihood_at_proposed_state + prior_logpdf_at_proposed_state
         )
         unnormalized_posterior_logpdf_at_current_state = (
-            list_of_unnormalized_posterior_logpdf_at_current_state[
-                dataset_number
-            ]
+            list_of_unnormalized_posterior_logpdf_at_current_state[dataset_number]
         )
         log_hastings_ratio = (
             unnormalized_posterior_logpdf_at_proposed_state
@@ -160,9 +152,7 @@ def _draw_one_sample(
         )
         list_of_log_hastings_ratios.append(log_hastings_ratio)
         list_of_log_likelihoods.append(log_likelihood_at_proposed_state)
-        standard_uniform_random_variate = prngs_algorithm[
-            dataset_number
-        ].uniform()
+        standard_uniform_random_variate = prngs_algorithm[dataset_number].uniform()
         proposed_state = list_of_proposed_states[dataset_number]
         current_state = list_of_current_states[dataset_number]
         if (log_hastings_ratio >= 0) | (
@@ -174,9 +164,7 @@ def _draw_one_sample(
             )
             list_of_log_likes.append(log_likelihood_at_proposed_state)
             list_of_log_priors.append(prior_logpdf_at_proposed_state)
-            num_accepts_list[dataset_number] = (
-                num_accepts_list[dataset_number] + 1
-            )
+            num_accepts_list[dataset_number] = num_accepts_list[dataset_number] + 1
         else:
             new_state = current_state
             list_of_log_posteriors.append(
@@ -190,9 +178,7 @@ def _draw_one_sample(
             )
         new_state = np.array(new_state).reshape((-1, 1))
         list_of_new_states.append(new_state)
-        list_of_parameter_samples.append(
-            transformation_function(new_state).tolist()
-        )
+        list_of_parameter_samples.append(transformation_function(new_state).tolist())
 
         sse = scaled_residual @ scaled_residual
         list_of_sse.append(sse)
@@ -207,12 +193,8 @@ def _draw_one_sample(
                 prngs_edps[dataset_number], alpha_n, beta_n
             )
         ).item()
-        list_of_error_variance_samples_scaled.append(
-            new_error_variance_sample_scaled
-        )
-        new_error_variance_sample = (
-            np.var(dataset) * new_error_variance_sample_scaled
-        )
+        list_of_error_variance_samples_scaled.append(new_error_variance_sample_scaled)
+        new_error_variance_sample = np.var(dataset) * new_error_variance_sample_scaled
         list_of_error_variance_samples.append(new_error_variance_sample)
 
     n = num_datasets
@@ -248,9 +230,7 @@ def _draw_one_sample(
 
     one_sample = {}
     one_sample["new_states"] = list_of_new_states
-    one_sample["error_variances_scaled"] = (
-        list_of_error_variance_samples_scaled
-    )
+    one_sample["error_variances_scaled"] = list_of_error_variance_samples_scaled
     one_sample["hyper_covariance"] = covariance_sample
     one_sample["hyper_mean"] = mean_sample
 
@@ -265,14 +245,12 @@ def _draw_one_sample(
         else:
             new_states_list.append(item.tolist())
     results_to_write["new_states"] = new_states_list
-    results_to_write["error_variances_scaled"] = (
-        list_of_error_variance_samples_scaled
-    )
+    results_to_write["error_variances_scaled"] = list_of_error_variance_samples_scaled
     results_to_write["hyper_covariance"] = covariance_sample.tolist()
     results_to_write["hyper_mean"] = mean_sample.tolist()
-    results_to_write[
-        "updated_parameters_of_normal_inverse_wishart_distribution"
-    ] = updated_parameters
+    results_to_write["updated_parameters_of_normal_inverse_wishart_distribution"] = (
+        updated_parameters
+    )
 
     for dataset_number in range(num_datasets):
         x = list_of_parameter_samples[dataset_number]
@@ -300,9 +278,7 @@ def _draw_one_sample(
             tabular_results_file_name, string_to_write
         )
 
-    with open(
-        results_directory_path / f"sample_{sample_number+1}.json", "w"
-    ) as f:
+    with open(results_directory_path / f"sample_{sample_number+1}.json", "w") as f:
         json.dump(results_to_write, f, indent=4)
 
     return one_sample, results_to_write
@@ -398,15 +374,11 @@ def metropolis_within_gibbs_sampler(
     if "Tuning Period" in uq_inputs:
         tuning_period = uq_inputs["Tuning Period"]
     num_samples = uq_inputs["Sample Size"] + tuning_period
-    parent_distribution_prng = (
-        uq_utilities.get_list_of_pseudo_random_number_generators(
-            10 * random_state, 1
-        )[0]
-    )
+    parent_distribution_prng = uq_utilities.get_list_of_pseudo_random_number_generators(
+        10 * random_state, 1
+    )[0]
 
-    initial_list_of_proposal_covariance_kernels = (
-        list_of_proposal_covariance_kernels
-    )
+    initial_list_of_proposal_covariance_kernels = list_of_proposal_covariance_kernels
 
     for dataset_number in range(num_datasets):
         tabular_results_file_name = (
@@ -446,18 +418,14 @@ def metropolis_within_gibbs_sampler(
     for rv in rv_inputs:
         rv_mean_string_list.append(f'mean_{rv["name"]}')
         rv_names_list.append(rv["name"])
-    list_of_hyperparameter_header_strings.append(
-        "\t".join(rv_mean_string_list)
-    )
+    list_of_hyperparameter_header_strings.append("\t".join(rv_mean_string_list))
     rv_covariance_string_list = []
     for i in range(len(rv_names_list)):
         for j in range(i, len(rv_names_list)):
             rv_covariance_string_list.append(
                 f"cov_{rv_names_list[i]}_{rv_names_list[j]}"
             )
-    list_of_hyperparameter_header_strings.append(
-        "\t".join(rv_covariance_string_list)
-    )
+    list_of_hyperparameter_header_strings.append("\t".join(rv_covariance_string_list))
     hyperparameter_header_string = (
         "\t".join(list_of_hyperparameter_header_strings) + "\n"
     )
@@ -544,13 +512,9 @@ def metropolis_within_gibbs_sampler(
                 proposal_scale = proposal_scale_list[dataset_number]
                 proposal_scale = tune(proposal_scale, acc_rate)
                 proposal_scale_list[dataset_number] = proposal_scale
-                cov_kernel = list_of_proposal_covariance_kernels[
-                    dataset_number
-                ]
+                cov_kernel = list_of_proposal_covariance_kernels[dataset_number]
                 if num_accepts > num_rv:
-                    states = get_states_from_samples_list(
-                        samples, dataset_number
-                    )
+                    states = get_states_from_samples_list(samples, dataset_number)
                     samples_array = np.array(states[-tuning_interval:]).T
                     try:
                         cov_kernel = np.cov(samples_array)
@@ -560,15 +524,11 @@ def metropolis_within_gibbs_sampler(
                             f" {dataset_number}, Exception in covariance"
                             f" calculation: {exc}"
                         )
-                        cov_kernel = list_of_proposal_covariance_kernels[
-                            dataset_number
-                        ]
+                        cov_kernel = list_of_proposal_covariance_kernels[dataset_number]
                 proposal_covariance_matrix = cov_kernel * proposal_scale
                 try:
-                    cholesky_of_proposal_covariance_matrix = (
-                        scipy.linalg.cholesky(
-                            proposal_covariance_matrix, lower=True
-                        )
+                    cholesky_of_proposal_covariance_matrix = scipy.linalg.cholesky(
+                        proposal_covariance_matrix, lower=True
                     )
                 except Exception as exc:
                     print(
@@ -576,34 +536,24 @@ def metropolis_within_gibbs_sampler(
                         f" {dataset_number}, Exception in cholesky"
                         f" calculation: {exc}"
                     )
-                    cov_kernel = list_of_proposal_covariance_kernels[
-                        dataset_number
-                    ]
+                    cov_kernel = list_of_proposal_covariance_kernels[dataset_number]
                     proposal_covariance_matrix = cov_kernel * proposal_scale
-                    cholesky_of_proposal_covariance_matrix = (
-                        scipy.linalg.cholesky(
-                            proposal_covariance_matrix, lower=True
-                        )
+                    cholesky_of_proposal_covariance_matrix = scipy.linalg.cholesky(
+                        proposal_covariance_matrix, lower=True
                     )
-                list_of_cholesky_of_proposal_covariance_matrix[
-                    dataset_number
-                ] = cholesky_of_proposal_covariance_matrix
-                list_of_proposal_covariance_kernels[dataset_number] = (
-                    cov_kernel
+                list_of_cholesky_of_proposal_covariance_matrix[dataset_number] = (
+                    cholesky_of_proposal_covariance_matrix
                 )
+                list_of_proposal_covariance_kernels[dataset_number] = cov_kernel
             num_accepts_list = [0] * num_datasets
 
             adaptivity_results = {}
-            adaptivity_results["list_of_acceptance_rates"] = (
-                list_of_acceptance_rates
-            )
+            adaptivity_results["list_of_acceptance_rates"] = list_of_acceptance_rates
             adaptivity_results["proposal_scale_list"] = proposal_scale_list
             cov_kernels_list = []
             for cov_kernel in list_of_proposal_covariance_kernels:
                 cov_kernels_list.append(cov_kernel.tolist())
-            adaptivity_results["list_of_proposal_covariance_kernels"] = (
-                cov_kernels_list
-            )
+            adaptivity_results["list_of_proposal_covariance_kernels"] = cov_kernels_list
             with open(
                 results_directory_path.parent
                 / f"adaptivity_results_{sample_number}.json",
@@ -619,15 +569,11 @@ def metropolis_within_gibbs_sampler(
         hyper_covariance = current_covariance_sample
         for i in range(len(rv_names_list)):
             for j in range(i, len(rv_names_list)):
-                hyper_covariance_string_list.append(
-                    f"{hyper_covariance[i][j]}"
-                )
+                hyper_covariance_string_list.append(f"{hyper_covariance[i][j]}")
         list_of_hyperparameter_value_strings = []
         list_of_hyperparameter_value_strings.append(f"{sample_number+1}")
         list_of_hyperparameter_value_strings.append("0")
-        list_of_hyperparameter_value_strings.append(
-            "\t".join(hyper_mean_string_list)
-        )
+        list_of_hyperparameter_value_strings.append("\t".join(hyper_mean_string_list))
         list_of_hyperparameter_value_strings.append(
             "\t".join(hyper_covariance_string_list)
         )
@@ -648,8 +594,7 @@ def metropolis_within_gibbs_sampler(
         1 / 5 * num_samples
     )
     for i in range(
-        num_samples
-        - n_samples_for_mean_of_updated_predictive_distribution_parameters,
+        num_samples - n_samples_for_mean_of_updated_predictive_distribution_parameters,
         num_samples,
     ):
         with open(results_directory_path / f"sample_{i+1}.json", "r") as f:
@@ -670,9 +615,7 @@ def metropolis_within_gibbs_sampler(
     df = nu_n_mean - num_datasets + 1
     loc = mu_n_mean
     shape = (lambda_n_mean + 1) / (lambda_n_mean * df) * psi_n_mean
-    predictive_distribution = scipy.stats.multivariate_t(
-        loc=loc, shape=shape, df=df
-    )
+    predictive_distribution = scipy.stats.multivariate_t(loc=loc, shape=shape, df=df)
     for sample_number in range(num_samples):
         sample_from_predictive_t_distribution = predictive_distribution.rvs(
             random_state=parent_distribution_prng
@@ -680,13 +623,9 @@ def metropolis_within_gibbs_sampler(
         sample_from_predictive_distribution = transformation_function(
             sample_from_predictive_t_distribution
         )
-        while (
-            np.sum(np.isfinite(sample_from_predictive_distribution)) < num_rv
-        ):
-            sample_from_predictive_t_distribution = (
-                predictive_distribution.rvs(
-                    random_state=parent_distribution_prng
-                )
+        while np.sum(np.isfinite(sample_from_predictive_distribution)) < num_rv:
+            sample_from_predictive_t_distribution = predictive_distribution.rvs(
+                random_state=parent_distribution_prng
             )
             sample_from_predictive_distribution = transformation_function(
                 sample_from_predictive_t_distribution
@@ -703,8 +642,7 @@ def metropolis_within_gibbs_sampler(
             "\t".join(predictive_distribution_sample_values_list)
         )
         predictive_distribution_sample_value_string = (
-            "\t".join(list_of_predictive_distribution_sample_value_strings)
-            + "\n"
+            "\t".join(list_of_predictive_distribution_sample_value_strings) + "\n"
         )
         uq_utilities._write_to_tabular_results_file(
             tabular_results_file_base_name,

@@ -141,9 +141,7 @@ class BetaDist:
         self.beta = beta
         self.lowerbound = lowerbound
         self.upperbound = upperbound
-        self.dist = stats.beta(
-            self.alpha, self.beta, self.lowerbound, self.upperbound
-        )
+        self.dist = stats.beta(self.alpha, self.beta, self.lowerbound, self.upperbound)
 
     def generate_rns(self, N):
         return self.dist.rvs(size=N)
@@ -257,9 +255,7 @@ class DiscreteDist:
         self.values = values
         self.weights = weights
         self.probabilities = self.weights / np.sum(self.weights)
-        self.log_probabilities = np.log(self.weights) - np.log(
-            np.sum(self.weights)
-        )
+        self.log_probabilities = np.log(self.weights) - np.log(np.sum(self.weights))
         self.rng = np.random.default_rng()
 
     def generate_rns(self, N):
