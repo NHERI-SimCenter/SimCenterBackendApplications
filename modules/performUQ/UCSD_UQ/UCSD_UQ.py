@@ -1,11 +1,11 @@
 import argparse
 import os
 import platform
+import shlex
 import stat
 import subprocess
-from pathlib import Path
 import sys
-import shlex
+from pathlib import Path
 
 
 def main(args):
@@ -24,7 +24,6 @@ def main(args):
     runType = args.runType
 
     if runType in ["runningLocal"]:
-
         if platform.system() == "Windows":
             pythonCommand = "python"
             driverFile = driverFile + ".bat"
@@ -41,35 +40,23 @@ def main(args):
         st = os.stat(driverFile)
         os.chmod(driverFile, st.st_mode | stat.S_IEXEC)
         driverFile = "./" + driverFile
-        print("WORKFLOW: " + driverFile)
 
         command = (
             f'"{pythonCommand}" "{mainScript}" "{tmpSimCenterDir}"'
             f' "{templateDir}" {runType} {driverFile} {workflowInput}'
         )
-        print(command)
 
         command_list = shlex.split(command)
-
-        result = subprocess.run(
-            command_list,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=True,
-            text=True,
-        )
 
         err_file = Path(tmpSimCenterDir) / "UCSD_UQ.err"
         err_file.touch()
 
         try:
+            result = subprocess.run(command_list, capture_output=True, text=True)
             result.check_returncode()
         except subprocess.CalledProcessError:
             with open(err_file, "a") as f:
-                f.write(f"ERROR: {result.stderr}\n\n")
-                f.write(f"The command was: {result.args}\n\n")
-                f.write(f"The return code was: {result.returncode}\n\n")
-                f.write(f"The output of the command was: {result.stdout}\n\n")
+                f.write(f"ERROR: {result.stderr}")
 
 
 if __name__ == "__main__":
