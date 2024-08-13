@@ -592,6 +592,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 
 		const int endm = comb.size(); // (nx+ng)-1
 		const int endx = endm - 1;			// (nx)-1
+        //no need for gsa
 		if (endm == 0)
 		{
 			if (Opt == 'T')
@@ -676,8 +677,18 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 		}
 
 		while (1) {
-			status = model.learn(data, Kos, maha_dist, static_subset, 1000, 1000, V * 1.e-12, false);// max kmeans iter = 100, max EM iter = 200, convergence variance = V*1.e-15
-			logL = model.sum_log_p(data);
+
+            try
+            {
+                status = model.learn(data, Kos, maha_dist, static_subset, 1000, 1000, V * 1.e-12, false);// max kmeans iter = 100, max EM iter = 200, convergence variance = V*1.e-15
+                logL = model.sum_log_p(data);
+            }
+            catch (std::exception& e)
+            {
+                std::string errMsg = "GSA engine failed to fit a Gaussian Mixture model. Check if your input and output random variables are continuous. If so, a larger number of samples is desired.";
+                theErrorFile.write(errMsg);
+            }
+
 			if ((logL < oldLogL) || (Kos >= Kthres)) {
 				break;
 			}
