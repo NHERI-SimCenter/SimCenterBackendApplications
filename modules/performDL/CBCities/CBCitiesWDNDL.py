@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -39,68 +38,72 @@
 # Dr. Stevan Gavrilovic
 
 import argparse
-import os, sys, json, posixpath
-import pandas as pd
-import numpy as np
-
+import json
+import posixpath
+import sys
 from time import gmtime, strftime
 
-def log_msg(msg):
+import numpy as np
+import pandas as pd
 
+
+def log_msg(msg):  # noqa: D103
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
 
-    print(formatted_msg)
+    print(formatted_msg)  # noqa: T201
 
-from operator import itemgetter
 
-from CBCitiesMethods import *
+from CBCitiesMethods import *  # noqa: E402, F403
 
-def run_DL_calc(aim_file_path, saveDir, output_name):
-    
+
+def run_DL_calc(aim_file_path, saveDir, output_name):  # noqa: N802, N803, D103
     # Load Data
-    
-    print('Loading the pipeline json file...')
+
+    print('Loading the pipeline json file...')  # noqa: T201
 
     # Open the AIM file
-    with open(aim_file_path, 'r') as f:
-        pipe = AIM_data = json.load(f)
-                    
-    add_failrate2pipe(pipe)
-    
-    failureRateArray = pipe['fail_prob']
-    avgRr = np.average(failureRateArray)
-    
-    df = pd.DataFrame({'DV': "0", 'RepairRate': avgRr}, index=[0])
-    
-    savePath = posixpath.join(saveDir,output_name)
-        
-    df.to_csv(savePath, index = False)
-    
+    with open(aim_file_path) as f:  # noqa: PLW1514, PTH123
+        pipe = AIM_data = json.load(f)  # noqa: N806, F841
+
+    add_failrate2pipe(pipe)  # noqa: F405
+
+    failureRateArray = pipe['fail_prob']  # noqa: N806
+    avgRr = np.average(failureRateArray)  # noqa: N806
+
+    df = pd.DataFrame({'DV': '0', 'RepairRate': avgRr}, index=[0])  # noqa: PD901
+
+    savePath = posixpath.join(saveDir, output_name)  # noqa: N806
+
+    df.to_csv(savePath, index=False)
+
     return 0
- 
 
-def main(args):
 
+def main(args):  # noqa: D103
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--filenameDL')
-    parser.add_argument('-p', '--demandFile', default = None)
+    parser.add_argument('-p', '--demandFile', default=None)
     parser.add_argument('--outputEDP', default='EDP.csv')
-    parser.add_argument('--outputDM', default = 'DM.csv')
-    parser.add_argument('--outputDV', default = 'DV.csv')
-    parser.add_argument('--resource_dir', default = None)
-    parser.add_argument('--dirnameOutput', default = None)
+    parser.add_argument('--outputDM', default='DM.csv')
+    parser.add_argument('--outputDV', default='DV.csv')
+    parser.add_argument('--resource_dir', default=None)
+    parser.add_argument('--dirnameOutput', default=None)
 
     args = parser.parse_args(args)
 
     log_msg('Initializing CB-Cities calculation...')
 
-    out = run_DL_calc(aim_file_path = args.filenameDL, saveDir = args.dirnameOutput, output_name = args.outputDV)
+    out = run_DL_calc(
+        aim_file_path=args.filenameDL,
+        saveDir=args.dirnameOutput,
+        output_name=args.outputDV,
+    )
 
     if out == -1:
-        log_msg("DL calculation failed.")
+        log_msg('DL calculation failed.')
     else:
         log_msg('DL calculation completed.')
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     main(sys.argv[1:])

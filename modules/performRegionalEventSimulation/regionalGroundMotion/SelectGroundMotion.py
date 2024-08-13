@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -39,35 +38,34 @@
 #
 
 import os
-import subprocess
-import time
-import glob
-import re
-import shutil
 import sys
 from pathlib import Path
+
 R2D = True
 if not R2D:
-    from selenium import webdriver
-import json
-import random
-import numpy as np
-import pandas as pd
-import zipfile
-import csv
-import copy
+    pass
+import copy  # noqa: E402
+import csv  # noqa: E402
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 
 
-class GM_Selector:
-
-    def __init__(self, gmdb_im_df=dict(), num_records=1, sf_min=None, sf_max=None, target_im=None):
-
+class GM_Selector:  # noqa: D101
+    def __init__(
+        self,
+        gmdb_im_df=dict(),  # noqa: B006, C408
+        num_records=1,
+        sf_min=None,
+        sf_max=None,
+        target_im=None,
+    ):
         self.set_gmdb_im_df(gmdb_im_df)
         self.set_num_records(num_records)
         self.set_sf_range(sf_min, sf_max)
         self.set_target_im(target_im)
 
-    def set_gmdb_im_df(self, gmdb_im_df):
+    def set_gmdb_im_df(self, gmdb_im_df):  # noqa: D102
         self.gmdb_im_df = gmdb_im_df
         self.num_gm = len(gmdb_im_df['RSN'])
         tmp_list = list(gmdb_im_df.keys())
@@ -81,10 +79,10 @@ class GM_Selector:
                 tmp_scalable.append(1)
         self.scalable = tmp_scalable
 
-    def set_num_records(self, num_records):
+    def set_num_records(self, num_records):  # noqa: D102
         self.num_records = num_records
 
-    def set_sf_range(self, sf_min, sf_max):
+    def set_sf_range(self, sf_min, sf_max):  # noqa: D102
         if sf_min is None:
             self.sf_min = 0.0001
         else:
@@ -95,19 +93,20 @@ class GM_Selector:
             self.sf_max = sf_max
         self.sf_range = np.linspace(self.sf_min, self.sf_max, 100)
 
-    def set_target_im(self, target_im):
+    def set_target_im(self, target_im):  # noqa: D102
         self.target_im = [target_im for k in range(self.num_gm)]
 
-    def select_records(self):
-
-        im_table = self.gmdb_im_df.iloc[:,1:]
+    def select_records(self):  # noqa: D102
+        im_table = self.gmdb_im_df.iloc[:, 1:]
         min_err = 1000000.0
         for s in self.sf_range:
             cur_im_table = copy.copy(im_table)
             for i in range(cur_im_table.shape[1]):
                 if self.scalable[i]:
-                    cur_im_table.iloc[:,i] = cur_im_table.iloc[:,i]*s
-            err = np.linalg.norm(np.exp(self.target_im) - cur_im_table.to_numpy(), axis = 1)
+                    cur_im_table.iloc[:, i] = cur_im_table.iloc[:, i] * s  # noqa: PLR6104
+            err = np.linalg.norm(
+                np.exp(self.target_im) - cur_im_table.to_numpy(), axis=1
+            )
             if np.min(err) < min_err:
                 min_err = np.min(err)
                 tmp_tag = err.argmin()
@@ -115,141 +114,184 @@ class GM_Selector:
 
         self.loc_tag = tmp_tag
         self.min_err = min_err
-        self.rsn_tag = self.gmdb_im_df['RSN'].values.tolist()[tmp_tag]
+        self.rsn_tag = self.gmdb_im_df['RSN'].values.tolist()[tmp_tag]  # noqa: PD011
         self.sf = sf
 
 
-def select_ground_motion(im_list, target_ln_im, gmdb_file, sf_max, sf_min,
-                         output_dir, output_file, stations, eq_ids):
-
+def select_ground_motion(  # noqa: C901, D103
+    im_list,
+    target_ln_im,
+    gmdb_file,
+    sf_max,
+    sf_min,
+    output_dir,
+    output_file,
+    stations,
+    eq_ids,
+):
     # Loading gmdb
     if gmdb_file == 'PEER NGA West 2':
-        cwd = os.path.dirname(os.path.realpath(__file__))
-        gmdb = pd.read_csv(cwd+'/database/gmdb/NGAWest2.csv', header = 0, index_col = None, low_memory=False)
+        cwd = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120
+        gmdb = pd.read_csv(
+            cwd + '/database/gmdb/NGAWest2.csv',
+            header=0,
+            index_col=None,
+            low_memory=False,
+        )
         # Parsing spectral data
         num_gm = len(gmdb['RecId'])
         tmp = gmdb.keys()[37:147]
-        T_db = [float(a.replace('T','').replace('S','')) for a in tmp]
+        T_db = [float(a.replace('T', '').replace('S', '')) for a in tmp]  # noqa: N806
         psa_db = gmdb.iloc[:, 37:147]
-        pga = gmdb.iloc[:, 34]
-        pgv = gmdb.iloc[:, 35]
-        pgd = gmdb.iloc[:, 36]
+        pga = gmdb.iloc[:, 34]  # noqa: F841
+        pgv = gmdb.iloc[:, 35]  # noqa: F841
+        pgd = gmdb.iloc[:, 36]  # noqa: F841
         # Scaling factors
-        sf_range = np.linspace(sf_min, sf_max, 100)
+        sf_range = np.linspace(sf_min, sf_max, 100)  # noqa: F841
         # Selected ground motion ID
         gm_id = []
         sf_data = []
         filename = []
         # get available key names
         # Parese im_list
-        target_period = []
-        im_map = {"PGA": 34,
-                  "PGV": 35,
-                  "PGD": 36,
-                  "DS575H": 151,
-                  "DS595H": 152}
+        target_period = []  # noqa: F841
+        im_map = {'PGA': 34, 'PGV': 35, 'PGD': 36, 'DS575H': 151, 'DS595H': 152}
         im_loc_tag = []
-        gmdb_im_dict = dict()
-        gmdb_im_dict.update({'RSN':gmdb['RecId'].values.tolist()})
+        gmdb_im_dict = dict()  # noqa: C408
+        gmdb_im_dict.update({'RSN': gmdb['RecId'].values.tolist()})  # noqa: PD011
         for cur_im in im_list:
             if cur_im.startswith('SA'):
                 cur_period = float(cur_im[3:-1])
-                gmdb_im_dict.update({cur_im:[np.interp(cur_period, T_db, psa_db.iloc[k, :]) for k in range(num_gm)]})
+                gmdb_im_dict.update(
+                    {
+                        cur_im: [
+                            np.interp(cur_period, T_db, psa_db.iloc[k, :])
+                            for k in range(num_gm)
+                        ]
+                    }
+                )
             else:
-                im_loc_tag.append(im_map.get(cur_im, None))
-                gmdb_im_dict.update({cur_im:[x[0] for x in gmdb.iloc[:, im_loc_tag].values.tolist()]})
+                im_loc_tag.append(im_map.get(cur_im))
+                gmdb_im_dict.update(
+                    {
+                        cur_im: [
+                            x[0]
+                            for x in gmdb.iloc[:, im_loc_tag].values.tolist()  # noqa: PD011
+                        ]
+                    }
+                )
         # ground motion database intensity measure data frame
         gmdb_im_df = pd.DataFrame.from_dict(gmdb_im_dict)
         count = 0
         # Looping over all scenarios
         for cur_target in target_ln_im:
             tmp_scen = eq_ids[count] + 1
-            count = count + 1
-            print('-Scenario #'+str(tmp_scen))
-            num_stations, num_periods, num_simu = cur_target.shape
+            count = count + 1  # noqa: PLR6104
+            print('-Scenario #' + str(tmp_scen))  # noqa: T201
+            num_stations, num_periods, num_simu = cur_target.shape  # noqa: F841
             tmp_id = np.zeros((num_stations, num_simu))
             tmp_sf = np.zeros((num_stations, num_simu))
             tmp_min_err = np.zeros((num_stations, num_simu))
             tmp_filename = []
             for i in range(num_simu):
-                print('--Realization #'+str(i+1))
+                print('--Realization #' + str(i + 1))  # noqa: T201
                 for j in range(num_stations):
                     # create a ground motion selector
-                    gm_selector = GM_Selector(gmdb_im_df=gmdb_im_df, num_records=1, sf_min=sf_min, sf_max=sf_max, target_im=cur_target[j,:,i])
+                    gm_selector = GM_Selector(
+                        gmdb_im_df=gmdb_im_df,
+                        num_records=1,
+                        sf_min=sf_min,
+                        sf_max=sf_max,
+                        target_im=cur_target[j, :, i],
+                    )
                     # select records
                     gm_selector.select_records()
                     # collect results
                     tmp_min_err[j, i] = gm_selector.min_err
                     tmp_id[j, i] = int(gmdb['RecId'][gm_selector.loc_tag])
                     tmp_sf[j, i] = gm_selector.sf
-                    tmp_filename.append('RSN'+str(int(tmp_id[j,i]))+'_'+gmdb['FileNameHorizontal1'][gm_selector.loc_tag].replace("\\","_").replace("/","_"))
-                    tmp_filename.append('RSN'+str(int(tmp_id[j,i]))+'_'+gmdb['FileNameHorizontal2'][gm_selector.loc_tag].replace("\\","_").replace("/","_"))
-                    #print('---Station #'+str(j+1))
+                    tmp_filename.append(  # noqa: FURB113
+                        'RSN'
+                        + str(int(tmp_id[j, i]))
+                        + '_'
+                        + gmdb['FileNameHorizontal1'][gm_selector.loc_tag]
+                        .replace('\\', '_')
+                        .replace('/', '_')
+                    )
+                    tmp_filename.append(
+                        'RSN'
+                        + str(int(tmp_id[j, i]))
+                        + '_'
+                        + gmdb['FileNameHorizontal2'][gm_selector.loc_tag]
+                        .replace('\\', '_')
+                        .replace('/', '_')
+                    )
+                    # print('---Station #'+str(j+1))
             # Collecting results in one scenario
             gm_id.append(tmp_id)
             sf_data.append(tmp_sf)
             filename.extend(tmp_filename)
-            #print(tmp_min_err)
+            # print(tmp_min_err)
     else:
         sys.exit('SelectGroundMotion: currently only supporting NGAWest2.')
-        
 
     # output data
-    station_name = ['site'+str(j)+'.csv' for j in range(len(stations))]
+    station_name = ['site' + str(j) + '.csv' for j in range(len(stations))]
     lat = [stations[j]['lat'] for j in range(len(stations))]
     lon = [stations[j]['lon'] for j in range(len(stations))]
     # vs30 = [stations[j]['vs30'] for j in range(len(stations))]
     # DepthToRock is not used in NGA-West2 GMPEs and is not saved
     # zTR = [stations[j]['DepthToRock'] for j in range(len(stations))]
-    df = pd.DataFrame({
-        'GP_file': station_name,
-        'Longitude': lon,
-        'Latitude': lat
-		# 'Vs30': vs30,
-        # DepthToRock is not used in NGA-West2 GMPEs and is not saved
-		# 'DepthToRock': zTR
-    })
-    output_dir = os.path.join(os.path.dirname(Path(output_dir)),
-                              os.path.basename(Path(output_dir)))
-    df.to_csv(os.path.join(output_dir, output_file), index = False)
+    df = pd.DataFrame(  # noqa: PD901
+        {
+            'GP_file': station_name,
+            'Longitude': lon,
+            'Latitude': lat,
+            # 'Vs30': vs30,
+            # DepthToRock is not used in NGA-West2 GMPEs and is not saved
+            # 'DepthToRock': zTR
+        }
+    )
+    output_dir = os.path.join(  # noqa: PTH118
+        os.path.dirname(Path(output_dir)),  # noqa: PTH120
+        os.path.basename(Path(output_dir)),  # noqa: PTH119
+    )
+    df.to_csv(os.path.join(output_dir, output_file), index=False)  # noqa: PTH118
     for cur_scen in range(len(gm_id)):
         if len(gm_id) > 1:
-            cur_scen_folder = 'scenario'+str(eq_ids[cur_scen]+1)
+            cur_scen_folder = 'scenario' + str(eq_ids[cur_scen] + 1)
             try:
-                os.mkdir(os.path.join(output_dir, cur_scen_folder))
-            except:
-                print('SelectGroundMotion: scenario folder already exists.')
-            cur_output_dir = os.path.join(output_dir, cur_scen_folder)
+                os.mkdir(os.path.join(output_dir, cur_scen_folder))  # noqa: PTH102, PTH118
+            except:  # noqa: E722
+                print('SelectGroundMotion: scenario folder already exists.')  # noqa: T201
+            cur_output_dir = os.path.join(output_dir, cur_scen_folder)  # noqa: PTH118
         else:
             cur_output_dir = output_dir
         for i, site_id in enumerate(station_name):
-            gm_file = ['RSN'+str(int(j)) for j in gm_id[cur_scen][i]]
-            factor = [j for j in sf_data[cur_scen][i]]
-            df = pd.DataFrame({
-                'TH_file': gm_file,
-                'factor': factor
-            })
-            df.to_csv(os.path.join(cur_output_dir, site_id), index = False)
+            gm_file = ['RSN' + str(int(j)) for j in gm_id[cur_scen][i]]
+            factor = [j for j in sf_data[cur_scen][i]]  # noqa: C416
+            df = pd.DataFrame({'TH_file': gm_file, 'factor': factor})  # noqa: PD901
+            df.to_csv(os.path.join(cur_output_dir, site_id), index=False)  # noqa: PTH118
     # return
     return gm_id, filename
 
 
-def output_all_ground_motion_info(gm_id, gm_file, output_dir, filename):
-
+def output_all_ground_motion_info(gm_id, gm_file, output_dir, filename):  # noqa: D103
     # Writing all record names to a csv file
-    print(gm_file)
+    print(gm_file)  # noqa: T201
     try:
-        with open(os.path.join(output_dir, filename), 'w') as f:
+        with open(os.path.join(output_dir, filename), 'w') as f:  # noqa: PLW1514, PTH118, PTH123
             w = csv.writer(f)
             if gm_file:
                 w.writerow(gm_file)
-        with open(os.path.join(output_dir, 'RSN.csv'), 'w') as f:
+        with open(os.path.join(output_dir, 'RSN.csv'), 'w') as f:  # noqa: PLW1514, PTH118, PTH123
             w = csv.writer(f)
             if gm_id:
                 w.writerow(gm_id)
-        return 1
-    except:
+        return 1  # noqa: TRY300
+    except:  # noqa: E722
         return 0
+
 
 """ Uncommenting below if use this tool alone to download records from PEER
 
@@ -265,7 +307,7 @@ def download_ground_motion(gm_id, user_name, user_password, output_dir, spectra_
         chromedriver = os.path.dirname(__file__) + '/bin/chromedriver/chromedriver_mac'
         os.chmod(chromedriver, 755)
     else:
-        print('Currently supoorting win32, linux, and mac.')
+        print('Currently supporting win32, linux, and mac.')
     chromeOptions = webdriver.ChromeOptions()
     output_dir = os.path.join(os.path.dirname(Path(output_dir)),
                               os.path.basename(Path(output_dir)))
@@ -336,7 +378,7 @@ def readNGAWest2record(ngaW2FilePath):
                 series.extend([float(value) for value in line.split()])
             elif("NPTS=" in line):
                 # sampling rate
-                dt = float(re.match(r"NPTS=.+, DT=\s+([0-9\.]+)\s+SEC", line).group(1))
+                dt = float(re.match(r"NPTS=.+, DT=\\s+([0-9\\.]+)\\s+SEC", line).group(1))
                 data_flag = True
     # return
     return series, dt

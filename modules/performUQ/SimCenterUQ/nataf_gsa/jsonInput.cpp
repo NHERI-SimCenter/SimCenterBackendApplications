@@ -59,7 +59,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	//
 
     // sy & frank - designsafe shell will always pass me scInput.json as input file name which is not good for non-quofem apps
-    // check if the sc_Input.json exists and if so overwirte the input file name
+    // check if the sc_Input.json exists and if so overwrite the input file name
 
     std::string sc_jsonPath  = workDir + "/templatedir/sc_scInput.json";
     bool sc_exists = std::filesystem::exists(sc_jsonPath);
@@ -757,7 +757,7 @@ jsonInput::fromTextToId(string groupTxt, vector<string>& groupPool, vector<vecto
 		std::vector<string> groupString;
 		while (ss.good()) {
 			std::string substr;
-			getline(ss, substr, ',');  // incase we have multiple strings inside {}
+			getline(ss, substr, ',');  // in case we have multiple strings inside {}
 			groupString.push_back(substr);
 
 			std::vector<std::string>::iterator itr = std::find(groupPool.begin(), groupPool.end(), substr);
@@ -797,7 +797,7 @@ jsonInput::fromTextToStr(string groupTxt, vector<vector<string>>& groupStringVec
 		std::vector<string> groupString;
 		while (ss.good()) {
 			std::string substr;
-			getline(ss, substr, ',');  // incase we have multiple strings inside {}
+			getline(ss, substr, ',');  // in case we have multiple strings inside {}
 			groupString.push_back(substr);
 			flattenStringVect.push_back(substr);
 		}

@@ -1,69 +1,72 @@
+# python code to open the .mat file  # noqa: CPY001, D100, INP001
+# and put data into a SimCenter JSON file
 
-# python code to open the .mat file
-# and put data into a SimCenter JSON file 
-
-import sys
-import os
-import subprocess
 import json
-import stat
-import shutil
+import os
+
 import numpy as np
 import scipy.io as sio
-from pprint import pprint
 
-def parseWindMatFile(matFileIn, windFileOutName):
 
-    dataDir = os.getcwd()
-    scriptDir = os.path.dirname(os.path.realpath(__file__))
-    
+def parseWindMatFile(matFileIn, windFileOutName):  # noqa: N802, N803, D103
+    dataDir = os.getcwd()  # noqa: PTH109, N806, F841
+    scriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N806, F841
 
-    mat_contents = sio.loadmat(matFileIn)  
+    mat_contents = sio.loadmat(matFileIn)
 
     depth = float(mat_contents['D'][0])
-    breadth = float(mat_contents['B'][0])  
-    height = float(mat_contents['H'][0])  
-    fs = float(mat_contents['fs'][0])  
-    vRef=float(mat_contents['Vref'][0]) 
-    
-    if "s_target" in mat_contents:
-        case = "spectra"
-        comp_CFmean = np.squeeze(np.array(mat_contents['comp_CFmean']))
+    breadth = float(mat_contents['B'][0])
+    height = float(mat_contents['H'][0])
+    fs = float(mat_contents['fs'][0])
+    vRef = float(mat_contents['Vref'][0])  # noqa: N806
+
+    if 's_target' in mat_contents:
+        case = 'spectra'  # noqa: F841
+        comp_CFmean = np.squeeze(np.array(mat_contents['comp_CFmean']))  # noqa: N806
         norm_all = np.squeeze(np.array(mat_contents['norm_all']))
         f_target = np.squeeze(np.array(mat_contents['f_target']))
         s_target = np.squeeze(np.array(mat_contents['s_target']))
 
-        createSpectraJson(windFileOutName, breadth, depth, height, fs, vRef, f_target, s_target, comp_CFmean, norm_all)
+        createSpectraJson(
+            windFileOutName,
+            breadth,
+            depth,
+            height,
+            fs,
+            vRef,
+            f_target,
+            s_target,
+            comp_CFmean,
+            norm_all,
+        )
 
-    elif "Fx" in mat_contents:
-
-
-        Fx = np.squeeze(np.array(mat_contents['Fx']))
-        Fy = np.squeeze(np.array(mat_contents['Fy']))
-        Tz = np.squeeze(np.array(mat_contents['Tz']))
+    elif 'Fx' in mat_contents:
+        Fx = np.squeeze(np.array(mat_contents['Fx']))  # noqa: N806
+        Fy = np.squeeze(np.array(mat_contents['Fy']))  # noqa: N806
+        Tz = np.squeeze(np.array(mat_contents['Tz']))  # noqa: N806
         t = np.squeeze(np.array(mat_contents['t']))
 
-        myJson = {}
-        myJson["D"] = depth
-        myJson["H"] = height
-        myJson["B"] = breadth
-        myJson["fs"] = fs
-        myJson["Vref"] = vRef
+        myJson = {}  # noqa: N806
+        myJson['D'] = depth
+        myJson['H'] = height
+        myJson['B'] = breadth
+        myJson['fs'] = fs
+        myJson['Vref'] = vRef
 
-        myJson["Fx"] = np.array(Fx).tolist()
-        myJson["Fy"] = np.array(Fy).tolist()
-        myJson["Tz"] = np.array(Tz).tolist()
-        myJson["t"] = np.array(t).tolist()
-        with open(windFileOutName,"w")  as f:
+        myJson['Fx'] = np.array(Fx).tolist()
+        myJson['Fy'] = np.array(Fy).tolist()
+        myJson['Tz'] = np.array(Tz).tolist()
+        myJson['t'] = np.array(t).tolist()
+        with open(windFileOutName, 'w') as f:  # noqa: PLW1514, PTH123
             json.dump(myJson, f)
 
-        # file = open(windFileOutName,"w")  
-        # file.write("{")  
-        # file.write("\"D\":%f," % depth)  
-        # file.write("\"H\":%f," % height)  
-        # file.write("\"B\":%f," % breadth)  
-        # file.write("\"fs\":%f," % fs)  
-        # file.write("\"Vref\":%f," % vRef)      
+        # file = open(windFileOutName,"w")
+        # file.write("{")
+        # file.write("\"D\":%f," % depth)
+        # file.write("\"H\":%f," % height)
+        # file.write("\"B\":%f," % breadth)
+        # file.write("\"fs\":%f," % fs)
+        # file.write("\"Vref\":%f," % vRef)
 
         # case = "timeHistory"
         # Fx = mat_contents['Fx']
@@ -118,70 +121,74 @@ def parseWindMatFile(matFileIn, windFileOutName):
         #     else:
         #         file.write(",")
 
-
         # file.write("}")
         # file.close()
 
-        # Check valid JSON file, 
+        # Check valid JSON file,
         validate = True
         if validate:
-            with open(windFileOutName, "r") as infile:
+            with open(windFileOutName) as infile:  # noqa: FURB101, PLW1514, PTH123
                 json_data = infile.read()
 
             # Try to parse the JSON data
             try:
-                json_object = json.loads(json_data)
-                print("JSON file is valid")
+                json_object = json.loads(json_data)  # noqa: F841
+                print('JSON file is valid')  # noqa: T201
             except json.decoder.JSONDecodeError:
-                print("JSON file is not valid")
+                print('JSON file is not valid')  # noqa: T201
 
 
+def createSpectraJson(  # noqa: N802, D103
+    windFileOutName,  # noqa: N803
+    breadth,
+    depth,
+    height,
+    fs,
+    vRef,  # noqa: N803
+    f_target,
+    s_target,
+    comp_CFmean,  # noqa: N803
+    norm_all,
+):
+    ncomp = comp_CFmean.shape[0]  # noqa: F841
+    nf = f_target.shape[0]  # noqa: F841
 
+    myJson = {}  # noqa: N806
+    myJson['D'] = depth
+    myJson['H'] = height
+    myJson['B'] = breadth
+    myJson['fs'] = fs
+    myJson['Vref'] = vRef
+    myJson['comp_CFmean'] = comp_CFmean.tolist()
+    myJson['norm_all'] = norm_all.tolist()
+    myJson['f_target'] = f_target.tolist()
 
+    myJson['s_target_real'] = np.real(s_target).tolist()
+    myJson['s_target_imag'] = np.imag(s_target).tolist()
 
-def createSpectraJson(windFileOutName, breadth, depth, height, fs, vRef, f_target, s_target, comp_CFmean, norm_all):
-    
-
-    ncomp = comp_CFmean.shape[0]
-    nf = f_target.shape[0]
-
-    myJson = {}
-    myJson["D"] = depth
-    myJson["H"] = height
-    myJson["B"] = breadth
-    myJson["fs"] = fs
-    myJson["Vref"] = vRef
-    myJson["comp_CFmean"] = comp_CFmean.tolist()
-    myJson["norm_all"] = norm_all.tolist()
-    myJson["f_target"] = f_target.tolist()
-
-
-    myJson["s_target_real"] = np.real(s_target).tolist()
-    myJson["s_target_imag"] = np.imag(s_target).tolist()
-
-    with open(windFileOutName,"w")  as f:
+    with open(windFileOutName, 'w') as f:  # noqa: PLW1514, PTH123
         json.dump(myJson, f)
 
-    # Check valid JSON file 
+    # Check valid JSON file
     validate = True
     if validate:
-        with open(windFileOutName, "r") as infile:
+        with open(windFileOutName) as infile:  # noqa: FURB101, PLW1514, PTH123
             json_data = infile.read()
 
         # Try to parse the JSON data
         try:
-            json_object = json.loads(json_data)
-            print("JSON file is valid")
+            json_object = json.loads(json_data)  # noqa: F841
+            print('JSON file is valid')  # noqa: T201
         except json.decoder.JSONDecodeError:
-            print("JSON file is not valid")
+            print('JSON file is not valid')  # noqa: T201
 
-    # file = open(windFileOutName,"w")  
-    # file.write("{")  
-    # file.write("\"D\":%f," % depth)  
-    # file.write("\"H\":%f," % height)  
-    # file.write("\"B\":%f," % breadth)  
-    # file.write("\"fs\":%f," % fs)  
-    # file.write("\"Vref\":%f," % vRef)      
+    # file = open(windFileOutName,"w")
+    # file.write("{")
+    # file.write("\"D\":%f," % depth)
+    # file.write("\"H\":%f," % height)
+    # file.write("\"B\":%f," % breadth)
+    # file.write("\"fs\":%f," % fs)
+    # file.write("\"Vref\":%f," % vRef)
     # file.write("\"units\":{\"length\":\"m\",\"time\":\"sec\"},")
 
     # ncomp = comp_CFmean.shape[0]
@@ -244,22 +251,33 @@ def createSpectraJson(windFileOutName, breadth, depth, height, fs, vRef, f_targe
     # file.close()
 
 
-def createPODJson(filename, V, D1, SpeN, f_target, norm_all, D, H, B, fs, vRef,comp_CFmean):
+def createPODJson(  # noqa: N802, D103
+    filename,
+    V,  # noqa: N803
+    D1,  # noqa: N803
+    SpeN,  # noqa: N803
+    f_target,
+    norm_all,
+    D,  # noqa: N803
+    H,  # noqa: N803
+    B,  # noqa: N803
+    fs,
+    vRef,  # noqa: N803
+    comp_CFmean,  # noqa: N803
+):
+    myJson = {}  # noqa: N806
+    myJson['V_imag'] = np.imag(V).tolist()
+    myJson['V_real'] = np.real(V).tolist()
+    myJson['D1'] = D1.tolist()
+    myJson['SpeN'] = SpeN
+    myJson['f_target'] = f_target.tolist()
+    myJson['norm_all'] = norm_all.tolist()
+    myJson['comp_CFmean'] = comp_CFmean.tolist()
+    myJson['D'] = D
+    myJson['H'] = H
+    myJson['B'] = B
+    myJson['fs'] = fs
+    myJson['Vref'] = vRef
 
-
-    myJson = {}
-    myJson["V_imag"] = np.imag(V).tolist()
-    myJson["V_real"] = np.real(V).tolist()
-    myJson["D1"] = D1.tolist()
-    myJson["SpeN"] = SpeN
-    myJson["f_target"] = f_target.tolist()
-    myJson["norm_all"] = norm_all.tolist()
-    myJson["comp_CFmean"] = comp_CFmean.tolist()
-    myJson["D"] = D
-    myJson["H"] = H
-    myJson["B"] = B
-    myJson["fs"] = fs
-    myJson["Vref"] = vRef
-
-    with open(filename,"w")  as f:
+    with open(filename, 'w') as f:  # noqa: PLW1514, PTH123
         json.dump(myJson, f)

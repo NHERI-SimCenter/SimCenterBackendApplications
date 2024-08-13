@@ -1473,7 +1473,7 @@ sp_auxlib::spsolve_refine(Mat<typename T1::elem_type>& X, typename T1::pod_type&
     if(dn == nullptr)  { return false; }
     
     dn->lda   = A.n_rows;
-    dn->nzval = (void*) A.memptr();  // re-use memory instead of copying
+    dn->nzval = (void*) A.memptr();  // reuse memory instead of copying
     
     out.nrow  = A.n_rows;
     out.ncol  = A.n_cols;
@@ -1505,7 +1505,7 @@ sp_auxlib::spsolve_refine(Mat<typename T1::elem_type>& X, typename T1::pod_type&
       {
       // superlu::destroy_dense_mat(&out);
       
-      // since dn->nzval is set to re-use memory from a Mat object (which manages its own memory),
+      // since dn->nzval is set to reuse memory from a Mat object (which manages its own memory),
       // we cannot simply call superlu::destroy_dense_mat().
       // Only the out.Store structure can be freed.
       
@@ -1579,11 +1579,11 @@ sp_auxlib::run_aupd
     
     resid.set_size(n);
     
-    // Two contraints on NCV: (NCV > NEV) for sym problems or
+    // Two constraints on NCV: (NCV > NEV) for sym problems or
     // (NCV > NEV + 2) for gen problems and (NCV <= N)
     // 
     // We're calling either arpack::saupd() or arpack::naupd(),
-    // which have slighly different minimum constraint and recommended value for NCV:
+    // which have slightly different minimum constraint and recommended value for NCV:
     // http://www.caam.rice.edu/software/ARPACK/UG/node136.html
     // http://www.caam.rice.edu/software/ARPACK/UG/node138.html
     
