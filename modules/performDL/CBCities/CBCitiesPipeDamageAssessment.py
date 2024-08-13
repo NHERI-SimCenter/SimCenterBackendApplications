@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -38,113 +37,108 @@
 # Modified 'cb-cities' code provided by the Soga Research Group UC Berkeley
 # Dr. Stevan Gavrilovic
 
-import itertools
 import argparse
-import os, sys, json, posixpath
-import pandas as pd
+import json
+import os
+import posixpath
+
 import numpy as np
-
-from operator import itemgetter
-
-from CBCitiesMethods import *
-
-def main(node_info, pipe_info):
+import pandas as pd
+from CBCitiesMethods import *  # noqa: F403
 
 
+def main(node_info, pipe_info):  # noqa: D103
     # Load Data
-    
-    print('Loading the node json file...')
-    
-    with open(node_info, 'r') as f:
-        node_data = json.load(f)
-    
-    with open(pipe_info, 'r') as f:
+
+    print('Loading the node json file...')  # noqa: T201
+
+    with open(node_info) as f:  # noqa: PLW1514, PTH123
+        node_data = json.load(f)  # noqa: F841
+
+    with open(pipe_info) as f:  # noqa: PLW1514, PTH123
         pipe_data = json.load(f)
-        
-    
+
     min_id = int(pipe_data[0]['id'])
     max_id = int(pipe_data[0]['id'])
-    
-    allPipes = []
-    
+
+    allPipes = []  # noqa: N806
+
     for pipe in pipe_data:
-    
-        AIM_file = pipe['file']
-        
+        AIM_file = pipe['file']  # noqa: N806
+
         asst_id = pipe['id']
-        
+
         min_id = min(int(asst_id), min_id)
         max_id = max(int(asst_id), max_id)
-    
+
         # Open the AIM file
-        with open(AIM_file, 'r') as f:
-            pipe = AIM_data = json.load(f)
-            
+        with open(AIM_file) as f:  # noqa: PLW1514, PTH123
+            pipe = AIM_data = json.load(f)  # noqa: N806, F841, PLW2901
+
         allPipes.append(pipe)
-        
 
     # read pgv for nodes
-#    pgv_csv_files = glob('../data/rupture/rupture62_im/*.csv')
+    #    pgv_csv_files = glob('../data/rupture/rupture62_im/*.csv')
 
     # Mapping & Saving
-    import multiprocessing as mp
+    import multiprocessing as mp  # noqa: PLC0415
 
-    pool = mp.Pool(mp.cpu_count()-1)
-    results = pool.map(add_failrate2pipe, [pipe for pipe in allPipes])
+    pool = mp.Pool(mp.cpu_count() - 1)
+    results = pool.map(add_failrate2pipe, [pipe for pipe in allPipes])  # noqa: C416, F405
     pool.close()
-    
-    df = pd.DataFrame({'DV':{},'MeanFailureProbability':{}})
+
+    df = pd.DataFrame({'DV': {}, 'MeanFailureProbability': {}})  # noqa: PD901
 
     for pipe in results:
-    
-        failureProbArray = pipe['fail_prob']
-        avgFailureProb = np.average(failureProbArray)
+        failureProbArray = pipe['fail_prob']  # noqa: N806
+        avgFailureProb = np.average(failureProbArray)  # noqa: N806
         pipe_id = pipe['GeneralInformation']['AIM_id']
 
-        print("pipe_id: ",pipe_id)
-#        print("failureProbArray: ",failureProbArray)
-        print("avgFailureProb: ",avgFailureProb)
-        
-        df2 = pd.DataFrame({'DV': pipe_id, 'MeanFailureProbability': avgFailureProb}, index=[0])
-        df = pd.concat([df,df2], axis=0)
-       
-    
+        print('pipe_id: ', pipe_id)  # noqa: T201
+        #        print("failureProbArray: ",failureProbArray)
+        print('avgFailureProb: ', avgFailureProb)  # noqa: T201
+
+        df2 = pd.DataFrame(
+            {'DV': pipe_id, 'MeanFailureProbability': avgFailureProb}, index=[0]
+        )
+        df = pd.concat([df, df2], axis=0)  # noqa: PD901
+
     # Get the directory for saving the results, assume it is the same one with the AIM file
-    aimDir = os.path.dirname(pipe_info)
-    aimFileName = os.path.basename(pipe_info)
-    
-    saveDir = posixpath.join(aimDir,f'DV_{min_id}-{max_id}.csv')
-        
-    df.to_csv(saveDir, index = False)
-    
+    aimDir = os.path.dirname(pipe_info)  # noqa: PTH120, N806
+    aimFileName = os.path.basename(pipe_info)  # noqa: PTH119, N806, F841
+
+    saveDir = posixpath.join(aimDir, f'DV_{min_id}-{max_id}.csv')  # noqa: N806
+
+    df.to_csv(saveDir, index=False)
+
     return 0
-        #failed_pipes = fail_pipes_number(pipe)
-    
+    # failed_pipes = fail_pipes_number(pipe)
+
 
 if __name__ == '__main__':
+    # Defining the command line arguments
+    workflowArgParser = argparse.ArgumentParser(  # noqa: N816
+        'Run the CB-cities water distribution damage and loss workflow.',
+        allow_abbrev=False,
+    )
 
-    #Defining the command line arguments
-    workflowArgParser = argparse.ArgumentParser(
-        "Run the CB-cities water distribution damage and loss workflow.",
-        allow_abbrev=False)
+    workflowArgParser.add_argument(
+        '-n', '--nodeInfo', default=None, help='Node information.'
+    )
+    workflowArgParser.add_argument(
+        '-p', '--pipeInfo', default=None, help='Pipe Information.'
+    )
+    workflowArgParser.add_argument(
+        '-s', '--save_dir', default=None, help='Directory where to save the results.'
+    )
 
-    workflowArgParser.add_argument("-n", "--nodeInfo",
-        default=None,
-        help="Node information.")
-    workflowArgParser.add_argument("-p", "--pipeInfo",
-        default=None,
-        help="Pipe Information.")
-    workflowArgParser.add_argument("-s", "--save_dir",
-        default=None,
-        help="Directory where to save the results.")
-
-    #Parsing the command line arguments
-    wfArgs = workflowArgParser.parse_args()
+    # Parsing the command line arguments
+    wfArgs = workflowArgParser.parse_args()  # noqa: N816
 
     # update the local app dir with the default - if needed
-#    if wfArgs.appDir is None:
-#        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
-#        wfArgs.appDir = workflow_dir.parents[1]
+    #    if wfArgs.appDir is None:
+    #        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+    #        wfArgs.appDir = workflow_dir.parents[1]
 
-    #Calling the main workflow method and passing the parsed arguments
-    main(node_info = wfArgs.nodeInfo, pipe_info = wfArgs.pipeInfo)
+    # Calling the main workflow method and passing the parsed arguments
+    main(node_info=wfArgs.nodeInfo, pipe_info=wfArgs.pipeInfo)

@@ -10,7 +10,7 @@
 ##############################################################################################################################
 
 # Gravity-analysis parameters -- load-controlled static analysis
-set Tol 1.0e-8; 									# Covergence tolerance for test
+set Tol 1.0e-8; 									# Convergence tolerance for test
 variable constraintsTypeGravity Plain;				# Default
 if {[info exists RigidDiaphragm] == 1} {
 	if {$RigidDiaphragm=="ON"} {

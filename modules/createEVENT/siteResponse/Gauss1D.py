@@ -1,10 +1,10 @@
-from cmath import pi, exp, sqrt
+from cmath import exp, pi, sqrt  # noqa: CPY001, D100, INP001
+
 import numpy as np
-import sys
 
-class gauss1D:
 
-    def __init__(self, Ly, Ny, sigma = 1.0, d = 1.0):
+class gauss1D:  # noqa: D101
+    def __init__(self, Ly, Ny, sigma=1.0, d=1.0):  # noqa: N803
         # overall length in x-direction
         self.Lx = 1
         # overall length in y-direction
@@ -31,7 +31,7 @@ class gauss1D:
         self.kxu = self.Nx * self.dkx
         self.kyu = self.Ny * self.dky
 
-    def calculate(self):
+    def calculate(self):  # noqa: D102
         # matrix of random phase angles
         phi = 2 * pi * np.random.rand(self.Mx, self.My)
         psi = 2 * pi * np.random.rand(self.Mx, self.My)
@@ -40,32 +40,42 @@ class gauss1D:
         f2 = f4 = np.zeros(self.My, dtype=complex)
         part1 = part2 = np.zeros(self.Mx)
 
-        for pp in range(0, self.Mx):
+        for pp in range(self.Mx):
             xp = pp * self.dx
-            for qq in range(0, self.My):
+            for qq in range(self.My):
                 yq = qq * self.dy
-                for kk in range(0, self.Mx):
+                for kk in range(self.Mx):
                     kxk = kk * self.dkx
                     f1[kk] = exp(1j * kxk * xp)
-                    for ll in range(0, self.My):
+                    for ll in range(self.My):
                         kyl = ll * self.dky
-                        kappa = sqrt(kxk ** 2 + kyl ** 2)
-                        Sgg = self.sigma ** 2 * self.d ** 2 * exp(-self.d ** 2 *
-                        abs(kappa) ** 2 / 4.0) / 4.0 / pi
-                        Akl = sqrt(2 * Sgg * self.dkx * self.dky)
+                        kappa = sqrt(kxk**2 + kyl**2)
+                        Sgg = (  # noqa: N806
+                            self.sigma**2
+                            * self.d**2
+                            * exp(-(self.d**2) * abs(kappa) ** 2 / 4.0)
+                            / 4.0
+                            / pi
+                        )
+                        Akl = sqrt(2 * Sgg * self.dkx * self.dky)  # noqa: N806
                         f2[ll] = Akl * exp(1j * phi[kk, ll]) * exp(1j * kyl * yq)
                     f2sum = np.sum(f2)
                     part1[kk] = np.real(sqrt(2) * np.sum(f2sum * f1[kk]))
 
-                for kk in range(0, self.Mx):
+                for kk in range(self.Mx):
                     kxk = kk * self.dkx
                     f3[kk] = exp(1j * kxk * xp)
-                    for ll in range(0, self.My):
+                    for ll in range(self.My):
                         kyl = ll * self.dky
-                        kappa = sqrt(kxk ** 2 + kyl ** 2)
-                        Sgg = self.sigma ** 2 * self.d ** 2 * exp(-self.d ** 2 *
-                        abs(kappa) ** 2 / 4.0) / 4.0 / pi
-                        Akl = sqrt(2 * Sgg * self.dkx * self.dky)
+                        kappa = sqrt(kxk**2 + kyl**2)
+                        Sgg = (  # noqa: N806
+                            self.sigma**2
+                            * self.d**2
+                            * exp(-(self.d**2) * abs(kappa) ** 2 / 4.0)
+                            / 4.0
+                            / pi
+                        )
+                        Akl = sqrt(2 * Sgg * self.dkx * self.dky)  # noqa: N806
                         f4[ll] = Akl * exp(1j * psi[kk, ll]) * exp(-1j * kyl * yq)
                     f4sum = np.sum(f4)
                     part2[kk] = np.real(sqrt(2) * np.sum(f4sum * f3[kk]))
@@ -73,19 +83,16 @@ class gauss1D:
                 self.f[pp, qq] = part1.sum() + part2.sum()
 
 
-def printField(self):
-    print(self.f)
+def printField(self):  # noqa: N802, D103
+    print(self.f)  # noqa: T201
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     Ly = 6.0
     Ny = 6.0
     sigma = 1.0
     d = 1.0
     a = gauss1D(Ly, Ny, sigma, d)
     a.calculate()
-    F = a.f.reshape((-1,1))
+    F = a.f.reshape((-1, 1))
     Y = np.linspace(0, a.Ly, a.My)
-
-
-
-

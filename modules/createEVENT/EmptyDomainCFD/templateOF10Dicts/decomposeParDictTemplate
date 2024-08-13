@@ -18,7 +18,7 @@ numberOfSubdomains  	8;
 
 decomposer      	hierarchical;
 
-//Needed for compatability
+//Needed for compatibility
 method       		hierarchical;
 
 distributor     	ptscotch;

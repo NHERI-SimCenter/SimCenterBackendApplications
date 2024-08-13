@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -38,79 +37,80 @@
 # Adam Zsarnóczay
 #
 
+import argparse
+import json
 import sys
-import argparse, json
 
-def write_RV(AIM_file, EVENT_file, EDP_file, EDP_specs):
 
+def write_RV(AIM_file, EVENT_file, EDP_file, EDP_specs):  # noqa: N802, N803, D103
     # We do this to provide an option for different behavior under setup,
     # even though it is unlikely to have random variables for EDPs.
     write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs)
 
-def write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs):
 
-    with open(AIM_file, 'r') as f:
+def write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs):  # noqa: N802, N803, D103
+    with open(AIM_file) as f:  # noqa: PLW1514, PTH123
         bim_file = json.load(f)
 
-    with open(EVENT_file, 'r') as f:
-        event_file = json.load(f)
+    with open(EVENT_file) as f:  # noqa: PLW1514, PTH123
+        event_file = json.load(f)  # noqa: F841
 
     stories = bim_file['GeneralInformation']['NumberOfStories']
 
-    with open(EDP_specs, 'r') as f:
+    with open(EDP_specs) as f:  # noqa: PLW1514, PTH123
         edp_specs = json.load(f)
 
-    EDP_locs = edp_specs['locations']
-    EDP_types = edp_specs['EDP_types']
+    EDP_locs = edp_specs['locations']  # noqa: N806
+    EDP_types = edp_specs['EDP_types']  # noqa: N806
 
-    EDP_list = []
-    total_EDP_num = 0
+    EDP_list = []  # noqa: N806
+    total_EDP_num = 0  # noqa: N806
 
     for edp_name, edp_data in EDP_types.items():
         for loc_id, loc_data in edp_data.items():
-            for story in range(stories+1):
-
-
+            for story in range(stories + 1):
                 if edp_name == 'PID':
                     if story > 0:
-                        EDP_list.append({
-                            'type'       : edp_name,
-                            'id'         : int(loc_id) + story,
-                            'cline'      : loc_id,
-                            'floor1'      : story-1,
-                            'floor2'     : story,
-                            'node'       : [EDP_locs[loc_id][s]
-                                            for s in [story-1, story]],
-                            'dofs'       : loc_data,
-                            'scalar_data': []
-                        })
-                        total_EDP_num += len(loc_data)
+                        EDP_list.append(
+                            {
+                                'type': edp_name,
+                                'id': int(loc_id) + story,
+                                'cline': loc_id,
+                                'floor1': story - 1,
+                                'floor2': story,
+                                'node': [
+                                    EDP_locs[loc_id][s] for s in [story - 1, story]
+                                ],
+                                'dofs': loc_data,
+                                'scalar_data': [],
+                            }
+                        )
+                        total_EDP_num += len(loc_data)  # noqa: N806
                 else:
-                    EDP_list.append({
-                        'type'       : edp_name,
-                        'id'         : int(loc_id) + story,
-                        'cline'      : loc_id,
-                        'floor'      : story,
-                        'node'       : EDP_locs[loc_id][story],
-                        'dofs'       : loc_data,
-                        'scalar_data': []
-                    })
-                    total_EDP_num += len(loc_data)
+                    EDP_list.append(
+                        {
+                            'type': edp_name,
+                            'id': int(loc_id) + story,
+                            'cline': loc_id,
+                            'floor': story,
+                            'node': EDP_locs[loc_id][story],
+                            'dofs': loc_data,
+                            'scalar_data': [],
+                        }
+                    )
+                    total_EDP_num += len(loc_data)  # noqa: N806
 
     edp_file = {
-        "RandomVariables": [],
-        "total_number_edp": total_EDP_num,
-        "EngineeringDemandParameters": [{
-            'name': '...',
-            'responses': EDP_list
-        }]
+        'RandomVariables': [],
+        'total_number_edp': total_EDP_num,
+        'EngineeringDemandParameters': [{'name': '...', 'responses': EDP_list}],
     }
 
-    with open(EDP_file, 'w') as f:
+    with open(EDP_file, 'w') as f:  # noqa: PLW1514, PTH123
         json.dump(edp_file, f, indent=2)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--filenameAIM')
     parser.add_argument('--filenameEVENT')
@@ -122,8 +122,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.getRV:
-        sys.exit(write_RV(args.filenameAIM, args.filenameEVENT,
-                          args.filenameEDP, args.EDPspecs))
+        sys.exit(
+            write_RV(
+                args.filenameAIM, args.filenameEVENT, args.filenameEDP, args.EDPspecs
+            )
+        )
     else:
-        sys.exit(write_EDP(args.filenameAIM, args.filenameEVENT,
-                           args.filenameEDP, args.EDPspecs))
+        sys.exit(
+            write_EDP(
+                args.filenameAIM, args.filenameEVENT, args.filenameEDP, args.EDPspecs
+            )
+        )

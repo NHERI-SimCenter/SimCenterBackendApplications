@@ -133,7 +133,7 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
     }
 
 
-	  // KZ: commented for fixing RVs not in BIM.json which is not passed to inidividual json files (i.e., EVENT.json, SIM.json, SAM.json)
+	  // KZ: commented for fixing RVs not in BIM.json which is not passed to individual json files (i.e., EVENT.json, SIM.json, SAM.json)
 	  //if (numRVs != 0) {
 	  rvFiles.insert(std::string(fName));
 	  //}
@@ -354,7 +354,7 @@ int main(int argc, char **argv) {
   std::string localDir(json_string_value(json_object_get(rootINPUT, "localAppDir")));
   std::string remoteDir(json_string_value(json_object_get(rootINPUT, "remoteAppDir")));
 
-  // KZ: for different os sytem
+  // KZ: for different os system
   std::string workflowNew_os = std::string(workflowNew);
   if ((strcmp(runType, "runningLocal")==0) && strcmp(osType,"Windows") == 0)
   {

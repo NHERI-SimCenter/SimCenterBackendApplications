@@ -363,7 +363,7 @@ enum struct file_type : unsigned int
   ppm_binary,         //!< Portable Pixel Map (colour image), used by the field and cube classes
   hdf5_binary,        //!< HDF5: open binary format, not specific to Armadillo, which can store arbitrary data
   hdf5_binary_trans,  //!< [DO NOT USE - deprecated] as per hdf5_binary, but save/load the data with columns transposed to rows
-  coord_ascii         //!< simple co-ordinate format for sparse matrices (indices start at zero)
+  coord_ascii         //!< simple coordinate format for sparse matrices (indices start at zero)
   };
 
 

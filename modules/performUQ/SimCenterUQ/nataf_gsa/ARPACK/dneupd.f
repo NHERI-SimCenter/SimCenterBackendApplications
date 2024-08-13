@@ -548,7 +548,7 @@ c        |    determine whether it is a wanted one.                 |
 c        |                                                          | 
 c        | 2) If it is wanted, then check the corresponding Ritz    |
 c        |    estimate to see if it has converged.  If it has, set  |
-c        |    correponding entry in the logical array SELECT to     |
+c        |    corresponding entry in the logical array SELECT to    |
 c        |    .TRUE..                                               |
 c        |                                                          |
 c        | If SELECT(j) = .TRUE. and j > NCONV, then there is a     |
@@ -968,9 +968,9 @@ c
 c
       if (type .eq. 'SHIFTI' .and. msglvl .gt. 1) then
          call dvout (logfil, nconv, dr, ndigit,
-     &   '_neupd: Untransformed real part of the Ritz valuess.')
+     &   '_neupd: Untransformed real part of the Ritz values')
          call dvout (logfil, nconv, di, ndigit,
-     &   '_neupd: Untransformed imag part of the Ritz valuess.')
+     &   '_neupd: Untransformed imag part of the Ritz values.')
          call dvout (logfil, nconv, workl(ihbds), ndigit,
      &   '_neupd: Ritz estimates of untransformed Ritz values.')
       else if (type .eq. 'REGULR' .and. msglvl .gt. 1) then
