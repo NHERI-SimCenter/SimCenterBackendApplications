@@ -19,7 +19,7 @@
         {
           "id": "assetFile",
           "type": "string",
-          "description": "name of JSON file containing an array of id,filename pairs. For each asset id the aplication creates a AIM file with name filename",
+          "description": "name of JSON file containing an array of id,filename pairs. For each asset id the application creates a AIM file with name filename",
           "default": "assetsFile.json"
         }
       ]
@@ -317,7 +317,7 @@
         {
           "id": "assetFile",
           "type": "path",
-          "description": "Name of JSON file containing an array of id,filename pairs. For each asset id the aplication creates a AIM file with name filename",
+          "description": "Name of JSON file containing an array of id,filename pairs. For each asset id the application creates a AIM file with name filename",
           "default": "assets.json"
         }
       ],
@@ -586,7 +586,7 @@
           {
             "id": "pathSW4results",
             "type": "path",
-            "description": "Path to directory containig output point files"
+            "description": "Path to directory containing output point files"
           }
         ]
       },
