@@ -68,67 +68,6 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
     if 'parallelExecution' in uqInputs:
         parallelizeMCMC = uqInputs['parallelExecution']  # noqa: N806, F841
 
-    # logFile.write("\n\t\t\tProcessing the log-likelihood script options")
-    # # If log-likelihood script is provided, use that, otherwise, use default log-likelihood function
-    # if (
-    #     len(logLikelihoodFile) > 0
-    # ):  # if the log-likelihood file is not an empty string
-    #     logFile.write(
-    #         "\n\t\t\t\tSearching for a user-defined log-likelihood script '{}'".format(
-    #             logLikelihoodFile
-    #         )
-    #     )
-    #     if os.path.exists(os.path.join(tmpSimCenterDir, logLikelihoodFile)):
-    #         logFile.write(
-    #             "\n\t\t\t\tFound log-likelihood file '{}' in {}.".format(
-    #                 logLikelihoodFile, tmpSimCenterDir
-    #             )
-    #         )
-    #         logLikeModuleName = os.path.splitext(logLikelihoodFile)[0]
-    #         try:
-    #             import_module(logLikeModuleName)
-    #         except:
-    #             logFile.write(
-    #                 "\n\t\t\t\tERROR: The log-likelihood script '{}' cannot be imported.".format(
-    #                     os.path.join(tmpSimCenterDir, logLikelihoodFile)
-    #                 )
-    #             )
-    #             raise
-    #     else:
-    #         logFile.write(
-    #             "\n\t\t\t\tERROR: The log-likelihood script '{}' cannot be found in {}.".format(
-    #                 logLikelihoodFile, tmpSimCenterDir
-    #             )
-    #         )
-    #         raise FileNotFoundError(
-    #             "ERROR: The log-likelihood script '{}' cannot be found in {}.".format(
-    #                 logLikelihoodFile, tmpSimCenterDir
-    #             )
-    #         )
-    # else:
-    #     defaultLogLikeFileName = "defaultLogLikeScript.py"
-    #     defaultLogLikeDirectoryPath = mainscriptDir
-    #     sys.path.append(defaultLogLikeDirectoryPath)
-    #     logLikeModuleName = os.path.splitext(defaultLogLikeFileName)[0]
-    #     logFile.write("\n\t\t\t\tLog-likelihood script not provided.")
-    #     logFile.write(
-    #         "\n\t\t\t\tUsing the default log-likelihood script: \n\t\t\t\t\t{}".format(
-    #             os.path.join(
-    #                 defaultLogLikeDirectoryPath, defaultLogLikeFileName
-    #             )
-    #         )
-    #     )
-    #     try:
-    #         import_module(logLikeModuleName)
-    #     except:
-    #         logFile.write(
-    #             "\n\t\t\t\tERROR: The log-likelihood script '{}' cannot be imported.".format(
-    #                 os.path.join(tmpSimCenterDir, logLikelihoodFile)
-    #             )
-    #         )
-    #         raise
-    # logLikeModule = import_module(logLikeModuleName)
-
     # Processing EDP inputs
     logFile.write('\n\n\t\tProcessing EDP inputs')
     edpNamesList = []  # noqa: N806
