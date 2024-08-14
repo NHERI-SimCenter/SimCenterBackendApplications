@@ -201,7 +201,7 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
   const char *seismicZoneType = NULL;
   if (NULL == zType)
   {
-    std::cout << "No seismic zone specificed, Assuming seismic zone 4.\n";
+    std::cout << "No seismic zone specified, Assuming seismic zone 4.\n";
     seismicZoneType = "Z4";
   }
   else

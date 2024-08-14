@@ -593,20 +593,20 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 		std::cerr << "copyDir:" << copyDir << "\n";
 		std::cerr << "runningFEM analysis.." << "\n\n";
 		//
-		// If we find result.out in the templete dir. emit error;
+		// If we find result.out in the template dir. emit error;
 		//
 
 		std::string existingResultsFile = inp.workDir + "/templatedir/results.out";
 		if (std::filesystem::exists(existingResultsFile)) {
 			//*ERROR*
-			std::string errMsg = "Error running SimCenterUQ: your templete directory already contains results.out file. Please clean up the directory where input file is located.";
+			std::string errMsg = "Error running SimCenterUQ: your template directory already contains results.out file. Please clean up the directory where input file is located.";
 			theErrorFile.write(errMsg);
 		}
 
 		std::string existingParamsFile = inp.workDir + "/templatedir/params.in";
 		if (std::filesystem::exists(existingParamsFile)) {
 			//*ERROR*
-			std::string errMsg = "Error running SimCenterUQ: your templete directory already contains params.in file. Please clean up the directory where input file is located.";
+			std::string errMsg = "Error running SimCenterUQ: your template directory already contains params.in file. Please clean up the directory where input file is located.";
 			theErrorFile.write(errMsg);
 		}
 	}
@@ -984,20 +984,20 @@ void ERANataf::simulateAppBatchSurrogate(string workflowDriver,
 		std::cout << "runningFEM analysis.." << "\n\n";
 
 		//
-		// If we find result.out in the templete dir. emit error;
+		// If we find result.out in the template dir. emit error;
 		//
 
 		std::string existingResultsFile = inp.workDir + "/templatedir/results.out";
 		if (std::filesystem::exists(existingResultsFile)) {
 			//*ERROR*
-			std::string errMsg = "Error running SimCenterUQ: your templete directory already contains results.out file. Please clean up the directory where input file is located.";
+			std::string errMsg = "Error running SimCenterUQ: your template directory already contains results.out file. Please clean up the directory where input file is located.";
 			theErrorFile.write(errMsg);
 		}
 
 		std::string existingParamsFile = inp.workDir + "/templatedir/params.in";
 		if (std::filesystem::exists(existingParamsFile)) {
 			//*ERROR*
-			std::string errMsg = "Error running SimCenterUQ: your templete directory already contains params.in file. Please clean up the directory where input file is located.";
+			std::string errMsg = "Error running SimCenterUQ: your template directory already contains params.in file. Please clean up the directory where input file is located.";
 			theErrorFile.write(errMsg);
 		}
 	}
@@ -1048,7 +1048,7 @@ void ERANataf::readBin(string filename,int ndim, vector<vector<double>> &mat, in
 	}
 	else {
 		nsamp = num_elements / ndim;
-		std::cout << " - Found " << num_elements << " values from the bianry file\n";
+		std::cout << " - Found " << num_elements << " values from the binary file\n";
 		std::cout << "  - Number of samples: " << nsamp << "\n";
 		std::cout << "  - Dimension: " << ndim << "\n";
 	}
@@ -1100,13 +1100,13 @@ void ERANataf::readCSV(string filename, int ndim, vector<vector<double>>& mat, i
 		vector<double> mattmp; 
 		mattmp.reserve(ndim);
 
-		// split string by delimeter
+		// split string by delimiter
 		int start = 0U;
 		int end = line.find(delimiter);
 		j = 0;
 
 		try {
-			// if comma seperated
+			// if comma separated
 			while (end != std::string::npos) {
 				fileIsCsv = true;
 				if (start != end)
@@ -1118,7 +1118,7 @@ void ERANataf::readCSV(string filename, int ndim, vector<vector<double>>& mat, i
 				end = line.find(delimiter, start);
 			}
 
-			// if space seperated
+			// if space separated
 			if (j == 0) {
 				end = line.find(delimiter2);
 				while (end != std::string::npos) {
@@ -1133,7 +1133,7 @@ void ERANataf::readCSV(string filename, int ndim, vector<vector<double>>& mat, i
 				}
 			}
 
-			// if tab seperated
+			// if tab separated
 			if (j == 0) {
 				end = line.find(delimiter3);
 				while (end != std::string::npos) {

@@ -208,9 +208,9 @@ c
      &           cabs1
       cabs1( cdum ) = abs( real( cdum ) ) + abs( aimag( cdum ) )
 c
-c     %----------------%
-c     | Data statments |
-c     %----------------%
+c     %-----------------%
+c     | Data statements |
+c     %-----------------%
 c
       data       first / .true. /
 c

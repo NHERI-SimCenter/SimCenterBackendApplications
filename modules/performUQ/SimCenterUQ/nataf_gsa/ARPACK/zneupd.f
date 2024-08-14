@@ -488,7 +488,7 @@ c        |    whether it is a wanted one.                          |
 c        |                                                         | 
 c        | 2) If it is wanted, then check the corresponding Ritz   |
 c        |    estimate to see if it has converged.  If it has, set |
-c        |    correponding entry in the logical array SELECT to    |
+c        |    corresponding entry in the logical array SELECT to   |
 c        |    .TRUE..                                              |
 c        |                                                         |
 c        | If SELECT(j) = .TRUE. and j > NCONV, then there is a    |

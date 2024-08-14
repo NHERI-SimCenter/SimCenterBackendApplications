@@ -218,7 +218,7 @@ endfunction(target_link_modules)
 
 #######################################################################################################################
 # If path contains a CMakeLists.txt, path is returned
-# otherwise recursivly the parent directories are checked and returned if they contain a CMakeLists.txt
+# otherwise recursively the parent directories are checked and returned if they contain a CMakeLists.txt
 #######################################################################################################################
     
 function(get_parent_with_cmakelists result dir)

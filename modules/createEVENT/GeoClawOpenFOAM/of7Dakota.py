@@ -1,28 +1,27 @@
-####################################################################
+# # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
-"""
-	LICENSE INFORMATION:
-	
-	Copyright (c) 2020-2030, The Regents of the University of California (Regents).
+"""LICENSE INFORMATION:
 
-	All rights reserved.
+Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
-	Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+All rights reserved.
 
-	1. Redistributions of source code must retain the above copyright notice, this 
-		list of conditions and the following disclaimer.
-	2. Redistributions in binary form must reproduce the above copyright notice,
-		this list of conditions and the following disclaimer in the documentation
-		and/or other materials provided with the distribution.
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+1. Redistributions of source code must retain the above copyright notice, this
+        list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+        this list of conditions and the following disclaimer in the documentation
+        and/or other materials provided with the distribution.
 
-	The views and conclusions contained in the software and documentation are those of the authors and should not be interpreted as representing official policies, either expressed or implied, of the FreeBSD Project.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-	REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
-	
-"""
+The views and conclusions contained in the software and documentation are those of the authors and should not be interpreted as representing official policies, either expressed or implied, of the FreeBSD Project.
+
+REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -35,67 +34,85 @@
 import os
 
 # Other custom modules
-from hydroUtils import hydroUtils
+
 
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
-class of7Dakota():
-	"""
-	This class includes the methods related to
-	dakota for openfoam7.
+class of7Dakota:
+    """This class includes the methods related to
+    dakota for openfoam7.
 
-	Methods
-	--------
-		scripts: Generate relevant scripts
-	"""
+    Methods
+    -------
+            scripts: Generate relevant scripts
 
-	#############################################################
-	def dakotascripts(self,args):
-		'''
-		Create the scripts for caserun.sh
+    """  # noqa: D205, D404
 
-		Arguments
-		-----------
-			data: all the JSON data
-			path: Path where dakota.json file is located
-		'''
+    #############################################################
+    def dakotascripts(self, args):  # noqa: PLR6301
+        """Create the scripts for caserun.sh
 
-		caseruntext = 'echo Starting Dakota preparation...\n'
-		caseruntext = caseruntext + 'python3 $HYDROBRAIN/GetOpenFOAMEvent.py -b '+args.b+'\n'
+        Arguments:
+        ---------
+                data: all the JSON data
+                path: Path where dakota.json file is located
 
-		# Openfoam cleanup
-		caseruntext = caseruntext + 'rm -fr processor*\n'
-		caseruntext = caseruntext + 'rm -fr 0\n'
-		caseruntext = caseruntext + 'mkdir EVTfiles\n'
-		caseruntext = caseruntext + 'mv 0.org '+os.path.join('EVTfiles','0.org')+'\n'
-		caseruntext = caseruntext + 'mv constant '+os.path.join('EVTfiles','constant')+'\n'
-		caseruntext = caseruntext + 'mv system '+os.path.join('EVTfiles','system')+'\n'
-		caseruntext = caseruntext + 'mv postProcessing '+os.path.join('EVTfiles','postProcessing')+'\n'
-		caseruntext = caseruntext + 'mv *.log EVTfiles\n'
-		caseruntext = caseruntext + 'mv *.stl EVTfiles\n'
-		caseruntext = caseruntext + 'mv *.sh EVTfiles\n'
-		caseruntext = caseruntext + 'mv *.txt EVTfiles\n'
-		caseruntext = caseruntext + 'mv cdict* EVTfiles\n'
-		caseruntext = caseruntext + 'tar zcBf EVTfiles.tar.gz EVTfiles\n'
-		caseruntext = caseruntext + 'rm -fr EVTfiles\n\n'
+        """  # noqa: D400
+        caseruntext = 'echo Starting Dakota preparation...\n'
+        caseruntext = (
+            caseruntext
+            + 'python3 $HYDROBRAIN/GetOpenFOAMEvent.py -b '
+            + args.b
+            + '\n'
+        )
 
-		# Write to caserun file
-		scriptfile = open('caserun.sh',"a")
-		scriptfile.write(caseruntext)
-		scriptfile.close()
+        # Openfoam cleanup
+        caseruntext = caseruntext + 'rm -fr processor*\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'rm -fr 0\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'mkdir EVTfiles\n'  # noqa: PLR6104
+        caseruntext = (
+            caseruntext + 'mv 0.org ' + os.path.join('EVTfiles', '0.org') + '\n'  # noqa: PTH118
+        )
+        caseruntext = (
+            caseruntext
+            + 'mv constant '
+            + os.path.join('EVTfiles', 'constant')  # noqa: PTH118
+            + '\n'
+        )
+        caseruntext = (
+            caseruntext + 'mv system ' + os.path.join('EVTfiles', 'system') + '\n'  # noqa: PTH118
+        )
+        caseruntext = (
+            caseruntext
+            + 'mv postProcessing '
+            + os.path.join('EVTfiles', 'postProcessing')  # noqa: PTH118
+            + '\n'
+        )
+        caseruntext = caseruntext + 'mv *.log EVTfiles\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'mv *.stl EVTfiles\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'mv *.sh EVTfiles\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'mv *.txt EVTfiles\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'mv cdict* EVTfiles\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'tar zcBf EVTfiles.tar.gz EVTfiles\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'rm -fr EVTfiles\n\n'  # noqa: PLR6104
 
-	#############################################################
-	def cleaning(self,args,path):
-		'''
-		Create the scripts for cleaning
+        # Write to caserun file
+        scriptfile = open('caserun.sh', 'a')  # noqa: PLW1514, PTH123, SIM115
+        scriptfile.write(caseruntext)
+        scriptfile.close()
 
-		Arguments
-		-----------
-			args: all the arguments
-		'''
+    #############################################################
+    def cleaning(self, args, path):  # noqa: ARG002, PLR6301
+        """Create the scripts for cleaning
 
-		print('No OF cleaning')
+        Arguments:
+        ---------
+                args: all the arguments
+
+        """  # noqa: D400
+        print('No OF cleaning')  # noqa: T201
+
 
 # # tar -c -f trial.tar $(readlink -e a b c d)
 # # tar -xvf trial.tar
@@ -109,7 +126,7 @@ class of7Dakota():
 # 		# Tar all files and folder
 # 		caseruntext = caseruntext + 'tar -c -f Files.tar $(cdictpp cdictforce FlumeData.txt sample temp_geometry.txt translate.sh caserun.sh 0 0.org constant system postProcessing logfiles ' + path + ')\n'
 
-# 		# Remove all folders 
+# 		# Remove all folders
 # 		caseruntext = caseruntext + 'rm -rf ./*/' + '\n'
 
 # 		# Untar

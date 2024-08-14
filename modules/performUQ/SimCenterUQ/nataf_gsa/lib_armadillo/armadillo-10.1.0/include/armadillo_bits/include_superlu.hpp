@@ -55,7 +55,7 @@
 
 #if defined(ARMA_USE_SUPERLU_HEADERS) || defined(ARMA_SUPERLU_INCLUDE_DIR)
 
-// Since we need to suport float, double, cx_float and cx_double,
+// Since we need to support float, double, cx_float and cx_double,
 // as well as preserve the sanity of the user,
 // we cannot simply include all the SuperLU headers due to their messy state
 // (duplicate definitions, pollution of global namespace, bizarro defines).

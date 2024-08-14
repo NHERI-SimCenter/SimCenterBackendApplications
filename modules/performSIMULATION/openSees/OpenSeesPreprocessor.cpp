@@ -46,7 +46,7 @@ OpenSeesPreprocessor::writeRV(const char *AIM,
 
   //
   // TO DO .. check simulation data exists and contains all fields
-  //  .. would stop dakota from runnning
+  //  .. would stop dakota from running
   //
 
   //
@@ -937,11 +937,11 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 
 	
 	
-	s << "set lambdaN [eigen 1];\n"
-    << "set lambda1 [lindex $lambdaN 0]\n"
-    << "set T1 [expr 2*3.14159/$lambda1]\n"
-	  << "set dTana [expr $T1/20.]\n"
-	  << "if {$dt < $dTana} {set dTana $dt}\n";
+	//s << "set lambdaN [eigen 1];\n"
+	s  << "set lambda1 [lindex $lambdaN 0]\n"
+	   << "set T1 [expr 2*3.14159/$lambda1]\n"
+	   << "set dTana [expr $T1/20.]\n"
+	   << "if {$dt < $dTana} {set dTana $dt}\n";
 	s << "analyze [expr int($numStep*$dt/$dTana)] $dTana \n";
 	s << "remove recorders \n";
       }
@@ -981,7 +981,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 }
 
 
-// seperate for multi events
+// separate for multi events
 int 
 OpenSeesPreprocessor::processEvent(ofstream &s, 
 				   json_t *event, 

@@ -1924,7 +1924,7 @@ Mat<eT>::operator-=(const subview<eT>& X)
 
 
 
-//! in-place matrix mutiplication (using a submatrix on the right-hand-side)
+//! in-place matrix multiplication (using a submatrix on the right-hand-side)
 template<typename eT>
 inline
 Mat<eT>&
@@ -1939,7 +1939,7 @@ Mat<eT>::operator*=(const subview<eT>& X)
 
 
 
-//! in-place element-wise matrix mutiplication (using a submatrix on the right-hand-side)
+//! in-place element-wise matrix multiplication (using a submatrix on the right-hand-side)
 template<typename eT>
 inline
 Mat<eT>&
@@ -2114,7 +2114,7 @@ Mat<eT>::operator-=(const subview_cube<eT>& X)
 
 
 
-//! in-place matrix mutiplication (using a single-slice subcube on the right-hand-side)
+//! in-place matrix multiplication (using a single-slice subcube on the right-hand-side)
 template<typename eT>
 inline
 Mat<eT>&
@@ -2130,7 +2130,7 @@ Mat<eT>::operator*=(const subview_cube<eT>& X)
 
 
 
-//! in-place element-wise matrix mutiplication (using a single-slice subcube on the right-hand-side)
+//! in-place element-wise matrix multiplication (using a single-slice subcube on the right-hand-side)
 template<typename eT>
 inline
 Mat<eT>&
@@ -2239,7 +2239,7 @@ Mat<eT>::operator-=(const diagview<eT>& X)
 
 
 
-//! in-place matrix mutiplication (using a diagview on the right-hand-side)
+//! in-place matrix multiplication (using a diagview on the right-hand-side)
 template<typename eT>
 inline
 Mat<eT>&
@@ -2254,7 +2254,7 @@ Mat<eT>::operator*=(const diagview<eT>& X)
 
 
 
-//! in-place element-wise matrix mutiplication (using a diagview on the right-hand-side)
+//! in-place element-wise matrix multiplication (using a diagview on the right-hand-side)
 template<typename eT>
 inline
 Mat<eT>&
@@ -6080,7 +6080,7 @@ Mat<eT>::is_colvec() const
 
 
 
-//! returns true if the object has the same number of non-zero rows and columnns
+//! returns true if the object has the same number of non-zero rows and columns
 template<typename eT>
 arma_inline
 arma_warn_unused

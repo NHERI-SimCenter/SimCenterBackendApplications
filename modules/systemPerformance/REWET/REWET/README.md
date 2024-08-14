@@ -5,10 +5,10 @@ REstoration of Water after Event Tool (REWET) is a tool for the simulation of fu
 ## Installation
 The current release of REWET (V0.1) only support Windows AMD64 systems.
 
-To install the package, first intall teh depencies. Installing Anacodna for managing the depencies is strongly advised.To install the latest version of Anaconda, please visit 
+To install the package, first install the dependencies. Installing Anacodna for managing the dependencies is strongly advised.To install the latest version of Anaconda, please visit 
 Use the package manager please [click here](https://www.anaconda.com).
 
-After installing anaconda, open up the conda bash. To create a virtual enviroment * using Anaconda, type:
+After installing anaconda, open up the conda bash. To create a virtual environment * using Anaconda, type:
 
 ```bash
 conda create --name myenv

@@ -2,9 +2,9 @@ include ../../Makefile.inc
 
 all: StandardEDP 
 
-StandardWindEDP.o : StandardEDP.cpp
+StandardEDP.o : StandardEDP.cpp
 
-StandardWindEDP: StandardWindEDP.o
+StandardEDP: StandardEDP.o
 	$(CXX) $(LDFLAGS) -o StandardEDP StandardEDP.o $(LDLIBS)
 
 clean:
