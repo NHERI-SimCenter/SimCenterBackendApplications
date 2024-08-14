@@ -132,7 +132,7 @@ class of7Process:
         sampletext = sampletext + ');\n\n'  # noqa: PLR6104
         sampletext = sampletext + 'fields\t' + fieldtext + ';\n'
 
-        return sampletext  # noqa: RET504
+        return sampletext  # noqa: DOC201, RET504
 
     #############################################################
     def pprocesscdict(self, data, path):  # noqa: C901, PLR6301
@@ -275,7 +275,7 @@ class of7Process:
         cdicttext = cdicttext + '\t\tfields\t' + fieldtext + ';\n'
         cdicttext = cdicttext + '\t}\n}'  # noqa: PLR6104
 
-        return cdicttext  # noqa: RET504
+        return cdicttext  # noqa: DOC201, RET504
 
     #############################################################
     def scripts(self, data, path):  # noqa: ARG002, PLR6301
@@ -293,7 +293,7 @@ class of7Process:
             data, ['Events', 'Postprocessing']
         )
         if pprocess == [None]:
-            return 0
+            return 0  # noqa: DOC201
         else:  # noqa: RET505
             pprocess = ', '.join(
                 hydroutil.extract_element_from_json(
@@ -350,7 +350,7 @@ class of7Process:
         )
 
         if pprocess == 'No':
-            return 0
+            return 0  # noqa: DOC201
         else:  # noqa: RET505
             pprocessV = ', '.join(  # noqa: N806
                 hydroutil.extract_element_from_json(data, ['Events', 'PPVelocity'])

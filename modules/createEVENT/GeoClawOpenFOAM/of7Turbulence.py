@@ -84,7 +84,7 @@ class of7Turbulence:
             turbtext = turbtext + '\tturbulence\ton;\n'  # noqa: PLR6104
             turbtext = turbtext + '\tprintCoeffs\ton;\n}\n'  # noqa: PLR6104
 
-        return turbtext
+        return turbtext  # noqa: DOC201
 
     #############################################################
     def turbheader(self):  # noqa: PLR6301
@@ -106,4 +106,4 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
         # Return the header for U file
-        return header  # noqa: RET504
+        return header  # noqa: DOC201, RET504

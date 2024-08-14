@@ -229,7 +229,7 @@ class EpanetSimulator(EpanetSimulator):
             if run_successful:
                 break
 
-        return result_data, run_successful
+        return result_data, run_successful  # noqa: DOC201
 
     def _updateResultStartTime(self, result_data, start_time):  # noqa: N802, PLR6301
         for res_type, res in result_data.link.items():  # noqa: B007, PERF102
@@ -313,10 +313,10 @@ class EpanetSimulator(EpanetSimulator):
             from_node_id = self._node_name_to_id[from_node_name]
             to_node_id = self._node_name_to_id[to_node_name]
             if (from_node_id, to_node_id) not in n_links:
-                n_links[(from_node_id, to_node_id)] = 0
-                n_links[(to_node_id, from_node_id)] = 0
-            n_links[(from_node_id, to_node_id)] += 1
-            n_links[(to_node_id, from_node_id)] += 1
+                n_links[(from_node_id, to_node_id)] = 0  # noqa: RUF031
+                n_links[(to_node_id, from_node_id)] = 0  # noqa: RUF031
+            n_links[(from_node_id, to_node_id)] += 1  # noqa: RUF031
+            n_links[(to_node_id, from_node_id)] += 1  # noqa: RUF031
             rows.append(from_node_id)  # noqa: FURB113
             cols.append(to_node_id)  # noqa: FURB113
             rows.append(to_node_id)
@@ -379,7 +379,7 @@ class EpanetSimulator(EpanetSimulator):
 
         self._node_pairs_with_multiple_links = OrderedDict()
         for from_node_id, to_node_id in n_links.keys():  # noqa: SIM118
-            if n_links[(from_node_id, to_node_id)] > 1:
+            if n_links[(from_node_id, to_node_id)] > 1:  # noqa: RUF031
                 if (
                     to_node_id,
                     from_node_id,
@@ -390,7 +390,7 @@ class EpanetSimulator(EpanetSimulator):
                 from_node_name = self._node_id_to_name[from_node_id]
                 to_node_name = self._node_id_to_name[to_node_id]
                 tmp_list = self._node_pairs_with_multiple_links[
-                    (from_node_id, to_node_id)
+                    (from_node_id, to_node_id)  # noqa: RUF031
                 ] = []
                 for link_name in self._wn.get_links_for_node(from_node_name):
                     link = self._wn.get_link(link_name)

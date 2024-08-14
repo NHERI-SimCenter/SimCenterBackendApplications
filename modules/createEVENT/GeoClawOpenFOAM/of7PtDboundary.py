@@ -115,7 +115,7 @@ class of7PtDboundary:
             if (int(Utype) == 103) or (int(Utype) == 104):  # noqa: PLR2004
                 numMovWall += 1  # noqa: N806
                 if numMovWall > 0:
-                    return 1
+                    return 1  # noqa: DOC201
 
         if numMovWall == 0:
             return 0
@@ -169,7 +169,7 @@ class of7PtDboundary:
         ptdtext = ptdtext + '}\n\n'  # noqa: PLR6104
 
         # Return the text for pointDisplacement
-        return ptdtext  # noqa: RET504
+        return ptdtext  # noqa: DOC201, RET504
 
     #############################################################
     def PtDheader(self):  # noqa: N802, PLR6301
@@ -194,7 +194,7 @@ FoamFile
         header = header + 'internalField\tuniform (0 0 0);\n\n'  # noqa: PLR6104
 
         # Return the header for U file
-        return header  # noqa: RET504
+        return header  # noqa: DOC201, RET504
 
     #############################################################
     def PtDpatchtext(self, data, Utype, patchname, fipath):  # noqa: ARG002, N802, N803
@@ -243,7 +243,7 @@ FoamFile
             PtDtext = PtDtext + 'value\tuniform (0 0 0);\n'  # noqa: N806, PLR6104
             PtDtext = PtDtext + '\t}\n'  # noqa: N806, PLR6104
 
-        return PtDtext
+        return PtDtext  # noqa: DOC201
 
     #############################################################
     def getNormal(self, patchname):  # noqa: N802, PLR6301
@@ -267,4 +267,4 @@ FoamFile
         elif (patchname == 'Building') or (patchname == 'OtherBuilding'):  # noqa: PLR1714
             normal = '1 0 0'
 
-        return normal
+        return normal  # noqa: DOC201

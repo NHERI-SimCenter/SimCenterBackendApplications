@@ -44,7 +44,7 @@ class RestorationIO:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400
+        """  # noqa: D400, DOC202
         # some of the following lines have been adopted from WNTR
         self.rm = restoration_model
         self.crew_data = {}
@@ -106,7 +106,7 @@ class RestorationIO:  # noqa: D101
                     self.config_file_comment.append(line[1:])
                     continue
                 elif section is None:
-                    raise RuntimeError(  # noqa: DOC501
+                    raise RuntimeError(  # noqa: DOC501, RUF100
                         '%(fname)s:%(lnum)d: Non-comment outside of valid section!'
                         % edata
                     )
@@ -1180,7 +1180,7 @@ class RestorationIO:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D205, D400, D401
+        """  # noqa: D205, D400, D401, DOC202
         edata = OrderedDict()
         self._crew_file_name = []
         self._crew_file_type = []

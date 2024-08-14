@@ -16,7 +16,7 @@ def validateCaseDirectoryStructure(caseDir):  # noqa: N802, N803
     It also checks that system directory contains the controlDict
     """  # noqa: D205, D400, D401, D404
     if not os.path.isdir(caseDir):  # noqa: PTH112
-        return False
+        return False  # noqa: DOC201
 
     caseDirList = os.listdir(caseDir)  # noqa: N806
     necessaryDirs = ['0', 'constant', 'system', 'postProcessing']  # noqa: N806
@@ -36,7 +36,7 @@ def parseForceComponents(forceArray):  # noqa: N802, N803
     x = float(components[0])
     y = float(components[1])
     z = float(components[2])
-    return [x, y, z]
+    return [x, y, z]  # noqa: DOC201
 
 
 def ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime):  # noqa: N802, N803
@@ -77,14 +77,14 @@ def ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime):  # noqa: N80
                     forces[i].Y.append(fpry + fvy + fpoy)
                     forces[i].Z.append(fprz + fvz + fpoz)
 
-    return [deltaT, forces]
+    return [deltaT, forces]  # noqa: DOC201
 
 
 def directionToDof(direction):  # noqa: N802
     """Converts direction to degree of freedom"""  # noqa: D400, D401
     directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
 
-    return directioMap[direction]
+    return directioMap[direction]  # noqa: DOC201
 
 
 def addFloorForceToEvent(  # noqa: N802

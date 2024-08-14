@@ -167,7 +167,7 @@ class IntensityMeasureComputer:  # noqa: D101
         acceleration = np.asarray(acceleration)
         if from_ == 'g':
             if to_ == 'g':
-                return acceleration
+                return acceleration  # noqa: DOC201
             if to_ in self.km_sec_square:
                 return acceleration * self.g / 1000.0
             if to_ in self.m_sec_square:

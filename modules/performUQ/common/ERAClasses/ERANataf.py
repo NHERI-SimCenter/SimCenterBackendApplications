@@ -104,17 +104,17 @@ class ERANataf:
         try:
             np.linalg.cholesky(self.Rho_X)
         except np.linalg.LinAlgError:
-            raise RuntimeError(  # noqa: B904, DOC501, TRY003
+            raise RuntimeError(  # noqa: B904, DOC501, RUF100, TRY003
                 'The given correlation matrix is not positive definite'  # noqa: EM101
                 '--> Nataf transformation is not applicable.'
             )
         if not np.all(self.Rho_X - self.Rho_X.T == 0):
-            raise RuntimeError(  # noqa: DOC501, TRY003
+            raise RuntimeError(  # noqa: DOC501, RUF100, TRY003
                 'The given correlation matrix is not symmetric '  # noqa: EM101
                 '--> Nataf transformation is not applicable.'
             )
         if not np.all(np.diag(self.Rho_X) == 1):
-            raise RuntimeError(  # noqa: DOC501, TRY003
+            raise RuntimeError(  # noqa: DOC501, RUF100, TRY003
                 'Not all diagonal entries of the given correlation matrix are equal to one '  # noqa: EM101
                 '--> Nataf transformation is not applicable.'
             )
@@ -246,7 +246,7 @@ class ERANataf:
                                     self.Rho_Z[i, j] = sol[0]
                                     self.Rho_Z[j, i] = self.Rho_Z[i, j]
                                 else:
-                                    raise RuntimeError(  # noqa: DOC501, TRY003
+                                    raise RuntimeError(  # noqa: DOC501, RUF100, TRY003
                                         'brentq and fsolve coul'  # noqa: EM101
                                         'd not converge to a '
                                         'solution of the Nataf '
@@ -255,7 +255,7 @@ class ERANataf:
         try:
             self.A = np.linalg.cholesky(self.Rho_Z)
         except np.linalg.LinAlgError:
-            raise RuntimeError(  # noqa: B904, DOC501, TRY003
+            raise RuntimeError(  # noqa: B904, DOC501, RUF100, TRY003
                 'Transformed correlation matrix is not positive'  # noqa: EM101
                 ' definite --> Nataf transformation is not '
                 'applicable.'
@@ -298,12 +298,12 @@ class ERANataf:
 
         # check of the dimensions of input X
         if X.ndim > 2:  # noqa: PLR2004
-            raise RuntimeError('X must have not more than two dimensions. ')  # noqa: DOC501, EM101, TRY003
+            raise RuntimeError('X must have not more than two dimensions. ')  # noqa: DOC501, EM101, RUF100, TRY003
         if np.shape(X)[1] == 1 and n_dim != 1:
             # in case that only one point X is given, he can be defined either as row or column vector
             X = X.T  # noqa: N806
         if np.shape(X)[1] != n_dim:
-            raise RuntimeError(  # noqa: DOC501, TRY003
+            raise RuntimeError(  # noqa: DOC501, RUF100, TRY003
                 'X must be an array of size [n,d], where d is the'  # noqa: EM101
                 ' number of dimensions of the joint distribution.'
             )
@@ -318,7 +318,7 @@ class ERANataf:
             for i in range(n_dim):
                 diag[i, i] = self.Marginals[i].pdf(X[0, i]) / stats.norm.pdf(Z[i, 0])
             Jac = np.linalg.solve(self.A, diag)  # noqa: N806
-            return np.squeeze(U), Jac
+            return np.squeeze(U), Jac  # noqa: DOC201
         else:  # noqa: RET505
             return np.squeeze(U)
 
@@ -342,7 +342,7 @@ class ERANataf:
             # in case that only one point U is given, he can be defined either as row or column vector
             U = U.T  # noqa: N806
         if np.shape(U)[1] != n_dim:
-            raise RuntimeError(  # noqa: DOC501, TRY003
+            raise RuntimeError(  # noqa: DOC501, RUF100, TRY003
                 'U must be an array of size [n,d], where d is the'  # noqa: EM101
                 ' number of dimensions of the joint distribution.'
             )
@@ -359,7 +359,7 @@ class ERANataf:
             for i in range(n_dim):
                 diag[i, i] = stats.norm.pdf(Z[i, 0]) / self.Marginals[i].pdf(X[0, i])
             Jac = np.dot(diag, self.A)  # noqa: N806
-            return np.squeeze(X), Jac
+            return np.squeeze(X), Jac  # noqa: DOC201
         else:  # noqa: RET505
             return np.squeeze(X)
 
@@ -376,7 +376,7 @@ class ERANataf:
         for i in range(n_dim):
             jr[:, i] = self.Marginals[i].icdf(stats.norm.cdf(Z[i, :]))
 
-        return np.squeeze(jr)
+        return np.squeeze(jr)  # noqa: DOC201
 
     # %%
     def pdf(self, X):  # noqa: C901, N803
@@ -402,12 +402,12 @@ class ERANataf:
 
         # check of the dimensions of input X
         if X.ndim > 2:  # noqa: PLR2004
-            raise RuntimeError('X must have not more than two dimensions.')  # noqa: DOC501, EM101, TRY003
+            raise RuntimeError('X must have not more than two dimensions.')  # noqa: DOC501, EM101, RUF100, TRY003
         if np.shape(X)[1] == 1 and n_dim != 1:
             # in case that only one point X is given, he can be defined either as row or column vector
             X = X.T  # noqa: N806
         if np.shape(X)[1] != n_dim:
-            raise RuntimeError(  # noqa: DOC501, TRY003
+            raise RuntimeError(  # noqa: DOC501, RUF100, TRY003
                 'X must be an array of size [n,d], where d is the'  # noqa: EM101
                 ' number of dimensions of the joint distribution.'
             )
@@ -437,7 +437,7 @@ class ERANataf:
                 jointpdf[i] = 0
 
         if np.size(jointpdf) == 1:
-            return jointpdf[0]
+            return jointpdf[0]  # noqa: DOC201
         else:  # noqa: RET505
             return jointpdf
 
@@ -461,7 +461,7 @@ class ERANataf:
             # in case that only one point X is given, he can be defined either as row or column vector
             X = X.T  # noqa: N806
         if np.shape(X)[1] != n_dim:
-            raise RuntimeError(  # noqa: DOC501, TRY003
+            raise RuntimeError(  # noqa: DOC501, RUF100, TRY003
                 'X must be an array of size [n,d], where d is the'  # noqa: EM101
                 ' number of dimensions of the joint distribution.'
             )
@@ -474,7 +474,7 @@ class ERANataf:
             U, mean=mu, cov=np.matrix(self.Rho_Z)
         )
 
-        return jointcdf  # noqa: RET504
+        return jointcdf  # noqa: DOC201, RET504
 
     # %%
     @staticmethod

@@ -139,7 +139,7 @@ class UQpyRunner(UqRunner):  # noqa: D101
                 distributionObjects, nsamples=numberOfSamples, random_state=seed
             )
         else:
-            raise OSError(  # noqa: DOC501
+            raise OSError(  # noqa: DOC501, RUF100
                 "ERROR: You'll need to update UQpyRunner.py to run your specified"  # noqa: ISC003
                 + ' sampling method!'
             )

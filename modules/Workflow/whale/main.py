@@ -310,7 +310,7 @@ def create_command(command_list, enforced_python=None):
         for command_arg in command_list[1:]:
             command += f'"{command_arg}" '
 
-    return command
+    return command  # noqa: DOC201
 
 
 def run_command(command):
@@ -357,7 +357,7 @@ def run_command(command):
 
         py_script.main(arg_list)
 
-        return '', ''
+        return '', ''  # noqa: DOC201
 
     else:  # noqa: RET505
         # fmk with Shell=True not working on older windows machines, new approach needed for quoted command .. turn into a list
@@ -668,7 +668,7 @@ class WorkflowApplication:
 
         # pp.pprint(arg_list)
 
-        return arg_list
+        return arg_list  # noqa: DOC201
 
 
 class Workflow:  # noqa: PLR0904
@@ -857,7 +857,7 @@ class Workflow:  # noqa: PLR0904
 
         if app_type_obj == None:  # noqa: E711
             err = 'The application ' + app_type + ' is not found in the app registry'
-            raise WorkFlowInputError(err)  # noqa: DOC501
+            raise WorkFlowInputError(err)  # noqa: DOC501, RUF100
 
         # Finally check to see if the app registry contains the provided application
         if app_type_obj.get(app_in) == None:  # noqa: E711
@@ -866,7 +866,7 @@ class Workflow:  # noqa: PLR0904
                 + app_in
             )
             print('Error', app_in)  # noqa: T201
-            raise WorkFlowInputError(err)  # noqa: DOC501
+            raise WorkFlowInputError(err)  # noqa: DOC501, RUF100
 
         appData = app_dict['ApplicationData']  # noqa: N806
         #
@@ -878,7 +878,7 @@ class Workflow:  # noqa: PLR0904
 
         # Check if the app object was created successfully
         if app_object is None:
-            raise WorkFlowInputError(f'Application deep copy failed for {app_type}')  # noqa: DOC501, EM102, TRY003
+            raise WorkFlowInputError(f'Application deep copy failed for {app_type}')  # noqa: DOC501, EM102, RUF100, TRY003
 
         # only assign the app to the workflow if it has an executable
         if app_object.rel_path is None:
@@ -1081,7 +1081,7 @@ class Workflow:  # noqa: PLR0904
         # Events are special because they are in an array
         if 'Events' in requested_apps:
             if len(requested_apps['Events']) > 1:
-                raise WorkFlowInputError(  # noqa: DOC501, TRY003
+                raise WorkFlowInputError(  # noqa: DOC501, RUF100, TRY003
                     'Currently, WHALE only supports a single event.'  # noqa: EM101
                 )
             for event in requested_apps['Events'][
@@ -1104,7 +1104,7 @@ class Workflow:  # noqa: PLR0904
                         )
 
                         if app_object is None:
-                            raise WorkFlowInputError(  # noqa: DOC501
+                            raise WorkFlowInputError(  # noqa: DOC501, RUF100
                                 'Application entry missing for {}'.format('Events')  # noqa: EM103
                             )
 
@@ -1114,12 +1114,12 @@ class Workflow:  # noqa: PLR0904
                         self.workflow_apps['Event'] = app_object
 
                     else:
-                        raise WorkFlowInputError(  # noqa: DOC501, TRY003
+                        raise WorkFlowInputError(  # noqa: DOC501, RUF100, TRY003
                             'Currently, only earthquake and wind events are supported. '  # noqa: EM102
                             f'EventClassification must be Earthquake, not {eventClassification}'
                         )
                 else:
-                    raise WorkFlowInputError('Need Event Classification')  # noqa: DOC501, EM101, TRY003
+                    raise WorkFlowInputError('Need Event Classification')  # noqa: DOC501, EM101, RUF100, TRY003
 
         # Figure out what types of assets are coming into the analysis
         assetObjs = requested_apps.get('Assets', None)  # noqa: N806
@@ -1130,7 +1130,7 @@ class Workflow:  # noqa: PLR0904
 
             # Check if asset list is not empty
             if len(assetObjs) == 0:
-                raise WorkFlowInputError('The provided asset object is empty')  # noqa: DOC501, EM101, TRY003
+                raise WorkFlowInputError('The provided asset object is empty')  # noqa: DOC501, EM101, RUF100, TRY003
 
             # Iterate through the asset objects
             for assetObj in assetObjs:  # noqa: N806
@@ -1316,7 +1316,7 @@ class Workflow:  # noqa: PLR0904
 
         log_div()
 
-        return assetFilesList
+        return assetFilesList  # noqa: DOC201
 
     def augment_asset_files(self):  # noqa: C901
         """Short description
@@ -1504,7 +1504,7 @@ class Workflow:  # noqa: PLR0904
         )
         log_div()
 
-        return assetFilesList
+        return assetFilesList  # noqa: DOC201
 
     def perform_system_performance_assessment(self, asset_type):
         """For an asset type run the system level performance assessment application
@@ -1525,7 +1525,7 @@ class Workflow:  # noqa: PLR0904
                 prepend_timestamp=False,
             )
             log_div()
-            return False
+            return False  # noqa: DOC201
 
         if performance_app.rel_path == None:  # noqa: E711
             log_msg(
@@ -1905,7 +1905,7 @@ class Workflow:  # noqa: PLR0904
             prepend_timestamp=False,
         )
         log_div()
-        return dst
+        return dst  # noqa: DOC201
 
     def cleanup_simdir(self, asst_id):
         """Short description
@@ -2730,7 +2730,7 @@ class Workflow:  # noqa: PLR0904
                     ],
                 )
                 if ('PID', '0') in df_res.columns:
-                    del df_res[('PID', '0')]
+                    del df_res[('PID', '0')]  # noqa: RUF031
 
                 # store the EDP statistics in the output DF
                 for col in np.transpose(col_info):

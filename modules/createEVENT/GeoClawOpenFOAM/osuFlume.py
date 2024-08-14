@@ -104,4 +104,4 @@ class osuFlume:
         # Write extreme values and building data to temporary file for later usage
         flumeobj.extremedata(extreme, breadth)
 
-        return 0
+        return 0  # noqa: DOC201

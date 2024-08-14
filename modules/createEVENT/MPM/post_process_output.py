@@ -88,7 +88,7 @@ def readPressureProbes(fileName):  # noqa: N802, N803
     time = np.asarray(time, dtype=np.float32)
     p = np.asarray(p, dtype=np.float32)
 
-    return probes, time, p
+    return probes, time, p  # noqa: DOC201
 
 
 def read_pressure_data(file_names):
@@ -291,7 +291,7 @@ def read_openFoam_scalar_field(file_name):  # noqa: N802
 
     sField = np.asarray(sField, dtype=np.float32)  # noqa: N806
 
-    return sField  # noqa: RET504
+    return sField  # noqa: DOC201, RET504
 
 
 def read_openFoam_vector_field(file_name):  # noqa: N802
@@ -312,7 +312,7 @@ def read_openFoam_vector_field(file_name):  # noqa: N802
 
     vField = np.asarray(vField, dtype=np.float32)  # noqa: N806
 
-    return vField  # noqa: RET504
+    return vField  # noqa: DOC201, RET504
 
 
 def read_openFoam_tensor_field(file_name):  # noqa: N802
@@ -340,7 +340,7 @@ def read_openFoam_tensor_field(file_name):  # noqa: N802
 
     vField = np.asarray(vField, dtype=np.float32)  # noqa: N806
 
-    return vField  # noqa: RET504
+    return vField  # noqa: DOC201, RET504
 
 
 def read_openFoam_symmetric_tensor_field(file_name):  # noqa: N802
@@ -367,7 +367,7 @@ def read_openFoam_symmetric_tensor_field(file_name):  # noqa: N802
 
     vField = np.asarray(vField, dtype=np.float32)  # noqa: N806
 
-    return vField  # noqa: RET504
+    return vField  # noqa: DOC201, RET504
 
 
 def read_velocity_data(path):
@@ -462,7 +462,7 @@ def read_velocity_probes(fileName):  # noqa: N803
     time = np.asarray(time, dtype=np.float32)
     U = np.asarray(U, dtype=np.float32)  # noqa: N806
 
-    return probes, time, U
+    return probes, time, U  # noqa: DOC201
 
 
 def calculate_length_scale(u, uav, dt, min_corr=0.0):
@@ -481,7 +481,7 @@ def calculate_length_scale(u, uav, dt, min_corr=0.0):
 
     L = uav * np.trapz(corr, dx=dt)  # noqa: NPY201, N806
 
-    return L  # noqa: RET504
+    return L  # noqa: DOC201, RET504
 
 
 def psd(x, dt, nseg):  # noqa: F811

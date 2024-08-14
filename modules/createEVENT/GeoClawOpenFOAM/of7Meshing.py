@@ -72,7 +72,7 @@ class of7Meshing:
 
         # If hydro mesher - nothing to check
         if int(mesher[0]) == 0:
-            return 0
+            return 0  # noqa: DOC201
 
         # Other mesh software
         elif int(mesher[0]) == 1:  # noqa: RET505
@@ -126,7 +126,7 @@ FoamFile
         )
 
         # Return the header for meshing file
-        return header  # noqa: RET504
+        return header  # noqa: DOC201, RET504
 
     #############################################################
     def bmeshtext(self, data):
@@ -284,7 +284,7 @@ FoamFile
         # Add merge patch pairs
         bmeshtext = bmeshtext + 'mergePatchPairs\n(\n);\n'  # noqa: PLR6104
 
-        return bmeshtext  # noqa: RET504
+        return bmeshtext  # noqa: DOC201, RET504
 
     #############################################################
     def sfetext(self):
@@ -320,7 +320,7 @@ FoamFile
         elif int(data_geoext[6]) == 3:  # noqa: PLR2004
             sfetext = sfetext + 'OtherBuilding.stl\n' + stlinfo + '\n\n'
 
-        return sfetext
+        return sfetext  # noqa: DOC201
 
     #############################################################
     def shmtext(self, data):
@@ -505,7 +505,7 @@ FoamFile
         shmtext = shmtext + 'debug\t0;\n'  # noqa: PLR6104
         shmtext = shmtext + 'mergeTolerance\t1E-6;\n'  # noqa: PLR6104
 
-        return shmtext  # noqa: RET504
+        return shmtext  # noqa: DOC201, RET504
 
     #############################################################
     def scripts(self, data, path):  # noqa: C901, PLR6301

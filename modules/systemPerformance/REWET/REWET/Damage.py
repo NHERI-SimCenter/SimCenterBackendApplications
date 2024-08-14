@@ -75,7 +75,7 @@ class Damage:  # noqa: D101, PLR0904
         Returns
         -------
 
-        """  # noqa: D205, D400, D401, D404, D414
+        """  # noqa: D205, D400, D401, D404, D414, DOC202
         with open(pickle_file_name, 'rb') as pckf:  # noqa: PTH123
             w = pickle.load(pckf)  # noqa: S301
 
@@ -276,7 +276,7 @@ class Damage:  # noqa: D101, PLR0904
 
             elif sline[0].lower() == 'break':
                 if line_length < 3:  # noqa: PLR2004
-                    raise OSError('Line cannot have more than three arguments')  # noqa: DOC501, EM101, TRY003
+                    raise OSError('Line cannot have more than three arguments')  # noqa: DOC501, EM101, RUF100, TRY003
                 # print('Probelm 2')
                 temp_break = {}
                 temp_break['pipe_id'] = sline[1]
@@ -313,7 +313,7 @@ class Damage:  # noqa: D101, PLR0904
         -------
         None.
 
-        """  # noqa: D400
+        """  # noqa: D400, DOC202
         if self.node_damage.empty:
             print('no node damage at all')  # noqa: T201
             return
@@ -383,7 +383,7 @@ class Damage:  # noqa: D101, PLR0904
                 pipe_length = val['node_Pipe_Length'] * 1000
 
                 if node_name not in WaterNetwork.node_name_list:
-                    raise ValueError(  # noqa: DOC501
+                    raise ValueError(  # noqa: DOC501, RUF100
                         'Node name of damages not in node name list: ' + node_name
                     )
 
@@ -420,7 +420,7 @@ class Damage:  # noqa: D101, PLR0904
                 number_of_damages = val['Number_of_damages']
                 pipe_length = val['node_Pipe_Length'] * 1000
                 if node_name not in WaterNetwork.node_name_list:
-                    raise ValueError(  # noqa: DOC501
+                    raise ValueError(  # noqa: DOC501, RUF100
                         'Node name of damages not in node name list: ' + node_name
                     )
                 maximum_node_demand = 10
@@ -484,7 +484,7 @@ class Damage:  # noqa: D101, PLR0904
                     over_designed_diameter,
                 }
         else:
-            raise ValueError('Unknown nodal damage method')  # noqa: DOC501, EM101, TRY003
+            raise ValueError('Unknown nodal damage method')  # noqa: DOC501, EM101, RUF100, TRY003
 
         # return WaterNetwork
 
@@ -807,7 +807,7 @@ class Damage:  # noqa: D101, PLR0904
 
                 ratio = cur_damage['damage_loc'] / last_ratio
                 if ratio >= 1:
-                    raise ValueError(  # noqa: DOC501
+                    raise ValueError(  # noqa: DOC501, RUF100
                         'IN LEAK: ratio is bigger than or equal to 1 for pipe:'
                         + repr(pipe_id)
                         + '  '
@@ -863,7 +863,7 @@ class Damage:  # noqa: D101, PLR0904
 
                 ratio = cur_damage['damage_loc'] / last_ratio
                 if ratio >= 1:
-                    raise ValueError(  # noqa: DOC501
+                    raise ValueError(  # noqa: DOC501, RUF100
                         'IN BREAK: ratio is bigger than or equal to 1 for pipe:'
                         + repr(pipe_id)
                         + '  '
@@ -940,7 +940,7 @@ class Damage:  # noqa: D101, PLR0904
                 )
                 # self._registry.addPipeDamageToDamageRestorationData(pipe_id, 'break', damage_time)
             else:
-                raise ValueError(  # noqa: DOC501
+                raise ValueError(  # noqa: DOC501, RUF100
                     'undefined damage type: '
                     + repr(cur_damage['type'])
                     + ". Accpetale type of famages are either 'creack' or 'break'."
@@ -1043,7 +1043,7 @@ class Damage:  # noqa: D101, PLR0904
         -------
         None.
 
-        """  # noqa: D205, DOC502
+        """  # noqa: D205, DOC202, DOC502
         if type(earthquake_file_name) != str:  # noqa: E721
             raise ValueError('string is wanted for earthqiake fie name')  # noqa: EM101, TRY003
 
@@ -1080,7 +1080,7 @@ class Damage:  # noqa: D101, PLR0904
         -------
         None.
 
-        """  # noqa: D400, D401, D404
+        """  # noqa: D400, D401, D404, DOC202
         self._earthquake.sort_index()
         self.is_timely_sorted = True
 
@@ -1099,7 +1099,7 @@ class Damage:  # noqa: D101, PLR0904
         -------
         None.
 
-        """  # noqa: D401, D404
+        """  # noqa: D401, D404, DOC202
         if iClear:
             self.pipe_leak = pd.Series()
             self.pipe_break = pd.Series()

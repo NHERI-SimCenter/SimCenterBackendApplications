@@ -100,7 +100,7 @@ class of7Building:
                             data, ['Events', 'BuildingSTLFile']
                         )
                         if stlfile == [None]:
-                            return -1
+                            return -1  # noqa: DOC201
                         else:  # noqa: RET505
                             stlfile = ', '.join(
                                 hydroutil.extract_element_from_json(
@@ -218,7 +218,7 @@ class of7Building:
         elif buildeftype == 'Parameters':
             self.buildpara(data, path)
 
-        return 0
+        return 0  # noqa: DOC201
 
     #############################################################
     def buildmanual(self, data, path):

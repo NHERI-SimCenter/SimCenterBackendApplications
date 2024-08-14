@@ -89,7 +89,7 @@ class of7Alpboundary:
         Alptext = Alptext + '}\n\n'  # noqa: N806, PLR6104
 
         # Return the text for velocity BC
-        return Alptext  # noqa: RET504
+        return Alptext  # noqa: DOC201, RET504
 
     #############################################################
     def Alpheader(self):  # noqa: N802, PLR6301
@@ -114,7 +114,7 @@ FoamFile
         header = header + 'internalField\tuniform\t0;\n\n'  # noqa: PLR6104
 
         # Return the header for U file
-        return header  # noqa: RET504
+        return header  # noqa: DOC201, RET504
 
     #############################################################
     def Alppatchtext(self, Alptype, patchname):  # noqa: ARG002, N802, N803, PLR6301
@@ -140,4 +140,4 @@ FoamFile
             Alptext = Alptext + 'type\tzeroGradient;\n\t}\n'  # noqa: N806, PLR6104
 
         # Return the header for U file
-        return Alptext
+        return Alptext  # noqa: DOC201

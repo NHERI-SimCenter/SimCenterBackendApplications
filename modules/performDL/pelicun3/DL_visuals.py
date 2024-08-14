@@ -116,26 +116,26 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
             5: cl.scales['5']['seq']['Reds'],
         }
 
-        if comp_data.loc[('Incomplete', '')] != 1:
+        if comp_data.loc[('Incomplete', '')] != 1:  # noqa: RUF031
             p_min, p_max = 0.01, 0.9
             d_min = np.inf
             d_max = -np.inf
 
             LS_count = 0  # noqa: N806
             for LS in limit_states:  # noqa: N806
-                if comp_data.loc[(LS, 'Family')] == 'normal':
+                if comp_data.loc[(LS, 'Family')] == 'normal':  # noqa: RUF031
                     d_min_i, d_max_i = norm.ppf(
                         [p_min, p_max],
-                        loc=comp_data.loc[(LS, 'Theta_0')],
-                        scale=comp_data.loc[(LS, 'Theta_1')]
-                        * comp_data.loc[(LS, 'Theta_0')],
+                        loc=comp_data.loc[(LS, 'Theta_0')],  # noqa: RUF031
+                        scale=comp_data.loc[(LS, 'Theta_1')]  # noqa: RUF031
+                        * comp_data.loc[(LS, 'Theta_0')],  # noqa: RUF031
                     )
-                elif comp_data.loc[(LS, 'Family')] == 'lognormal':
+                elif comp_data.loc[(LS, 'Family')] == 'lognormal':  # noqa: RUF031
                     d_min_i, d_max_i = np.exp(
                         norm.ppf(
                             [p_min, p_max],
-                            loc=np.log(comp_data.loc[(LS, 'Theta_0')]),
-                            scale=comp_data.loc[(LS, 'Theta_1')],
+                            loc=np.log(comp_data.loc[(LS, 'Theta_0')]),  # noqa: RUF031
+                            scale=comp_data.loc[(LS, 'Theta_1')],  # noqa: RUF031
                         )
                     )
                 else:
@@ -149,18 +149,18 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
             demand_vals = np.linspace(d_min, d_max, num=100)
 
             for i_ls, LS in enumerate(limit_states):  # noqa: N806
-                if comp_data.loc[(LS, 'Family')] == 'normal':
+                if comp_data.loc[(LS, 'Family')] == 'normal':  # noqa: RUF031
                     cdf_vals = norm.cdf(
                         demand_vals,
-                        loc=comp_data.loc[(LS, 'Theta_0')],
-                        scale=comp_data.loc[(LS, 'Theta_1')]
-                        * comp_data.loc[(LS, 'Theta_0')],
+                        loc=comp_data.loc[(LS, 'Theta_0')],  # noqa: RUF031
+                        scale=comp_data.loc[(LS, 'Theta_1')]  # noqa: RUF031
+                        * comp_data.loc[(LS, 'Theta_0')],  # noqa: RUF031
                     )
-                elif comp_data.loc[(LS, 'Family')] == 'lognormal':
+                elif comp_data.loc[(LS, 'Family')] == 'lognormal':  # noqa: RUF031
                     cdf_vals = norm.cdf(
                         np.log(demand_vals),
-                        loc=np.log(comp_data.loc[(LS, 'Theta_0')]),
-                        scale=comp_data.loc[(LS, 'Theta_1')],
+                        loc=np.log(comp_data.loc[(LS, 'Theta_0')]),  # noqa: RUF031
+                        scale=comp_data.loc[(LS, 'Theta_1')],  # noqa: RUF031
                     )
                 else:
                     continue
@@ -385,11 +385,11 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
             gridcolor='rgb(192,192,192)',
         )
 
-        demand_unit = comp_data.loc[('Demand', 'Unit')]
+        demand_unit = comp_data.loc[('Demand', 'Unit')]  # noqa: RUF031
         if demand_unit == 'unitless':
             demand_unit = '-'
         fig.update_xaxes(
-            title_text=f"{comp_data.loc[('Demand', 'Type')]} [{demand_unit}]",
+            title_text=f"{comp_data.loc[('Demand', 'Type')]} [{demand_unit}]",  # noqa: RUF031
             **shared_ax_props,
         )
 
@@ -465,7 +465,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
         # perform plotting for each repair consequence type independently
         for c_type in repair_df.loc[comp_id].index:
             # load the component-specific part of the database
-            comp_data = repair_df.loc[(comp_id, c_type)]
+            comp_data = repair_df.loc[(comp_id, c_type)]  # noqa: RUF031
 
             # and the component-specific metadata - if it exists
             if repair_meta != None:  # noqa: E711
@@ -620,7 +620,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
                 ),
             }
 
-            if comp_data.loc[('Incomplete', '')] != 1:
+            if comp_data.loc[('Incomplete', '')] != 1:  # noqa: RUF031
                 # set the parameters for displaying uncertainty
                 p_min, p_max = 0.16, 0.84  # +- 1 std  # noqa: F841
 
@@ -923,13 +923,13 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
                 gridcolor='rgb(220,220,220)',
             )
 
-            quantity_unit = comp_data.loc[('Quantity', 'Unit')]
+            quantity_unit = comp_data.loc[('Quantity', 'Unit')]  # noqa: RUF031
             if quantity_unit in ['unitless', '1 EA', '1 ea']:  # noqa: PLR6201
                 quantity_unit = '-'
             elif quantity_unit.split()[0] == '1':
                 quantity_unit = quantity_unit.split()[1]
 
-            dv_unit = comp_data.loc[('DV', 'Unit')]
+            dv_unit = comp_data.loc[('DV', 'Unit')]  # noqa: RUF031
             if dv_unit == 'unitless':
                 dv_unit = '-'
 

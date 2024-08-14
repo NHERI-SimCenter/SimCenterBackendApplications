@@ -907,12 +907,12 @@ class Restoration:  # noqa: D101, PLR0904
         -------
         None.
 
-        """  # noqa: D400, D401
+        """  # noqa: D400, D401, DOC202
         if type(time) != int and type(time) != float:  # noqa: E721
             raise ValueError('Time must be integer not ' + str(type(time)))  # noqa: DOC501
         time = int(time)
         if time < 0:
-            raise ValueError('Time must be bigger than zero')  # noqa: DOC501, EM101, TRY003
+            raise ValueError('Time must be bigger than zero')  # noqa: DOC501, EM101, RUF100, TRY003
         next_shift_time = self.shifting.getNextShiftTime(time)
         # logger.debug('next shitt time = ' + str(next_shift_time))
         self._addHardEvent(int(next_shift_time), 'shift')
@@ -1555,18 +1555,18 @@ class Restoration:  # noqa: D101, PLR0904
         if type(next_time) != int and type(next_time) != float:  # noqa: E721
             raise ValueError('time must be int, not ' + str(type(next_time)))  # noqa: DOC501
         if detail != None and current_time == None:  # noqa: E711
-            raise ValueError('When detail is provided, current time cannot be None')  # noqa: DOC501, EM101, TRY003
+            raise ValueError('When detail is provided, current time cannot be None')  # noqa: DOC501, EM101, RUF100, TRY003
 
         minimum_time_devision = int(self._registry.settings['simulation_time_step'])
         if current_time != None:  # noqa: E711
             if next_time < current_time:
-                raise ValueError('Time is smaller than current time')  # noqa: DOC501, EM101, TRY003
+                raise ValueError('Time is smaller than current time')  # noqa: DOC501, EM101, RUF100, TRY003
             if detail == None:  # noqa: E711
-                raise ValueError(  # noqa: DOC501, TRY003
+                raise ValueError(  # noqa: DOC501, RUF100, TRY003
                     'When current time is provided, detail cannot be None'  # noqa: EM101
                 )
             if minimum_time_devision < 0:
-                raise ValueError('Minimum time division cannot be negative')  # noqa: DOC501, EM101, TRY003
+                raise ValueError('Minimum time division cannot be negative')  # noqa: DOC501, EM101, RUF100, TRY003
 
             name = requester + '-' + detail
 

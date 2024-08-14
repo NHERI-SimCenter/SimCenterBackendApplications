@@ -75,7 +75,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
         unit_time = output_units.get('time', 'sec')
         f_time = globals().get(unit_time, None)
         if f_time is None:
-            raise ValueError(f'Specified time unit not recognized: {unit_time}')  # noqa: DOC501, EM102, TRY003
+            raise ValueError(f'Specified time unit not recognized: {unit_time}')  # noqa: DOC501, EM102, RUF100, TRY003
 
         scale_factors = {}
 
@@ -88,7 +88,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
                 # get the scale factor to standard units
                 f_in = globals().get(input_unit, None)
                 if f_in is None:
-                    raise ValueError(  # noqa: DOC501, TRY003
+                    raise ValueError(  # noqa: DOC501, RUF100, TRY003
                         f'Input unit for event files not recognized: {input_unit}'  # noqa: EM102
                     )
 
@@ -98,7 +98,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
                         unit_type = base_unit_type
 
                 if unit_type is None:
-                    raise ValueError(f'Failed to identify unit type: {input_unit}')  # noqa: DOC501, EM102, TRY003
+                    raise ValueError(f'Failed to identify unit type: {input_unit}')  # noqa: DOC501, EM102, RUF100, TRY003
 
                 # the output unit depends on the unit type
                 if unit_type == 'acceleration':
@@ -111,7 +111,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
                     f_out = 1.0 / f_length
 
                 else:
-                    raise ValueError(  # noqa: DOC501, TRY003
+                    raise ValueError(  # noqa: DOC501, RUF100, TRY003
                         f'Unexpected unit type in workflow: {unit_type}'  # noqa: EM102
                     )
 
@@ -120,7 +120,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
 
             scale_factors.update({input_name: f_scale})
 
-    return scale_factors
+    return scale_factors  # noqa: DOC201
 
 
 def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: C901, D103, N802, N803, PLR0914, PLR0915
@@ -410,28 +410,28 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: C901,
                 m_pgd_y = 0.0
                 s_pgd_y = 0.0
             # add to dictionary
-            dict_im[('type', 'loc', 'dir', 'stat')].append(int(siteID))
+            dict_im[('type', 'loc', 'dir', 'stat')].append(int(siteID))  # noqa: RUF031
             # pga
-            dict_im[('PGA', 0, 1, 'median')].append(m_pga_x)
-            dict_im[('PGA', 0, 1, 'beta')].append(s_pga_x)
-            dict_im[('PGA', 0, 2, 'median')].append(m_pga_y)
-            dict_im[('PGA', 0, 2, 'beta')].append(s_pga_y)
+            dict_im[('PGA', 0, 1, 'median')].append(m_pga_x)  # noqa: RUF031
+            dict_im[('PGA', 0, 1, 'beta')].append(s_pga_x)  # noqa: RUF031
+            dict_im[('PGA', 0, 2, 'median')].append(m_pga_y)  # noqa: RUF031
+            dict_im[('PGA', 0, 2, 'beta')].append(s_pga_y)  # noqa: RUF031
             # pgv
-            dict_im[('PGV', 0, 1, 'median')].append(m_pgv_x)
-            dict_im[('PGV', 0, 1, 'beta')].append(s_pgv_x)
-            dict_im[('PGV', 0, 2, 'median')].append(m_pgv_y)
-            dict_im[('PGV', 0, 2, 'beta')].append(s_pgv_y)
+            dict_im[('PGV', 0, 1, 'median')].append(m_pgv_x)  # noqa: RUF031
+            dict_im[('PGV', 0, 1, 'beta')].append(s_pgv_x)  # noqa: RUF031
+            dict_im[('PGV', 0, 2, 'median')].append(m_pgv_y)  # noqa: RUF031
+            dict_im[('PGV', 0, 2, 'beta')].append(s_pgv_y)  # noqa: RUF031
             # pgd
-            dict_im[('PGD', 0, 1, 'median')].append(m_pgd_x)
-            dict_im[('PGD', 0, 1, 'beta')].append(s_pgd_x)
-            dict_im[('PGD', 0, 2, 'median')].append(m_pgd_y)
-            dict_im[('PGD', 0, 2, 'beta')].append(s_pgd_y)
+            dict_im[('PGD', 0, 1, 'median')].append(m_pgd_x)  # noqa: RUF031
+            dict_im[('PGD', 0, 1, 'beta')].append(s_pgd_x)  # noqa: RUF031
+            dict_im[('PGD', 0, 2, 'median')].append(m_pgd_y)  # noqa: RUF031
+            dict_im[('PGD', 0, 2, 'beta')].append(s_pgd_y)  # noqa: RUF031
             for jj, Ti in enumerate(periods):  # noqa: N806
                 cur_sa = f'SA({Ti}s)'
-                dict_im[(cur_sa, 0, 1, 'median')].append(m_psa_x[jj])
-                dict_im[(cur_sa, 0, 1, 'beta')].append(s_psa_x[jj])
-                dict_im[(cur_sa, 0, 2, 'median')].append(m_psa_y[jj])
-                dict_im[(cur_sa, 0, 2, 'beta')].append(s_psa_y[jj])
+                dict_im[(cur_sa, 0, 1, 'median')].append(m_psa_x[jj])  # noqa: RUF031
+                dict_im[(cur_sa, 0, 1, 'beta')].append(s_psa_x[jj])  # noqa: RUF031
+                dict_im[(cur_sa, 0, 2, 'median')].append(m_psa_y[jj])  # noqa: RUF031
+                dict_im[(cur_sa, 0, 2, 'beta')].append(s_psa_y[jj])  # noqa: RUF031
 
             # aggregate
             for cur_key, cur_value in dict_im.items():

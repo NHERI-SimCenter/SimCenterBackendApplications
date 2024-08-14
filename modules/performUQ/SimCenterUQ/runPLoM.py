@@ -428,7 +428,7 @@ class runPLoM:
 
         # check if training data source from simulation
         if training_data == 'Sampling and Simulation':
-            return x_dim, y_dim, rv_name, g_name
+            return x_dim, y_dim, rv_name, g_name  # noqa: DOC201
 
         # read X and Y variable names
         for rv in job_config['randomVariables']:
@@ -562,7 +562,7 @@ class runPLoM:
             run_flag = 1
 
         # return
-        return run_flag
+        return run_flag  # noqa: DOC201
 
     def _set_up_parallel(self):
         """_set_up_parallel: set up modules and variables for parallel jobs
@@ -592,7 +592,7 @@ class runPLoM:
             run_flag = 1
 
         # return
-        return run_flag
+        return run_flag  # noqa: DOC201
 
     def _load_variables(self, do_sampling, do_simulation):  # noqa: C901
         """_load_variables: load variables
@@ -666,7 +666,7 @@ class runPLoM:
         #    run_flag = 1
 
         # return
-        return run_flag
+        return run_flag  # noqa: DOC201
 
     # KZ, 07/24: loading user-defined hyper-parameter files
     def _load_hyperparameter(self):

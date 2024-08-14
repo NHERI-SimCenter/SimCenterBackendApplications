@@ -82,7 +82,7 @@ def sampleRaster(  # noqa: N802
         sample = sample.astype(dtype)
     # clean up invalid values (returned as 1e38 by NumPy)
     sample[abs(sample) > 1e10] = invalid_value  # noqa: PLR2004
-    return sample
+    return sample  # noqa: DOC201
 
 
 # Helper functions
@@ -96,9 +96,13 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ARG00
     try:
         user_crs_input = CRS.from_user_input(vector_crs).to_epsg()
         if vector_gdf.crs.to_epsg() != user_crs_input:
-            sys.exit(f"The CRS of vector file {vector_file_path} is {vector_gdf.crs}, and doesn't match the input CRS ({xy_crs}) defined for liquefaction triggering models")
-    except:
-        print("The input CRS ({xy_crs}) defined for liquefaction triggering models is invalid. The CRS of vector files are used")
+            sys.exit(
+                f"The CRS of vector file {vector_file_path} is {vector_gdf.crs}, and doesn't match the input CRS ({xy_crs}) defined for liquefaction triggering models"
+            )
+    except:  # noqa: E722
+        print(  # noqa: T201
+            'The input CRS ({xy_crs}) defined for liquefaction triggering models is invalid. The CRS of vector files are used'  # noqa: RUF027
+        )
     # if vector_gdf.crs != vector_crs:
     #     sys.exit(f"The CRS of vector file {vector_file_path} is {vector_gdf.crs}, and doesn't match the input CRS ({xy_crs}) defined for liquefaction triggering models")
 
@@ -159,7 +163,7 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ARG00
     merged = merged.set_index('index_right').sort_index().drop(columns=['geometry'])
     gdf_sites = pandas.merge(gdf_sites, merged, on='index', how='left')
     gdf_sites.drop(columns=['geometry', 'index'], inplace=True)  # noqa: PD002
-    return gdf_sites
+    return gdf_sites  # noqa: DOC201
 
 
 def find_additional_output_req(liq_info, current_step):  # noqa: D103
@@ -451,7 +455,7 @@ class ZhuEtal2017(Liquefaction):
 
         # liq_susc[prob_liq==zero_prob_liq] = 'none'
 
-        return {'liq_prob': prob_liq, 'liq_susc': liq_susc}
+        return {'liq_prob': prob_liq, 'liq_susc': liq_susc}  # noqa: DOC201
 
 
 # -----------------------------------------------------------
@@ -654,7 +658,7 @@ class Hazus2020(Liquefaction):
         pga_mag = pga / (10**2.24 / mag**2.56)
         prob_liq[pga_mag < 0.1] = zero_prob_liq  # noqa: PLR2004
 
-        return {'liq_prob': prob_liq, 'liq_susc': liq_susc}
+        return {'liq_prob': prob_liq, 'liq_susc': liq_susc}  # noqa: DOC201
 
 
 # -----------------------------------------------------------
@@ -817,7 +821,7 @@ class Hazus2020_with_ZhuEtal2017(ZhuEtal2017):
         # for precip > 1700 mm, set prob to "0"
         prob_liq[self.precip > 1700] = zero_prob_liq  # noqa: PLR2004
 
-        return {'liq_prob': prob_liq, 'liq_susc': liq_susc}
+        return {'liq_prob': prob_liq, 'liq_susc': liq_susc}  # noqa: DOC201
 
 
 # Lateral Spreading:
@@ -983,7 +987,7 @@ class Hazus2020Lateral(LateralSpread):
         #     output['ratio'] = ratio
 
         # return
-        return output  # noqa: RET504
+        return output  # noqa: DOC201, RET504
 
 
 # Settlement:
@@ -1056,7 +1060,7 @@ class Hazus2020Vertical(GroundSettlement):
             pass
 
         # return
-        return output
+        return output  # noqa: DOC201
 
     def run(self, ln_im_data, eq_data, im_list):  # noqa: D102
         output_keys = ['liq_PGD_v']

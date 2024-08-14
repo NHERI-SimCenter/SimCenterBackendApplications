@@ -561,4 +561,4 @@ def run_TMCMC(  # noqa: N802, PLR0913, PLR0917
                 f'\n\tShutdown mpi4py executor pool for runType: {run_type}'
             )
 
-    return mytrace, total_log_evidence
+    return mytrace, total_log_evidence  # noqa: DOC201

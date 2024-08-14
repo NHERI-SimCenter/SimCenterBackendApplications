@@ -168,7 +168,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
             if not z0:
                 z0 = 0.01
         # return
-        return z0
+        return z0  # noqa: DOC201
 
     def add_reference_terrain(self, terrain_info):
         """add_reference_terrainL specifying reference z0 values for a set of polygons
@@ -595,4 +595,4 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
     def get_station_data(self):
         """get_station_data: returning station data"""  # noqa: D400
         # return station dictionary
-        return self.station
+        return self.station  # noqa: DOC201

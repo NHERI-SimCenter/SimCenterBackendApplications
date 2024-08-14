@@ -304,7 +304,7 @@ class Settings:  # noqa: D101
 
         for key, val in settings_data.items():
             if key not in self:
-                raise ValueError(  # noqa: DOC501, TRY003
+                raise ValueError(  # noqa: DOC501, RUF100, TRY003
                     f'REWET settinsg does not have "{key}" as a settings key'  # noqa: EM102
                 )
 

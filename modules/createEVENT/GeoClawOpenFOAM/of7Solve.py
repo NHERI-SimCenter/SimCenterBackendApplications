@@ -73,7 +73,7 @@ FoamFile
         )
 
         # Return the header for U file
-        return header  # noqa: RET504
+        return header  # noqa: DOC201, RET504
 
     #############################################################
     def fvSchemetext(self, data):  # noqa: ARG002, N802
@@ -163,7 +163,7 @@ FoamFile
         fvSchemetext = fvSchemetext + 'alpha.water;\n'  # noqa: N806, PLR6104
         fvSchemetext = fvSchemetext + '}\n'  # noqa: N806, PLR6104
 
-        return fvSchemetext  # noqa: RET504
+        return fvSchemetext  # noqa: DOC201, RET504
 
     #############################################################
     def fvSolntext(self, data):  # noqa: N802
@@ -280,7 +280,7 @@ FoamFile
         fvSolntext = fvSolntext + 'fields\n\t{\n\t}\n\t'  # noqa: N806, PLR6104
         fvSolntext = fvSolntext + 'equations\n\t{\n\t\t".*"\t1;\n\t}\n}'  # noqa: N806, PLR6104
 
-        return fvSolntext  # noqa: RET504
+        return fvSolntext  # noqa: DOC201, RET504
 
     #############################################################
     def cdicttext(self, data):
@@ -349,7 +349,7 @@ FoamFile
         cdicttext = cdicttext + 'maxAlphaCo \t 1.0;\n\n'  # noqa: PLR6104
         cdicttext = cdicttext + 'maxDeltaT \t 1;\n\n'  # noqa: PLR6104
 
-        return cdicttext  # noqa: RET504
+        return cdicttext  # noqa: DOC201, RET504
 
     #############################################################
     def cdictcheck(self, data):  # noqa: PLR6301
@@ -366,7 +366,7 @@ FoamFile
         # Start time
         startT = hydroutil.extract_element_from_json(data, ['Events', 'StartTime'])  # noqa: N806
         if startT == [None]:
-            return -1
+            return -1  # noqa: DOC201
 
         # End time
         endT = hydroutil.extract_element_from_json(data, ['Events', 'EndTime'])  # noqa: N806
@@ -489,4 +489,4 @@ FoamFile
         cdicttext = cdicttext + 'direction\t(1 0 0);\n\t\t\t'  # noqa: PLR6104
         cdicttext = cdicttext + 'cumulative\tno;\n\t\t}\n\t}\n}'  # noqa: PLR6104
 
-        return cdicttext  # noqa: RET504
+        return cdicttext  # noqa: DOC201, RET504

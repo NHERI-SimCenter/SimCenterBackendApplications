@@ -102,7 +102,7 @@ def kernel(x, y, epsilon):
     """  # noqa: D205, D400
     dist = np.linalg.norm(x - y) ** 2
     k = np.exp(-dist / (4 * epsilon))
-    return k  # noqa: RET504
+    return k  # noqa: DOC201, RET504
 
 
 def K(eta, epsilon):  # noqa: N802
@@ -124,7 +124,7 @@ def K(eta, epsilon):  # noqa: N802
                 K[i, j] = 1
                 row_sum = row_sum + 1  # noqa: PLR6104
         b[i, i] = row_sum
-    return K, b
+    return K, b  # noqa: DOC201
 
 
 def g(K, b):  # noqa: N803
@@ -142,7 +142,7 @@ def g(K, b):  # noqa: N803
     norm = np.diagonal(np.transpose(g).dot(b).dot(g))
     sqrt_norm = np.sqrt(1 / norm)
     g = np.multiply(g, sqrt_norm)
-    return g, eigenvalues
+    return g, eigenvalues  # noqa: DOC201
 
 
 def m(eigenvalues, tol=0.1):
@@ -153,7 +153,7 @@ def m(eigenvalues, tol=0.1):
     m = 0
     while i < len(eigenvalues) and m == 0:
         if eigenvalues[i] <= eigenvalues[1] * tol:
-            return i + 1
+            return i + 1  # noqa: DOC201
         i = i + 1  # noqa: PLR6104
     if m == 0:
         return max(round(len(eigenvalues) / 10), 3)
@@ -170,7 +170,7 @@ def mean(x):
     x_mean = np.zeros((dim, 1))
     for i in range(dim):
         x_mean[i] = np.mean(x[i, :])
-    return x_mean
+    return x_mean  # noqa: DOC201
 
 
 def covariance(x):
@@ -187,7 +187,7 @@ def covariance(x):
         C = C + (np.resize(x[:, i], x_mean.shape) - x_mean).dot(  # noqa: N806, PLR6104
             np.transpose(np.resize(x[:, i], x_mean.shape) - x_mean)
         )
-    return C / (N - 1)
+    return C / (N - 1)  # noqa: DOC201
 
 
 def PCA(x, tol):  # noqa: N802
@@ -226,7 +226,7 @@ def PCA(x, tol):  # noqa: N802
         1 / (mu)
     )  # no need to do the sqrt because we use the singularvalues
     eta = mu_sqrt_inv.dot(np.transpose(phi)).dot(x - x_mean)
-    return (
+    return (  # noqa: DOC201
         eta,
         mu,
         phi,
@@ -243,7 +243,7 @@ def parameters_kde(eta):
     s_v = (4 / (N * (2 + nu))) ** (1 / (nu + 4))  # (4/(N*(2+nu)))**(1/(nu+4))
     hat_s_v = s_v / sqrt(s_v**2 + ((N - 1) / N))
     c_v = 1 / (sqrt(2 * pi) * hat_s_v) ** nu
-    return s_v, c_v, hat_s_v
+    return s_v, c_v, hat_s_v  # noqa: DOC201
 
 
 def kde(y, eta, s_v=None, c_v=None, hat_s_v=None):
@@ -254,7 +254,7 @@ def kde(y, eta, s_v=None, c_v=None, hat_s_v=None):
     N = eta.shape[1]  # noqa: N806
     if s_v == None or c_v == None or hat_s_v == None:  # noqa: E711
         s_v, c_v, hat_s_v = parameters_kde(eta)
-    return c_v * rhoctypes(
+    return c_v * rhoctypes(  # noqa: DOC201
         np.resize(y, (y.shape[0] * y.shape[1], 1)),
         np.resize(np.transpose(eta), (nu * N, 1)),
         nu,
@@ -288,7 +288,7 @@ def PCA2(C_h_hat_eta, beta, tol):  # noqa: N802, N803
     lambda_c = lambda_c[0:nu_c]
     psi = psi[:, 0:nu_c]
     b_c = np.transpose(psi).dot(beta)
-    return b_c, psi
+    return b_c, psi  # noqa: DOC201
 
 
 def h_c(eta, g_c, phi, mu, psi, x_mean):  # noqa: D103

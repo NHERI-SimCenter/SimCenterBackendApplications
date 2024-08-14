@@ -240,7 +240,7 @@ class chiou_youngs_2013:  # noqa: D101
 
         stdDev = np.sqrt(tauSq + phiSq)  # noqa: N806
 
-        return mean, stdDev, np.sqrt(tauSq), np.sqrt(phiSq)
+        return mean, stdDev, np.sqrt(tauSq), np.sqrt(phiSq)  # noqa: DOC201
 
     # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/imr/attenRelImpl/ngaw2/NGAW2_Wrapper.java#L220
     def getFaultFromRake(self, rake):  # noqa: D102, N802, PLR6301

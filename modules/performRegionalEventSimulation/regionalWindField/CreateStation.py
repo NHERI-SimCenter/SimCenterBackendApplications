@@ -68,7 +68,7 @@ def create_stations(input_file, output_file, min_id, max_id):
         stn_df = pd.read_csv(input_file, header=0, index_col=0)
     except:  # noqa: E722
         run_tag = 0
-        return run_tag  # noqa: RET504
+        return run_tag  # noqa: DOC201, RET504
     # Max and Min IDs
     stn_ids_min = np.min(stn_df.index.values)
     stn_ids_max = np.max(stn_df.index.values)

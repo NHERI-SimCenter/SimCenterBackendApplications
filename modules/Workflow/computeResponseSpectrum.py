@@ -23,7 +23,7 @@ def convert_accel_units(acceleration, from_, to_='cm/s/s'):  # noqa: C901
     acceleration = np.asarray(acceleration)
     if from_ == 'g':
         if to_ == 'g':
-            return acceleration
+            return acceleration  # noqa: DOC201
         if to_ in m_sec_square:
             return acceleration * g
         if to_ in cm_sec_square:
@@ -70,7 +70,7 @@ def get_velocity_displacement(
         velocity = time_step * cumtrapz(acceleration, initial=0.0)
     if displacement is None:
         displacement = time_step * cumtrapz(velocity, initial=0.0)
-    return velocity, displacement
+    return velocity, displacement  # noqa: DOC201
 
 
 class NewmarkBeta:
@@ -160,7 +160,7 @@ class NewmarkBeta:
             'PGV': np.max(np.fabs(self.velocity)),
             'PGD': np.max(np.fabs(self.displacement)),
         }
-        return self.response_spectrum, time_series, accel, vel, disp
+        return self.response_spectrum, time_series, accel, vel, disp  # noqa: DOC201
 
     def _newmark_beta(self, omega, cval, kval):  # noqa: ARG002
         """Newmark-beta integral
@@ -216,4 +216,4 @@ class NewmarkBeta:
             disp[j, :] = delta_u + disp[j - 1, :]
             a_t[j, :] = ground_acc[j] + accel[j, :]
 
-        return accel, vel, disp, a_t
+        return accel, vel, disp, a_t  # noqa: DOC201

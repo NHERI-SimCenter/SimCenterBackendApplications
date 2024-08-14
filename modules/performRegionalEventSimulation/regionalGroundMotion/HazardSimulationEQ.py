@@ -470,17 +470,18 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0914, PLR0915
                     ln_im_mr, mag_maf, im_list
                 )
                 gf_im_list += settlement_info['Output']
-        if "Landslide" in ground_failure_info.keys():
-            import landslide
-            if 'Landslide' in ground_failure_info['Landslide'].keys():
+        if 'Landslide' in ground_failure_info.keys():  # noqa: SIM118
+            import landslide  # noqa: PLC0415
+
+            if 'Landslide' in ground_failure_info['Landslide'].keys():  # noqa: SIM118
                 lsld_info = ground_failure_info['Landslide']['Landslide']
-                lsld_model = getattr(landslide, lsld_info['Model'])(\
-                    lsld_info["Parameters"], stations)
+                lsld_model = getattr(landslide, lsld_info['Model'])(
+                    lsld_info['Parameters'], stations
+                )
                 ln_im_mr, mag_maf, im_list = lsld_model.run(
-                            ln_im_mr, mag_maf, im_list
-                        )
+                    ln_im_mr, mag_maf, im_list
+                )
                 gf_im_list += lsld_info['Output']
-            
 
     if event_info['SaveIM'] and ln_im_mr:
         print('HazardSimulation: saving simulated intensity measures.')  # noqa: T201

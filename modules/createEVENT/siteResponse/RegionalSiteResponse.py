@@ -86,7 +86,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
         unit_time = output_units.get('time', 'sec')
         f_time = globals().get(unit_time, None)
         if f_time is None:
-            raise ValueError(f'Specified time unit not recognized: {unit_time}')  # noqa: DOC501, EM102, TRY003
+            raise ValueError(f'Specified time unit not recognized: {unit_time}')  # noqa: DOC501, EM102, RUF100, TRY003
 
         scale_factors = {}
 
@@ -99,7 +99,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
                 # get the scale factor to standard units
                 f_in = globals().get(input_unit, None)
                 if f_in is None:
-                    raise ValueError(  # noqa: DOC501, TRY003
+                    raise ValueError(  # noqa: DOC501, RUF100, TRY003
                         f'Input unit for event files not recognized: {input_unit}'  # noqa: EM102
                     )
 
@@ -109,7 +109,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
                         unit_type = base_unit_type
 
                 if unit_type is None:
-                    raise ValueError(f'Failed to identify unit type: {input_unit}')  # noqa: DOC501, EM102, TRY003
+                    raise ValueError(f'Failed to identify unit type: {input_unit}')  # noqa: DOC501, EM102, RUF100, TRY003
 
                 # the output unit depends on the unit type
                 if unit_type == 'acceleration':
@@ -122,7 +122,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
                     f_out = 1.0 / f_length
 
                 else:
-                    raise ValueError(  # noqa: DOC501, TRY003
+                    raise ValueError(  # noqa: DOC501, RUF100, TRY003
                         f'Unexpected unit type in workflow: {unit_type}'  # noqa: EM102
                     )
 
@@ -131,7 +131,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
 
             scale_factors.update({input_name: f_scale})
 
-    return scale_factors
+    return scale_factors  # noqa: DOC201
 
 
 def postProcess(evtName, input_units, f_scale_units):  # noqa: N802, N803, D103

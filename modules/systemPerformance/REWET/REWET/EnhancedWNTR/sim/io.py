@@ -10,7 +10,7 @@
 ----
 
 
-"""  # noqa: CPY001
+"""  # noqa: A005, CPY001
 
 import logging
 import re
@@ -131,7 +131,7 @@ def _is_number(s):
     """  # noqa: D400, D401
     try:
         float(s)
-        return True  # noqa: TRY300
+        return True  # noqa: DOC201, TRY300
     except ValueError:
         return False
 
@@ -211,7 +211,7 @@ def _clock_time_to_sec(s, am_pm):  # noqa: C901
             time_sec -= 3600 * 12
         if not am:
             if time_sec >= 3600 * 12:
-                raise RuntimeError(  # noqa: DOC501, TRY003
+                raise RuntimeError(  # noqa: DOC501, RUF100, TRY003
                     'Cannot specify am/pm for times greater than 12:00:00'  # noqa: EM101
                 )
             time_sec += 3600 * 12
@@ -228,7 +228,7 @@ def _clock_time_to_sec(s, am_pm):  # noqa: C901
                 time_sec -= 3600 * 12
             if not am:
                 if time_sec >= 3600 * 12:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: DOC501, RUF100, TRY003
                         'Cannot specify am/pm for times greater than 12:00:00'  # noqa: EM101
                     )
                 time_sec += 3600 * 12
@@ -242,13 +242,13 @@ def _clock_time_to_sec(s, am_pm):  # noqa: C901
                     time_sec -= 3600 * 12
                 if not am:
                     if time_sec >= 3600 * 12:
-                        raise RuntimeError(  # noqa: DOC501, TRY003
+                        raise RuntimeError(  # noqa: DOC501, RUF100, TRY003
                             'Cannot specify am/pm for times greater than 12:00:00'  # noqa: EM101
                         )
                     time_sec += 3600 * 12
                 return time_sec
             else:  # noqa: RET505
-                raise RuntimeError('Time format in ' 'INP file not recognized. ')  # noqa: DOC501, EM101, TRY003
+                raise RuntimeError('Time format in ' 'INP file not recognized. ')  # noqa: DOC501, EM101, RUF100, TRY003
 
 
 def _sec_to_string(sec):

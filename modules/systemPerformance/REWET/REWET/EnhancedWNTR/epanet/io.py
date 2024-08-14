@@ -7,7 +7,7 @@
     InpFile
     BinFile
 s
-"""  # noqa: CPY001
+"""  # noqa: A005, CPY001
 
 import datetime
 import difflib
@@ -231,7 +231,7 @@ def _clock_time_to_sec(s, am_pm):  # noqa: C901
             time_sec -= 3600 * 12
         if not am:
             if time_sec >= 3600 * 12:
-                raise RuntimeError(  # noqa: DOC501, TRY003
+                raise RuntimeError(  # noqa: DOC501, RUF100, TRY003
                     'Cannot specify am/pm for times greater than 12:00:00'  # noqa: EM101
                 )
             time_sec += 3600 * 12
@@ -248,7 +248,7 @@ def _clock_time_to_sec(s, am_pm):  # noqa: C901
                 time_sec -= 3600 * 12
             if not am:
                 if time_sec >= 3600 * 12:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: DOC501, RUF100, TRY003
                         'Cannot specify am/pm for times greater than 12:00:00'  # noqa: EM101
                     )
                 time_sec += 3600 * 12
@@ -262,13 +262,13 @@ def _clock_time_to_sec(s, am_pm):  # noqa: C901
                     time_sec -= 3600 * 12
                 if not am:
                     if time_sec >= 3600 * 12:
-                        raise RuntimeError(  # noqa: DOC501, TRY003
+                        raise RuntimeError(  # noqa: DOC501, RUF100, TRY003
                             'Cannot specify am/pm for times greater than 12:00:00'  # noqa: EM101
                         )
                     time_sec += 3600 * 12
                 return time_sec
             else:  # noqa: RET505
-                raise RuntimeError('Time format in ' 'INP file not recognized. ')  # noqa: DOC501, EM101, TRY003
+                raise RuntimeError('Time format in ' 'INP file not recognized. ')  # noqa: DOC501, EM101, RUF100, TRY003
 
 
 def _sec_to_string(sec):
@@ -371,7 +371,7 @@ class InpFile:
                         continue
                     elif section is None:
                         logger.debug('Found confusing line: %s', repr(line))
-                        raise RuntimeError(  # noqa: DOC501
+                        raise RuntimeError(  # noqa: DOC501, RUF100
                             '%(fname)s:%(lnum)d: Non-comment outside of valid section!'
                             % edata
                         )
@@ -3985,7 +3985,7 @@ class _InpFileDifferHelper:  # pragma: no cover
         """  # noqa: D205
         try:
             self.get_section(sec)
-            return True  # noqa: TRY300
+            return True  # noqa: DOC201, TRY300
         except NoSectionError:
             return False
 
@@ -4147,7 +4147,7 @@ def _read_control_line(line, wn, flow_units, control_name):  # noqa: C901
             elif current[6] == 'BELOW':
                 oper = np.less
             else:
-                raise RuntimeError(  # noqa: DOC501
+                raise RuntimeError(  # noqa: DOC501, RUF100
                     'The following control is not recognized: ' + line
                 )
             # OKAY - we are adding in the elevation. This is A PROBLEM
@@ -4169,14 +4169,14 @@ def _read_control_line(line, wn, flow_units, control_name):  # noqa: C901
                     node, 'level', oper, threshold, action_obj, control_name
                 )
         else:
-            raise RuntimeError('The following control is not recognized: ' + line)  # noqa: DOC501
+            raise RuntimeError('The following control is not recognized: ' + line)  # noqa: DOC501, RUF100
     #                control_name = ''
     #                for i in range(len(current)-1):
     #                    control_name = control_name + '/' + current[i]
     #                control_name = control_name + '/' + str(round(threshold, 2))
     elif 'CLOCKTIME' not in current:  # at time
         if 'TIME' not in current:
-            raise ValueError(f'Unrecognized line in inp file: {line}')  # noqa: DOC501, EM102, TRY003
+            raise ValueError(f'Unrecognized line in inp file: {line}')  # noqa: DOC501, EM102, RUF100, TRY003
 
         if ':' in current[5]:
             run_at_time = int(_str_time_to_sec(current[5]))
@@ -4345,4 +4345,4 @@ def _diff_inp_files(  # noqa: C901
     g.write(html_diff)
     g.close()
 
-    return n
+    return n  # noqa: DOC201
