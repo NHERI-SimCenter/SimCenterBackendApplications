@@ -183,7 +183,7 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):
         comm.Barrier()
 
     # if rank 0, gather result_agg and resilience_results, write to file
-    # note that the gathered results dosen't follow the order in realization_to_run
+    # note that the gathered results doesn't follow the order in realization_to_run
     # but this order is not needed when calculating mean and std
     if doParallel:
         # gather results_agg

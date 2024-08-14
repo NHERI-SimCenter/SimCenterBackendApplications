@@ -217,7 +217,7 @@ def erfinv_coeff(order=20):
 
 def erfinv(x, order=20):
     """returns inverse erf(x)"""
-    # get coeffcients
+    # get coefficients
     c = erfinv_coeff(order)
     # initialize
     root_pi_over_2 = np.sqrt(np.pi)/2
@@ -237,7 +237,7 @@ def norm2_ppf(p, loc, scale):
 
 def erfinv_2d(x, order=20):
     """returns inverse erf(x)"""
-    # get coeffcients
+    # get coefficients
     c = erfinv_coeff(order)
     # initialize
     root_pi_over_2 = np.sqrt(np.pi)/2

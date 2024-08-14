@@ -99,7 +99,8 @@ if __name__ == '__main__':
         if importlib.util.find_spec('jpype') is None:
             subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])  # noqa: S603
         import jpype
-        from jpype import imports
+        # from jpype import imports
+        import jpype.imports
         from jpype.types import *  # noqa: F403
 
         memory_total = psutil.virtual_memory().total / (1024.0**3)
