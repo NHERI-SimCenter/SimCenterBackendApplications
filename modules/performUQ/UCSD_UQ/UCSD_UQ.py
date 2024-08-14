@@ -54,7 +54,7 @@ def main(args):  # noqa: D103
         err_file.touch()
 
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # noqa: S603
                 command_list,
                 capture_output=True,
                 text=True,
