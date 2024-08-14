@@ -1,54 +1,53 @@
-"""
-@author: Mukesh, Maitreya, Conte, Aakash
-
-"""
+"""@author: Mukesh, Maitreya, Conte, Aakash"""  # noqa: CPY001, D400, INP001
 
 import numpy as np
-import scipy.stats as stats
+from scipy import stats
 
 
-class Dist:
+class Dist:  # noqa: D101
     def __init__(self, dist_name, params=None, moments=None, data=None):
         self.dist_name = dist_name
         self.params = params
         self.moments = moments
         self.data = data
         if (params is None) and (moments is None) and (data is None):
-            raise RuntimeError(
-                "Atleast one of parameters, moments, or data must be specified when creating a random variable"
+            raise RuntimeError(  # noqa: TRY003
+                'Atleast one of parameters, moments, or data must be specified when creating a random variable'  # noqa: EM101
             )
 
 
-class Uniform:
+class Uniform:  # noqa: D101
     # Method with in this uniform class
     def __init__(
-        self, lower, upper
+        self,
+        lower,
+        upper,
     ):  # method receives instance as first argument automatically
         # the below are the instance variables
         self.lower = lower
         self.upper = upper
 
     # Method to generate random numbers
-    def generate_rns(self, N):
+    def generate_rns(self, N):  # noqa: N803, D102
         return (self.upper - self.lower) * np.random.rand(N) + self.lower
 
     # Method to compute log of the pdf at x
-    def log_pdf_eval(self, x):
+    def log_pdf_eval(self, x):  # noqa: D102
         if (x - self.upper) * (x - self.lower) <= 0:
             lp = np.log(1 / (self.upper - self.lower))
         else:
-            lp = -np.Inf
+            lp = -np.inf
         return lp
 
 
-class Halfnormal:
+class Halfnormal:  # noqa: D101
     def __init__(self, sig):
         self.sig = sig
 
-    def generate_rns(self, N):
+    def generate_rns(self, N):  # noqa: N803, D102
         return self.sig * np.abs(np.random.randn(N))
 
-    def log_pdf_eval(self, x):
+    def log_pdf_eval(self, x):  # noqa: D102
         if x >= 0:
             lp = (
                 -np.log(self.sig)
@@ -56,35 +55,35 @@ class Halfnormal:
                 - ((x * x) / (2 * self.sig * self.sig))
             )
         else:
-            lp = -np.Inf
+            lp = -np.inf
         return lp
 
 
-class Normal:
+class Normal:  # noqa: D101
     def __init__(self, mu, sig):
         self.mu = mu
         self.sig = sig
 
-    def generate_rns(self, N):
+    def generate_rns(self, N):  # noqa: N803, D102
         return self.sig * np.random.randn(N) + self.mu
 
-    def log_pdf_eval(self, x):
+    def log_pdf_eval(self, x):  # noqa: D102
         lp = (
             -0.5 * np.log(2 * np.pi)
             - np.log(self.sig)
             - 0.5 * (((x - self.mu) / self.sig) ** 2)
         )
-        return lp
+        return lp  # noqa: RET504
 
 
-class TrunNormal:
+class TrunNormal:  # noqa: D101
     def __init__(self, mu, sig, a, b):
         self.mu = mu
         self.sig = sig
         self.a = a
         self.b = b
 
-    def generate_rns(self, N):
+    def generate_rns(self, N):  # noqa: N803, D102
         return stats.truncnorm(
             (self.a - self.mu) / self.sig,
             (self.b - self.mu) / self.sig,
@@ -92,28 +91,28 @@ class TrunNormal:
             scale=self.sig,
         ).rvs(N)
 
-    def log_pdf_eval(self, x):
+    def log_pdf_eval(self, x):  # noqa: D102
         lp = stats.truncnorm(
             (self.a - self.mu) / self.sig,
             (self.b - self.mu) / self.sig,
             loc=self.mu,
             scale=self.sig,
         ).logpdf(x)
-        return lp
+        return lp  # noqa: RET504
 
 
-class mvNormal:
-    def __init__(self, mu, E):
+class mvNormal:  # noqa: D101
+    def __init__(self, mu, E):  # noqa: N803
         self.mu = mu
         self.E = E
         self.d = len(mu)
         self.logdetE = np.log(np.linalg.det(self.E))
         self.Einv = np.linalg.inv(E)
 
-    def generate_rns(self, N):
+    def generate_rns(self, N):  # noqa: N803, D102
         return np.random.multivariate_normal(self.mu, self.E, N)
 
-    def log_pdf_eval(self, x):
+    def log_pdf_eval(self, x):  # noqa: D102
         xc = x - self.mu
         return (
             -(0.5 * self.d * np.log(2 * np.pi))
@@ -122,35 +121,37 @@ class mvNormal:
         )
 
 
-class InvGamma:
+class InvGamma:  # noqa: D101
     def __init__(self, a, b):
         self.a = a
         self.b = b
         self.dist = stats.invgamma(self.a, scale=self.b)
 
-    def generate_rns(self, N):
+    def generate_rns(self, N):  # noqa: N803, D102
         return self.dist.rvs(size=N)
 
-    def log_pdf_eval(self, x):
+    def log_pdf_eval(self, x):  # noqa: D102
         return self.dist.logpdf(x)
 
 
-class BetaDist:
+class BetaDist:  # noqa: D101
     def __init__(self, alpha, beta, lowerbound, upperbound):
         self.alpha = alpha
         self.beta = beta
         self.lowerbound = lowerbound
         self.upperbound = upperbound
-        self.dist = stats.beta(self.alpha, self.beta, self.lowerbound, self.upperbound)
+        self.dist = stats.beta(
+            self.alpha, self.beta, self.lowerbound, self.upperbound
+        )
 
-    def generate_rns(self, N):
+    def generate_rns(self, N):  # noqa: N803, D102
         return self.dist.rvs(size=N)
 
-    def log_pdf_eval(self, x):
+    def log_pdf_eval(self, x):  # noqa: D102
         return self.dist.logpdf(x)
 
 
-class LogNormDist:
+class LogNormDist:  # noqa: D101
     def __init__(self, mu, sigma):
         # self.sigma = np.sqrt(np.log(zeta**2/lamda**2 + 1))
         # self.mu = np.log(lamda) - 1/2*self.sigma**2
@@ -159,53 +160,53 @@ class LogNormDist:
         self.scale = np.exp(mu)
         self.dist = stats.lognorm(s=self.s, loc=self.loc, scale=self.scale)
 
-    def generate_rns(self, N):
+    def generate_rns(self, N):  # noqa: N803, D102
         return self.dist.rvs(size=N)
 
-    def log_pdf_eval(self, x):
+    def log_pdf_eval(self, x):  # noqa: D102
         return self.dist.logpdf(x)
 
 
-class GumbelDist:
+class GumbelDist:  # noqa: D101
     def __init__(self, alpha, beta):
         self.alpha = alpha
         self.beta = beta
         self.dist = stats.gumbel_r(loc=self.beta, scale=(1 / self.alpha))
 
-    def generate_rns(self, N):
+    def generate_rns(self, N):  # noqa: N803, D102
         return self.dist.rvs(size=N)
 
-    def log_pdf_eval(self, x):
+    def log_pdf_eval(self, x):  # noqa: D102
         return self.dist.logpdf(x)
 
 
-class WeibullDist:
+class WeibullDist:  # noqa: D101
     def __init__(self, shape, scale):
         self.shape = shape
         self.scale = scale
         self.dist = stats.weibull_min(c=self.shape, scale=self.scale)
 
-    def generate_rns(self, N):
+    def generate_rns(self, N):  # noqa: N803, D102
         return self.dist.rvs(size=N)
 
-    def log_pdf_eval(self, x):
+    def log_pdf_eval(self, x):  # noqa: D102
         return self.dist.logpdf(x)
 
 
-class ExponentialDist:
+class ExponentialDist:  # noqa: D101
     def __init__(self, lamda):
         self.lamda = lamda
         self.scale = 1 / self.lamda
         self.dist = stats.expon(scale=self.scale)
 
-    def generate_rns(self, N):
+    def generate_rns(self, N):  # noqa: N803, D102
         return self.dist.rvs(size=N)
 
-    def log_pdf_eval(self, x):
+    def log_pdf_eval(self, x):  # noqa: D102
         return self.dist.logpdf(x)
 
 
-class TruncatedExponentialDist:
+class TruncatedExponentialDist:  # noqa: D101
     def __init__(self, lamda, lower, upper):
         self.lower = lower
         self.upper = upper
@@ -215,14 +216,14 @@ class TruncatedExponentialDist:
         self.b = (self.upper - self.lower) / self.scale
         self.dist = stats.truncexpon(b=self.b, loc=self.loc, scale=self.scale)
 
-    def generate_rns(self, N):
+    def generate_rns(self, N):  # noqa: N803, D102
         return self.dist.rvs(size=N)
 
-    def log_pdf_eval(self, x):
+    def log_pdf_eval(self, x):  # noqa: D102
         return self.dist.logpdf(x)
 
 
-class GammaDist:
+class GammaDist:  # noqa: D101
     def __init__(self, k, lamda):
         self.k = k
         self.lamda = lamda
@@ -231,26 +232,26 @@ class GammaDist:
         self.scale = 1 / self.beta
         self.dist = stats.gamma(a=self.alpha, scale=self.scale)
 
-    def generate_rns(self, N):
+    def generate_rns(self, N):  # noqa: N803, D102
         return self.dist.rvs(size=N)
 
-    def log_pdf_eval(self, x):
+    def log_pdf_eval(self, x):  # noqa: D102
         return self.dist.logpdf(x)
 
 
-class ChiSquareDist:
+class ChiSquareDist:  # noqa: D101
     def __init__(self, k):
         self.k = k
         self.dist = stats.chi2(k=self.k)
 
-    def generate_rns(self, N):
+    def generate_rns(self, N):  # noqa: N803, D102
         return self.dist.rvs(size=N)
 
-    def log_pdf_eval(self, x):
+    def log_pdf_eval(self, x):  # noqa: D102
         return self.dist.logpdf(x)
 
 
-class DiscreteDist:
+class DiscreteDist:  # noqa: D101
     def __init__(self, values, weights):
         self.values = values
         self.weights = weights
@@ -258,10 +259,10 @@ class DiscreteDist:
         self.log_probabilities = np.log(self.weights) - np.log(np.sum(self.weights))
         self.rng = np.random.default_rng()
 
-    def generate_rns(self, N):
+    def generate_rns(self, N):  # noqa: N803, D102
         return self.rng.choice(self.values, N, p=self.probabilities)
 
-    def U2X(self, u):
+    def U2X(self, u):  # noqa: N802, D102
         cumsum_prob = np.cumsum(self.probabilities)
         cumsum_prob = np.insert(cumsum_prob, 0, 0)
         cumsum_prob = cumsum_prob[:-1]
@@ -271,7 +272,7 @@ class DiscreteDist:
             x[i] = self.values[np.where(cumsum_prob <= cdf_val)[0][-1]]
         return x
 
-    def log_pdf_eval(self, u):
+    def log_pdf_eval(self, u):  # noqa: D102
         x = self.U2X(u)
         lp = np.zeros_like(x)
         for i, x_comp in enumerate(x):
@@ -279,12 +280,12 @@ class DiscreteDist:
         return lp
 
 
-class ConstantInteger:
+class ConstantInteger:  # noqa: D101
     def __init__(self, value) -> None:
         self.value = value
 
-    def generate_rns(self, N):
+    def generate_rns(self, N):  # noqa: N803, D102
         return np.array([self.value for _ in range(N)], dtype=int)
 
-    def log_pdf_eval(self, x):
+    def log_pdf_eval(self, x):  # noqa: ARG002, D102, PLR6301
         return 0.0

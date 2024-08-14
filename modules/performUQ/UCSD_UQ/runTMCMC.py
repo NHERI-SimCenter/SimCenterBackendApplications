@@ -1,8 +1,7 @@
-"""
-authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, and Prof. J.P. Conte
+"""authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, and Prof. J.P. Conte
 affiliation: University of California, San Diego
 modified: Aakash Bangalore Satish, NHERI SimCenter, UC Berkeley
-"""
+"""  # noqa: CPY001, D205, D400, INP001
 
 import csv
 import multiprocessing as mp
@@ -15,7 +14,7 @@ from numpy.random import SeedSequence, default_rng
 from runFEM import runFEM
 
 
-def write_stage_start_info_to_logfile(
+def write_stage_start_info_to_logfile(  # noqa: D103
     logfile,
     stage_number,
     beta,
@@ -24,96 +23,93 @@ def write_stage_start_info_to_logfile(
     log_evidence,
     number_of_samples,
 ):
-    logfile.write("\n\n\t\t==========================")
-    logfile.write("\n\t\tStage number: {}".format(stage_number))
+    logfile.write('\n\n\t\t==========================')
+    logfile.write(f'\n\t\tStage number: {stage_number}')
     if stage_number == 0:
-        logfile.write("\n\t\tSampling from prior")
-        logfile.write("\n\t\tbeta = 0")
+        logfile.write('\n\t\tSampling from prior')
+        logfile.write('\n\t\tbeta = 0')
     else:
-        logfile.write("\n\t\tbeta = %9.8g" % beta)
-    logfile.write("\n\t\tESS = %d" % effective_sample_size)
-    logfile.write("\n\t\tscalem = %.2g" % scale_factor_for_proposal_covariance)
-    logfile.write(f"\n\t\tlog-evidence = {log_evidence:<9.8g}")
+        logfile.write('\n\t\tbeta = %9.8g' % beta)  # noqa: UP031
+    logfile.write('\n\t\tESS = %d' % effective_sample_size)
+    logfile.write('\n\t\tscalem = %.2g' % scale_factor_for_proposal_covariance)  # noqa: UP031
+    logfile.write(f'\n\t\tlog-evidence = {log_evidence:<9.8g}')
     logfile.write(
-        "\n\n\t\tNumber of model evaluations in this stage: {}".format(
-            number_of_samples
-        )
+        f'\n\n\t\tNumber of model evaluations in this stage: {number_of_samples}'
     )
     logfile.flush()
     os.fsync(logfile.fileno())
 
 
-def write_eval_data_to_logfile(
-    logfile, parallelize_MCMC, run_type, proc_count=1, MPI_size=1, stage_num=0
+def write_eval_data_to_logfile(  # noqa: D103
+    logfile,
+    parallelize_MCMC,  # noqa: N803
+    run_type,
+    proc_count=1,
+    MPI_size=1,  # noqa: N803
+    stage_num=0,
 ):
     if stage_num == 0:
-        logfile.write("\n\n\t\tRun type: {}".format(run_type))
+        logfile.write(f'\n\n\t\tRun type: {run_type}')
     if parallelize_MCMC:
-        if run_type == "runningLocal":
+        if run_type == 'runningLocal':
             if stage_num == 0:
                 logfile.write(
-                    "\n\n\t\tCreated multiprocessing pool for runType: {}".format(
-                        run_type
-                    )
+                    f'\n\n\t\tCreated multiprocessing pool for runType: {run_type}'
                 )
             else:
-                logfile.write("\n\n\t\tLocal run - MCMC steps")
-            logfile.write(
-                "\n\t\t\tNumber of processors being used: {}".format(proc_count)
-            )
+                logfile.write('\n\n\t\tLocal run - MCMC steps')
+            logfile.write(f'\n\t\t\tNumber of processors being used: {proc_count}')
         else:
             if stage_num == 0:
                 logfile.write(
-                    "\n\n\t\tCreated mpi4py executor pool for runType: {}".format(
-                        run_type
-                    )
+                    f'\n\n\t\tCreated mpi4py executor pool for runType: {run_type}'
                 )
             else:
-                logfile.write("\n\n\t\tRemote run - MCMC steps")
-            logfile.write("\n\t\t\tmax_workers: {}".format(MPI_size))
+                logfile.write('\n\n\t\tRemote run - MCMC steps')
+            logfile.write(f'\n\t\t\tmax_workers: {MPI_size}')
     else:
         if stage_num == 0:
-            logfile.write("\n\n\t\tNot parallelized")
+            logfile.write('\n\n\t\tNot parallelized')
         else:
-            logfile.write("\n\n\t\tLocal run - MCMC steps, not parallelized")
-        logfile.write("\n\t\t\tNumber of processors being used: {}".format(1))
+            logfile.write('\n\n\t\tLocal run - MCMC steps, not parallelized')
+        logfile.write(f'\n\t\t\tNumber of processors being used: {1}')
 
 
-def create_headings(
+def create_headings(  # noqa: D103
     logfile,
     model_number,
     model_parameters,
     edp_names_list,
     edp_lengths_list,
-    writeOutputs,
+    writeOutputs,  # noqa: N803
 ):
     # Create the headings, which will be the first line of the file
-    headings = "eval_id\tinterface\t"
+    headings = 'eval_id\tinterface\t'
     if model_number == 0:
-        logfile.write("\n\t\t\tCreating headings")
-        for v in model_parameters["names"]:
-            headings += "{}\t".format(v)
+        logfile.write('\n\t\t\tCreating headings')
+        for v in model_parameters['names']:
+            headings += f'{v}\t'
         if writeOutputs:  # create headings for outputs
             for i, edp in enumerate(edp_names_list):
                 if edp_lengths_list[i] == 1:
-                    headings += "{}\t".format(edp)
+                    headings += f'{edp}\t'
                 else:
                     for comp in range(edp_lengths_list[i]):
-                        headings += "{}_{}\t".format(edp, comp + 1)
-        headings += "\n"
+                        headings += f'{edp}_{comp + 1}\t'
+        headings += '\n'
 
     return headings
 
 
-def get_prediction_from_workdirs(i, working_directory):
-    workdir_string = "workdir." + str(i + 1)
+def get_prediction_from_workdirs(i, working_directory):  # noqa: D103
+    workdir_string = 'workdir.' + str(i + 1)
     prediction = np.atleast_2d(
-        np.genfromtxt(os.path.join(working_directory, workdir_string, "results.out"))
+        np.genfromtxt(os.path.join(working_directory, workdir_string, 'results.out'))  # noqa: PTH118
     ).reshape((1, -1))
-    return prediction
+    return prediction  # noqa: RET504
 
 
-def write_data_to_tab_files(
+def write_data_to_tab_files(  # noqa: D103
     logfile,
     working_directory,
     model_number,
@@ -121,11 +117,11 @@ def write_data_to_tab_files(
     edp_names_list,
     edp_lengths_list,
     number_of_samples,
-    dataToWrite,
+    dataToWrite,  # noqa: N803
     tab_file_name,
     predictions,
 ):
-    tab_file_full_path = os.path.join(working_directory, tab_file_name)
+    tab_file_full_path = os.path.join(working_directory, tab_file_name)  # noqa: PTH118
     write_outputs = True
     headings = create_headings(
         logfile,
@@ -136,27 +132,29 @@ def write_data_to_tab_files(
         write_outputs,
     )
 
-    logfile.write("\n\t\t\tWriting to file {}".format(tab_file_full_path))
-    with open(tab_file_full_path, "a+") as f:
+    logfile.write(f'\n\t\t\tWriting to file {tab_file_full_path}')
+    with open(tab_file_full_path, 'a+') as f:  # noqa: PLW1514, PTH123
         if model_number == 0:
             f.write(headings)
         for i in range(number_of_samples):
-            row_string = f"{i + 1 + number_of_samples*model_number}\t{model_number+1}\t"
-            for j in range(len(model_parameters["names"])):
-                row_string += f"{dataToWrite[i, j]}\t"
+            row_string = (
+                f'{i + 1 + number_of_samples * model_number}\t{model_number + 1}\t'
+            )
+            for j in range(len(model_parameters['names'])):
+                row_string += f'{dataToWrite[i, j]}\t'
             if write_outputs:  # write the output data
                 prediction = predictions[i, :]
                 for pred in prediction:
-                    row_string += f"{pred}\t"
-            row_string += "\n"
+                    row_string += f'{pred}\t'
+            row_string += '\n'
             f.write(row_string)
 
-    logfile.write("\n\t\t==========================")
+    logfile.write('\n\t\t==========================')
     logfile.flush()
     os.fsync(logfile.fileno())
 
 
-def write_data_to_csvfile(
+def write_data_to_csvfile(  # noqa: D103
     logfile,
     total_number_of_models_in_ensemble,
     stage_number,
@@ -165,27 +163,32 @@ def write_data_to_csvfile(
     data_to_write,
 ):
     logfile.write(
-        "\n\n\t\tWriting samples from stage {} to csv file".format(stage_number - 1)
+        f'\n\n\t\tWriting samples from stage {stage_number - 1} to csv file'
     )
     if total_number_of_models_in_ensemble > 1:
-        string_to_append = f"resultsStage{stage_number - 1}_Model_{model_number+1}.csv"
+        string_to_append = (
+            f'resultsStage{stage_number - 1}_Model_{model_number + 1}.csv'
+        )
     else:
-        string_to_append = f"resultsStage{stage_number - 1}.csv"
-    resultsFilePath = os.path.join(os.path.abspath(working_directory), string_to_append)
+        string_to_append = f'resultsStage{stage_number - 1}.csv'
+    resultsFilePath = os.path.join(  # noqa: PTH118, N806
+        os.path.abspath(working_directory),  # noqa: PTH100
+        string_to_append,
+    )
 
-    with open(resultsFilePath, "w", newline="") as csvfile:
-        csvWriter = csv.writer(csvfile)
+    with open(resultsFilePath, 'w', newline='') as csvfile:  # noqa: PLW1514, PTH123
+        csvWriter = csv.writer(csvfile)  # noqa: N806
         csvWriter.writerows(data_to_write)
-    logfile.write("\n\t\t\tWrote to file {}".format(resultsFilePath))
+    logfile.write(f'\n\t\t\tWrote to file {resultsFilePath}')
     # Finished writing data
 
 
-def run_TMCMC(
+def run_TMCMC(  # noqa: N802, PLR0913, PLR0917
     number_of_samples,
     number_of_chains,
     all_distributions_list,
-    number_of_MCMC_steps,
-    max_number_of_MCMC_steps,
+    number_of_MCMC_steps,  # noqa: N803
+    max_number_of_MCMC_steps,  # noqa: N803
     log_likelihood_function,
     model_parameters,
     working_directory,
@@ -199,22 +202,21 @@ def run_TMCMC(
     shift_factors,
     run_type,
     logfile,
-    MPI_size,
+    MPI_size,  # noqa: N803
     driver_file,
-    parallelize_MCMC=True,
+    parallelize_MCMC=True,  # noqa: FBT002, N803
     model_number=0,
     total_number_of_models_in_ensemble=1,
 ):
-    """Runs TMCMC Algorithm"""
-
+    """Runs TMCMC Algorithm"""  # noqa: D400, D401
     # Initialize (beta, effective sample size)
     beta = 0
     effective_sample_size = number_of_samples
     mytrace = []
 
     # Initialize other TMCMC variables
-    number_of_MCMC_steps = number_of_MCMC_steps
-    adaptively_calculate_num_MCMC_steps = True
+    number_of_MCMC_steps = number_of_MCMC_steps  # noqa: N806, PLW0127
+    adaptively_calculate_num_MCMC_steps = True  # noqa: N806
     adaptively_scale_proposal_covariance = True
     scale_factor_for_proposal_covariance = 1  # cov scale factor
     # model_evidence = 1  # model evidence
@@ -261,7 +263,7 @@ def run_TMCMC(
     ]
 
     # Evaluate log-likelihood at current samples Sm
-    if run_type == "runningLocal":
+    if run_type == 'runningLocal':
         processor_count = mp.cpu_count()
         pool = Pool(processes=processor_count)
         write_eval_data_to_logfile(
@@ -278,7 +280,7 @@ def run_TMCMC(
             log_likelihoods_list.append(output[0])
             predictions_list.append(output[1])
     else:
-        from mpi4py.futures import MPIPoolExecutor
+        from mpi4py.futures import MPIPoolExecutor  # noqa: PLC0415
 
         executor = MPIPoolExecutor(max_workers=MPI_size)
         write_eval_data_to_logfile(
@@ -299,9 +301,7 @@ def run_TMCMC(
 
     total_number_of_model_evaluations = number_of_samples
     logfile.write(
-        "\n\n\t\tTotal number of model evaluations so far: {}".format(
-            total_number_of_model_evaluations
-        )
+        f'\n\n\t\tTotal number of model evaluations so far: {total_number_of_model_evaluations}'
     )
 
     # Write the results of the first stage to a file named dakotaTabPrior.out for quoFEM to be able to read the results
@@ -317,7 +317,7 @@ def run_TMCMC(
         edp_lengths_list,
         number_of_samples,
         dataToWrite=sample_values,
-        tab_file_name="dakotaTabPrior.out",
+        tab_file_name='dakotaTabPrior.out',
         predictions=prediction_values,
     )
 
@@ -336,7 +336,7 @@ def run_TMCMC(
         )
         # beta, log_evidence, weights, effective_sample_size = tmcmcFunctions.compute_beta_evidence_old(beta, log_likelihood_values, logfile, int(effective_sample_size/2), threshold=1.0)
 
-        total_log_evidence = total_log_evidence + log_evidence
+        total_log_evidence = total_log_evidence + log_evidence  # noqa: PLR6104
 
         # seed to reproduce results
         ss = SeedSequence(seed)
@@ -361,10 +361,12 @@ def run_TMCMC(
 
         resampled_values = sample_values[resample_ids]
         resampled_log_likelihood_values = log_likelihood_values[resample_ids]
-        resampled_unnormalized_posterior_pdf_values = unnormalized_posterior_pdf_values[
-            resample_ids
-        ]
-        resampled_prediction_values = np.atleast_2d(prediction_values[resample_ids, :])
+        resampled_unnormalized_posterior_pdf_values = (
+            unnormalized_posterior_pdf_values[resample_ids]
+        )
+        resampled_prediction_values = np.atleast_2d(
+            prediction_values[resample_ids, :]
+        )
 
         # save to trace
         # stage m: samples, likelihood, weights, next stage ESS, next stage beta, resampled samples
@@ -438,7 +440,7 @@ def run_TMCMC(
             for sample_num in range(number_of_samples)
         ]
 
-        if run_type == "runningLocal":
+        if run_type == 'runningLocal':
             write_eval_data_to_logfile(
                 logfile,
                 parallelize_MCMC,
@@ -463,7 +465,7 @@ def run_TMCMC(
             posterior_pdf_vals_list,
             num_accepts,
             all_proposals,
-            all_PLP,
+            all_PLP,  # noqa: N806
             preds_list,
         ) = zip(*results)
         # for next beta
@@ -475,21 +477,21 @@ def run_TMCMC(
         num_accepts = np.asarray(num_accepts)
         number_of_accepted_states_in_this_stage = sum(num_accepts)
         all_proposals = np.asarray(all_proposals)
-        all_PLP = np.asarray(all_PLP)
+        all_PLP = np.asarray(all_PLP)  # noqa: N806
 
-        total_number_of_model_evaluations += number_of_model_evaluations_in_this_stage
+        total_number_of_model_evaluations += (
+            number_of_model_evaluations_in_this_stage
+        )
         logfile.write(
-            "\n\n\t\tTotal number of model evaluations so far: {}".format(
-                total_number_of_model_evaluations
-            )
+            f'\n\n\t\tTotal number of model evaluations so far: {total_number_of_model_evaluations}'
         )
 
         # total observed acceptance rate
-        R = (
+        R = (  # noqa: N806
             number_of_accepted_states_in_this_stage
             / number_of_model_evaluations_in_this_stage
         )
-        logfile.write(f"\n\n\t\tacceptance rate = {R:<9.6g}")
+        logfile.write(f'\n\n\t\tacceptance rate = {R:<9.6g}')
         if (
             adaptively_scale_proposal_covariance
         ):  # scale factor based on observed acceptance ratio
@@ -499,19 +501,19 @@ def run_TMCMC(
             adaptively_calculate_num_MCMC_steps
         ):  # Calculate Nm_steps based on observed acceptance rate
             # increase max Nmcmc with stage number
-            number_of_MCMC_steps = min(
+            number_of_MCMC_steps = min(  # noqa: N806
                 number_of_MCMC_steps + 1, max_number_of_MCMC_steps
             )
-            logfile.write("\n\t\tadapted max MCMC steps = %d" % number_of_MCMC_steps)
+            logfile.write('\n\t\tadapted max MCMC steps = %d' % number_of_MCMC_steps)
 
             acc_rate = max(1.0 / number_of_model_evaluations_in_this_stage, R)
-            number_of_MCMC_steps = min(
+            number_of_MCMC_steps = min(  # noqa: N806
                 number_of_MCMC_steps,
                 1 + int(np.log(1 - 0.99) / np.log(1 - acc_rate)),
             )
-            logfile.write("\n\t\tnext MCMC Nsteps = %d" % number_of_MCMC_steps)
+            logfile.write('\n\t\tnext MCMC Nsteps = %d' % number_of_MCMC_steps)
 
-        logfile.write("\n\t\t==========================")
+        logfile.write('\n\t\t==========================')
 
     # save to trace
     mytrace.append(
@@ -519,9 +521,9 @@ def run_TMCMC(
             sample_values,
             log_likelihood_values,
             np.ones(len(weights)),
-            "notValid",
+            'notValid',
             1,
-            "notValid",
+            'notValid',
         ]
     )
 
@@ -545,20 +547,18 @@ def run_TMCMC(
         edp_lengths_list,
         number_of_samples,
         dataToWrite=sample_values,
-        tab_file_name="dakotaTab.out",
+        tab_file_name='dakotaTab.out',
         predictions=prediction_values,
     )
 
-    if parallelize_MCMC == "yes":
-        if run_type == "runningLocal":
+    if parallelize_MCMC == 'yes':
+        if run_type == 'runningLocal':
             pool.close()
-            logfile.write(
-                "\n\tClosed multiprocessing pool for runType: {}".format(run_type)
-            )
+            logfile.write(f'\n\tClosed multiprocessing pool for runType: {run_type}')
         else:
             executor.shutdown()
             logfile.write(
-                "\n\tShutdown mpi4py executor pool for runType: {}".format(run_type)
+                f'\n\tShutdown mpi4py executor pool for runType: {run_type}'
             )
 
     return mytrace, total_log_evidence

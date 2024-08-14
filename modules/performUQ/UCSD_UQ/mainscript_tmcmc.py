@@ -1,8 +1,7 @@
-"""
-authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, Aakash Bangalore Satish*
+"""authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, Aakash Bangalore Satish*
 affiliation: University of California, San Diego, *SimCenter, University of California, Berkeley
 
-"""
+"""  # noqa: CPY001, D205, D400, INP001
 
 # ======================================================================================================================
 import os
@@ -26,13 +25,14 @@ from runTMCMC import run_TMCMC
 # ======================================================================================================================
 
 
-def computeModelPosteriorProbabilities(modelPriorProbabilities, modelEvidences):
+def computeModelPosteriorProbabilities(modelPriorProbabilities, modelEvidences):  # noqa: N802, N803, D103
     denominator = np.dot(modelPriorProbabilities, modelEvidences)
     return modelPriorProbabilities * modelEvidences / denominator
 
 
-def computeModelPosteriorProbabilitiesUsingLogEvidences(
-    modelPriorProbabilities, modelLogEvidences
+def computeModelPosteriorProbabilitiesUsingLogEvidences(  # noqa: N802, D103
+    modelPriorProbabilities,  # noqa: N803
+    modelLogEvidences,  # noqa: N803
 ):
     deltas = modelLogEvidences - np.min(modelLogEvidences)
     denominator = np.dot(modelPriorProbabilities, np.exp(deltas))
@@ -42,15 +42,15 @@ def computeModelPosteriorProbabilitiesUsingLogEvidences(
 # ======================================================================================================================
 
 
-class TMCMC_Data:
+class TMCMC_Data:  # noqa: D101
     def __init__(
         self,
-        mainscriptPath: str,
-        workdirMain: str,
-        runType: str,
-        workflowDriver: str,
-        logFile: TextIO,
-        numBurnInSteps: int = 10,
+        mainscriptPath: str,  # noqa: N803
+        workdirMain: str,  # noqa: N803
+        runType: str,  # noqa: N803
+        workflowDriver: str,  # noqa: N803
+        logFile: TextIO,  # noqa: N803
+        numBurnInSteps: int = 10,  # noqa: N803
     ) -> None:
         self.mainscriptPath = mainscriptPath
         self.workdirMain = workdirMain
@@ -65,42 +65,41 @@ class TMCMC_Data:
         self.numBurnInSteps = numBurnInSteps
         self.numSkipSteps = 1
 
-    def getMPI_size(self):
-        if self.runType == "runningRemote":
-            from mpi4py import MPI
+    def getMPI_size(self):  # noqa: N802, D102
+        if self.runType == 'runningRemote':
+            from mpi4py import MPI  # noqa: PLC0415
 
             self.comm = MPI.COMM_WORLD
             self.MPI_size = self.comm.Get_size()
 
-    def updateUQInfo(self, numberOfSamples, seedVal):
+    def updateUQInfo(self, numberOfSamples, seedVal):  # noqa: N802, N803, D102
         self.numberOfSamples = numberOfSamples
         self.seedVal = seedVal
 
-    def findNumProcessorsAvailable(self):
-        if self.runType == "runningLocal":
-            import multiprocessing as mp
+    def findNumProcessorsAvailable(self):  # noqa: N802, D102
+        if self.runType == 'runningLocal':
+            import multiprocessing as mp  # noqa: PLC0415
 
             self.numProcessors = mp.cpu_count()
-        elif self.runType == "runningRemote":
-            from mpi4py import MPI
+        elif self.runType == 'runningRemote':
+            from mpi4py import MPI  # noqa: PLC0415
 
             self.comm = MPI.COMM_WORLD
             self.numProcessors = self.comm.Get_size()
         else:
             self.numProcessors = 1
 
-    def getNumChains(self, numberOfSamples, runType, numProcessors):
-        if runType == "runningLocal":
+    def getNumChains(self, numberOfSamples, runType, numProcessors):  # noqa: N802, N803, D102
+        if runType == 'runningLocal':
             self.numChains = int(min(numProcessors, self.recommendedNumChains))
-        elif runType == "runningRemote":
+        elif runType == 'runningRemote':
             self.numChains = int(max(numProcessors, self.recommendedNumChains))
         else:
             self.numChains = self.recommendedNumChains
 
-        if self.numChains < numberOfSamples:
-            self.numChains = numberOfSamples
+        self.numChains = max(self.numChains, numberOfSamples)
 
-    def getNumStepsPerChainAfterBurnIn(self, numParticles, numChains):
+    def getNumStepsPerChainAfterBurnIn(self, numParticles, numChains):  # noqa: N802, N803, D102
         self.numStepsAfterBurnIn = (
             int(np.ceil(numParticles / numChains)) * self.numSkipSteps
         )
@@ -111,7 +110,7 @@ class TMCMC_Data:
 
 
 # ======================================================================================================================
-def main(input_args):
+def main(input_args):  # noqa: D103
     t1 = time.time()
 
     # Initialize analysis
@@ -122,20 +121,20 @@ def main(input_args):
     # driver_file = input_args[4]
     # input_json_filename = input_args[5]
 
-    mainscript_path = os.path.abspath(__file__)
-    working_directory = os.path.abspath(input_args[0])
-    template_directory = os.path.abspath(input_args[1])
+    mainscript_path = os.path.abspath(__file__)  # noqa: PTH100
+    working_directory = os.path.abspath(input_args[0])  # noqa: PTH100
+    template_directory = os.path.abspath(input_args[1])  # noqa: PTH100
     run_type = input_args[2]  # either "runningLocal" or "runningRemote"
     driver_file = input_args[3]
     input_json_filename = input_args[4]
 
-    logfile_name = "logFileTMCMC.txt"
+    logfile_name = 'logFileTMCMC.txt'
     logfile = createLogFile(where=working_directory, logfile_name=logfile_name)
 
     # Remove dakotaTab and dakotaTabPrior files if they already exist in the working directory
     try:
-        os.remove("dakotaTab.out")
-        os.remove("dakotTabPrior.out")
+        os.remove('dakotaTab.out')  # noqa: PTH107
+        os.remove('dakotTabPrior.out')  # noqa: PTH107
     except OSError:
         pass
 
@@ -144,10 +143,8 @@ def main(input_args):
     # Process input json file
     # input_json_filename_full_path = os.path.join(os.path.abspath(template_directory), input_json_filename)
     input_json_filename_full_path = input_json_filename
-    logfile.write("\n\n==========================")
-    logfile.write(
-        "\nParsing the json input file {}".format(input_json_filename_full_path)
-    )
+    logfile.write('\n\n==========================')
+    logfile.write(f'\nParsing the json input file {input_json_filename_full_path}')
     (
         number_of_samples,
         seed_value,
@@ -155,13 +152,13 @@ def main(input_args):
         variables_list,
         edp_names_list,
         edp_lengths_list,
-        models_dict,
+        models_dict,  # noqa: F841
         total_number_of_models_in_ensemble,
     ) = parseDataFunction(
         input_json_filename_full_path,
         logfile,
         working_directory,
-        os.path.dirname(mainscript_path),
+        os.path.dirname(mainscript_path),  # noqa: PTH120
     )
     syncLogFile(logfile)
 
@@ -203,7 +200,7 @@ def main(input_args):
     # # ================================================================================================================
 
     # Transform the data depending on the option chosen by the user
-    transformation = "absMaxScaling"
+    transformation = 'absMaxScaling'
     data_transformer_instance = DataTransformer(
         transformStrategy=transformation, logFile=logfile
     )
@@ -213,19 +210,15 @@ def main(input_args):
             calibration_data, edp_lengths_list
         )
     )
-    logfile.write("\n\n\tThe scale and shift factors computed are: ")
+    logfile.write('\n\n\tThe scale and shift factors computed are: ')
     for j in range(len(edp_names_list)):
         logfile.write(
-            "\n\t\tEDP: {}, scale factor: {}, shift factor: {}".format(
-                edp_names_list[j], scale_factors[j], shift_factors[j]
-            )
+            f'\n\t\tEDP: {edp_names_list[j]}, scale factor: {scale_factors[j]}, shift factor: {shift_factors[j]}'
         )
 
     transformed_calibration_data = data_transformer_instance.transformData()
     logfile.write(
-        "\n\nThe transformed calibration data: \n{}".format(
-            transformed_calibration_data
-        )
+        f'\n\nThe transformed calibration data: \n{transformed_calibration_data}'
     )
 
     # ======================================================================================================================
@@ -239,12 +232,12 @@ def main(input_args):
         logfile,
         run_type,
     )
-    defaultErrorVariances = cov_matrix_options_instance.getDefaultErrorVariances()
+    defaultErrorVariances = cov_matrix_options_instance.getDefaultErrorVariances()  # noqa: N806, F841
     covariance_matrix_list = cov_matrix_options_instance.createCovarianceMatrix()
 
     # ======================================================================================================================
     # Get log-likelihood function
-    LL_Handler = LogLikelihoodHandler(
+    LL_Handler = LogLikelihoodHandler(  # noqa: N806
         data=transformed_calibration_data,
         covariance_matrix_blocks_list=covariance_matrix_list,
         list_of_data_segment_lengths=edp_lengths_list,
@@ -252,34 +245,30 @@ def main(input_args):
         list_of_shift_factors=shift_factors,
         workdir_main=working_directory,
         full_path_to_tmcmc_code_directory=mainscript_path,
-        log_likelihood_file_name="loglike_script.py",
+        log_likelihood_file_name='loglike_script.py',
     )
     log_likelihood_function = LL_Handler.evaluate_log_likelihood
 
     # ======================================================================================================================
     # Start TMCMC workflow
-    logfile.write("\n\n==========================")
-    logfile.write("\nSetting up the TMCMC algorithm")
+    logfile.write('\n\n==========================')
+    logfile.write('\nSetting up the TMCMC algorithm')
 
     # sys.path.append(workdirMain)
-    logfile.write("\n\tResults path: {}".format(working_directory))
+    logfile.write(f'\n\tResults path: {working_directory}')
 
     # number of particles: Np
     number_of_samples = tmcmc_data_instance.numberOfSamples
-    logfile.write("\n\tNumber of particles: {}".format(number_of_samples))
+    logfile.write(f'\n\tNumber of particles: {number_of_samples}')
 
     # number of max MCMC steps
-    number_of_MCMC_steps = (
+    number_of_MCMC_steps = (  # noqa: N806
         tmcmc_data_instance.numBurnInSteps + tmcmc_data_instance.numStepsAfterBurnIn
     )
-    max_number_of_MCMC_steps = 10
+    max_number_of_MCMC_steps = 10  # noqa: N806
+    logfile.write(f'\n\tNumber of MCMC steps in first stage: {number_of_MCMC_steps}')
     logfile.write(
-        "\n\tNumber of MCMC steps in first stage: {}".format(number_of_MCMC_steps)
-    )
-    logfile.write(
-        "\n\tMax. number of MCMC steps in any stage: {}".format(
-            max_number_of_MCMC_steps
-        )
+        f'\n\tMax. number of MCMC steps in any stage: {max_number_of_MCMC_steps}'
     )
 
     syncLogFile(logfile)
@@ -289,30 +278,30 @@ def main(input_args):
     model_prior_probabilities = np.ones((len(variables_list),)) / len(variables_list)
     model_evidences = np.ones_like(model_prior_probabilities)
 
-    logfile.write("\n\n==========================")
-    logfile.write("\nLooping over each model")
+    logfile.write('\n\n==========================')
+    logfile.write('\nLooping over each model')
     # For each model:
     for model_number, parameters_of_model in enumerate(variables_list):
-        logfile.write("\n\n\t==========================")
-        logfile.write("\n\tStarting analysis for model {}".format(model_number + 1))
-        logfile.write("\n\t==========================")
+        logfile.write('\n\n\t==========================')
+        logfile.write(f'\n\tStarting analysis for model {model_number + 1}')
+        logfile.write('\n\t==========================')
 
         # Assign probability distributions to the parameters of the model
-        logfile.write("\n\t\tAssigning probability distributions to the parameters")
+        logfile.write('\n\t\tAssigning probability distributions to the parameters')
         all_distributions_list = make_distributions(variables=parameters_of_model)
 
         # Run the Algorithm
-        logfile.write("\n\n\t==========================")
-        logfile.write("\n\tRunning the TMCMC algorithm")
-        logfile.write("\n\t==========================")
+        logfile.write('\n\n\t==========================')
+        logfile.write('\n\tRunning the TMCMC algorithm')
+        logfile.write('\n\t==========================')
 
         # set the seed
         np.random.seed(tmcmc_data_instance.seedVal)
-        logfile.write("\n\tSeed: {}".format(tmcmc_data_instance.seedVal))
+        logfile.write(f'\n\tSeed: {tmcmc_data_instance.seedVal}')
 
         syncLogFile(logfile)
 
-        mytrace, log_evidence = run_TMCMC(
+        mytrace, log_evidence = run_TMCMC(  # noqa: F841
             number_of_samples,
             number_of_samples,
             all_distributions_list,
@@ -338,31 +327,31 @@ def main(input_args):
             model_number,
             total_number_of_models_in_ensemble,
         )
-        logfile.write("\n\n\t==========================")
-        logfile.write("\n\tTMCMC algorithm finished running")
-        logfile.write("\n\t==========================")
+        logfile.write('\n\n\t==========================')
+        logfile.write('\n\tTMCMC algorithm finished running')
+        logfile.write('\n\t==========================')
 
         syncLogFile(logfile)
 
-        logfile.write("\n\n\t==========================")
-        logfile.write("\n\tStarting post-processing")
+        logfile.write('\n\n\t==========================')
+        logfile.write('\n\tStarting post-processing')
 
         # Compute model evidence
-        logfile.write("\n\n\t\tComputing the model evidence")
+        logfile.write('\n\n\t\tComputing the model evidence')
         # evidence = 1
         # for i in range(len(mytrace)):
         #     Wm = mytrace[i][2]
         #     evidence *= np.mean(Wm)
         # logfile.write("\n\t\t\tModel evidence: {:g}".format(evidence))
         evidence = np.exp(log_evidence)
-        logfile.write("\n\t\t\tModel evidence: {:g}".format(evidence))
-        logfile.write("\n\t\t\tModel log_evidence: {:g}".format(log_evidence))
+        logfile.write(f'\n\t\t\tModel evidence: {evidence:g}')
+        logfile.write(f'\n\t\t\tModel log_evidence: {log_evidence:g}')
 
         syncLogFile(logfile)
 
-        logfile.write("\n\n\t==========================")
-        logfile.write("\n\tPost processing finished")
-        logfile.write("\n\t==========================")
+        logfile.write('\n\n\t==========================')
+        logfile.write('\n\tPost processing finished')
+        logfile.write('\n\t==========================')
 
         syncLogFile(logfile)
 
@@ -377,35 +366,35 @@ def main(input_args):
 
         model_evidences[model_number] = evidence
 
-        logfile.write("\n\n\t==========================")
-        logfile.write("\n\tCompleted analysis for model {}".format(model_number + 1))
-        logfile.write("\n\t==========================")
+        logfile.write('\n\n\t==========================')
+        logfile.write(f'\n\tCompleted analysis for model {model_number + 1}')
+        logfile.write('\n\t==========================')
 
         syncLogFile(logfile)
 
-    modelPosteriorProbabilities = computeModelPosteriorProbabilities(
+    modelPosteriorProbabilities = computeModelPosteriorProbabilities(  # noqa: N806
         model_prior_probabilities, model_evidences
     )
 
-    logfile.write("\n\n==========================")
-    logfile.write("\nFinished looping over each model")
-    logfile.write("\n==========================\n")
+    logfile.write('\n\n==========================')
+    logfile.write('\nFinished looping over each model')
+    logfile.write('\n==========================\n')
 
-    logfile.write("\nThe posterior model probabilities are:")
+    logfile.write('\nThe posterior model probabilities are:')
     for model_number in range(len(variables_list)):
         logfile.write(
-            f"\nModel number {model_number+1}: {modelPosteriorProbabilities[model_number]*100:15g}%"
+            f'\nModel number {model_number + 1}: {modelPosteriorProbabilities[model_number] * 100:15g}%'
         )
 
     # ======================================================================================================================
-    logfile.write("\nUCSD_UQ engine workflow complete!\n")
-    logfile.write("\nTime taken: {:0.2f} minutes\n\n".format((time.time() - t1) / 60))
+    logfile.write('\nUCSD_UQ engine workflow complete!\n')
+    logfile.write(f'\nTime taken: {(time.time() - t1) / 60:0.2f} minutes\n\n')
 
     syncLogFile(logfile)
 
     logfile.close()
 
-    if run_type == "runningRemote":
+    if run_type == 'runningRemote':
         tmcmc_data_instance.comm.Abort(0)
 
     # ======================================================================================================================
@@ -413,8 +402,8 @@ def main(input_args):
 
 # ======================================================================================================================
 
-if __name__ == "__main__":
-    inputArgs = sys.argv
+if __name__ == '__main__':
+    inputArgs = sys.argv  # noqa: N816
     main(inputArgs)
 
 # ======================================================================================================================

@@ -23,7 +23,7 @@ set(SIMCENTER_GLOB_FILES *.cpp
 #                        Careful: when file was added or deleted, cmake has to be run again
 #   EXCLUDE [optional]   Files that should not be included in the module (but are located in module directory).
 #                        This makes only sense if FILES was not specified, and all files have been added automatically.
-#   BUILD_ONLY_IF_FOUND  Before building the module test if all libraries specified here are availbable.
+#   BUILD_ONLY_IF_FOUND  Before building the module test if all libraries specified here are available.
 #   [optional]           This is done using the ${arg}_FOUND variable.
 #                        Example: simcenter_add_module(DEPENDS someModule BUILD_ONLY_IF_FOUND something)
 #                                 This module is only built if SOMETHING_FOUND is true.

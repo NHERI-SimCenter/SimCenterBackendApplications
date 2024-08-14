@@ -57,7 +57,7 @@ c
 c  Z       Double precision array, dimension (N).  (OUTPUT)
 c          On exit Z contains the last components of the Schur vectors.
 c
-c  INFO    Integer.  (OUPUT)
+c  INFO    Integer.  (OUTPUT)
 c          = 0: successful exit
 c          > 0: SLAQRB failed to compute all the eigenvalues ILO to IHI
 c               in a total of 30*(IHI-ILO+1) iterations; if INFO = i,

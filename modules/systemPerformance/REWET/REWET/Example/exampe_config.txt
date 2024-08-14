@@ -3,7 +3,7 @@ Net3RA 		Crew_Data/Net3RA.txt
 Net3DA		Crew_Data/Net3DA.txt
 
 [SHIFTS]
-;name	begining	end
+;name	beginning	end
 D		8			20
 N		20			8
 
@@ -40,7 +40,7 @@ DistrAgent		1		inspect:distr			isolate:distr			repair:distr
 DistrAgent		2		EPICENTERDIST			EPICENTERDIST			EPICENTERDIST	
 
 [JOBS]
-;agent_type		action:entity		time		EDN
+;agent_type		action:entity		time		END
 ;---------- Inspection Phase ----------
 RepairAgent		inspect:trunk		FIXED:1800	CHECK
 RepairAgent		inspect:distr		FIXED:1800	CHECK
@@ -63,7 +63,7 @@ DistrAgent		repair:distr		FIXED:144000	DN_repair
 
 
 [DEFINE]
-;EDN
+;END
 ;---------- Reroute for Major-Trunkline Definition ----------
 MJTRreroute 		DEFAULT	METHOD_PROBABILITY:1:1
 MJTRreroute 		1 		RECONNECT:PIPESIZEFACTOR:0.05  	REMOVE_LEAK:LEAKFACTOR:1
