@@ -23,4 +23,4 @@ quote-style = "single"
 
 [tool.codespell]
 ignore-words = ["ignore_words.txt"]
-skip = ["*.html", "NGAWest2.csv", "./applications/*"]
+skip = ["*.html", "NGAWest2.csv", "./applications/*", "./build/*"]
