@@ -5,12 +5,10 @@
 class UqRunnerFactory:  # noqa: D101
     factories = {}  # noqa: RUF012
 
-    @staticmethod
     def addFactory(id, runnerFactory):  # noqa: A002, D102, N802, N803
         UqRunnerFactory.factories.put[id] = runnerFactory
 
     # A Template Method:
-    @staticmethod
     def createRunner(id):  # noqa: A002, D102, N802
         if id not in UqRunnerFactory.factories:
             UqRunnerFactory.factories[id] = eval(id + '.Factory()')  # noqa: S307

@@ -423,15 +423,15 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
                     * (f + vg1[j, :] / self.r + der_vg1_r)
                 )
                 GAMMA = 1.0 / (2.0 * self.EDDY_VISCOCITY) * vg1[j, :] / self.r  # noqa: N806
-                ALPHA = np.array(  # noqa: N806
-                    list(starmap(complex, zip(np.real(ALPHA), np.imag(ALPHA))))
+                ALPHA = np.array(
+                    [complex(x, y) for x, y in zip(np.real(ALPHA), np.imag(ALPHA))]
                 )
-                BETA = np.array(  # noqa: N806
-                    list(starmap(complex, zip(np.real(BETA), np.imag(BETA))))
+                BETA = np.array(
+                    [complex(x, y) for x, y in zip(np.real(BETA), np.imag(BETA))]
                 )
                 XXX = -((ALPHA * BETA) ** 0.25)  # noqa: N806
                 YYY = -((ALPHA * BETA) ** 0.25)  # noqa: N806
-                PP_zero = np.array(list(starmap(complex, zip(XXX, YYY))))  # noqa: N806
+                PP_zero = np.array([complex(x, y) for x, y in zip(XXX, YYY)])
                 PP_one = -complex(1, 1) * (  # noqa: N806
                     (GAMMA + np.sqrt(ALPHA * BETA) - BB) ** 0.5
                 )
@@ -583,9 +583,9 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
             for ii in range(len(self.zp)):
                 tmp = U[:, :, ii].tolist()
                 wind_speed = [tmp[jtag][ktag] for jtag, ktag in zip(jj, kk)]
-                station_umax[:, ii] = list(
-                    starmap(max, zip(wind_speed, station_umax[:, ii]))
-                )
+                station_umax[:, ii] = [
+                    max(x, y) for x, y in zip(wind_speed, station_umax[:, ii])
+                ]
 
         # copying results
         self.station['PWS']['height'] = self.zp

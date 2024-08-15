@@ -151,7 +151,7 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ARG00
         data['geometry'].append(new_geom)
     del vector_gdf
     gdf_roi = gpd.GeoDataFrame(data, geometry='geometry', crs=4326)
-    geometry = list(starmap(shapely.geometry.Point, zip(x, y)))
+    geometry = [shapely.geometry.Point(lon, lat) for lon, lat in zip(x, y)]
     gdf_sites = gpd.GeoDataFrame(geometry=geometry, crs=4326).reset_index()
     merged = gpd.GeoDataFrame.sjoin(
         gdf_roi, gdf_sites, how='inner', predicate='contains'

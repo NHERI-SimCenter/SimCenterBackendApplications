@@ -50,9 +50,9 @@ from scipy.spatial import cKDTree
 def ckdnearest(gdfA, gdfB, gdfB_cols=['pgv']):  # noqa: B006, N803, D103
     A = np.concatenate([np.array(geom.coords) for geom in gdfA.geometry.to_list()])  # noqa: N806
     B = [np.array(geom.coords) for geom in gdfB.geometry.to_list()]  # noqa: N806
-    B_ix = tuple(  # noqa: N806
+    B_ix = tuple(
         itertools.chain.from_iterable(
-            list(itertools.starmap(itertools.repeat, enumerate(list(map(len, B)))))
+            [itertools.repeat(i, x) for i, x in enumerate(list(map(len, B)))]
         )
     )
     B = np.concatenate(B)  # noqa: N806
