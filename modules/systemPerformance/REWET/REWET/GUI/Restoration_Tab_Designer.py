@@ -1,7 +1,7 @@
 """Created on Wed Nov  2 00:24:43 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""
 
 import os
 
@@ -13,15 +13,15 @@ from .Pump_Damage_Discovery_Designer import Pump_Damage_Discovery_Designer
 from .Tank_Damage_Discovery_Designer import Tank_Damage_Discovery_Designer
 
 
-class Restoration_Tab_Designer:  # noqa: D101
+class Restoration_Tab_Designer:
     def __init__(self):
-        """These are variables that are shared between ui and settings."""  # noqa: D401
+        """These are variables that are shared between ui and settings."""
         self.setRestorationSettings(self.settings)
 
         """
         Reassignment of shared variables.
         """
-        self.current_policy_directory = os.getcwd()  # noqa: PTH109
+        self.current_policy_directory = os.getcwd()
 
         """
         ui value assignments.
@@ -50,14 +50,14 @@ class Restoration_Tab_Designer:  # noqa: D101
             self.tankDamageDiscoveryByButton
         )
 
-    def getRestorationSettings(self):  # noqa: N802, D102
+    def getRestorationSettings(self):
         if self.restoration_on_radio.isChecked():
             self.restoration_on = True
         elif self.restoration_off_radio.isChecked():
             self.restoration_on = False
         else:
-            raise ValueError(  # noqa: TRY003
-                'None of Restoration-on/off buttons are checked which is an error.'  # noqa: EM101
+            raise ValueError(
+                'None of Restoration-on/off buttons are checked which is an error.'
             )
 
         if self.script_txt_radio.isChecked():
@@ -65,13 +65,13 @@ class Restoration_Tab_Designer:  # noqa: D101
         elif self.script_rrp_radio.isChecked():
             self.restoraion_policy_type = 'binary'
         else:
-            raise ValueError(  # noqa: TRY003
-                'None of File-Type buttons are checked which is an error.'  # noqa: EM101
+            raise ValueError(
+                'None of File-Type buttons are checked which is an error.'
             )
 
         self.minimum_job_time = int(float(self.minimum_job_time_line.text()))
 
-        if self.restoraion_policy_addr == '':  # noqa: PLC1901
+        if self.restoraion_policy_addr == '':
             self.errorMSG('REWET', 'Policy Definition file is needed.')
             return False
 
@@ -99,10 +99,10 @@ class Restoration_Tab_Designer:  # noqa: D101
 
         return True
 
-    def setRestorationUI(self):  # noqa: N802, D102
-        if self.restoration_on == True:  # noqa: E712
+    def setRestorationUI(self):
+        if self.restoration_on == True:
             self.restoration_on_radio.setChecked(True)
-        elif self.restoration_on == False:  # noqa: E712
+        elif self.restoration_on == False:
             self.restoration_off_radio.setChecked(True)
         else:
             raise ValueError(
@@ -124,9 +124,9 @@ class Restoration_Tab_Designer:  # noqa: D101
 
         self.minimum_job_time_line.setText(str(self.minimum_job_time))
 
-        if self.out_of_zone_allowed == True:  # noqa: E712
+        if self.out_of_zone_allowed == True:
             self.out_of_zone_travel_yes.setChecked(True)
-        elif self.out_of_zone_allowed == False:  # noqa: E712
+        elif self.out_of_zone_allowed == False:
             self.out_of_zone_travel_no.setChecked(True)
         else:
             raise ValueError(
@@ -134,7 +134,7 @@ class Restoration_Tab_Designer:  # noqa: D101
                 + repr(self.out_of_zone_travel_no)
             )
 
-    def setRestorationSettings(self, settings):  # noqa: N802, D102
+    def setRestorationSettings(self, settings):
         self.restoration_on = settings.process['Restoration_on']
         self.restoraion_policy_type = settings.scenario['Restoraion_policy_type']
         self.restoraion_policy_addr = settings.scenario['Restortion_config_file']
@@ -153,7 +153,7 @@ class Restoration_Tab_Designer:  # noqa: D101
         ]
         self.out_of_zone_allowed = settings.scenario['crew_out_of_zone_travel']
 
-    def browsePolicyDefinitionFile(self):  # noqa: N802, D102
+    def browsePolicyDefinitionFile(self):
         if self.script_txt_radio.isChecked():
             file_type = 'scenrario text file (*.txt)'
         elif self.script_rrp_radio.isChecked():
@@ -165,51 +165,51 @@ class Restoration_Tab_Designer:  # noqa: D101
             self.current_policy_directory,
             file_type,
         )
-        if file[0] == '':  # noqa: PLC1901
+        if file[0] == '':
             return
         split_addr = os.path.split(file[0])
         self.current_policy_directory = split_addr[0]
         self.restoraion_policy_addr = file[0]
         self.policy_definition_addr_line.setText(file[0])
 
-    def pipeDamageDiscoveryByButton(self):  # noqa: N802, D102
+    def pipeDamageDiscoveryByButton(self):
         pipe_damage_discovery_designer = Pipe_Damage_Discovery_Designer(
             self.pipe_damage_discovery_model
         )
-        return_value = pipe_damage_discovery_designer._window.exec_()  # noqa: SLF001
+        return_value = pipe_damage_discovery_designer._window.exec_()
 
         if return_value == 1:
             self.pipe_damage_discovery_model = (
                 pipe_damage_discovery_designer.damage_discovery_model
             )
 
-    def nodeDamageDiscoveryByButton(self):  # noqa: N802, D102
+    def nodeDamageDiscoveryByButton(self):
         node_damage_discovery_designer = Node_Damage_Discovery_Designer(
             self.node_damage_discovery_model
         )
-        return_value = node_damage_discovery_designer._window.exec_()  # noqa: SLF001
+        return_value = node_damage_discovery_designer._window.exec_()
 
         if return_value == 1:
             self.node_damage_discovery_model = (
                 node_damage_discovery_designer.damage_discovery_model
             )
 
-    def pumpDamageDiscoveryByButton(self):  # noqa: N802, D102
+    def pumpDamageDiscoveryByButton(self):
         pump_damage_discovery_designer = Pump_Damage_Discovery_Designer(
             self.pump_damage_discovery_model
         )
-        return_value = pump_damage_discovery_designer._window.exec_()  # noqa: SLF001
+        return_value = pump_damage_discovery_designer._window.exec_()
 
         if return_value == 1:
             self.pump_damage_discovery_model = (
                 pump_damage_discovery_designer.damage_discovery_model
             )
 
-    def tankDamageDiscoveryByButton(self):  # noqa: N802, D102
+    def tankDamageDiscoveryByButton(self):
         tank_damage_discovery_designer = Tank_Damage_Discovery_Designer(
             self.tank_damage_discovery_model
         )
-        return_value = tank_damage_discovery_designer._window.exec_()  # noqa: SLF001
+        return_value = tank_damage_discovery_designer._window.exec_()
 
         if return_value == 1:
             self.tank_damage_discovery_model = (

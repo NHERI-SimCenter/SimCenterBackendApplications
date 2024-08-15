@@ -1,4 +1,4 @@
-#  # noqa: EXE002, INP001, D100
+#
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -46,22 +46,22 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 import whale.main as whale
 from whale.main import log_div, log_msg
 
 
-def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):  # noqa: ARG001, D103
+def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
     # initialize the log file
-    with open(input_file) as f:  # noqa: PLW1514, PTH123
+    with open(input_file) as f:
         inputs = json.load(f)
-    runDir = inputs['runDir']  # noqa: N806
+    runDir = inputs['runDir']
 
     if working_dir is not None:
-        runDir = working_dir  # noqa: N806
+        runDir = working_dir
     else:
-        runDir = inputs['runDir']  # noqa: N806
+        runDir = inputs['runDir']
 
     whale.log_file = runDir + '/log.txt'
     # initialize log file
@@ -80,7 +80,7 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):  #
     log_msg('Started running the workflow script')
     log_div()
 
-    WF = whale.Workflow(  # noqa: N806
+    WF = whale.Workflow(
         run_type,
         input_file,
         app_registry,
@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
     # Defining the command line arguments
 
-    workflowArgParser = argparse.ArgumentParser(  # noqa: N816
+    workflowArgParser = argparse.ArgumentParser(
         'Run the NHERI SimCenter sWHALE workflow for a single asset.',
         allow_abbrev=False,
     )
@@ -125,8 +125,8 @@ if __name__ == '__main__':
     )
     workflowArgParser.add_argument(
         'registry',
-        default=os.path.join(  # noqa: PTH118
-            os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
+        default=os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
             'WorkflowApplications.json',
         ),
         help='Path to file containing registered workflow applications',
@@ -151,11 +151,11 @@ if __name__ == '__main__':
     )
 
     # Parsing the command line arguments
-    wfArgs = workflowArgParser.parse_args()  # noqa: N816
+    wfArgs = workflowArgParser.parse_args()
 
     # update the local app dir with the default - if needed
     if wfArgs.appDir is None:
-        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
+        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
         wfArgs.appDir = workflow_dir.parents[1]
 
     # Calling the main workflow method and passing the parsed arguments

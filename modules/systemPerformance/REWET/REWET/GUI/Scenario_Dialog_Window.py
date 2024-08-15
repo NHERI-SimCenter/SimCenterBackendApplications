@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Scenario_Dialog_Window.ui'  # noqa: CPY001, D100, N999
+# Form implementation generated from reading ui file 'Scenario_Dialog_Window.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,8 +8,8 @@
 from PyQt5 import QtCore, QtWidgets
 
 
-class Ui_Scenario_Dialog:  # noqa: D101
-    def setupUi(self, Scenario_Dialog):  # noqa: N802, N803, D102
+class Ui_Scenario_Dialog:
+    def setupUi(self, Scenario_Dialog):
         Scenario_Dialog.setObjectName('Scenario_Dialog')
         Scenario_Dialog.resize(351, 241)
         self.buttonBox = QtWidgets.QDialogButtonBox(Scenario_Dialog)
@@ -61,7 +61,7 @@ class Ui_Scenario_Dialog:  # noqa: D101
         self.buttonBox.rejected.connect(Scenario_Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Scenario_Dialog)
 
-    def retranslateUi(self, Scenario_Dialog):  # noqa: N802, N803, D102
+    def retranslateUi(self, Scenario_Dialog):
         _translate = QtCore.QCoreApplication.translate
         Scenario_Dialog.setWindowTitle(_translate('Scenario_Dialog', 'New Scenario'))
         self.label.setText(_translate('Scenario_Dialog', 'Scenario Name'))

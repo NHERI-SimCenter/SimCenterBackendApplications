@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -42,24 +42,24 @@ import json
 import sys
 
 
-def create_SAM(  # noqa: N802, D103
-    BIM_file,  # noqa: N803
-    EVENT_file,  # noqa: ARG001, N803
-    SAM_file,  # noqa: N803
+def create_SAM(
+    BIM_file,
+    EVENT_file,
+    SAM_file,
     model_script,
     model_path,
     ndm,
     dof_map,
     column_line,
-    getRV,  # noqa: ARG001, N803
+    getRV,
 ):
-    with open(BIM_file, encoding='utf-8') as f:  # noqa: PTH123
-        root_BIM = json.load(f)['GeneralInformation']  # noqa: N806
+    with open(BIM_file, encoding='utf-8') as f:
+        root_BIM = json.load(f)['GeneralInformation']
 
     try:
         stories = root_BIM['NumberOfStories']
-    except:  # noqa: E722
-        raise ValueError('OpenSeesPyInput - structural information missing')  # noqa: B904, EM101, TRY003
+    except:
+        raise ValueError('OpenSeesPyInput - structural information missing')
 
     if column_line is None:
         nodes = list(range(stories + 1))
@@ -75,7 +75,7 @@ def create_SAM(  # noqa: N802, D103
         node_entry['floor'] = f'{floor}'
         node_map.append(node_entry)
 
-    root_SAM = {  # noqa: N806
+    root_SAM = {
         'mainScript': model_script,
         'modelPath': model_path,
         'dofMap': dof_map,
@@ -84,11 +84,11 @@ def create_SAM(  # noqa: N802, D103
         'NodeMapping': node_map,
         'numStory': stories,
         'ndm': ndm,
-        # TODO: improve this if we want random vars in the structure  # noqa: TD002
+        # TODO: improve this if we want random vars in the structure
         'randomVar': [],
     }
 
-    with open(SAM_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
+    with open(SAM_file, 'w', encoding='utf-8') as f:
         json.dump(root_SAM, f, indent=2)
 
 

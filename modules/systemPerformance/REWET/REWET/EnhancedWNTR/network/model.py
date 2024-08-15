@@ -12,7 +12,7 @@ model.
     NodeRegistry
     LinkRegistry
 
-"""  # noqa: CPY001, D205
+"""
 
 import logging
 import math
@@ -23,7 +23,7 @@ from wntrfr.network import WaterNetworkModel
 from wntrfr.network.base import LinkStatus
 from wntrfr.network.elements import Pump, Valve
 
-from ..epanet.io import InpFile  # noqa: TID252
+from ..epanet.io import InpFile
 
 logger = logging.getLogger(__name__)
 
@@ -44,10 +44,10 @@ class WaterNetworkModel(WaterNetworkModel):
         self.breakage_link = {}
         self.expicit_leak = []
 
-    def updateWaterNetworkModelWithResult(  # noqa: C901, N802
+    def updateWaterNetworkModelWithResult(
         self,
         result,
-        registry,  # noqa: ARG002
+        registry,
         latest_simulation_time=None,
     ):
         """Updates Water Network Model consistent with result model. must be only
@@ -75,13 +75,13 @@ class WaterNetworkModel(WaterNetworkModel):
         -------
         None.
 
-        """  # noqa: D205, D401
+        """
         max_time = result.node['head'].index.max()
-        if latest_simulation_time == None:  # noqa: E711
+        if latest_simulation_time == None:
             latest_simulation_time = max_time
         elif latest_simulation_time != max_time:
-            raise ValueError(  # noqa: TRY003
-                'Provided LATEST SIMULATION TIME id not consistent with the latest time in RESULT'  # noqa: EM101
+            raise ValueError(
+                'Provided LATEST SIMULATION TIME id not consistent with the latest time in RESULT'
             )
 
         avilable_tank_name_list = set(self.tank_name_list).intersection(
@@ -94,7 +94,7 @@ class WaterNetworkModel(WaterNetworkModel):
             head = None
 
             cur_node = self.get_node(tank_name)
-            if cur_node._is_isolated:  # noqa: SLF001
+            if cur_node._is_isolated:
                 continue
             head = result.node['head'].loc[max_time, tank_name]
 
@@ -107,12 +107,12 @@ class WaterNetworkModel(WaterNetworkModel):
                 tank_level = cur_node.max_level
 
             cur_node.init_level = abs(tank_level)
-            cur_node._head = cur_node.elevation + tank_level  # noqa: SLF001
+            cur_node._head = cur_node.elevation + tank_level
 
             if tank_level < 0.0:
-                logger.error('head= ' + repr(head))  # noqa: G003
-                logger.error('elevation= ' + repr(cur_node.elevation))  # noqa: G003
-                logger.error('tank_level= ' + repr(tank_level))  # noqa: G003
+                logger.error('head= ' + repr(head))
+                logger.error('elevation= ' + repr(cur_node.elevation))
+                logger.error('tank_level= ' + repr(tank_level))
                 raise ValueError(
                     'Tank Level for ' + tank_name + ' is less than zero'
                 )
@@ -124,7 +124,7 @@ class WaterNetworkModel(WaterNetworkModel):
             try:
                 setting = result.link['setting'].loc[max_time, link_name]
                 status = result.link['status'].loc[max_time, link_name]
-            except:  # noqa: S112, E722
+            except:
                 # logger.error(link_name + ' exist in WaterNetwork but does not exist in result')
                 # raise ValueError(link_name + ' exist in WaterNetwork but does not exist in result')
                 continue
@@ -136,17 +136,17 @@ class WaterNetworkModel(WaterNetworkModel):
                 link.setting.base_value = float(setting)
 
             if status == 0:
-                link._user_status = LinkStatus.Closed  # noqa: SLF001
+                link._user_status = LinkStatus.Closed
 
             elif status == 1:
-                link._user_status = LinkStatus.Open  # noqa: SLF001
+                link._user_status = LinkStatus.Open
 
-            elif status == 2:  # noqa: PLR2004
-                link._user_status = LinkStatus.Active  # noqa: SLF001
+            elif status == 2:
+                link._user_status = LinkStatus.Active
 
             else:
-                logger.error('Element type is: ' + repr(type(link)))  # noqa: G003
-                logger.error('Status is : ' + repr(status))  # noqa: G003
+                logger.error('Element type is: ' + repr(type(link)))
+                logger.error('Status is : ' + repr(status))
 
     def read_inpfile(self, filename):
         """Defines water network model components from an EPANET INP file
@@ -156,7 +156,7 @@ class WaterNetworkModel(WaterNetworkModel):
         filename : string
             Name of the INP file.
 
-        """  # noqa: D400, D401
+        """
         inpfile = InpFile()
         inpfile.read(filename, wn=self)
         self._inpfile = inpfile
@@ -171,7 +171,7 @@ class WaterNetworkModel(WaterNetworkModel):
         units : str, int or FlowUnits
             Name of the units being written to the inp file.
 
-        """  # noqa: D400, D401
+        """
         if self._inpfile is None:
             logger.warning(
                 'Writing a minimal INP file without saved non-WNTR options (energy, etc.)'
@@ -181,15 +181,15 @@ class WaterNetworkModel(WaterNetworkModel):
             units = self._options.hydraulic.en2_units
         self._inpfile.write(filename, self, units=units)
 
-    def implicitLeakToExplicitEMitter(self, registry):  # noqa: N802, D102
+    def implicitLeakToExplicitEMitter(self, registry):
         if len(self.expicit_leak) > 0:
-            raise ValueError('Explicit leak is not reset')  # noqa: EM101, TRY003
+            raise ValueError('Explicit leak is not reset')
 
         registry.active_pipe_damages = OrderedDict()
         for node_name in self.node_name_list:
             node = self.get_node(node_name)
 
-            if node._leak:  # noqa: SLF001
+            if node._leak:
                 if node_name in self.expicit_leak:
                     raise ValueError(
                         'The node name in already in leak memory: ' + node_name
@@ -214,12 +214,12 @@ class WaterNetworkModel(WaterNetworkModel):
                 )
 
                 cd = node.leak_area * (2) ** 0.5  # (m^3ps/(KPa^0.5))
-                cd = cd / (0.145038**0.5)  # (gpm/(Psi^0.5))  # noqa: PLR6104
+                cd = cd / (0.145038**0.5)  # (gpm/(Psi^0.5))
                 # When writing to emitter, function from_si changes m^3ps to GPM
 
-                new_node._emitter_coefficient = cd  # noqa: SLF001
+                new_node._emitter_coefficient = cd
 
-                if node.demand_timeseries_list[0].base_value > 0.001:  # noqa: PLR2004
+                if node.demand_timeseries_list[0].base_value > 0.001:
                     raise ValueError('leak node has demand: ' + node_name)
                 temp = {
                     'node_name': node_name,
@@ -232,14 +232,14 @@ class WaterNetworkModel(WaterNetworkModel):
                 registry.explicit_leak_node[node_name] = new_node_name
                 registry.active_pipe_damages.update({new_node_name: node_name})
 
-    def implicitLeakToExplicitReservoir(self, registry):  # noqa: N802, D102
+    def implicitLeakToExplicitReservoir(self, registry):
         if len(self.expicit_leak) > 0:
-            raise ValueError('Explicit leak is not reset')  # noqa: EM101, TRY003
+            raise ValueError('Explicit leak is not reset')
         registry.active_pipe_damages = OrderedDict()
         for node_name in self.node_name_list:
             node = self.get_node(node_name)
 
-            if node._leak:  # noqa: SLF001
+            if node._leak:
                 if node_name in self.expicit_leak:
                     raise ValueError(
                         'The node name in already in leak memory: ' + node_name
@@ -264,7 +264,7 @@ class WaterNetworkModel(WaterNetworkModel):
                     check_valve=True,
                 )
 
-                if node.demand_timeseries_list[0].base_value > 0.001:  # noqa: PLR2004
+                if node.demand_timeseries_list[0].base_value > 0.001:
                     raise ValueError('leak node has demand: ' + node_name)
                 temp = {
                     'node_name': node_name,
@@ -276,20 +276,20 @@ class WaterNetworkModel(WaterNetworkModel):
                 registry.explicit_leak_node[node_name] = new_node_name
                 registry.active_pipe_damages.update({new_node_name: node_name})
 
-    def resetExplicitLeak(self):  # noqa: N802, D102
+    def resetExplicitLeak(self):
         for data in self.expicit_leak:
             new_pipe_name = data['element1']
             new_node_name = data['element2']
 
             self.remove_link(new_pipe_name, force=True)
-            self.get_node(new_node_name)._emitter_coefficient = None  # noqa: SLF001
+            self.get_node(new_node_name)._emitter_coefficient = None
             self.remove_node(new_node_name, force=True)
 
         self.expicit_leak = []
 
-    def linkBreackage(self, registry):  # noqa: N802, D102
+    def linkBreackage(self, registry):
         if len(self.breakage_link) > 0:
-            raise ValueError('Breakckage is not unliked')  # noqa: EM101, TRY003
+            raise ValueError('Breakckage is not unliked')
 
         self.breakage_link = {}
         pipe_damage_table = registry.getDamageData('PIPE')
@@ -297,20 +297,20 @@ class WaterNetworkModel(WaterNetworkModel):
             pipe_damage_table['damage_type'] == 'break'
         ]
 
-        for damage_node, row in broken_pipe_damage_table.iterrows():  # noqa: B007
-            if registry.getPipeDamageAttribute('repair', damage_node) == True:  # noqa: E712
+        for damage_node, row in broken_pipe_damage_table.iterrows():
+            if registry.getPipeDamageAttribute('repair', damage_node) == True:
                 continue
-            pipe_A, pipe_B, orginal_pipe, node_A, node_B = registry.getBreakData(  # noqa: F841, N806
+            pipe_A, pipe_B, orginal_pipe, node_A, node_B = registry.getBreakData(
                 damage_node
             )
 
             pipe_name_list = self.pipe_name_list
             junction_name_list = self.junction_name_list
 
-            iPipe_A_in = pipe_A in pipe_name_list  # noqa: N806
-            iPipe_B_in = pipe_B in pipe_name_list  # noqa: N806
-            iNode_A_in = node_A in junction_name_list  # noqa: N806
-            iNode_B_in = node_B in junction_name_list  # noqa: N806
+            iPipe_A_in = pipe_A in pipe_name_list
+            iPipe_B_in = pipe_B in pipe_name_list
+            iNode_A_in = node_A in junction_name_list
+            iNode_B_in = node_B in junction_name_list
 
             if not iPipe_A_in or not iPipe_B_in or not iNode_A_in or not iNode_B_in:
                 if iPipe_A_in or iPipe_B_in or iNode_A_in or iNode_B_in:
@@ -341,8 +341,8 @@ class WaterNetworkModel(WaterNetworkModel):
                 )
                 self.breakage_link[damage_node] = new_pipe_name
 
-    def unlinkBreackage(self):  # noqa: N802, D102
-        for damage_node, link_pipe_name in self.breakage_link.items():  # noqa: B007, PERF102
+    def unlinkBreackage(self):
+        for damage_node, link_pipe_name in self.breakage_link.items():
             self.remove_link(link_pipe_name, force=True)
 
         self.breakage_link = {}

@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -47,7 +47,7 @@ import numpy as np
 
 # from simcenter_common import *
 
-convert_EDP = {  # noqa: N816
+convert_EDP = {
     'max_abs_acceleration': 'PFA',
     'max_rel_disp': 'PFD',
     'max_drift': 'PID',
@@ -57,18 +57,18 @@ convert_EDP = {  # noqa: N816
 }
 
 
-def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ARG001, N802, N803, D103
+def run_surrogateGP(AIM_input_path, EDP_input_path):
     # these imports are here to save time when the app is called without
     # the -getRV flag
     # import openseespy.opensees as ops
 
-    with open(AIM_input_path, encoding='utf-8') as f:  # noqa: PTH123
-        root_AIM = json.load(f)  # noqa: N806
+    with open(AIM_input_path, encoding='utf-8') as f:
+        root_AIM = json.load(f)
     # root_GI = root_AIM['GeneralInformation']
 
-    root_SAM = root_AIM['Applications']['Modeling']  # noqa: N806
+    root_SAM = root_AIM['Applications']['Modeling']
 
-    surrogate_path = os.path.join(  # noqa: PTH118, F841
+    surrogate_path = os.path.join(
         root_SAM['ApplicationData']['MS_Path'],
         root_SAM['ApplicationData']['mainScript'],
     )
@@ -79,27 +79,27 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ARG001, N802, N803
     #
     # Let's call GPdriver creator?
     #
-    pythonEXE = sys.executable  # noqa: N806
+    pythonEXE = sys.executable
 
-    surrogatePredictionPath = os.path.join(  # noqa: PTH118, N806
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),  # noqa: PTH100, PTH120
+    surrogatePredictionPath = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
         'performFEM',
         'surrogateGP',
         'gpPredict.py',
     )
 
-    curpath = os.getcwd()  # noqa: PTH109
-    params_name = os.path.join(curpath, 'params.in')  # noqa: PTH118
-    surrogate_name = os.path.join(  # noqa: PTH118
+    curpath = os.getcwd()
+    params_name = os.path.join(curpath, 'params.in')
+    surrogate_name = os.path.join(
         curpath, root_SAM['ApplicationData']['postprocessScript']
     )  # pickl
-    surrogate_meta_name = os.path.join(  # noqa: PTH118
+    surrogate_meta_name = os.path.join(
         curpath, root_SAM['ApplicationData']['mainScript']
     )  # json
 
     # compute IMs
     # print(f"{pythonEXE} {surrogatePredictionPath} {params_name} {surrogate_meta_name} {surrogate_name}")
-    os.system(  # noqa: S605
+    os.system(
         f'{pythonEXE} {surrogatePredictionPath} {params_name} {surrogate_meta_name} {surrogate_name}'
     )
 
@@ -114,26 +114,26 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ARG001, N802, N803
         root_AIM['Applications']['Simulation']['Application']
         != 'SurrogateRegionalPy'
     ):
-        with open('../workflow.err', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+        with open('../workflow.err', 'w') as f:
             f.write(
                 'Do not select [None] in the FEM tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'
             )
-        exit(-1)  # noqa: PLR1722
+        exit(-1)
 
 
-def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):  # noqa: C901, N802, N803, D103
-    with open(AIM_input_path, encoding='utf-8') as f:  # noqa: PTH123
-        root_AIM = json.load(f)  # noqa: N806
+def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):
+    with open(AIM_input_path, encoding='utf-8') as f:
+        root_AIM = json.load(f)
 
-    if newEDP_input_path == None:  # noqa: E711
-        newEDP_input_path = EDP_input_path  # noqa: N806
+    if newEDP_input_path == None:
+        newEDP_input_path = EDP_input_path
 
-    root_SAM = root_AIM['Applications']['Modeling']  # noqa: N806
-    curpath = os.getcwd()  # noqa: PTH109
+    root_SAM = root_AIM['Applications']['Modeling']
+    curpath = os.getcwd()
     # surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])
-    surrogate_path = os.path.join(curpath, root_SAM['ApplicationData']['mainScript'])  # noqa: PTH118
+    surrogate_path = os.path.join(curpath, root_SAM['ApplicationData']['mainScript'])
 
-    with open(surrogate_path, encoding='utf-8') as f:  # noqa: PTH123
+    with open(surrogate_path, encoding='utf-8') as f:
         surrogate_model = json.load(f)
 
     #
@@ -142,14 +142,14 @@ def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):  # noqa: 
 
     edp_names = surrogate_model['ylabels']
 
-    if not os.path.isfile('results.out'):  # noqa: PTH113
+    if not os.path.isfile('results.out'):
         # not found
-        print('Skiping surrogateEDP - results.out does not exist in ' + os.getcwd())  # noqa: T201, PTH109
-        exit(-1)  # noqa: PLR1722
-    elif os.stat('results.out').st_size == 0:  # noqa: PTH116
+        print('Skiping surrogateEDP - results.out does not exist in ' + os.getcwd())
+        exit(-1)
+    elif os.stat('results.out').st_size == 0:
         # found but empty
-        print('Skiping surrogateEDP - results.out is empty in ' + os.getcwd())  # noqa: T201, PTH109
-        exit(-1)  # noqa: PLR1722
+        print('Skiping surrogateEDP - results.out is empty in ' + os.getcwd())
+        exit(-1)
 
     edp_vals = np.loadtxt('results.out').tolist()
 
@@ -157,48 +157,48 @@ def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):  # noqa: 
     # Read EDP file, mapping between EDPnames and EDP.json and write scalar_data
     #
 
-    with open(EDP_input_path, encoding='utf-8') as f:  # noqa: PTH123
-        rootEDP = json.load(f)  # noqa: N806
+    with open(EDP_input_path, encoding='utf-8') as f:
+        rootEDP = json.load(f)
 
-    numEvents = len(rootEDP['EngineeringDemandParameters'])  # noqa: N806, F841
-    numResponses = rootEDP['total_number_edp']  # noqa: N806, F841
+    numEvents = len(rootEDP['EngineeringDemandParameters'])
+    numResponses = rootEDP['total_number_edp']
     i = 0  # current event id
     event = rootEDP['EngineeringDemandParameters'][i]
-    eventEDPs = event['responses']  # noqa: N806
+    eventEDPs = event['responses']
     for j in range(len(eventEDPs)):
-        eventEDP = eventEDPs[j]  # noqa: N806
-        eventType = eventEDP['type']  # noqa: N806
+        eventEDP = eventEDPs[j]
+        eventType = eventEDP['type']
         known = False
         if eventType == 'max_abs_acceleration':
-            edpAcronym = 'PFA'  # noqa: N806
+            edpAcronym = 'PFA'
             floor = eventEDP['floor']
             known = True
         elif eventType == 'max_drift':
-            edpAcronym = 'PID'  # noqa: N806
+            edpAcronym = 'PID'
             floor = eventEDP['floor2']
             known = True
         elif eventType == 'max_roof_drift':
-            edpAcronym = 'PRD'  # noqa: N806
+            edpAcronym = 'PRD'
             floor = '1'
             known = True
         elif eventType == 'residual_disp':
-            edpAcronym = 'RD'  # noqa: N806
+            edpAcronym = 'RD'
             floor = eventEDP['floor']
             known = True
         elif eventType == 'max_pressure':
-            edpAcronym = 'PSP'  # noqa: N806
+            edpAcronym = 'PSP'
             floor = eventEDP['floor2']
             known = True
         elif eventType == 'max_rel_disp':
-            edpAcronym = 'PFD'  # noqa: N806
+            edpAcronym = 'PFD'
             floor = eventEDP['floor']
             known = True
         elif eventType == 'peak_wind_gust_speed':
-            edpAcronym = 'PWS'  # noqa: N806
+            edpAcronym = 'PWS'
             floor = eventEDP['floor']
             known = True
         else:
-            edpList = [eventType]  # noqa: N806
+            edpList = [eventType]
 
         if known:
             dofs = eventEDP['dofs']
@@ -207,7 +207,7 @@ def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):  # noqa: 
                 my_edp_name = '1-' + edpAcronym + '-' + floor + '-' + str(dof)
                 idscalar = edp_names.index(my_edp_name)
                 scalar_data += [edp_vals[idscalar]]
-                edpList = [my_edp_name]  # noqa: N806, F841
+                edpList = [my_edp_name]
 
             eventEDPs[j]['scalar_data'] = scalar_data
 
@@ -216,7 +216,7 @@ def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):  # noqa: 
     )  # Remove EQ name if exists because it is confusing
     rootEDP['EngineeringDemandParameters'][0]['responses'] = eventEDPs
 
-    with open(newEDP_input_path, 'w', encoding='utf-8') as f:  # noqa: PTH123
+    with open(newEDP_input_path, 'w', encoding='utf-8') as f:
         json.dump(rootEDP, f, indent=2)
 
 

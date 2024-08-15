@@ -1,12 +1,12 @@
-# written: Michael Gardner @ UNR  # noqa: CPY001, D100, INP001
+# written: Michael Gardner @ UNR
 
 # import sys
 
 
-def prepareUQ(paramsFile, inputFile, outputFile, rvSpecifier):  # noqa: C901, N802, N803, D103
+def prepareUQ(paramsFile, inputFile, outputFile, rvSpecifier):
     # These are the delimiter choices, which can expanded as more UQ programs are added. Remember to also
     # extend the factory in rvDelimiter to handle additional cases
-    rvDelimiterChoices = ['SimCenterDelimiter', 'UQpyDelimiter']  # noqa: N806
+    rvDelimiterChoices = ['SimCenterDelimiter', 'UQpyDelimiter']
 
     if rvSpecifier not in rvDelimiterChoices:
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -21,51 +21,51 @@ def prepareUQ(paramsFile, inputFile, outputFile, rvSpecifier):  # noqa: C901, N8
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     # Open parameters file and read parameter settings
-    numRVs = 0  # noqa: N806
-    lineCount = 0  # noqa: N806
-    rvNames = []  # noqa: N806
-    rvSettings = []  # noqa: N806
+    numRVs = 0
+    lineCount = 0
+    rvNames = []
+    rvSettings = []
 
     try:
-        with open(paramsFile) as params:  # noqa: PLW1514, PTH123
+        with open(paramsFile) as params:
             for line in params:
                 if lineCount == 0:
-                    rvNames = [i.strip() for i in line.split(',')]  # noqa: N806
-                    numRVs = len(rvNames)  # noqa: N806, F841
+                    rvNames = [i.strip() for i in line.split(',')]
+                    numRVs = len(rvNames)
                     # Replace RV names based on delimiter
                     for i, rv in enumerate(rvNames):
                         rvNames[i] = rvSpecifier.replaceRV(rv)
 
                 else:
-                    rvSettings = [i.strip() for i in line.split(',')]  # noqa: N806
+                    rvSettings = [i.strip() for i in line.split(',')]
 
-                lineCount = lineCount + 1  # noqa: N806, PLR6104
+                lineCount = lineCount + 1
 
     except OSError:
-        print('ERROR: preProcessUQ.py could not open parameters file: ' + paramsFile)  # noqa: T201
+        print('ERROR: preProcessUQ.py could not open parameters file: ' + paramsFile)
 
     # Next, open input file and search for random variables that need to be replaced by parameter realizations
-    inputTemplate = 'inputTemplate'  # noqa: N806
-    realizationOutput = 'outputFile'  # noqa: N806
+    inputTemplate = 'inputTemplate'
+    realizationOutput = 'outputFile'
     try:
-        inputTemplate = open(inputFile)  # noqa: N806, PLW1514, PTH123, SIM115
+        inputTemplate = open(inputFile)
     except OSError:
-        print(  # noqa: T201
+        print(
             'ERROR: preProcessUQ.py could not open input template file: ' + inputFile
         )
 
     try:
-        realizationOutput = open(outputFile, 'w')  # noqa: N806, PLW1514, PTH123, SIM115
+        realizationOutput = open(outputFile, 'w')
     except OSError:
-        print('ERROR: preProcessUQ.py could not open output file: ' + outputFile)  # noqa: T201
+        print('ERROR: preProcessUQ.py could not open output file: ' + outputFile)
 
     # Iterate over all lines in input template
     for line in inputTemplate:
         # Iterate over all RVs to check they need to be replaced
         for i, rv in enumerate(rvNames):
-            try:  # noqa: SIM105
-                line = line.replace(rv, rvSettings[i])  # noqa: PLW2901
-            except:  # noqa: S110, PERF203, E722
+            try:
+                line = line.replace(rv, rvSettings[i])
+            except:
                 pass
 
         realizationOutput.write(line)

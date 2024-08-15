@@ -1,4 +1,4 @@
-"""The wntrfr.morph.link module contains functions to split/break pipes."""  # noqa: CPY001, INP001
+"""The wntrfr.morph.link module contains functions to split/break pipes."""
 
 import copy
 import logging
@@ -13,9 +13,9 @@ def split_pipe(
     pipe_name_to_split,
     new_pipe_name,
     new_junction_name,
-    add_pipe_at_end=True,  # noqa: FBT002
+    add_pipe_at_end=True,
     split_at_point=0.5,
-    return_copy=True,  # noqa: FBT002
+    return_copy=True,
 ):
     """Split a pipe by adding a junction and one new pipe segment.
 
@@ -77,7 +77,7 @@ def split_pipe(
         return_copy,
     )
 
-    return wn2  # noqa: RET504
+    return wn2
 
 
 def break_pipe(
@@ -86,9 +86,9 @@ def break_pipe(
     new_pipe_name,
     new_junction_name_old_pipe,
     new_junction_name_new_pipe,
-    add_pipe_at_end=True,  # noqa: FBT002
+    add_pipe_at_end=True,
     split_at_point=0.5,
-    return_copy=True,  # noqa: FBT002
+    return_copy=True,
 ):
     """Break a pipe by adding a two unconnected junctions and one new pipe segment.
 
@@ -156,10 +156,10 @@ def break_pipe(
         return_copy,
     )
 
-    return wn2  # noqa: RET504
+    return wn2
 
 
-def _split_or_break_pipe(  # noqa: C901
+def _split_or_break_pipe(
     wn,
     pipe_name_to_split,
     new_pipe_name,
@@ -178,9 +178,9 @@ def _split_or_break_pipe(  # noqa: C901
 
     # Do sanity checks
     if not isinstance(pipe, Pipe):
-        raise ValueError('You can only split pipes.')  # noqa: EM101, TRY003, TRY004
+        raise ValueError('You can only split pipes.')
     if split_at_point < 0 or split_at_point > 1:
-        raise ValueError('split_at_point must be between 0 and 1')  # noqa: EM101, TRY003
+        raise ValueError('split_at_point must be between 0 and 1')
     # Sina edited here
     # node_list = [node_name for node_name, node in wn2.nodes()]
     # link_list = [link_name for link_name, link in wn2.links()]
@@ -222,7 +222,7 @@ def _split_or_break_pipe(  # noqa: C901
         elevation=junction_elevation,
         coordinates=junction_coordinates,
     )
-    if len(new_junction_names) == 2:  # noqa: PLR2004
+    if len(new_junction_names) == 2:
         wn2.add_junction(
             new_junction_names[1],
             base_demand=0.0,

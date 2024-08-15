@@ -1,11 +1,11 @@
-# written: fmk, adamzs  # noqa: CPY001, D100, INP001
+# written: fmk, adamzs
 
 # import functions for Python 2.X support
 import sys
 
 if sys.version.startswith('2'):
-    range = xrange  # noqa: A001, F821
-    string_types = basestring  # noqa: F821
+    range = xrange
+    string_types = basestring
 else:
     string_types = str
 
@@ -17,78 +17,78 @@ from time import gmtime, strftime
 divider = '#' * 80
 log_output = []
 
-from WorkflowUtils import *  # noqa: E402, F403
+from WorkflowUtils import *
 
 
-def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, PLR0912, PLR0914, PLR0915
+def main(run_type, inputFile, applicationsRegistry):
     # the whole workflow is wrapped within a 'try' block.
     # a number of exceptions (files missing, explicit application failures, etc.) are
     # handled explicitly to aid the user.
     # But unhandled exceptions case the workflow to stop with an error, handled in the
     # exception block way at the bottom of this main() function
-    try:  # noqa: PLR1702
-        workflow_log(divider)  # noqa: F405
-        workflow_log('Start of run')  # noqa: F405
-        workflow_log(divider)  # noqa: F405
-        workflow_log('workflow input file:       %s' % inputFile)  # noqa: F405, UP031
-        workflow_log('application registry file: %s' % applicationsRegistry)  # noqa: F405, UP031
-        workflow_log('runtype:                   %s' % run_type)  # noqa: F405, UP031
-        workflow_log(divider)  # noqa: F405
+    try:
+        workflow_log(divider)
+        workflow_log('Start of run')
+        workflow_log(divider)
+        workflow_log('workflow input file:       %s' % inputFile)
+        workflow_log('application registry file: %s' % applicationsRegistry)
+        workflow_log('runtype:                   %s' % run_type)
+        workflow_log(divider)
 
         #
         # first we parse the applications registry to load all possible applications
         #  - for each application type we place in a dictionary key being name, value containing path to executable
         #
-        with open(applicationsRegistry) as data_file:  # noqa: PLW1514, PTH123
-            registryData = json.load(data_file)  # noqa: N806
+        with open(applicationsRegistry) as data_file:
+            registryData = json.load(data_file)
             # convert all relative paths to full paths
 
-        A = 'Applications'  # noqa: N806
-        Applications = dict()  # noqa: C408, N806
-        appList = 'Event Modeling EDP Simulation UQ'.split(' ')  # noqa: N806
-        appList = [a + A for a in appList]  # noqa: N806
+        A = 'Applications'
+        Applications = dict()
+        appList = 'Event Modeling EDP Simulation UQ'.split(' ')
+        appList = [a + A for a in appList]
 
         for app_type in appList:
             if app_type in registryData:
-                xApplicationData = registryData[app_type]  # noqa: N806
-                applicationsData = xApplicationData['Applications']  # noqa: N806
+                xApplicationData = registryData[app_type]
+                applicationsData = xApplicationData['Applications']
 
                 for app in applicationsData:
-                    appName = app['Name']  # noqa: N806
-                    appExe = app['ExecutablePath']  # noqa: N806
+                    appName = app['Name']
+                    appExe = app['ExecutablePath']
                     if app_type not in Applications:
-                        Applications[app_type] = dict()  # noqa: C408
+                        Applications[app_type] = dict()
                     Applications[app_type][appName] = appExe
 
         #
         # open input file, and parse json into data
         #
 
-        with open(inputFile) as data_file:  # noqa: PLW1514, PTH123
+        with open(inputFile) as data_file:
             data = json.load(data_file)
             # convert all relative paths to full paths
             # relative2fullpath(data)
 
         if 'runDir' in data:
-            runDIR = data['runDir']  # noqa: N806
+            runDIR = data['runDir']
         else:
-            raise WorkFlowInputError('Need a runDir Entry')  # noqa: EM101, F405, TRY003, TRY301
+            raise WorkFlowInputError('Need a runDir Entry')
 
         if 'remoteAppDir' in data:
-            remoteAppDir = data['remoteAppDir']  # noqa: N806
+            remoteAppDir = data['remoteAppDir']
         else:
-            raise WorkFlowInputError('Need a remoteAppDir Entry')  # noqa: EM101, F405, TRY003, TRY301
+            raise WorkFlowInputError('Need a remoteAppDir Entry')
 
         if 'localAppDir' in data:
-            localAppDir = data['localAppDir']  # noqa: N806
+            localAppDir = data['localAppDir']
         else:
-            raise WorkFlowInputError('Need a localAppDir Entry')  # noqa: EM101, F405, TRY003, TRY301
+            raise WorkFlowInputError('Need a localAppDir Entry')
 
         #
         # before running chdir to templatedir
         #
 
-        workflow_log('run Directory:               %s' % runDIR)  # noqa: F405, UP031
+        workflow_log('run Directory:               %s' % runDIR)
 
         os.chdir(runDIR)
         os.chdir('templatedir')
@@ -100,7 +100,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
         if 'Applications' in data:
             available_apps = data['Applications']
         else:
-            raise WorkFlowInputError('Need an Applications Entry')  # noqa: EM101, F405, TRY003, TRY301
+            raise WorkFlowInputError('Need an Applications Entry')
 
         #
         # get events, for each the  application and its data .. FOR NOW 1 EVENT
@@ -111,42 +111,42 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
 
             for event in events:
                 if 'EventClassification' in event:
-                    eventClassification = event['EventClassification']  # noqa: N806
+                    eventClassification = event['EventClassification']
                     if eventClassification == 'Earthquake':
                         if 'Application' in event:
-                            eventApplication = event['Application']  # noqa: N806
-                            eventAppData = event['ApplicationData']  # noqa: N806
-                            eventData = event['ApplicationData']  # noqa: N806
+                            eventApplication = event['Application']
+                            eventAppData = event['ApplicationData']
+                            eventData = event['ApplicationData']
 
                             if (
-                                eventApplication  # noqa: SIM118
+                                eventApplication
                                 in Applications['EventApplications'].keys()
                             ):
-                                eventAppExe = Applications['EventApplications'].get(  # noqa: N806
+                                eventAppExe = Applications['EventApplications'].get(
                                     eventApplication
                                 )
-                                workflow_log(remoteAppDir)  # noqa: F405
-                                workflow_log(eventAppExe)  # noqa: F405
-                                eventAppExeLocal = posixpath.join(  # noqa: N806
+                                workflow_log(remoteAppDir)
+                                workflow_log(eventAppExe)
+                                eventAppExeLocal = posixpath.join(
                                     localAppDir, eventAppExe
                                 )
-                                eventAppExeRemote = posixpath.join(  # noqa: N806
+                                eventAppExeRemote = posixpath.join(
                                     remoteAppDir, eventAppExe
                                 )
-                                workflow_log(eventAppExeRemote)  # noqa: F405
+                                workflow_log(eventAppExeRemote)
                             else:
-                                raise WorkFlowInputError(  # noqa: F405, TRY301
-                                    'Event application %s not in registry'  # noqa: UP031
+                                raise WorkFlowInputError(
+                                    'Event application %s not in registry'
                                     % eventApplication
                                 )
 
                         else:
-                            raise WorkFlowInputError(  # noqa: F405, TRY003, TRY301
-                                'Need an EventApplication section'  # noqa: EM101
+                            raise WorkFlowInputError(
+                                'Need an EventApplication section'
                             )
-                    # TODO: Fully implement HydroUQ's waterborne events into PBE  # noqa: TD002
+                    # TODO: Fully implement HydroUQ's waterborne events into PBE
                     elif (
-                        eventClassification == 'Tsunami'  # noqa: PLR1714
+                        eventClassification == 'Tsunami'
                         or eventClassification == 'Surge'
                         or eventClassification == 'StormSurge'
                         or eventClassification == 'Hydro'
@@ -156,175 +156,175 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
                         )
                         if is_hydrouq_implemented:
                             if 'Application' in event:
-                                eventApplication = event['Application']  # noqa: N806
-                                eventAppData = event['ApplicationData']  # noqa: N806
-                                eventData = event['ApplicationData']  # noqa: N806, F841
+                                eventApplication = event['Application']
+                                eventAppData = event['ApplicationData']
+                                eventData = event['ApplicationData']
 
                                 if (
-                                    eventApplication  # noqa: SIM118
+                                    eventApplication
                                     in Applications['EventApplications'].keys()
                                 ):
-                                    eventAppExe = Applications[  # noqa: N806
+                                    eventAppExe = Applications[
                                         'EventApplications'
                                     ].get(eventApplication)
-                                    workflow_log(remoteAppDir)  # noqa: F405
-                                    workflow_log(eventAppExe)  # noqa: F405
-                                    eventAppExeLocal = posixpath.join(  # noqa: N806
+                                    workflow_log(remoteAppDir)
+                                    workflow_log(eventAppExe)
+                                    eventAppExeLocal = posixpath.join(
                                         localAppDir, eventAppExe
                                     )
-                                    eventAppExeRemote = posixpath.join(  # noqa: N806
+                                    eventAppExeRemote = posixpath.join(
                                         remoteAppDir, eventAppExe
                                     )
-                                    workflow_log(eventAppExeRemote)  # noqa: F405
+                                    workflow_log(eventAppExeRemote)
                                 else:
-                                    raise WorkFlowInputError(  # noqa: F405, TRY301
-                                        'Event application %s not in registry'  # noqa: UP031
+                                    raise WorkFlowInputError(
+                                        'Event application %s not in registry'
                                         % eventApplication
                                     )
 
                             else:
-                                raise WorkFlowInputError(  # noqa: F405, TRY003, TRY301
-                                    'Need an EventApplication section'  # noqa: EM101
+                                raise WorkFlowInputError(
+                                    'Need an EventApplication section'
                                 )
                         else:
-                            raise WorkFlowInputError(  # noqa: F405, TRY003, TRY301
-                                'HydroUQ waterborne events are not implemented in PBE yet. Please use different workflow for now...'  # noqa: EM101
+                            raise WorkFlowInputError(
+                                'HydroUQ waterborne events are not implemented in PBE yet. Please use different workflow for now...'
                             )
                     else:
-                        raise WorkFlowInputError(  # noqa: F405, TRY301
-                            'Event classification must be Earthquake, not %s'  # noqa: UP031
+                        raise WorkFlowInputError(
+                            'Event classification must be Earthquake, not %s'
                             % eventClassification
                         )
 
                 else:
-                    raise WorkFlowInputError('Need Event Classification')  # noqa: EM101, F405, TRY003, TRY301
+                    raise WorkFlowInputError('Need Event Classification')
 
         else:
-            raise WorkFlowInputError('Need an Events Entry in Applications')  # noqa: EM101, F405, TRY003, TRY301
+            raise WorkFlowInputError('Need an Events Entry in Applications')
 
         #
         # get modeling application and its data
         #
 
         if 'Modeling' in available_apps:
-            modelingApp = available_apps['Modeling']  # noqa: N806
+            modelingApp = available_apps['Modeling']
 
             if 'Application' in modelingApp:
-                modelingApplication = modelingApp['Application']  # noqa: N806
+                modelingApplication = modelingApp['Application']
 
                 # check modeling app in registry, if so get full executable path
-                modelingAppData = modelingApp['ApplicationData']  # noqa: N806
+                modelingAppData = modelingApp['ApplicationData']
                 if (
-                    modelingApplication  # noqa: SIM118
+                    modelingApplication
                     in Applications['ModelingApplications'].keys()
                 ):
-                    modelingAppExe = Applications['ModelingApplications'].get(  # noqa: N806
+                    modelingAppExe = Applications['ModelingApplications'].get(
                         modelingApplication
                     )
-                    modelingAppExeLocal = posixpath.join(localAppDir, modelingAppExe)  # noqa: N806
-                    modelingAppExeRemote = posixpath.join(  # noqa: N806
+                    modelingAppExeLocal = posixpath.join(localAppDir, modelingAppExe)
+                    modelingAppExeRemote = posixpath.join(
                         remoteAppDir, modelingAppExe
                     )
                 else:
-                    raise WorkFlowInputError(  # noqa: F405, TRY301
-                        'Modeling application %s not in registry'  # noqa: UP031
+                    raise WorkFlowInputError(
+                        'Modeling application %s not in registry'
                         % modelingApplication
                     )
 
             else:
-                raise WorkFlowInputError(  # noqa: F405, TRY003, TRY301
-                    'Need a ModelingApplication in Modeling data'  # noqa: EM101
+                raise WorkFlowInputError(
+                    'Need a ModelingApplication in Modeling data'
                 )
 
         else:
-            raise WorkFlowInputError('Need a Modeling Entry in Applications')  # noqa: EM101, F405, TRY003, TRY301
+            raise WorkFlowInputError('Need a Modeling Entry in Applications')
 
         #
         # get edp application and its data .. CURRENTLY MODELING APP MUST CREATE EDP
         #
 
         if 'EDP' in available_apps:
-            edpApp = available_apps['EDP']  # noqa: N806
+            edpApp = available_apps['EDP']
 
             if 'Application' in edpApp:
-                edpApplication = edpApp['Application']  # noqa: N806
+                edpApplication = edpApp['Application']
 
                 # check modeling app in registry, if so get full executable path
-                edpAppData = edpApp['ApplicationData']  # noqa: N806
-                if edpApplication in Applications['EDPApplications'].keys():  # noqa: SIM118
-                    edpAppExe = Applications['EDPApplications'].get(edpApplication)  # noqa: N806
-                    edpAppExeLocal = posixpath.join(localAppDir, edpAppExe)  # noqa: N806
-                    edpAppExeRemote = posixpath.join(remoteAppDir, edpAppExe)  # noqa: N806
+                edpAppData = edpApp['ApplicationData']
+                if edpApplication in Applications['EDPApplications'].keys():
+                    edpAppExe = Applications['EDPApplications'].get(edpApplication)
+                    edpAppExeLocal = posixpath.join(localAppDir, edpAppExe)
+                    edpAppExeRemote = posixpath.join(remoteAppDir, edpAppExe)
                 else:
-                    raise WorkFlowInputError(  # noqa: F405, TRY003, TRY301
-                        f'EDP application {edpApplication} not in registry'  # noqa: EM102
+                    raise WorkFlowInputError(
+                        f'EDP application {edpApplication} not in registry'
                     )
 
             else:
-                raise WorkFlowInputError('Need an EDPApplication in EDP data')  # noqa: EM101, F405, TRY003, TRY301
+                raise WorkFlowInputError('Need an EDPApplication in EDP data')
 
         else:
-            raise WorkFlowInputError('Need an EDP Entry in Applications')  # noqa: EM101, F405, TRY003, TRY301
+            raise WorkFlowInputError('Need an EDP Entry in Applications')
 
         #
         # get simulation application and its data
         #
 
         if 'Simulation' in available_apps:
-            simulationApp = available_apps['Simulation']  # noqa: N806
+            simulationApp = available_apps['Simulation']
 
             if 'Application' in simulationApp:
-                simulationApplication = simulationApp['Application']  # noqa: N806
+                simulationApplication = simulationApp['Application']
 
                 # check modeling app in registry, if so get full executable path
-                simAppData = simulationApp['ApplicationData']  # noqa: N806
+                simAppData = simulationApp['ApplicationData']
                 if (
-                    simulationApplication  # noqa: SIM118
+                    simulationApplication
                     in Applications['SimulationApplications'].keys()
                 ):
-                    simAppExe = Applications['SimulationApplications'].get(  # noqa: N806
+                    simAppExe = Applications['SimulationApplications'].get(
                         simulationApplication
                     )
-                    simAppExeLocal = posixpath.join(localAppDir, simAppExe)  # noqa: N806
-                    simAppExeRemote = posixpath.join(remoteAppDir, simAppExe)  # noqa: N806
+                    simAppExeLocal = posixpath.join(localAppDir, simAppExe)
+                    simAppExeRemote = posixpath.join(remoteAppDir, simAppExe)
                 else:
-                    raise WorkFlowInputError(  # noqa: F405, TRY003, TRY301
-                        f'Simulation application {simulationApplication} not in registry'  # noqa: EM102
+                    raise WorkFlowInputError(
+                        f'Simulation application {simulationApplication} not in registry'
                     )
 
             else:
-                raise WorkFlowInputError(  # noqa: F405, TRY003, TRY301
-                    'Need an SimulationApplication in Simulation data'  # noqa: EM101
+                raise WorkFlowInputError(
+                    'Need an SimulationApplication in Simulation data'
                 )
 
         else:
-            raise WorkFlowInputError('Need a Simulation Entry in Applications')  # noqa: EM101, F405, TRY003, TRY301
+            raise WorkFlowInputError('Need a Simulation Entry in Applications')
 
         if 'UQ' in available_apps:
-            uqApp = available_apps['UQ']  # noqa: N806
+            uqApp = available_apps['UQ']
 
             if 'Application' in uqApp:
-                uqApplication = uqApp['Application']  # noqa: N806
+                uqApplication = uqApp['Application']
 
                 # check modeling app in registry, if so get full executable path
-                uqAppData = uqApp['ApplicationData']  # noqa: N806
-                if uqApplication in Applications['UQApplications'].keys():  # noqa: SIM118
-                    uqAppExe = Applications['UQApplications'].get(uqApplication)  # noqa: N806
-                    uqAppExeLocal = posixpath.join(localAppDir, uqAppExe)  # noqa: N806
-                    uqAppExeRemote = posixpath.join(localAppDir, uqAppExe)  # noqa: N806, F841
+                uqAppData = uqApp['ApplicationData']
+                if uqApplication in Applications['UQApplications'].keys():
+                    uqAppExe = Applications['UQApplications'].get(uqApplication)
+                    uqAppExeLocal = posixpath.join(localAppDir, uqAppExe)
+                    uqAppExeRemote = posixpath.join(localAppDir, uqAppExe)
                 else:
-                    raise WorkFlowInputError(  # noqa: F405, TRY003, TRY301
-                        f'UQ application {uqApplication} not in registry'  # noqa: EM102
+                    raise WorkFlowInputError(
+                        f'UQ application {uqApplication} not in registry'
                     )
 
             else:
-                raise WorkFlowInputError('Need a UQApplication in UQ data')  # noqa: EM101, F405, TRY003, TRY301
+                raise WorkFlowInputError('Need a UQApplication in UQ data')
 
         else:
-            raise WorkFlowInputError('Need a Simulation Entry in Applications')  # noqa: EM101, F405, TRY003, TRY301
+            raise WorkFlowInputError('Need a Simulation Entry in Applications')
 
-        workflow_log('SUCCESS: Parsed workflow input')  # noqa: F405
-        workflow_log(divider)  # noqa: F405
+        workflow_log('SUCCESS: Parsed workflow input')
+        workflow_log(divider)
 
         #
         # now invoke the applications
@@ -337,18 +337,18 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
         #  - perform Simulation
         #  - getDL
 
-        bimFILE = 'dakota.json'  # noqa: N806
-        eventFILE = 'EVENT.json'  # noqa: N806
-        samFILE = 'SAM.json'  # noqa: N806
-        edpFILE = 'EDP.json'  # noqa: N806
-        simFILE = 'SIM.json'  # noqa: N806
-        driverFile = 'driver'  # noqa: N806
+        bimFILE = 'dakota.json'
+        eventFILE = 'EVENT.json'
+        samFILE = 'SAM.json'
+        edpFILE = 'EDP.json'
+        simFILE = 'SIM.json'
+        driverFile = 'driver'
 
         # open driver file & write building app (minus the --getRV) to it
-        driverFILE = open(driverFile, 'w')  # noqa: N806, PLW1514, PTH123, SIM115
+        driverFILE = open(driverFile, 'w')
 
         # get RV for event
-        eventAppDataList = [  # noqa: N806
+        eventAppDataList = [
             f'"{eventAppExeRemote}"',
             '--filenameBIM',
             bimFILE,
@@ -358,13 +358,13 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
         if eventAppExe.endswith('.py'):
             eventAppDataList.insert(0, 'python')
 
-        for key in eventAppData.keys():  # noqa: SIM118
+        for key in eventAppData.keys():
             eventAppDataList.append('--' + key)
             value = eventAppData.get(key)
             eventAppDataList.append('' + value)
 
         for item in eventAppDataList:
-            driverFILE.write('%s ' % item)  # noqa: UP031
+            driverFILE.write('%s ' % item)
         driverFILE.write('\n')
 
         eventAppDataList.append('--getRV')
@@ -373,11 +373,11 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
         else:
             eventAppDataList[0] = '' + eventAppExeLocal
 
-        command, result, returncode = runApplication(eventAppDataList)  # noqa: F405
+        command, result, returncode = runApplication(eventAppDataList)
         log_output.append([command, result, returncode])
 
         # get RV for building model
-        modelAppDataList = [  # noqa: N806
+        modelAppDataList = [
             f'"{modelingAppExeRemote}"',
             '--filenameBIM',
             bimFILE,
@@ -390,12 +390,12 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
         if modelingAppExe.endswith('.py'):
             modelAppDataList.insert(0, 'python')
 
-        for key in modelingAppData.keys():  # noqa: SIM118
-            modelAppDataList.append('--' + key)  # noqa: FURB113
+        for key in modelingAppData.keys():
+            modelAppDataList.append('--' + key)
             modelAppDataList.append('' + modelingAppData.get(key))
 
         for item in modelAppDataList:
-            driverFILE.write('%s ' % item)  # noqa: UP031
+            driverFILE.write('%s ' % item)
         driverFILE.write('\n')
 
         modelAppDataList.append('--getRV')
@@ -405,11 +405,11 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
         else:
             modelAppDataList[0] = modelingAppExeLocal
 
-        command, result, returncode = runApplication(modelAppDataList)  # noqa: F405
+        command, result, returncode = runApplication(modelAppDataList)
         log_output.append([command, result, returncode])
 
         # get RV for EDP!
-        edpAppDataList = [  # noqa: N806
+        edpAppDataList = [
             f'"{edpAppExeRemote}"',
             '--filenameBIM',
             bimFILE,
@@ -424,12 +424,12 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
         if edpAppExe.endswith('.py'):
             edpAppDataList.insert(0, 'python')
 
-        for key in edpAppData.keys():  # noqa: SIM118
-            edpAppDataList.append('--' + key)  # noqa: FURB113
+        for key in edpAppData.keys():
+            edpAppDataList.append('--' + key)
             edpAppDataList.append('' + edpAppData.get(key))
 
         for item in edpAppDataList:
-            driverFILE.write('%s ' % item)  # noqa: UP031
+            driverFILE.write('%s ' % item)
         driverFILE.write('\n')
 
         if edpAppExe.endswith('.py'):
@@ -438,11 +438,11 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
             edpAppDataList[0] = edpAppExeLocal
 
         edpAppDataList.append('--getRV')
-        command, result, returncode = runApplication(edpAppDataList)  # noqa: F405
+        command, result, returncode = runApplication(edpAppDataList)
         log_output.append([command, result, returncode])
 
         # get RV for Simulation
-        simAppDataList = [  # noqa: N806
+        simAppDataList = [
             f'"{simAppExeRemote}"',
             '--filenameBIM',
             bimFILE,
@@ -459,12 +459,12 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
         if simAppExe.endswith('.py'):
             simAppDataList.insert(0, 'python')
 
-        for key in simAppData.keys():  # noqa: SIM118
-            simAppDataList.append('--' + key)  # noqa: FURB113
+        for key in simAppData.keys():
+            simAppDataList.append('--' + key)
             simAppDataList.append('' + simAppData.get(key))
 
         for item in simAppDataList:
-            driverFILE.write('%s ' % item)  # noqa: UP031
+            driverFILE.write('%s ' % item)
         driverFILE.write('\n')
 
         simAppDataList.append('--getRV')
@@ -473,13 +473,13 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
         else:
             simAppDataList[0] = simAppExeLocal
 
-        command, result, returncode = runApplication(simAppDataList)  # noqa: F405
+        command, result, returncode = runApplication(simAppDataList)
         log_output.append([command, result, returncode])
 
         # perform the simulation
         driverFILE.close()
 
-        uqAppDataList = [  # noqa: N806
+        uqAppDataList = [
             f'"{uqAppExeLocal}"',
             '--filenameBIM',
             bimFILE,
@@ -499,10 +499,10 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
             uqAppDataList.insert(0, 'python')
             uqAppDataList[1] = uqAppExeLocal
 
-        uqAppDataList.append('--runType')  # noqa: FURB113
+        uqAppDataList.append('--runType')
         uqAppDataList.append(run_type)
 
-        for key in uqAppData.keys():  # noqa: SIM118
+        for key in uqAppData.keys():
             uqAppDataList.append('--' + key)
             value = uqAppData.get(key)
             if isinstance(value, string_types):
@@ -510,50 +510,50 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
             else:
                 uqAppDataList.append('' + str(value))
 
-        if run_type == 'run' or run_type == 'set_up':  # noqa: PLR1714
-            workflow_log('Running Simulation...')  # noqa: F405
-            workflow_log(' '.join(uqAppDataList))  # noqa: F405
-            command, result, returncode = runApplication(uqAppDataList)  # noqa: F405
+        if run_type == 'run' or run_type == 'set_up':
+            workflow_log('Running Simulation...')
+            workflow_log(' '.join(uqAppDataList))
+            command, result, returncode = runApplication(uqAppDataList)
             log_output.append([command, result, returncode])
-            workflow_log('Simulation ended...')  # noqa: F405
+            workflow_log('Simulation ended...')
         else:
-            workflow_log('Setup run only. No simulation performed.')  # noqa: F405
+            workflow_log('Setup run only. No simulation performed.')
 
-    except WorkFlowInputError as e:  # noqa: F405
-        print('workflow error: %s' % e.value)  # noqa: T201, UP031
-        workflow_log('workflow error: %s' % e.value)  # noqa: F405, UP031
-        workflow_log(divider)  # noqa: F405
-        exit(1)  # noqa: PLR1722
+    except WorkFlowInputError as e:
+        print('workflow error: %s' % e.value)
+        workflow_log('workflow error: %s' % e.value)
+        workflow_log(divider)
+        exit(1)
 
     # unhandled exceptions are handled here
     except Exception as e:
-        print('workflow error: %s' % e.value)  # noqa: T201, UP031
-        workflow_log('unhandled exception... exiting')  # noqa: F405
+        print('workflow error: %s' % e.value)
+        workflow_log('unhandled exception... exiting')
         raise
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:  # noqa: PLR2004
-        print('\nNeed three arguments, e.g.:\n')  # noqa: T201
-        print(  # noqa: T201
-            '    python %s action workflowinputfile.json workflowapplications.json'  # noqa: UP031
+    if len(sys.argv) != 4:
+        print('\nNeed three arguments, e.g.:\n')
+        print(
+            '    python %s action workflowinputfile.json workflowapplications.json'
             % sys.argv[0]
         )
-        print('\nwhere: action is either check or run\n')  # noqa: T201
-        exit(1)  # noqa: PLR1722
+        print('\nwhere: action is either check or run\n')
+        exit(1)
 
     run_type = sys.argv[1]
-    inputFile = sys.argv[2]  # noqa: N816
-    applicationsRegistry = sys.argv[3]  # noqa: N816
+    inputFile = sys.argv[2]
+    applicationsRegistry = sys.argv[3]
 
     main(run_type, inputFile, applicationsRegistry)
 
-    workflow_log_file = 'workflow-log-%s.txt' % (  # noqa: UP031
+    workflow_log_file = 'workflow-log-%s.txt' % (
         strftime('%Y-%m-%d-%H-%M-%S-utc', gmtime())
     )
-    log_filehandle = open(workflow_log_file, 'w')  # noqa: PLW1514, PTH123, SIM115
+    log_filehandle = open(workflow_log_file, 'w')
 
-    print(type(log_filehandle))  # noqa: T201
+    print(type(log_filehandle))
     print(divider, file=log_filehandle)
     print('Start of Log', file=log_filehandle)
     print(divider, file=log_filehandle)
@@ -561,13 +561,13 @@ if __name__ == '__main__':
     # nb: log_output is a global variable, defined at the top of this script.
     for result in log_output:
         print(divider, file=log_filehandle)
-        print('command line:\n%s\n' % result[0], file=log_filehandle)  # noqa: UP031
+        print('command line:\n%s\n' % result[0], file=log_filehandle)
         print(divider, file=log_filehandle)
-        print('output from process:\n%s\n' % result[1], file=log_filehandle)  # noqa: UP031
+        print('output from process:\n%s\n' % result[1], file=log_filehandle)
 
     print(divider, file=log_filehandle)
     print('End of Log', file=log_filehandle)
     print(divider, file=log_filehandle)
 
-    workflow_log('Log file: %s' % workflow_log_file)  # noqa: F405, UP031
-    workflow_log('End of run.')  # noqa: F405
+    workflow_log('Log file: %s' % workflow_log_file)
+    workflow_log('End of run.')

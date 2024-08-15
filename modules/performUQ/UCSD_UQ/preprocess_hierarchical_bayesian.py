@@ -1,4 +1,4 @@
-import argparse  # noqa: CPY001, D100, INP001
+import argparse
 import json
 import shutil
 import sys
@@ -9,7 +9,7 @@ import numpy as np
 
 path_to_common_uq = Path(__file__).parent.parent / 'common'
 sys.path.append(str(path_to_common_uq))
-import uq_utilities  # noqa: E402
+import uq_utilities
 
 InputsType = tuple[
     Path,
@@ -20,7 +20,7 @@ InputsType = tuple[
 ]
 
 
-class CommandLineArguments:  # noqa: D101
+class CommandLineArguments:
     working_directory_path: Path
     template_directory_path: Path
     run_type: Literal['runningLocal', 'runningRemote']
@@ -36,7 +36,7 @@ def _handle_arguments(
     run_type = command_line_arguments.run_type
     driver_file = command_line_arguments.driver_file
     input_file = command_line_arguments.input_file
-    with open(input_file) as f:  # noqa: PLW1514, PTH123
+    with open(input_file) as f:
         inputs = json.load(f)
     return (
         working_directory_path,
@@ -98,20 +98,20 @@ def _create_parser() -> argparse.ArgumentParser:
 
 def _print_start_message(demarcation_string: str = '=', start_space: str = ''):
     msg = f"'{Path(__file__).name}' started running"
-    print()  # noqa: T201
-    print(start_space + demarcation_string * len(msg))  # noqa: T201
-    print(start_space + msg)  # noqa: T201
-    print()  # noqa: T201
+    print()
+    print(start_space + demarcation_string * len(msg))
+    print(start_space + msg)
+    print()
 
 
 def _print_end_message(demarcation_string: str = '=', start_space: str = ''):
     msg = f"'{Path(__file__).name}' finished running"
-    print()  # noqa: T201
-    print(start_space + msg)  # noqa: T201
-    print(start_space + demarcation_string * len(msg))  # noqa: T201
+    print()
+    print(start_space + msg)
+    print(start_space + demarcation_string * len(msg))
 
 
-def main(arguments: InputsType):  # noqa: D103
+def main(arguments: InputsType):
     (
         working_directory_path,
         template_directory_path,
@@ -153,7 +153,7 @@ def main(arguments: InputsType):  # noqa: D103
     list_of_dataset_lengths = []
 
     for sample_number, dir_name_string in enumerate(list_of_dataset_subdirs):
-        dir_name_string = list_of_dataset_subdirs[sample_number]  # noqa: PLW2901
+        dir_name_string = list_of_dataset_subdirs[sample_number]
         dir_name = Path(dir_name_string).stem
         source_dir_name = template_directory_path / dir_name
         destination_dir_name = working_directory_path / dir_name
@@ -210,10 +210,10 @@ def _parse_arguments(args) -> InputsType:
     command_line_arguments = CommandLineArguments()
     parser.parse_args(args=args, namespace=command_line_arguments)
     arguments = _handle_arguments(command_line_arguments)
-    return arguments  # noqa: RET504
+    return arguments
 
 
-def preprocess_arguments(args):  # noqa: D103
+def preprocess_arguments(args):
     arguments = _parse_arguments(args)
     return main(arguments=arguments)
 

@@ -3,16 +3,16 @@
 code creates pressure probes for the main simulation. Three types of
 probes are created.
 
-"""  # noqa: CPY001, D404, INP001
+"""
 
 import json
 import sys
 
-import CWE as cwe  # noqa: N811
+import CWE as cwe
 import numpy as np
 
 
-def write_wind_profiles(case_path):  # noqa: D103
+def write_wind_profiles(case_path):
     inf_path = (
         case_path + '/constant/boundaryData/windProfile/sampledData/verticalProfile/'
     )
@@ -20,7 +20,7 @@ def write_wind_profiles(case_path):  # noqa: D103
     inf = cwe.VelocityData('cfd', inf_path, start_time=None, end_time=None)
 
     # Read JSON data for turbulence model
-    wc_json_file = open(case_path + '/constant/simCenter/windCharacteristics.json')  # noqa: PLW1514, PTH123, SIM115
+    wc_json_file = open(case_path + '/constant/simCenter/windCharacteristics.json')
 
     # Returns JSON object as a dictionary
     wind_data = json.load(wc_json_file, 'r', encoding='utf-8')
@@ -36,10 +36,10 @@ def write_wind_profiles(case_path):  # noqa: D103
     prof[:, 3] = inf.L[:, 0]
 
     # Wind velocity at roof height
-    H_loc = np.argmin(np.abs(inf.z - building_height))  # noqa: N806
+    H_loc = np.argmin(np.abs(inf.z - building_height))
 
     # U, v, w in at roof height
-    Uh = inf.U[H_loc, :, :].T  # noqa: N806
+    Uh = inf.U[H_loc, :, :].T
 
     s_uh = []
 
@@ -49,7 +49,7 @@ def write_wind_profiles(case_path):  # noqa: D103
 
     s_uh.insert(0, f)
 
-    Suhout = np.asarray(s_uh, dtype=np.float32).T  # noqa: N806
+    Suhout = np.asarray(s_uh, dtype=np.float32).T
 
     write_precision = 6
     fmt = f'%.{write_precision}e'
@@ -61,10 +61,10 @@ def write_wind_profiles(case_path):  # noqa: D103
     np.savetxt(s_uh_path, Suhout, fmt=fmt)
 
 
-def write_wind_loads(case_path):  # noqa: D103
+def write_wind_loads(case_path):
     # Write base forces
     base_forces_path = case_path + '/postProcessing/baseForces/0/forces.dat'
-    base_o, base_t, base_f, base_m = cwe.read_forces_OF10(base_forces_path)  # noqa: F841
+    base_o, base_t, base_f, base_m = cwe.read_forces_OF10(base_forces_path)
 
     base_forces = np.zeros((len(base_t), 3))
 
@@ -73,7 +73,7 @@ def write_wind_loads(case_path):  # noqa: D103
 
     # Write story forces
     story_forces_path = case_path + '/postProcessing/storyForces/0/forces_bins.dat'
-    story_coord, story_t, story_f, story_m = cwe.read_bin_forces_OF10(  # noqa: F841
+    story_coord, story_t, story_f, story_m = cwe.read_bin_forces_OF10(
         story_forces_path
     )
 
@@ -82,9 +82,9 @@ def write_wind_loads(case_path):  # noqa: D103
 
     out_base_path = case_path + '/constant/simCenter/output/baseForces.txt'
 
-    out_story_path_Fx = case_path + '/constant/simCenter/output/storyForcesFx.txt'  # noqa: N806
-    out_story_path_Fy = case_path + '/constant/simCenter/output/storyForcesFy.txt'  # noqa: N806
-    out_story_path_Mz = case_path + '/constant/simCenter/output/storyForcesMz.txt'  # noqa: N806
+    out_story_path_Fx = case_path + '/constant/simCenter/output/storyForcesFx.txt'
+    out_story_path_Fy = case_path + '/constant/simCenter/output/storyForcesFy.txt'
+    out_story_path_Mz = case_path + '/constant/simCenter/output/storyForcesMz.txt'
 
     np.savetxt(out_base_path, base_forces, fmt=fmt)
 

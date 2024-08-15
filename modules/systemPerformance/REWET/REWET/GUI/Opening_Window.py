@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Opening.ui'  # noqa: CPY001, D100, N999
+# Form implementation generated from reading ui file 'Opening.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,8 +8,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Opening_Window:  # noqa: D101
-    def setupUi(self, Opening_Window):  # noqa: N802, N803, D102, PLR0915
+class Ui_Opening_Window:
+    def setupUi(self, Opening_Window):
         Opening_Window.setObjectName('Opening_Window')
         Opening_Window.resize(830, 780)
         self.centralwidget = QtWidgets.QWidget(Opening_Window)
@@ -892,7 +892,7 @@ class Ui_Opening_Window:  # noqa: D101
         self.results_tabs_widget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Opening_Window)
 
-    def retranslateUi(self, Opening_Window):  # noqa: N802, N803, D102, PLR0915
+    def retranslateUi(self, Opening_Window):
         _translate = QtCore.QCoreApplication.translate
         Opening_Window.setWindowTitle(_translate('Opening_Window', 'REWET'))
         self.groupBox_4.setTitle(_translate('Opening_Window', 'Temp File Settings'))
@@ -1102,7 +1102,7 @@ class Ui_Opening_Window:  # noqa: D101
         item.setText(_translate('Opening_Window', 'Time Shift'))
         item = self.curve_settings_table.horizontalHeaderItem(0)
         item.setText(_translate('Opening_Window', 'Values'))
-        __sortingEnabled = self.curve_settings_table.isSortingEnabled()  # noqa: N806
+        __sortingEnabled = self.curve_settings_table.isSortingEnabled()
         self.curve_settings_table.setSortingEnabled(False)
         self.curve_settings_table.setSortingEnabled(__sortingEnabled)
         self.label_25.setText(_translate('Opening_Window', 'Scenario'))
@@ -1123,7 +1123,7 @@ class Ui_Opening_Window:  # noqa: D101
         item.setText(_translate('Opening_Window', 'Time Shift'))
         item = self.map_settings_table.horizontalHeaderItem(0)
         item.setText(_translate('Opening_Window', 'Values'))
-        __sortingEnabled = self.map_settings_table.isSortingEnabled()  # noqa: N806
+        __sortingEnabled = self.map_settings_table.isSortingEnabled()
         self.map_settings_table.setSortingEnabled(False)
         self.map_settings_table.setSortingEnabled(__sortingEnabled)
         self.label_36.setText(_translate('Opening_Window', 'Settings'))
@@ -1174,7 +1174,7 @@ class Ui_Opening_Window:  # noqa: D101
         )
 
 
-from .MplWidget import MplWidget  # noqa: E402
+from .MplWidget import MplWidget
 
 if __name__ == '__main__':
     import sys

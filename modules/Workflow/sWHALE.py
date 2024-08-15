@@ -1,4 +1,4 @@
-#  # noqa: EXE002, INP001, D100
+#
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -47,22 +47,22 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 import whale.main as whale
 from whale.main import log_div, log_msg
 
 
-def runSWhale(  # noqa: N802, D103
+def runSWhale(
     inputs,
-    WF,  # noqa: N803
-    assetID=None,  # noqa: N803
-    assetAIM='AIM.json',  # noqa: N803
-    prep_app_sequence=['Event', 'Modeling', 'EDP', 'Simulation'],  # noqa: B006
-    WF_app_sequence=['Event', 'Modeling', 'EDP', 'Simulation'],  # noqa: B006, N803
+    WF,
+    assetID=None,
+    assetAIM='AIM.json',
+    prep_app_sequence=['Event', 'Modeling', 'EDP', 'Simulation'],
+    WF_app_sequence=['Event', 'Modeling', 'EDP', 'Simulation'],
     asset_type=None,
-    copy_resources=False,  # noqa: FBT002
-    force_cleanup=False,  # noqa: FBT002
+    copy_resources=False,
+    force_cleanup=False,
 ):
     # update the runDir, if needed
     #    with open(input_file, 'r', encoding="utf-8") as f:
@@ -137,7 +137,7 @@ def runSWhale(  # noqa: N802, D103
 
     # When used in rWhale, delete the original AIM since it is the same with asset_id/templatedir/AIM
     if assetAIM != 'AIM.json':
-        os.remove(assetAIM)  # noqa: PTH107
+        os.remove(assetAIM)
     if force_cleanup:
         # clean up intermediate files from the simulation
         WF.cleanup_simdir(assetID)
@@ -147,16 +147,16 @@ def runSWhale(  # noqa: N802, D103
     log_div(prepend_blank_space=False)
 
 
-def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):  # noqa: ARG001, D103
+def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
     # update the runDir, if needed
-    with open(input_file, encoding='utf-8') as f:  # noqa: PTH123
+    with open(input_file, encoding='utf-8') as f:
         inputs = json.load(f)
-    runDir = inputs['runDir']  # noqa: N806
+    runDir = inputs['runDir']
 
     if working_dir is not None:
-        runDir = working_dir  # noqa: N806
+        runDir = working_dir
     else:
-        runDir = inputs['runDir']  # noqa: N806
+        runDir = inputs['runDir']
 
     whale.log_file = runDir + '/log.txt'
 
@@ -181,10 +181,10 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):  #
     try:
         if inputs['DL']['Demands']['DemandFilePath'] is not None:
             run_type = 'loss_only'
-    except:  # noqa: S110, E722
+    except:
         pass
 
-    WF = whale.Workflow(  # noqa: N806
+    WF = whale.Workflow(
         run_type,
         input_file,
         app_registry,
@@ -222,7 +222,7 @@ if __name__ == '__main__':
 
     # Defining the command line arguments
 
-    workflowArgParser = argparse.ArgumentParser(  # noqa: N816
+    workflowArgParser = argparse.ArgumentParser(
         'Run the NHERI SimCenter sWHALE workflow for a single asset.',
         allow_abbrev=False,
     )
@@ -235,8 +235,8 @@ if __name__ == '__main__':
     )
     workflowArgParser.add_argument(
         'registry',
-        default=os.path.join(  # noqa: PTH118
-            os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
+        default=os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
             'WorkflowApplications.json',
         ),
         help='Path to file containing registered workflow applications',
@@ -261,11 +261,11 @@ if __name__ == '__main__':
     )
 
     # Parsing the command line arguments
-    wfArgs = workflowArgParser.parse_args()  # noqa: N816
+    wfArgs = workflowArgParser.parse_args()
 
     # update the local app dir with the default - if needed
     if wfArgs.appDir is None:
-        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
+        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
         wfArgs.appDir = workflow_dir.parents[1]
 
     # Calling the main workflow method and passing the parsed arguments

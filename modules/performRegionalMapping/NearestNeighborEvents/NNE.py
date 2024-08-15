@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -48,35 +48,35 @@ import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 
 
-def find_neighbors(  # noqa: C901, D103
+def find_neighbors(
     asset_file,
     event_grid_file,
     samples,
     neighbors,
     filter_label,
     seed,
-    doParallel,  # noqa: N803
+    doParallel,
 ):
     # check if running parallel
-    numP = 1  # noqa: N806
-    procID = 0  # noqa: N806
-    runParallel = False  # noqa: N806
+    numP = 1
+    procID = 0
+    runParallel = False
 
     if doParallel == 'True':
         mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
-            from mpi4py import MPI  # noqa: PLC0415
+            from mpi4py import MPI
 
-            runParallel = True  # noqa: N806
+            runParallel = True
             comm = MPI.COMM_WORLD
-            numP = comm.Get_size()  # noqa: N806
-            procID = comm.Get_rank()  # noqa: N806
-            if numP < 2:  # noqa: PLR2004
-                doParallel = 'False'  # noqa: N806
-                runParallel = False  # noqa: N806
-                numP = 1  # noqa: N806
-                procID = 0  # noqa: N806
+            numP = comm.Get_size()
+            procID = comm.Get_rank()
+            if numP < 2:
+                doParallel = 'False'
+                runParallel = False
+                numP = 1
+                procID = 0
 
     # read the event grid data file
     event_grid_path = Path(event_grid_file).resolve()
@@ -86,17 +86,17 @@ def find_neighbors(  # noqa: C901, D103
     grid_df = pd.read_csv(event_dir / event_grid_file, header=0)
 
     # store the locations of the grid points in X
-    lat_E = grid_df['Latitude']  # noqa: N806
-    lon_E = grid_df['Longitude']  # noqa: N806
-    X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])  # noqa: N806
+    lat_E = grid_df['Latitude']
+    lon_E = grid_df['Longitude']
+    X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])
 
-    if filter_label == '':  # noqa: PLC1901
+    if filter_label == '':
         grid_extra_keys = list(
             grid_df.drop(['GP_file', 'Longitude', 'Latitude'], axis=1).columns
         )
 
     # prepare the tree for the nearest neighbor search
-    if filter_label != '' or len(grid_extra_keys) > 0:  # noqa: PLC1901
+    if filter_label != '' or len(grid_extra_keys) > 0:
         neighbors_to_get = min(neighbors * 10, len(lon_E))
     else:
         neighbors_to_get = neighbors
@@ -105,28 +105,28 @@ def find_neighbors(  # noqa: C901, D103
     )
 
     # load the building data file
-    with open(asset_file, encoding='utf-8') as f:  # noqa: PTH123
+    with open(asset_file, encoding='utf-8') as f:
         asset_dict = json.load(f)
 
     # prepare a dataframe that holds asset filenames and locations
-    AIM_df = pd.DataFrame(  # noqa: N806
+    AIM_df = pd.DataFrame(
         columns=['Latitude', 'Longitude', 'file'], index=np.arange(len(asset_dict))
     )
 
     count = 0
     for i, asset in enumerate(asset_dict):
-        if runParallel == False or (i % numP) == procID:  # noqa: E712
-            with open(asset['file'], encoding='utf-8') as f:  # noqa: PTH123
+        if runParallel == False or (i % numP) == procID:
+            with open(asset['file'], encoding='utf-8') as f:
                 asset_data = json.load(f)
 
             asset_loc = asset_data['GeneralInformation']['location']
             AIM_df.iloc[count]['Longitude'] = asset_loc['longitude']
             AIM_df.iloc[count]['Latitude'] = asset_loc['latitude']
             AIM_df.iloc[count]['file'] = asset['file']
-            count = count + 1  # noqa: PLR6104
+            count = count + 1
 
     # store building locations in Y
-    Y = np.array(  # noqa: N806
+    Y = np.array(
         [
             [lo, la]
             for lo, la in zip(AIM_df['Longitude'], AIM_df['Latitude'])
@@ -136,7 +136,7 @@ def find_neighbors(  # noqa: C901, D103
 
     # collect the neighbor indices and distances for every building
     distances, indices = nbrs.kneighbors(Y)
-    distances = distances + 1e-20  # noqa: PLR6104
+    distances = distances + 1e-20
 
     # initialize the random generator
     if seed is not None:
@@ -147,16 +147,16 @@ def find_neighbors(  # noqa: C901, D103
     count = 0
 
     # iterate through the buildings and store the selected events in the AIM
-    for asset_i, (AIM_id, dist_list, ind_list) in enumerate(  # noqa: B007, N806
+    for asset_i, (AIM_id, dist_list, ind_list) in enumerate(
         zip(AIM_df.index, distances, indices)
     ):
         # open the AIM file
         asst_file = AIM_df.iloc[AIM_id]['file']
 
-        with open(asst_file, encoding='utf-8') as f:  # noqa: PTH123
+        with open(asst_file, encoding='utf-8') as f:
             asset_data = json.load(f)
 
-        if filter_label != '':  # noqa: PLC1901
+        if filter_label != '':
             # soil type of building
             asset_label = asset_data['GeneralInformation'][filter_label]
             # soil types of all initial neighbors
@@ -164,8 +164,8 @@ def find_neighbors(  # noqa: C901, D103
 
             # only keep the distances and indices corresponding to neighbors
             # with the same soil type
-            dist_list = dist_list[(grid_label == asset_label).values]  # noqa: PD011, PLW2901
-            ind_list = ind_list[(grid_label == asset_label).values]  # noqa: PD011, PLW2901
+            dist_list = dist_list[(grid_label == asset_label).values]
+            ind_list = ind_list[(grid_label == asset_label).values]
 
             # return dist_list & ind_list with a length equals neighbors
             # assuming that at least neighbors grid points exist with
@@ -173,26 +173,26 @@ def find_neighbors(  # noqa: C901, D103
 
             # because dist_list, ind_list sorted initially in order of increasing
             # distance, just take the first neighbors grid points of each
-            dist_list = dist_list[:neighbors]  # noqa: PLW2901
-            ind_list = ind_list[:neighbors]  # noqa: PLW2901
+            dist_list = dist_list[:neighbors]
+            ind_list = ind_list[:neighbors]
 
         if len(grid_extra_keys) > 0:
             filter_labels = []
-            for key in asset_data['GeneralInformation'].keys():  # noqa: SIM118
+            for key in asset_data['GeneralInformation'].keys():
                 if key in grid_extra_keys:
-                    filter_labels.append(key)  # noqa: PERF401
+                    filter_labels.append(key)
 
             filter_list = [True for i in dist_list]
-            for filter_label in filter_labels:  # noqa: PLR1704
+            for filter_label in filter_labels:
                 asset_label = asset_data['GeneralInformation'][filter_label]
                 grid_label = grid_df[filter_label][ind_list]
-                filter_list_i = (grid_label == asset_label).values  # noqa: PD011
+                filter_list_i = (grid_label == asset_label).values
                 filter_list = filter_list and filter_list_i
 
             # only keep the distances and indices corresponding to neighbors
             # with the same soil type
-            dist_list = dist_list[filter_list]  # noqa: PLW2901
-            ind_list = ind_list[filter_list]  # noqa: PLW2901
+            dist_list = dist_list[filter_list]
+            ind_list = ind_list[filter_list]
 
             # return dist_list & ind_list with a length equals neighbors
             # assuming that at least neighbors grid points exist with
@@ -200,11 +200,11 @@ def find_neighbors(  # noqa: C901, D103
 
             # because dist_list, ind_list sorted initially in order of increasing
             # distance, just take the first neighbors grid points of each
-            dist_list = dist_list[:neighbors]  # noqa: PLW2901
-            ind_list = ind_list[:neighbors]  # noqa: PLW2901
+            dist_list = dist_list[:neighbors]
+            ind_list = ind_list[:neighbors]
 
         # calculate the weights for each neighbor based on their distance
-        dist_list = 1.0 / (dist_list**2.0)  # noqa: PLW2901
+        dist_list = 1.0 / (dist_list**2.0)
         weights = np.array(dist_list) / np.sum(dist_list)
 
         # get the pre-defined number of samples for each neighbor
@@ -268,7 +268,7 @@ def find_neighbors(  # noqa: C901, D103
                     # IM collections are not scaled
                     scale_list.append(1.0)
 
-        # TODO: update the LLNL input data and remove this clause  # noqa: TD002
+        # TODO: update the LLNL input data and remove this clause
         else:
             event_list = []
             for e, i in zip(nbr_samples, ind_list):
@@ -290,7 +290,7 @@ def find_neighbors(  # noqa: C901, D103
             event_list_json.append([f'{event}x{e_i:05d}', scale_list[e_i]])
 
         # save the event dictionary to the AIM
-        # TODO: we assume there is only one event  # noqa: TD002
+        # TODO: we assume there is only one event
         # handling multiple events will require more sophisticated inputs
 
         if 'Events' not in asset_data:
@@ -308,7 +308,7 @@ def find_neighbors(  # noqa: C901, D103
             }
         )
 
-        with open(asst_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
+        with open(asst_file, 'w', encoding='utf-8') as f:
             json.dump(asset_data, f, indent=2)
 
 

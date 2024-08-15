@@ -1,9 +1,9 @@
-import os  # noqa: CPY001, D100, INP001
+import os
 import sys
 
 if sys.version.startswith('2'):
-    range = xrange  # noqa: A001, F821
-    string_types = basestring  # noqa: F821
+    range = xrange
+    string_types = basestring
 else:
     string_types = str
 
@@ -11,10 +11,10 @@ import argparse
 import json
 
 
-def write_RV(AIM_input_path, EDP_input_path, EDP_type):  # noqa: ARG001, N802, N803, D103
+def write_RV(AIM_input_path, EDP_input_path, EDP_type):
     # load the AIM file
-    with open(AIM_input_path, encoding='utf-8') as f:  # noqa: PTH123
-        root_AIM = json.load(f)  # noqa: N806
+    with open(AIM_input_path, encoding='utf-8') as f:
+        root_AIM = json.load(f)
 
     #
     # Is this the correct application
@@ -24,29 +24,29 @@ def write_RV(AIM_input_path, EDP_input_path, EDP_type):  # noqa: ARG001, N802, N
         root_AIM['Applications']['Modeling']['Application']
         != 'SurrogateGPBuildingModel'
     ):
-        with open('../workflow.err', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+        with open('../workflow.err', 'w') as f:
             f.write(
                 'Do not select [None] in the EDP tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'
             )
-        exit(-1)  # noqa: PLR1722
+        exit(-1)
 
     #
     # Get EDP info from surrogate model file
     #
 
-    print('General Information tab is ignored')  # noqa: T201
-    root_SAM = root_AIM['Applications']['Modeling']  # noqa: N806
+    print('General Information tab is ignored')
+    root_SAM = root_AIM['Applications']['Modeling']
 
-    surrogate_path = os.path.join(  # noqa: PTH118
+    surrogate_path = os.path.join(
         root_SAM['ApplicationData']['MS_Path'],
         root_SAM['ApplicationData']['mainScript'],
     )
-    print(surrogate_path)  # noqa: T201
+    print(surrogate_path)
 
-    with open(surrogate_path, encoding='utf-8') as f:  # noqa: PTH123
+    with open(surrogate_path, encoding='utf-8') as f:
         surrogate_model = json.load(f)
 
-    root_EDP = surrogate_model['EDP']  # noqa: N806
+    root_EDP = surrogate_model['EDP']
 
     # if it is surrogate,
     # Save Load EDP.json from standard surrogate models and write it to EDP
@@ -77,12 +77,12 @@ def write_RV(AIM_input_path, EDP_input_path, EDP_type):  # noqa: ARG001, N802, N
             "responses": EDP_list
         },]
     }
-    """  # noqa: W291
-    with open(EDP_input_path, 'w', encoding='utf-8') as f:  # noqa: PTH123
+    """
+    with open(EDP_input_path, 'w', encoding='utf-8') as f:
         json.dump(root_EDP, f, indent=2)
 
 
-def create_EDP(AIM_input_path, EDP_input_path, EDP_type):  # noqa: ARG001, N802, N803, D103
+def create_EDP(AIM_input_path, EDP_input_path, EDP_type):
     pass
 
 

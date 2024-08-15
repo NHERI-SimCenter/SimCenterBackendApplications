@@ -1,4 +1,4 @@
-import json  # noqa: CPY001, D100, INP001
+import json
 import sys
 from pathlib import Path
 
@@ -9,11 +9,11 @@ import scipy.stats
 
 path_to_common_uq = Path(__file__).parent.parent / 'common'
 sys.path.append(str(path_to_common_uq))
-import mwg_sampler  # noqa: E402
-import uq_utilities  # noqa: E402
+import mwg_sampler
+import uq_utilities
 
 
-def generate_initial_states(  # noqa: D103
+def generate_initial_states(
     num_edp,
     num_rv,
     num_datasets,
@@ -58,7 +58,7 @@ def generate_initial_states(  # noqa: D103
     )
 
 
-def loglikelihood_function(residual, error_variance_sample):  # noqa: D103
+def loglikelihood_function(residual, error_variance_sample):
     mean = 0
     var = error_variance_sample
     standard_deviation = np.sqrt(var)
@@ -68,17 +68,17 @@ def loglikelihood_function(residual, error_variance_sample):  # noqa: D103
     return ll
 
 
-def main(input_args):  # noqa: D103, PLR0914
+def main(input_args):
     # Initialize analysis
     working_directory = Path(input_args[0]).resolve()
-    template_directory = Path(input_args[1]).resolve()  # noqa: F841
+    template_directory = Path(input_args[1]).resolve()
     run_type = input_args[2]  # either "runningLocal" or "runningRemote"
-    workflow_driver = input_args[3]  # noqa: F841
+    workflow_driver = input_args[3]
     input_file = input_args[4]
 
     # input_file_full_path = template_directory / input_file
 
-    with open(input_file, encoding='utf-8') as f:  # noqa: PTH123
+    with open(input_file, encoding='utf-8') as f:
         inputs = json.load(f)
 
     uq_inputs = inputs['UQ']
@@ -124,12 +124,12 @@ def main(input_args):  # noqa: D103, PLR0914
         restart_file,
     )
 
-    # TODO: get_initial_states():  # noqa: TD002
+    # TODO: get_initial_states():
     # either:
     # read them from file or
     # use LHS to explore the space and find the best starting points out of
     # those sampled values for the different chains
-    # TODO: get_initial_proposal_covariance_matrix():  # noqa: TD002
+    # TODO: get_initial_proposal_covariance_matrix():
     # either:
     # read them from file or
     # adaptively tune the proposal covariance matrix by running the chain for
@@ -237,7 +237,7 @@ def main(input_args):  # noqa: D103, PLR0914
         list_of_initial_states_of_error_variance_per_dataset
     )
 
-    with open(results_directory_path / 'sample_0.json', 'w', encoding='utf-8') as f:  # noqa: PTH123
+    with open(results_directory_path / 'sample_0.json', 'w', encoding='utf-8') as f:
         json.dump(results_to_write, f, indent=4)
 
     adaptivity_results = {}
@@ -247,16 +247,16 @@ def main(input_args):  # noqa: D103, PLR0914
     adaptivity_results['proposal_scale_list'] = proposal_scale_list
     cov_kernels_list = []
     for cov_kernel in list_of_proposal_covariance_kernels:
-        cov_kernels_list.append(cov_kernel.tolist())  # noqa: PERF401
+        cov_kernels_list.append(cov_kernel.tolist())
     adaptivity_results['list_of_proposal_covariance_kernels'] = cov_kernels_list
-    with open(  # noqa: PTH123
+    with open(
         results_directory_path.parent / f'adaptivity_results_{0}.json',
         'w',
         encoding='utf-8',
     ) as f:
         json.dump(adaptivity_results, f, indent=4)
 
-    samples = mwg_sampler.metropolis_within_gibbs_sampler(  # noqa: F841
+    samples = mwg_sampler.metropolis_within_gibbs_sampler(
         uq_inputs,
         parallel_evaluation_function,
         function_to_evaluate,
@@ -288,7 +288,7 @@ def main(input_args):  # noqa: D103, PLR0914
     )
 
     if run_type == 'runningRemote':
-        from mpi4py import MPI  # noqa: PLC0415
+        from mpi4py import MPI
 
         MPI.COMM_WORLD.Abort(0)
 

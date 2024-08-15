@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -46,25 +46,25 @@ import os
 import sys
 
 if sys.version.startswith('2'):
-    range = xrange  # noqa: A001, F821
-    string_types = basestring  # noqa: F821
+    range = xrange
+    string_types = basestring
 else:
     string_types = str
 
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 import whale.main as whale
 from whale.main import log_div, log_msg
 
 
-def main(run_type, input_file, app_registry):  # noqa: D103
+def main(run_type, input_file, app_registry):
     # initialize the log file
-    with open(input_file) as f:  # noqa: PLW1514, PTH123
+    with open(input_file) as f:
         inputs = json.load(f)
-    runDir = inputs['runDir']  # noqa: N806
+    runDir = inputs['runDir']
 
     whale.log_file = runDir + '/log.txt'
-    with open(whale.log_file, 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+    with open(whale.log_file, 'w') as f:
         f.write('PBE workflow\n')
 
     # echo the inputs
@@ -81,10 +81,10 @@ def main(run_type, input_file, app_registry):  # noqa: D103
             is not None
         ):
             run_type = 'loss_only'
-    except:  # noqa: S110, E722
+    except:
         pass
 
-    WF = whale.Workflow(  # noqa: N806
+    WF = whale.Workflow(
         run_type,
         input_file,
         app_registry,
@@ -112,13 +112,13 @@ def main(run_type, input_file, app_registry):  # noqa: D103
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:  # noqa: PLR2004
-        print('\nNeed three arguments, e.g.:\n')  # noqa: T201
-        print(  # noqa: T201
-            '    python %s action workflowinputfile.json workflowapplications.json'  # noqa: UP031
+    if len(sys.argv) != 4:
+        print('\nNeed three arguments, e.g.:\n')
+        print(
+            '    python %s action workflowinputfile.json workflowapplications.json'
             % sys.argv[0]
         )
-        print('\nwhere: action is either check or run\n')  # noqa: T201
-        exit(1)  # noqa: PLR1722
+        print('\nwhere: action is either check or run\n')
+        exit(1)
 
     main(run_type=sys.argv[1], input_file=sys.argv[2], app_registry=sys.argv[3])

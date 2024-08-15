@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2024 The Regents of the University of California
 #
 # This file is a part of SimCenter backend applications.
@@ -39,11 +39,11 @@
 # 03-27-2024
 
 # Import packages needed for setting up required packages:
-import subprocess  # noqa: S404
+import subprocess
 import sys
 from importlib import metadata as importlib_metadata
 
-print('Initializing BRAILS...')  # noqa: T201
+print('Initializing BRAILS...')
 
 # If not installed, install BRAILS, argparse, and requests:
 required = {'BRAILS', 'argparse', 'requests'}
@@ -51,9 +51,9 @@ installed = set()
 
 # Detect installed packages using Python-provided importlib.metadata:
 for x in importlib_metadata.distributions():
-    try:  # noqa: SIM105
+    try:
         installed.add(x.name)
-    except:  # noqa: S110, PERF203, E722
+    except:
         pass
 
 # If installed packages could not be detected, use importlib_metadata backport:
@@ -61,73 +61,73 @@ if not installed:
     import importlib_metadata
 
     for x in importlib_metadata.distributions():
-        try:  # noqa: SIM105
+        try:
             installed.add(x.name)
-        except:  # noqa: S110, PERF203, E722
+        except:
             pass
 missing = required - installed
 
 # Install missing packages:
 python = sys.executable
 if missing:
-    print('\nInstalling packages required for running this widget...')  # noqa: T201
-    subprocess.check_call(  # noqa: S603
+    print('\nInstalling packages required for running this widget...')
+    subprocess.check_call(
         [python, '-m', 'pip', 'install', *missing], stdout=subprocess.DEVNULL
     )
-    print('Successfully installed the required packages')  # noqa: T201
+    print('Successfully installed the required packages')
 
 # If requests and BRAILS were previously installed ensure they are at their latest versions:
-subprocess.check_call(  # noqa: S603
+subprocess.check_call(
     [python, '-m', 'pip', 'install', 'requests', '-U'], stdout=subprocess.DEVNULL
 )
 
-import requests  # noqa: E402
+import requests
 
-latestBrailsVersion = requests.get('https://pypi.org/pypi/BRAILS/json').json()[  # noqa: S113, N816
+latestBrailsVersion = requests.get('https://pypi.org/pypi/BRAILS/json').json()[
     'info'
 ]['version']
 if importlib_metadata.version('BRAILS') != latestBrailsVersion:
-    print(  # noqa: T201
+    print(
         '\nAn older version of BRAILS was detected. Updating to the latest BRAILS version..'
     )
-    subprocess.check_call(  # noqa: S603
+    subprocess.check_call(
         [python, '-m', 'pip', 'install', 'BRAILS', '-U'], stdout=subprocess.DEVNULL
     )
-    print('Successfully installed the latest version of BRAILS')  # noqa: T201
+    print('Successfully installed the latest version of BRAILS')
 
 # Import packages required for running the latest version of BRAILS:
-import argparse  # noqa: E402
-import os  # noqa: E402
-from time import gmtime, strftime  # noqa: E402
+import argparse
+import os
+from time import gmtime, strftime
 
-from brails.EnabledAttributes import BldgAttributes  # noqa: E402
+from brails.EnabledAttributes import BldgAttributes
 
 
 # Define a standard way of printing program outputs:
-def log_msg(msg):  # noqa: D103
+def log_msg(msg):
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
-    print(formatted_msg)  # noqa: T201
+    print(formatted_msg)
 
 
 # Define a way to call BRAILS BldgAttributes and write them in a file:
-def runBrails(outputfile):  # noqa: N802, D103
+def runBrails(outputfile):
     attributes = BldgAttributes()
-    with open(outputfile, 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+    with open(outputfile, 'w') as f:
         f.write('\n'.join(attributes))
 
 
 # Define a way to collect GUI input:
-def main(args):  # noqa: D103
+def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--outputFile', default=None)
 
     args = parser.parse_args(args)
 
     # Create the folder for the output file, if it does not exist:
-    outdir = os.path.abspath(args.outputFile).replace(  # noqa: PTH100
+    outdir = os.path.abspath(args.outputFile).replace(
         os.path.split(args.outputFile)[-1], ''
     )
-    os.makedirs(outdir, exist_ok=True)  # noqa: PTH103
+    os.makedirs(outdir, exist_ok=True)
 
     # Run BRAILS  with the user-defined arguments:
     runBrails(args.outputFile)

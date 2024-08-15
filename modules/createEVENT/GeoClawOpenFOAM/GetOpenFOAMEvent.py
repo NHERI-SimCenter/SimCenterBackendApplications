@@ -1,37 +1,37 @@
-import argparse  # noqa: CPY001, D100, INP001
+import argparse
 import json
 import os
 import re
 
 
-class FloorForces:  # noqa: D101
+class FloorForces:
     def __init__(self):
         self.X = [0]
         self.Y = [0]
         self.Z = [0]
 
 
-def validateCaseDirectoryStructure(caseDir):  # noqa: N802, N803
+def validateCaseDirectoryStructure(caseDir):
     """This method validates that the provided case directory is valid and contains the 0, constant and system directory
     It also checks that system directory contains the controlDict
-    """  # noqa: D205, D400, D401, D404
-    if not os.path.isdir(caseDir):  # noqa: PTH112
+    """
+    if not os.path.isdir(caseDir):
         return False
 
-    caseDirList = os.listdir(caseDir)  # noqa: N806
-    necessaryDirs = ['0', 'constant', 'system', 'postProcessing']  # noqa: N806
+    caseDirList = os.listdir(caseDir)
+    necessaryDirs = ['0', 'constant', 'system', 'postProcessing']
     if any(aDir not in caseDirList for aDir in necessaryDirs):
         return False
 
-    controlDictPath = os.path.join(caseDir, 'system/controlDict')  # noqa: PTH118, N806
-    if not os.path.exists(controlDictPath):  # noqa: SIM103, PTH110
+    controlDictPath = os.path.join(caseDir, 'system/controlDict')
+    if not os.path.exists(controlDictPath):
         return False
 
     return True
 
 
-def parseForceComponents(forceArray):  # noqa: N802, N803
-    """This method takes the OpenFOAM force array and parse into components x,y,z"""  # noqa: D400, D401, D404
+def parseForceComponents(forceArray):
+    """This method takes the OpenFOAM force array and parse into components x,y,z"""
     components = forceArray.strip('()').split()
     x = float(components[0])
     y = float(components[1])
@@ -39,33 +39,33 @@ def parseForceComponents(forceArray):  # noqa: N802, N803
     return [x, y, z]
 
 
-def ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime):  # noqa: N802, N803
-    """This method will read the forces from the output files in the OpenFOAM case output (post processing)"""  # noqa: D400, D401, D404
-    deltaT = 0  # noqa: N806
+def ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime):
+    """This method will read the forces from the output files in the OpenFOAM case output (post processing)"""
+    deltaT = 0
     forces = []
-    for i in range(floorsCount):  # noqa: B007
-        forces.append(FloorForces())  # noqa: PERF401
-    forcePattern = re.compile(r'\([0-9.e\+\-\s]+\)')  # noqa: N806
+    for i in range(floorsCount):
+        forces.append(FloorForces())
+    forcePattern = re.compile(r'\([0-9.e\+\-\s]+\)')
 
-    with open(buildingForcesPath) as forcesFile:  # noqa: N806, PLW1514, PTH123
-        forceLines = forcesFile.readlines()  # noqa: N806
-        needsDeltaT = True  # noqa: N806
+    with open(buildingForcesPath) as forcesFile:
+        forceLines = forcesFile.readlines()
+        needsDeltaT = True
         for line in forceLines:
             if line.startswith('#'):
                 continue
-            elif needsDeltaT:  # noqa: RET507
-                deltaT = float(line.split()[0])  # noqa: N806
-                needsDeltaT = False  # noqa: N806
+            elif needsDeltaT:
+                deltaT = float(line.split()[0])
+                needsDeltaT = False
 
             t = float(line.split()[0])
             if t > startTime:
-                detectedForces = re.findall(forcePattern, line)  # noqa: N806
+                detectedForces = re.findall(forcePattern, line)
 
                 for i in range(floorsCount):
                     # Read the different force types (pressure, viscous and porous!)
-                    pressureForce = detectedForces[6 * i]  # noqa: N806
-                    viscousForce = detectedForces[6 * i + 1]  # noqa: N806
-                    porousForce = detectedForces[6 * i + 2]  # noqa: N806
+                    pressureForce = detectedForces[6 * i]
+                    viscousForce = detectedForces[6 * i + 1]
+                    porousForce = detectedForces[6 * i + 2]
 
                     # Parse force components
                     [fprx, fpry, fprz] = parseForceComponents(pressureForce)
@@ -80,28 +80,28 @@ def ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime):  # noqa: N80
     return [deltaT, forces]
 
 
-def directionToDof(direction):  # noqa: N802
-    """Converts direction to degree of freedom"""  # noqa: D400, D401
-    directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
+def directionToDof(direction):
+    """Converts direction to degree of freedom"""
+    directioMap = {'X': 1, 'Y': 2, 'Z': 3}
 
     return directioMap[direction]
 
 
-def addFloorForceToEvent(  # noqa: N802
-    timeSeriesArray,  # noqa: N803
-    patternsArray,  # noqa: N803
+def addFloorForceToEvent(
+    timeSeriesArray,
+    patternsArray,
     force,
     direction,
     floor,
-    dT,  # noqa: N803
+    dT,
 ):
-    """Add force (one component) time series and pattern in the event file"""  # noqa: D400
-    seriesName = 'WaterForceSeries_' + str(floor) + direction  # noqa: N806
-    timeSeries = {'name': seriesName, 'dT': dT, 'type': 'Value', 'data': force}  # noqa: N806
+    """Add force (one component) time series and pattern in the event file"""
+    seriesName = 'WaterForceSeries_' + str(floor) + direction
+    timeSeries = {'name': seriesName, 'dT': dT, 'type': 'Value', 'data': force}
 
     timeSeriesArray.append(timeSeries)
 
-    patternName = 'WaterForcePattern_' + str(floor) + direction  # noqa: N806
+    patternName = 'WaterForcePattern_' + str(floor) + direction
     pattern = {
         'name': patternName,
         'timeSeries': seriesName,
@@ -113,19 +113,19 @@ def addFloorForceToEvent(  # noqa: N802
     patternsArray.append(pattern)
 
 
-def addFloorPressure(pressureArray, floor):  # noqa: N802, N803
-    """Add floor pressure in the event file"""  # noqa: D400
-    floorPressure = {'story': str(floor), 'pressure': [0.0, 0.0]}  # noqa: N806
+def addFloorPressure(pressureArray, floor):
+    """Add floor pressure in the event file"""
+    floorPressure = {'story': str(floor), 'pressure': [0.0, 0.0]}
 
     pressureArray.append(floorPressure)
 
 
-def writeEVENT(forces, deltaT):  # noqa: N802, N803
-    """This method writes the EVENT.json file"""  # noqa: D400, D401, D404
-    timeSeriesArray = []  # noqa: N806
-    patternsArray = []  # noqa: N806
-    pressureArray = []  # noqa: N806
-    waterEventJson = {  # noqa: N806
+def writeEVENT(forces, deltaT):
+    """This method writes the EVENT.json file"""
+    timeSeriesArray = []
+    patternsArray = []
+    pressureArray = []
+    waterEventJson = {
         'type': 'Hydro',
         'subtype': 'OpenFOAM CFD Hydro Event',
         'timeSeries': timeSeriesArray,
@@ -137,10 +137,10 @@ def writeEVENT(forces, deltaT):  # noqa: N802, N803
     }
 
     # Creating the event dictionary that will be used to export the EVENT json file
-    eventDict = {'randomVariables': [], 'Events': [waterEventJson]}  # noqa: N806
+    eventDict = {'randomVariables': [], 'Events': [waterEventJson]}
 
     # Adding floor forces
-    for floorForces in forces:  # noqa: N806
+    for floorForces in forces:
         floor = forces.index(floorForces) + 1
         addFloorForceToEvent(
             timeSeriesArray, patternsArray, floorForces.X, 'X', floor, deltaT
@@ -150,33 +150,33 @@ def writeEVENT(forces, deltaT):  # noqa: N802, N803
         )
         addFloorPressure(pressureArray, floor)
 
-    with open('EVENT.json', 'w') as eventsFile:  # noqa: N806, PLW1514, PTH123
+    with open('EVENT.json', 'w') as eventsFile:
         json.dump(eventDict, eventsFile)
 
 
-def GetOpenFOAMEvent(floorsCount, startTime):  # noqa: N802, N803
-    """Read OpenFOAM output and generate an EVENT file for the building"""  # noqa: D400
-    forcesOutputName = 'buildingsForces'  # noqa: N806
+def GetOpenFOAMEvent(floorsCount, startTime):
+    """Read OpenFOAM output and generate an EVENT file for the building"""
+    forcesOutputName = 'buildingsForces'
 
     if floorsCount == 1:
-        buildingForcesPath = os.path.join(  # noqa: PTH118, N806
+        buildingForcesPath = os.path.join(
             'postProcessing', forcesOutputName, '0', 'forces.dat'
         )
     else:
-        buildingForcesPath = os.path.join(  # noqa: PTH118, N806
+        buildingForcesPath = os.path.join(
             'postProcessing', forcesOutputName, '0', 'forces_bins.dat'
         )
 
-    [deltaT, forces] = ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime)  # noqa: N806
+    [deltaT, forces] = ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime)
 
     # Write the EVENT file
     writeEVENT(forces, deltaT)
 
-    print('OpenFOAM event is written to EVENT.json')  # noqa: T201
+    print('OpenFOAM event is written to EVENT.json')
 
 
-def ReadBIM(BIMFilePath):  # noqa: N802, N803, D103
-    with open(BIMFilePath) as BIMFile:  # noqa: N806, PLW1514, PTH123
+def ReadBIM(BIMFilePath):
+    with open(BIMFilePath) as BIMFile:
         bim = json.load(BIMFile)
 
     return [
@@ -197,6 +197,6 @@ if __name__ == '__main__':
 
     # parsing arguments
     arguments, unknowns = parser.parse_known_args()
-    [floors, startTime] = ReadBIM(arguments.bim)  # noqa: N816
+    [floors, startTime] = ReadBIM(arguments.bim)
 
     GetOpenFOAMEvent(floors, startTime)

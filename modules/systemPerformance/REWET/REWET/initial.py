@@ -1,11 +1,11 @@
 """Created on Tue Jun  1 21:04:18 2021
 
 @author: snaeimi
-"""  # noqa: CPY001, D400
+"""
 
 import logging
 import os
-import pickle  # noqa: S403
+import pickle
 import time
 
 import Damage
@@ -23,16 +23,16 @@ from restoration.registry import Registry
 logging.basicConfig(level=50)
 
 
-class Starter:  # noqa: D101
-    def createProjectFile(self, project_settings, damage_list, project_file_name):  # noqa: D102, N802, PLR6301
+class Starter:
+    def createProjectFile(self, project_settings, damage_list, project_file_name):
         project = Project(project_settings, damage_list)
-        project_file_addr = os.path.join(  # noqa: PTH118
+        project_file_addr = os.path.join(
             project_settings.process['result_directory'], project_file_name
         )
-        with open(project_file_addr, 'wb') as f:  # noqa: PTH123
+        with open(project_file_addr, 'wb') as f:
             pickle.dump(project, f)
 
-    def run(self, project_file=None):  # noqa: C901
+    def run(self, project_file=None):
         """Runs the ptogram. It initiates the Settings class and based on the
         settings, run the program in either single scenario, multiple serial or
         multiple parallel mode.
@@ -46,12 +46,12 @@ class Starter:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D205, D401
+        """
         settings = Settings()
         if project_file is not None:
             project_file = str(project_file)
 
-        if type(project_file) == str:  # noqa: E721
+        if type(project_file) == str:
             if project_file.split('.')[-1].lower() == 'prj':
                 settings.importProject(project_file)
             elif project_file.split('.')[-1].lower() == 'json':
@@ -59,7 +59,7 @@ class Starter:  # noqa: D101
                 project_file = None
             else:
                 raise ValueError(
-                    'The input file has an unrgnizable extension: {}'.format(  # noqa: EM103
+                    'The input file has an unrgnizable extension: {}'.format(
                         project_file.split('.')[-1].lower()
                     )
                 )
@@ -81,7 +81,7 @@ class Starter:  # noqa: D101
             if settings.process['number_of_damages'] == 'multiple':
                 damage_list_size = len(damage_list)
                 for i in range(damage_list_size):
-                    print(i, flush=True)  # noqa: T201
+                    print(i, flush=True)
                     settings.initializeScenarioSettings(
                         i
                     )  # initialize scenario-specific settings for each list/useful for sensitivity analysis
@@ -114,16 +114,16 @@ class Starter:  # noqa: D101
                     tank_damage_file_name=tank_damage_name,
                 )
                 t2 = time.time()
-                print('Time of Single run is: ' + repr((t2 - t1) / 3600) + '(hr)')  # noqa: T201
+                print('Time of Single run is: ' + repr((t2 - t1) / 3600) + '(hr)')
             else:
-                raise ValueError("Unknown value for settings['number_of_damages']")  # noqa: EM101, TRY003
+                raise ValueError("Unknown value for settings['number_of_damages']")
 
         elif settings.process['number_of_proccessor'] > 1:
             self.run_mpi(settings)
         else:
-            raise ValueError('Number of processor must be equal to or more than 1')  # noqa: EM101, TRY003
+            raise ValueError('Number of processor must be equal to or more than 1')
 
-    def run_local_single(  # noqa: C901
+    def run_local_single(
         self,
         file_name,
         scenario_name,
@@ -161,8 +161,8 @@ class Starter:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D401
-        print(  # noqa: T201
+        """
+        print(
             scenario_name
             + ' - '
             + file_name
@@ -172,27 +172,27 @@ class Starter:  # noqa: D101
             + str(pump_damage_file_name),
             flush=True,
         )
-        if settings.process['number_of_proccessor'] > 1 and worker_rank == None:  # noqa: E711
-            raise ValueError(  # noqa: TRY003
-                'for multiple processor analysis, worker_rank_must be provided'  # noqa: EM101
+        if settings.process['number_of_proccessor'] > 1 and worker_rank == None:
+            raise ValueError(
+                'for multiple processor analysis, worker_rank_must be provided'
             )
 
-        if type(file_name) != str:  # noqa: E721
+        if type(file_name) != str:
             file_name = str(
                 file_name
             )  # for number-only names to convert from int/float to str
 
-        if type(tank_damage_file_name) != str:  # noqa: E721
+        if type(tank_damage_file_name) != str:
             tank_damage_file_name = str(
                 tank_damage_file_name
             )  # for number-only names to convert from int/float to str
 
-        if type(nodal_damage_file_name) != str:  # noqa: E721
+        if type(nodal_damage_file_name) != str:
             nodal_damage_file_name = str(
                 nodal_damage_file_name
             )  # for number-only names to convert from int/float to str
 
-        if type(pump_damage_file_name) != str:  # noqa: E721
+        if type(pump_damage_file_name) != str:
             pump_damage_file_name = str(
                 pump_damage_file_name
             )  # for number-only names to convert from int/float to str
@@ -226,15 +226,15 @@ class Starter:  # noqa: D101
                 settings.process['pipe_damage_file_directory'], pump_damage_file_name
             )
         else:
-            raise ValueError(  # noqa: TRY003
-                "Unknown value for settings['Pipe_damage_input_method']"  # noqa: EM101
+            raise ValueError(
+                "Unknown value for settings['Pipe_damage_input_method']"
             )
 
         if (
-            pipe_damages.empty == True  # noqa: E712
-            and node_damages.empty == True  # noqa: E712
-            and tank_damages.empty == True  # noqa: E712
-            and pump_damages.empty == True  # noqa: E712
+            pipe_damages.empty == True
+            and node_damages.empty == True
+            and tank_damages.empty == True
+            and pump_damages.empty == True
             and settings.process['ignore_empty_damage']
         ):
             return 2  # means it didn't  run due to lack of any damage in pipe lines
@@ -253,7 +253,7 @@ class Starter:  # noqa: D101
         demand_node_name_list = []
         for junction_name, junction in wn.junctions():
             if junction.demand_timeseries_list[0].base_value > 0:
-                junction.demand_timeseries_list[0].base_value = (  # noqa: PLR6104
+                junction.demand_timeseries_list[0].base_value = (
                     junction.demand_timeseries_list[0].base_value
                     * settings.process['demand_ratio']
                 )
@@ -266,9 +266,9 @@ class Starter:  # noqa: D101
         self.registry.damage = self.damage
         self.damage.pipe_all_damages = pipe_damages
         self.damage.node_damage = node_damages
-        if tank_damages.empty == False:  # noqa: E712
+        if tank_damages.empty == False:
             self.damage.tank_damage = tank_damages['Tank_ID']
-        if pump_damages.empty == False:  # noqa: E712
+        if pump_damages.empty == False:
             self.damage.damaged_pumps = pump_damages['Pump_ID']
 
         restoration = Restoration(
@@ -293,9 +293,9 @@ class Starter:  # noqa: D101
         io.save_single(settings, result, scenario_name, registry)
         return 1
 
-    def run_mpi(self, settings):  # noqa: C901, D102
-        import mpi4py  # noqa: PLC0415
-        from mpi4py import MPI  # noqa: PLC0415
+    def run_mpi(self, settings):
+        import mpi4py
+        from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
         mpi4py.rc.recv_mprobe = False
@@ -305,7 +305,7 @@ class Starter:  # noqa: D101
             settings.process['pipe_damage_file_directory'],
         )
 
-        if settings.process['mpi_resume'] == True:  # noqa: E712
+        if settings.process['mpi_resume'] == True:
             pipe_damage_list = pipe_damage_list.set_index('Scenario Name')
             # _done_file = pd.read_csv('done.csv')
             # _done_file = _done_file.transpose().reset_index().transpose().set_index(0)
@@ -331,7 +331,7 @@ class Starter:  # noqa: D101
         else:
             file_name_list = []
 
-        if comm.rank == 0:  # noqa: PLR1702
+        if comm.rank == 0:
             time_jobs_saved = time.time()
             jobs = pd.DataFrame(
                 columns=[
@@ -358,9 +358,9 @@ class Starter:  # noqa: D101
                 ],
             )
 
-            iContinue = True  # noqa: N806
+            iContinue = True
             while iContinue:
-                if (time.time() - time_jobs_saved) > 120:  # noqa: PLR2004
+                if (time.time() - time_jobs_saved) > 120:
                     jobs.to_excel(
                         'temp-jobs.xlsx'
                     )  # only for more information about the latest job status for the user in the real time
@@ -371,17 +371,17 @@ class Starter:  # noqa: D101
                     recieved_msg = comm.recv(status=status)
                     worker_rank = status.Get_source()
                     if (
-                        recieved_msg == 1 or recieved_msg == 2 or recieved_msg == 3  # noqa: PLR1714, PLR2004
+                        recieved_msg == 1 or recieved_msg == 2 or recieved_msg == 3
                     ):  # check if the job is done
                         msg_interpretation = None
                         if recieved_msg == 1:
                             msg_interpretation = 'done'
-                        elif recieved_msg == 2:  # noqa: PLR2004
+                        elif recieved_msg == 2:
                             msg_interpretation = 'done w/o simulation'
-                        elif recieved_msg == 3:  # noqa: PLR2004
+                        elif recieved_msg == 3:
                             msg_interpretation = 'exception happened'
 
-                        print(  # noqa: T201
+                        print(
                             'messaged received= '
                             + repr(msg_interpretation)
                             + ' rank recivied= '
@@ -399,9 +399,9 @@ class Starter:  # noqa: D101
                     jobs_index = workers.loc[worker_rank]
                     if recieved_msg == 1:
                         jobs.loc[jobs_index, 'Done'] = 'True'
-                    elif recieved_msg == 2:  # noqa: PLR2004
+                    elif recieved_msg == 2:
                         jobs.loc[jobs_index, 'Done'] = 'No need'
-                    elif recieved_msg == 3:  # noqa: PLR2004
+                    elif recieved_msg == 3:
                         jobs.loc[jobs_index, 'Done'] = 'exception'
 
                     jobs.loc[jobs_index, 'time_confirmed'] = time.time()
@@ -419,7 +419,7 @@ class Starter:  # noqa: D101
                         jobs.loc[jobs_index, 'time_confirmed']
                         - jobs.loc[jobs_index, 'time_assigned']
                     )
-                    with open(  # noqa: PTH123
+                    with open(
                         'done.csv', 'a', encoding='utf-8', buffering=1000000
                     ) as f:  # shows the order of done jobs
                         f.write(
@@ -445,11 +445,11 @@ class Starter:  # noqa: D101
                 if (
                     len(not_assigned_data) > 0
                     and len(free_workers) > 0
-                    and time_constraint == False  # noqa: E712
+                    and time_constraint == False
                 ):
                     jobs_index = not_assigned_data.index[0]
                     worker_rank = free_workers.index[0]
-                    print(  # noqa: T201
+                    print(
                         'trying to send '
                         + repr(jobs_index)
                         + ' to '
@@ -466,7 +466,7 @@ class Starter:  # noqa: D101
                         '%Y-%m-%d %H:%M:%S',
                         time.localtime(jobs.loc[jobs_index, 'time_assigned']),
                     )
-                    with open(  # noqa: PTH123
+                    with open(
                         'runing.csv', 'a', encoding='utf-8', buffering=1000000
                     ) as f:
                         f.write(
@@ -481,11 +481,11 @@ class Starter:  # noqa: D101
                         )
 
                 binary_vector = jobs['Done'] == 'False'
-                iContinue = binary_vector.any() and (not time_constraint)  # noqa: N806
+                iContinue = binary_vector.any() and (not time_constraint)
 
             # Finish workers with sending them a dummy data with tag=100 (death tag)
             for i in range(1, settings.process['number_of_proccessor']):
-                print('Death msg (tag=100) is sent to all workers. RIP!', flush=True)  # noqa: T201
+                print('Death msg (tag=100) is sent to all workers. RIP!', flush=True)
                 comm.send('None', dest=i, tag=100)
             jobs['time_lapsed'] = jobs['time_confirmed'] - jobs['time_assigned']
             jobs['time_assigned'] = jobs.apply(
@@ -501,25 +501,25 @@ class Starter:  # noqa: D101
                 axis=1,
             )
             jobs.to_excel('jobs.xlsx')
-            print('MAIN NODE FINISHED. Going under!', flush=True)  # noqa: T201
+            print('MAIN NODE FINISHED. Going under!', flush=True)
 
         else:
             worker_exit_flag = None
             while True:
                 if comm.iprobe(source=0):
                     status = MPI.Status()
-                    print(  # noqa: T201
+                    print(
                         'trying to receive msg. -> rank= ' + repr(comm.rank),
                         flush=True,
                     )
                     scenario_index = comm.recv(source=0, status=status)
 
-                    if status.Get_tag() != 100:  # noqa: PLR2004
+                    if status.Get_tag() != 100:
                         scenario_name = pipe_damage_list.loc[
                             scenario_index, 'Scenario Name'
                         ]
                         settings.initializeScenarioSettings(scenario_index)
-                        print(  # noqa: T201
+                        print(
                             'Rank= '
                             + repr(comm.rank)
                             + '  is assigned to '
@@ -546,23 +546,23 @@ class Starter:  # noqa: D101
                                 pump_damage_file_name=pump_damage,
                                 tank_damage_file_name=tank_damage_name,
                             )
-                            print(  # noqa: T201
+                            print(
                                 'run_flag for worker: '
                                 + repr(comm.rank)
                                 + ' --> '
                                 + repr(run_flag)
                             )
                             comm.isend(run_flag, dest=0)
-                        except Exception:  # noqa: BLE001
+                        except Exception:
                             error_dump_file = None
-                            if type(scenario_name) == str:  # noqa: E721
+                            if type(scenario_name) == str:
                                 error_dump_file = 'dump_' + scenario_name + '.pkl'
                             else:
                                 error_dump_file = (
                                     'dump_' + repr(scenario_name) + '.pkl'
                                 )
 
-                            with open(error_dump_file, 'wb') as f:  # noqa: PTH123
+                            with open(error_dump_file, 'wb') as f:
                                 pickle.dump(self, f)
 
                             comm.isend(3, dest=0)
@@ -577,17 +577,17 @@ class Starter:  # noqa: D101
                     ]:
                         worker_exit_flag = 'Maximum time reached.'
                         break
-            print(  # noqa: T201
+            print(
                 repr(worker_exit_flag) + " I'm OUT -> Rank= " + repr(comm.rank),
                 flush=True,
             )
 
-    def checkArgument(self, argv):  # noqa: D102, N802, PLR6301
-        if len(argv) > 2:  # noqa: PLR2004
-            print('REWET USAGE is as [./REWET Project.prj: optional]')  # noqa: T201
-        if len(argv) == 1:  # noqa: SIM103
+    def checkArgument(self, argv):
+        if len(argv) > 2:
+            print('REWET USAGE is as [./REWET Project.prj: optional]')
+        if len(argv) == 1:
             return False
-        else:  # noqa: RET505
+        else:
             return True
 
 
@@ -597,9 +597,9 @@ if __name__ == '__main__':
     start = Starter()
     if_project = start.checkArgument(sys.argv)
     if if_project:
-        if os.path.exists(sys.argv[1]):  # noqa: PTH110
+        if os.path.exists(sys.argv[1]):
             tt = start.run(sys.argv[1])
         else:
-            print('Project file address is not valid: ' + repr(sys.argv[1]))  # noqa: T201
+            print('Project file address is not valid: ' + repr(sys.argv[1]))
     else:
         tt = start.run()

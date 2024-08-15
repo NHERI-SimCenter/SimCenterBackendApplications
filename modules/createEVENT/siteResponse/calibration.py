@@ -1,4 +1,4 @@
-import json  # noqa: CPY001, D100, INP001
+import json
 import sys
 
 import numpy as np
@@ -7,7 +7,7 @@ from Gauss1D import gauss1D
 from scipy.interpolate import interp1d
 
 
-def materialPM4(baseInputs, matTag, fn):  # noqa: N802, N803, D103
+def materialPM4(baseInputs, matTag, fn):
     fn.write(
         'nDMaterial PM4Sand {} {:.3f} {:.2f} {:.3f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f}  {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} \n'.format(
             matTag,
@@ -39,7 +39,7 @@ def materialPM4(baseInputs, matTag, fn):  # noqa: N802, N803, D103
     )
 
 
-def materialPDMY03(baseInputs, matTag, fn):  # noqa: N802, N803, D103
+def materialPDMY03(baseInputs, matTag, fn):
     fn.write(
         'nDMaterial PressureDependMultiYield03 {} {} {:.2f} {:.3e} {:.3e} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {} {:.3f} {:.3f} {:.3f} {:.3f} \n'.format(
             matTag,
@@ -70,7 +70,7 @@ def materialPDMY03(baseInputs, matTag, fn):  # noqa: N802, N803, D103
     )
 
 
-def materialElastic(baseInputs, matTag, fn):  # noqa: N802, N803, D103
+def materialElastic(baseInputs, matTag, fn):
     fn.write(
         'nDMaterial ElasticIsotropic  {} {:.3e} {:.3f} {:.2f} \n'.format(
             matTag, baseInputs['E'], baseInputs['poisson'], baseInputs['density']
@@ -78,7 +78,7 @@ def materialElastic(baseInputs, matTag, fn):  # noqa: N802, N803, D103
     )
 
 
-def calibration(variables, inputParameters, fn):  # noqa: C901, N803, D103
+def calibration(variables, inputParameters, fn):
     # This function contains two parts: call gauss1D to generate 1D random field; generate material based on random field
     # Currently only relative density is supported
     # Calibration of PM4Sand is based on a parametric study that produces hpo = f(Dr, Go, CRR)
@@ -86,7 +86,7 @@ def calibration(variables, inputParameters, fn):  # noqa: C901, N803, D103
 
     if variables['materialType'] == 'PM4Sand_Random':
         # PM4Sand
-        baseInputs = {  # noqa: N806
+        baseInputs = {
             'Dr': 0.65,
             'Go': 600.0,
             'hpo': 0.08,
@@ -114,7 +114,7 @@ def calibration(variables, inputParameters, fn):  # noqa: C901, N803, D103
         }
     elif variables['materialType'] == 'PDMY03_Random':
         # PDMY03
-        baseInputs = {  # noqa: N806
+        baseInputs = {
             'nd': 2,
             'rho': 1.5,
             'refShearModul': 4.69e4,
@@ -141,7 +141,7 @@ def calibration(variables, inputParameters, fn):  # noqa: C901, N803, D103
         }
     elif variables['materialType'] == 'Elastic_Random':
         # Elastic
-        baseInputs = {'E': 168480, 'poisson': 0.3, 'density': 2.0}  # noqa: N806
+        baseInputs = {'E': 168480, 'poisson': 0.3, 'density': 2.0}
 
     for keys in baseInputs:
         baseInputs[keys] = inputParameters[keys]
@@ -149,40 +149,40 @@ def calibration(variables, inputParameters, fn):  # noqa: C901, N803, D103
     # calculate random field
     # size of mesh
     thickness = variables['thickness']
-    waveLength = variables['Ly']  # noqa: N806
+    waveLength = variables['Ly']
     # Number of wave number increments in y-direction
-    Ny = thickness / waveLength  # noqa: N806
+    Ny = thickness / waveLength
     rd = gauss1D(thickness, Ny)
     rd.calculate()
-    F = np.squeeze(rd.f.reshape((-1, 1)))  # noqa: N806
-    Y = np.linspace(0, rd.Ly, rd.My)  # noqa: N806
+    F = np.squeeze(rd.f.reshape((-1, 1)))
+    Y = np.linspace(0, rd.Ly, rd.My)
     f = interp1d(Y, F, kind='cubic')
 
     # mapping from random field to mesh
-    elemID = np.arange(variables['eleStart'], variables['eleEnd'] + 1, 1)  # noqa: N806
-    elementY = np.linspace(  # noqa: N806
+    elemID = np.arange(variables['eleStart'], variables['eleEnd'] + 1, 1)
+    elementY = np.linspace(
         variables['elevationStart'], variables['elevationEnd'], len(elemID)
     )
 
-    for matTag in elemID:  # noqa: N806
+    for matTag in elemID:
         residual = (
             variables['mean']
             * f(elementY[matTag - variables['eleStart']])
             * variables['COV']
         )
-        print()  # noqa: T201
+        print()
         if variables['name'] == 'Dr':
             # bound Dr between 0.2 and 0.95
-            Dr = min(max(0.2, variables['mean'] + residual), 0.95)  # noqa: N806
-            if Dr != Dr:  # noqa: PLR0124
-                Dr = 0.2  # noqa: N806
+            Dr = min(max(0.2, variables['mean'] + residual), 0.95)
+            if Dr != Dr:
+                Dr = 0.2
             if variables['materialType'] == 'PM4Sand_Random':
                 baseInputs['Dr'] = Dr
-                Go = baseInputs['Go']  # noqa: N806
+                Go = baseInputs['Go']
                 # CPT and SPT Based Liquefaction Triggering Procedures (Boulanger and Idriss 2014)
-                Cd = 46.0  # noqa: N806
-                N160 = Dr**2 * Cd  # noqa: N806
-                CRR_IB = np.exp(  # noqa: N806
+                Cd = 46.0
+                N160 = Dr**2 * Cd
+                CRR_IB = np.exp(
                     N160 / 14.1
                     + (N160 / 126) ** 2
                     - (N160 / 23.6) ** 3
@@ -202,9 +202,9 @@ def calibration(variables, inputParameters, fn):  # noqa: C901, N803, D103
                     + 0.71347 * Dr**2
                 )
                 hpo = (-b + np.sqrt(b**2 - 4 * a * c)) / (2 * a)
-                if hpo != hpo:  # noqa: PLR0124
+                if hpo != hpo:
                     hpo = 0.4
-                    CRR_prediction = (  # noqa: N806
+                    CRR_prediction = (
                         0.114
                         - 0.44844 * Dr
                         - (4.2648e-5) * Go
@@ -222,13 +222,13 @@ def calibration(variables, inputParameters, fn):  # noqa: C901, N803, D103
                 baseInputs['hpo'] = hpo
                 materialPM4(baseInputs, matTag, fn)
             elif variables['materialType'] == 'PDMY03_Random':
-                Dr = max(min(Dr, 0.87), 0.33)  # noqa: N806
+                Dr = max(min(Dr, 0.87), 0.33)
                 baseInputs['Dr'] = Dr
                 # interpolation using Khosravifar, A., Elgamal, A., Lu, J., and Li, J. [2018].
                 # "A 3D model for earthquake-induced liquefaction triggering and post-liquefaction response."
                 # Soil Dynamics and Earthquake Engineering, 110, 43-52
                 drs = np.array([0.33, 0.57, 0.74, 0.87])
-                df = pd.DataFrame(  # noqa: PD901
+                df = pd.DataFrame(
                     [
                         (
                             46900,
@@ -302,14 +302,14 @@ def calibration(variables, inputParameters, fn):  # noqa: C901, N803, D103
                         'dc',
                     ),
                 )
-                for columnName, columnData in df.iteritems():  # noqa: B007, N806
-                    f_Dr = interp1d(drs, df[columnName], kind='cubic')  # noqa: N806
+                for columnName, columnData in df.iteritems():
+                    f_Dr = interp1d(drs, df[columnName], kind='cubic')
                     baseInputs[columnName] = f_Dr(Dr)
                 materialPDMY03(baseInputs, matTag, fn)
         elif variables['name'] == 'Vs':
             if variables['materialType'] == 'Elastic_Random':
                 # bound Dr between 50 and 1500
-                Vs = min(max(50, variables['mean'] + residual), 1500)  # noqa: N806
+                Vs = min(max(50, variables['mean'] + residual), 1500)
                 baseInputs['E'] = (
                     2.0
                     * baseInputs['density']
@@ -321,28 +321,28 @@ def calibration(variables, inputParameters, fn):  # noqa: C901, N803, D103
                 materialElastic(baseInputs, matTag, fn)
 
 
-def createMaterial(data):  # noqa: N802, D103
-    eleStart = 0  # noqa: N806
-    eleEnd = 0  # noqa: N806
-    elevationStart = 0  # noqa: N806
-    elevationEnd = 0  # noqa: N806
-    numElems = 0  # noqa: N806
-    totalHeight = 0  # noqa: N806
-    randomMaterialList = ['PM4Sand_Random', 'PDMY03_Random', 'Elastic_Random']  # noqa: N806
-    fn = open('material.tcl', 'w')  # noqa: PLW1514, PTH123, SIM115
+def createMaterial(data):
+    eleStart = 0
+    eleEnd = 0
+    elevationStart = 0
+    elevationEnd = 0
+    numElems = 0
+    totalHeight = 0
+    randomMaterialList = ['PM4Sand_Random', 'PDMY03_Random', 'Elastic_Random']
+    fn = open('material.tcl', 'w')
 
     for layer in reversed(data['soilProfile']['soilLayers']):
         if layer['eSize'] != 0:
-            eleStart = numElems + 1  # noqa: N806
-            numElemsLayer = round(layer['thickness'] / layer['eSize'])  # noqa: N806
-            numElems += numElemsLayer  # noqa: N806
-            eleSize = layer['thickness'] / numElemsLayer  # noqa: N806
-            elevationStart = eleSize / 2.0  # noqa: N806
-            totalHeight += layer['thickness']  # noqa: N806
-            eleEnd = numElems  # noqa: N806
-            elevationEnd = layer['thickness'] - eleSize / 2.0  # noqa: N806
+            eleStart = numElems + 1
+            numElemsLayer = round(layer['thickness'] / layer['eSize'])
+            numElems += numElemsLayer
+            eleSize = layer['thickness'] / numElemsLayer
+            elevationStart = eleSize / 2.0
+            totalHeight += layer['thickness']
+            eleEnd = numElems
+            elevationEnd = layer['thickness'] - eleSize / 2.0
         if data['materials'][layer['material'] - 1]['type'] in randomMaterialList:
-            variables = dict(  # noqa: C408
+            variables = dict(
                 materialType=data['materials'][layer['material'] - 1]['type'],
                 name=data['materials'][layer['material'] - 1]['Variable'],
                 mean=data['materials'][layer['material'] - 1]['mean'],
@@ -354,20 +354,20 @@ def createMaterial(data):  # noqa: N802, D103
                 elevationStart=elevationStart,  # location of first Gauss Point respect to layer base
                 elevationEnd=elevationEnd,  # location of last Gauss Point respect to layer base
             )
-            inputParameters = data['materials'][layer['material'] - 1]  # noqa: N806
+            inputParameters = data['materials'][layer['material'] - 1]
             calibration(variables, inputParameters, fn)
 
     fn.close()
 
 
 if __name__ == '__main__':
-    srtName = sys.argv[0]  # noqa: N816
+    srtName = sys.argv[0]
 
     # data obtained from user input
     # define the random field
-    with open(srtName) as json_file:  # noqa: PLW1514, PTH123
+    with open(srtName) as json_file:
         data = json.load(json_file)
 
-    eventData = data['Events'][0]  # noqa: N816
+    eventData = data['Events'][0]
 
     createMaterial(eventData)

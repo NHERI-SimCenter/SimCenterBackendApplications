@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -50,27 +50,27 @@ import pandas as pd
 from scipy.cluster.vq import vq
 
 
-def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # noqa: C901, N803, D103
+def create_event(asset_file, event_grid_file, multipleEvents, doParallel):
     # check if running parallel
-    numP = 1  # noqa: N806
-    procID = 0  # noqa: N806
-    runParallel = False  # noqa: N806
+    numP = 1
+    procID = 0
+    runParallel = False
 
     if doParallel == 'True':
         mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
-            from mpi4py import MPI  # noqa: PLC0415
+            from mpi4py import MPI
 
-            runParallel = True  # noqa: N806
+            runParallel = True
             comm = MPI.COMM_WORLD
-            numP = comm.Get_size()  # noqa: N806
-            procID = comm.Get_rank()  # noqa: N806
-            if numP < 2:  # noqa: PLR2004
-                doParallel = 'False'  # noqa: N806
-                runParallel = False  # noqa: N806
-                numP = 1  # noqa: N806
-                procID = 0  # noqa: N806
+            numP = comm.Get_size()
+            procID = comm.Get_rank()
+            if numP < 2:
+                doParallel = 'False'
+                runParallel = False
+                numP = 1
+                procID = 0
 
     # read the event grid data file
     event_grid_path = Path(event_grid_file).resolve()
@@ -80,33 +80,33 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
     grid_df = pd.read_csv(event_dir / event_grid_file, header=0)
 
     # store the locations of the grid points in X
-    lat_E = grid_df['Latitude']  # noqa: N806
-    lon_E = grid_df['Longitude']  # noqa: N806
-    X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])  # noqa: N806
+    lat_E = grid_df['Latitude']
+    lon_E = grid_df['Longitude']
+    X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])
 
     # load the asset data file
-    with open(asset_file, encoding='utf-8') as f:  # noqa: PTH123
+    with open(asset_file, encoding='utf-8') as f:
         asset_dict = json.load(f)
 
     # prepare a dataframe that holds asset filenames and locations
-    AIM_df = pd.DataFrame(  # noqa: N806
+    AIM_df = pd.DataFrame(
         columns=['Latitude', 'Longitude', 'file'], index=np.arange(len(asset_dict))
     )
 
     count = 0
     for i, asset in enumerate(asset_dict):
-        if runParallel == False or (i % numP) == procID:  # noqa: E712
-            with open(asset['file'], encoding='utf-8') as f:  # noqa: PTH123
+        if runParallel == False or (i % numP) == procID:
+            with open(asset['file'], encoding='utf-8') as f:
                 asset_data = json.load(f)
 
             asset_loc = asset_data['GeneralInformation']['location']
             AIM_df.iloc[count]['Longitude'] = asset_loc['longitude']
             AIM_df.iloc[count]['Latitude'] = asset_loc['latitude']
             AIM_df.iloc[count]['file'] = asset['file']
-            count = count + 1  # noqa: PLR6104
+            count = count + 1
 
     # store asset locations in Y
-    Y = np.array(  # noqa: N806
+    Y = np.array(
         [
             [lo, la]
             for lo, la in zip(AIM_df['Longitude'], AIM_df['Latitude'])
@@ -118,7 +118,7 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
     # print(sub_grid)
 
     # Find the index of the closest point - each index corresponds to the gridpoint index
-    closest, distances = vq(Y, X)  # noqa: F841
+    closest, distances = vq(Y, X)
 
     #    print("****closest",closest)
     #    print("****distances",distances)
@@ -129,10 +129,10 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
 
     # check to ensure we found all of the assets
     if len(closest) != np.size(Y, 0):
-        print(  # noqa: T201
+        print(
             'Error, the number of assets needs to be equal to the number of grid points'
         )
-        print(  # noqa: T201
+        print(
             'The number of assets is '
             + str(np.size(Y, 0))
             + ' and the number of grid points is '
@@ -141,11 +141,11 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
         return 1
 
     # iterate through the assets and store the selected events in the AIM
-    for idx, AIM_id in enumerate(AIM_df.index):  # noqa: N806, PLR1702, RET503
+    for idx, AIM_id in enumerate(AIM_df.index):
         # open the AIM file
         asset_file = AIM_df.iloc[AIM_id]['file']
 
-        with open(asset_file, encoding='utf-8') as f:  # noqa: PTH123
+        with open(asset_file, encoding='utf-8') as f:
             asset_data = json.load(f)
 
         # this is the preferred behavior, the else clause is left for legacy inputs
@@ -167,13 +167,13 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
             else:
                 event_type = 'intensityMeasure'
 
-            event_count = first_file.shape[0]  # noqa: F841
+            event_count = first_file.shape[0]
 
             # collect the list of events and scale factors
             event_list = []
             scale_list = []
 
-            closestPnt = grid_df.iloc[closest[idx]]  # noqa: N806
+            closestPnt = grid_df.iloc[closest[idx]]
 
             # if the grid has ground motion records...
             if event_type == 'timeHistory':
@@ -214,17 +214,17 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
                 # If GP_file contains multiple events
                 if multipleEvents:
                     # Read the GP_file
-                    GP_file = os.path.join(event_dir, closestPnt['GP_file'])  # noqa: PTH118, N806
-                    GP_file_df = pd.read_csv(GP_file, header=0)  # noqa: N806
+                    GP_file = os.path.join(event_dir, closestPnt['GP_file'])
+                    GP_file_df = pd.read_csv(GP_file, header=0)
                     if GP_file_df.shape[0] > 1:
                         for row in range(1, GP_file_df.shape[0]):
                             event_list.append(closestPnt['GP_file'] + f'x{row}')
                             scale_list.append(1.0)
 
-        # TODO: update the LLNL input data and remove this clause  # noqa: TD002
+        # TODO: update the LLNL input data and remove this clause
         else:
             event_list = []
-            for e, i in zip(nbr_samples, ind_list):  # noqa: B007, F821
+            for e, i in zip(nbr_samples, ind_list):
                 event_list += [
                     closestPnt['GP_file'],
                 ] * e
@@ -254,7 +254,7 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
             # "type": "SimCenterEvents"
         }
 
-        with open(asset_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
+        with open(asset_file, 'w', encoding='utf-8') as f:
             json.dump(asset_data, f, indent=2)
 
 

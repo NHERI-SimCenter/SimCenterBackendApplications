@@ -1,7 +1,7 @@
 """Created on Wed May 26 16:11:36 2021
 
 @author: snaeimi
-"""  # noqa: CPY001, D400
+"""
 
 import ctypes
 import logging
@@ -16,73 +16,73 @@ from pkg_resources import resource_filename
 logger = logging.getLogger(__name__)
 
 
-class EpanetException(Exception):  # noqa: N818, D101
+class EpanetException(Exception):
     pass
 
 
-class ENepanet(wntrfr.epanet.toolkit.ENepanet):  # noqa: D101
-    def __init__(  # noqa: C901
+class ENepanet(wntrfr.epanet.toolkit.ENepanet):
+    def __init__(
         self,
         inpfile='',
         rptfile='',
         binfile='',
-        changed_epanet=False,  # noqa: FBT002
+        changed_epanet=False,
         version=2.2,
     ):
-        if changed_epanet == False or changed_epanet == True:  # noqa: E712, PLR1714
+        if changed_epanet == False or changed_epanet == True:
             self.changed_epanet = changed_epanet
         else:
-            raise ValueError('changed_epanet must be a boolean value')  # noqa: EM101, TRY003
+            raise ValueError('changed_epanet must be a boolean value')
 
-        if changed_epanet == False:  # noqa: E712
-            try:  # noqa: SIM105
+        if changed_epanet == False:
+            try:
                 super().__init__(inpfile, rptfile, binfile, version=version)
-            except:  # noqa: S110, E722
+            except:
                 pass  # to add robustness for the time when for the WNTR
                 # cannot load the umodified DLLs for any reason
         else:
-            if float(version) != 2.2:  # noqa: PLR2004
-                raise ValueError(  # noqa: TRY003
-                    'EPANET version must be 2.2 when using tegh changed version'  # noqa: EM101
+            if float(version) != 2.2:
+                raise ValueError(
+                    'EPANET version must be 2.2 when using tegh changed version'
                 )
 
-            elif float(version) == 2.2:  # noqa: RET506, PLR2004
+            elif float(version) == 2.2:
                 libnames = ['epanet22_mod', 'epanet22_win32_mod']
                 if '64' in platform.machine():
                     libnames.insert(0, 'epanet22_amd64_mod')
             for lib in libnames:
                 try:
-                    if os.name in ['nt', 'dos']:  # noqa: PLR6201
+                    if os.name in ['nt', 'dos']:
                         libepanet = resource_filename(
                             __name__,
-                            'Windows/%s.dll' % lib,  # noqa: UP031
+                            'Windows/%s.dll' % lib,
                         )
                         self.ENlib = ctypes.windll.LoadLibrary(libepanet)
                     elif sys.platform == 'darwin':
                         libepanet = resource_filename(
                             __name__,
-                            'Darwin/lib%s.dylib' % lib,  # noqa: UP031
+                            'Darwin/lib%s.dylib' % lib,
                         )
                         self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
                     else:
                         libepanet = resource_filename(
                             __name__,
-                            'Linux/lib%s.so' % lib,  # noqa: UP031
+                            'Linux/lib%s.so' % lib,
                         )
                         self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-                    return  # noqa: TRY300
-                except Exception as E1:  # noqa: PERF203
+                    return
+                except Exception as E1:
                     if lib == libnames[-1]:
-                        raise E1  # noqa: TRY201
+                        raise E1
                 finally:
-                    if version >= 2.2 and '32' not in lib:  # noqa: PLR2004
+                    if version >= 2.2 and '32' not in lib:
                         self._project = ctypes.c_uint64()
-                    elif version >= 2.2:  # noqa: PLR2004
+                    elif version >= 2.2:
                         self._project = ctypes.c_uint32()
                     else:
                         self._project = None
 
-    def ENn(self, inpfile=None, rptfile=None, binfile=None):  # noqa: N802
+    def ENn(self, inpfile=None, rptfile=None, binfile=None):
         """Opens an EPANET input file and reads in network data
 
         Parameters
@@ -94,22 +94,22 @@ class ENepanet(wntrfr.epanet.toolkit.ENepanet):  # noqa: D101
         binfile : str
             Binary output file to create (default to constructor value)
 
-        """  # noqa: D400, D401
+        """
         inpfile = inpfile.encode('ascii')
         rptfile = rptfile.encode('ascii')  # ''.encode('ascii')
         binfile = binfile.encode('ascii')
         s = 's'
         self.errcode = self.ENlib.EN_runproject(inpfile, rptfile, binfile, s)
         self._error()
-        if self.errcode < 100:  # noqa: PLR2004
+        if self.errcode < 100:
             self.fileLoaded = True
 
-    def ENSetIgnoreFlag(self, ignore_flag=0):  # noqa: D102, N802, PLR6301
-        if abs(ignore_flag - np.round(ignore_flag)) > 0.00001 or ignore_flag < 0:  # noqa: PLR2004
+    def ENSetIgnoreFlag(self, ignore_flag=0):
+        if abs(ignore_flag - np.round(ignore_flag)) > 0.00001 or ignore_flag < 0:
             logger.error(
-                'ignore_flag must be int value and bigger than zero'  # noqa: G003
+                'ignore_flag must be int value and bigger than zero'
                 + str(ignore_flag)
             )
-        flag = ctypes.c_int(int(ignore_flag))  # noqa: F841
+        flag = ctypes.c_int(int(ignore_flag))
         # print('++++++++++++++++++++++')
         # self.ENlib.ENEXTENDEDsetignoreflag(flag)

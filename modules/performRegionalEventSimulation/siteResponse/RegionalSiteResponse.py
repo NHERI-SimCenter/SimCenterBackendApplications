@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2018 The Regents of the University of California
 #
 # This file is part of the SimCenter Backend Applications
@@ -40,7 +40,7 @@ import argparse
 import json
 import os
 import shutil
-import subprocess  # noqa: S404
+import subprocess
 import sys
 from pathlib import Path
 
@@ -48,68 +48,68 @@ from pathlib import Path
 # some filePath and python exe stuff
 #
 
-thisDir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120, N816
-mainDir = thisDir.parents[1]  # noqa: N816
-mainDir = thisDir.parents[1]  # noqa: N816
-currentDir = os.getcwd()  # noqa: PTH109, N816
+thisDir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+mainDir = thisDir.parents[1]
+mainDir = thisDir.parents[1]
+currentDir = os.getcwd()
 
-pythonEXE = sys.executable  # noqa: N816
+pythonEXE = sys.executable
 
-thisDir = str(thisDir)  # noqa: N816
-mainDir = str(mainDir)  # noqa: N816
-currentDir = str(currentDir)  # noqa: N816
+thisDir = str(thisDir)
+mainDir = str(mainDir)
+currentDir = str(currentDir)
 
-print(f'thisDir: {thisDir}')  # noqa: T201
-print(f'mainDir: {mainDir}')  # noqa: T201
-print(f'currentDir: {currentDir}')  # noqa: T201
+print(f'thisDir: {thisDir}')
+print(f'mainDir: {mainDir}')
+print(f'currentDir: {currentDir}')
 
 
-def runHazardSimulation(inputFILE):  # noqa: N802, N803, D103
+def runHazardSimulation(inputFILE):
     # log_msg('Startring simulation script...')
 
-    sys.path.insert(0, os.getcwd())  # noqa: PTH109
+    sys.path.insert(0, os.getcwd())
 
     #
     # open input & parse json
     #
 
-    print(f'inputFILE: {inputFILE}')  # noqa: T201
-    with open(inputFILE) as f:  # noqa: PLW1514, PTH123
-        inputJSON = json.load(f)  # noqa: N806
+    print(f'inputFILE: {inputFILE}')
+    with open(inputFILE) as f:
+        inputJSON = json.load(f)
 
     #
     # read needed input data
     #
 
-    unitData = inputJSON['units']  # noqa: N806
-    inputApplications = inputJSON['Applications']  # noqa: N806
-    hazardApplication = inputApplications['Hazard']  # noqa: N806
-    regionalMappingApplication = inputApplications['RegionalMapping']  # noqa: N806
-    uqApplication = inputApplications['UQ']  # noqa: N806
+    unitData = inputJSON['units']
+    inputApplications = inputJSON['Applications']
+    hazardApplication = inputApplications['Hazard']
+    regionalMappingApplication = inputApplications['RegionalMapping']
+    uqApplication = inputApplications['UQ']
 
-    hazardAppData = hazardApplication['ApplicationData']  # noqa: N806
+    hazardAppData = hazardApplication['ApplicationData']
 
-    soilFile = hazardAppData['soilGridParametersFile']  # noqa: N806
-    soilPath = hazardAppData['soilParametersPath']  # noqa: N806
-    responseScript = hazardAppData['siteResponseScript']  # noqa: N806
-    scriptPath = hazardAppData['scriptPath']  # noqa: N806
+    soilFile = hazardAppData['soilGridParametersFile']
+    soilPath = hazardAppData['soilParametersPath']
+    responseScript = hazardAppData['siteResponseScript']
+    scriptPath = hazardAppData['scriptPath']
     filters = hazardAppData['filter']
-    eventFile = hazardAppData['inputEventFile']  # noqa: N806
-    motionDir = hazardAppData['inputMotionDir']  # noqa: N806
-    outputDir = hazardAppData['outputMotionDir']  # noqa: N806
+    eventFile = hazardAppData['inputEventFile']
+    motionDir = hazardAppData['inputMotionDir']
+    outputDir = hazardAppData['outputMotionDir']
 
     # now create an input for siteResponseWHALE
 
-    srtFILE = 'sc_srt.json'  # noqa: N806
+    srtFILE = 'sc_srt.json'
 
-    outputs = dict(EDP=True, DM=False, DV=False, every_realization=False)  # noqa: C408
+    outputs = dict(EDP=True, DM=False, DV=False, every_realization=False)
 
-    edpApplication = dict(Application='DummyEDP', ApplicationData=dict())  # noqa: C408, N806
+    edpApplication = dict(Application='DummyEDP', ApplicationData=dict())
 
-    eventApp = dict(  # noqa: C408, N806
+    eventApp = dict(
         EventClassification='Earthquake',
         Application='RegionalSiteResponse',
-        ApplicationData=dict(  # noqa: C408
+        ApplicationData=dict(
             pathEventData=motionDir,
             mainScript=responseScript,
             modelPath=scriptPath,
@@ -117,17 +117,17 @@ def runHazardSimulation(inputFILE):  # noqa: N802, N803, D103
         ),
     )
 
-    regionalMappingAppData = regionalMappingApplication['ApplicationData']  # noqa: N806
+    regionalMappingAppData = regionalMappingApplication['ApplicationData']
     regionalMappingAppData['filenameEVENTgrid'] = eventFile
 
-    buildingApplication = dict(  # noqa: C408, N806
+    buildingApplication = dict(
         Application='CSV_to_BIM',
-        ApplicationData=dict(  # noqa: C408
+        ApplicationData=dict(
             buildingSourceFile=f'{soilPath}{soilFile}', filter=filters
         ),
     )
 
-    Applications = dict(  # noqa: C408, N806
+    Applications = dict(
         UQ=uqApplication,
         RegionalMapping=regionalMappingApplication,
         Events=[eventApp],
@@ -135,23 +135,23 @@ def runHazardSimulation(inputFILE):  # noqa: N802, N803, D103
         Building=buildingApplication,
     )
 
-    srt = dict(units=unitData, outputs=outputs, Applications=Applications)  # noqa: C408
+    srt = dict(units=unitData, outputs=outputs, Applications=Applications)
 
-    with open(srtFILE, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(srtFILE, 'w') as f:
         json.dump(srt, f, indent=2)
 
     #
     # now invoke siteResponseWHALE
     #
 
-    inputDir = currentDir + '/input_data'  # noqa: N806
-    tmpDir = currentDir + '/input_data/siteResponseRunningDir'  # noqa: N806
+    inputDir = currentDir + '/input_data'
+    tmpDir = currentDir + '/input_data/siteResponseRunningDir'
 
-    print(  # noqa: T201
+    print(
         f'RUNNING {pythonEXE} {mainDir}/Workflow/siteResponseWHALE.py ./sc_srt.json --registry {mainDir}/Workflow/WorkflowApplications.json --referenceDir {inputDir} -w {tmpDir}'
     )
 
-    subprocess.run(  # noqa: S603
+    subprocess.run(
         [
             pythonEXE,
             mainDir + '/Workflow/siteResponseWHALE.py',
@@ -171,12 +171,12 @@ def runHazardSimulation(inputFILE):  # noqa: N802, N803, D103
     # and moving all the motions created
     #
 
-    outputMotionDir = currentDir + '/input_data/' + outputDir  # noqa: N806
-    print(  # noqa: T201
+    outputMotionDir = currentDir + '/input_data/' + outputDir
+    print(
         f'RUNNING {pythonEXE} {mainDir}/createEVENT/siteResponse/createGM4BIM.py -i  {tmpDir} -o  {outputMotionDir} --removeInput'
     )
 
-    subprocess.run(  # noqa: S603
+    subprocess.run(
         [
             pythonEXE,
             mainDir + '/createEVENT/siteResponse/createGM4BIM.py',
@@ -197,16 +197,16 @@ def runHazardSimulation(inputFILE):  # noqa: N802, N803, D103
     try:
         shutil.rmtree(tmpDir)
     except OSError as e:
-        print('Error: %s : %s' % (tmpDir, e.strerror))  # noqa: T201, UP031
+        print('Error: %s : %s' % (tmpDir, e.strerror))
 
     #
     # modify inputFILE to provide new event file for regional mapping
     #
 
-    regionalMappingAppData = regionalMappingApplication['ApplicationData']  # noqa: N806
+    regionalMappingAppData = regionalMappingApplication['ApplicationData']
     regionalMappingAppData['filenameEVENTgrid'] = f'{outputDir}/EventGrid.csv'
 
-    with open(inputFILE, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(inputFILE, 'w') as f:
         json.dump(inputJSON, f, indent=2)
 
     #

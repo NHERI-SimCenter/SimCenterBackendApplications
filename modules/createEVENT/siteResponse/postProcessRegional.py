@@ -1,25 +1,25 @@
-# This script create evt.j for workflow  # noqa: CPY001, D100, INP001
+# This script create evt.j for workflow
 import json
 import os
 
 import numpy as np
 
 
-def postProcess(evtName):  # noqa: N802, N803, D103
+def postProcess(evtName):
     acc = np.loadtxt('acceleration.out')
     # remove acceleration file to save space
-    os.remove('acceleration.out')  # noqa: PTH107
+    os.remove('acceleration.out')
     # acc = np.loadtxt("out_tcl/acceleration.out")
     # shutil.rmtree("out_tcl")  # remove output files to save space
     time = acc[:, 0]
     acc_surf = acc[:, -2] / 9.81
-    dT = time[1] - time[0]  # noqa: N806
+    dT = time[1] - time[0]
 
-    timeSeries = dict(name='accel_X', type='Value', dT=dT, data=acc_surf.tolist())  # noqa: C408, N806
+    timeSeries = dict(name='accel_X', type='Value', dT=dT, data=acc_surf.tolist())
 
-    patterns = dict(type='UniformAcceleration', timeSeries='accel_X', dof=1)  # noqa: C408
+    patterns = dict(type='UniformAcceleration', timeSeries='accel_X', dof=1)
 
-    evts = dict(  # noqa: C408
+    evts = dict(
         RandomVariables=[],
         name='SiteResponseTool',
         type='Seismic',
@@ -30,9 +30,9 @@ def postProcess(evtName):  # noqa: N802, N803, D103
         pattern=[patterns],
     )
 
-    dataToWrite = dict(Events=[evts])  # noqa: C408, N806
+    dataToWrite = dict(Events=[evts])
 
-    with open(evtName, 'w') as outfile:  # noqa: PLW1514, PTH123
+    with open(evtName, 'w') as outfile:
         json.dump(dataToWrite, outfile, indent=4)
 
     return 0

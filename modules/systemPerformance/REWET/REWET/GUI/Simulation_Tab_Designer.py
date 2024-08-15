@@ -1,7 +1,7 @@
 """Created on Thu Oct 27 19:00:30 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""
 
 import os
 import tempfile
@@ -9,15 +9,15 @@ import tempfile
 from PyQt5 import QtGui, QtWidgets
 
 
-class Simulation_Tab_Designer:  # noqa: D101
+class Simulation_Tab_Designer:
     def __init__(self):
-        """These are variables that are shared between ui and settings."""  # noqa: D401
+        """These are variables that are shared between ui and settings."""
         self.setSimulationSettings(self.settings)
 
         """
         Reassignment of shared variables.
         """
-        self.result_folder_addr = os.getcwd()  # noqa: PTH109
+        self.result_folder_addr = os.getcwd()
         self.temp_folder_addr = tempfile.mkdtemp()
 
         """
@@ -49,11 +49,11 @@ class Simulation_Tab_Designer:  # noqa: D101
             self.SimulationTimeValidatorHelper
         )
 
-    def getSimulationSettings(self):  # noqa: N802, D102
-        if self.result_folder_addr == '':  # noqa: PLC1901
+    def getSimulationSettings(self):
+        if self.result_folder_addr == '':
             self.errorMSG('REWET', 'Result folder must be provided')
             return False
-        if self.temp_folder_addr == '':  # noqa: PLC1901
+        if self.temp_folder_addr == '':
             self.errorMSG('REWET', 'Temp folder must be provided')
             return False
 
@@ -64,8 +64,8 @@ class Simulation_Tab_Designer:  # noqa: D101
         elif self.multiple_radio.isChecked():
             self.number_of_damages = 'multiple'
         else:
-            raise ValueError(  # noqa: TRY003
-                'Borh of Run-Type Buttons are not selected which is an error.'  # noqa: EM101
+            raise ValueError(
+                'Borh of Run-Type Buttons are not selected which is an error.'
             )
         # self.result_folder_addr -- already set
         # self.temp_folder_addr -- already set
@@ -75,8 +75,8 @@ class Simulation_Tab_Designer:  # noqa: D101
         elif self.save_time_step_no_radio.isChecked():
             self.save_time_step = False
         else:
-            raise ValueError(  # noqa: TRY003
-                'Both of Time-Save Buttons are not selected which is an error.'  # noqa: EM101
+            raise ValueError(
+                'Both of Time-Save Buttons are not selected which is an error.'
             )
 
         self.settings.process['RUN_TIME'] = self.simulation_time
@@ -88,7 +88,7 @@ class Simulation_Tab_Designer:  # noqa: D101
 
         return True
 
-    def setSimulationUI(self):  # noqa: N802, D102
+    def setSimulationUI(self):
         self.simulation_time_line.setText(str(int(self.simulation_time)))
         self.simulation_time_step_line.setText(str(int(self.simulation_time_step)))
         self.result_folder_addr_line.setText(self.result_folder_addr)
@@ -101,16 +101,16 @@ class Simulation_Tab_Designer:  # noqa: D101
         else:
             raise ValueError('Unknown runtype: ' + repr(self.number_of_damages))
 
-        if self.save_time_step == True:  # noqa: E712
+        if self.save_time_step == True:
             self.save_time_step_yes_radio.setChecked(True)
-        elif self.save_time_step == False:  # noqa: E712
+        elif self.save_time_step == False:
             self.save_time_step_no_radio.setChecked(True)
         else:
             raise ValueError(
                 'Unknown time save value: ' + repr(self.save_time_step_no_radio)
             )
 
-    def setSimulationSettings(self, settings):  # noqa: N802, D102
+    def setSimulationSettings(self, settings):
         self.simulation_time = settings.process['RUN_TIME']
         self.simulation_time_step = settings.process['simulation_time_step']
         self.number_of_damages = settings.process['number_of_damages']
@@ -118,32 +118,32 @@ class Simulation_Tab_Designer:  # noqa: D101
         self.temp_folder_addr = settings.process['temp_directory']
         self.save_time_step = settings.process['save_time_step']
 
-    def ResultFileBrowserClicked(self):  # noqa: N802, D102
+    def ResultFileBrowserClicked(self):
         directory = QtWidgets.QFileDialog.getExistingDirectory(
             self.asli_MainWindow, 'Select Directory'
         )
-        if directory == '':  # noqa: PLC1901
+        if directory == '':
             return
         self.result_folder_addr = directory
         self.result_folder_addr_line.setText(self.result_folder_addr)
 
-    def tempFileBrowserClicked(self):  # noqa: N802, D102
+    def tempFileBrowserClicked(self):
         directory = QtWidgets.QFileDialog.getExistingDirectory(
             self.asli_MainWindow, 'Select Directory'
         )
-        if directory == '':  # noqa: PLC1901
+        if directory == '':
             return
         self.temp_folder_addr = directory
         self.temp_folder_addr_line.setText(self.temp_folder_addr)
 
-    def SimulationTimeValidatorHelper(self, text):  # noqa: N802, D102
+    def SimulationTimeValidatorHelper(self, text):
         try:
             simulation_time = int(float(self.simulation_time_line.text()))
-        except:  # noqa: E722
+        except:
             simulation_time = 0
         try:
             simulation_time_step = int(float(self.simulation_time_step_line.text()))
-        except:  # noqa: E722
+        except:
             simulation_time_step = 0
 
         if text == self.simulation_time_line.text():

@@ -1,16 +1,16 @@
-import os  # noqa: CPY001, D100, INP001
+import os
 
 from conans import CMake, ConanFile
 
 
-class simCenterBackendApps(ConanFile):  # noqa: D101
+class simCenterBackendApps(ConanFile):
     name = 'nataf_gsa_cpp_mpi'
     version = '1.0.0'
     description = 'Software for creating nataf_gsa'
     license = 'BSD 2-Clause'
-    settings = {'os': None, 'build_type': None, 'compiler': None, 'arch': ['x86_64']}  # noqa: RUF012
-    options = {'shared': [True, False]}  # noqa: RUF012
-    default_options = {  # noqa: RUF012
+    settings = {'os': None, 'build_type': None, 'compiler': None, 'arch': ['x86_64']}
+    options = {'shared': [True, False]}
+    default_options = {
         'mkl-static:threaded': False,
         'ipp-static:simcenter_backend': True,
     }
@@ -28,34 +28,34 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
     _build_subfolder = 'build_subfolder'
     # Set short paths for Windows
     short_paths = True
-    scm = {  # noqa: RUF012
+    scm = {
         'type': 'git',  # Use "type": "svn", if local repo is managed using SVN
         'subfolder': _source_subfolder,
         'url': 'auto',
         'revision': 'auto',
     }
 
-    def configure(self):  # noqa: D102
+    def configure(self):
         self.options.shared = False
 
         if self.settings.os == 'Windows':
             self.options['libcurl'].with_winssl = True
             self.options['libcurl'].with_openssl = False
 
-    def configure_cmake(self):  # noqa: D102
+    def configure_cmake(self):
         cmake = CMake(self)
         cmake.configure(source_folder=self._source_subfolder)
         return cmake
 
-    def build(self):  # noqa: D102
+    def build(self):
         cmake = self.configure_cmake()
         cmake.build()
 
-    def package(self):  # noqa: D102
+    def package(self):
         self.copy(pattern='LICENSE', dst='licenses', src=self._source_subfolder)
         cmake = self.configure_cmake()
         cmake.install()
         self.copy('*', dst='bin', src=self._source_subfolder + '/applications')
 
-    def package_info(self):  # noqa: D102
-        self.env_info.PATH.append(os.path.join(self.package_folder, 'bin'))  # noqa: PTH118
+    def package_info(self):
+        self.env_info.PATH.append(os.path.join(self.package_folder, 'bin'))

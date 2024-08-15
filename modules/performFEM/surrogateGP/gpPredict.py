@@ -1,8 +1,8 @@
-import json as json  # noqa: CPY001, D100, INP001, PLC0414
+import json as json
 import os
-import pickle as pickle  # noqa: PLC0414, S403
+import pickle as pickle
 import shutil
-import subprocess  # noqa: S404
+import subprocess
 import sys
 import time
 
@@ -10,40 +10,40 @@ import numpy as np
 from scipy.stats import lognorm, norm
 
 try:
-    moduleName = 'GPy'  # noqa: N816
-    import GPy as GPy  # noqa: PLC0414
-except:  # noqa: E722
-    print(  # noqa: T201
+    moduleName = 'GPy'
+    import GPy as GPy
+except:
+    print(
         'Error running surrogate prediction - Failed to import module: Surrogate modeling module uses GPy python package which is facing a version compatibility issue at this moment (01.05.2024). To use the surrogate module, one needs to update manually the GPy version to 1.13. The instruction can be found in the the documentation: https://nheri-simcenter.github.io/quoFEM-Documentation/common/user_manual/usage/desktop/SimCenterUQSurrogate.html#lblsimsurrogate'
     )
-    exit(-1)  # noqa: PLR1722
+    exit(-1)
 
 
 try:
-    moduleName = 'GPy'  # noqa: N816
-    import GPy as GPy  # noqa: PLC0414
+    moduleName = 'GPy'
+    import GPy as GPy
 
-    moduleName = 'emukit'  # noqa: N816
+    moduleName = 'emukit'
     from emukit.multi_fidelity.convert_lists_to_array import (
         convert_x_list_to_array,
     )
 
-    moduleName = 'Pandas'  # noqa: N816
+    moduleName = 'Pandas'
     import pandas as pd
 
     error_tag = False  # global variable
-except:  # noqa: E722
+except:
     error_tag = True
-    print(  # noqa: T201
+    print(
         'Error running surrogate prediction - Failed to import module:' + moduleName
     )
-    exit(-1)  # noqa: PLR1722
+    exit(-1)
 
 # from emukit.multi_fidelity.convert_lists_to_array import convert_x_list_to_array, convert_xy_lists_to_arrays
 
 
-def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa: C901, D103, PLR0912, PLR0914, PLR0915
-    global error_file  # noqa: PLW0602
+def main(params_dir, surrogate_dir, json_dir, result_file, input_json):
+    global error_file
 
     os_type = sys.platform.lower()
     run_type = 'runninglocal'
@@ -52,11 +52,11 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     # create a log file
     #
 
-    msg0 = os.path.basename(os.getcwd()) + ' : '  # noqa: PTH109, PTH119
-    file_object = open('surrogateLog.log', 'a')  # noqa: PLW1514, PTH123, SIM115
+    msg0 = os.path.basename(os.getcwd()) + ' : '
+    file_object = open('surrogateLog.log', 'a')
 
-    folderName = os.path.basename(os.getcwd())  # noqa: PTH109, PTH119, N806
-    sampNum = folderName.split('.')[-1]  # noqa: N806
+    folderName = os.path.basename(os.getcwd())
+    sampNum = folderName.split('.')[-1]
 
     #
     # read json -- current input file
@@ -67,26 +67,26 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         error_file.close()
         file_object.write(msg0 + msg)  # global file
         file_object.close()
-        print(msg)  # noqa: T201
-        exit(-1)  # noqa: PLR1722
+        print(msg)
+        exit(-1)
 
     def error_warning(msg):
         # error_file.write(msg)
         file_object.write(msg)
         # print(msg)
 
-    if not os.path.exists(json_dir):  # noqa: PTH110
+    if not os.path.exists(json_dir):
         msg = 'Error in surrogate prediction: File not found -' + json_dir
         error_exit(msg)
 
-    with open(json_dir) as f:  # noqa: PLW1514, PTH123
+    with open(json_dir) as f:
         try:
             sur = json.load(f)
         except ValueError:
             msg = 'invalid json format: ' + json_dir
             error_exit(msg)
 
-    isEEUQ = sur['isEEUQ']  # noqa: N806
+    isEEUQ = sur['isEEUQ']
 
     if isEEUQ:
         dakota_path = 'sc_scInput.json'
@@ -94,14 +94,14 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         dakota_path = input_json
 
     try:
-        with open(dakota_path) as f:  # current input file  # noqa: PLW1514, PTH123
+        with open(dakota_path) as f:  # current input file
             inp_tmp = json.load(f)
-    except:  # noqa: E722
+    except:
         try:
             # current input file
-            with open('sc_inputRWHALE.json') as f:  # noqa: PLW1514, PTH123
+            with open('sc_inputRWHALE.json') as f:
                 inp_tmp = json.load(f)
-        except:  # noqa: S110, E722
+        except:
             pass
 
     try:
@@ -109,17 +109,17 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             inp_fem = inp_tmp['Applications']['Modeling']
         else:
             inp_fem = inp_tmp['FEM']
-    except:  # noqa: E722
+    except:
         inp_fem = {}
-        print('invalid json format - dakota.json')  # noqa: T201
+        print('invalid json format - dakota.json')
 
     norm_var_thr = inp_fem.get('varThres', 0.02)
     when_inaccurate = inp_fem.get('femOption', 'continue')
-    do_mf = False  # noqa: F841
+    do_mf = False
     myseed = inp_fem.get('gpSeed', None)
     prediction_option = inp_fem.get('predictionOption', 'random')
-    if myseed == None:  # noqa: E711
-        folderName = os.path.basename(os.path.dirname(os.getcwd()))  # noqa: PTH109, PTH119, PTH120, N806
+    if myseed == None:
+        folderName = os.path.basename(os.path.dirname(os.getcwd()))
         myseed = int(folderName) * int(1.0e7)
     np.random.seed(int(myseed) + int(sampNum))
 
@@ -143,32 +143,32 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     elif kernel == 'Matern 3/2':
         kern_name = 'Mat32'
     elif kernel == 'Matern 5/2':
-        kern_name = 'Mat52'  # noqa: F841
+        kern_name = 'Mat52'
     did_mf = sur['doMultiFidelity']
 
     # from json
-    g_name_sur = list()  # noqa: C408
+    g_name_sur = list()
     ng_sur = 0
-    Y = np.zeros((sur['highFidelityInfo']['valSamp'], sur['ydim']))  # noqa: N806
+    Y = np.zeros((sur['highFidelityInfo']['valSamp'], sur['ydim']))
     for g in sur['ylabels']:
         g_name_sur += [g]
         Y[:, ng_sur] = np.array(sur['yExact'][g])
         ng_sur += 1
 
-    rv_name_sur = list()  # noqa: C408
+    rv_name_sur = list()
     nrv_sur = 0
-    X = np.zeros((sur['highFidelityInfo']['valSamp'], sur['xdim']))  # noqa: N806
+    X = np.zeros((sur['highFidelityInfo']['valSamp'], sur['xdim']))
     for rv in sur['xlabels']:
         rv_name_sur += [rv]
         X[:, nrv_sur] = np.array(sur['xExact'][rv])
         nrv_sur += 1
 
     try:
-        constIdx = sur['highFidelityInfo']['constIdx']  # noqa: N806
-        constVal = sur['highFidelityInfo']['constVal']  # noqa: N806
-    except:  # noqa: E722
-        constIdx = []  # noqa: N806
-        constVal = []  # noqa: N806
+        constIdx = sur['highFidelityInfo']['constIdx']
+        constVal = sur['highFidelityInfo']['constVal']
+    except:
+        constIdx = []
+        constVal = []
 
         # Read pickles
 
@@ -184,14 +184,14 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             return decorator
 
         @monkeypatch_method(GPy.likelihoods.Gaussian)
-        def gaussian_variance(self, Y_metadata=None):  # noqa: N803
+        def gaussian_variance(self, Y_metadata=None):
             if Y_metadata is None:
                 return self.variance
-            else:  # noqa: RET505
+            else:
                 return self.variance * Y_metadata['variance_structure']
 
         @monkeypatch_method(GPy.core.GP)
-        def set_XY2(self, X=None, Y=None, Y_metadata=None):  # noqa: N802, N803
+        def set_XY2(self, X=None, Y=None, Y_metadata=None):
             if Y_metadata is not None:
                 if self.Y_metadata is None:
                     self.Y_metadata = Y_metadata
@@ -201,24 +201,24 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
             self.set_XY(X, Y)
 
-        def get_stochastic_variance(X, Y, x, ny):  # noqa: N803
+        def get_stochastic_variance(X, Y, x, ny):
             # X_unique, X_idx, indices, counts = np.unique(X, axis=0, return_index=True, return_counts=True, return_inverse=True)
-            X_unique, dummy, indices, counts = np.unique(  # noqa: F841, N806
+            X_unique, dummy, indices, counts = np.unique(
                 X, axis=0, return_index=True, return_counts=True, return_inverse=True
             )
 
-            idx_repl = [i for i in np.where(counts > 1)[0]]  # noqa: C416
+            idx_repl = [i for i in np.where(counts > 1)[0]]
 
             if len(idx_repl) > 0:
                 n_unique = X_unique.shape[0]
-                Y_mean, Y_var = np.zeros((n_unique, 1)), np.zeros((n_unique, 1))  # noqa: N806
+                Y_mean, Y_var = np.zeros((n_unique, 1)), np.zeros((n_unique, 1))
 
                 for idx in range(n_unique):
-                    Y_subset = Y[[i for i in np.where(indices == idx)[0]], :]  # noqa: C416, N806
+                    Y_subset = Y[[i for i in np.where(indices == idx)[0]], :]
                     Y_mean[idx, :] = np.mean(Y_subset, axis=0)
                     Y_var[idx, :] = np.var(Y_subset, axis=0)
 
-                if (np.max(Y_var) / np.var(Y_mean) < 1.0e-10) and len(idx_repl) > 0:  # noqa: PLR2004
+                if (np.max(Y_var) / np.var(Y_mean) < 1.0e-10) and len(idx_repl) > 0:
                     return np.ones((X.shape[0], 1))
 
                 kernel_var = GPy.kern.Matern52(
@@ -233,16 +233,16 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     Y_metadata=None,
                 )
                 # print("Collecting variance field of ny={}".format(ny))
-                for key, val in sur['modelInfo'][g_name_sur[ny] + '_Var'].items():  # noqa: B007, PERF102
-                    exec('m_var.' + key + '= np.array(val)')  # noqa: S102
+                for key, val in sur['modelInfo'][g_name_sur[ny] + '_Var'].items():
+                    exec('m_var.' + key + '= np.array(val)')
 
                 log_var_pred, dum = m_var.predict(X_unique)
                 var_pred = np.exp(log_var_pred)
 
                 if did_normalization:
-                    Y_normFact = np.var(Y_mean)  # noqa: N806
+                    Y_normFact = np.var(Y_mean)
                 else:
-                    Y_normFact = 1  # noqa: N806
+                    Y_normFact = 1
 
                 norm_var_str = (
                     (var_pred.T[0]) / Y_normFact
@@ -252,8 +252,8 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 nugget_var_pred_x = np.exp(log_var_pred_x.T[0]) / Y_normFact
 
             else:
-                X_unique = X  # noqa: N806
-                Y_mean = Y  # noqa: N806
+                X_unique = X
+                Y_mean = Y
                 indices = range(Y.shape[0])
 
                 kernel_var = GPy.kern.Matern52(
@@ -267,22 +267,22 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 )
 
                 # print("Variance field obtained for ny={}".format(ny))
-                for key, val in sur['modelInfo'][g_name_sur[ny] + '_Var'].items():  # noqa: B007, PERF102
-                    exec('m_var.' + key + '= np.array(val)')  # noqa: S102
+                for key, val in sur['modelInfo'][g_name_sur[ny] + '_Var'].items():
+                    exec('m_var.' + key + '= np.array(val)')
 
                 log_var_pred, dum = m_var.predict(X)
                 var_pred = np.exp(log_var_pred)
 
                 if did_normalization:
-                    Y_normFact = np.var(Y)  # noqa: N806
+                    Y_normFact = np.var(Y)
                 else:
-                    Y_normFact = 1  # noqa: N806
+                    Y_normFact = 1
 
                 norm_var_str = (
                     (var_pred.T[0]) / Y_normFact
                 )  # if normalization was used..
 
-                log_var_pred_x, dum = m_var.predict(x)  # noqa: F841
+                log_var_pred_x, dum = m_var.predict(x)
                 nugget_var_pred_x = np.exp(log_var_pred_x.T[0]) / Y_normFact
 
             return (
@@ -300,7 +300,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     id_vec = []
     rv_name_dummy = []
 
-    t_total = time.process_time()  # noqa: F841
+    t_total = time.process_time()
     first_rv_found = False
     first_dummy_found = False
 
@@ -308,7 +308,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     # Check how many RVs overlap
     #
 
-    with open(params_dir) as x_file:  # noqa: PLW1514, PTH123
+    with open(params_dir) as x_file:
         data = x_file.readlines()
         nrv = int(data[0])
         for i in range(nrv):
@@ -317,7 +317,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             # print(name)
 
             # = pass if is string. GP cannot handle that
-            if ((name == 'MultipleEvent') or (name == 'eventID')) and isEEUQ:  # noqa: PLR1714
+            if ((name == 'MultipleEvent') or (name == 'eventID')) and isEEUQ:
                 continue
 
             if (
@@ -385,25 +385,25 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
     # if eeuq
     first_eeuq_found = False
-    if sur.get('intensityMeasureInfo') != None:  # noqa: E711
-        with open('IMinput.json', 'w') as f:  # noqa: PLW1514, PTH123
-            mySurrogateJson = sur['intensityMeasureInfo']  # noqa: N806
+    if sur.get('intensityMeasureInfo') != None:
+        with open('IMinput.json', 'w') as f:
+            mySurrogateJson = sur['intensityMeasureInfo']
             json.dump(mySurrogateJson, f)
 
-        computeIM = os.path.join(  # noqa: PTH118, N806
-            os.path.dirname(  # noqa: PTH120
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
+        computeIM = os.path.join(
+            os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             ),
             'createEVENT',
             'groundMotionIM',
             'IntensityMeasureComputer.py',
         )
 
-        pythonEXE = sys.executable  # noqa: N806
+        pythonEXE = sys.executable
         # compute IMs
 
-        if os.path.exists('EVENT.json') and os.path.exists('IMinput.json'):  # noqa: PTH110
-            os.system(  # noqa: S605
+        if os.path.exists('EVENT.json') and os.path.exists('IMinput.json'):
+            os.system(
                 f'{pythonEXE} {computeIM} --filenameAIM IMinput.json --filenameEVENT EVENT.json --filenameIM IM.json --geoMeanVar'
             )
         else:
@@ -411,15 +411,15 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             error_exit(msg)
 
         first_eeuq_found = False
-        if os.path.exists('IM.csv'):  # noqa: PTH110
+        if os.path.exists('IM.csv'):
             # print("IM.csv found")
             tmp1 = pd.read_csv(('IM.csv'), index_col=None)
             if tmp1.empty:
                 # print("IM.csv in wordir.{} is empty.".format(cur_id))
                 return
 
-            IMnames = list(map(str, tmp1))  # noqa: N806
-            IMvals = tmp1.to_numpy()  # noqa: N806
+            IMnames = list(map(str, tmp1))
+            IMvals = tmp1.to_numpy()
             nrv2 = len(IMnames)
             for i in range(nrv2):
                 name = IMnames[i]
@@ -443,16 +443,16 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 if ns != nsamp:
                     msg = 'Error importing input data: sample size in params.in is not consistent.'
                     error_exit(msg)
-        # TODO: fix for different nys m  # noqa: TD002
+        # TODO: fix for different nys m
 
         if len(id_vec + id_vec2) != nrv_sur:
-            missing_ids = set([i for i in range(len(rv_name_sur))]) - set(  # noqa: C403, C416
+            missing_ids = set([i for i in range(len(rv_name_sur))]) - set(
                 id_vec + id_vec2
             )
-            s = [str(rv_name_sur[id]) for id in missing_ids]  # noqa: A001
+            s = [str(rv_name_sur[id]) for id in missing_ids]
 
             if first_eeuq_found and all(
-                [missingEDP.endswith('-2') for missingEDP in s]  # noqa: C419
+                [missingEDP.endswith('-2') for missingEDP in s]
             ):
                 msg = 'ground motion dimension does not match with that of the training'
                 # for i in range(len(s)):
@@ -470,7 +470,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     if first_eeuq_found:
         if first_rv_found:
             rv_tmp = np.hstack([rv_tmp, rv_tmp2])
-            id_vec = id_vec + id_vec2  # noqa: PLR6104
+            id_vec = id_vec + id_vec2
         else:
             rv_tmp = np.hstack([rv_tmp2])
             id_vec = id_vec2
@@ -478,11 +478,11 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     nrv = len(id_vec)
     if nrv != nrv_sur:
         # missing_ids = set([i for i in range(len(rv_name_sur))]) - set(id_vec)
-        missing_ids = set([i for i in range(len(rv_name_sur))]).difference(  # noqa: C403, C416
+        missing_ids = set([i for i in range(len(rv_name_sur))]).difference(
             set(id_vec)
         )
         # print(missing_ids)
-        s = [str(rv_name_sur[id]) for id in missing_ids]  # noqa: A001
+        s = [str(rv_name_sur[id]) for id in missing_ids]
         msg = 'Error in Surrogate prediction: Number of dimension inconsistent: Please define '
         msg += ', '.join(s)
         msg += ' at RV tab'
@@ -505,19 +505,19 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         kr = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True)
 
     if sur['doLinear']:
-        kr = kr + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)  # noqa: PLR6104
+        kr = kr + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
 
     if did_logtransform:
-        Y = np.log(Y)  # noqa: N806
+        Y = np.log(Y)
 
     kg = kr
-    m_list = list()  # noqa: C408
+    m_list = list()
     nugget_var_list = [0] * ng_sur
 
     if not did_mf:
         for ny in range(ng_sur):
             if did_stochastic[ny]:
-                m_list = m_list + [  # noqa: PLR6104, RUF005
+                m_list = m_list + [
                     GPy.models.GPRegression(
                         X,
                         Y[:, ny][np.newaxis].transpose(),
@@ -526,17 +526,17 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     )
                 ]
                 (
-                    X_unique,  # noqa: N806
-                    Y_mean,  # noqa: N806
+                    X_unique,
+                    Y_mean,
                     norm_var_str,
                     counts,
                     nugget_var_pred,
-                    Y_normFact,  # noqa: N806
+                    Y_normFact,
                 ) = get_stochastic_variance(X, Y[:, ny][np.newaxis].T, rv_val, ny)
-                Y_metadata = {'variance_structure': norm_var_str / counts}  # noqa: N806
+                Y_metadata = {'variance_structure': norm_var_str / counts}
                 m_list[ny].set_XY2(X_unique, Y_mean, Y_metadata=Y_metadata)
-                for key, val in sur['modelInfo'][g_name_sur[ny]].items():  # noqa: B007, PERF102
-                    exec('m_list[ny].' + key + '= np.array(val)')  # noqa: S102
+                for key, val in sur['modelInfo'][g_name_sur[ny]].items():
+                    exec('m_list[ny].' + key + '= np.array(val)')
 
                 nugget_var_list[ny] = (
                     m_list[ny].Gaussian_noise.parameters
@@ -545,7 +545,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 )
 
             else:
-                m_list = m_list + [  # noqa: PLR6104, RUF005
+                m_list = m_list + [
                     GPy.models.GPRegression(
                         X,
                         Y[:, ny][np.newaxis].transpose(),
@@ -553,21 +553,21 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                         normalizer=True,
                     )
                 ]
-                for key, val in sur['modelInfo'][g_name_sur[ny]].items():  # noqa: B007, PERF102
-                    exec('m_list[ny].' + key + '= np.array(val)')  # noqa: S102
+                for key, val in sur['modelInfo'][g_name_sur[ny]].items():
+                    exec('m_list[ny].' + key + '= np.array(val)')
 
-                Y_normFact = np.var(Y[:, ny])  # noqa: N806
+                Y_normFact = np.var(Y[:, ny])
                 nugget_var_list[ny] = np.squeeze(
                     np.array(m_list[ny].Gaussian_noise.parameters)
                     * np.array(Y_normFact)
                 )
 
     else:
-        with open(surrogate_dir, 'rb') as file:  # noqa: PTH123
-            m_list = pickle.load(file)  # noqa: S301
+        with open(surrogate_dir, 'rb') as file:
+            m_list = pickle.load(file)
 
         for ny in range(ng_sur):
-            Y_normFact = np.var(Y[:, ny])  # noqa: N806
+            Y_normFact = np.var(Y[:, ny])
             nugget_var_list[ny] = (
                 m_list[ny].gpy_model['mixed_noise.Gaussian_noise.variance']
                 * Y_normFact
@@ -725,7 +725,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         if np.isnan(y_pred_var[:, ny]).any():
             y_pred_var[:, ny] = np.nan_to_num(y_pred_var[:, ny])
         if np.isnan(y_pred_var_m[:, ny]).any():
-            y_pred_m_var[:, ny] = np.nan_to_num(y_pred_m_var[:, ny])  # noqa: F821
+            y_pred_m_var[:, ny] = np.nan_to_num(y_pred_m_var[:, ny])
 
         # for parname in m_list[ny].parameter_names():
         #    if (kern_name in parname) and parname.endswith('variance'):
@@ -749,7 +749,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
     y_pred_subset = np.zeros([nsamp, len(g_idx)])
     msg1 = []
-    for ns in range(nsamp):  # noqa: PLR1702
+    for ns in range(nsamp):
         msg0 = folderName.split('.')[0] + '.' + str(int(sampNum) + ns) + ' : '
 
         if not is_accurate_array[ns]:
@@ -764,43 +764,43 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 #
                 # (1) create "workdir.idx " folder :need C++17 to use the files system namespace
                 #
-                templatedirFolder = os.path.join(os.getcwd(), 'templatedir_SIM')  # noqa: PTH109, PTH118, N806
+                templatedirFolder = os.path.join(os.getcwd(), 'templatedir_SIM')
 
                 if (
                     isEEUQ and nsamp == 1
                 ):  # because stochastic ground motion generation uses folder number when generating random seed.............
-                    current_dir_i = os.path.join(  # noqa: PTH118
-                        os.getcwd(),  # noqa: PTH109
+                    current_dir_i = os.path.join(
+                        os.getcwd(),
                         f'subworkdir.{sampNum}',
                     )
                 else:
-                    current_dir_i = os.path.join(os.getcwd(), f'subworkdir.{1 + ns}')  # noqa: PTH109, PTH118
+                    current_dir_i = os.path.join(os.getcwd(), f'subworkdir.{1 + ns}')
 
                 try:
                     shutil.copytree(templatedirFolder, current_dir_i)
-                except Exception:  # noqa: BLE001
+                except Exception:
                     try:
                         shutil.copytree(templatedirFolder, current_dir_i)
-                    except Exception as ex:  # noqa: BLE001
+                    except Exception as ex:
                         msg = 'Error running FEM: ' + str(ex)
 
                 # change directory, create params.in
                 if isEEUQ:
                     shutil.copyfile(
-                        os.path.join(os.getcwd(), 'params.in'),  # noqa: PTH109, PTH118
-                        os.path.join(current_dir_i, 'params.in'),  # noqa: PTH118
+                        os.path.join(os.getcwd(), 'params.in'),
+                        os.path.join(current_dir_i, 'params.in'),
                     )
                     shutil.copyfile(
-                        os.path.join(os.getcwd(), 'EVENT.json.sc'),  # noqa: PTH109, PTH118
-                        os.path.join(current_dir_i, 'EVENT.json.sc'),  # noqa: PTH118
+                        os.path.join(os.getcwd(), 'EVENT.json.sc'),
+                        os.path.join(current_dir_i, 'EVENT.json.sc'),
                     )
 
                     #
                     # Replace parts of AIM
                     #
-                    with open(os.path.join(current_dir_i, 'AIM.json.sc')) as f:  # noqa: PLW1514, PTH118, PTH123
+                    with open(os.path.join(current_dir_i, 'AIM.json.sc')) as f:
                         try:
-                            AIMsc = json.load(f)  # noqa: N806
+                            AIMsc = json.load(f)
                         except ValueError:
                             msg = 'invalid AIM in template. Simulation of original model cannot be perfomred'
                             error_exit(msg)
@@ -808,7 +808,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     AIMsc['Applications']['Events'] = inp_tmp['Applications'][
                         'Events'
                     ]
-                    with open(os.path.join(current_dir_i, 'AIM.json.sc'), 'w') as f:  # noqa: PLW1514, PTH118, PTH123
+                    with open(os.path.join(current_dir_i, 'AIM.json.sc'), 'w') as f:
                         json.dump(AIMsc, f, indent=2)
 
                     #
@@ -816,15 +816,15 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     #
                     for fname in os.listdir(current_dir_i):
                         if fname.startswith('PEER-Record-'):
-                            os.remove(os.path.join(current_dir_i, fname))  # noqa: PTH107, PTH118
+                            os.remove(os.path.join(current_dir_i, fname))
                         if fname.startswith('RSN') and fname.endswith('AT2'):
-                            os.remove(os.path.join(current_dir_i, fname))  # noqa: PTH107, PTH118
+                            os.remove(os.path.join(current_dir_i, fname))
 
-                    for fname in os.listdir(os.getcwd()):  # noqa: PTH109
+                    for fname in os.listdir(os.getcwd()):
                         if fname.startswith('PEER-Record-'):
                             shutil.copyfile(
-                                os.path.join(os.getcwd(), fname),  # noqa: PTH109, PTH118
-                                os.path.join(current_dir_i, fname),  # noqa: PTH118
+                                os.path.join(os.getcwd(), fname),
+                                os.path.join(current_dir_i, fname),
                             )
 
                     #
@@ -836,10 +836,10 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     else:
                         driver_name = 'driver'
 
-                    with open(os.path.join(os.getcwd(), driver_name)) as f:  # noqa: PLW1514, PTH109, PTH118, PTH123
+                    with open(os.path.join(os.getcwd(), driver_name)) as f:
                         event_driver = f.readline()
 
-                    with open(os.path.join(current_dir_i, driver_name), 'r+') as f:  # noqa: PLW1514, PTH118, PTH123
+                    with open(os.path.join(current_dir_i, driver_name), 'r+') as f:
                         # Read the original contents of the file
                         contents = f.readlines()
                         # Modify the first line
@@ -851,7 +851,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                         f.writelines(contents)
 
                 else:
-                    outF = open(current_dir_i + '/params.in', 'w')  # noqa: N806, PLW1514, PTH123, SIM115
+                    outF = open(current_dir_i + '/params.in', 'w')
                     outF.write(f'{nrv}\n')
                     for i in range(nrv):
                         outF.write(f'{rv_name_sur[i]} {rv_val[ns, i]}\n')
@@ -866,24 +866,24 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                         os_type.lower().startswith('win')
                         and run_type.lower() == 'runninglocal'
                     ):
-                        workflowDriver = 'sc_driver.bat'  # noqa: N806
+                        workflowDriver = 'sc_driver.bat'
                     else:
-                        workflowDriver = 'sc_driver'  # noqa: N806
+                        workflowDriver = 'sc_driver'
                 elif (
                     os_type.lower().startswith('win')
                     and run_type.lower() == 'runninglocal'
                 ):
-                    workflowDriver = 'driver.bat'  # noqa: N806
+                    workflowDriver = 'driver.bat'
                 else:
-                    workflowDriver = 'driver'  # noqa: N806
+                    workflowDriver = 'driver'
 
                 workflow_run_command = f'{current_dir_i}/{workflowDriver}'
-                subprocess.Popen(workflow_run_command, shell=True).wait()  # noqa: S602
+                subprocess.Popen(workflow_run_command, shell=True).wait()
 
                 # back to directory, copy result.out
                 # shutil.copyfile(os.path.join(sim_dir, 'results.out'), os.path.join(os.getcwd(), 'results.out'))
 
-                with open('results.out') as f:  # noqa: PLW1514, PTH123
+                with open('results.out') as f:
                     y_pred = np.array([np.loadtxt(f)]).flatten()
                     y_pred_subset[ns, :] = y_pred[g_idx]
 
@@ -940,13 +940,13 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     # Add dummy RVs
     #
     if first_dummy_found:
-        rv_name_sur = rv_name_sur + rv_name_dummy  # noqa: PLR6104
+        rv_name_sur = rv_name_sur + rv_name_dummy
         rv_val = np.hstack([rv_val, rv_val_dummy])
 
     g_name_subset = [g_name_sur[i] for i in g_idx]
 
     if int(sampNum) == 1:
-        with open('../surrogateTabHeader.out', 'w') as header_file:  # noqa: FURB103, PLW1514, PTH123
+        with open('../surrogateTabHeader.out', 'w') as header_file:
             # write header
             # if os.path.getsize('../surrogateTab.out') == 0:
             header_file.write(
@@ -972,7 +972,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             )
             # write values
 
-    with open('../surrogateTab.out', 'a') as tab_file:  # noqa: PLW1514, PTH123
+    with open('../surrogateTab.out', 'a') as tab_file:
         # write header
         # if os.path.getsize('../surrogateTab.out') == 0:
         #    tab_file.write("%eval_id interface "+ " ".join(rv_name_sur) + " "+ " ".join(g_name_subset) + " " + ".median ".join(g_name_subset) + ".median "+ ".q5 ".join(g_name_subset) + ".q5 "+ ".q95 ".join(g_name_subset) + ".q95 " +".var ".join(g_name_subset) + ".var " + ".q5_w_mnoise ".join(g_name_subset) + ".q5_w_mnoise "+ ".q95_w_mnoise ".join(g_name_subset) + ".q95_w_mnoise " +".var_w_mnoise ".join(g_name_subset) + ".var_w_mnoise \n")
@@ -982,11 +982,11 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             rv_list = ' '.join(f'{rv:e}' for rv in rv_val[ns, :])
             ypred_list = ' '.join(f'{yp:e}' for yp in y_pred_subset[ns, :])
             ymedian_list = ' '.join(f'{ym:e}' for ym in y_pred_median_subset[ns, :])
-            yQ1_list = ' '.join(f'{yq1:e}' for yq1 in y_q1_subset[ns, :])  # noqa: N806
-            yQ3_list = ' '.join(f'{yq3:e}' for yq3 in y_q3_subset[ns, :])  # noqa: N806
+            yQ1_list = ' '.join(f'{yq1:e}' for yq1 in y_q1_subset[ns, :])
+            yQ3_list = ' '.join(f'{yq3:e}' for yq3 in y_q3_subset[ns, :])
             ypredvar_list = ' '.join(f'{ypv:e}' for ypv in y_pred_var_subset[ns, :])
-            yQ1m_list = ' '.join(f'{yq1:e}' for yq1 in y_q1m_subset[ns, :])  # noqa: N806
-            yQ3m_list = ' '.join(f'{yq3:e}' for yq3 in y_q3m_subset[ns, :])  # noqa: N806
+            yQ1m_list = ' '.join(f'{yq1:e}' for yq1 in y_q1m_subset[ns, :])
+            yQ3m_list = ' '.join(f'{yq3:e}' for yq3 in y_q3m_subset[ns, :])
             ypredvarm_list = ' '.join(
                 f'{ypv:e}' for ypv in y_pred_var_m_subset[ns, :]
             )
@@ -1018,25 +1018,25 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     file_object.close()
 
 
-def predict(m, X, did_mf):  # noqa: N803, D103
+def predict(m, X, did_mf):
     if not did_mf:
         return m.predict_noiseless(X)
-    else:  # noqa: RET505
-        # TODO change below to noiseless  # noqa: TD002, TD004
-        X_list = convert_x_list_to_array([X, X])  # noqa: N806
-        X_list_l = X_list[: X.shape[0]]  # noqa: N806, F841
-        X_list_h = X_list[X.shape[0] :]  # noqa: N806
+    else:
+        # TODO change below to noiseless
+        X_list = convert_x_list_to_array([X, X])
+        X_list_l = X_list[: X.shape[0]]
+        X_list_h = X_list[X.shape[0] :]
         return m.predict(X_list_h)
 
 
 if __name__ == '__main__':
-    error_file = open('../surrogate.err', 'w')  # noqa: PLW1514, PTH123, SIM115
-    inputArgs = sys.argv  # noqa: N816
+    error_file = open('../surrogate.err', 'w')
+    inputArgs = sys.argv
 
     if not inputArgs[2].endswith('.json'):
         msg = 'ERROR: surrogate information file (.json) not set'
         error_file.write(msg)
-        exit(-1)  # noqa: PLR1722
+        exit(-1)
 
     # elif not inputArgs[3].endswith('.pkl'):
     #     msg = 'ERROR: surrogate model file (.pkl) not set'
@@ -1073,7 +1073,7 @@ if __name__ == '__main__':
     surrogate_meta_dir = inputArgs[2]
     input_json = inputArgs[3]  # scInput.json
 
-    if len(inputArgs) > 4:  # noqa: PLR2004
+    if len(inputArgs) > 4:
         surrogate_dir = inputArgs[4]
     else:
         surrogate_dir = 'dummy'  # not used

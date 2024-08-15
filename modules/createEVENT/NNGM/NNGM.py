@@ -1,4 +1,4 @@
-import argparse  # noqa: CPY001, D100, INP001
+import argparse
 import json
 import os
 from textwrap import wrap
@@ -6,66 +6,66 @@ from textwrap import wrap
 from scipy import spatial
 
 
-def ReadSMC(smcFilePath):  # noqa: N802, N803, D103
-    with open(smcFilePath, 'r+') as smcFile:  # noqa: N806, PLW1514, PTH123
+def ReadSMC(smcFilePath):
+    with open(smcFilePath, 'r+') as smcFile:
         series = []
-        smcLines = smcFile.readlines()  # noqa: N806
-        dT = 1.0 / float(smcLines[17].strip().split()[1])  # noqa: N806
-        nCommentLines = int(smcLines[12].strip().split()[7])  # noqa: N806
+        smcLines = smcFile.readlines()
+        dT = 1.0 / float(smcLines[17].strip().split()[1])
+        nCommentLines = int(smcLines[12].strip().split()[7])
         for line in smcLines[(27 + nCommentLines) :]:
             for value in wrap(line, 10, drop_whitespace=False):
                 if value.strip():
-                    series.append(float(value) / 100.0)  # noqa: PERF401
+                    series.append(float(value) / 100.0)
 
         return [series, dT]
 
 
-def ReadCOSMOS(cosmosFilePath):  # noqa: N802, N803, D103
-    with open(cosmosFilePath, 'r+') as cosmosFile:  # noqa: N806, PLW1514, PTH123
+def ReadCOSMOS(cosmosFilePath):
+    with open(cosmosFilePath, 'r+') as cosmosFile:
         series = []
-        cosmosLines = cosmosFile.readlines()  # noqa: N806
-        headerSize = int(cosmosLines[0][46:48])  # noqa: N806
-        intSize = int(cosmosLines[headerSize][37:40])  # noqa: N806
-        realSize = int(cosmosLines[headerSize + intSize + 1][34:37])  # noqa: N806
-        commentSize = int(cosmosLines[headerSize + intSize + realSize + 2][0:4])  # noqa: N806
-        totalHeader = headerSize + intSize + realSize + commentSize + 3  # noqa: N806
-        recordSize = int(cosmosLines[totalHeader].strip().split()[0])  # noqa: N806
-        dT = float(cosmosLines[37].strip().split()[1]) / 1000.0  # noqa: N806
+        cosmosLines = cosmosFile.readlines()
+        headerSize = int(cosmosLines[0][46:48])
+        intSize = int(cosmosLines[headerSize][37:40])
+        realSize = int(cosmosLines[headerSize + intSize + 1][34:37])
+        commentSize = int(cosmosLines[headerSize + intSize + realSize + 2][0:4])
+        totalHeader = headerSize + intSize + realSize + commentSize + 3
+        recordSize = int(cosmosLines[totalHeader].strip().split()[0])
+        dT = float(cosmosLines[37].strip().split()[1]) / 1000.0
 
         for line in cosmosLines[totalHeader + 1 : totalHeader + recordSize + 1]:
-            series.append(float(line.strip()) / 100.0)  # noqa: PERF401
+            series.append(float(line.strip()) / 100.0)
 
         return [series, dT]
 
 
-def createEvent(recordsFolder, h1File, h2File, eventFilePath):  # noqa: N802, N803, D103
+def createEvent(recordsFolder, h1File, h2File, eventFilePath):
     if h1File.endswith('.smc'):
-        h1, dt1 = ReadSMC(os.path.join(recordsFolder, h1File))  # noqa: PTH118
+        h1, dt1 = ReadSMC(os.path.join(recordsFolder, h1File))
     else:
-        h1, dt1 = ReadCOSMOS(os.path.join(recordsFolder, h1File))  # noqa: PTH118
+        h1, dt1 = ReadCOSMOS(os.path.join(recordsFolder, h1File))
 
     if h2File.endswith('.smc'):
-        h2, dt2 = ReadSMC(os.path.join(recordsFolder, h2File))  # noqa: PTH118
+        h2, dt2 = ReadSMC(os.path.join(recordsFolder, h2File))
     else:
-        h2, dt2 = ReadCOSMOS(os.path.join(recordsFolder, h2File))  # noqa: PTH118
+        h2, dt2 = ReadCOSMOS(os.path.join(recordsFolder, h2File))
 
-    patternH1 = {}  # noqa: N806
+    patternH1 = {}
     patternH1['type'] = 'UniformAcceleration'
     patternH1['timeSeries'] = 'accel_X'
     patternH1['dof'] = 1
 
-    patternH2 = {}  # noqa: N806
+    patternH2 = {}
     patternH2['type'] = 'UniformAcceleration'
     patternH2['timeSeries'] = 'accel_Y'
     patternH2['dof'] = 2
 
-    seriesH1 = {}  # noqa: N806
+    seriesH1 = {}
     seriesH1['name'] = 'accel_X'
     seriesH1['type'] = 'Value'
     seriesH1['dT'] = dt1
     seriesH1['data'] = h1
 
-    seriesH2 = {}  # noqa: N806
+    seriesH2 = {}
     seriesH2['name'] = 'accel_Y'
     seriesH2['type'] = 'Value'
     seriesH2['dT'] = dt2
@@ -80,17 +80,17 @@ def createEvent(recordsFolder, h1File, h2File, eventFilePath):  # noqa: N802, N8
     event['timeSeries'] = [seriesH1, seriesH2]
     event['pattern'] = [patternH1, patternH2]
 
-    eventsDict = {}  # noqa: N806
+    eventsDict = {}
     eventsDict['Events'] = [event]
     eventsDict['RandomVariables'] = []
 
-    with open(eventFilePath, 'w') as eventFile:  # noqa: N806, PLW1514, PTH123
+    with open(eventFilePath, 'w') as eventFile:
         json.dump(eventsDict, eventFile, indent=4)
 
 
-def main():  # noqa: D103
+def main():
     # Input Argument Specifications
-    gmArgsParser = argparse.ArgumentParser(  # noqa: N806
+    gmArgsParser = argparse.ArgumentParser(
         'Characterize ground motion using seismic hazard analysis and record selection'
     )
     gmArgsParser.add_argument(
@@ -122,7 +122,7 @@ def main():  # noqa: D103
     )
 
     # Parse the arguments
-    gmArgs = gmArgsParser.parse_args()  # noqa: N806
+    gmArgs = gmArgsParser.parse_args()
 
     # Check getRV flag
     if not gmArgs.getRV:
@@ -131,37 +131,37 @@ def main():  # noqa: D103
         return 0
 
     # First let's process the arguments
-    bimFilePath = gmArgs.filenameAIM  # noqa: N806
-    eventFilePath = gmArgs.filenameEVENT  # noqa: N806
-    gmConfigPath = gmArgs.groundMotions  # noqa: N806
-    recordsFolder = gmArgs.recordsFolder  # noqa: N806
+    bimFilePath = gmArgs.filenameAIM
+    eventFilePath = gmArgs.filenameEVENT
+    gmConfigPath = gmArgs.groundMotions
+    recordsFolder = gmArgs.recordsFolder
 
-    with open(gmConfigPath) as gmConfigFile:  # noqa: N806, PLW1514, PTH123
-        gmConfig = json.load(gmConfigFile)  # noqa: N806
+    with open(gmConfigPath) as gmConfigFile:
+        gmConfig = json.load(gmConfigFile)
 
     # We need to read the building location
-    with open(bimFilePath) as bimFile:  # noqa: N806, PLW1514, PTH123
+    with open(bimFilePath) as bimFile:
         bim = json.load(bimFile)
         location = [
             bim['GI']['location']['latitude'],
             bim['GI']['location']['longitude'],
         ]
 
-    siteLocations = []  # noqa: N806
+    siteLocations = []
     for gm in gmConfig['GroundMotion']:
-        siteLocations.append(  # noqa: PERF401
+        siteLocations.append(
             [gm['Location']['Latitude'], gm['Location']['Longitude']]
         )
 
     # we need to find the nearest neighbor
-    sitesTree = spatial.KDTree(siteLocations)  # noqa: N806
+    sitesTree = spatial.KDTree(siteLocations)
 
     nearest = sitesTree.query(location)
-    nearestGM = gmConfig['GroundMotion'][nearest[1]]  # noqa: N806
-    h1File = nearestGM['Records']['Horizontal1']  # noqa: N806
-    h2File = nearestGM['Records']['Horizontal2']  # noqa: N806
+    nearestGM = gmConfig['GroundMotion'][nearest[1]]
+    h1File = nearestGM['Records']['Horizontal1']
+    h2File = nearestGM['Records']['Horizontal2']
 
-    createEvent(os.path.abspath(recordsFolder), h1File, h2File, eventFilePath)  # noqa: RET503, PTH100
+    createEvent(os.path.abspath(recordsFolder), h1File, h2File, eventFilePath)
 
 
 if __name__ == '__main__':

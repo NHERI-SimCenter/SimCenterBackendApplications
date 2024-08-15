@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Damage_Discovery_Window.ui'  # noqa: CPY001, D100, N999
+# Form implementation generated from reading ui file 'Damage_Discovery_Window.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,8 +8,8 @@
 from PyQt5 import QtCore, QtWidgets
 
 
-class Ui_damage_discovery:  # noqa: D101
-    def setupUi(self, damage_discovery):  # noqa: N802, D102
+class Ui_damage_discovery:
+    def setupUi(self, damage_discovery):
         damage_discovery.setObjectName('damage_discovery')
         damage_discovery.resize(450, 400)
         damage_discovery.setMinimumSize(QtCore.QSize(450, 400))
@@ -79,7 +79,7 @@ class Ui_damage_discovery:  # noqa: D101
         self.buttonBox.rejected.connect(damage_discovery.reject)
         QtCore.QMetaObject.connectSlotsByName(damage_discovery)
 
-    def retranslateUi(self, damage_discovery):  # noqa: N802, D102
+    def retranslateUi(self, damage_discovery):
         _translate = QtCore.QCoreApplication.translate
         damage_discovery.setWindowTitle(
             _translate('damage_discovery', 'Damage Discovery')

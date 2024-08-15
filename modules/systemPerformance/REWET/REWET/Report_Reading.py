@@ -1,12 +1,12 @@
 """Created on Tue Oct  4 16:07:24 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""
 
 import datetime
 
 
-def parseTimeStamp(time_stamp):  # noqa: N802, D103
+def parseTimeStamp(time_stamp):
     striped_time_stamp = time_stamp.split(':')
     hour = striped_time_stamp[0]
     minute = striped_time_stamp[1]
@@ -19,11 +19,11 @@ def parseTimeStamp(time_stamp):  # noqa: N802, D103
     return (hour, minute, minute)
 
 
-class Report_Reading:  # noqa: D101
+class Report_Reading:
     def __init__(self, file_addr):
         self.file_data = {}
         self.maximum_trial_time = []
-        with open(file_addr, encoding='utf-8') as f:  # noqa: PTH123
+        with open(file_addr, encoding='utf-8') as f:
             lnum = 0
             for line in f:
                 # self.file_data[lnum] = line
@@ -52,4 +52,4 @@ class Report_Reading:  # noqa: D101
                     ).total_seconds()
                     time_sec = int(time_sec)
                     self.maximum_trial_time.append(time_sec)
-                lnum += 1  # noqa: SIM113
+                lnum += 1

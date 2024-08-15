@@ -1,4 +1,4 @@
-import json  # noqa: CPY001, D100, INP001
+import json
 import math
 import os
 
@@ -7,10 +7,10 @@ import pandas as pd
 from shapely.geometry import Point, Polygon
 
 
-def getStations(information, plot=False, show=False):  # noqa: FBT002, C901, N802
-    """This function is used to retrieve the information of the Istanbul physics-based simulations"""  # noqa: D400, D401, D404
-    RegionFlag = information['RegionFlag']  # noqa: N806
-    LocationFlag = information['LocationFlag']  # noqa: N806
+def getStations(information, plot=False, show=False):
+    """This function is used to retrieve the information of the Istanbul physics-based simulations"""
+    RegionFlag = information['RegionFlag']
+    LocationFlag = information['LocationFlag']
 
     if LocationFlag:
         # get the location of the site
@@ -32,10 +32,10 @@ def getStations(information, plot=False, show=False):  # noqa: FBT002, C901, N80
             radius = information['radius']
 
     # Read the data from the csv file ignore indexing
-    df_allSites = pd.read_csv(  # noqa: N806
+    df_allSites = pd.read_csv(
         'All_Stations_Lat_Lon_Vs30_BedrockDepth.csv', index_col=False
     )
-    df_allSites = df_allSites[['Longitude', 'Latitude', 'Depth (m)']]  # noqa: N806
+    df_allSites = df_allSites[['Longitude', 'Latitude', 'Depth (m)']]
     # add geometry using Lonnitude and Latitude
     gdf = gpd.GeoDataFrame(
         df_allSites,
@@ -52,12 +52,12 @@ def getStations(information, plot=False, show=False):  # noqa: FBT002, C901, N80
     del df_allSites
     directory = information['directory']  # directory to save the data
     # create the directory if it does not exist
-    if not os.path.exists(directory):  # noqa: PTH110
-        os.makedirs(directory)  # noqa: PTH103
+    if not os.path.exists(directory):
+        os.makedirs(directory)
     # empty the directory
     files = os.listdir(directory)
     for file in files:
-        os.remove(directory + '/' + file)  # noqa: PTH107
+        os.remove(directory + '/' + file)
 
     if LocationFlag:
         # find the nearest site to the location
@@ -71,7 +71,7 @@ def getStations(information, plot=False, show=False):  # noqa: FBT002, C901, N80
     if RegionFlag:
         if information['RegionShape'] == 'Rectangle':
             # Create a polygton using min_lat, max_lat, min_lon, max_lon
-            RegionofInterset = Polygon(  # noqa: N806
+            RegionofInterset = Polygon(
                 [
                     (min_lon, min_lat),
                     (min_lon, max_lat),
@@ -88,7 +88,7 @@ def getStations(information, plot=False, show=False):  # noqa: FBT002, C901, N80
 
             # check if the gdf is empty
             if withinindicies.sum() == 0:
-                print(  # noqa: T201
+                print(
                     'No sites are found in the selected region please change the region of interest'
                 )
                 return
@@ -125,7 +125,7 @@ def getStations(information, plot=False, show=False):  # noqa: FBT002, C901, N80
         )
 
     if plot:
-        import plotly.express as px  # noqa: PLC0415
+        import plotly.express as px
 
         # plot the sites
         if LocationFlag:
@@ -169,13 +169,13 @@ def getStations(information, plot=False, show=False):  # noqa: FBT002, C901, N80
     gdf.drop(columns=['geometry', 'Color', 'Selected Site']).to_csv(
         'TapisFiles/selectedSites.csv', index=True
     )
-    json.dump(information, open('TapisFiles/information.json', 'w'), indent=2)  # noqa: PLW1514, PTH123, SIM115
+    json.dump(information, open('TapisFiles/information.json', 'w'), indent=2)
 
 
 def haversine(lat1, lon1, lat2, lon2):
     """Calculate the great circle distance between two points
     on the earth specified in decimal degrees.
-    """  # noqa: D205
+    """
     # Convert decimal degrees to radians
     lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
 
@@ -190,7 +190,7 @@ def haversine(lat1, lon1, lat2, lon2):
     r = 6371  # Radius of the Earth in kilometers
     distance = r * c
 
-    return distance  # noqa: RET504
+    return distance
 
 
 if __name__ == '__main__':
@@ -209,5 +209,5 @@ if __name__ == '__main__':
     }
 
     # change the directory to the file location
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
     getStations(information, plot=False, show=False)

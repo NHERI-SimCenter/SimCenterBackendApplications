@@ -1,24 +1,24 @@
 """Created on Tue Oct 25 14:30:01 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, INP001
+"""
 
 import pandas as pd
 
 from .Helper import hhelper
 
 
-class Curve:  # noqa: D101
+class Curve:
     def __init__():
         pass
 
-    def getPipeStatusByAction(self, scn_name, action):  # noqa: N802, D102
+    def getPipeStatusByAction(self, scn_name, action):
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
         sequence = reg.retoration_data['sequence']['PIPE']
         if action not in sequence:
             raise ValueError('the action is not in the sequence: ' + str(action))
-        pipe_damage_table_time_series = reg._pipe_damage_table_time_series  # noqa: SLF001
+        pipe_damage_table_time_series = reg._pipe_damage_table_time_series
         time_action_done = {}
         for time in pipe_damage_table_time_series:
             current_pipe_damage_table = pipe_damage_table_time_series[time]
@@ -30,7 +30,7 @@ class Curve:  # noqa: D101
                 ~current_action_damage.isna()
             ]
             current_action_damage_true = current_action_damage[
-                current_action_damage == True  # noqa: E712
+                current_action_damage == True
             ]
             unique_done_orginal_element_list = (
                 (
@@ -53,13 +53,13 @@ class Curve:  # noqa: D101
 
         return pd.Series(time_action_done)
 
-    def getNodeStatusByAction(self, scn_name, action):  # noqa: N802, D102
+    def getNodeStatusByAction(self, scn_name, action):
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
         sequence = reg.retoration_data['sequence']['DISTNODE']
         if action not in sequence:
             raise ValueError('the action is not in the sequence: ' + str(action))
-        node_damage_table_time_series = reg._node_damage_table_time_series  # noqa: SLF001
+        node_damage_table_time_series = reg._node_damage_table_time_series
         time_action_done = {}
         for time in node_damage_table_time_series:
             current_node_damage_table = node_damage_table_time_series[time]
@@ -71,7 +71,7 @@ class Curve:  # noqa: D101
                 ~current_action_damage.isna()
             ]
             current_action_damage_true = current_action_damage[
-                current_action_damage == True  # noqa: E712
+                current_action_damage == True
             ]
             unique_done_orginal_element_list = (
                 (
@@ -94,7 +94,7 @@ class Curve:  # noqa: D101
 
         return pd.Series(time_action_done)
 
-    def getPumpStatus(self, scn_name):  # noqa: N802, D102
+    def getPumpStatus(self, scn_name):
         self.loadScneariodata(scn_name)
         res = self.data[scn_name]
         reg = self.registry[scn_name]
@@ -109,7 +109,7 @@ class Curve:  # noqa: D101
 
         return pd.Series(time_action_done)
 
-    def getTankStatus(self, scn_name):  # noqa: N802, D102
+    def getTankStatus(self, scn_name):
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
         time_list = reg.time_list
@@ -123,7 +123,7 @@ class Curve:  # noqa: D101
 
         return pd.Series(time_action_done)
 
-    def getInputWaterFlowCurve(  # noqa: C901, N802, D102
+    def getInputWaterFlowCurve(
         self,
         scn_name,
         tank_name_list=None,
@@ -133,7 +133,7 @@ class Curve:  # noqa: D101
         self.loadScneariodata(scn_name)
         res = self.data[scn_name]
 
-        if tank_name_list == None:  # noqa: E711
+        if tank_name_list == None:
             tank_name_list = self.wn.tank_name_list
 
         not_known_tank = set(tank_name_list) - set(self.wn.tank_name_list)
@@ -143,7 +143,7 @@ class Curve:  # noqa: D101
                 + repr(tank_name_list)
             )
 
-        if reservoir_name_list == None:  # noqa: E711
+        if reservoir_name_list == None:
             reservoir_name_list = self.wn.reservoir_name_list
 
         not_known_reservoir = set(reservoir_name_list) - set(
@@ -160,7 +160,7 @@ class Curve:  # noqa: D101
         # inbound_flow  = 0
         # outbound_flow = 0
 
-        waterFlow = None  # noqa: N806
+        waterFlow = None
 
         for tank_name in tank_name_list:
             if tank_name in res.node['demand'].columns:
@@ -175,11 +175,11 @@ class Curve:  # noqa: D101
                     inbound_flow.loc[time] += -1 * flow
 
                 if mode == 'all':
-                    waterFlow = outbound_flow + inbound_flow  # noqa: N806
+                    waterFlow = outbound_flow + inbound_flow
                 elif mode == 'out':
-                    waterFlow = outbound_flow  # noqa: N806
+                    waterFlow = outbound_flow
                 elif mode == 'in':
-                    waterFlow = inbound_flow  # noqa: N806
+                    waterFlow = inbound_flow
                 else:
                     raise ValueError('Unnown mode: ' + repr(mode))
 
@@ -196,19 +196,19 @@ class Curve:  # noqa: D101
                     inbound_flow.loc[time] += -1 * flow
 
                 if mode == 'all':
-                    waterFlow = outbound_flow + inbound_flow  # noqa: N806
+                    waterFlow = outbound_flow + inbound_flow
                 elif mode == 'out':
-                    waterFlow = outbound_flow  # noqa: N806
+                    waterFlow = outbound_flow
                 elif mode == 'in':
-                    waterFlow = inbound_flow  # noqa: N806
+                    waterFlow = inbound_flow
                 else:
                     raise ValueError('Unnown mode: ' + repr(mode))
 
         return waterFlow
 
-    def getOveralDemandSatisfied(self, scn_name, pure=False):  # noqa: FBT002, N802, D102
+    def getOveralDemandSatisfied(self, scn_name, pure=False):
         self.loadScneariodata(scn_name)
-        if pure == False:  # noqa: E712
+        if pure == False:
             demand_node_name_list = self.demand_node_name_list
         else:
             demand_node_name_list = []
@@ -225,27 +225,27 @@ class Curve:  # noqa: D101
         # sat_node_demands = sat_node_demands.applymap(hhelper)
         s = sat_node_demands.sum(axis=1)
 
-        return s  # noqa: RET504
+        return s
 
-    def getWaterLeakingFromNode(self, scn_name):  # noqa: N802, D102
+    def getWaterLeakingFromNode(self, scn_name):
         self.loadScneariodata(scn_name)
         res = self.data[scn_name]
         sum_amount = 0
         try:
             res = res.node['leak']
             sum_amount = res.sum(axis=1)
-        except:  # noqa: E722
+        except:
             sum_amount = 0
         return sum_amount
 
-    def getWaterLeakingFromPipe(self, scn_name, mode='all'):  # noqa: N802, D102
+    def getWaterLeakingFromPipe(self, scn_name, mode='all'):
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
         res = self.data[scn_name]
 
-        damage_location_list = reg._pipe_damage_table  # noqa: SLF001
+        damage_location_list = reg._pipe_damage_table
 
-        if mode == 'leak' or mode == 'break':  # noqa: PLR1714
+        if mode == 'leak' or mode == 'break':
             damage_location_list = damage_location_list[
                 damage_location_list['damage_type'] == mode
             ]
@@ -257,7 +257,7 @@ class Curve:  # noqa: D101
         break_damage_table = damage_location_list[
             damage_location_list['damage_type'] == 'break'
         ]
-        pipe_B_list = self.registry[scn_name]._pipe_break_history.loc[  # noqa: SLF001, N806
+        pipe_B_list = self.registry[scn_name]._pipe_break_history.loc[
             break_damage_table.index, 'Node_B'
         ]
 
@@ -273,13 +273,13 @@ class Curve:  # noqa: D101
 
         leak_from_pipe = res.node['demand'][available_nodes]
 
-        leak = leak_from_pipe < -0.1  # noqa: PLR2004
+        leak = leak_from_pipe < -0.1
         if leak.any().any():
-            raise ValueError('There is negative leak')  # noqa: EM101, TRY003
+            raise ValueError('There is negative leak')
 
         return leak_from_pipe.sum(axis=1)
 
-    def getSystemServiceabilityIndexCurve(self, scn_name, iPopulation='No'):  # noqa: N802, N803, D102
+    def getSystemServiceabilityIndexCurve(self, scn_name, iPopulation='No'):
         s4 = self.getRequiredDemandForAllNodesandtime(scn_name)
         sat_node_demands = (
             self.data[scn_name].node['demand'].filter(self.demand_node_name_list)
@@ -287,8 +287,8 @@ class Curve:  # noqa: D101
         sat_node_demands = sat_node_demands.applymap(hhelper)
 
         if iPopulation == 'Yes':
-            s4 = s4 * self._population_data  # noqa: PLR6104
-            sat_node_demands = sat_node_demands * self._population_data  # noqa: PLR6104
+            s4 = s4 * self._population_data
+            sat_node_demands = sat_node_demands * self._population_data
         elif iPopulation == 'No':
             pass
         else:
@@ -298,20 +298,20 @@ class Curve:  # noqa: D101
 
         for time_index, val in s.iteritems():
             if val < 0:
-                val = 0  # noqa: PLW2901
+                val = 0
             elif val > 1:
-                val = 1  # noqa: PLW2901
+                val = 1
             s.loc[time_index] = val
 
         return s
 
-    def getBSCIndexPopulation_4(  # noqa: N802, D102
+    def getBSCIndexPopulation_4(
         self,
         scn_name,
         bsc='DL',
-        iPopulation=False,  # noqa: FBT002, N803
-        ratio=False,  # noqa: FBT002
-        consider_leak=False,  # noqa: FBT002
+        iPopulation=False,
+        ratio=False,
+        consider_leak=False,
         leak_ratio=1,
     ):
         if bsc == 'DL':
@@ -322,7 +322,7 @@ class Curve:  # noqa: D101
                 consider_leak=consider_leak,
                 leak_ratio=leak_ratio,
             )
-        elif bsc == 'QN':  # noqa: RET505
+        elif bsc == 'QN':
             return self.getQNIndexPopulation_4(
                 scn_name,
                 iPopulation=iPopulation,
@@ -331,26 +331,26 @@ class Curve:  # noqa: D101
                 leak_ratio=leak_ratio,
             )
         else:
-            raise ValueError(f'BSC input is not recognizable: {bsc}')  # noqa: EM102, TRY003
+            raise ValueError(f'BSC input is not recognizable: {bsc}')
 
-    def getDLIndexPopulation_4(  # noqa: C901, N802, D102
+    def getDLIndexPopulation_4(
         self,
         scn_name,
-        iPopulation='No',  # noqa: N803
-        ratio=False,  # noqa: FBT002
-        consider_leak=False,  # noqa: FBT002
+        iPopulation='No',
+        ratio=False,
+        consider_leak=False,
         leak_ratio=1,
     ):
-        if type(leak_ratio) != float:  # noqa: E721
+        if type(leak_ratio) != float:
             leak_ratio = float(leak_ratio)
 
         self.loadScneariodata(scn_name)
         res = self.data[scn_name]
 
-        if type(self._population_data) == type(None) or iPopulation == False:  # noqa: E712, E721
+        if type(self._population_data) == type(None) or iPopulation == False:
             pop = pd.Series(index=self.demand_node_name_list, data=1)
-        elif type(self._population_data) == type(None) and iPopulation == True:  # noqa: E712, E721
-            raise ValueError('Population data is not available')  # noqa: EM101, TRY003
+        elif type(self._population_data) == type(None) and iPopulation == True:
+            raise ValueError('Population data is not available')
         else:
             pop = self._population_data
 
@@ -388,38 +388,38 @@ class Curve:  # noqa: D101
             if name in leak_data.columns:
                 leak_data_name = leak_data[name]
                 for time in leak_data_name.index:
-                    if leak_data_name.loc[time] == True:  # noqa: E712
+                    if leak_data_name.loc[time] == True:
                         s.loc[time, name] = False
 
-        s = s * pop[s.columns]  # noqa: PLR6104
+        s = s * pop[s.columns]
 
-        if ratio == False:  # noqa: E712
+        if ratio == False:
             total_pop = 1
         else:
             total_pop = pop.sum()
 
         result = s.sum(axis=1) / total_pop
 
-        return result  # noqa: RET504
+        return result
 
-    def getQNIndexPopulation_4(  # noqa: C901, N802, D102
+    def getQNIndexPopulation_4(
         self,
         scn_name,
-        iPopulation=False,  # noqa: FBT002, N803
-        ratio=False,  # noqa: FBT002
-        consider_leak=False,  # noqa: FBT002
+        iPopulation=False,
+        ratio=False,
+        consider_leak=False,
         leak_ratio=0.75,
     ):
-        if type(leak_ratio) != float:  # noqa: E721
+        if type(leak_ratio) != float:
             leak_ratio = float(leak_ratio)
 
         self.loadScneariodata(scn_name)
         res = self.data[scn_name]
 
-        if type(self._population_data) == type(None) or iPopulation == False:  # noqa: E712, E721
+        if type(self._population_data) == type(None) or iPopulation == False:
             pop = pd.Series(index=self.demand_node_name_list, data=1)
-        elif type(self._population_data) == type(None) and iPopulation == True:  # noqa: E712, E721
-            raise ValueError('Population data is not available')  # noqa: EM101, TRY003
+        elif type(self._population_data) == type(None) and iPopulation == True:
+            raise ValueError('Population data is not available')
         else:
             pop = self._population_data
 
@@ -454,27 +454,27 @@ class Curve:  # noqa: D101
             if name in leak_data.columns:
                 leak_data_name = leak_data[name]
                 for time in leak_data_name.index:
-                    if leak_data_name.loc[time] == True:  # noqa: E712
+                    if leak_data_name.loc[time] == True:
                         s.loc[time, name] = False
 
-        s = s * pop[s.columns]  # noqa: PLR6104
-        if ratio == False:  # noqa: E712
+        s = s * pop[s.columns]
+        if ratio == False:
             total_pop = 1
         else:
             total_pop = pop.sum()
 
         result = s.sum(axis=1) / total_pop
 
-        return result  # noqa: RET504
+        return result
 
-    def getQuantityExceedanceCurve(  # noqa: N802, D102
+    def getQuantityExceedanceCurve(
         self,
-        iPopulation='No',  # noqa: ARG002, N803
-        ratio=False,  # noqa: FBT002
-        consider_leak=False,  # noqa: FBT002
+        iPopulation='No',
+        ratio=False,
+        consider_leak=False,
         leak_ratio=0.75,
         result_type='mean',
-        daily=False,  # noqa: FBT002
+        daily=False,
         min_time=0,
         max_time=999999999999999,
     ):
@@ -501,7 +501,7 @@ class Curve:  # noqa: D101
             dmg_vs_ep_list[dmg_col] = ep_col
         res = {}
 
-        for dmg_col in dmg_vs_ep_list:  # noqa: PLC0206
+        for dmg_col in dmg_vs_ep_list:
             ep_col = dmg_vs_ep_list[dmg_col]
             exceedance_curve_temp = exceedance_curve.set_index(dmg_col)
             exceedance_curve_temp = exceedance_curve_temp[ep_col]
@@ -509,14 +509,14 @@ class Curve:  # noqa: D101
 
         return res
 
-    def getDeliveryExceedanceCurve(  # noqa: N802, D102
+    def getDeliveryExceedanceCurve(
         self,
-        iPopulation='No',  # noqa: N803
-        ratio=False,  # noqa: FBT002
-        consider_leak=False,  # noqa: FBT002
+        iPopulation='No',
+        ratio=False,
+        consider_leak=False,
         leak_ratio=0.75,
         result_type='mean',
-        daily=False,  # noqa: FBT002
+        daily=False,
         min_time=0,
         max_time=999999999999999,
     ):
@@ -543,7 +543,7 @@ class Curve:  # noqa: D101
             dmg_vs_ep_list[dmg_col] = ep_col
         res = {}
 
-        for dmg_col in dmg_vs_ep_list:  # noqa: PLC0206
+        for dmg_col in dmg_vs_ep_list:
             ep_col = dmg_vs_ep_list[dmg_col]
             exceedance_curve_temp = exceedance_curve.set_index(dmg_col)
             exceedance_curve_temp = exceedance_curve_temp[ep_col]

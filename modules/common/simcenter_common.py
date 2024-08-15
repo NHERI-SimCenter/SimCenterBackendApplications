@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -42,23 +42,23 @@ from datetime import datetime
 
 
 # Monkeypatch warnings to get prettier messages
-def _warning(message, category, filename, lineno, file=None, line=None):  # noqa: ARG001
+def _warning(message, category, filename, lineno, file=None, line=None):
     if '\\' in filename:
         file_path = filename.split('\\')
     elif '/' in filename:
         file_path = filename.split('/')
     python_file = '/'.join(file_path[-3:])
-    print(f'WARNING in {python_file} at line {lineno}\n{message}\n')  # noqa: T201
+    print(f'WARNING in {python_file} at line {lineno}\n{message}\n')
 
 
 warnings.showwarning = _warning
 
 
-def show_warning(warning_msg):  # noqa: D103
-    warnings.warn(UserWarning(warning_msg))  # noqa: B028
+def show_warning(warning_msg):
+    warnings.warn(UserWarning(warning_msg))
 
 
-def log_msg(msg='', prepend_timestamp=True):  # noqa: FBT002
+def log_msg(msg='', prepend_timestamp=True):
     """Print a message to the screen with the current time as prefix
 
     The time is in ISO-8601 format, e.g. 2018-06-16T20:24:04Z
@@ -68,19 +68,19 @@ def log_msg(msg='', prepend_timestamp=True):  # noqa: FBT002
     msg: string
        Message to print.
 
-    """  # noqa: D400
+    """
     if prepend_timestamp:
         formatted_msg = '{} {}'.format(
-            datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S:%fZ')[:-4],  # noqa: DTZ003
+            datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S:%fZ')[:-4],
             msg,
         )
     else:
         formatted_msg = msg
 
-    print(formatted_msg)  # noqa: T201
+    print(formatted_msg)
 
     if globals().get('log_file', None) is not None:
-        with open(globals()['log_file'], 'a') as f:  # noqa: PLW1514, PTH123
+        with open(globals()['log_file'], 'a') as f:
             f.write('\n' + formatted_msg)
 
 
@@ -169,7 +169,7 @@ lb = 0.453592 * kg
 # force
 N = kg * m / sec2
 
-kN = 1e3 * N  # noqa: N816
+kN = 1e3 * N
 
 lbf = lb * g
 kip = 1000.0 * lbf
@@ -178,7 +178,7 @@ kips = kip
 # pressure / stress
 Pa = N / m2
 
-kPa = 1e3 * Pa  # noqa: N816
+kPa = 1e3 * Pa
 MPa = 1e6 * Pa
 GPa = 1e9 * Pa
 
@@ -216,8 +216,8 @@ unit_bases = {
 unit_decoupling_type_list = ['TH_file']
 
 
-def get_scale_factors(input_units, output_units):  # noqa: C901
-    """Determine the scale factor to convert input event to internal event data"""  # noqa: D400
+def get_scale_factors(input_units, output_units):
+    """Determine the scale factor to convert input event to internal event data"""
     # special case: if the input unit is not specified then do not do any scaling
     if input_units is None:
         scale_factors = {'ALL': 1.0}
@@ -231,13 +231,13 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
             unit_length = 'inch'
         f_length = globals().get(unit_length, None)
         if f_length is None:
-            raise ValueError(f'Specified length unit not recognized: {unit_length}')  # noqa: DOC501, EM102, TRY003
+            raise ValueError(f'Specified length unit not recognized: {unit_length}')
 
         # if no time unit is specified, 'sec' is assumed
         unit_time = output_units.get('time', 'sec')
         f_time = globals().get(unit_time, None)
         if f_time is None:
-            raise ValueError(f'Specified time unit not recognized: {unit_time}')  # noqa: DOC501, EM102, TRY003
+            raise ValueError(f'Specified time unit not recognized: {unit_time}')
 
         scale_factors = {}
 
@@ -249,11 +249,11 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
             else:
                 # get the scale factor to standard units
                 if input_unit == 'in':
-                    input_unit = 'inch'  # noqa: PLW2901
+                    input_unit = 'inch'
 
                 f_in = globals().get(input_unit, None)
                 if f_in is None:
-                    raise ValueError(f'Input unit not recognized: {input_unit}')  # noqa: DOC501, EM102, TRY003
+                    raise ValueError(f'Input unit not recognized: {input_unit}')
 
                 unit_type = None
                 for base_unit_type, unit_set in globals()['unit_types'].items():
@@ -261,7 +261,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
                         unit_type = base_unit_type
 
                 if unit_type is None:
-                    raise ValueError(f'Failed to identify unit type: {input_unit}')  # noqa: DOC501, EM102, TRY003
+                    raise ValueError(f'Failed to identify unit type: {input_unit}')
 
                 # the output unit depends on the unit type
                 if unit_type == 'acceleration':
@@ -274,8 +274,8 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
                     f_out = 1.0 / f_length
 
                 else:
-                    raise ValueError(  # noqa: DOC501, TRY003
-                        f'Unexpected unit type in workflow: {unit_type}'  # noqa: EM102
+                    raise ValueError(
+                        f'Unexpected unit type in workflow: {unit_type}'
                     )
 
                 # the scale factor is the product of input and output scaling
@@ -287,9 +287,9 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
 
 
 def get_unit_bases(input_units):
-    """Decouple input units"""  # noqa: D400
+    """Decouple input units"""
     # special case: if the input unit is not specified then do nothing
-    if input_units is None:  # noqa: PLR1702
+    if input_units is None:
         input_unit_bases = {}
 
     else:

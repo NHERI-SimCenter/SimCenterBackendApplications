@@ -1,4 +1,4 @@
-# %%  # noqa: CPY001, D100, INP001
+# %%
 import json
 import os
 import time
@@ -7,23 +7,23 @@ from datetime import datetime
 from agavepy.agave import Agave
 
 # change the directory to the current directory
-os.chdir(os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 
-def Submit_tapis_job():  # noqa: N802, D103
+def Submit_tapis_job():
     ag = Agave.restore()
-    with open('TapisFiles/information.json') as file:  # noqa: PLW1514, PTH123
+    with open('TapisFiles/information.json') as file:
         information = json.load(file)
     file.close()
 
     # %%
     profile = ag.profiles.get()
     username = profile['username']
-    savingDirectory = information['directory']  # noqa: N806
-    if not os.path.exists(savingDirectory):  # noqa: PTH110
-        os.makedirs(savingDirectory)  # noqa: PTH103
+    savingDirectory = information['directory']
+    if not os.path.exists(savingDirectory):
+        os.makedirs(savingDirectory)
 
-    print('Uploading files to designsafe storage')  # noqa: T201
+    print('Uploading files to designsafe storage')
     ag.files.manage(
         systemId='designsafe.storage.default',
         filePath=f'{username}/',
@@ -35,20 +35,20 @@ def Submit_tapis_job():  # noqa: N802, D103
         body={'action': 'mkdir', 'path': 'Istanbul'},
     )
     # ag.files_mkdir(systemId="designsafe.storage.default", filePath=f"{username}/physics_based/Istanbul2")
-    with open('TapisFiles/Istanbul.py', 'rb') as file:  # noqa: PTH123
+    with open('TapisFiles/Istanbul.py', 'rb') as file:
         result = ag.files.importData(
             filePath=f'{username}/physics_based/Istanbul/',
             fileToUpload=file,
             systemId='designsafe.storage.default',
         )
-    with open('TapisFiles/information.json', 'rb') as file:  # noqa: PTH123
+    with open('TapisFiles/information.json', 'rb') as file:
         result = ag.files.importData(
             filePath=f'{username}/physics_based/Istanbul/',
             fileToUpload=file,
             systemId='designsafe.storage.default',
         )
-    with open('TapisFiles/selectedSites.csv', 'rb') as file:  # noqa: PTH123
-        result = ag.files.importData(  # noqa: F841
+    with open('TapisFiles/selectedSites.csv', 'rb') as file:
+        result = ag.files.importData(
             filePath=f'{username}/physics_based/Istanbul/',
             fileToUpload=file,
             systemId='designsafe.storage.default',
@@ -70,10 +70,10 @@ def Submit_tapis_job():  # noqa: N802, D103
     }
 
     # Generate a timestamp to append to the job name an
-    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')  # noqa: DTZ005
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
     jobname = f'PhysicsBasedMotion_Istanbul_{username}_{timestamp}'
 
-    print('Submitting job')  # noqa: T201
+    print('Submitting job')
     # submit the job
     jobdict['name'] = jobname
     jobdict['inputs']['inputDirectory'] = (
@@ -90,28 +90,28 @@ def Submit_tapis_job():  # noqa: N802, D103
         status = ag.jobs.getStatus(jobId=jobid)['status']
         if count == 0:
             last_status = status
-            print('Job status: ', status)  # noqa: T201
+            print('Job status: ', status)
         count += 1
         if last_status != status:
-            print('Job status: ', status)  # noqa: T201
+            print('Job status: ', status)
             last_status = status
         if status == 'FAILED':
-            print('Job failed')  # noqa: T201
+            print('Job failed')
             break
 
         time.sleep(10)
 
     # %%
-    print('Downloading extracted motions')  # noqa: T201
-    archivePath = ag.jobs.get(jobId=jobid)['archivePath']  # noqa: N806
-    archivePath = f'{archivePath}/Istanbul/Events/'  # noqa: N806
+    print('Downloading extracted motions')
+    archivePath = ag.jobs.get(jobId=jobid)['archivePath']
+    archivePath = f'{archivePath}/Istanbul/Events/'
 
     files = ag.files.list(
         filePath=archivePath, systemId='designsafe.storage.default'
     )
     # %%
     if len(files) <= 1:
-        print('No files in the archive')  # noqa: T201
+        print('No files in the archive')
     else:
         for file in files:
             filename = file['name']
@@ -121,6 +121,6 @@ def Submit_tapis_job():  # noqa: N802, D103
             res = ag.files.download(
                 filePath=path, systemId='designsafe.storage.default'
             )
-            with open(f'{savingDirectory}/{filename}', 'wb') as f:  # noqa: FURB103, PTH123
+            with open(f'{savingDirectory}/{filename}', 'wb') as f:
                 f.write(res.content)
     # %%

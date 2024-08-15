@@ -1,19 +1,19 @@
-import json  # noqa: CPY001, D100, INP001
-import subprocess  # noqa: S404
+import json
+import subprocess
 import sys
 
 from calibration import createMaterial
 from postProcess import postProcess
 
 
-def main(args):  # noqa: D103
+def main(args):
     # set filenames
-    srtName = args[1]  # noqa: N806
-    evtName = args[3]  # noqa: N806
+    srtName = args[1]
+    evtName = args[3]
 
-    RFflag = False  # noqa: N806
+    RFflag = False
 
-    with open(srtName, encoding='utf-8') as json_file:  # noqa: PTH123
+    with open(srtName, encoding='utf-8') as json_file:
         data = json.load(json_file)
 
     for material in data['Events'][0]['materials']:
@@ -22,15 +22,15 @@ def main(args):  # noqa: D103
             or material['type'] == 'PDMY03_Random'
             or material['type'] == 'Elastic_Random'
         ):
-            RFflag = True  # noqa: N806
+            RFflag = True
             break
     if RFflag:
         # create material file based on 1D Gaussian field
-        soilData = data['Events'][0]  # noqa: N806
+        soilData = data['Events'][0]
         createMaterial(soilData)
 
     # Run OpenSees
-    subprocess.Popen('OpenSees model.tcl', shell=True).wait()  # noqa: S602, S607
+    subprocess.Popen('OpenSees model.tcl', shell=True).wait()
 
     # Run postprocessor to create EVENT.json
     postProcess(evtName)

@@ -1,4 +1,4 @@
-# # noqa: INP001
+#
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: D400
+"""
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -48,10 +48,10 @@ class hydroUtils:
             hydrolog: Initializes the log file
             general_header: Creates the header for the Hydro-UQ files
 
-    """  # noqa: D205, D404
+    """
 
     #############################################################
-    def extract(self, obj, path, ind, arr):  # noqa: C901
+    def extract(self, obj, path, ind, arr):
         """Extracts an element from a nested dictionary
         along a specified path and returns a list.
 
@@ -62,11 +62,11 @@ class hydroUtils:
                 ind: An int - starting index
                 arr: A list - output list
 
-        """  # noqa: D205, D401
+        """
         key = path[ind]
         if ind + 1 < len(path):
             if isinstance(obj, dict):
-                if key in obj.keys():  # noqa: SIM118
+                if key in obj.keys():
                     self.extract(obj.get(key), path, ind + 1, arr)
                 else:
                     arr.append(None)
@@ -104,41 +104,41 @@ class hydroUtils:
                 obj: A list or dict - input dictionary or list of dictionaries
                 path: A list - list of strings that form the path to the desired element
 
-        """  # noqa: D205, D401
-        if isinstance(obj, dict):  # noqa: RET503
+        """
+        if isinstance(obj, dict):
             return self.extract(obj, path, 0, [])
-        elif isinstance(obj, list):  # noqa: RET505
+        elif isinstance(obj, list):
             outer_arr = []
             for item in obj:
-                outer_arr.append(self.extract(item, path, 0, []))  # noqa: PERF401
+                outer_arr.append(self.extract(item, path, 0, []))
             return outer_arr
 
     #############################################################
-    def general_header(self):  # noqa: PLR6301
+    def general_header(self):
         """Used to create a general header for Hydro-UQ related files
 
         Variables
         -----------
                 header: Stores the general header for the Hydro-UQ files
-        """  # noqa: D400, D401
+        """
         header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H  |
 |	   | Y  | HydroUQ: Water-based Natural Hazards Modeling Application
 |======| D  | Website: simcenter.designsafe-ci.org/research-tools/hydro-uq
 |	   | R  | Version: 1.00
 |	   | O  |
-\\*---------------------------------------------------------------------------*/ \n\n"""  # noqa: W291
+\\*---------------------------------------------------------------------------*/ \n\n"""
 
-        return header  # noqa: RET504
+        return header
 
     ####################################################################
-    def of7header(self, OFclass, location, filename):  # noqa: N803, PLR6301
+    def of7header(self, OFclass, location, filename):
         """Method to create a header for the input dictionaries.
 
         Variables
         -----------
                 header: FileID for the file being created
-        """  # noqa: D401
+        """
         header = rf"""/*--------------------------*- NHERI SimCenter -*----------------------------*\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
@@ -154,9 +154,9 @@ FoamFile
 	location  "{location}";
 	object	{filename};
 }}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
 
-        return header  # noqa: RET504
+        return header
 
     #############################################################
     def hydrolog(self, projname, fipath):
@@ -171,28 +171,28 @@ FoamFile
         -----------
                 flog: File pointer to the log file
 
-        """  # noqa: D400, D401
+        """
         # Open a log file to write the outputs
         # Use project name for the log file
         # If no project name is specified, call it Untitled
-        if projname != '':  # noqa: PLC1901
+        if projname != '':
             fname = ''.join(projname.split()) + '.h20log'
         else:
             fname = 'Untitled.h20log'
 
         # Path to the file
-        filepath = os.path.join(fipath, fname)  # noqa: PTH118
-        self.flog = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
+        filepath = os.path.join(fipath, fname)
+        self.flog = open(filepath, 'w')
 
     #############################################################
-    def getlist(self, data):  # noqa: PLR6301
+    def getlist(self, data):
         """Used to get the float from a list of negative string
 
         Arguments:
         ---------
                 userlist: Name of the project as given by the user
 
-        """  # noqa: D400, D401
+        """
         # results = []
 
         # for line in data:
@@ -210,4 +210,4 @@ FoamFile
         data = data.replace(',', ' ')
         results = [float(n) for n in data.split()]
 
-        return results  # noqa: RET504
+        return results

@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2022 Leland Stanford Junior University
 # Copyright (c) 2022 The Regents of the University of California
 #
@@ -42,30 +42,30 @@ import json
 import sys
 
 
-def create_SAM(  # noqa: N802, D103
-    AIM_file,  # noqa: N803
-    EVENT_file,  # noqa: ARG001, N803
-    SAM_file,  # noqa: N803
+def create_SAM(
+    AIM_file,
+    EVENT_file,
+    SAM_file,
     model_script,
     model_path,
     ndm,
     dof_map,
     column_line,
-    getRV,  # noqa: ARG001, N803
+    getRV,
 ):
     # KZ: modifying BIM to AIM
-    with open(AIM_file, encoding='utf-8') as f:  # noqa: PTH123
-        root_AIM = json.load(f)  # noqa: N806
-    root_GI = root_AIM['GeneralInformation']  # noqa: N806
+    with open(AIM_file, encoding='utf-8') as f:
+        root_AIM = json.load(f)
+    root_GI = root_AIM['GeneralInformation']
 
     try:
         stories = int(root_GI['NumberOfStories'])
-    except:  # noqa: E722
-        raise ValueError('number of stories information missing')  # noqa: B904, EM101, TRY003
+    except:
+        raise ValueError('number of stories information missing')
 
     if column_line is None:
         # KZ: looking into SAM
-        root_SAM = root_AIM.get('Modeling', {})  # noqa: N806
+        root_SAM = root_AIM.get('Modeling', {})
         nodes = root_SAM.get('centroidNodes', [])
         if len(nodes) == 0:
             nodes = list(range(stories + 1))
@@ -82,7 +82,7 @@ def create_SAM(  # noqa: N802, D103
         node_entry['floor'] = f'{floor}'
         node_map.append(node_entry)
 
-    root_SAM = {  # noqa: N806
+    root_SAM = {
         'mainScript': model_script,
         'modelPath': model_path,
         'dofMap': dof_map,
@@ -92,19 +92,19 @@ def create_SAM(  # noqa: N802, D103
         'numStory': stories,
         # KZ: correcting the ndm format --> this causing standardEarthquakeEDP failure...
         'ndm': int(ndm),
-        # TODO: improve this if we want random vars in the structure  # noqa: TD002
+        # TODO: improve this if we want random vars in the structure
         'randomVar': [],
     }
 
     # pass all other attributes in the AIM GI to SAM
-    for cur_key in root_GI.keys():  # noqa: SIM118
+    for cur_key in root_GI.keys():
         cur_item = root_GI.get(cur_key, None)
-        if cur_key in root_SAM.keys():  # noqa: SIM118
+        if cur_key in root_SAM.keys():
             pass
         else:
             root_SAM[cur_key] = cur_item
 
-    with open(SAM_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
+    with open(SAM_file, 'w', encoding='utf-8') as f:
         json.dump(root_SAM, f, indent=2)
 
 

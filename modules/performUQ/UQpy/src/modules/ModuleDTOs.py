@@ -1,28 +1,28 @@
-from typing import Literal, Union  # noqa: CPY001, D100, INP001
+from typing import Literal, Union
 
 from pydantic import BaseModel, Field
 from src.reliability.ReliabilityMethodsDTOs import ReliabilityMethod
 from typing_extensions import Annotated
 
 
-class ModuleBaseDTO(BaseModel):  # noqa: D101
+class ModuleBaseDTO(BaseModel):
     pass
 
 
-class SamplingDTO(ModuleBaseDTO):  # noqa: D101
-    uqType: Literal['Sampling'] = 'Sampling'  # noqa: N815
+class SamplingDTO(ModuleBaseDTO):
+    uqType: Literal['Sampling'] = 'Sampling'
 
-    def generate_code(self):  # noqa: D102
+    def generate_code(self):
         pass
 
 
-class SurrogatesDTO(ModuleBaseDTO):  # noqa: D101
-    uqType: Literal['Surrogates'] = 'Surrogates'  # noqa: N815
+class SurrogatesDTO(ModuleBaseDTO):
+    uqType: Literal['Surrogates'] = 'Surrogates'
 
 
-class ReliabilityDTO(ModuleBaseDTO):  # noqa: D101
-    uqType: Literal['Reliability Analysis'] = 'Reliability Analysis'  # noqa: N815
-    methodData: ReliabilityMethod  # noqa: N815
+class ReliabilityDTO(ModuleBaseDTO):
+    uqType: Literal['Reliability Analysis'] = 'Reliability Analysis'
+    methodData: ReliabilityMethod
 
 
 ModuleDTO = Annotated[

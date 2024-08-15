@@ -1,5 +1,5 @@
-import json  # noqa: CPY001, D100, INP001
-import pickle  # noqa: S403
+import json
+import pickle
 import warnings
 
 import numpy as np
@@ -17,18 +17,18 @@ list_default_headers = [
 acceptable_override_list = ['POINTS']
 
 
-class base:  # noqa: D101
+class base:
     def __init__(self):
         self.settings = {}
 
-    def __getitem__(self, key):  # noqa: D105
+    def __getitem__(self, key):
         return self.settings[key]
 
-    def __setitem__(self, key, data):  # noqa: D105
+    def __setitem__(self, key, data):
         self.settings[key] = data
 
 
-class Process_Settings(base):  # noqa: D101
+class Process_Settings(base):
     def __init__(self):
         super().__init__()
         """
@@ -123,7 +123,7 @@ class Process_Settings(base):  # noqa: D101
         self.settings['limit_result_file_size'] = -1  # in Mb. 0 means no limit
 
 
-class Scenario_Settings(base):  # noqa: D101
+class Scenario_Settings(base):
     def __init__(self):
         super().__init__()
         """
@@ -204,7 +204,7 @@ class Scenario_Settings(base):  # noqa: D101
         # Sina, there is no x in the GUI. Implement it
         """
         Restoration settings 
-        """  # noqa: W291
+        """
         self.settings['Restoraion_policy_type'] = (
             'script'  # sina needs to be implemented in the code
         )
@@ -248,13 +248,13 @@ class Scenario_Settings(base):  # noqa: D101
         self.settings['pipe_damage_diameter_factor'] = 1
 
 
-class Settings:  # noqa: D101
+class Settings:
     def __init__(self):
         self.process = Process_Settings()
         self.scenario = Scenario_Settings()
         self.overrides = {}
 
-    def __setitem__(self, key, data):  # noqa: D105
+    def __setitem__(self, key, data):
         if key in self.process.settings:
             self.process.settings[key] = data
         elif key in self.scenario.settings:
@@ -262,56 +262,56 @@ class Settings:  # noqa: D101
         else:
             raise AttributeError(repr(key) + ' is not in the Settings.')
 
-    def __getitem__(self, key):  # noqa: D105
+    def __getitem__(self, key):
         if key in self.process.settings:
-            if self.scenario != None:  # noqa: E711
+            if self.scenario != None:
                 if key in self.scenario.settings:
                     raise ValueError(
                         str(key) + ' in both the process and scenario settings.'
                     )
 
             return self.process.settings[key]
-        elif self.scenario != None:  # noqa: RET505, E711
+        elif self.scenario != None:
             if key in self.scenario.settings:
                 return self.scenario.settings[key]
 
         raise ValueError(str(key) + ' NOT in either process and scenario settings.')
 
-    def __contains__(self, key):  # noqa: D105
+    def __contains__(self, key):
         if key in self.process.settings:
             return True
-        elif self.scenario != None:  # noqa: RET505, E711
+        elif self.scenario != None:
             if key in self.scenario.settings:
                 return True
 
         return False
 
-    def importJsonSettings(self, json_file_path):  # noqa: N802
+    def importJsonSettings(self, json_file_path):
         """Read a settinsg json file and import the data
 
         Args:
         ----
             json_file_path (path): JSON file path
 
-        """  # noqa: D400
-        with open(json_file_path) as f:  # noqa: PLW1514, PTH123
+        """
+        with open(json_file_path) as f:
             settings_data = json.load(f)
 
         if not isinstance(settings_data, dict):
-            raise ValueError(  # noqa: DOC501, TRY003, TRY004
-                'Wrong JSON file type for the settings. The settings JSOn file must be an OBJECT file type.'  # noqa: EM101
+            raise ValueError(
+                'Wrong JSON file type for the settings. The settings JSOn file must be an OBJECT file type.'
             )
 
         for key, val in settings_data.items():
             if key not in self:
-                raise ValueError(  # noqa: DOC501, TRY003
-                    f'REWET settinsg does not have "{key}" as a settings key'  # noqa: EM102
+                raise ValueError(
+                    f'REWET settinsg does not have "{key}" as a settings key'
                 )
 
-            print(key, val)  # noqa: T201
+            print(key, val)
             if (
                 key
-                in [  # noqa: PLR6201
+                in [
                     'pipe_damage_discovery_model',
                     'node_damage_discovery_model',
                     'pump_damage_discovery_model',
@@ -326,9 +326,9 @@ class Settings:  # noqa: D101
 
             self[key] = val
 
-    def importProject(self, project_addr):  # noqa: N802, D102
-        with open(project_addr, 'rb') as f:  # noqa: PTH123
-            project = pickle.load(f)  # noqa: S301
+    def importProject(self, project_addr):
+        with open(project_addr, 'rb') as f:
+            project = pickle.load(f)
         # for k in project.project_settings.scenario.settings:
         # new_value = project.project_settings.scenario[k]
         # old_value = self.scenario[k]
@@ -336,8 +336,8 @@ class Settings:  # noqa: D101
         self.process = project.project_settings.process
         self.scenario = project.project_settings.scenario
 
-    def initializeScenarioSettings(self, scenario_index):  # noqa: C901, N802, D102
-        if self.process['Parameter_override'] == False:  # noqa: E712
+    def initializeScenarioSettings(self, scenario_index):
+        if self.process['Parameter_override'] == False:
             return
 
         list_file = pd.read_excel(self['pipe_damage_file_list'])
@@ -353,8 +353,8 @@ class Settings:  # noqa: D101
 
             if parameter_name in self:
                 try:
-                    if type(override_value) != str and np.isnan(override_value):  # noqa: E721
-                        warnings.warn(  # noqa: B028
+                    if type(override_value) != str and np.isnan(override_value):
+                        warnings.warn(
                             'REWET Input ERROR in scenario: '
                             + repr(scenario_name)
                             + '\n'
@@ -363,11 +363,11 @@ class Settings:  # noqa: D101
                             + ' is empty. The override is IGNORED!'
                         )
                         continue
-                except:  # noqa: S110, E722
+                except:
                     pass
 
-                if override_value == '':  # noqa: PLC1901
-                    warnings.warn(  # noqa: B028
+                if override_value == '':
+                    warnings.warn(
                         'REWET Input ERROR in scenario: '
                         + repr(scenario_name)
                         + '\n'
@@ -385,7 +385,7 @@ class Settings:  # noqa: D101
                 override_key1 = splited_parameter_name[0]
                 override_key2 = splited_parameter_name[1]
 
-                if number_of_words != 2:  # noqa: PLR2004
+                if number_of_words != 2:
                     raise ValueError(
                         'REWET Input ERROR in scenario: '
                         + repr(scenario_name)
@@ -395,7 +395,7 @@ class Settings:  # noqa: D101
                         + ' is not an acceptable parameter'
                     )
 
-                if override_key1 == None:  # noqa: E711
+                if override_key1 == None:
                     raise ValueError(
                         'REWET Input ERROR in scenario: '
                         + repr(scenario_name)
@@ -405,7 +405,7 @@ class Settings:  # noqa: D101
                     )
 
                 if override_key1.upper() not in acceptable_override_list:
-                    warnings.warn(  # noqa: B028
+                    warnings.warn(
                         'REWET Input ERROR in scenario: '
                         + repr(scenario_name)
                         + '\n'
@@ -418,8 +418,8 @@ class Settings:  # noqa: D101
                     continue
 
                 try:
-                    if type(override_value) != str and np.isnan(override_value):  # noqa: E721
-                        warnings.warn(  # noqa: B028
+                    if type(override_value) != str and np.isnan(override_value):
+                        warnings.warn(
                             'REWET Input ERROR in scenario: '
                             + repr(scenario_name)
                             + '\n'
@@ -428,11 +428,11 @@ class Settings:  # noqa: D101
                             + ' is empty. The override is IGNORED!'
                         )
                         continue
-                except:  # noqa: S110, E722
+                except:
                     pass
 
-                if override_value == '':  # noqa: PLC1901
-                    warnings.warn(  # noqa: B028
+                if override_value == '':
+                    warnings.warn(
                         'REWET Input ERROR in scenario: '
                         + repr(scenario_name)
                         + '\n'
@@ -443,7 +443,7 @@ class Settings:  # noqa: D101
                     continue
 
                 if override_key1.upper() == 'POINTS':
-                    if override_key2 == None:  # noqa: E711
+                    if override_key2 == None:
                         raise ValueError(
                             'REWET Input ERROR in scenario: '
                             + repr(scenario_name)
@@ -461,7 +461,7 @@ class Settings:  # noqa: D101
                         else:
                             self.overrides['POINTS'] = {override_key2: point_list}
                     else:
-                        warnings.warn(  # noqa: B028
+                        warnings.warn(
                             'REWET Input ERROR in scenario: '
                             + repr(scenario_name)
                             + '\n'
@@ -480,9 +480,9 @@ class Settings:  # noqa: D101
                 #                         warnings.warn("REWET Input ERROR in scenario: " + repr(scenario_name) + "\n" + "SPEEDCREW is not valid; thus, the override is ignored!")
                 # =============================================================================
                 else:
-                    raise ValueError('Unknown overrise key')  # noqa: EM101, TRY003
+                    raise ValueError('Unknown overrise key')
 
-    def getOverridePointsList(self, points_list_str, scenario_name):  # noqa: D102, N802, PLR6301
+    def getOverridePointsList(self, points_list_str, scenario_name):
         point_list = []
 
         points_list_str = points_list_str.strip()
@@ -490,7 +490,7 @@ class Settings:  # noqa: D101
 
         for word in points_list_str:
             if ':' not in word:
-                warnings.warn(  # noqa: B028
+                warnings.warn(
                     'REWET Input ERROR in scenario: '
                     + repr(scenario_name)
                     + '\n'
@@ -503,8 +503,8 @@ class Settings:  # noqa: D101
 
             splited_word = word.split(':')
 
-            if len(splited_word) > 2:  # noqa: PLR2004
-                warnings.warn(  # noqa: B028
+            if len(splited_word) > 2:
+                warnings.warn(
                     'REWET Input ERROR in scenario: '
                     + repr(scenario_name)
                     + '\n'
@@ -520,8 +520,8 @@ class Settings:  # noqa: D101
 
             try:
                 x_coord = float(x_coord)
-            except:  # noqa: E722
-                warnings.warn(  # noqa: B028
+            except:
+                warnings.warn(
                     'REWET Input ERROR in scenario: '
                     + repr(scenario_name)
                     + '\n'
@@ -536,8 +536,8 @@ class Settings:  # noqa: D101
 
             try:
                 y_coord = float(y_coord)
-            except:  # noqa: E722
-                warnings.warn(  # noqa: B028
+            except:
+                warnings.warn(
                     'REWET Input ERROR in scenario: '
                     + repr(scenario_name)
                     + '\n'
@@ -554,11 +554,11 @@ class Settings:  # noqa: D101
 
         return point_list
 
-    def getOverrideCrewSpeed(self, crew_speed_str, scenario_name):  # noqa: D102, N802, PLR6301
+    def getOverrideCrewSpeed(self, crew_speed_str, scenario_name):
         crew_speed_str = crew_speed_str.strip()
 
         if len(crew_speed_str.split()) > 1:
-            warnings.warn(  # noqa: B028
+            warnings.warn(
                 'REWET Input ERROR in scenario: '
                 + repr(scenario_name)
                 + '\n'
@@ -569,8 +569,8 @@ class Settings:  # noqa: D101
 
         try:
             crew_speed = float(crew_speed_str)
-        except:  # noqa: E722
-            warnings.warn(  # noqa: B028
+        except:
+            warnings.warn(
                 'REWET Input ERROR in scenario: '
                 + repr(scenario_name)
                 + '\n'

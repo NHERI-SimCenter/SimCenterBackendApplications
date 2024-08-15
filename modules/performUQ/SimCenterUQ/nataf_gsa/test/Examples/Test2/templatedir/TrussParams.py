@@ -1,4 +1,4 @@
-# set some parameters  # noqa: CPY001, D100, INP001
+# set some parameters
 
 E = 'RV.E'
 P = 'RV.P'

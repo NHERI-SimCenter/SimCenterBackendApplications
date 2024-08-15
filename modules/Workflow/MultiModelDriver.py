@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2019 The Regents of the University of California
 #
 # This file is part of the SimCenter Backend Applications.
@@ -41,95 +41,95 @@ import os
 import sys
 from copy import deepcopy
 
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 from whale.main import (
-    _parse_app_registry,  # noqa: PLC2701
+    _parse_app_registry,
     create_command,
     run_command,
 )
 
 
-def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType):  # noqa: C901, N803, D103
+def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType):
     #
     # get some dir paths, load input file and get data for app, appKey
     #
 
-    inputDir = os.path.dirname(inputFile)  # noqa: PTH120, N806
-    inputFileName = os.path.basename(inputFile)  # noqa: PTH119, N806
-    if inputDir != '':  # noqa: PLC1901
+    inputDir = os.path.dirname(inputFile)
+    inputFileName = os.path.basename(inputFile)
+    if inputDir != '':
         os.chdir(inputDir)
 
-    with open(inputFileName) as f:  # noqa: PLW1514, PTH123
+    with open(inputFileName) as f:
         inputs = json.load(f)
 
-    localAppDir = inputs['localAppDir']  # noqa: N806
-    remoteAppDir = inputs['remoteAppDir']  # noqa: N806
+    localAppDir = inputs['localAppDir']
+    remoteAppDir = inputs['remoteAppDir']
 
-    appDir = localAppDir  # noqa: N806
+    appDir = localAppDir
     if runType == 'runningRemote':
-        appDir = remoteAppDir  # noqa: N806
+        appDir = remoteAppDir
 
-    if 'referenceDir' in inputs:  # noqa: SIM401
+    if 'referenceDir' in inputs:
         reference_dir = inputs['referenceDir']
     else:
         reference_dir = inputDir
 
-    appData = {}  # noqa: N806
+    appData = {}
     if appKey in inputs:
-        appData = inputs[appKey]  # noqa: N806
+        appData = inputs[appKey]
 
     if 'models' not in appData:
-        print('NO models in: ', appData)  # noqa: T201
-        raise KeyError(  # noqa: TRY003
-            f'"models" not defined in data for "{appKey}" application in the input file "{inputFile}'  # noqa: EM102
+        print('NO models in: ', appData)
+        raise KeyError(
+            f'"models" not defined in data for "{appKey}" application in the input file "{inputFile}'
         )
 
-    if len(appData['models']) < 2:  # noqa: PLR2004
-        raise RuntimeError(  # noqa: TRY003
-            f'At least two models must be provided if the multimodel {appKey} application is used'  # noqa: EM102
+    if len(appData['models']) < 2:
+        raise RuntimeError(
+            f'At least two models must be provided if the multimodel {appKey} application is used'
         )
 
     models = appData['models']
-    modelToRun = appData['modelToRun']  # noqa: N806
+    modelToRun = appData['modelToRun']
 
-    appsInMultiModel = []  # noqa: N806
-    appDataInMultiModel = []  # noqa: N806
-    appRunDataInMultiModel = []  # noqa: N806
+    appsInMultiModel = []
+    appDataInMultiModel = []
+    appRunDataInMultiModel = []
     beliefs = []
-    sumBeliefs = 0  # noqa: N806
+    sumBeliefs = 0
 
-    numModels = 0  # noqa: N806
+    numModels = 0
 
     for model in models:
         belief = model['belief']
-        appName = model['Application']  # noqa: N806
-        appData = model['ApplicationData']  # noqa: N806
-        appRunData = model['data']  # noqa: N806
+        appName = model['Application']
+        appData = model['ApplicationData']
+        appRunData = model['data']
         beliefs.append(belief)
-        sumBeliefs = sumBeliefs + belief  # noqa: N806, PLR6104
+        sumBeliefs = sumBeliefs + belief
         appsInMultiModel.append(appName)
         appDataInMultiModel.append(appData)
         appRunDataInMultiModel.append(appRunData)
-        numModels = numModels + 1  # noqa: N806, PLR6104
+        numModels = numModels + 1
 
     for i in range(numModels):
-        beliefs[i] = beliefs[i] / sumBeliefs  # noqa: PLR6104
+        beliefs[i] = beliefs[i] / sumBeliefs
 
-    appTypes = [appKey]  # noqa: N806
+    appTypes = [appKey]
 
-    parsedRegistry = _parse_app_registry(registryFile, appTypes)  # noqa: N806
-    appsRegistry = parsedRegistry[0][appKey]  # noqa: N806
+    parsedRegistry = _parse_app_registry(registryFile, appTypes)
+    appsRegistry = parsedRegistry[0][appKey]
 
     #
     # add RV to input file
     #
 
-    randomVariables = inputs['randomVariables']  # noqa: N806
-    rvName = 'MultiModel-' + appKey  # noqa: N806
-    rvValue = 'RV.MultiModel-' + appKey  # noqa: N806
+    randomVariables = inputs['randomVariables']
+    rvName = 'MultiModel-' + appKey
+    rvValue = 'RV.MultiModel-' + appKey
 
-    thisRV = {  # noqa: N806
+    thisRV = {
         'distribution': 'Discrete',
         'inputType': 'Parameters',
         'name': rvName,
@@ -142,28 +142,28 @@ def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType): 
     }
     randomVariables.append(thisRV)
 
-    with open(inputFile, 'w') as outfile:  # noqa: PLW1514, PTH123
+    with open(inputFile, 'w') as outfile:
         json.dump(inputs, outfile)
 
     #
     # create driver file that runs the right driver
     #
-    paramsFileName = 'params.in'  # noqa: N806
-    multiModelString = 'MultiModel'  # noqa: N806
-    exeFileName = 'runMultiModelDriver'  # noqa: N806
+    paramsFileName = 'params.in'
+    multiModelString = 'MultiModel'
+    exeFileName = 'runMultiModelDriver'
     if osType == 'Windows' and runType == 'runningLocal':
-        driverFileBat = driverFile + '.bat'  # noqa: N806
-        exeFileName = exeFileName + '.exe'  # noqa: N806, PLR6104
-        with open(driverFileBat, 'wb') as f:  # noqa: FURB103, PTH123
+        driverFileBat = driverFile + '.bat'
+        exeFileName = exeFileName + '.exe'
+        with open(driverFileBat, 'wb') as f:
             f.write(
                 bytes(
-                    os.path.join(appDir, 'applications', 'Workflow', exeFileName)  # noqa: PTH118
+                    os.path.join(appDir, 'applications', 'Workflow', exeFileName)
                     + f' {paramsFileName} {driverFileBat} {multiModelString}',
                     'UTF-8',
                 )
             )
     elif osType == 'Windows' and runType == 'runningRemote':
-        with open(driverFile, 'wb') as f:  # noqa: PTH123
+        with open(driverFile, 'wb') as f:
             f.write(
                 appDir
                 + '/applications/Workflow/'
@@ -172,21 +172,21 @@ def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType): 
                 'UTF-8',
             )
     else:
-        with open(driverFile, 'wb') as f:  # noqa: FURB103, PTH123
+        with open(driverFile, 'wb') as f:
             f.write(
                 bytes(
-                    os.path.join(appDir, 'applications', 'Workflow', exeFileName)  # noqa: PTH118
+                    os.path.join(appDir, 'applications', 'Workflow', exeFileName)
                     + f' {paramsFileName} {driverFile} {multiModelString}',
                     'UTF-8',
                 )
             )
 
-    for modelToRun in range(numModels):  # noqa: N806
+    for modelToRun in range(numModels):
         #
         # run the app to create the driver file for each model
         #
 
-        appName = appsInMultiModel[modelToRun]  # noqa: N806
+        appName = appsInMultiModel[modelToRun]
         application = appsRegistry[appName]
         application.set_pref(appDataInMultiModel[modelToRun], reference_dir)
 
@@ -194,17 +194,17 @@ def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType): 
         # create input file for application
         #
 
-        modelInputFile = f'MultiModel_{modelToRun + 1}_' + inputFile  # noqa: N806
-        modelDriverFile = f'MultiModel_{modelToRun + 1}_' + driverFile  # noqa: N806
+        modelInputFile = f'MultiModel_{modelToRun + 1}_' + inputFile
+        modelDriverFile = f'MultiModel_{modelToRun + 1}_' + driverFile
 
-        inputsTmp = deepcopy(inputs)  # noqa: N806
+        inputsTmp = deepcopy(inputs)
         inputsTmp[appKey] = appRunDataInMultiModel[modelToRun]
         inputsTmp['Applications'][appKey] = {
             'Application': appsInMultiModel[modelToRun],
             'ApplicationData': appDataInMultiModel[modelToRun],
         }
 
-        with open(modelInputFile, 'w') as outfile:  # noqa: PLW1514, PTH123
+        with open(modelInputFile, 'w') as outfile:
             json.dump(inputsTmp, outfile)
 
         #
@@ -212,9 +212,9 @@ def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType): 
         #
 
         asset_command_list = application.get_command_list(localAppDir)
-        indexInputFile = asset_command_list.index('--workflowInput') + 1  # noqa: N806
+        indexInputFile = asset_command_list.index('--workflowInput') + 1
         asset_command_list[indexInputFile] = modelInputFile
-        indexInputFile = asset_command_list.index('--driverFile') + 1  # noqa: N806
+        indexInputFile = asset_command_list.index('--driverFile') + 1
         asset_command_list[indexInputFile] = modelDriverFile
         asset_command_list.append('--osType')
         asset_command_list.append(osType)
@@ -243,8 +243,8 @@ if __name__ == '__main__':
     parser.add_argument('--osType', default=None)
     parser.add_argument(
         '--registry',
-        default=os.path.join(  # noqa: PTH118
-            os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
+        default=os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
             'WorkflowApplications.json',
         ),
         help='Path to file containing registered workflow applications',
@@ -253,8 +253,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '-a',
         '--appDir',
-        default=os.path.dirname(  # noqa: PTH120
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
+        default=os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         ),
         help='Absolute path to the local application directory.',
     )

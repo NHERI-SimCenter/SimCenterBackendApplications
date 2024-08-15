@@ -1,11 +1,11 @@
 """Created on Wed Apr  8 20:19:10 2020
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""
 
 import logging
 import os
-import pickle  # noqa: S403
+import pickle
 import sys
 
 import Damage
@@ -23,7 +23,7 @@ from wntrfr.utils.ordered_set import OrderedSet
 logger = logging.getLogger(__name__)
 
 
-class StochasticModel:  # noqa: D101
+class StochasticModel:
     def __init__(
         self,
         water_network,
@@ -32,17 +32,17 @@ class StochasticModel:  # noqa: D101
         simulation_end_time,
         restoration,
         mode='PDD',
-        i_restoration=True,  # noqa: FBT002
+        i_restoration=True,
     ):
         if (
-            type(water_network) != wntrfr.network.model.WaterNetworkModel  # noqa: E721
-            and type(water_network) != EnhancedWNTR.network.model.WaterNetworkModel  # noqa: E721
+            type(water_network) != wntrfr.network.model.WaterNetworkModel
+            and type(water_network) != EnhancedWNTR.network.model.WaterNetworkModel
         ):
-            raise ValueError(  # noqa: TRY003
-                'Water_network model is not legitimate water Network Model'  # noqa: EM101
+            raise ValueError(
+                'Water_network model is not legitimate water Network Model'
             )
-        if type(damage_model) != Damage.Damage:  # noqa: E721
-            raise ValueError('damage_model is not a ligitimate Damage Model')  # noqa: EM101, TRY003
+        if type(damage_model) != Damage.Damage:
+            raise ValueError('damage_model is not a ligitimate Damage Model')
         self.wn = water_network
         self.damage_model = damage_model
         self._simulation_time = simulation_end_time
@@ -52,7 +52,7 @@ class StochasticModel:  # noqa: D101
         self.timeline.checkAndAmendTime()
 
         self.simulation_mode = None
-        if mode == 'PDD' or mode == 'DD':  # noqa: PLR1714
+        if mode == 'PDD' or mode == 'DD':
             self.simulation_mode = mode
         else:
             self.simulation_mode = 'PDD'
@@ -68,7 +68,7 @@ class StochasticModel:  # noqa: D101
         self._prev_isolated_links = OrderedSet()
         self.first_leak_flag = True
 
-    def runLinearScenario(self, damage, settings, worker_rank=None):  # noqa: C901, N802
+    def runLinearScenario(self, damage, settings, worker_rank=None):
         """Runs a simple linear analysis of water damage scenario
         Parameters
 
@@ -80,17 +80,17 @@ class StochasticModel:  # noqa: D101
         -------
         Result.
 
-        """  # noqa: D205, D400, D401
-        while self.timeline.iContinue():  # noqa: PLR1702
+        """
+        while self.timeline.iContinue():
             sys.stdout.flush()
             current_stop_time = self.timeline.getCurrentStopTime()
-            print('--------------------------------------')  # noqa: T201
-            print('At stop Time: ' + repr(current_stop_time / 3600))  # noqa: T201
+            print('--------------------------------------')
+            print('At stop Time: ' + repr(current_stop_time / 3600))
             # =============================================================================
             # Restoration event Block
             if (
                 self.timeline.iCurenttimeRestorationEvent()
-                and self.iRestoration == True  # noqa: E712
+                and self.iRestoration == True
             ):
                 logger.debug('\t Restoration Event ')
 
@@ -156,10 +156,10 @@ class StochasticModel:  # noqa: D101
                         duration = self.wn.options.time.duration
                         report_time_step = self.wn.options.time.report_timestep
                         try:  # Run with modified EPANET V2.2
-                            print('Performing method 1')  # noqa: T201
+                            print('Performing method 1')
                             rr, i_run_successful = hyd_sim.performSimulation(
                                 current_stop_time,
-                                True,  # noqa: FBT003
+                                True,
                             )
                             if current_stop_time in rr.maximum_trial_time:
                                 pass
@@ -186,10 +186,10 @@ class StochasticModel:  # noqa: D101
                                 hydraulic_impact
                             )
 
-                        except Exception as epa_err_1:  # noqa: TRY302
+                        except Exception as epa_err_1:
                             raise
                             if epa_err_1.args[0] == 'EPANET Error 110':
-                                print('Method 1 failed. Performing method 2')  # noqa: T201
+                                print('Method 1 failed. Performing method 2')
                                 self.wn.options.time.duration = duration
                                 self.wn.options.time.report_timestep = (
                                     report_time_step
@@ -199,9 +199,9 @@ class StochasticModel:  # noqa: D101
                                 ] = -1
                         pipe.initial_status = initial_pipe_status
                         self._prev_isolated_junctions = (
-                            hyd_sim._prev_isolated_junctions  # noqa: SLF001
+                            hyd_sim._prev_isolated_junctions
                         )
-                        self._prev_isolated_links = hyd_sim._prev_isolated_links  # noqa: SLF001
+                        self._prev_isolated_links = hyd_sim._prev_isolated_links
                         self.wn.options.time.duration = duration
                         self.wn.options.time.report_timestep = report_time_step
                 damage.applyPipeDamages(self.wn, current_stop_time)
@@ -209,7 +209,7 @@ class StochasticModel:  # noqa: D101
                 damage.applyPumpDamages(self.wn, current_stop_time)
                 damage.applyTankDamages(self.wn, current_stop_time)
 
-                if self.iRestoration == True:  # noqa: E712
+                if self.iRestoration == True:
                     event_time_list = self.restoration.initialize(
                         self.wn, current_stop_time
                     )  # starts restoration
@@ -217,23 +217,23 @@ class StochasticModel:  # noqa: D101
 
             # =============================================================================
             #           This is for updatng the pipe damage log
-            if settings['record_damage_table_logs'] == True:  # noqa: E712
-                self.restoration._registry.updatePipeDamageTableTimeSeries(  # noqa: SLF001
+            if settings['record_damage_table_logs'] == True:
+                self.restoration._registry.updatePipeDamageTableTimeSeries(
                     current_stop_time
                 )
-                self.restoration._registry.updateNodeDamageTableTimeSeries(  # noqa: SLF001
+                self.restoration._registry.updateNodeDamageTableTimeSeries(
                     current_stop_time
                 )
             # =============================================================================
             #           running the model
             next_event_time = self.timeline.getNextTime()
-            logger.debug('next event time is: ' + repr(next_event_time))  # noqa: G003
+            logger.debug('next event time is: ' + repr(next_event_time))
 
             self.wn.implicitLeakToExplicitReservoir(self.registry)
 
-            print('***** Running hydraulic *****')  # noqa: T201
+            print('***** Running hydraulic *****')
 
-            if type(worker_rank) != str:  # noqa: E721
+            if type(worker_rank) != str:
                 worker_rank = str(worker_rank)
 
             hyd_sim = Hydraulic_Simulation(
@@ -248,14 +248,14 @@ class StochasticModel:  # noqa: D101
             duration = self.wn.options.time.duration
             report_time_step = self.wn.options.time.report_timestep
             try:  # Run with modified EPANET V2.2
-                print('Performing method 1')  # noqa: T201
+                print('Performing method 1')
                 rr, i_run_successful = hyd_sim.performSimulation(
                     next_event_time,
-                    True,  # noqa: FBT003
+                    True,
                 )
             except Exception as epa_err_1:
                 if epa_err_1.args[0] == 'EPANET Error 110':
-                    print('Method 1 failed. Performing method 2')  # noqa: T201
+                    print('Method 1 failed. Performing method 2')
                     try:  # Remove Non-Demand Node by Python-Side iterative algorithm with closing
                         # self.wn.options.time.duration        = duration
                         # self.wn.options.time.report_timestep = report_time_step
@@ -274,11 +274,11 @@ class StochasticModel:  # noqa: D101
                                 # hyd_sim.rollBackPipeClose()
                                 rr, i_run_successful = hyd_sim.estimateRun(
                                     next_event_time,
-                                    True,  # noqa: FBT003
+                                    True,
                                 )
                             except Exception as epa_err_3:
                                 if epa_err_3.args[0] == 'EPANET Error 110':
-                                    print('Method 3 failed. Performing method 4')  # noqa: T201
+                                    print('Method 3 failed. Performing method 4')
                                     try:  # Extend result from the result at the beginning of the time step with modified EPANET V2.2
                                         self.wn.options.time.duration = duration
                                         self.wn.options.time.report_timestep = (
@@ -287,7 +287,7 @@ class StochasticModel:  # noqa: D101
                                         rr, i_run_successful = (
                                             hyd_sim.performSimulation(
                                                 next_event_time,
-                                                False,  # noqa: FBT003
+                                                False,
                                             )
                                         )
                                     except Exception as epa_err_4:
@@ -297,14 +297,14 @@ class StochasticModel:  # noqa: D101
                                                     duration
                                                 )
                                                 self.wn.options.time.report_timestep = report_time_step
-                                                print(  # noqa: T201
+                                                print(
                                                     'Method 4 failed. Performing method 5'
                                                 )
                                                 # Extend result from the result at the beginning of the time step with modified EPANET V2.2
                                                 rr, i_run_successful = (
                                                     hyd_sim.estimateRun(
                                                         next_event_time,
-                                                        False,  # noqa: FBT003
+                                                        False,
                                                     )
                                                 )
                                             except Exception as epa_err_5:
@@ -313,7 +313,7 @@ class StochasticModel:  # noqa: D101
                                                     == 'EPANET Error 110'
                                                 ):
                                                     try:
-                                                        print(  # noqa: T201
+                                                        print(
                                                             'Method 5 failed. Performing method 6'
                                                         )
                                                         self.wn.options.time.duration = duration
@@ -325,26 +325,26 @@ class StochasticModel:  # noqa: D101
                                                             )
                                                         )
                                                     except Exception as epa_err_6:
-                                                        print(  # noqa: T201
+                                                        print(
                                                             'ERROR in rank='
                                                             + repr(worker_rank)
                                                             + ' and time='
                                                             + repr(current_stop_time)
                                                         )
-                                                        raise epa_err_6  # noqa: TRY201
+                                                        raise epa_err_6
                                                 else:
-                                                    raise epa_err_5  # noqa: TRY201
+                                                    raise epa_err_5
                                         else:
-                                            raise epa_err_4  # noqa: TRY201
+                                            raise epa_err_4
                                 else:
-                                    raise epa_err_3  # noqa: TRY201
+                                    raise epa_err_3
                         else:
-                            raise epa_err_2  # noqa: TRY201
+                            raise epa_err_2
                 else:
-                    raise epa_err_1  # noqa: TRY201
-            self._prev_isolated_junctions = hyd_sim._prev_isolated_junctions  # noqa: SLF001
-            self._prev_isolated_links = hyd_sim._prev_isolated_links  # noqa: SLF001
-            print(  # noqa: T201
+                    raise epa_err_1
+            self._prev_isolated_junctions = hyd_sim._prev_isolated_junctions
+            self._prev_isolated_links = hyd_sim._prev_isolated_links
+            print(
                 '***** Finish Running at time '
                 + repr(current_stop_time)
                 + '  '
@@ -352,9 +352,9 @@ class StochasticModel:  # noqa: D101
                 + ' *****'
             )
 
-            if i_run_successful == False:  # noqa: E712
+            if i_run_successful == False:
                 continue
-            self.wn.updateWaterNetworkModelWithResult(rr, self.restoration._registry)  # noqa: SLF001
+            self.wn.updateWaterNetworkModelWithResult(rr, self.restoration._registry)
 
             self.KeepLinearResult(
                 rr,
@@ -369,21 +369,21 @@ class StochasticModel:  # noqa: D101
 
         # =============================================================================
         # self.resoration._registry.updateTankTimeSeries(self.wn, current_stop_time)
-        self.restoration._registry.updateRestorationIncomeWaterTimeSeries(  # noqa: SLF001
+        self.restoration._registry.updateRestorationIncomeWaterTimeSeries(
             self.wn, current_stop_time
         )
 
         return self._linear_result
 
-    def KeepLinearResult(  # noqa: C901, N802, D102
+    def KeepLinearResult(
         self,
         result,
         isolated_nodes,
         node_attributes=None,
         link_attributes=None,
-        iCheck=False,  # noqa: FBT002, ARG002, N803
+        iCheck=False,
     ):  # , iNeedTimeCorrection=False, start_time=None):
-        if self.registry.if_first_event_occured == False:  # noqa: E712
+        if self.registry.if_first_event_occured == False:
             self.registry.pre_event_demand_met = (
                 self.registry.pre_event_demand_met.append(result.node['demand'])
             )
@@ -394,11 +394,11 @@ class StochasticModel:  # noqa: D101
         # link_attributes = ['linkquality', 'flowrate', 'headloss', 'velocity', 'status', 'setting', 'frictionfact', 'rxnrate']
 
         just_initialized_flag = False
-        if self._linear_result == None:  # noqa: E711
+        if self._linear_result == None:
             just_initialized_flag = True
             self._linear_result = result
 
-            self.restoration._registry.result = self._linear_result  # noqa: SLF001
+            self.restoration._registry.result = self._linear_result
             node_result_type_elimination_list = set(result.node.keys()) - set(
                 node_attributes
             )
@@ -414,7 +414,7 @@ class StochasticModel:  # noqa: D101
 
             self._linear_result.node['leak'] = pd.DataFrame(dtype=float)
 
-        active_pipe_damages = self.restoration._registry.active_pipe_damages  # noqa: SLF001
+        active_pipe_damages = self.restoration._registry.active_pipe_damages
 
         temp_active = active_pipe_damages.copy()
         for virtual_demand_node in active_pipe_damages:
@@ -455,9 +455,9 @@ class StochasticModel:  # noqa: D101
             result.node['demand'][real_demand_nodes] = result.node['demand'][
                 virtual_demand_nodes
             ]
-            result.node['demand'].drop(virtual_demand_nodes, axis=1, inplace=True)  # noqa: PD002
+            result.node['demand'].drop(virtual_demand_nodes, axis=1, inplace=True)
 
-        active_nodal_damages = self.restoration._registry.active_nodal_damages  # noqa: SLF001
+        active_nodal_damages = self.restoration._registry.active_nodal_damages
         temp_active = active_nodal_damages.copy()
 
         for virtual_demand_node in active_nodal_damages:
@@ -500,14 +500,14 @@ class StochasticModel:  # noqa: D101
                 non_isolated_pairs, axis=1
             )
 
-        if just_initialized_flag == False:  # noqa: E712
+        if just_initialized_flag == False:
             self._linear_result.maximum_trial_time.extend(result.maximum_trial_time)
 
             saved_max_time = self._linear_result.node[
-                list(self._linear_result.node.keys())[0]  # noqa: RUF015
+                list(self._linear_result.node.keys())[0]
             ].index.max()
             to_be_saved_min_time = result.node[
-                list(result.node.keys())[0]  # noqa: RUF015
+                list(result.node.keys())[0]
             ].index.min()
             if (
                 abs(to_be_saved_min_time - saved_max_time) != 0
@@ -539,7 +539,7 @@ class StochasticModel:  # noqa: D101
                     ].iloc[0]
 
                 if att in result.node:
-                    result.node[att].drop(result.node[att].index[0], inplace=True)  # noqa: PD002
+                    result.node[att].drop(result.node[att].index[0], inplace=True)
                     self._linear_result.node[att] = self._linear_result.node[
                         att
                     ].append(result.node[att])
@@ -553,12 +553,12 @@ class StochasticModel:  # noqa: D101
                     ].sort_index()
 
             for att in link_attributes:
-                result.link[att].drop(result.link[att].index[0], inplace=True)  # noqa: PD002
+                result.link[att].drop(result.link[att].index[0], inplace=True)
                 self._linear_result.link[att] = self._linear_result.link[att].append(
                     result.link[att]
                 )
 
-    def dumpPartOfResult(self):  # noqa: C901, N802, D102
+    def dumpPartOfResult(self):
         limit_size = self.registry.settings['limit_result_file_size']
         limit_size_byte = limit_size * 1024 * 1024
 
@@ -572,7 +572,7 @@ class StochasticModel:  # noqa: D101
             att_size = sys.getsizeof(self._linear_result.link[att])
             total_size += att_size
 
-        print('total size= ' + repr(total_size / 1024 / 1024))  # noqa: T201
+        print('total size= ' + repr(total_size / 1024 / 1024))
 
         if total_size >= limit_size_byte:
             dump_result = SimulationResults()
@@ -582,7 +582,7 @@ class StochasticModel:  # noqa: D101
                 # just to make sure. it obly add tens of micro seconds for each
                 # att
 
-                self._linear_result.node[att].sort_index(inplace=True)  # noqa: PD002
+                self._linear_result.node[att].sort_index(inplace=True)
                 att_result = self._linear_result.node[att]
                 if att_result.empty:
                     continue
@@ -599,7 +599,7 @@ class StochasticModel:  # noqa: D101
                 if len(last_valid_time) > 0:
                     last_valid_time = last_valid_time[-2]
                 else:
-                    print(att_time_index)  # noqa: T201
+                    print(att_time_index)
                     last_valid_time = att_time_index[-2]
 
                 dump_result.node[att] = att_result.loc[:last_valid_time]
@@ -608,13 +608,13 @@ class StochasticModel:  # noqa: D101
                 )
                 self._linear_result.node[att].drop(
                     att_result.index[: last_valid_time_index + 1],
-                    inplace=True,  # noqa: PD002
+                    inplace=True,
                 )
 
             for att in self._linear_result.link:
                 # just to make sure. it obly add tens of micro seconds for each
                 # att
-                self._linear_result.link[att].sort_index(inplace=True)  # noqa: PD002
+                self._linear_result.link[att].sort_index(inplace=True)
                 att_result = self._linear_result.link[att]
                 if att_result.empty:
                     continue
@@ -639,7 +639,7 @@ class StochasticModel:  # noqa: D101
                 )
                 self._linear_result.link[att].drop(
                     att_result.index[: last_valid_time_index + 1],
-                    inplace=True,  # noqa: PD002
+                    inplace=True,
                 )
 
             dump_file_index = len(self.registry.result_dump_file_list) + 1
@@ -652,21 +652,21 @@ class StochasticModel:  # noqa: D101
             result_dump_file_name = (
                 self.registry.scenario_name + '.part' + str(dump_file_index)
             )
-            result_dump_file_dst = os.path.join(  # noqa: PTH118
+            result_dump_file_dst = os.path.join(
                 self.registry.settings.process['result_directory'],
                 result_dump_file_name,
             )
 
-            with open(result_dump_file_dst, 'wb') as resul_file:  # noqa: PTH123
+            with open(result_dump_file_dst, 'wb') as resul_file:
                 pickle.dump(dump_result, resul_file)
 
             dump_list_file_name = self.registry.scenario_name + '.dumplist'
-            list_file_dst = os.path.join(  # noqa: PTH118
+            list_file_dst = os.path.join(
                 self.registry.settings.process['result_directory'],
                 dump_list_file_name,
             )
 
-            with open(list_file_dst, list_file_opening_mode) as part_list_file:  # noqa: PTH123
+            with open(list_file_dst, list_file_opening_mode) as part_list_file:
                 part_list_file.writelines([result_dump_file_name])
 
             self.registry.result_dump_file_list.append(result_dump_file_name)

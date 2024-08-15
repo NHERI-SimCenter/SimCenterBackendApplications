@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2022 Leland Stanford Junior University
 # Copyright (c) 2022 The Regents of the University of California
 #
@@ -50,10 +50,10 @@ from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 from scipy.stats.mstats import gmean
 
-this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
 main_dir = this_dir.parents[1]
 sys.path.insert(0, str(main_dir / 'common'))
-from simcenter_common import *  # noqa: E402, F403
+from simcenter_common import *
 
 IM_TYPES = [
     'PeakGroundResponse',
@@ -71,8 +71,8 @@ IM_MAP = {
 }
 
 
-class IntensityMeasureComputer:  # noqa: D101
-    def __init__(self, time_hist_dict=dict(), units=dict(), ampScaled=False):  # noqa: FBT002, B006, C408, ARG002, N803
+class IntensityMeasureComputer:
+    def __init__(self, time_hist_dict=dict(), units=dict(), ampScaled=False):
         self.time_hist_dict = time_hist_dict
         self.units = units
         self._define_constants()
@@ -82,7 +82,7 @@ class IntensityMeasureComputer:  # noqa: D101
             from_acc_unit = units.get('acceleration')
         else:
             from_acc_unit = '{}/{}^2'.format(units['length'], units['time'])
-        for cur_hist_name, cur_hist in self.time_hist_dict.items():  # noqa: B007, PERF102
+        for cur_hist_name, cur_hist in self.time_hist_dict.items():
             cur_hist[2] = self.convert_accel_units(
                 cur_hist[2], from_acc_unit
             ).tolist()
@@ -110,23 +110,23 @@ class IntensityMeasureComputer:  # noqa: D101
 
     def _init_intensity_measures(self):
         # response spectra
-        self.periods = dict()  # noqa: C408
-        self.disp_spectrum = dict()  # noqa: C408
-        self.vel_spectrum = dict()  # noqa: C408
-        self.acc_spectrum = dict()  # noqa: C408
-        self.psv = dict()  # noqa: C408
-        self.psa = dict()  # noqa: C408
+        self.periods = dict()
+        self.disp_spectrum = dict()
+        self.vel_spectrum = dict()
+        self.acc_spectrum = dict()
+        self.psv = dict()
+        self.psa = dict()
         # peak ground responses
-        self.pga = dict()  # noqa: C408
-        self.pgv = dict()  # noqa: C408
-        self.pgd = dict()  # noqa: C408
+        self.pga = dict()
+        self.pgv = dict()
+        self.pgd = dict()
         # arias intensity
-        self.i_a = dict()  # noqa: C408
+        self.i_a = dict()
         # significant duration
-        self.ds575 = dict()  # noqa: C408
-        self.ds595 = dict()  # noqa: C408
+        self.ds575 = dict()
+        self.ds595 = dict()
         # saratio
-        self.saratio = dict()  # noqa: C408
+        self.saratio = dict()
 
         # all
         self.intensity_measures = {
@@ -162,8 +162,8 @@ class IntensityMeasureComputer:  # noqa: D101
             'SaRatio': 'scalar',
         }
 
-    def convert_accel_units(self, acceleration, from_, to_='cm/sec/sec'):  # noqa: C901, PLR0911, PLR0912
-        """Converts acceleration from/to different units"""  # noqa: D400, D401
+    def convert_accel_units(self, acceleration, from_, to_='cm/sec/sec'):
+        """Converts acceleration from/to different units"""
         acceleration = np.asarray(acceleration)
         if from_ == 'g':
             if to_ == 'g':
@@ -309,9 +309,9 @@ class IntensityMeasureComputer:  # noqa: D101
             if to_ in self.mile_sec_square:
                 return acceleration
 
-        raise ValueError(f'Unrecognized unit {from_}')  # noqa: DOC501, EM102, TRY003
+        raise ValueError(f'Unrecognized unit {from_}')
 
-    def compute_response_spectrum(self, periods=[], damping=0.05, im_units=dict()):  # noqa: B006, C408, D102
+    def compute_response_spectrum(self, periods=[], damping=0.05, im_units=dict()):
         if len(im_units) == 0:
             unit_factor_vspec = 1.0
             unit_factor_aspec = 1.0
@@ -341,7 +341,7 @@ class IntensityMeasureComputer:  # noqa: D101
         # psa is in g, psv in cm/sec
         if len(periods) == 0:
             return
-        elif type(periods) == list:  # noqa: RET505, E721
+        elif type(periods) == list:
             periods = np.array(periods)
         num_periods = len(periods)
 
@@ -434,7 +434,7 @@ class IntensityMeasureComputer:  # noqa: D101
             )
             self.periods.update({cur_hist_name: periods.tolist()})
 
-    def compute_peak_ground_responses(self, im_units=dict()):  # noqa: B006, C408, D102
+    def compute_peak_ground_responses(self, im_units=dict()):
         if len(im_units) == 0:
             unit_factor_pga = 1.0
             unit_factor_pgv = 1.0
@@ -455,7 +455,7 @@ class IntensityMeasureComputer:  # noqa: D101
         for cur_hist_name, cur_hist in self.time_hist_dict.items():
             dt = cur_hist[1]
             ground_acc = cur_hist[2]
-            num_steps = len(ground_acc)  # noqa: F841
+            num_steps = len(ground_acc)
             # integral
             velocity = dt * cumtrapz(ground_acc, initial=0.0)
             displacement = dt * cumtrapz(velocity, initial=0.0)
@@ -476,7 +476,7 @@ class IntensityMeasureComputer:  # noqa: D101
                 {cur_hist_name: np.max(np.fabs(displacement)) * unit_factor_pgd}
             )
 
-    def compute_arias_intensity(self, im_units=dict()):  # noqa: B006, C408, D102
+    def compute_arias_intensity(self, im_units=dict()):
         if len(im_units) == 0:
             unit_factor_ai = 1.0
             unit_factor_ds575 = 1.0
@@ -496,10 +496,10 @@ class IntensityMeasureComputer:  # noqa: D101
         for cur_hist_name, cur_hist in self.time_hist_dict.items():
             dt = cur_hist[1]
             ground_acc = cur_hist[2]
-            num_steps = len(ground_acc)  # noqa: F841
+            num_steps = len(ground_acc)
             tmp = [x**2 / 100 / 100 for x in ground_acc]
             # integral
-            I_A = np.pi / 2 / self.g * dt * cumtrapz(tmp, initial=0.0)  # noqa: N806
+            I_A = np.pi / 2 / self.g * dt * cumtrapz(tmp, initial=0.0)
             # collect data
             self.i_a.update({cur_hist_name: np.max(np.fabs(I_A)) * unit_factor_ai})
             # compute significant duration
@@ -507,23 +507,23 @@ class IntensityMeasureComputer:  # noqa: D101
             self.ds575.update({cur_hist_name: ds575 * unit_factor_ds575})
             self.ds595.update({cur_hist_name: ds595 * unit_factor_ds595})
 
-    def _compute_significant_duration(self, I_A, dt):  # noqa: N803, PLR6301
+    def _compute_significant_duration(self, I_A, dt):
         # note this function return duration in sec
         ds575 = 0.0
         ds595 = 0.0
         # normalize
-        I_A_n = I_A / np.max(I_A)  # noqa: N806
+        I_A_n = I_A / np.max(I_A)
         # find 5%, 75%, 95%
-        id5 = next(x for x, val in enumerate(I_A_n) if val > 0.05)  # noqa: PLR2004
-        id75 = next(x for x, val in enumerate(I_A_n) if val > 0.75)  # noqa: PLR2004
-        id95 = next(x for x, val in enumerate(I_A_n) if val > 0.95)  # noqa: PLR2004
+        id5 = next(x for x, val in enumerate(I_A_n) if val > 0.05)
+        id75 = next(x for x, val in enumerate(I_A_n) if val > 0.75)
+        id95 = next(x for x, val in enumerate(I_A_n) if val > 0.95)
         # compute ds
         ds575 = dt * (id75 - id5)
         ds595 = dt * (id95 - id5)
         # return
         return ds575, ds595
 
-    def compute_saratio(self, T1=1.0, Ta=0.02, Tb=3.0, im_units=dict()):  # noqa: B006, C408, N803, D102
+    def compute_saratio(self, T1=1.0, Ta=0.02, Tb=3.0, im_units=dict()):
         if len(self.psa) == 0:
             return
 
@@ -538,7 +538,7 @@ class IntensityMeasureComputer:  # noqa: D101
         period_list = [0.01 * x for x in range(1500)]
         period_list = [x for x in period_list if x <= Tb and x >= Ta]
 
-        for cur_hist_name, cur_hist in self.time_hist_dict.items():  # noqa: B007, PERF102
+        for cur_hist_name, cur_hist in self.time_hist_dict.items():
             cur_psa = self.psa.get(cur_hist_name, None)
             cur_periods = self.periods.get(cur_hist_name, None)
             if (cur_psa is None) or (cur_periods is None):
@@ -551,34 +551,34 @@ class IntensityMeasureComputer:  # noqa: D101
                 )
 
 
-def load_records(event_file, ampScaled):  # noqa: N803, D103
+def load_records(event_file, ampScaled):
     event_data = event_file.get('Events', None)
     if event_data is None:
-        raise ValueError(  # noqa: TRY003
-            "IntensityMeasureComputer: 'Events' attribute is not found in EVENT.json"  # noqa: EM101
+        raise ValueError(
+            "IntensityMeasureComputer: 'Events' attribute is not found in EVENT.json"
         )
-    else:  # noqa: RET506
+    else:
         event_data = event_data[0]
 
     # check type
     if (event_data.get('type', None) != 'Seismic') and (
         event_data.get('type', None) != 'timeHistory'
     ):
-        return dict()  # noqa: C408
+        return dict()
 
     # get time series attribute
     time_series = event_data.get('timeSeries', None)
     if time_series is None:
-        return dict()  # noqa: C408
+        return dict()
     ts_names = [x['name'] for x in time_series]
 
     # collect time series tags
     pattern = event_data.get('pattern', None)
     if pattern is None:
-        raise ValueError(  # noqa: TRY003
-            "IntensityMeasureComputer: 'pattern' is not found in EVENT.json"  # noqa: EM101
+        raise ValueError(
+            "IntensityMeasureComputer: 'pattern' is not found in EVENT.json"
         )
-    dict_ts = dict()  # noqa: C408
+    dict_ts = dict()
     for cur_pat in pattern:
         dict_ts.update({cur_pat['timeSeries']: [cur_pat['dof']]})
 
@@ -586,15 +586,15 @@ def load_records(event_file, ampScaled):  # noqa: N803, D103
     for cur_ts in list(dict_ts.keys()):
         try:
             cur_id = ts_names.index(cur_ts)
-        except:  # noqa: E722
-            raise ValueError(  # noqa: B904, TRY003
-                f"IntensityMeasureComputer: {cur_ts} is not found in 'timeSeries' in EVENT.json"  # noqa: EM102
+        except:
+            raise ValueError(
+                f"IntensityMeasureComputer: {cur_ts} is not found in 'timeSeries' in EVENT.json"
             )
         # get amplitude scaling (if the record is raw, i.e., ampScaled is false)
         if not ampScaled:
-            scalingFactor = time_series[cur_id].get('factor', 1.0)  # noqa: N806
+            scalingFactor = time_series[cur_id].get('factor', 1.0)
         else:
-            scalingFactor = 1.0  # noqa: N806
+            scalingFactor = 1.0
         # append that record
         dict_ts[cur_ts].append(time_series[cur_id]['dT'])
         dict_ts[cur_ts].append(
@@ -605,45 +605,45 @@ def load_records(event_file, ampScaled):  # noqa: N803, D103
     return dict_ts
 
 
-def get_unit_factor(unit_in, unit_out):  # noqa: D103
+def get_unit_factor(unit_in, unit_out):
     # this function is geared to the unit names in SimCenterUnitsCombo in R2D.
     unit_factor = 1.0
     # unit types
     unit_types = globals().get('unit_types')
     f_out = 1
     f_in = 1
-    for cur_unit, name_list in unit_types.items():  # noqa: B007, PERF102
+    for cur_unit, name_list in unit_types.items():
         if unit_out in name_list:
             f_out = globals().get(unit_out)
         if unit_in in name_list:
             f_in = globals().get(unit_in)
     unit_factor = f_in / f_out
-    return unit_factor  # noqa: RET504
+    return unit_factor
 
 
-def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):  # noqa: C901, N803, D103
+def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):
     # load AIM file
     try:
-        with open(AIM_file, encoding='utf-8') as f:  # noqa: PTH123
-            AIM_file = json.load(f)  # noqa: N806
-    except:  # noqa: E722
-        raise ValueError(  # noqa: B904, TRY003
-            f'IntensityMeasureComputer: cannot load AIM file {AIM_file}'  # noqa: EM102
+        with open(AIM_file, encoding='utf-8') as f:
+            AIM_file = json.load(f)
+    except:
+        raise ValueError(
+            f'IntensityMeasureComputer: cannot load AIM file {AIM_file}'
         )
 
     # load EVENT file
     try:
-        with open(EVENT_file, encoding='utf-8') as f:  # noqa: PTH123
+        with open(EVENT_file, encoding='utf-8') as f:
             event_file = json.load(f)
-    except:  # noqa: E722
-        raise ValueError(  # noqa: B904, TRY003
-            f'IntensityMeasureComputer: cannot load EVENT file {EVENT_file}'  # noqa: EM102
+    except:
+        raise ValueError(
+            f'IntensityMeasureComputer: cannot load EVENT file {EVENT_file}'
         )
 
     # get periods
-    AIM_event = AIM_file['Events']  # noqa: N806
-    if type(AIM_event) == list:  # noqa: E721
-        AIM_event = AIM_event[0]  # noqa: N806
+    AIM_event = AIM_file['Events']
+    if type(AIM_event) == list:
+        AIM_event = AIM_event[0]
     periods = AIM_event.get(
         'SpectrumPeriod',
         [
@@ -673,8 +673,8 @@ def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):  # noqa
         # corresponding to records after SimCenterEvent.py
         units = AIM_file['GeneralInformation'].get('units', None)
         if units is None:
-            raise ValueError(  # noqa: TRY003
-                f'IntensityMeasureComputer: units is not found in {AIM_file}'  # noqa: EM102
+            raise ValueError(
+                f'IntensityMeasureComputer: units is not found in {AIM_file}'
             )
     else:
         # corresponding to raw records (e.g., EE-UQ)
@@ -682,14 +682,14 @@ def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):  # noqa
 
     # get IM list (will be user-defined)
     im_types = []  # IM type
-    im_units = dict()  # noqa: C408
+    im_units = dict()
     im_names = ['Periods']  # IM name
-    AIM_im = AIM_file.get('IntensityMeasure', None)  # noqa: N806
+    AIM_im = AIM_file.get('IntensityMeasure', None)
     output_periods = []
     process_geomean = False
     if AIM_im is None:
         # search it again under UQ/surrogateMethodInfo
-        AIM_im = AIM_file['UQ']['surrogateMethodInfo'].get('IntensityMeasure', None)  # noqa: N806
+        AIM_im = AIM_file['UQ']['surrogateMethodInfo'].get('IntensityMeasure', None)
         if geoMean:
             process_geomean = AIM_file['UQ']['surrogateMethodInfo'].get(
                 'useGeoMean', False
@@ -701,7 +701,7 @@ def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):  # noqa
     if AIM_im is None or len(AIM_im) == 0:
         # no intensity measure calculation requested
         return
-    else:  # noqa: RET505
+    else:
         for cur_im in list(AIM_im.keys()):
             for ref_type in IM_TYPES:
                 if cur_im in IM_MAP.get(ref_type):
@@ -737,23 +737,23 @@ def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):  # noqa
                         output_periods = periods
                     if cur_im == 'SaRatio':
                         tmp = AIM_im[cur_im].get('Periods', [0.02, 1.0, 3.0])
-                        Ta, Tb = [np.min(tmp), np.max(tmp)]  # noqa: N806
+                        Ta, Tb = [np.min(tmp), np.max(tmp)]
                         tmp.pop(tmp.index(Ta))
                         tmp.pop(tmp.index(Tb))
-                        T1 = tmp[0]  # noqa: N806
+                        T1 = tmp[0]
                         periods = [
                             Ta + 0.01 * (x - 1)
                             for x in range(int(np.ceil((Tb - Ta) / 0.01)) + 3)
                         ]
                     break
-        for Ti in output_periods:  # noqa: N806
+        for Ti in output_periods:
             if Ti not in periods:
                 bisect.insort(periods, Ti)
 
     for cur_type in im_types:
         if cur_type not in IM_TYPES:
             # pop the non-supported IMs
-            im_types.pop(cur_type)  # noqa: B909
+            im_types.pop(cur_type)
 
     # load records
     dict_time_series = load_records(event_file, ampScaled)
@@ -780,24 +780,24 @@ def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):  # noqa
 
     # save a IM.json
     out_data = {'IntensityMeasure': im_computer.intensity_measures}
-    with open(IM_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
+    with open(IM_file, 'w', encoding='utf-8') as f:
         json.dump(out_data, f, indent=2)
 
     # save a csv file
-    csv_dict = dict()  # noqa: C408
+    csv_dict = dict()
     colname = []
     for cur_im in im_types:
-        colname = colname + IM_MAP.get(cur_im, [])  # noqa: PLR6104
+        colname = colname + IM_MAP.get(cur_im, [])
     im_dict = im_computer.intensity_measures
-    for cur_hist_name, cur_hist in dict_time_series.items():  # noqa: PLR1702
-        cur_colname = []  # noqa: F841
+    for cur_hist_name, cur_hist in dict_time_series.items():
+        cur_colname = []
         cur_dof = cur_hist[0]
         cur_periods = im_dict['Periods'].get(cur_hist_name)
         for cur_im in im_names:
             if cur_im in IM_MAP.get('PseudoSpectrum'):
                 if len(output_periods) > 0:
-                    for Ti in output_periods:  # noqa: N806
-                        cur_im_T = f'{cur_im}({Ti}s)'  # noqa: N806
+                    for Ti in output_periods:
+                        cur_im_T = f'{cur_im}({Ti}s)'
                         tmp_key = f'1-{cur_im_T}-0-{cur_dof}'
                         if len(cur_periods) > 1:
                             # interp
@@ -849,7 +849,7 @@ def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):  # noqa
                 ]
                 get_count_dict[new_key_name] += 1
 
-        for key, val in geo_csv_dict.items():  # noqa: B007
+        for key, val in geo_csv_dict.items():
             geo_csv_dict[key] = [
                 a ** (1 / get_count_dict[key]) for a in geo_csv_dict[key]
             ]
@@ -860,9 +860,9 @@ def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):  # noqa
     csv_df = pd.DataFrame.from_dict(csv_dict)
     tmp_idx = IM_file.index('.')
     if tmp_idx:
-        filenameCSV = IM_file[:tmp_idx] + '.csv'  # noqa: N806
+        filenameCSV = IM_file[:tmp_idx] + '.csv'
     else:
-        filenameCSV = IM_file + '.csv'  # noqa: N806
+        filenameCSV = IM_file + '.csv'
     csv_df.to_csv(filenameCSV, index=False)
 
 

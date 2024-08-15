@@ -1,4 +1,4 @@
-# python code to open the .mat file  # noqa: CPY001, D100, INP001
+# python code to open the .mat file
 # and put data into a SimCenter JSON file
 
 import json
@@ -8,9 +8,9 @@ import numpy as np
 import scipy.io as sio
 
 
-def parseWindMatFile(matFileIn, windFileOutName):  # noqa: N802, N803, D103
-    dataDir = os.getcwd()  # noqa: PTH109, N806, F841
-    scriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N806, F841
+def parseWindMatFile(matFileIn, windFileOutName):
+    dataDir = os.getcwd()
+    scriptDir = os.path.dirname(os.path.realpath(__file__))
 
     mat_contents = sio.loadmat(matFileIn)
 
@@ -18,11 +18,11 @@ def parseWindMatFile(matFileIn, windFileOutName):  # noqa: N802, N803, D103
     breadth = float(mat_contents['B'][0])
     height = float(mat_contents['H'][0])
     fs = float(mat_contents['fs'][0])
-    vRef = float(mat_contents['Vref'][0])  # noqa: N806
+    vRef = float(mat_contents['Vref'][0])
 
     if 's_target' in mat_contents:
-        case = 'spectra'  # noqa: F841
-        comp_CFmean = np.squeeze(np.array(mat_contents['comp_CFmean']))  # noqa: N806
+        case = 'spectra'
+        comp_CFmean = np.squeeze(np.array(mat_contents['comp_CFmean']))
         norm_all = np.squeeze(np.array(mat_contents['norm_all']))
         f_target = np.squeeze(np.array(mat_contents['f_target']))
         s_target = np.squeeze(np.array(mat_contents['s_target']))
@@ -41,12 +41,12 @@ def parseWindMatFile(matFileIn, windFileOutName):  # noqa: N802, N803, D103
         )
 
     elif 'Fx' in mat_contents:
-        Fx = np.squeeze(np.array(mat_contents['Fx']))  # noqa: N806
-        Fy = np.squeeze(np.array(mat_contents['Fy']))  # noqa: N806
-        Tz = np.squeeze(np.array(mat_contents['Tz']))  # noqa: N806
+        Fx = np.squeeze(np.array(mat_contents['Fx']))
+        Fy = np.squeeze(np.array(mat_contents['Fy']))
+        Tz = np.squeeze(np.array(mat_contents['Tz']))
         t = np.squeeze(np.array(mat_contents['t']))
 
-        myJson = {}  # noqa: N806
+        myJson = {}
         myJson['D'] = depth
         myJson['H'] = height
         myJson['B'] = breadth
@@ -57,7 +57,7 @@ def parseWindMatFile(matFileIn, windFileOutName):  # noqa: N802, N803, D103
         myJson['Fy'] = np.array(Fy).tolist()
         myJson['Tz'] = np.array(Tz).tolist()
         myJson['t'] = np.array(t).tolist()
-        with open(windFileOutName, 'w') as f:  # noqa: PLW1514, PTH123
+        with open(windFileOutName, 'w') as f:
             json.dump(myJson, f)
 
         # file = open(windFileOutName,"w")
@@ -127,33 +127,33 @@ def parseWindMatFile(matFileIn, windFileOutName):  # noqa: N802, N803, D103
         # Check valid JSON file,
         validate = True
         if validate:
-            with open(windFileOutName) as infile:  # noqa: FURB101, PLW1514, PTH123
+            with open(windFileOutName) as infile:
                 json_data = infile.read()
 
             # Try to parse the JSON data
             try:
-                json_object = json.loads(json_data)  # noqa: F841
-                print('JSON file is valid')  # noqa: T201
+                json_object = json.loads(json_data)
+                print('JSON file is valid')
             except json.decoder.JSONDecodeError:
-                print('JSON file is not valid')  # noqa: T201
+                print('JSON file is not valid')
 
 
-def createSpectraJson(  # noqa: N802, D103
-    windFileOutName,  # noqa: N803
+def createSpectraJson(
+    windFileOutName,
     breadth,
     depth,
     height,
     fs,
-    vRef,  # noqa: N803
+    vRef,
     f_target,
     s_target,
-    comp_CFmean,  # noqa: N803
+    comp_CFmean,
     norm_all,
 ):
-    ncomp = comp_CFmean.shape[0]  # noqa: F841
-    nf = f_target.shape[0]  # noqa: F841
+    ncomp = comp_CFmean.shape[0]
+    nf = f_target.shape[0]
 
-    myJson = {}  # noqa: N806
+    myJson = {}
     myJson['D'] = depth
     myJson['H'] = height
     myJson['B'] = breadth
@@ -166,21 +166,21 @@ def createSpectraJson(  # noqa: N802, D103
     myJson['s_target_real'] = np.real(s_target).tolist()
     myJson['s_target_imag'] = np.imag(s_target).tolist()
 
-    with open(windFileOutName, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(windFileOutName, 'w') as f:
         json.dump(myJson, f)
 
     # Check valid JSON file
     validate = True
     if validate:
-        with open(windFileOutName) as infile:  # noqa: FURB101, PLW1514, PTH123
+        with open(windFileOutName) as infile:
             json_data = infile.read()
 
         # Try to parse the JSON data
         try:
-            json_object = json.loads(json_data)  # noqa: F841
-            print('JSON file is valid')  # noqa: T201
+            json_object = json.loads(json_data)
+            print('JSON file is valid')
         except json.decoder.JSONDecodeError:
-            print('JSON file is not valid')  # noqa: T201
+            print('JSON file is not valid')
 
     # file = open(windFileOutName,"w")
     # file.write("{")
@@ -251,21 +251,21 @@ def createSpectraJson(  # noqa: N802, D103
     # file.close()
 
 
-def createPODJson(  # noqa: N802, D103
+def createPODJson(
     filename,
-    V,  # noqa: N803
-    D1,  # noqa: N803
-    SpeN,  # noqa: N803
+    V,
+    D1,
+    SpeN,
     f_target,
     norm_all,
-    D,  # noqa: N803
-    H,  # noqa: N803
-    B,  # noqa: N803
+    D,
+    H,
+    B,
     fs,
-    vRef,  # noqa: N803
-    comp_CFmean,  # noqa: N803
+    vRef,
+    comp_CFmean,
 ):
-    myJson = {}  # noqa: N806
+    myJson = {}
     myJson['V_imag'] = np.imag(V).tolist()
     myJson['V_real'] = np.real(V).tolist()
     myJson['D1'] = D1.tolist()
@@ -279,5 +279,5 @@ def createPODJson(  # noqa: N802, D103
     myJson['fs'] = fs
     myJson['Vref'] = vRef
 
-    with open(filename, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(filename, 'w') as f:
         json.dump(myJson, f)

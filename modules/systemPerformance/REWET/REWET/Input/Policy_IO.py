@@ -3,7 +3,7 @@
 This is the Restoration Policy Reader/Writtter Module.
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, INP001
+"""
 
 import logging
 from collections import OrderedDict
@@ -24,7 +24,7 @@ def _split_line(line):
         pass
     elif len(_vc) == 1:
         _vals = _vc[0].split()
-    elif _vc[0] == '':  # noqa: PLC1901
+    elif _vc[0] == '':
         _cmnt = _vc[1]
     else:
         _vals = _vc[0].split()
@@ -32,7 +32,7 @@ def _split_line(line):
     return _vals, _cmnt
 
 
-class restoration_data:  # noqa: D101
+class restoration_data:
     def __init__(self):
         self.files = {}
         self.shift = {}
@@ -52,7 +52,7 @@ class restoration_data:  # noqa: D101
             self.group[el] = OrderedDict()
 
 
-class RestorationIO:  # noqa: D101
+class RestorationIO:
     def __init__(self, definition_file_name):
         """Needs a file that contains:
 
@@ -67,7 +67,7 @@ class RestorationIO:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400
+        """
         # some of the following lines have been adopted from WNTR
         self.rm = restoration_data()
 
@@ -98,31 +98,31 @@ class RestorationIO:  # noqa: D101
         section = None
         lnum = 0
         edata = {'fname': definition_file_name}
-        with open(definition_file_name, encoding='utf-8') as f:  # noqa: PTH123
+        with open(definition_file_name, encoding='utf-8') as f:
             for line in f:
                 lnum += 1
                 edata['lnum'] = lnum
-                line = line.strip()  # noqa: PLW2901
+                line = line.strip()
                 nwords = len(line.split())
                 if len(line) == 0 or nwords == 0:
                     # Blank line
                     continue
-                elif line.startswith('['):  # noqa: RET507
+                elif line.startswith('['):
                     vals = line.split()
                     sec = vals[0].upper()
                     edata['sec'] = sec
                     if sec in expected_sections:
                         section = sec
                         continue
-                    else:  # noqa: RET507
-                        raise RuntimeError(  # noqa: DOC501
+                    else:
+                        raise RuntimeError(
                             '%(fname)s:%(lnum)d: Invalid section "%(sec)s"' % edata
                         )
                 elif section is None and line.startswith(';'):
                     self.config_file_comment.append(line[1:])
                     continue
                 elif section is None:
-                    raise RuntimeError(  # noqa: DOC501
+                    raise RuntimeError(
                         '%(fname)s:%(lnum)d: Non-comment outside of valid section!'
                         % edata
                     )
@@ -148,9 +148,9 @@ class RestorationIO:  # noqa: D101
         self._file_handle_address = {}
         for lnum, line in self.sections['[FILES]']:
             edata['lnum'] = lnum
-            words, comments = _split_line(line)  # noqa: F841
+            words, comments = _split_line(line)
             if words is not None and len(words) > 0:
-                if len(words) != 2:  # noqa: PLR2004
+                if len(words) != 2:
                     edata['key'] = words[0]
                     raise RuntimeError(
                         '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'
@@ -167,30 +167,30 @@ class RestorationIO:  # noqa: D101
 
     def _read_each_file(self, file_address, method=0):
         lnum = 0
-        iTitle = True  # noqa: N806
+        iTitle = True
         data_temp = None
-        if method == 0:  # noqa: PLR1702
+        if method == 0:
             try:
-                raise  # noqa: PLE0704
-                with open(file_address, encoding='utf-8') as f:  # noqa: PTH123
+                raise
+                with open(file_address, encoding='utf-8') as f:
                     for line in f:
-                        line = line.strip()  # noqa: PLW2901
+                        line = line.strip()
                         nwords = len(line.split())
                         if len(line) == 0 or nwords == 0:
                             # Blank line
                             continue
-                        elif line.startswith(';'):  # noqa: RET507
+                        elif line.startswith(';'):
                             # comment
                             continue
                         else:
                             lnum += 1
                             vals = line.split()
-                            if iTitle == True:  # noqa: E712
-                                iTitle = False  # noqa: N806
+                            if iTitle == True:
+                                iTitle = False
                                 data_temp = pd.DataFrame(columns=vals)
                             else:
                                 data_temp.loc[lnum - 2] = vals
-            except:  # noqa: E722
+            except:
                 data_temp = self._read_each_file(file_address, method=1)
         elif method == 1:
             data_temp = pd.read_csv(file_address)
@@ -199,13 +199,13 @@ class RestorationIO:  # noqa: D101
         return data_temp
 
     def _read_shifts(self):
-        for lnum, line in self.sections['[SHIFTS]']:  # noqa: B007
+        for lnum, line in self.sections['[SHIFTS]']:
             # edata['lnum'] = lnum
-            words, comments = _split_line(line)  # noqa: F841
+            words, comments = _split_line(line)
             if words is not None and len(words) > 0:
-                if len(words) != 3:  # noqa: PLR2004
-                    raise RuntimeError(  # noqa: TRY003
-                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'  # noqa: EM101
+                if len(words) != 3:
+                    raise RuntimeError(
+                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'
                     )
                 shift_name = words[0]
                 shift_begining = int(words[1]) * 3600
@@ -213,7 +213,7 @@ class RestorationIO:  # noqa: D101
 
                 self.rm.shift[shift_name] = (shift_begining, shift_ending)
 
-    def _read_entities(self):  # noqa: C901
+    def _read_entities(self):
         """Reads damage group definitions and updates the Restoration Model
         object data.
 
@@ -230,7 +230,7 @@ class RestorationIO:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D205, D401
+        """
         # Entities is kept for legacy compatibility with the first version
         damage_group_data = self.sections.get(
             '[ENTITIES]', self.sections.get('[Damage Group]')
@@ -239,11 +239,11 @@ class RestorationIO:  # noqa: D101
         for lnum, line in damage_group_data:
             arg1 = None
             arg2 = None
-            words, comments = _split_line(line)  # noqa: F841
+            words, comments = _split_line(line)
             if words is not None and len(words) > 0:
-                if len(words) != 2 and len(words) != 4:  # noqa: PLR2004
-                    raise RuntimeError(  # noqa: TRY003
-                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'  # noqa: EM101
+                if len(words) != 2 and len(words) != 4:
+                    raise RuntimeError(
+                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'
                     )
                 entity_name = words[0]
                 element = words[1].upper()
@@ -254,14 +254,14 @@ class RestorationIO:  # noqa: D101
                 # if entity_name in self.rm.entity:
                 # raise ValueError('Entity already defined')
 
-                if len(words) == 4:  # noqa: PLR2004
+                if len(words) == 4:
                     arg1 = words[2]
                     arg2 = words[3]
 
                     # if (element=='PIPE' and arg1 not in self.rm._registry._pipe_damage_table.columns and arg1!='FILE' and arg1!='NOT_IN_FILE') and (element=='DISTNODE' and arg1 not in self.rm._registry._node_damage_table.columns):
                     # raise ValueError('Argument 1('+arg1+') is not recognized in line number: ' + str(lnum))
 
-                if arg1 == None:  # noqa: E711
+                if arg1 == None:
                     self.rm.entity[entity_name] = element
                     ent_rule = [('ALL', None, None)]
 
@@ -273,7 +273,7 @@ class RestorationIO:  # noqa: D101
                     # sina: take care of this in registry opening
                     # self.rm._registry.addAttrToElementDamageTable(element ,entity_name , True)
 
-                elif arg1 == 'FILE' or arg1 == 'NOT_IN_FILE':  # noqa: PLR1714
+                elif arg1 == 'FILE' or arg1 == 'NOT_IN_FILE':
                     name_list = self.rm.files[arg2]['ElementID'].unique().tolist()
                     ent_rule = [(arg1, None, name_list)]
                     self.rm.entity[entity_name] = element
@@ -288,7 +288,7 @@ class RestorationIO:  # noqa: D101
                     if ':' in arg2:
                         split_arg = arg2.split(':')
 
-                        if len(split_arg) != 2:  # noqa: PLR2004
+                        if len(split_arg) != 2:
                             raise ValueError(
                                 'There must be two parts: PART1:PART2. Now there are '
                                 + repr(
@@ -297,11 +297,11 @@ class RestorationIO:  # noqa: D101
                                     + repr(lnum)
                                 )
                             )
-                        if split_arg[0] == '':  # noqa: PLC1901
+                        if split_arg[0] == '':
                             raise ValueError(
                                 'The first part is Empty in line ' + repr(lnum)
                             )
-                        if split_arg[1] == '':  # noqa: PLC1901
+                        if split_arg[1] == '':
                             raise ValueError(
                                 'The second part is Empty in line ' + repr(lnum)
                             )
@@ -317,7 +317,7 @@ class RestorationIO:  # noqa: D101
 
                     try:
                         temp_arg3 = float(arg3)
-                    except:  # noqa: E722
+                    except:
                         temp_arg3 = str(arg3)
 
                     arg3 = temp_arg3
@@ -336,17 +336,17 @@ class RestorationIO:  # noqa: D101
 
     def _read_sequences(self):
         # sina: there is a part that you need to add in restroation init
-        for lnum, line in self.sections['[SEQUENCES]']:  # noqa: B007
-            words, comments = _split_line(line)  # noqa: F841
+        for lnum, line in self.sections['[SEQUENCES]']:
+            words, comments = _split_line(line)
             if words is not None and len(words) > 0:
                 # if len(words) != 2 or len(words)!=4:
                 # raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
                 element = words[0].upper()
                 seq = []
                 for arg in words[1:]:
-                    seq.append(arg)  # noqa: PERF402
+                    seq.append(arg)
                 if element in self.rm.sequence:
-                    raise ValueError('Element already in sequences')  # noqa: EM101, TRY003
+                    raise ValueError('Element already in sequences')
                 if element not in ELEMENTS:
                     raise ValueError(
                         'The Element '
@@ -361,23 +361,23 @@ class RestorationIO:  # noqa: D101
         group_column = {}
 
         crews_data = self.sections.get('[AGENTS]', self.sections.get('CREWS'))
-        for lnum, line in crews_data:  # noqa: B007
+        for lnum, line in crews_data:
             # edata['lnum'] = lnum
-            words, comments = _split_line(line)  # noqa: F841
+            words, comments = _split_line(line)
             if words is not None and len(words) > 0:
                 _group_name = None
                 _group_column = None
 
-                if len(words) < 3:  # noqa: PLR2004
-                    raise RuntimeError(  # noqa: TRY003
-                        'less than three argument is not valid for crew definition'  # noqa: EM101
+                if len(words) < 3:
+                    raise RuntimeError(
+                        'less than three argument is not valid for crew definition'
                     )
                 agent_type = words[0]
                 if words[1].upper() == 'FILE':
                     agent_file_handle[words[0]] = words[2]
                 else:
-                    raise ValueError('Unknown key')  # noqa: EM101, TRY003
-                if len(words) >= 4:  # noqa: PLR2004
+                    raise ValueError('Unknown key')
+                if len(words) >= 4:
                     group_data = words[3]
                     _group_name = group_data.split(':')[0]
                     _group_column = group_data.split(':')[1]
@@ -393,7 +393,7 @@ class RestorationIO:  # noqa: D101
 
             agent_number = data['Number']
             j = 0
-            for lnum, line in data.iterrows():  # noqa: B007
+            for lnum, line in data.iterrows():
                 # try:
                 num = int(agent_number[j])
                 # except :
@@ -412,7 +412,7 @@ class RestorationIO:  # noqa: D101
                     definitions['shift_name'] = predefinitions['Shift']
 
                     group_name_temp = None
-                    if group_names[agent_type] != None:  # noqa: E711
+                    if group_names[agent_type] != None:
                         definitions['group'] = predefinitions[
                             group_column[agent_type]
                         ]
@@ -423,21 +423,21 @@ class RestorationIO:  # noqa: D101
 
                     definitions['group_name'] = group_name_temp
                     self.rm.agents.append((agent_name, agent_type, definitions))
-                j += 1  # noqa: SIM113
+                j += 1
 
     def _read_groups(self):
         for lnum, line in self.sections['[GROUPS]']:
-            words, comments = _split_line(line)  # noqa: F841
+            words, comments = _split_line(line)
 
             if words is not None and len(words) > 0:
-                if not len(words) >= 6:  # noqa: PLR2004
+                if not len(words) >= 6:
                     raise ValueError('error in line: ' + str(lnum))
                 group_name = words[0]
                 element_type = words[1]
                 argument = words[2]
                 file_handler = words[3]
-                element_col_ID = words[4]  # noqa: N806
-                pipe_col_ID = words[5]  # noqa: N806
+                element_col_ID = words[4]
+                pipe_col_ID = words[5]
 
                 if element_type not in ELEMENTS:
                     raise ValueError(
@@ -481,21 +481,21 @@ class RestorationIO:  # noqa: D101
 
                 self.rm.group[element_type][group_name] = group_list
 
-    def _read_priorities(self):  # noqa: C901
+    def _read_priorities(self):
         for lnum, line in self.sections['[PRIORITIES]']:
-            words, comments = _split_line(line)  # noqa: F841
+            words, comments = _split_line(line)
 
             if words is not None and len(words) > 0:
-                if not len(words) >= 3:  # noqa: PLR2004
+                if not len(words) >= 3:
                     raise ValueError('error in line: ' + str(lnum))
                 agent_type = words[0]
 
                 priority = None
                 try:
                     priority = int(words[1])
-                except:  # noqa: E722
-                    print('exeption handled in _read_priorities')  # noqa: T201
-                if type(priority) != int:  # noqa: E721
+                except:
+                    print('exeption handled in _read_priorities')
+                if type(priority) != int:
                     raise ValueError(
                         'Priority casting failed:'
                         + str(priority)
@@ -504,7 +504,7 @@ class RestorationIO:  # noqa: D101
                     )
                 arg = []
                 for word in words[2:]:
-                    temp = None  # noqa: F841
+                    temp = None
                     if word.find(':') != -1:
                         split_temp = word.split(':')
                         arg.append((split_temp[0], split_temp[1]))
@@ -527,17 +527,17 @@ class RestorationIO:  # noqa: D101
                             )
                     else:
                         arg.append(word)
-                        if word not in ['EPICENTERDIST', 'WaterSource']:  # noqa: PLR6201
+                        if word not in ['EPICENTERDIST', 'WaterSource']:
                             raise ValueError('Unnown value in line: ' + str(lnum))
 
                 self.rm.priority.append((agent_type, priority, arg))
 
     def _read_jobs(self):
         for lnum, line in self.sections['[JOBS]']:
-            words, comments = _split_line(line)  # noqa: F841
+            words, comments = _split_line(line)
 
             if words is not None and len(words) > 0:
-                if not len(words) >= 3:  # noqa: PLR2004
+                if not len(words) >= 3:
                     raise ValueError(
                         'Not enough arguments. error in line: ' + str(lnum)
                     )
@@ -566,23 +566,23 @@ class RestorationIO:  # noqa: D101
                 if definer.upper() == 'FIXED':
                     try:
                         argument = int(argument)
-                    except:  # noqa: E722
-                        print('exeption handled in _read_jobs')  # noqa: T201
+                    except:
+                        print('exeption handled in _read_jobs')
                 else:
                     raise ValueError('Definer is not recognized: ' + definer)
 
                 effect = None
-                if len(words) >= 4:  # noqa: PLR2004
+                if len(words) >= 4:
                     effect = words[3]
 
                 self.rm.jobs.append((agent_type, entity, action, argument, effect))
 
-    def _read_define(self):  # noqa: C901, PLR0912
-        job = {}  # noqa: F841
+    def _read_define(self):
+        job = {}
 
         effect_data = self.sections.get('[DEFINE]', self.sections.get('[EFFECTS]'))
-        for lnum, line in effect_data:  # noqa: PLR1702
-            words, comments = _split_line(line)  # noqa: F841
+        for lnum, line in effect_data:
+            words, comments = _split_line(line)
             if words is not None and len(words) > 0:
                 # if not len(words) >= 3:
                 # raise ValueError('Not enough arguments. error in line: ' + str(lnum))
@@ -590,7 +590,7 @@ class RestorationIO:  # noqa: D101
 
                 try:
                     method_name = float(words[1])
-                except:  # noqa: E722
+                except:
                     method_name = words[1]
 
                 res_list = []
@@ -624,15 +624,15 @@ class RestorationIO:  # noqa: D101
                         if main_arg == 'RECONNECT':
                             if arg == 'PIPESIZE':
                                 if 'PIPESIZEFACTOR' in res:
-                                    raise ValueError(  # noqa: TRY003
-                                        'Either pipe size or pipe size factor can be defined'  # noqa: EM101
+                                    raise ValueError(
+                                        'Either pipe size or pipe size factor can be defined'
                                     )
                                 res['PIPESIZE'] = float(val)
 
                             elif arg == 'PIPESIZEFACTOR':
                                 if 'PIPESIZE' in res:
-                                    raise ValueError(  # noqa: TRY003
-                                        'Either pipe size or pipe size factor can be defined'  # noqa: EM101
+                                    raise ValueError(
+                                        'Either pipe size or pipe size factor can be defined'
                                     )
                                 val = float(val)
                                 if val > 1 or val < 0:
@@ -642,9 +642,9 @@ class RestorationIO:  # noqa: D101
                                     )
                                 res['PIPESIZEFACTOR'] = float(val)
                             elif arg == 'CV':
-                                if val == 'TRUE' or val == '1':  # noqa: PLR1714
+                                if val == 'TRUE' or val == '1':
                                     val = True
-                                elif val == 'FALSE' or val == '0':  # noqa: PLR1714
+                                elif val == 'FALSE' or val == '0':
                                     val = False
                                 else:
                                     raise ValueError(
@@ -659,21 +659,21 @@ class RestorationIO:  # noqa: D101
                                 res['CV'] = val
                             elif arg == 'PIPELENGTH':
                                 try:
-                                    val == float(val)  # noqa: B015
+                                    val == float(val)
                                 except Exception as e:
-                                    print(  # noqa: T201
+                                    print(
                                         'The value for PIPELENGTH must be a number'
                                     )
-                                    raise e  # noqa: TRY201
+                                    raise e
                                 res['PIPELENGTH'] = val
                             elif arg == 'PIPEFRICTION':
                                 try:
-                                    val == float(val)  # noqa: B015
+                                    val == float(val)
                                 except Exception as e:
-                                    print(  # noqa: T201
+                                    print(
                                         'The value for PIPEFRICTION must be a number'
                                     )
-                                    raise e  # noqa: TRY201
+                                    raise e
                                 res['PIPEFRICTION'] = val
                             else:
                                 raise ValueError(
@@ -687,9 +687,9 @@ class RestorationIO:  # noqa: D101
                                 res['PUMP'] = float(val)
 
                             elif arg == 'CV':
-                                if val == 'TRUE' or val == '1':  # noqa: PLR1714
+                                if val == 'TRUE' or val == '1':
                                     val = True
-                                elif val == 'FALSE' or val == '0':  # noqa: PLR1714
+                                elif val == 'FALSE' or val == '0':
                                     val = False
                                 else:
                                     raise ValueError(
@@ -730,8 +730,8 @@ class RestorationIO:  # noqa: D101
                                 )
 
                         elif main_arg == 'COL_CLOSE_PIPE':
-                            raise ValueError(  # noqa: TRY003
-                                'REPAIR at this stage does not accept any argument'  # noqa: EM101
+                            raise ValueError(
+                                'REPAIR at this stage does not accept any argument'
                             )
 
                         elif main_arg == 'ISOLATE_DN':
@@ -741,7 +741,7 @@ class RestorationIO:  # noqa: D101
                                     or val[-1] != ')'
                                     or val.find(',') == -1
                                 ):
-                                    ValueError(  # noqa: PLW0133
+                                    ValueError(
                                         'After PIDR the format must be like (CONDIION,VALUE)'
                                     )
 
@@ -751,7 +751,7 @@ class RestorationIO:  # noqa: D101
                                 _con_val = float(val_split[1])
 
                                 if not (
-                                    _con == 'BG'  # noqa: PLR1714
+                                    _con == 'BG'
                                     or _con == 'EQ'
                                     or _con == 'LT'
                                     or _con == 'BG-EQ'
@@ -770,14 +770,14 @@ class RestorationIO:  # noqa: D101
                                 res['PIDR'] = (_con, _con_val)
 
                         elif main_arg == 'REPAIR':
-                            raise ValueError(  # noqa: TRY003
-                                'REPAIR at this stage does not accept any argument'  # noqa: EM101
+                            raise ValueError(
+                                'REPAIR at this stage does not accept any argument'
                             )
 
                         elif method_name.upper() == 'DEFAULT':
-                            try:  # noqa: SIM105
+                            try:
                                 arg = int(arg)
-                            except:  # noqa: S110, E722
+                            except:
                                 pass
 
                             if main_arg == 'METHOD_PROBABILITY':
@@ -785,15 +785,15 @@ class RestorationIO:  # noqa: D101
 
                                 if val < 0:
                                     raise ValueError(
-                                        'Probability cannot be less than zero. '  # noqa: ISC003
+                                        'Probability cannot be less than zero. '
                                         + ' In line  '
                                         + lnum
                                         + ' probability: '
                                         + val
                                     )
-                                elif val > 1:  # noqa: RET506
+                                elif val > 1:
                                     raise ValueError(
-                                        'Probability cannot be bigger than 1. '  # noqa: ISC003
+                                        'Probability cannot be bigger than 1. '
                                         + ' In line  '
                                         + lnum
                                         + ' probability: '
@@ -812,16 +812,16 @@ class RestorationIO:  # noqa: D101
                                     val = None
                                 else:
                                     val = None
-                                    print(  # noqa: T201
+                                    print(
                                         'WARNING: At default line in FINAL section, the third argument is not NULL: '
                                         + str(val)
                                         + 'The value is ignored antywhere'
                                     )
                                 self.rm.final_method[job_name] = arg
                             elif main_arg == 'ONLYONCE':
-                                try:  # noqa: SIM105
+                                try:
                                     val = float(val)
-                                except:  # noqa: S110, E722
+                                except:
                                     pass
 
                                 if job_name in self.rm.once:
@@ -847,7 +847,7 @@ class RestorationIO:  # noqa: D101
 
                         i += 2
                     res_list.append(res)
-                if flag == False:  # noqa: E712
+                if flag == False:
                     self.rm.jobs.append((job_name, method_name, res_list))
 
         # for self.rm.effects.pruneData()
@@ -875,7 +875,7 @@ class RestorationIO:  # noqa: D101
             if val not in data.columns:
                 raise ValueError('Value not in file: ' + val)
             if (
-                arg == 'ELEMENT_NAME'  # noqa: PLR1714
+                arg == 'ELEMENT_NAME'
                 or arg == 'METHOD_NAME'
                 or arg == 'METHOD_PROBABILITY'
             ):
@@ -906,69 +906,69 @@ class RestorationIO:  # noqa: D101
                 raise ValueError('Unrecognized argument in pair: ' + _arg)
         res = pd.DataFrame(res)
         # print(res)
-        return res  # noqa: RET504
+        return res
 
     def _read_demand_nodes(self):
-        titles = []  # noqa: F841
+        titles = []
         ntitle = 0
         lnum = 0
         dtemp = []
-        with open(self._demand_Node_file_name, encoding='utf-8') as f:  # noqa: PTH123
+        with open(self._demand_Node_file_name, encoding='utf-8') as f:
             for line in f:
                 lnum += 1
-                line = line.strip()  # noqa: PLW2901
+                line = line.strip()
                 nwords = len(line.split())
                 words = line.split()
                 if len(line) == 0 or nwords == 0:
                     # Blank line
                     continue
-                elif line.upper().startswith('NODEID'):  # noqa: RET507
+                elif line.upper().startswith('NODEID'):
                     title = words.copy()
                     ntitle = len(
                         words
                     )  # we need this to confirm that every line has data for every title(column)
                     continue
                 elif nwords != ntitle:
-                    raise ValueError(  # noqa: TRY003
-                        '%{fname}s:%(lnum)d: Number of data does not match number of titles'  # noqa: EM101
+                    raise ValueError(
+                        '%{fname}s:%(lnum)d: Number of data does not match number of titles'
                     )
                 elif nwords == ntitle:
                     dtemp.append(words)
                 else:
-                    raise ValueError(  # noqa: TRY003
-                        '%{fname}s:%(lnum)d:This error must nnever happen'  # noqa: EM101
+                    raise ValueError(
+                        '%{fname}s:%(lnum)d:This error must nnever happen'
                     )
             self.demand_node = pd.DataFrame(dtemp, columns=title)
 
     def _read_crew(self):
-        titles = []  # noqa: F841
+        titles = []
         ntitle = 0
         lnum = 0
         dtemp = []
-        with open(self._crew_file_name[-1], encoding='utf-8') as f:  # noqa: PTH123
+        with open(self._crew_file_name[-1], encoding='utf-8') as f:
             for line in f:
                 lnum += 1
-                line = line.strip()  # noqa: PLW2901
+                line = line.strip()
                 nwords = len(line.split())
                 words = line.split()
                 if len(line) == 0 or nwords == 0:
                     # Blank line
                     continue
-                elif line.upper().startswith('DISTYARDID'):  # noqa: RET507
+                elif line.upper().startswith('DISTYARDID'):
                     title = words.copy()
                     ntitle = len(
                         words
                     )  # we need this to confirm that every line has data for every title(column)
                     continue
                 elif nwords != ntitle:
-                    raise ValueError(  # noqa: TRY003
-                        '%{fname}s:%(lnum)d: Number of data does not match number of titles'  # noqa: EM101
+                    raise ValueError(
+                        '%{fname}s:%(lnum)d: Number of data does not match number of titles'
                     )
                 elif nwords == ntitle:
                     dtemp.append(words)
                 else:
-                    raise ValueError(  # noqa: TRY003
-                        '%{fname}s:%(lnum)d:This error must nnever happen'  # noqa: EM101
+                    raise ValueError(
+                        '%{fname}s:%(lnum)d:This error must nnever happen'
                     )
             self.crew_data[self._crew_file_type[-1]] = pd.DataFrame(
                 dtemp, columns=title

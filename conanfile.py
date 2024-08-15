@@ -1,30 +1,30 @@
-import os  # noqa: D100, CPY001
+import os
 
 from conans import CMake, ConanFile
 
 
-class simCenterBackendApps(ConanFile):  # noqa: D101
+class simCenterBackendApps(ConanFile):
     name = 'SimCenterBackendApplications'
     version = '1.2.2'
     description = 'Backend applications for SimCenter software'
     license = 'BSD 3-Clause'
     author = 'Michael Gardner mhgardner@berkeley.edu'
     url = 'https://github.com/NHERI-SimCenter/SimCenterBackendApplications'
-    settings = {  # noqa: RUF012
+    settings = {
         'os': None,
         'build_type': None,
         'compiler': None,
         'arch': ['x86_64', 'armv8'],
     }
-    options = {'shared': [True, False]}  # noqa: RUF012
-    default_options = {  # noqa: RUF012
+    options = {'shared': [True, False]}
+    default_options = {
         'mkl-static:threaded': False,
         'ipp-static:simcenter_backend': True,
         'libcurl:with_ssl': 'openssl',
     }
     generators = 'cmake'
     build_policy = 'missing'
-    requires = [  # noqa: RUF012
+    requires = [
         'jansson/2.13.1',
         'zlib/1.2.11',
         'libcurl/8.1.1',
@@ -40,30 +40,30 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
     _build_subfolder = 'build_subfolder'
     # Set short paths for Windows
     short_paths = True
-    scm = {  # noqa: RUF012
+    scm = {
         'type': 'git',  # Use "type": "svn", if local repo is managed using SVN
         'subfolder': _source_subfolder,
         'url': 'auto',
         'revision': 'auto',
     }
 
-    def configure(self):  # noqa: D102
+    def configure(self):
         self.options.shared = False
 
-    def configure_cmake(self):  # noqa: D102
+    def configure_cmake(self):
         cmake = CMake(self)
         cmake.configure(source_folder=self._source_subfolder)
         return cmake
 
-    def build(self):  # noqa: D102
+    def build(self):
         cmake = self.configure_cmake()
         cmake.build()
 
-    def package(self):  # noqa: D102
+    def package(self):
         self.copy(pattern='LICENSE', dst='licenses', src=self._source_subfolder)
         cmake = self.configure_cmake()
         cmake.install()
         self.copy('*', dst='bin', src=self._source_subfolder + '/applications')
 
-    def package_info(self):  # noqa: D102
-        self.env_info.PATH.append(os.path.join(self.package_folder, 'bin'))  # noqa: PTH118
+    def package_info(self):
+        self.env_info.PATH.append(os.path.join(self.package_folder, 'bin'))

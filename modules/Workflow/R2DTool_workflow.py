@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -46,13 +46,13 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 import whale.main as whale
 from whale.main import log_div, log_msg
 
 
-def main(  # noqa: D103
+def main(
     run_type,
     input_file,
     app_registry,
@@ -64,20 +64,20 @@ def main(  # noqa: D103
     log_file,
 ):
     # initialize the log file
-    with open(input_file) as f:  # noqa: PLW1514, PTH123
+    with open(input_file) as f:
         inputs = json.load(f)
     if working_dir is not None:
-        runDir = working_dir  # noqa: N806
+        runDir = working_dir
     else:
-        runDir = inputs['runDir']  # noqa: N806
+        runDir = inputs['runDir']
 
-    if not os.path.exists(runDir):  # noqa: PTH110
-        os.mkdir(runDir)  # noqa: PTH102
+    if not os.path.exists(runDir):
+        os.mkdir(runDir)
     if log_file == 'log.txt':
         whale.log_file = runDir + '/log.txt'
     else:
         whale.log_file = log_file
-    with open(whale.log_file, 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+    with open(whale.log_file, 'w') as f:
         f.write('RDT workflow\n')
 
     whale.print_system_info()
@@ -89,7 +89,7 @@ def main(  # noqa: D103
     if force_cleanup:
         log_msg('Forced cleanup turned on.')
 
-    WF = whale.Workflow(  # noqa: N806
+    WF = whale.Workflow(
         run_type,
         input_file,
         app_registry,
@@ -112,7 +112,7 @@ def main(  # noqa: D103
     )
 
     if bldg_id_filter is not None:
-        print(bldg_id_filter)  # noqa: T201
+        print(bldg_id_filter)
         log_msg(f'Overriding simulation scope; running buildings {bldg_id_filter}')
 
         # If a Min or Max attribute is used when calling the script, we need to
@@ -126,8 +126,8 @@ def main(  # noqa: D103
     building_file = WF.create_building_files()
     WF.perform_regional_mapping(building_file)
 
-    # TODO: not elegant code, fix later  # noqa: TD002
-    with open(WF.building_file_path) as f:  # noqa: PLW1514, PTH123
+    # TODO: not elegant code, fix later
+    with open(WF.building_file_path) as f:
         bldg_data = json.load(f)
 
     for bldg in bldg_data:  # [:1]:
@@ -170,7 +170,7 @@ def main(  # noqa: D103
 if __name__ == '__main__':
     # Defining the command line arguments
 
-    workflowArgParser = argparse.ArgumentParser(  # noqa: N816
+    workflowArgParser = argparse.ArgumentParser(
         'Run the NHERI SimCenter workflow for a set of assets.', allow_abbrev=False
     )
 
@@ -190,8 +190,8 @@ if __name__ == '__main__':
     workflowArgParser.add_argument(
         '-r',
         '--registry',
-        default=os.path.join(  # noqa: PTH118
-            os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
+        default=os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
             'WorkflowApplications.json',
         ),
         help='Path to file containing registered workflow applications',
@@ -205,13 +205,13 @@ if __name__ == '__main__':
     workflowArgParser.add_argument(
         '-d',
         '--referenceDir',
-        default=os.path.join(os.getcwd(), 'input_data'),  # noqa: PTH109, PTH118
+        default=os.path.join(os.getcwd(), 'input_data'),
         help='Relative paths in the config file are referenced to this directory.',
     )
     workflowArgParser.add_argument(
         '-w',
         '--workDir',
-        default=os.path.join(os.getcwd(), 'results'),  # noqa: PTH109, PTH118
+        default=os.path.join(os.getcwd(), 'results'),
         help='Absolute path to the working directory.',
     )
     workflowArgParser.add_argument(
@@ -228,11 +228,11 @@ if __name__ == '__main__':
     )
 
     # Parsing the command line arguments
-    wfArgs = workflowArgParser.parse_args()  # noqa: N816
+    wfArgs = workflowArgParser.parse_args()
 
     # update the local app dir with the default - if needed
     if wfArgs.appDir is None:
-        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
+        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
         wfArgs.appDir = workflow_dir.parents[1]
 
     if wfArgs.check:

@@ -1,7 +1,7 @@
 """Created on Sat Dec 26 03:22:21 2020
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, INP001
+"""
 
 import logging
 from collections import OrderedDict
@@ -13,8 +13,8 @@ from restoration.restorationlog import RestorationLog
 logger = logging.getLogger(__name__)
 
 
-class Registry:  # noqa: D101, PLR0904
-    def __init__(self, WaterNetwork, settings, demand_node_name_list, scenario_name):  # noqa: N803
+class Registry:
+    def __init__(self, WaterNetwork, settings, demand_node_name_list, scenario_name):
         self._registry_version = 0.15
         self.wn = WaterNetwork
         self.settings = settings
@@ -89,7 +89,7 @@ class Registry:  # noqa: D101, PLR0904
             self._pipe_data.loc[name] = [pipe.diameter]
 
         for node_name, node in WaterNetwork.junctions():
-            if node.demand_timeseries_list[0].base_value > 0.00000008:  # noqa: PLR2004
+            if node.demand_timeseries_list[0].base_value > 0.00000008:
                 self.demand_node_name_list.append(node_name)
 
         # for demand_node_name in self.demand_node_name_list:
@@ -139,12 +139,12 @@ class Registry:  # noqa: D101, PLR0904
     #         self._restoration_table = self._restoration_table.append(temp, ignore_index=True)
     # =============================================================================
 
-    def addRestorationDataOnPipe(self, damage_node_name, time, state):  # noqa: N802, D102
-        if self.settings['dmg_rst_data_save'] == True:  # noqa: E712
+    def addRestorationDataOnPipe(self, damage_node_name, time, state):
+        if self.settings['dmg_rst_data_save'] == True:
             orginal_pipe_name = self._pipe_damage_table.loc[
                 damage_node_name, 'Orginal_element'
             ]
-            time = time / 3600  # noqa: PLR6104
+            time = time / 3600
             temp_row = {
                 'time': time,
                 'pipe_name': orginal_pipe_name,
@@ -152,7 +152,7 @@ class Registry:  # noqa: D101, PLR0904
             }
             self.Pipe_Damage_restoration_report.append(temp_row)
 
-    def addEquavalantDamageHistory(  # noqa: N802, D102
+    def addEquavalantDamageHistory(
         self,
         node_name,
         new_node_name,
@@ -161,7 +161,7 @@ class Registry:  # noqa: D101, PLR0904
         number_of_damages,
     ):
         if node_name in self.ED_history:
-            raise ValueError('Node_damage already in history')  # noqa: EM101, TRY003
+            raise ValueError('Node_damage already in history')
 
         self.ED_history.loc[node_name] = {
             'new_node_name': new_node_name,
@@ -171,18 +171,18 @@ class Registry:  # noqa: D101, PLR0904
             'current_number_of_damage': number_of_damages,
         }
 
-    def getEquavalantDamageHistory(self, node_name):  # noqa: N802, D102
+    def getEquavalantDamageHistory(self, node_name):
         temp = self.ED_history[node_name]
 
-        if type(temp) != dict:  # noqa: E721
+        if type(temp) != dict:
             raise ValueError('probably two damages with the same name: ' + node_name)
 
         return temp
 
-    def removeEquavalantDamageHistory(self, node_name):  # noqa: N802, D102
-        self.ED_history.drop(node_name, inplace=True)  # noqa: PD002
+    def removeEquavalantDamageHistory(self, node_name):
+        self.ED_history.drop(node_name, inplace=True)
 
-    def isThereSuchOngoingLongJob(self, damaged_node_name, action, entity):  # noqa: N802, D102
+    def isThereSuchOngoingLongJob(self, damaged_node_name, action, entity):
         data = self._long_task_data
         temp = data[['Node_name', 'Action', 'Entity']] == [
             damaged_node_name,
@@ -192,16 +192,16 @@ class Registry:  # noqa: D101, PLR0904
         temp = data[temp.all(1)]
 
         if len(temp) > 1:
-            raise ValueError('More job than 1 in long jobs')  # noqa: EM101, TRY003
-        elif len(temp) == 1:  # noqa: RET506
-            if abs(temp['Time'].iloc[0]) < 0.01:  # noqa: PLR2004
-                raise ValueError('Something Wrong')  # noqa: EM101, TRY003
-            else:  # noqa: RET506
+            raise ValueError('More job than 1 in long jobs')
+        elif len(temp) == 1:
+            if abs(temp['Time'].iloc[0]) < 0.01:
+                raise ValueError('Something Wrong')
+            else:
                 return True
         else:
             return False
 
-    def addLongJob(  # noqa: N802, D102
+    def addLongJob(
         self,
         damaged_node_name,
         action,
@@ -236,7 +236,7 @@ class Registry:  # noqa: D101, PLR0904
         )
         self._long_task_data = data.append(temp, ignore_index=True)
 
-    def assignAgenttoLongJob(  # noqa: N802, D102
+    def assignAgenttoLongJob(
         self,
         damaged_node_name,
         action,
@@ -263,8 +263,8 @@ class Registry:  # noqa: D101, PLR0904
 
         ind = temp.index[0]
         if (
-            self._long_task_data.loc[ind, 'cur_agent_name'] != None  # noqa: E711
-            and choosed_agent_name != None  # noqa: E711
+            self._long_task_data.loc[ind, 'cur_agent_name'] != None
+            and choosed_agent_name != None
         ):
             raise ValueError(
                 'Already someone is here '
@@ -273,7 +273,7 @@ class Registry:  # noqa: D101, PLR0904
 
         self._long_task_data.loc[ind, 'cur_agent_name'] = choosed_agent_name
 
-    def deductLongJobTime(self, damaged_node_name, action, entity, deduced_time):  # noqa: N802, D102
+    def deductLongJobTime(self, damaged_node_name, action, entity, deduced_time):
         deduced_time = int(deduced_time)
 
         if deduced_time < 0:
@@ -299,7 +299,7 @@ class Registry:  # noqa: D101, PLR0904
                 + ', '
                 + entity
             )
-        elif len(temp) > 1:  # noqa: RET506
+        elif len(temp) > 1:
             raise ValueError(
                 'There are MORE THAN ONE long task defined for: '
                 + damaged_node_name
@@ -313,7 +313,7 @@ class Registry:  # noqa: D101, PLR0904
 
         if (self._long_task_data.loc[ind, 'Time'] - deduced_time) < 0:
             logger.warning(
-                damaged_node_name  # noqa: G003
+                damaged_node_name
                 + ', '
                 + action
                 + ', '
@@ -325,11 +325,11 @@ class Registry:  # noqa: D101, PLR0904
                 + ', '
                 + str(self._long_task_data.loc[ind, 'Time'] - deduced_time)
             )
-            raise ValueError('Zero reminded time for long task')  # noqa: EM101, TRY003
+            raise ValueError('Zero reminded time for long task')
 
         self._long_task_data.loc[ind, 'Time'] -= deduced_time
 
-    def getLongJobRemindedTime(self, damaged_node_name, action, entity):  # noqa: N802, D102
+    def getLongJobRemindedTime(self, damaged_node_name, action, entity):
         data = self._long_task_data
         temp = data[['Node_name', 'Action', 'Entity']] == [
             damaged_node_name,
@@ -348,7 +348,7 @@ class Registry:  # noqa: D101, PLR0904
                 + ','
                 + entity
             )
-        elif len(temp) > 1:  # noqa: RET506
+        elif len(temp) > 1:
             raise ValueError(
                 'There are MORE THAN ONE long task defined for: '
                 + damaged_node_name
@@ -360,30 +360,30 @@ class Registry:  # noqa: D101, PLR0904
 
         return temp['Time'].iloc[0]
 
-    def getVacantOnGoingJobs(self, action, entity):  # noqa: N802, D102
+    def getVacantOnGoingJobs(self, action, entity):
         res = []
         data = self._long_task_data
         temp = data[['Action', 'Entity']] == [action, entity]
 
         temp = data[temp.all(1)]
 
-        for ind, data in temp.iterrows():  # noqa: B007
-            if data['cur_agent_name'] == None:  # noqa: E711
+        for ind, data in temp.iterrows():
+            if data['cur_agent_name'] == None:
                 res.append(data['Node_name'])
 
         return res
 
-    def getdamagedNodesOfPipes(self, damage_type):  # noqa: N802, D102
-        if damage_type != 'break' and damage_type != 'leak':  # noqa: PLR1714
-            raise ValueError('The damage for pipe is either break or leak.')  # noqa: EM101, TRY003
+    def getdamagedNodesOfPipes(self, damage_type):
+        if damage_type != 'break' and damage_type != 'leak':
+            raise ValueError('The damage for pipe is either break or leak.')
 
-        if damage_type == 'break':  # noqa: RET503
+        if damage_type == 'break':
             return self._pipe_break_history[['Node_A', 'Node_B']]
 
-        elif damage_type == 'leak':  # noqa: RET505
+        elif damage_type == 'leak':
             return self._pipe_leak_history['Node_name']
 
-    def removeLongJob(self, damaged_node_name, action, entity):  # noqa: N802, D102
+    def removeLongJob(self, damaged_node_name, action, entity):
         data = self._long_task_data
         temp = data[['Node_name', 'Action', 'Entity']] == [
             damaged_node_name,
@@ -402,7 +402,7 @@ class Registry:  # noqa: D101, PLR0904
                 + ','
                 + entity
             )
-        elif len(temp) > 1:  # noqa: RET506
+        elif len(temp) > 1:
             raise ValueError(
                 'There are MORE THAN ONE long task defined for: '
                 + damaged_node_name
@@ -414,9 +414,9 @@ class Registry:  # noqa: D101, PLR0904
 
         ind = temp.index[0]
 
-        self._long_task_data.drop(ind, inplace=True)  # noqa: PD002
+        self._long_task_data.drop(ind, inplace=True)
 
-    def addFunctionDataToRestorationRegistry(  # noqa: N802, D102
+    def addFunctionDataToRestorationRegistry(
         self,
         damaged_node_name,
         history,
@@ -448,10 +448,10 @@ class Registry:  # noqa: D101, PLR0904
             temp, ignore_index=True
         )
 
-    def addNodalDamage(self, nodal_damage, new_pipe_name_list):  # noqa: N802, D102
-        if self.settings['Virtual_node'] == True:  # noqa: E712
+    def addNodalDamage(self, nodal_damage, new_pipe_name_list):
+        if self.settings['Virtual_node'] == True:
             for ind, val in nodal_damage.items():
-                val = int(val)  # noqa: PLW2901
+                val = int(val)
                 virtual_node_name_list = []
                 for i in range(val):
                     new_virtual_node_name = ind + '_vir_' + str(i)
@@ -483,15 +483,15 @@ class Registry:  # noqa: D101, PLR0904
                     'number_of_damages': val,
                 }
 
-    def isVirtualNodeDamaged(self, virtual_node_name):  # noqa: N802, D102
+    def isVirtualNodeDamaged(self, virtual_node_name):
         return self.virtual_node_data[virtual_node_name]['is_damaged']
 
-    def setVirtualNodeRepaired(self, virtual_node_name):  # noqa: N802, D102
+    def setVirtualNodeRepaired(self, virtual_node_name):
         self.virtual_node_data[virtual_node_name]['is_damaged'] = False
 
-    def addNodalDemandChange(self, node_name, demand1, demand2):  # noqa: N802, D102
+    def addNodalDemandChange(self, node_name, demand1, demand2):
         # if self.settings['Virtual_node'] == False:
-        if type(node_name) == str:  # noqa: E721
+        if type(node_name) == str:
             if node_name not in self._node_damage_table.index:
                 raise ValueError(repr(node_name) + ' is not in the node table')
         self._node_damage_table.loc[node_name, 'Demand1'] = demand1
@@ -501,7 +501,7 @@ class Registry:  # noqa: D101, PLR0904
         # self._node_damage_table.loc[node_name_vir, 'Demand1'] = demand1
         # self._node_damage_table.loc[node_name_vir, 'Demand2'] = demand2
 
-    def addPipeDamageToRegistry(self, node_name, data):  # noqa: N802
+    def addPipeDamageToRegistry(self, node_name, data):
         """Adds damage to pipe registry
 
         Parameters
@@ -515,13 +515,13 @@ class Registry:  # noqa: D101, PLR0904
         -------
         None.
 
-        """  # noqa: D400, D401
+        """
         # self._pipe_node_damage_status[name] = data
 
-        leaking_pipe_with_pipeA_orginal_pipe = self._pipe_leak_history[  # noqa: N806
+        leaking_pipe_with_pipeA_orginal_pipe = self._pipe_leak_history[
             self._pipe_leak_history.loc[:, 'Pipe_A'] == data['orginal_pipe']
         ]
-        breaking_pipe_with_pipeA_orginal_pipe = self._pipe_break_history[  # noqa: N806
+        breaking_pipe_with_pipeA_orginal_pipe = self._pipe_break_history[
             self._pipe_break_history.loc[:, 'Pipe_A'] == data['orginal_pipe']
         ]
 
@@ -529,8 +529,8 @@ class Registry:  # noqa: D101, PLR0904
         i_break_not_zero_length = len(breaking_pipe_with_pipeA_orginal_pipe) > 0
 
         if i_leak_not_zero_length and i_break_not_zero_length:
-            raise ValueError(  # noqa: DOC501, TRY003
-                'There are more than 1 damage with original pipe name in pipe A. it does not make sense'  # noqa: EM101
+            raise ValueError(
+                'There are more than 1 damage with original pipe name in pipe A. it does not make sense'
             )
         if i_leak_not_zero_length:
             temp_node_name = leaking_pipe_with_pipeA_orginal_pipe.index[0]
@@ -582,27 +582,27 @@ class Registry:  # noqa: D101, PLR0904
             self._pipe_break_history.loc[node_name, 'Node_B'] = data['node_B']
 
         else:
-            raise ValueError('Undefined damage type')  # noqa: DOC501, EM101, TRY003
+            raise ValueError('Undefined damage type')
 
-    def addGeneralNodeDamageToRegistry(self, node_name, data=None):  # noqa: ARG002, N802, D102
+    def addGeneralNodeDamageToRegistry(self, node_name, data=None):
         self._gnode_damage_table.loc[node_name, 'damage_type'] = None
 
-    def addTankDamageToRegistry(self, node_name, data=None):  # noqa: ARG002, N802, D102
+    def addTankDamageToRegistry(self, node_name, data=None):
         self._tank_damage_table.loc[node_name, 'damage_type'] = None
 
-    def addPumpDamageToRegistry(self, pump_name, data):  # noqa: N802, D102
+    def addPumpDamageToRegistry(self, pump_name, data):
         node_name = data.start_node.name
         self._pump_damage_table.loc[node_name, 'damage_type'] = None
         self._pump_damage_table.loc[node_name, 'element_name'] = pump_name
         self._pump_damage_table.loc[node_name, 'start_node'] = data.start_node.name
         self._pump_damage_table.loc[node_name, 'end_node'] = data.end_node.name
 
-    def addReservoirDamageToRegistry(self, node_name, data=None):  # noqa: ARG002, N802, D102
+    def addReservoirDamageToRegistry(self, node_name, data=None):
         self._reservoir_damage_table.loc[node_name, 'damage_type'] = None
 
     # def assignAgentToDamage(self, element, node_name, choosed_agent_name):
 
-    def getListAllElementOrginalName(self, element_type):  # noqa: N802, D102
+    def getListAllElementOrginalName(self, element_type):
         original_element_list = None
         if element_type == 'PIPE':
             original_element_list = self._pipe_damage_table['Orginal_element']
@@ -611,7 +611,7 @@ class Registry:  # noqa: D101, PLR0904
             original_element_list = self._pump_damage_table['element_name']
 
         elif (
-            element_type == 'DISTNODE'  # noqa: PLR1714
+            element_type == 'DISTNODE'
             or element_type == 'GNODE'
             or element_type == 'TANK'
             or element_type == 'RESERVOIR'
@@ -629,11 +629,11 @@ class Registry:  # noqa: D101, PLR0904
 
         return original_element_list
 
-    def getDamagedLocationListByOriginalElementList(  # noqa: N802, D102
+    def getDamagedLocationListByOriginalElementList(
         self,
         element_type,
         orginal_element_list,
-        iCheck=False,  # noqa: FBT002, N803
+        iCheck=False,
     ):
         res = pd.Series()
 
@@ -644,7 +644,7 @@ class Registry:  # noqa: D101, PLR0904
             original_element_list = self._pump_damage_table['element_name']
 
         elif (
-            element_type == 'DISTNODE'  # noqa: PLR1714
+            element_type == 'DISTNODE'
             or element_type == 'GNODE'
             or element_type == 'TANK'
             or element_type == 'RESERVOIR'
@@ -655,7 +655,7 @@ class Registry:  # noqa: D101, PLR0904
         else:
             raise ValueError('Unkown recognized element type: ' + repr(element_type))
 
-        for element_name, group_tag in orginal_element_list.iteritems():  # noqa: B007
+        for element_name, group_tag in orginal_element_list.iteritems():
             temp = original_element_list[original_element_list == element_name]
 
             # if len(temp)!=1:
@@ -673,11 +673,11 @@ class Registry:  # noqa: D101, PLR0904
 
         return res
 
-    def getDamagedLocationListByOriginalElementList_2(  # noqa: N802, D102
+    def getDamagedLocationListByOriginalElementList_2(
         self,
         element_type,
         orginal_element_list,
-        iCheck=False,  # noqa: FBT002, N803
+        iCheck=False,
     ):
         if element_type == 'PIPE':
             all_original_element_list = self._pipe_damage_table['Orginal_element']
@@ -686,7 +686,7 @@ class Registry:  # noqa: D101, PLR0904
             all_original_element_list = self._pump_damage_table['element_name']
 
         elif (
-            element_type == 'DISTNODE'  # noqa: PLR1714
+            element_type == 'DISTNODE'
             or element_type == 'GNODE'
             or element_type == 'TANK'
             or element_type == 'RESERVOIR'
@@ -701,7 +701,7 @@ class Registry:  # noqa: D101, PLR0904
             raise ValueError('Unkown recognized element type: ' + repr(element_type))
         temp_bool = all_original_element_list.isin(orginal_element_list.index)
         res = all_original_element_list[temp_bool]
-        if iCheck == True:  # noqa: E712
+        if iCheck == True:
             if len(res.index) < len(orginal_element_list):
                 not_available_list = set(orginal_element_list) - set(res.index)
                 raise ValueError(
@@ -713,30 +713,30 @@ class Registry:  # noqa: D101, PLR0904
 
         return res
 
-    def getOriginalPipenodes(self, orginal_pipe_name):  # noqa: N802, D102
+    def getOriginalPipenodes(self, orginal_pipe_name):
         return self.original_pipe_data[orginal_pipe_name]
 
-    def getLeakData(self, leaking_node_name):  # noqa: N802, D102
-        pipe_A = self._pipe_leak_history.loc[leaking_node_name, 'Pipe_A']  # noqa: N806
-        pipe_B = self._pipe_leak_history.loc[leaking_node_name, 'Pipe_B']  # noqa: N806
+    def getLeakData(self, leaking_node_name):
+        pipe_A = self._pipe_leak_history.loc[leaking_node_name, 'Pipe_A']
+        pipe_B = self._pipe_leak_history.loc[leaking_node_name, 'Pipe_B']
         orginal_pipe = self._pipe_leak_history.loc[leaking_node_name, 'Orginal_pipe']
 
         return pipe_A, pipe_B, orginal_pipe
 
-    def getCertainLeakData(self, damage_node_name, wn):  # noqa: C901, N802, D102
+    def getCertainLeakData(self, damage_node_name, wn):
         pipe_name_list = []
 
-        result_pipe_A = None  # noqa: N806
-        result_pipe_B = None  # noqa: N806
+        result_pipe_A = None
+        result_pipe_B = None
 
         orginal_pipe = self._pipe_leak_history.loc[damage_node_name, 'Orginal_pipe']
         refined_data = self._pipe_leak_history[
             self._pipe_leak_history['Orginal_pipe'] == orginal_pipe
         ]
 
-        for damage_point_name, data in refined_data.iterrows():  # noqa: B007
-            pipe_A = data['Pipe_A']  # noqa: N806
-            pipe_B = data['Pipe_B']  # noqa: N806
+        for damage_point_name, data in refined_data.iterrows():
+            pipe_A = data['Pipe_A']
+            pipe_B = data['Pipe_B']
 
             if pipe_A not in pipe_name_list:
                 pipe_name_list.append(pipe_A)
@@ -748,9 +748,9 @@ class Registry:  # noqa: D101, PLR0904
             self._pipe_break_history['Orginal_pipe'] == orginal_pipe
         ]
 
-        for damage_point_name, data in refined_data.iterrows():  # noqa: B007
-            pipe_A = data['Pipe_A']  # noqa: N806
-            pipe_B = data['Pipe_B']  # noqa: N806
+        for damage_point_name, data in refined_data.iterrows():
+            pipe_A = data['Pipe_A']
+            pipe_B = data['Pipe_B']
 
             if pipe_A not in pipe_name_list:
                 pipe_name_list.append(pipe_A)
@@ -760,39 +760,39 @@ class Registry:  # noqa: D101, PLR0904
         for pipe_name in pipe_name_list:
             try:
                 pipe = wn.get_link(pipe_name)
-            except:  # noqa: S112, E722
+            except:
                 continue
 
             if damage_node_name == pipe.start_node_name:
-                result_pipe_B = pipe_name  # noqa: N806
+                result_pipe_B = pipe_name
             elif damage_node_name == pipe.end_node_name:
-                result_pipe_A = pipe_name  # noqa: N806
+                result_pipe_A = pipe_name
 
-            if result_pipe_A != None and result_pipe_B != None:  # noqa: E711
+            if result_pipe_A != None and result_pipe_B != None:
                 return result_pipe_A, result_pipe_B
         raise RuntimeError(
             'There must be a pair of pipes for ' + repr(damage_node_name)
         )
 
-    def getBreakData(self, breaking_node_name):  # noqa: N802, D102
-        pipe_A = self._pipe_break_history.loc[breaking_node_name, 'Pipe_A']  # noqa: N806
-        pipe_B = self._pipe_break_history.loc[breaking_node_name, 'Pipe_B']  # noqa: N806
+    def getBreakData(self, breaking_node_name):
+        pipe_A = self._pipe_break_history.loc[breaking_node_name, 'Pipe_A']
+        pipe_B = self._pipe_break_history.loc[breaking_node_name, 'Pipe_B']
         orginal_pipe = self._pipe_break_history.loc[
             breaking_node_name, 'Orginal_pipe'
         ]
-        node_A = self._pipe_break_history.loc[breaking_node_name, 'Node_A']  # noqa: N806
-        node_B = self._pipe_break_history.loc[breaking_node_name, 'Node_B']  # noqa: N806
+        node_A = self._pipe_break_history.loc[breaking_node_name, 'Node_A']
+        node_B = self._pipe_break_history.loc[breaking_node_name, 'Node_B']
 
         return pipe_A, pipe_B, orginal_pipe, node_A, node_B
 
-    def getCertainBreakData(self, damage_node_name, wn):  # noqa: C901, N802, D102
+    def getCertainBreakData(self, damage_node_name, wn):
         pipe_name_list = []
 
-        result_pipe_A = None  # noqa: N806
-        result_pipe_B = None  # noqa: N806
+        result_pipe_A = None
+        result_pipe_B = None
 
-        node_A = self._pipe_break_history.loc[damage_node_name, 'Node_A']  # noqa: N806
-        node_B = self._pipe_break_history.loc[damage_node_name, 'Node_B']  # noqa: N806
+        node_A = self._pipe_break_history.loc[damage_node_name, 'Node_A']
+        node_B = self._pipe_break_history.loc[damage_node_name, 'Node_B']
 
         orginal_pipe = self._pipe_break_history.loc[damage_node_name, 'Orginal_pipe']
 
@@ -800,9 +800,9 @@ class Registry:  # noqa: D101, PLR0904
             self._pipe_leak_history['Orginal_pipe'] == orginal_pipe
         ]
 
-        for damage_point_name, data in refined_data.iterrows():  # noqa: B007
-            pipe_A = data['Pipe_A']  # noqa: N806
-            pipe_B = data['Pipe_B']  # noqa: N806
+        for damage_point_name, data in refined_data.iterrows():
+            pipe_A = data['Pipe_A']
+            pipe_B = data['Pipe_B']
 
             if pipe_A not in pipe_name_list:
                 pipe_name_list.append(pipe_A)
@@ -814,9 +814,9 @@ class Registry:  # noqa: D101, PLR0904
             self._pipe_break_history['Orginal_pipe'] == orginal_pipe
         ]
 
-        for damage_point_name, data in refined_data.iterrows():  # noqa: B007
-            pipe_A = data['Pipe_A']  # noqa: N806
-            pipe_B = data['Pipe_B']  # noqa: N806
+        for damage_point_name, data in refined_data.iterrows():
+            pipe_A = data['Pipe_A']
+            pipe_B = data['Pipe_B']
 
             if pipe_A not in pipe_name_list:
                 pipe_name_list.append(pipe_A)
@@ -826,30 +826,30 @@ class Registry:  # noqa: D101, PLR0904
         for pipe_name in pipe_name_list:
             try:
                 pipe = wn.get_link(pipe_name)
-            except:  # noqa: S112, E722
+            except:
                 continue
 
             if node_B == pipe.start_node_name:
-                result_pipe_B = pipe_name  # noqa: N806
+                result_pipe_B = pipe_name
             elif node_A == pipe.end_node_name:
-                result_pipe_A = pipe_name  # noqa: N806
+                result_pipe_A = pipe_name
 
-            if result_pipe_A != None and result_pipe_B != None:  # noqa: E711
+            if result_pipe_A != None and result_pipe_B != None:
                 return result_pipe_A, result_pipe_B, node_A, node_B
         raise RuntimeError(
             'There must be a pair of pipes for ' + repr(damage_node_name)
         )
 
-    def getPipeDamageAttribute(self, attribute_name, damage_node_name=None):  # noqa: N802, D102
+    def getPipeDamageAttribute(self, attribute_name, damage_node_name=None):
         if attribute_name not in self._pipe_damage_table.columns:
             raise ValueError('Attribute not in damage table: ' + str(attribute_name))
 
-        if damage_node_name == None:  # noqa: E711
+        if damage_node_name == None:
             return self._pipe_damage_table[attribute_name]
-        else:  # noqa: RET505
+        else:
             return self._pipe_damage_table.loc[damage_node_name, attribute_name]
 
-    def getDamageData(self, element_type, iCopy=True):  # noqa: FBT002, C901, N802, N803, D102
+    def getDamageData(self, element_type, iCopy=True):
         if element_type.upper() == 'PIPE':
             if iCopy:
                 res = self._pipe_damage_table.copy()
@@ -889,17 +889,17 @@ class Registry:  # noqa: D101, PLR0904
             raise ValueError('Unknown element type: ' + element_type)
         return res
 
-    def getOrginalElement(self, damaged_node_name, element_type):  # noqa: N802, D102
+    def getOrginalElement(self, damaged_node_name, element_type):
         element_damage_data = self.getDamageData(element_type, iCopy=False)
         return element_damage_data.loc[damaged_node_name, 'Orginal_element']
 
-    def getPipeData(self, attr, name=None):  # noqa: N802, D102
-        if name != None:  # noqa: E711
+    def getPipeData(self, attr, name=None):
+        if name != None:
             return self._pipe_data[attr].loc[name]
-        else:  # noqa: RET505
+        else:
             return self._pipe_data[attr]
 
-    def setDamageData(self, element, col, value):  # noqa: N802, D102
+    def setDamageData(self, element, col, value):
         if element.upper() == 'PIPE':
             if col not in self._pipe_damage_table.columns:
                 raise ValueError('Columns is not in damage table: ' + col)
@@ -919,22 +919,22 @@ class Registry:  # noqa: D101, PLR0904
         else:
             raise ValueError('Element is not defined: ' + element)
 
-    def setDamageDataByRowAndColumn(self, element, index, col, value, iCheck=False):  # noqa: FBT002, N802, N803, D102
+    def setDamageDataByRowAndColumn(self, element, index, col, value, iCheck=False):
         # if element.upper() == 'PIPE':
         damage_table = self.getDamageData(element, iCopy=False)
         if col not in damage_table.columns:
             raise ValueError('Columns is not in damage table: ' + col)
-        if type(index) == list or (  # noqa: E721
+        if type(index) == list or (
             (index in damage_table.index and col in damage_table.columns)
-            or iCheck == True  # noqa: E712
+            or iCheck == True
         ):
             damage_table.loc[index, col] = value
         else:
             raise ValueError(index)
 
-    def setDamageDataByList(self, element, index_list, col, value, iCheck=False):  # noqa: FBT002, C901, N802, N803, D102
-        if type(index_list) != list:  # noqa: E721
-            raise ValueError('index_list is not data type list')  # noqa: EM101, TRY003
+    def setDamageDataByList(self, element, index_list, col, value, iCheck=False):
+        if type(index_list) != list:
+            raise ValueError('index_list is not data type list')
 
         if element.upper() == 'PIPE':
             if col not in self._pipe_damage_table.columns:
@@ -943,7 +943,7 @@ class Registry:  # noqa: D101, PLR0904
             for damage_node_name in index_list:
                 if (
                     damage_node_name in self._pipe_damage_table.index
-                    or iCheck == True  # noqa: E712
+                    or iCheck == True
                 ):
                     self._pipe_damage_table.loc[damage_node_name, col] = value
                 else:
@@ -956,7 +956,7 @@ class Registry:  # noqa: D101, PLR0904
             for damage_node_name in index_list:
                 if (
                     damage_node_name in self._node_damage_table.index
-                    or iCheck == True  # noqa: E712
+                    or iCheck == True
                 ):
                     self._node_damage_table.loc[damage_node_name, col] = value
                 else:
@@ -967,7 +967,7 @@ class Registry:  # noqa: D101, PLR0904
                 raise ValueError('Columns is not in damage table: ' + col)
 
             for gnode_name in index_list:
-                if gnode_name in self._gnode_damage_table.index or iCheck == True:  # noqa: E712
+                if gnode_name in self._gnode_damage_table.index or iCheck == True:
                     self._gnode_damage_table.loc[gnode_name, col] = value
                 else:
                     raise ValueError(gnode_name)
@@ -979,7 +979,7 @@ class Registry:  # noqa: D101, PLR0904
             for _tank_damage_table in index_list:
                 if (
                     _tank_damage_table in self._tank_damage_table.index
-                    or iCheck == True  # noqa: E712
+                    or iCheck == True
                 ):
                     self._tank_damage_table.loc[_tank_damage_table, col] = value
                 else:
@@ -992,7 +992,7 @@ class Registry:  # noqa: D101, PLR0904
             for _pump_damage_table in index_list:
                 if (
                     _pump_damage_table in self._pump_damage_table.index
-                    or iCheck == True  # noqa: E712
+                    or iCheck == True
                 ):
                     self._pump_damage_table.loc[_pump_damage_table, col] = value
                 else:
@@ -1005,7 +1005,7 @@ class Registry:  # noqa: D101, PLR0904
             for _reservoir_damage_table in index_list:
                 if (
                     _reservoir_damage_table in self._reservoir_damage_table.index
-                    or iCheck == True  # noqa: E712
+                    or iCheck == True
                 ):
                     self._reservoir_damage_table.loc[
                         _reservoir_damage_table, col
@@ -1015,21 +1015,21 @@ class Registry:  # noqa: D101, PLR0904
         else:
             raise ValueError('Element is not defined: ' + element)
 
-    def updatePipeDamageTableTimeSeries(self, time):  # noqa: N802, D102
+    def updatePipeDamageTableTimeSeries(self, time):
         if time in self._pipe_damage_table_time_series:
-            raise ValueError('Time exist in pipe damage table time history')  # noqa: EM101, TRY003
+            raise ValueError('Time exist in pipe damage table time history')
 
         self._pipe_damage_table_time_series[time] = self._pipe_damage_table.copy()
 
-    def updateNodeDamageTableTimeSeries(self, time):  # noqa: N802, D102
+    def updateNodeDamageTableTimeSeries(self, time):
         if time in self._node_damage_table_time_series:
-            raise ValueError('Time exist in node damage table time history')  # noqa: EM101, TRY003
+            raise ValueError('Time exist in node damage table time history')
 
         self._node_damage_table_time_series[time] = self._node_damage_table.copy()
 
-    def updateTankTimeSeries(self, wn, time):  # noqa: N802, D102
+    def updateTankTimeSeries(self, wn, time):
         if time in self._tank_level_time_series:
-            raise ValueError('Time exist in tank damage table time history')  # noqa: EM101, TRY003
+            raise ValueError('Time exist in tank damage table time history')
 
         tank_name_list = wn.tank_name_list
         tank_level_res = pd.Series(index=tank_name_list)
@@ -1037,7 +1037,7 @@ class Registry:  # noqa: D101, PLR0904
         for tank_name in wn.tank_name_list:
             node = wn.get_node(tank_name)
             net_water_level = node.level - node.min_level
-            if net_water_level < 0.001:  # noqa: PLR2004
+            if net_water_level < 0.001:
                 raise ValueError(
                     'Net Water Level in tank cannot be less than zero:'
                     + repr(tank_name)
@@ -1048,10 +1048,10 @@ class Registry:  # noqa: D101, PLR0904
 
         self._tank_level_time_series[time] = tank_level_res
 
-    def updateRestorationIncomeWaterTimeSeries(self, wn, time):  # noqa: ARG002, N802, D102
+    def updateRestorationIncomeWaterTimeSeries(self, wn, time):
         if time in self._restoration_reservoir_name_time_series:
-            raise ValueError(  # noqa: TRY003
-                'Time exist in restoration reservoir damage table time history'  # noqa: EM101
+            raise ValueError(
+                'Time exist in restoration reservoir damage table time history'
             )
         res = []
         for list_of_restoration in self._record_registry:
@@ -1061,16 +1061,16 @@ class Registry:  # noqa: D101, PLR0904
 
         self._restoration_reservoir_name_time_series[time] = res
 
-    def updateElementDamageTable(self, element, attr, index, value, icheck=False):  # noqa: FBT002, C901, N802, D102
+    def updateElementDamageTable(self, element, attr, index, value, icheck=False):
         if element == 'PIPE':
-            if icheck == True:  # noqa: E712
+            if icheck == True:
                 if self._pipe_damage_table[attr].loc[index] == value:
-                    raise ValueError('the value is already set')  # noqa: EM101, TRY003
+                    raise ValueError('the value is already set')
 
             self._pipe_damage_table.loc[index, attr] = value
 
         elif element == 'DISTNODE':
-            if icheck == True:  # noqa: E712
+            if icheck == True:
                 if self._node_damage_table[attr].loc[index] == value:
                     raise ValueError(
                         'the value is already set in element: '
@@ -1086,7 +1086,7 @@ class Registry:  # noqa: D101, PLR0904
             self._node_damage_table.loc[index, attr] = value
 
         elif element == 'GNODE':
-            if icheck == True:  # noqa: E712
+            if icheck == True:
                 if self._gnode_damage_table[attr].loc[index] == value:
                     raise ValueError(
                         'the value is already set in element: '
@@ -1102,7 +1102,7 @@ class Registry:  # noqa: D101, PLR0904
             self._gnode_damage_table.loc[index, attr] = value
 
         elif element == 'TANK':
-            if icheck == True:  # noqa: E712
+            if icheck == True:
                 if self._tank_damage_table[attr].loc[index] == value:
                     raise ValueError(
                         'the value is already set in element: '
@@ -1118,7 +1118,7 @@ class Registry:  # noqa: D101, PLR0904
             self._tank_damage_table.loc[index, attr] = value
 
         elif element == 'PUMP':
-            if icheck == True:  # noqa: E712
+            if icheck == True:
                 if self._pump_damage_table[attr].loc[index] == value:
                     raise ValueError(
                         'the value is already set in element: '
@@ -1134,7 +1134,7 @@ class Registry:  # noqa: D101, PLR0904
             self._pump_damage_table.loc[index, attr] = value
 
         elif element == 'RESERVOIR':
-            if icheck == True:  # noqa: E712
+            if icheck == True:
                 if self._reservoir_damage_table[attr].loc[index] == value:
                     raise ValueError(
                         'the value is already set in element: '
@@ -1152,7 +1152,7 @@ class Registry:  # noqa: D101, PLR0904
         else:
             raise ValueError('Unknown element: ' + element)
 
-    def addAttrToElementDamageTable(self, element, attr, def_data):  # noqa: N802, D102
+    def addAttrToElementDamageTable(self, element, attr, def_data):
         if element == 'PIPE':
             self.addAttrToPipeDamageTable(attr, def_data)
         elif element == 'DISTNODE':
@@ -1169,61 +1169,61 @@ class Registry:  # noqa: D101, PLR0904
         else:
             raise ValueError('Undefined element: ' + element)
 
-    def addAttrToPipeDamageTable(self, attr, def_data):  # noqa: N802, D102
+    def addAttrToPipeDamageTable(self, attr, def_data):
         if attr in self._pipe_damage_table.columns:
-            raise ValueError('attribute already in the damage table')  # noqa: EM101, TRY003
+            raise ValueError('attribute already in the damage table')
 
-        if def_data == None:  # noqa: E711
+        if def_data == None:
             self._pipe_damage_table[attr] = np.nan
         else:
             self._pipe_damage_table[attr] = def_data
 
-    def addAttrToDistNodeDamageTable(self, attr, def_data):  # noqa: N802, D102
+    def addAttrToDistNodeDamageTable(self, attr, def_data):
         if attr in self._node_damage_table.columns:
-            raise ValueError('attribute already in the damage table')  # noqa: EM101, TRY003
+            raise ValueError('attribute already in the damage table')
 
-        if def_data == None:  # noqa: E711
+        if def_data == None:
             self._node_damage_table[attr] = np.nan
         else:
             self._node_damage_table[attr] = def_data
 
-    def addAttrToGeneralNodeDamageTable(self, attr, def_data):  # noqa: N802, D102
+    def addAttrToGeneralNodeDamageTable(self, attr, def_data):
         if attr in self._gnode_damage_table.columns:
-            raise ValueError('attribute already in the damage table')  # noqa: EM101, TRY003
+            raise ValueError('attribute already in the damage table')
 
-        if def_data == None:  # noqa: E711
+        if def_data == None:
             self._gnode_damage_table[attr] = np.nan
         else:
             self._gnode_damage_table[attr] = def_data
 
-    def addAttrToTankDamageTable(self, attr, def_data):  # noqa: N802, D102
+    def addAttrToTankDamageTable(self, attr, def_data):
         if attr in self._tank_damage_table.columns:
-            raise ValueError('attribute already in the damage table')  # noqa: EM101, TRY003
+            raise ValueError('attribute already in the damage table')
 
-        if def_data == None:  # noqa: E711
+        if def_data == None:
             self._tank_damage_table[attr] = np.nan
         else:
             self._tank_damage_table[attr] = def_data
 
-    def addAttrToPumpDamageTable(self, attr, def_data):  # noqa: N802, D102
+    def addAttrToPumpDamageTable(self, attr, def_data):
         if attr in self._pump_damage_table.columns:
-            raise ValueError('attribute already in the damage table')  # noqa: EM101, TRY003
+            raise ValueError('attribute already in the damage table')
 
-        if def_data == None:  # noqa: E711
+        if def_data == None:
             self._pump_damage_table[attr] = np.nan
         else:
             self._pump_damage_table[attr] = def_data
 
-    def addAttrToReservoirDamageTable(self, attr, def_data):  # noqa: N802, D102
+    def addAttrToReservoirDamageTable(self, attr, def_data):
         if attr in self._reservoir_damage_table.columns:
-            raise ValueError('attribute already in the damage table')  # noqa: EM101, TRY003
+            raise ValueError('attribute already in the damage table')
 
-        if def_data == None:  # noqa: E711
+        if def_data == None:
             self._reservoir_damage_table[attr] = np.nan
         else:
             self._reservoir_damage_table[attr] = def_data
 
-    def iOccupied(self, node_name):  # noqa: N802
+    def iOccupied(self, node_name):
         """Checks if the node is occuoied
 
         Parameters
@@ -1236,10 +1236,10 @@ class Registry:  # noqa: D101, PLR0904
         bool
             result.
 
-        """  # noqa: D400, D401
+        """
         return node_name in self._occupancy.index
 
-    def _getDamagedPipesRegistry(self):  # noqa: N802
+    def _getDamagedPipesRegistry(self):
         """Gets the whole damage registry. Not safe to be used outside the class.
 
         Returns
@@ -1247,10 +1247,10 @@ class Registry:  # noqa: D101, PLR0904
         Pandas.Series
             damage locations by node name.
 
-        """  # noqa: D401
+        """
         return self._pipe_node_damage_status
 
-    def getNumberofDamagedNodes(self):  # noqa: N802
+    def getNumberofDamagedNodes(self):
         """Gets numbers of Damaged locations. Counts two for broken pipes
 
         Returns
@@ -1258,10 +1258,10 @@ class Registry:  # noqa: D101, PLR0904
         Int
             Number of damaged locations by node name.
 
-        """  # noqa: D400, D401
+        """
         return len(self._pipe_node_damage_status)
 
-    def occupyNode(self, node_name, occupier_name):  # noqa: N802
+    def occupyNode(self, node_name, occupier_name):
         """Put adds node and its occupier in occupency list
 
         Parameters
@@ -1280,17 +1280,17 @@ class Registry:  # noqa: D101, PLR0904
         -------
         None.
 
-        """  # noqa: D400
+        """
         if occupier_name in self._occupancy:
             # if not iNodeCoupled(node_name):
-            raise ValueError(  # noqa: TRY003
-                'Occupier name already in the list. Forget to remove another occupancy or double adding?'  # noqa: EM101
+            raise ValueError(
+                'Occupier name already in the list. Forget to remove another occupancy or double adding?'
             )
         self._occupancy = self._occupancy.append(
             pd.Series(data=occupier_name, index=[node_name])
         )
 
-    def removeOccupancy(self, occupier_name):  # noqa: N802
+    def removeOccupancy(self, occupier_name):
         """Removes occupency in the node by occupier's name.
 
         Parameters
@@ -1307,16 +1307,16 @@ class Registry:  # noqa: D101, PLR0904
         -------
         None.
 
-        """  # noqa: D401
+        """
         temp = self._occupancy[self._occupancy == occupier_name]
 
         if len(temp) == 0:
-            raise ValueError('there is no node occupied with this occupier name')  # noqa: EM101, TRY003
+            raise ValueError('there is no node occupied with this occupier name')
 
         ind = temp.index.tolist()
         self._occupancy = self._occupancy.drop(ind)
 
-    def whoOccupiesIn(self, node_name):  # noqa: N802
+    def whoOccupiesIn(self, node_name):
         """Gets name of the occupier
 
         Parameters
@@ -1329,10 +1329,10 @@ class Registry:  # noqa: D101, PLR0904
         string
             Occupier's name.
 
-        """  # noqa: D400, D401
+        """
         return self._occupancy[node_name]
 
-    def whereIsOccupiedByName(self, occupier_name):  # noqa: N802
+    def whereIsOccupiedByName(self, occupier_name):
         """Gets node(s) occupied by occupier
 
         Parameters
@@ -1350,12 +1350,12 @@ class Registry:  # noqa: D101, PLR0904
         str or series
             node(s) ID.
 
-        """  # noqa: D400, D401
+        """
         temp = self._occupancy[self._occupancy == occupier_name]
         if len(temp) == 0:
-            raise ValueError('there is no occupancy with this name')  # noqa: EM101, TRY003
+            raise ValueError('there is no occupancy with this name')
 
-    def getListofFreeRepairAgents(self):  # noqa: N802
+    def getListofFreeRepairAgents(self):
         """MAYBE NOT NEEDED Gets a list of free agents. Not needed anymore.
 
         Returns
@@ -1364,14 +1364,14 @@ class Registry:  # noqa: D101, PLR0904
             DESCRIPTION.
 
         """
-        working_RepairAgents = set(self._occupancy.tolist())  # noqa: N806
-        RepairAgentsNameList = self._pipe_RepairAgentNameRegistry  # noqa: N806
-        Free_RepairAgents = [  # noqa: N806
+        working_RepairAgents = set(self._occupancy.tolist())
+        RepairAgentsNameList = self._pipe_RepairAgentNameRegistry
+        Free_RepairAgents = [
             name for name in RepairAgentsNameList if name not in working_RepairAgents
         ]
-        return Free_RepairAgents  # noqa: RET504
+        return Free_RepairAgents
 
-    def coupleTwoBreakNodes(self, break_point_1_name, break_point_2_name):  # noqa: N802
+    def coupleTwoBreakNodes(self, break_point_1_name, break_point_2_name):
         """Couples two nodes in registry for the time which we have a break.
         PLEASE NOTE THAT THE FIRST NODE MUST BE THE ONE CONNECTED TO THE
         MAIN(ORIGINAL) PIPE THAT IS BROKEN NOW.
@@ -1387,12 +1387,12 @@ class Registry:  # noqa: D101, PLR0904
         -------
         None.
 
-        """  # noqa: D205
+        """
         self._pipe_break_node_coupling[break_point_1_name] = break_point_2_name
         self._pipe_break_node_coupling[break_point_2_name] = break_point_1_name
         self._break_point_attached_to_mainPipe.append(break_point_1_name)
 
-    def getCoupledBreakNode(self, break_point_name):  # noqa: N802
+    def getCoupledBreakNode(self, break_point_name):
         """Gets the coupled node given the first coupled node, and checks if the
         given coupled node is connected to the main pipe.
 
@@ -1409,17 +1409,17 @@ class Registry:  # noqa: D101, PLR0904
             If the given (first node) is the one connected to the main(original)
             pipe
 
-        """  # noqa: D205, D401
+        """
         out1 = self._pipe_break_node_coupling[break_point_name]
-        is_breakPoint_1_attacjedToMainPipe = (  # noqa: N806
+        is_breakPoint_1_attacjedToMainPipe = (
             break_point_name in self._break_point_attached_to_mainPipe
         )
         return out1, is_breakPoint_1_attacjedToMainPipe
 
-    def iNodeCoupled(self, node_name):  # noqa: N802, D102
+    def iNodeCoupled(self, node_name):
         return node_name in self._pipe_break_node_coupling
 
-    def iDamagedPipeReminded(self):  # noqa: N802, D102
+    def iDamagedPipeReminded(self):
         damaged_nodes = self._pipe_node_damage_status.index
         if len(damaged_nodes) == 0:
             return False
@@ -1427,13 +1427,13 @@ class Registry:  # noqa: D101, PLR0904
         for node_name in iter(damaged_nodes):
             if node_name not in self._occupancy.index:
                 is_reminded = True
-                return is_reminded  # noqa: RET504
+                return is_reminded
         return is_reminded
 
-    def getOtherCoupledBreakPoint(self, node_name):  # noqa: N802, D102
+    def getOtherCoupledBreakPoint(self, node_name):
         return self._pipe_break_node_coupling[node_name]
 
-    def removeCoupledBreakNodes(self, break_point_name):  # noqa: N802
+    def removeCoupledBreakNodes(self, break_point_name):
         """Removes the coupled
 
         Parameters
@@ -1448,7 +1448,7 @@ class Registry:  # noqa: D101, PLR0904
         second : str
             Name of second node(connected to the pipe created after break)
 
-        """  # noqa: D400, D401
+        """
         other_coupled_break_point = self._pipe_break_node_coupling.pop(
             break_point_name
         )
@@ -1465,23 +1465,23 @@ class Registry:  # noqa: D101, PLR0904
             second = break_point_name
         return first, second
 
-    def recordPipeDamageTable(self, stop_time):  # noqa: N802, D102
+    def recordPipeDamageTable(self, stop_time):
         if self.settings['result_details'] == 'minimal':
             return None
         if stop_time in self._pipe_damage_table_history:
             return ValueError('Time exists in pipe damage hostry: ' + str(stop_time))
-        self._pipe_damage_table_history['stop_time'] = (  # noqa: RET503
+        self._pipe_damage_table_history['stop_time'] = (
             self._pipe_damage_table_history
         )
 
-    def getMostLeakAtCheck(self, real_node_name_list, element_type):  # noqa: N802, D102
+    def getMostLeakAtCheck(self, real_node_name_list, element_type):
         if element_type == 'DISTNODE':
             total_demand = self._node_damage_table.loc[
                 real_node_name_list, 'Demand2'
             ]
             total_demand.loc[total_demand[total_demand.isna()].index] = 0
             return total_demand
-        elif element_type == 'PIPE':  # noqa: RET505
+        elif element_type == 'PIPE':
             leak = self._pipe_damage_table.loc[real_node_name_list, 'LeakAtCheck']
             leak.loc[leak[leak.isna()].index] = 0
             return leak

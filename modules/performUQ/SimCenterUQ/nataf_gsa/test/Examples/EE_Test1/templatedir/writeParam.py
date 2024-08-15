@@ -1,32 +1,32 @@
-import os  # noqa: CPY001, D100, INP001
+import os
 import sys
 
 
-def main():  # noqa: D103
-    paramsIn = sys.argv[1]  # noqa: N806
-    paramsOut = sys.argv[2]  # noqa: N806
+def main():
+    paramsIn = sys.argv[1]
+    paramsOut = sys.argv[2]
 
-    if not os.path.isfile(paramsIn):  # noqa: PTH113
-        print(f'Input param file {paramsIn} does not exist. Exiting...')  # noqa: T201
+    if not os.path.isfile(paramsIn):
+        print(f'Input param file {paramsIn} does not exist. Exiting...')
         sys.exit()
 
-    outFILE = open(paramsOut, 'w')  # noqa: N806, PLW1514, PTH123, SIM115
+    outFILE = open(paramsOut, 'w')
 
-    with open(paramsIn) as inFILE:  # noqa: N806, PLW1514, PTH123
+    with open(paramsIn) as inFILE:
         line = inFILE.readline()
-        splitLine = line.split()  # noqa: N806
-        numRV = int(splitLine[3])  # noqa: N806
+        splitLine = line.split()
+        numRV = int(splitLine[3])
         print(numRV, file=outFILE)
 
-        for i in range(numRV):  # noqa: B007
+        for i in range(numRV):
             line = inFILE.readline()
-            splitLine = line.split()  # noqa: N806
-            nameRV = splitLine[1]  # noqa: N806
-            valueRV = splitLine[3]  # noqa: N806
+            splitLine = line.split()
+            nameRV = splitLine[1]
+            valueRV = splitLine[3]
             print(f'{nameRV} {valueRV}', file=outFILE)
 
-    outFILE.close  # noqa: B018
-    inFILE.close  # noqa: B018
+    outFILE.close
+    inFILE.close
 
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 """Created on Thu Nov 10 18:29:50 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""
 
 import pandas as pd
 from PyQt5 import QtGui, QtWidgets
@@ -72,16 +72,16 @@ curve_settings = {
 }
 
 
-class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: D101
+class Time_Unit_Combo(QtWidgets.QComboBox):
     def __init__(self):
         super().__init__()
         time_units = ['second', 'hour', 'day']
 
         self.addItems(time_units)
 
-    def changeCurveTimeUnit(self, raw_time_curve):  # noqa: N802, D102
+    def changeCurveTimeUnit(self, raw_time_curve):
         res = {}
-        if type(raw_time_curve) == pd.core.series.Series:  # noqa: E721
+        if type(raw_time_curve) == pd.core.series.Series:
             time_justified_curve = raw_time_curve.copy()
             res = self.applyUnitToSeries(time_justified_curve)
         else:
@@ -90,12 +90,12 @@ class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: D101
                 res[k] = self.applyUnitToSeries(time_justified_curve)
         return res
 
-    def applyUnitToSeries(self, data):  # noqa: N802, D102
+    def applyUnitToSeries(self, data):
         time_unit = self.currentText()
         if time_unit == 'second':
             pass
         elif time_unit == 'hour':
-            data.index = data.index / 3600  # noqa: PLR6104
+            data.index = data.index / 3600
         elif time_unit == 'day':
             data.index = data.index / 3600 / 24
         else:
@@ -104,13 +104,13 @@ class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: D101
         return data
 
 
-class Yes_No_Combo(QtWidgets.QComboBox):  # noqa: D101
+class Yes_No_Combo(QtWidgets.QComboBox):
     def __init__(self):
         super().__init__()
         self.addItems(['No', 'Yes'])
 
 
-class Result_Designer:  # noqa: D101
+class Result_Designer:
     def __init__(self):
         self.current_raw_curve = None
         self.current_curve = None
@@ -125,23 +125,23 @@ class Result_Designer:  # noqa: D101
 
         self.initalize_result()
 
-    def initalize_result(self):  # noqa: D102
+    def initalize_result(self):
         self.setCurveAllScenarios(True)
         self.all_scenarios_checkbox.setChecked(True)
         self.scenario_combo.clear()
         self.scenario_combo.addItems(self.result_scenarios)
         # self.current_curve_data = None
 
-    def curveAllScenarioCheckboxChanged(self, state):  # noqa: N802, D102
+    def curveAllScenarioCheckboxChanged(self, state):
         if state == 0:
             self.setCurveAllScenarios(False)
-        elif state == 2:  # noqa: PLR2004
+        elif state == 2:
             self.setCurveAllScenarios(True)
 
-    def clearCurvePlot(self):  # noqa: N802, D102
+    def clearCurvePlot(self):
         self.mpl_curve.canvas.ax.cla()
 
-    def plot_data(self):  # noqa: D102
+    def plot_data(self):
         x = range(10)
         y = range(0, 20, 2)
         self.mpl_curve.canvas.ax.plot(x, y)
@@ -150,16 +150,16 @@ class Result_Designer:  # noqa: D101
         # self.mpl_curve.canvas.ax.set_xlabel("x_label")
         # self.mpl_curve.canvas.fig.tight_layout()
 
-    def plotCurve(self, y_label=None, x_label=None):  # noqa: N802, D102
-        if y_label == None:  # noqa: E711
+    def plotCurve(self, y_label=None, x_label=None):
+        if y_label == None:
             y_label = self.mpl_curve.canvas.ax.get_ylabel()
-        if x_label == None:  # noqa: E711
+        if x_label == None:
             x_label = self.mpl_curve.canvas.ax.get_xlabel()
 
         self.mpl_curve.canvas.ax.clear()
         data = self.current_curve
 
-        if type(data) == pd.core.series.Series:  # noqa: E721
+        if type(data) == pd.core.series.Series:
             self.mpl_curve.canvas.ax.plot(
                 self.current_curve.index, self.current_curve.to_list()
             )
@@ -172,14 +172,14 @@ class Result_Designer:  # noqa: D101
         self.mpl_curve.canvas.draw()
         self.mpl_curve.canvas.fig.tight_layout()
 
-    def setCurveAllScenarios(self, flag):  # noqa: N802, D102
-        if flag == True:  # noqa: E712
+    def setCurveAllScenarios(self, flag):
+        if flag == True:
             self.all_scenarios_checkbox.setChecked(True)
             self.scenario_combo.setEnabled(False)
             self.curve_type_combo.clear()
             self.curve_type_combo.addItems(multi_scenario_curve_options)
             self.clearCurvePlot()
-        elif flag == False:  # noqa: E712
+        elif flag == False:
             self.all_scenarios_checkbox.setChecked(False)
             self.scenario_combo.setEnabled(True)
             self.curve_type_combo.clear()
@@ -188,23 +188,23 @@ class Result_Designer:  # noqa: D101
         else:
             raise ValueError('Unknown flag: ' + repr(flag))
 
-    def resultScenarioChanged(self, text):  # noqa: N802, D102
+    def resultScenarioChanged(self, text):
         self.result_current_scenario = text  # self.scenario_combo.getText()
         # self.current_curve_data = None
 
-    def curveTypeChanegd(self, text):  # noqa: N802, D102
-        if self.project_result == None:  # noqa: E711
+    def curveTypeChanegd(self, text):
+        if self.project_result == None:
             return
         self.current_curve_type = text
         self.setCurveSettingBox(text)
         self.calculateCurrentCurve()
 
-    def calculateCurrentCurve(self):  # noqa: C901, N802, D102
+    def calculateCurrentCurve(self):
         curve_type = self.current_curve_type
         if curve_type == 'Quantity Exceedance':
-            iPopulation = self.curve_settings_widgets['Population'].currentText()  # noqa: N806
-            iRatio = self.curve_settings_widgets['Percentage'].currentText()  # noqa: N806
-            iConsider_leak = self.curve_settings_widgets['LDN leak'].currentText()  # noqa: N806
+            iPopulation = self.curve_settings_widgets['Population'].currentText()
+            iRatio = self.curve_settings_widgets['Percentage'].currentText()
+            iConsider_leak = self.curve_settings_widgets['LDN leak'].currentText()
             leak_ratio = self.curve_settings_widgets['leak Criteria'].text()
             group_method = self.curve_settings_widgets['Group method'].currentText()
             daily_bin = self.curve_settings_widgets['Daily bin'].currentText()
@@ -212,14 +212,14 @@ class Result_Designer:  # noqa: D101
             max_time = self.curve_settings_widgets['Max time'].text()
 
             if iConsider_leak == 'Yes':
-                iConsider_leak = True  # noqa: N806
+                iConsider_leak = True
             else:
-                iConsider_leak = False  # noqa: N806
+                iConsider_leak = False
 
             if iRatio == 'Yes':
-                iRatio = True  # noqa: N806
+                iRatio = True
             else:
-                iRatio = False  # noqa: N806
+                iRatio = False
 
             if daily_bin == 'Yes':
                 daily_bin = True
@@ -246,9 +246,9 @@ class Result_Designer:  # noqa: D101
             self.plotCurve('Exceedance Probability', 'Time')
 
         elif curve_type == 'Delivery Exceedance':
-            iPopulation = self.curve_settings_widgets['Population'].currentText()  # noqa: N806
-            iRatio = self.curve_settings_widgets['Percentage'].currentText()  # noqa: N806
-            iConsider_leak = self.curve_settings_widgets['LDN leak'].currentText()  # noqa: N806
+            iPopulation = self.curve_settings_widgets['Population'].currentText()
+            iRatio = self.curve_settings_widgets['Percentage'].currentText()
+            iConsider_leak = self.curve_settings_widgets['LDN leak'].currentText()
             leak_ratio = self.curve_settings_widgets['leak Criteria'].text()
             group_method = self.curve_settings_widgets['Group method'].currentText()
             daily_bin = self.curve_settings_widgets['Daily bin'].currentText()
@@ -256,14 +256,14 @@ class Result_Designer:  # noqa: D101
             max_time = self.curve_settings_widgets['Max time'].text()
 
             if iConsider_leak == 'Yes':
-                iConsider_leak = True  # noqa: N806
+                iConsider_leak = True
             else:
-                iConsider_leak = False  # noqa: N806
+                iConsider_leak = False
 
             if iRatio == 'Yes':
-                iRatio = True  # noqa: N806
+                iRatio = True
             else:
-                iRatio = False  # noqa: N806
+                iRatio = False
 
             if daily_bin == 'Yes':
                 daily_bin = True
@@ -289,21 +289,21 @@ class Result_Designer:  # noqa: D101
             )
             self.plotCurve('Exceedance Probability', 'Time')
         elif curve_type == 'Quantity':
-            iPopulation = self.curve_settings_widgets['Population'].currentText()  # noqa: N806
+            iPopulation = self.curve_settings_widgets['Population'].currentText()
             # iPopulation             = self.curve_population_settings_combo.currentText()
-            iRatio = self.curve_settings_widgets['Percentage'].currentText()  # noqa: N806
-            iConsider_leak = self.curve_settings_widgets['LDN leak'].currentText()  # noqa: N806
+            iRatio = self.curve_settings_widgets['Percentage'].currentText()
+            iConsider_leak = self.curve_settings_widgets['LDN leak'].currentText()
             leak_ratio = self.curve_settings_widgets['leak Criteria'].text()
 
             if iConsider_leak == 'Yes':
-                iConsider_leak = True  # noqa: N806
+                iConsider_leak = True
             else:
-                iConsider_leak = False  # noqa: N806
+                iConsider_leak = False
 
             if iRatio == 'Yes':
-                iRatio = True  # noqa: N806
+                iRatio = True
             else:
-                iRatio = False  # noqa: N806
+                iRatio = False
 
             scn_name = self.scenario_combo.currentText()
             self.current_raw_curve = self.project_result.getQNIndexPopulation_4(
@@ -320,21 +320,21 @@ class Result_Designer:  # noqa: D101
 
         elif curve_type == 'Delivery':
             # self.current_curve_data = (curve_type, pd.DataFrame())
-            iPopulation = self.curve_settings_widgets['Population'].currentText()  # noqa: N806
+            iPopulation = self.curve_settings_widgets['Population'].currentText()
             # iPopulation             = self.curve_population_settings_combo.currentText()
-            iRatio = self.curve_settings_widgets['Percentage'].currentText()  # noqa: N806
-            iConsider_leak = self.curve_settings_widgets['LDN leak'].currentText()  # noqa: N806
+            iRatio = self.curve_settings_widgets['Percentage'].currentText()
+            iConsider_leak = self.curve_settings_widgets['LDN leak'].currentText()
             leak_ratio = self.curve_settings_widgets['leak Criteria'].text()
 
             if iConsider_leak == 'Yes':
-                iConsider_leak = True  # noqa: N806
+                iConsider_leak = True
             else:
-                iConsider_leak = False  # noqa: N806
+                iConsider_leak = False
 
             if iRatio == 'Yes':
-                iRatio = True  # noqa: N806
+                iRatio = True
             else:
-                iRatio = False  # noqa: N806
+                iRatio = False
 
             scn_name = self.scenario_combo.currentText()
             self.current_raw_curve = self.project_result.getDLIndexPopulation_4(
@@ -351,7 +351,7 @@ class Result_Designer:  # noqa: D101
 
         elif curve_type == 'SSI':
             # self.current_curve_data = (curve_type, pd.DataFrame())
-            iPopulation = self.curve_settings_widgets['Population'].currentText()  # noqa: N806
+            iPopulation = self.curve_settings_widgets['Population'].currentText()
             scn_name = self.scenario_combo.currentText()
             self.current_raw_curve = (
                 self.project_result.getSystemServiceabilityIndexCurve(
@@ -363,8 +363,8 @@ class Result_Designer:  # noqa: D101
             )
             self.plotCurve('SSI', 'Time')
 
-    def setCurveSettingBox(self, curve_type):  # noqa: N802, D102
-        for i in range(self.curve_settings_table.rowCount()):  # noqa: B007
+    def setCurveSettingBox(self, curve_type):
+        for i in range(self.curve_settings_table.rowCount()):
             self.curve_settings_table.removeRow(0)
 
         if curve_type in curve_settings:
@@ -373,7 +373,7 @@ class Result_Designer:  # noqa: D101
             pass
             # raise ValueError("Unknown Curve type: "+repr(curve_type))
 
-    def populateCurveSettingsTable(self, settings_content):  # noqa: C901, N802, D102
+    def populateCurveSettingsTable(self, settings_content):
         self.curve_settings_widgets.clear()
         vertical_header = []
         cell_type_list = []
@@ -457,35 +457,35 @@ class Result_Designer:  # noqa: D101
             else:
                 raise ValueError(repr(cell_type))
 
-            i += 1  # noqa: SIM113
+            i += 1
         # for label in settings_content:
 
-    def curveTimeSettingsChanged(self, x):  # noqa: ARG002, N802, D102
+    def curveTimeSettingsChanged(self, x):
         self.current_curve = self.time_combo.changeCurveTimeUnit(
             self.current_raw_curve
         )
         self.plotCurve()
 
-    def curveSettingChanged(self):  # noqa: N802, D102
+    def curveSettingChanged(self):
         if 'Population' in self.curve_settings_widgets:
             new_population_setting = self.curve_settings_widgets[
                 'Population'
             ].currentText()
-            if new_population_setting == 'Yes' and type(  # noqa: E721
-                self.project_result._population_data  # noqa: SLF001
+            if new_population_setting == 'Yes' and type(
+                self.project_result._population_data
             ) == type(None):
                 self.errorMSG('Error', 'Population data is not loaded')
                 self.curve_settings_widgets['Population'].setCurrentText('No')
                 return
         self.calculateCurrentCurve()
 
-    def tabChanged(self, index):  # noqa: N802, D102
+    def tabChanged(self, index):
         if index == 1:
             self.initalize_result()
 
-    def saveCurrentCurveByButton(self):  # noqa: N802, D102
+    def saveCurrentCurveByButton(self):
         # if self.current_curve_data == None:
-        if type(self.current_curve) == type(None):  # noqa: E721
+        if type(self.current_curve) == type(None):
             self.errorMSG('REWET', 'No curve is ploted')
             return
 
@@ -495,7 +495,7 @@ class Result_Designer:  # noqa: D101
             self.project_file_addr,
             'Excel Workbook (*.xlsx)',
         )
-        if file_addr[0] == '':  # noqa: PLC1901
+        if file_addr[0] == '':
             return
 
         # self.current_curve_data[1].to_excel(file_addr[0])

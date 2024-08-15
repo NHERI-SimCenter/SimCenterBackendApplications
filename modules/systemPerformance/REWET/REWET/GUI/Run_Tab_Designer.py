@@ -1,19 +1,19 @@
 """Created on Wed Nov  2 14:40:45 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""
 
-import subprocess  # noqa: S404
+import subprocess
 import threading
 
 from PyQt5.QtCore import QObject, pyqtSignal
 
 
-class Custom_Object(QObject):  # noqa: D101
-    outSignal = pyqtSignal(bytes)  # noqa: N815
+class Custom_Object(QObject):
+    outSignal = pyqtSignal(bytes)
 
 
-class Run_Tab_Designer:  # noqa: D101
+class Run_Tab_Designer:
     def __init__(self):
         self.run_button.clicked.connect(self.runREWET)
         self.stop_button.clicked.connect(self.stopRun)
@@ -22,27 +22,27 @@ class Run_Tab_Designer:  # noqa: D101
         self.rewet_sub_process = None
         self.if_run_in_progress = False
 
-    def runREWET(self):  # noqa: N802, D102
-        if self.if_run_in_progress == True:  # noqa: E712
+    def runREWET(self):
+        if self.if_run_in_progress == True:
             return False
         if_saved = self.saveProject()
 
-        if if_saved == False:  # noqa: E712
+        if if_saved == False:
             return False
         self.ouput_textedit.clear()
         # start = Starter()
-        if self.project_file_addr == None:  # noqa: E711
+        if self.project_file_addr == None:
             self.errorMSG(
                 'REWET',
                 'File address is empty. Please report it as a bug to the developer.',
             )
         self.if_run_in_progress = True
         self.setAllTabsEnabled(False)
-        threading.Thread(target=self._RunREWETHelper, args=(), daemon=True).start()  # noqa: RET503
+        threading.Thread(target=self._RunREWETHelper, args=(), daemon=True).start()
 
-    def _RunREWETHelper(self):  # noqa: N802
-        self.rewet_sub_process = subprocess.Popen(  # noqa: S603
-            ['python', 'initial.py', self.project_file_addr],  # noqa: S607
+    def _RunREWETHelper(self):
+        self.rewet_sub_process = subprocess.Popen(
+            ['python', 'initial.py', self.project_file_addr],
             stdout=subprocess.PIPE,
             bufsize=0,
         )
@@ -52,7 +52,7 @@ class Run_Tab_Designer:  # noqa: D101
             self.cobject.outSignal.emit(line)
         self.rewet_sub_process.stdout.close()
 
-    def setAllTabsEnabled(self, enabled):  # noqa: N802, D102
+    def setAllTabsEnabled(self, enabled):
         # self.ouput_textedit.setEnabled(enabled)
         self.main_tab.setTabEnabled(1, enabled)
         self.main_process1.setTabEnabled(0, enabled)
@@ -64,7 +64,7 @@ class Run_Tab_Designer:  # noqa: D101
         # self.stop_button.setEnabled(True)
 
     # @pyqtSlot(bytes)
-    def updateRunOuput(self, string):  # noqa: N802, D102
+    def updateRunOuput(self, string):
         string = string.decode()
 
         if 'Time of Single run is' in string:
@@ -76,7 +76,7 @@ class Run_Tab_Designer:  # noqa: D101
 
         # running code for the project
 
-    def endSimulation(self):  # noqa: N802, D102
+    def endSimulation(self):
         end_message = (
             '\n-------------------\nSIMULATION FINISHED\n-------------------\n'
         )
@@ -84,7 +84,7 @@ class Run_Tab_Designer:  # noqa: D101
         self.if_run_in_progress = False
         self.ouput_textedit.appendPlainText(end_message)
 
-    def errorInSimulation(self):  # noqa: N802, D102
+    def errorInSimulation(self):
         end_message = '\n-------------\nERROR OCCURRED\n-------------\n'
         self.setAllTabsEnabled(True)
         self.if_run_in_progress = False
@@ -94,10 +94,10 @@ class Run_Tab_Designer:  # noqa: D101
         )
         self.ouput_textedit.appendPlainText(end_message)
 
-    def stopRun(self):  # noqa: N802, D102
-        if self.if_run_in_progress == False:  # noqa: E712
+    def stopRun(self):
+        if self.if_run_in_progress == False:
             return
-        if type(self.rewet_sub_process) != type(None):  # noqa: E721
+        if type(self.rewet_sub_process) != type(None):
             self.rewet_sub_process.terminate()
             termination_message = '\n-------------\nRUN CANCELLED\n-------------\n'
             self.setAllTabsEnabled(True)

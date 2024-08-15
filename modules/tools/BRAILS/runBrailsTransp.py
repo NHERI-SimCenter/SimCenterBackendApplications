@@ -1,80 +1,80 @@
-# Import packages needed for setting up required packages:  # noqa: CPY001, D100, INP001
+# Import packages needed for setting up required packages:
 import importlib.metadata
-import subprocess  # noqa: S404
+import subprocess
 import sys
 
 # If not installed, install BRAILS, argparse, and requests:
 required = {'BRAILS', 'argparse', 'requests'}
 installed = set()
 for x in importlib.metadata.distributions():
-    try:  # noqa: SIM105
+    try:
         installed.add(x.name)
-    except:  # noqa: S110, PERF203, E722
+    except:
         pass
 missing = required - installed
 
 python = sys.executable
 if missing:
-    print('\nInstalling packages required for running this widget...')  # noqa: T201
-    subprocess.check_call(  # noqa: S603
+    print('\nInstalling packages required for running this widget...')
+    subprocess.check_call(
         [python, '-m', 'pip', 'install', *missing], stdout=subprocess.DEVNULL
     )
-    print('Successfully installed the required packages')  # noqa: T201
+    print('Successfully installed the required packages')
 
 # If BRAILS was previously installed ensure it is the latest version:
-import requests  # noqa: E402
+import requests
 
-latestBrailsVersion = requests.get('https://pypi.org/pypi/BRAILS/json').json()[  # noqa: S113, N816
+latestBrailsVersion = requests.get('https://pypi.org/pypi/BRAILS/json').json()[
     'info'
 ]['version']
 if importlib.metadata.version('BRAILS') != latestBrailsVersion:
-    print(  # noqa: T201
+    print(
         '\nAn older version of BRAILS was detected. Updating to the latest BRAILS version..'
     )
-    subprocess.check_call(  # noqa: S603
+    subprocess.check_call(
         [python, '-m', 'pip', 'install', 'BRAILS', '-U'], stdout=subprocess.DEVNULL
     )
-    print('Successfully installed the latest version of BRAILS')  # noqa: T201
+    print('Successfully installed the latest version of BRAILS')
 
 # Import packages required for running the latest version of BRAILS:
-import argparse  # noqa: E402
-import os  # noqa: E402
-from time import gmtime, strftime  # noqa: E402
+import argparse
+import os
+from time import gmtime, strftime
 
-from brails.TranspInventoryGenerator import TranspInventoryGenerator  # noqa: E402
+from brails.TranspInventoryGenerator import TranspInventoryGenerator
 
 
-def str2bool(v):  # noqa: D103
+def str2bool(v):
     # courtesy of Maxim @ stackoverflow
 
     if isinstance(v, bool):
         return v
-    if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):  # noqa: PLR6201
+    if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):
         return True
-    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):  # noqa: PLR6201, RET505
+    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):
         return False
     else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')  # noqa: EM101, TRY003
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
 # Define a standard way of printing program outputs:
-def log_msg(msg):  # noqa: D103
+def log_msg(msg):
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
-    print(formatted_msg)  # noqa: T201
+    print(formatted_msg)
 
 
 # Define a way to call BRAILS TranspInventoryGenerator:
-def runBrails(  # noqa: N802, D103
-    latMin,  # noqa: N803
-    latMax,  # noqa: N803
-    longMin,  # noqa: N803
-    longMax,  # noqa: N803
-    minimumHAZUS,  # noqa: N803
-    maxRoadLength,  # noqa: N803
-    lengthUnit,  # noqa: N803
+def runBrails(
+    latMin,
+    latMax,
+    longMin,
+    longMax,
+    minimumHAZUS,
+    maxRoadLength,
+    lengthUnit,
 ):
     # Initialize TranspInventoryGenerator:
-    invGenerator = TranspInventoryGenerator(  # noqa: N806
+    invGenerator = TranspInventoryGenerator(
         location=(longMin, latMin, longMax, latMax)
     )
 
@@ -87,7 +87,7 @@ def runBrails(  # noqa: N802, D103
     )
 
 
-def main(args):  # noqa: D103
+def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--latMin', default=None, type=float)
     parser.add_argument('--latMax', default=None, type=float)
@@ -103,7 +103,7 @@ def main(args):  # noqa: D103
     args = parser.parse_args(args)
 
     # Change the current directory to the user-defined output folder:
-    os.makedirs(args.outputFolder, exist_ok=True)  # noqa: PTH103
+    os.makedirs(args.outputFolder, exist_ok=True)
     os.chdir(args.outputFolder)
 
     # Run BRAILS TranspInventoryGenerator with the user-defined arguments:

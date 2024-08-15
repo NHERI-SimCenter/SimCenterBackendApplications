@@ -1,7 +1,7 @@
 """Created on Thu Jan  5 16:31:32 2023
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""
 
 import os
 
@@ -11,12 +11,12 @@ from GUI.Subsitute_Layer_Window import Ui_subsitite_layer_dialoge
 from PyQt5 import QtWidgets
 
 
-class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: D101
+class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):
     def __init__(
         self,
         subsitute_layer_addr,
         subsitute_layer,
-        iUse_substitute_layer,  # noqa: N803
+        iUse_substitute_layer,
         demand_node_layers,
     ):
         super().__init__()
@@ -31,7 +31,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: D101
         self.iUse_substitute_layer = iUse_substitute_layer
         self.demand_node_layers.to_file(r'Northridge\demand_node_layer.shp')
         self.subsitute_layer_addr_line.setText(self.subsitute_layer_addr)
-        if type(self.subsitute_layer) != type(None):  # noqa: E721
+        if type(self.subsitute_layer) != type(None):
             self.subsitute_layer_projection_name_line.setText(
                 self.subsitute_layer.crs.name
             )
@@ -52,18 +52,18 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: D101
             self.iUseSubstituteCheckBoxStateChanged
         )
 
-    def iUseSubstituteCheckBoxStateChanged(self, state):  # noqa: N802, D102
+    def iUseSubstituteCheckBoxStateChanged(self, state):
         if state == 0:
             self.iUse_substitute_layer = False
-        elif state == 2:  # noqa: PLR2004
+        elif state == 2:
             self.iUse_substitute_layer = True
 
-    def applyNewSubsituteLayer(self):  # noqa: N802, D102
+    def applyNewSubsituteLayer(self):
         # demand_node_layers = self.createGeopandasPointDataFrameForNodes(self, self.wn, self.demand_node_name)
-        if type(self.subsitute_layer) == type(None):  # noqa: E721
+        if type(self.subsitute_layer) == type(None):
             return
 
-    def substituteLayerBrowseButton(self):  # noqa: N802, D102
+    def substituteLayerBrowseButton(self):
         file = QtWidgets.QFileDialog.getOpenFileName(
             self._window,
             'Open file',
@@ -71,7 +71,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: D101
             'Shapefile file (*.shp)',
         )
 
-        if file[0] == '':  # noqa: PLC1901
+        if file[0] == '':
             return
         split_addr = os.path.split(file[0])
         self.current_substitute_directory = split_addr[0]
@@ -92,8 +92,8 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: D101
         joined_map = gpd.sjoin(self.subsitute_layer, self.demand_node_layers)
 
         number_list = pd.Series(index=self.demand_node_layers.index, data=0)
-        for ind, val in joined_map['index_right'].iteritems():  # noqa: B007
-            number_list.loc[val] = number_list.loc[val] + 1  # noqa: PLR6104
+        for ind, val in joined_map['index_right'].iteritems():
+            number_list.loc[val] = number_list.loc[val] + 1
 
         number_list = number_list[number_list > 1]
         number_list = number_list.sort_values(ascending=False)
@@ -111,7 +111,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: D101
             index=self.subsitute_layer.index.unique(), data=0
         )
         for ind in joined_map.index.to_list():
-            index_number_list.loc[ind] = index_number_list.loc[ind] + 1  # noqa: PLR6104
+            index_number_list.loc[ind] = index_number_list.loc[ind] + 1
 
         index_number_list = index_number_list[index_number_list > 1]
         index_number_list = index_number_list.sort_values(ascending=False)

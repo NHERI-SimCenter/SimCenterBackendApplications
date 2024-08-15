@@ -1,9 +1,9 @@
-import argparse  # noqa: CPY001, D100, INP001
+import argparse
 import json
 import sys
 
 
-def create_building_files(output_file, building_source_file, min_id, max_id):  # noqa: D103
+def create_building_files(output_file, building_source_file, min_id, max_id):
     # check if the min and max values are provided in the right order
     if (min_id is not None) and (max_id is not None):
         if min_id > max_id:
@@ -11,7 +11,7 @@ def create_building_files(output_file, building_source_file, min_id, max_id):  #
             min_id = max_id
             max_id = tmp
 
-    with open(building_source_file, encoding='utf-8') as f:  # noqa: PTH123
+    with open(building_source_file, encoding='utf-8') as f:
         building_source_list = json.load(f)['features']
 
     buildings_array = []
@@ -26,7 +26,7 @@ def create_building_files(output_file, building_source_file, min_id, max_id):  #
 
         bldg_loc = bldg_src['geometry']['coordinates']
 
-        BIM_i = {  # noqa: N806
+        BIM_i = {
             'RandomVariables': [],
             'GI': dict(
                 BIM_id=str(bldg_id),
@@ -35,14 +35,14 @@ def create_building_files(output_file, building_source_file, min_id, max_id):  #
             ),
         }
 
-        BIM_file_name = f'{bldg_id}-BIM.json'  # noqa: N806
+        BIM_file_name = f'{bldg_id}-BIM.json'
 
-        with open(BIM_file_name, 'w', encoding='utf-8') as f:  # noqa: PTH123
+        with open(BIM_file_name, 'w', encoding='utf-8') as f:
             json.dump(BIM_i, f, indent=2)
 
-        buildings_array.append(dict(id=str(bldg_id), file=BIM_file_name))  # noqa: C408
+        buildings_array.append(dict(id=str(bldg_id), file=BIM_file_name))
 
-    with open(output_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
+    with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(buildings_array, f, indent=2)
 
 

@@ -1,17 +1,17 @@
-# written: Michael Gardner @ UNR, Aakash Bangalore Satish @ UCB  # noqa: CPY001, D100, INP001
+# written: Michael Gardner @ UNR, Aakash Bangalore Satish @ UCB
 
 # Use the UQpy driver as a starting point if you want to add other UQ capabilities
 
 
-def configureAndRunUQ(  # noqa: N802
-    uqData,  # noqa: N803
-    simulationData,  # noqa: N803
-    randomVarsData,  # noqa: N803
-    demandParams,  # noqa: N803
-    workingDir,  # noqa: N803
-    runType,  # noqa: N803
-    localAppDir,  # noqa: N803
-    remoteAppDir,  # noqa: N803
+def configureAndRunUQ(
+    uqData,
+    simulationData,
+    randomVarsData,
+    demandParams,
+    workingDir,
+    runType,
+    localAppDir,
+    remoteAppDir,
 ):
     """This function configures and runs a UQ simulation based on the input
     UQ driver and its associated inputs, simulation configuration, random
@@ -28,25 +28,25 @@ def configureAndRunUQ(  # noqa: N802
     runType:        Specifies whether computations are being run locally or on an HPC cluster
     localAppDir:    Directory containing apps for local run
     remoteAppDir:   Directory containing apps for remote run
-    """  # noqa: D205, D400, D401, D404
-    uqDriverOptions = ['UQpy', 'HeirBayes']  # noqa: N806
+    """
+    uqDriverOptions = ['UQpy', 'HeirBayes']
 
     for val in uqData['Parameters']:
         if val['name'] == 'UQ Driver':
-            uqDriver = val['value']  # noqa: N806
+            uqDriver = val['value']
 
     if uqDriver not in uqDriverOptions:
-        raise ValueError(  # noqa: DOC501
-            'ERROR: configureAndRunUQ.py: UQ driver not recognized.'  # noqa: ISC003
+        raise ValueError(
+            'ERROR: configureAndRunUQ.py: UQ driver not recognized.'
             + ' Either input incorrectly or class to run UQ driver not'
             + ' implemented: ',
             uqDriver,
         )
-    else:  # noqa: RET506
-        if uqDriver == 'UQpy' or uqDriver == 'HeirBayes':  # noqa: PLR1714
+    else:
+        if uqDriver == 'UQpy' or uqDriver == 'HeirBayes':
             pass
 
-        uqDriverClass = locals()[uqDriver + 'Runner']  # noqa: N806
+        uqDriverClass = locals()[uqDriver + 'Runner']
         uqDriverClass().runUQ(
             uqData,
             simulationData,

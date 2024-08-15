@@ -1,4 +1,4 @@
-import numpy as np  # noqa: CPY001, D100, INP001
+import numpy as np
 
 
 class CovError(Exception):
@@ -15,15 +15,15 @@ class CovError(Exception):
 
 
 def log_likelihood(
-    calibrationData,  # noqa: N803
+    calibrationData,
     prediction,
-    numExperiments,  # noqa: N803
-    covarianceMatrixList,  # noqa: N803
-    edpNamesList,  # noqa: ARG001, N803
-    edpLengthsList,  # noqa: N803
-    covarianceMultiplierList,  # noqa: N803
-    scaleFactors,  # noqa: N803
-    shiftFactors,  # noqa: N803
+    numExperiments,
+    covarianceMatrixList,
+    edpNamesList,
+    edpLengthsList,
+    covarianceMultiplierList,
+    scaleFactors,
+    shiftFactors,
 ):
     """Compute the log-likelihood
 
@@ -67,52 +67,52 @@ def log_likelihood(
     distribution and a user-supplied covariance structure. Block-diagonal covariance structures are supported. The value
     of multipliers on the covariance block corresponding to each response quantity is also calibrated.
     :rtype: float
-    """  # noqa: D400
+    """
     # Check if the correct number of covariance terms has been passed in
-    numResponses = len(edpLengthsList)  # noqa: N806
+    numResponses = len(edpLengthsList)
     if len(covarianceMatrixList) != numExperiments * numResponses:
-        print(  # noqa: T201
+        print(
             f'ERROR: The expected number of covariance matrices is {numExperiments * numResponses}, but only {len(covarianceMatrixList)} were passed '
             'in.'
         )
-        raise CovError(  # noqa: DOC501, TRY003
-            f'ERROR: The expected number of covariance matrices is {numExperiments * numResponses}, but only {len(covarianceMatrixList)} were passed '  # noqa: EM102
+        raise CovError(
+            f'ERROR: The expected number of covariance matrices is {numExperiments * numResponses}, but only {len(covarianceMatrixList)} were passed '
             'in.'
         )
 
     # Shift and normalize the prediction
-    currentPosition = 0  # noqa: N806
+    currentPosition = 0
     for j in range(len(edpLengthsList)):
-        prediction[:, currentPosition : currentPosition + edpLengthsList[j]] = (  # noqa: PLR6104
+        prediction[:, currentPosition : currentPosition + edpLengthsList[j]] = (
             prediction[:, currentPosition : currentPosition + edpLengthsList[j]]
             + shiftFactors[j]
         )
-        prediction[:, currentPosition : currentPosition + edpLengthsList[j]] = (  # noqa: PLR6104
+        prediction[:, currentPosition : currentPosition + edpLengthsList[j]] = (
             prediction[:, currentPosition : currentPosition + edpLengthsList[j]]
             / scaleFactors[j]
         )
-        currentPosition = currentPosition + edpLengthsList[j]  # noqa: N806, PLR6104
+        currentPosition = currentPosition + edpLengthsList[j]
 
     # Compute the normalized residuals
-    allResiduals = prediction - calibrationData  # noqa: N806
+    allResiduals = prediction - calibrationData
 
     # Loop over the normalized residuals to compute the log-likelihood
     loglike = 0
-    covListIndex = 0  # noqa: N806
+    covListIndex = 0
     for i in range(numExperiments):
-        currentPosition = 0  # noqa: N806
+        currentPosition = 0
         for j in range(numResponses):
             # Get the residuals corresponding to this response variable
             length = edpLengthsList[j]
             residuals = allResiduals[i, currentPosition : currentPosition + length]
-            currentPosition = currentPosition + length  # noqa: N806, PLR6104
+            currentPosition = currentPosition + length
 
             # Get the covariance matrix corresponding to this response variable
             cov = np.atleast_2d(covarianceMatrixList[covListIndex])
-            covListIndex = covListIndex + 1  # noqa: N806, PLR6104
+            covListIndex = covListIndex + 1
 
             # Multiply the covariance matrix by the value of the covariance multiplier
-            cov = cov * covarianceMultiplierList[j]  # noqa: PLR6104
+            cov = cov * covarianceMultiplierList[j]
 
             if np.shape(cov)[0] == np.shape(cov)[1] == 1:
                 # If there is a single variance value that is constant for all residual terms, then this is the case of
@@ -132,11 +132,11 @@ def log_likelihood(
                 # Mahalanobis distance]
                 #                = -1/2*[t1 + t2 + t3]
                 t1 = length * np.log(2 * np.pi)
-                eigenValues, eigenVectors = np.linalg.eigh(cov)  # noqa: N806
+                eigenValues, eigenVectors = np.linalg.eigh(cov)
                 logdet = np.sum(np.log(eigenValues))
-                eigenValuesReciprocal = 1.0 / eigenValues  # noqa: N806
+                eigenValuesReciprocal = 1.0 / eigenValues
                 z = eigenVectors * np.sqrt(eigenValuesReciprocal)
-                mahalanobisDistance = np.square(np.dot(residuals, z)).sum()  # noqa: N806
+                mahalanobisDistance = np.square(np.dot(residuals, z)).sum()
                 ll = -0.5 * (t1 + logdet + mahalanobisDistance)
             if not np.isnan(ll):
                 loglike += ll

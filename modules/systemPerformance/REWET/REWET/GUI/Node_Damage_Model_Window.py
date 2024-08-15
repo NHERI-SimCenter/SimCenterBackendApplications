@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Node_Damage_Model_Window.ui'  # noqa: CPY001, D100, N999
+# Form implementation generated from reading ui file 'Node_Damage_Model_Window.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,8 +8,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Node_Damage_Model:  # noqa: D101
-    def setupUi(self, Node_Damage_Model):  # noqa: N802, N803, D102, PLR0915
+class Ui_Node_Damage_Model:
+    def setupUi(self, Node_Damage_Model):
         Node_Damage_Model.setObjectName('Node_Damage_Model')
         Node_Damage_Model.resize(396, 296)
         palette = QtGui.QPalette()
@@ -185,7 +185,7 @@ class Ui_Node_Damage_Model:  # noqa: D101
         self.buttonBox.rejected.connect(Node_Damage_Model.reject)
         QtCore.QMetaObject.connectSlotsByName(Node_Damage_Model)
 
-    def retranslateUi(self, Node_Damage_Model):  # noqa: N802, N803, D102
+    def retranslateUi(self, Node_Damage_Model):
         _translate = QtCore.QCoreApplication.translate
         Node_Damage_Model.setWindowTitle(
             _translate('Node_Damage_Model', 'Node Damage Model')

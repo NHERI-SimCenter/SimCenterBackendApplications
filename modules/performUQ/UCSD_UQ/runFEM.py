@@ -2,75 +2,75 @@
 and Prof. J.P. Conte
 affiliation: SimCenter*; University of California, San Diego
 
-"""  # noqa: CPY001, D205, D400, INP001
+"""
 
 import os
 import shutil
-import subprocess  # noqa: S404
+import subprocess
 
 import numpy as np
 
 
-def copytree(src, dst, symlinks=False, ignore=None):  # noqa: FBT002, D103
-    if not os.path.exists(dst):  # noqa: PTH110
-        os.makedirs(dst)  # noqa: PTH103
+def copytree(src, dst, symlinks=False, ignore=None):
+    if not os.path.exists(dst):
+        os.makedirs(dst)
     for item in os.listdir(src):
-        s = os.path.join(src, item)  # noqa: PTH118
-        d = os.path.join(dst, item)  # noqa: PTH118
-        if os.path.isdir(s):  # noqa: PTH112
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+        if os.path.isdir(s):
             copytree(s, d, symlinks, ignore)
         else:
             try:
                 if (
-                    not os.path.exists(d)  # noqa: PTH110
-                    or os.stat(s).st_mtime - os.stat(d).st_mtime > 1  # noqa: PTH116
+                    not os.path.exists(d)
+                    or os.stat(s).st_mtime - os.stat(d).st_mtime > 1
                 ):
                     shutil.copy2(s, d)
-            except Exception as ex:  # noqa: BLE001
+            except Exception as ex:
                 msg = f'Could not copy {s}. The following error occurred: \n{ex}'
-                return msg  # noqa: RET504
+                return msg
     return '0'
 
 
-def runFEM(  # noqa: N802
-    particleNumber,  # noqa: N803
-    parameterSampleValues,  # noqa: N803
+def runFEM(
+    particleNumber,
+    parameterSampleValues,
     variables,
-    workdirMain,  # noqa: N803
+    workdirMain,
     log_likelihood_function,
-    calibrationData,  # noqa: ARG001, N803
-    numExperiments,  # noqa: ARG001, N803
-    covarianceMatrixList,  # noqa: ARG001, N803
-    edpNamesList,  # noqa: N803
-    edpLengthsList,  # noqa: N803
-    scaleFactors,  # noqa: ARG001, N803
-    shiftFactors,  # noqa: ARG001, N803
-    workflowDriver,  # noqa: N803
+    calibrationData,
+    numExperiments,
+    covarianceMatrixList,
+    edpNamesList,
+    edpLengthsList,
+    scaleFactors,
+    shiftFactors,
+    workflowDriver,
 ):
     """This function runs FE model (model.tcl) for each parameter value (par)
     model.tcl should take parameter input
     model.tcl should output 'output$PN.txt' -> column vector of size 'Ny'
-    """  # noqa: D205, D400, D401, D404
-    workdirName = 'workdir.' + str(particleNumber + 1)  # noqa: N806
-    analysisPath = os.path.join(workdirMain, workdirName)  # noqa: PTH118, N806
+    """
+    workdirName = 'workdir.' + str(particleNumber + 1)
+    analysisPath = os.path.join(workdirMain, workdirName)
 
-    if os.path.isdir(analysisPath):  # noqa: PTH112
-        os.chmod(os.path.join(analysisPath, workflowDriver), 0o777)  # noqa: S103, PTH101, PTH118
+    if os.path.isdir(analysisPath):
+        os.chmod(os.path.join(analysisPath, workflowDriver), 0o777)
         shutil.rmtree(analysisPath)
 
-    os.mkdir(analysisPath)  # noqa: PTH102
+    os.mkdir(analysisPath)
 
     # copy templatefiles
-    templateDir = os.path.join(workdirMain, 'templatedir')  # noqa: PTH118, N806
+    templateDir = os.path.join(workdirMain, 'templatedir')
     copytree(templateDir, analysisPath)
 
     # change to analysis directory
     os.chdir(analysisPath)
 
     # write input file and covariance multiplier values list
-    covarianceMultiplierList = []  # noqa: N806
-    parameterNames = variables['names']  # noqa: N806
-    with open('params.in', 'w') as f:  # noqa: PLW1514, PTH123
+    covarianceMultiplierList = []
+    parameterNames = variables['names']
+    with open('params.in', 'w') as f:
         f.write(f'{len(parameterSampleValues) - len(edpNamesList)}\n')
         for i in range(len(parameterSampleValues)):
             name = str(parameterNames[i])
@@ -82,16 +82,16 @@ def runFEM(  # noqa: N802
 
     # subprocess.run(workflowDriver, stderr=subprocess.PIPE, shell=True)
 
-    returnCode = subprocess.call(  # noqa: S602, N806, F841
-        os.path.join(analysisPath, workflowDriver),  # noqa: PTH118
+    returnCode = subprocess.call(
+        os.path.join(analysisPath, workflowDriver),
         shell=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.STDOUT,
     )  # subprocess.check_call(workflow_run_command, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
     # Read in the model prediction
-    if os.path.exists('results.out'):  # noqa: PTH110
-        with open('results.out') as f:  # noqa: PLW1514, PTH123
+    if os.path.exists('results.out'):
+        with open('results.out') as f:
             prediction = np.atleast_2d(np.genfromtxt(f)).reshape((1, -1))
         preds = prediction.copy()
         os.chdir('../')

@@ -1,29 +1,29 @@
-# %%  # noqa: CPY001, D100, INP001
+# %%
 import os
 
 directory = './Events'
 # check if the directory exists
-if not os.path.exists(directory):  # noqa: PTH110
-    os.makedirs(directory)  # noqa: PTH103
-import json  # noqa: E402
+if not os.path.exists(directory):
+    os.makedirs(directory)
+import json
 
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
+import numpy as np
+import pandas as pd
 
 
-def Istanbul(information):  # noqa: N802, D103
-    TopoFlag = information['TopoFlag']  # noqa: N806
-    LocationFlag = information['LocationFlag']  # noqa: N806
-    numSiteGM = information['number_of_realizations']  # noqa: N806
+def Istanbul(information):
+    TopoFlag = information['TopoFlag']
+    LocationFlag = information['LocationFlag']
+    numSiteGM = information['number_of_realizations']
 
-    randomFLag = True  # if True, the realizations are selected randomly, otherwise, the first numSiteGM sites are selected  # noqa: N806
-    maxnumSiteGM = 57  # noqa: N806
-    numSiteGM = min(numSiteGM, maxnumSiteGM)  # number of realizations  # noqa: N806
+    randomFLag = True  # if True, the realizations are selected randomly, otherwise, the first numSiteGM sites are selected
+    maxnumSiteGM = 57
+    numSiteGM = min(numSiteGM, maxnumSiteGM)  # number of realizations
 
     directory = './Events'
     # check if the directory exists
-    if not os.path.exists(directory):  # noqa: PTH110
-        os.makedirs(directory)  # noqa: PTH103
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
     # changing realizations order
     indices = list(range(1, maxnumSiteGM + 1))
@@ -35,21 +35,21 @@ def Istanbul(information):  # noqa: N802, D103
 
     if 'TopoFlag':
         # IstanbulDirectory = '/corral-repl/projects/NHERI/published/PRJ-3712/GM_data/GM_topo/'
-        IstanbulDirectory = '/home/jovyan/work/projects/PRJ-3712/GM_data/GM_topo/'  # noqa: N806
+        IstanbulDirectory = '/home/jovyan/work/projects/PRJ-3712/GM_data/GM_topo/'
     else:
         # IstanbulDirectory = '/corral-repl/projects/NHERI/published/PRJ-3712/GM_data/GM_flat/'
-        IstanbulDirectory = '/home/jovyan/work/projects/PRJ-3712/GM_data/GM_flat/'  # noqa: N806
+        IstanbulDirectory = '/home/jovyan/work/projects/PRJ-3712/GM_data/GM_flat/'
 
     # print number of cites
-    print(f'Number of sites: {len(gdf)}')  # noqa: T201
+    print(f'Number of sites: {len(gdf)}')
     for realization in indices:
         # load the data frame from the hdf file
         if TopoFlag:
-            df = pd.HDFStore(  # noqa: PD901
+            df = pd.HDFStore(
                 f'{IstanbulDirectory}/Istanbul_sim{realization}.hdf5', 'r'
             )
         else:
-            df = pd.HDFStore(  # noqa: PD901
+            df = pd.HDFStore(
                 f'{IstanbulDirectory}/Istanbul_sim{realization}_flat.hdf5', 'r'
             )
 
@@ -79,13 +79,13 @@ def Istanbul(information):  # noqa: N802, D103
     )
 
 
-def write_motion(site_name, directory, i, motiondict):  # noqa: D103
+def write_motion(site_name, directory, i, motiondict):
     filename = f'{directory}/site_{site_name}_{i}.json'
-    with open(filename, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(filename, 'w') as f:
         json.dump(motiondict, f, indent=2)
 
 
 # get the location flag
-with open('information.json') as file:  # noqa: PLW1514, PTH123
+with open('information.json') as file:
     information = json.load(file)
 Istanbul(information)

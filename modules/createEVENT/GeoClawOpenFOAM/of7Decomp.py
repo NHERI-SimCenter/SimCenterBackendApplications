@@ -1,4 +1,4 @@
-# # noqa: INP001
+#
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: D400
+"""
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -47,7 +47,7 @@ class of7Decomp:
     -------
             decomptext: Get all the text for the decomposeParDict
 
-    """  # noqa: D205, D404
+    """
 
     #############################################################
     def decomptext(self, data):
@@ -57,7 +57,7 @@ class of7Decomp:
         ---------
                 data: all the JSON data
 
-        """  # noqa: D400, D401
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -73,18 +73,18 @@ class of7Decomp:
 
         decomptext = decomptext + 'numberOfSubdomains\t' + subdomains + ';\n\n'
 
-        decomptext = decomptext + 'method\tscotch;\n\n'  # noqa: PLR6104
+        decomptext = decomptext + 'method\tscotch;\n\n'
 
-        return decomptext  # noqa: RET504
+        return decomptext
 
     #############################################################
-    def decompheader(self):  # noqa: PLR6301
+    def decompheader(self):
         """Creates the text for the header
 
         Variable
         -----------
                 header: Header for the decomposeparDict-file
-        """  # noqa: D400, D401
+        """
         header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
@@ -94,13 +94,13 @@ class of7Decomp:
 \\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"system";\n\tobject\tdecomposeParDict;\n}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
 
         # Return the header for U file
-        return header  # noqa: RET504
+        return header
 
     #############################################################
-    def scripts(self, data, path):  # noqa: ARG002, PLR6301
+    def scripts(self, data, path):
         """Create the scripts for caserun.sh
 
         Arguments:
@@ -108,7 +108,7 @@ FoamFile
                 data: all the JSON data
                 path: Path where dakota.json file is located
 
-        """  # noqa: D400
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -128,13 +128,13 @@ FoamFile
         if int(totalprocs) > 1:
             # Decompose the domain
             caseruntext = 'echo Decomposing domain...\n'
-            caseruntext = caseruntext + 'decomposePar > decomposePar.log\n\n'  # noqa: PLR6104
+            caseruntext = caseruntext + 'decomposePar > decomposePar.log\n\n'
 
             # Start the CFD simulation
-            caseruntext = (  # noqa: PLR6104
+            caseruntext = (
                 caseruntext + 'echo Starting CFD simulation in parallel...\n'
             )
-            if int(simtype) == 4:  # noqa: PLR2004
+            if int(simtype) == 4:
                 caseruntext = (
                     caseruntext
                     + 'ibrun -n '
@@ -151,12 +151,12 @@ FoamFile
 
         else:
             caseruntext = 'echo Starting CFD simulation in serial...\n'
-            if int(simtype) == 4:  # noqa: PLR2004
-                caseruntext = caseruntext + 'olaDyMFlow > olaDyMFlow.log\n\n'  # noqa: PLR6104
+            if int(simtype) == 4:
+                caseruntext = caseruntext + 'olaDyMFlow > olaDyMFlow.log\n\n'
             else:
-                caseruntext = caseruntext + 'olaFlow > olaFlow.log\n\n'  # noqa: PLR6104
+                caseruntext = caseruntext + 'olaFlow > olaFlow.log\n\n'
 
         # Write to caserun file
-        scriptfile = open('caserun.sh', 'a')  # noqa: PLW1514, PTH123, SIM115
+        scriptfile = open('caserun.sh', 'a')
         scriptfile.write(caseruntext)
         scriptfile.close()

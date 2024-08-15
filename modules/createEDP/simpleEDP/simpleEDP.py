@@ -1,8 +1,8 @@
-import sys  # noqa: CPY001, D100, INP001
+import sys
 
 if sys.version.startswith('2'):
-    range = xrange  # noqa: A001, F821
-    string_types = basestring  # noqa: F821
+    range = xrange
+    string_types = basestring
 else:
     string_types = str
 
@@ -10,15 +10,15 @@ import argparse
 import json
 
 
-def write_RV(AIM_input_path, EDP_input_path, EDP_type):  # noqa: N802, N803, D103
+def write_RV(AIM_input_path, EDP_input_path, EDP_type):
     # load the AIM file
-    with open(AIM_input_path, encoding='utf-8') as f:  # noqa: PTH123
-        AIM_in = json.load(f)  # noqa: N806
+    with open(AIM_input_path, encoding='utf-8') as f:
+        AIM_in = json.load(f)
 
-    EDP_list = []  # noqa: N806
-    if 'EDP' in AIM_in.keys():  # noqa: SIM118
+    EDP_list = []
+    if 'EDP' in AIM_in.keys():
         for edp in AIM_in['EDP']:
-            EDP_list.append(  # noqa: PERF401
+            EDP_list.append(
                 {
                     'type': edp['type'],
                     'cline': edp.get('cline', '1'),
@@ -45,7 +45,7 @@ def write_RV(AIM_input_path, EDP_input_path, EDP_type):  # noqa: N802, N803, D10
             }
         )
 
-    EDP_json = {  # noqa: N806
+    EDP_json = {
         'RandomVariables': [],
         'total_number_edp': len(EDP_list),
         'EngineeringDemandParameters': [
@@ -53,11 +53,11 @@ def write_RV(AIM_input_path, EDP_input_path, EDP_type):  # noqa: N802, N803, D10
         ],
     }
 
-    with open(EDP_input_path, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(EDP_input_path, 'w') as f:
         json.dump(EDP_json, f, indent=2)
 
 
-def create_EDP(AIM_input_path, EDP_input_path, EDP_type):  # noqa: ARG001, N802, N803, D103
+def create_EDP(AIM_input_path, EDP_input_path, EDP_type):
     pass
 
 

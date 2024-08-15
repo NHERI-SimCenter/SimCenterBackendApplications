@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -49,14 +49,14 @@ from pathlib import Path
 
 from createGM4BIM import createFilesForEventGrid
 
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 import whale.main as whale
 from sWHALE import runSWhale
 from whale.main import log_div, log_msg
 
 
-def main(  # noqa: C901, D103
+def main(
     run_type,
     input_file,
     app_registry,
@@ -67,32 +67,32 @@ def main(  # noqa: C901, D103
     app_dir,
     log_file,
     output_dir,
-    parallelType,  # noqa: N803
-    mpiExec,  # noqa: N803
-    numPROC,  # noqa: N803
+    parallelType,
+    mpiExec,
+    numPROC,
 ):
-    numP = 1  # noqa: N806
-    procID = 0  # noqa: N806
-    doParallel = False  # noqa: N806
+    numP = 1
+    procID = 0
+    doParallel = False
 
     mpi_spec = importlib.util.find_spec('mpi4py')
     found = mpi_spec is not None
     if found:
-        from mpi4py import MPI  # noqa: PLC0415
+        from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
-        numP = comm.Get_size()  # noqa: N806
-        procID = comm.Get_rank()  # noqa: N806
-        parallelType = 'parRUN'  # noqa: N806
-        if numP < 2:  # noqa: PLR2004
-            doParallel = False  # noqa: N806
-            numP = 1  # noqa: N806
-            parallelType = 'seqRUN'  # noqa: N806
-            procID = 0  # noqa: N806
+        numP = comm.Get_size()
+        procID = comm.Get_rank()
+        parallelType = 'parRUN'
+        if numP < 2:
+            doParallel = False
+            numP = 1
+            parallelType = 'seqRUN'
+            procID = 0
         else:
-            doParallel = True  # noqa: N806
+            doParallel = True
 
-    print(  # noqa: T201
+    print(
         'siteResponse (doParallel, procID, numP):',
         doParallel,
         procID,
@@ -102,16 +102,16 @@ def main(  # noqa: C901, D103
     )
 
     # save the reference dir in the input file
-    with open(input_file, encoding='utf-8') as f:  # noqa: PTH123
+    with open(input_file, encoding='utf-8') as f:
         inputs = json.load(f)
 
-    print('WORKING_DIR', working_dir)  # noqa: T201
+    print('WORKING_DIR', working_dir)
 
     if procID == 0:
-        if not os.path.exists(working_dir):  # noqa: PTH110
-            os.mkdir(working_dir)  # noqa: PTH102
+        if not os.path.exists(working_dir):
+            os.mkdir(working_dir)
 
-    if doParallel == True:  # noqa: E712
+    if doParallel == True:
         comm.Barrier()
 
     # initialize log file
@@ -143,31 +143,31 @@ def main(  # noqa: C901, D103
     # for the rWHALE workflow
     #
 
-    randomVariables = []  # noqa: N806
-    if 'randomVariables' in inputs.keys():  # noqa: SIM118
-        randomVariables = inputs['randomVariables']  # noqa: N806
+    randomVariables = []
+    if 'randomVariables' in inputs.keys():
+        randomVariables = inputs['randomVariables']
 
-    inputApplications = inputs['Applications']  # noqa: N806
-    regionalApplication = inputApplications['RegionalEvent']  # noqa: N806
-    appData = regionalApplication['ApplicationData']  # noqa: N806
-    regionalData = inputs['RegionalEvent']  # noqa: N806
+    inputApplications = inputs['Applications']
+    regionalApplication = inputApplications['RegionalEvent']
+    appData = regionalApplication['ApplicationData']
+    regionalData = inputs['RegionalEvent']
     regionalData['eventFile'] = (
         appData['inputEventFilePath'] + '/' + appData['inputEventFile']
     )
     regionalData['eventFilePath'] = appData['inputEventFilePath']
 
-    siteFilter = appData['filter']  # noqa: N806
+    siteFilter = appData['filter']
 
     # KZ: 10/19/2022, adding new attributes for the refactored whale
 
-    remoteAppDir = inputs.get('remoteAppDir', '')  # noqa: N806
-    localAppDir = inputs.get('localAppDir', '')  # noqa: N806
-    if localAppDir == '':  # noqa: PLC1901
-        localAppDir = remoteAppDir  # noqa: N806
-    if remoteAppDir == '':  # noqa: PLC1901
-        remoteAppDir = localAppDir  # noqa: N806
+    remoteAppDir = inputs.get('remoteAppDir', '')
+    localAppDir = inputs.get('localAppDir', '')
+    if localAppDir == '':
+        localAppDir = remoteAppDir
+    if remoteAppDir == '':
+        remoteAppDir = localAppDir
 
-    siteResponseInput = {  # noqa: N806
+    siteResponseInput = {
         'units': inputs['units'],
         'outputs': {
             'IM': True,
@@ -207,7 +207,7 @@ def main(  # noqa: C901, D103
                 }
             ],
         },
-        'UQ': inputs.get('UQ', dict()),  # noqa: C408
+        'UQ': inputs.get('UQ', dict()),
         'localAppDir': localAppDir,
         'remoteAppDir': remoteAppDir,
         'runType': inputs.get('runType', ''),
@@ -228,16 +228,16 @@ def main(  # noqa: C901, D103
     # siteResponseInputFile = 'tmpSiteResponseInput.json'
     # siteResponseInputFile = os.path.join(os.path.dirname(input_file),'tmpSiteResponseInput.json')
     # KZ: 10/19/2022, fixing the json file path
-    siteResponseInputFile = os.path.join(  # noqa: PTH118, N806
-        os.path.dirname(reference_dir),  # noqa: PTH120
+    siteResponseInputFile = os.path.join(
+        os.path.dirname(reference_dir),
         'tmpSiteResponseInput.json',
     )
 
     if procID == 0:
-        with open(siteResponseInputFile, 'w') as json_file:  # noqa: FURB103, PLW1514, PTH123
+        with open(siteResponseInputFile, 'w') as json_file:
             json_file.write(json.dumps(siteResponseInput, indent=2))
 
-    WF = whale.Workflow(  # noqa: N806
+    WF = whale.Workflow(
         run_type,
         siteResponseInputFile,
         app_registry,
@@ -251,7 +251,7 @@ def main(  # noqa: C901, D103
     )
 
     if bldg_id_filter is not None:
-        print(bldg_id_filter)  # noqa: T201
+        print(bldg_id_filter)
         log_msg(f'Overriding simulation scope; running buildings {bldg_id_filter}')
 
         # If a Min or Max attribute is used when calling the script, we need to
@@ -265,38 +265,38 @@ def main(  # noqa: C901, D103
         # prepare the basic inputs for individual buildings
         asset_files = WF.create_asset_files()
 
-    if doParallel == True:  # noqa: E712
+    if doParallel == True:
         comm.Barrier()
 
     asset_files = WF.augment_asset_files()
 
     if procID == 0:
-        for asset_type, assetIt in asset_files.items():  # noqa: N806
+        for asset_type, assetIt in asset_files.items():
             # perform the regional mapping
             # WF.perform_regional_mapping(assetIt)
             # KZ: 10/19/2022, adding the required argument for the new whale
-            print('0 STARTING MAPPING')  # noqa: T201
+            print('0 STARTING MAPPING')
             # FMK _ PARALLEL WF.perform_regional_mapping(assetIt, asset_type, False)
             # WF.perform_regional_mapping(assetIt, asset_type)
-            WF.perform_regional_mapping(assetIt, asset_type, False)  # noqa: FBT003
+            WF.perform_regional_mapping(assetIt, asset_type, False)
 
     # get all other processes to wait till we are here
-    if doParallel == True:  # noqa: E712
+    if doParallel == True:
         comm.Barrier()
 
-    print('BARRIER AFTER PERFORM REGIONAL MAPPING')  # noqa: T201
+    print('BARRIER AFTER PERFORM REGIONAL MAPPING')
 
     count = 0
-    for asset_type, assetIt in asset_files.items():  # noqa: N806
-        # TODO: not elegant code, fix later  # noqa: TD002
-        with open(assetIt, encoding='utf-8') as f:  # noqa: PTH123
+    for asset_type, assetIt in asset_files.items():
+        # TODO: not elegant code, fix later
+        with open(assetIt, encoding='utf-8') as f:
             asst_data = json.load(f)
 
         # The preprocess app sequence (previously get_RV)
         preprocess_app_sequence = ['Event', 'EDP']
 
         # The workflow app sequence
-        WF_app_sequence = ['Assets', 'Event', 'EDP']  # noqa: N806
+        WF_app_sequence = ['Assets', 'Event', 'EDP']
 
         # For each asset
         for asst in asst_data:
@@ -307,7 +307,7 @@ def main(  # noqa: C901, D103
                 log_div()
 
                 # Run sWhale
-                print('COUNT: ', count, ' ID: ', procID)  # noqa: T201
+                print('COUNT: ', count, ' ID: ', procID)
 
                 runSWhale(
                     inputs=None,
@@ -321,14 +321,14 @@ def main(  # noqa: C901, D103
                     force_cleanup=force_cleanup,
                 )
 
-            count = count + 1  # noqa: PLR6104
+            count = count + 1
 
-    if doParallel == True:  # noqa: E712
+    if doParallel == True:
         comm.Barrier()
 
     if procID == 0:
         createFilesForEventGrid(
-            os.path.join(working_dir, 'Buildings'),  # noqa: PTH118
+            os.path.join(working_dir, 'Buildings'),
             output_dir,
             force_cleanup,
         )
@@ -338,7 +338,7 @@ def main(  # noqa: C901, D103
         # KZ: 10/19/2022, chaining bldg_data to asst_data
         WF.aggregate_results(asst_data=asst_data)
 
-    if doParallel == True:  # noqa: E712
+    if doParallel == True:
         comm.Barrier()
 
     # clean up intermediate files from the working directory
@@ -352,32 +352,32 @@ def main(  # noqa: C901, D103
 
 
 if __name__ == '__main__':
-    pwd1 = os.getcwd()  # noqa: PTH109
-    if os.path.basename(pwd1) == 'Results':  # noqa: PTH119
+    pwd1 = os.getcwd()
+    if os.path.basename(pwd1) == 'Results':
         os.chdir('..')
 
     #
     # little bit of preprocessing
     #
 
-    thisScriptPath = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120, N816
-    registryFile = thisScriptPath / 'WorkflowApplications.json'  # noqa: N816
-    applicationDir = Path(thisScriptPath).parents[1]  # noqa: N816
-    pwd = os.getcwd()  # noqa: PTH109
-    currentDir = Path(pwd)  # noqa: N816
-    referenceDir = currentDir / 'input_data'  # noqa: N816
-    siteResponseOutputDir = referenceDir / 'siteResponseWorkingDir'  # noqa: N816
-    siteResponseAggregatedResultsDir = referenceDir / 'siteResponseOutputMotions'  # noqa: N816
+    thisScriptPath = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+    registryFile = thisScriptPath / 'WorkflowApplications.json'
+    applicationDir = Path(thisScriptPath).parents[1]
+    pwd = os.getcwd()
+    currentDir = Path(pwd)
+    referenceDir = currentDir / 'input_data'
+    siteResponseOutputDir = referenceDir / 'siteResponseWorkingDir'
+    siteResponseAggregatedResultsDir = referenceDir / 'siteResponseOutputMotions'
 
-    print('PWD: ', pwd)  # noqa: T201
-    print('currentDir: ', currentDir)  # noqa: T201
-    print('referenceDir: ', referenceDir)  # noqa: T201
-    print('siteResponseOutputDir: ', siteResponseOutputDir)  # noqa: T201
+    print('PWD: ', pwd)
+    print('currentDir: ', currentDir)
+    print('referenceDir: ', referenceDir)
+    print('siteResponseOutputDir: ', siteResponseOutputDir)
     #
     # parse command line
     #
 
-    workflowArgParser = argparse.ArgumentParser(  # noqa: N816
+    workflowArgParser = argparse.ArgumentParser(
         'Run the NHERI SimCenter rWHALE workflow for a set of assets.',
         allow_abbrev=False,
     )
@@ -461,11 +461,11 @@ if __name__ == '__main__':
     )
 
     # Parsing the command line arguments
-    wfArgs = workflowArgParser.parse_args()  # noqa: N816
+    wfArgs = workflowArgParser.parse_args()
 
     # update the local app dir with the default - if needed
     if wfArgs.appDir is None:
-        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
+        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
         wfArgs.appDir = workflow_dir.parents[1]
 
     if wfArgs.check:
@@ -478,8 +478,8 @@ if __name__ == '__main__':
     #
     # Calling the main workflow method and passing the parsed arguments
     #
-    print('FMK siteResponse main: WORKDIR: ', wfArgs.workDir)  # noqa: T201
-    numPROC = int(wfArgs.numP)  # noqa: N816
+    print('FMK siteResponse main: WORKDIR: ', wfArgs.workDir)
+    numPROC = int(wfArgs.numP)
 
     main(
         run_type=run_type,

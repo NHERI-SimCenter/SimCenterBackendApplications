@@ -1,98 +1,98 @@
 """authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, and Prof. J.P. Conte
 affiliation: University of California, San Diego
 
-"""  # noqa: CPY001, D205, D400, INP001
+"""
 
 import numpy as np
 from runFEM import runFEM
 from scipy.special import logsumexp
 
 
-def initial_population(N, p):  # noqa: N803, D103
-    IniPop = np.zeros((N, len(p)))  # noqa: N806
+def initial_population(N, p):
+    IniPop = np.zeros((N, len(p)))
     for i in range(len(p)):
         IniPop[:, i] = p[i].generate_rns(N)
     return IniPop
 
 
-def log_prior(s, p):  # noqa: D103
-    logP = 0  # noqa: N806
+def log_prior(s, p):
+    logP = 0
     for i in range(len(s)):
-        logP = logP + p[i].log_pdf_eval(s[i])  # noqa: N806, PLR6104
+        logP = logP + p[i].log_pdf_eval(s[i])
     return logP
 
 
-def propose(current, covariance, n):  # noqa: D103
+def propose(current, covariance, n):
     return np.random.multivariate_normal(current, covariance, n)
 
 
-def compute_beta(beta, likelihoods, prev_ESS, threshold):  # noqa: N803, D103
+def compute_beta(beta, likelihoods, prev_ESS, threshold):
     old_beta = beta
     min_beta = beta
     max_beta = 2.0
     # rN = int(len(likelihoods) * 0.95)   #pymc3 uses 0.5
-    rN = threshold * prev_ESS  # purdue prof uses 0.95  # noqa: N806
+    rN = threshold * prev_ESS  # purdue prof uses 0.95
     new_beta = beta
-    while max_beta - min_beta > 1e-3:  # noqa: PLR2004
+    while max_beta - min_beta > 1e-3:
         new_beta = 0.5 * (max_beta + min_beta)
         # plausible weights of Sm corresponding to new beta
         inc_beta = new_beta - old_beta
-        Wm = np.exp(inc_beta * (likelihoods - likelihoods.max()))  # noqa: N806
-        ESS = int(1 / np.sum((Wm / sum(Wm)) ** 2))  # noqa: N806
+        Wm = np.exp(inc_beta * (likelihoods - likelihoods.max()))
+        ESS = int(1 / np.sum((Wm / sum(Wm)) ** 2))
         if rN == ESS:
             break
-        elif rN > ESS:  # noqa: RET508
+        elif rN > ESS:
             max_beta = new_beta
         else:
             min_beta = new_beta
 
-    if new_beta < 1e-3:  # noqa: PLR2004
+    if new_beta < 1e-3:
         new_beta = 1e-3
         inc_beta = new_beta - old_beta
-        Wm = np.exp(inc_beta * (likelihoods - likelihoods.max()))  # noqa: N806
+        Wm = np.exp(inc_beta * (likelihoods - likelihoods.max()))
 
-    if new_beta >= 0.95:  # noqa: PLR2004
+    if new_beta >= 0.95:
         new_beta = 1
         # plausible weights of Sm corresponding to new beta
         inc_beta = new_beta - old_beta
-        Wm = np.exp(inc_beta * (likelihoods - likelihoods.max()))  # noqa: N806
+        Wm = np.exp(inc_beta * (likelihoods - likelihoods.max()))
 
     return new_beta, Wm, ESS
 
 
-def compute_beta_evidence_old(  # noqa: D103
+def compute_beta_evidence_old(
     beta,
     log_likelihoods,
     log_evidence,
-    prev_ESS,  # noqa: N803
+    prev_ESS,
     threshold,
 ):
     old_beta = beta
     min_beta = beta
     max_beta = 2.0
 
-    N = len(log_likelihoods)  # noqa: N806
-    min_ESS = np.ceil(0.1 * N)  # noqa: N806
-    rN = max(threshold * prev_ESS, min_ESS)  # noqa: N806
+    N = len(log_likelihoods)
+    min_ESS = np.ceil(0.1 * N)
+    rN = max(threshold * prev_ESS, min_ESS)
 
     new_beta = 0.5 * (max_beta + min_beta)
     inc_beta = new_beta - old_beta
-    log_Wm = inc_beta * log_likelihoods  # noqa: N806
-    log_Wm_n = log_Wm - logsumexp(log_Wm)  # noqa: N806
-    ESS = int(np.exp(-logsumexp(log_Wm_n * 2)))  # noqa: N806
+    log_Wm = inc_beta * log_likelihoods
+    log_Wm_n = log_Wm - logsumexp(log_Wm)
+    ESS = int(np.exp(-logsumexp(log_Wm_n * 2)))
 
-    while max_beta - min_beta > 1e-6:  # min step size  # noqa: PLR2004
+    while max_beta - min_beta > 1e-6:  # min step size
         new_beta = 0.5 * (max_beta + min_beta)
         # plausible weights of Sm corresponding to new beta
         inc_beta = new_beta - old_beta
 
-        log_Wm = inc_beta * log_likelihoods  # noqa: N806
-        log_Wm_n = log_Wm - logsumexp(log_Wm)  # noqa: N806
-        ESS = int(np.exp(-logsumexp(log_Wm_n * 2)))  # noqa: N806
+        log_Wm = inc_beta * log_likelihoods
+        log_Wm_n = log_Wm - logsumexp(log_Wm)
+        ESS = int(np.exp(-logsumexp(log_Wm_n * 2)))
 
         if rN == ESS:
             break
-        elif rN > ESS:  # noqa: RET508
+        elif rN > ESS:
             max_beta = new_beta
         else:
             min_beta = new_beta
@@ -102,11 +102,11 @@ def compute_beta_evidence_old(  # noqa: D103
         # plausible weights of Sm corresponding to new beta
         inc_beta = new_beta - old_beta
 
-        log_Wm = inc_beta * log_likelihoods  # noqa: N806
-        log_Wm_n = log_Wm - logsumexp(log_Wm)  # noqa: N806
+        log_Wm = inc_beta * log_likelihoods
+        log_Wm_n = log_Wm - logsumexp(log_Wm)
 
-    Wm = np.exp(log_Wm)  # noqa: N806, F841
-    Wm_n = np.exp(log_Wm_n)  # noqa: N806
+    Wm = np.exp(log_Wm)
+    Wm_n = np.exp(log_Wm_n)
 
     # update model evidence
     # evidence = evidence * (sum(Wm)/N)
@@ -117,32 +117,32 @@ def compute_beta_evidence_old(  # noqa: D103
 
 
 # MCMC
-def MCMC_MH_old(  # noqa: D103, N802, PLR0913, PLR0917
-    ParticleNum,  # noqa: N803
-    Em,  # noqa: N803
-    Nm_steps,  # noqa: N803
+def MCMC_MH_old(
+    ParticleNum,
+    Em,
+    Nm_steps,
     current,
     likelihood_current,
     posterior_current,
     beta,
-    numAccepts,  # noqa: N803
-    AllPars,  # noqa: N803
+    numAccepts,
+    AllPars,
     log_likelihood,
     variables,
-    resultsLocation,  # noqa: N803
+    resultsLocation,
     rng,
-    calibrationData,  # noqa: N803
-    numExperiments,  # noqa: N803
-    covarianceMatrixList,  # noqa: N803
-    edpNamesList,  # noqa: N803
-    edpLengthsList,  # noqa: N803
-    normalizingFactors,  # noqa: N803
-    locShiftList,  # noqa: N803
-    workflowDriver,  # noqa: N803
+    calibrationData,
+    numExperiments,
+    covarianceMatrixList,
+    edpNamesList,
+    edpLengthsList,
+    normalizingFactors,
+    locShiftList,
+    workflowDriver,
     prediction_current,
 ):
     all_proposals = []
-    all_PLP = []  # noqa: N806
+    all_PLP = []
 
     # deltas = propose(np.zeros(len(current)), Em, Nm_steps)
     deltas = rng.multivariate_normal(np.zeros(len(current)), Em, Nm_steps)
@@ -188,7 +188,7 @@ def MCMC_MH_old(  # noqa: D103, N802, PLR0913, PLR0917
             current = proposal
             posterior_current = posterior_proposal
             likelihood_current = likelihood_proposal
-            numAccepts += 1  # noqa: N806
+            numAccepts += 1
             prediction_current = prediction_proposal
 
     # gather all last samples
@@ -204,32 +204,32 @@ def MCMC_MH_old(  # noqa: D103, N802, PLR0913, PLR0917
 
 
 # MCMC
-def MCMC_MH(  # noqa: D103, N802, PLR0913, PLR0917
-    ParticleNum,  # noqa: N803
-    Em,  # noqa: N803
-    Nm_steps,  # noqa: N803
+def MCMC_MH(
+    ParticleNum,
+    Em,
+    Nm_steps,
     current,
     likelihood_current,
     posterior_current,
     beta,
-    numAccepts,  # noqa: N803
-    AllPars,  # noqa: N803
+    numAccepts,
+    AllPars,
     log_likelihood,
     variables,
-    resultsLocation,  # noqa: N803
+    resultsLocation,
     rng,
-    calibrationData,  # noqa: N803
-    numExperiments,  # noqa: N803
-    covarianceMatrixList,  # noqa: N803
-    edpNamesList,  # noqa: N803
-    edpLengthsList,  # noqa: N803
-    normalizingFactors,  # noqa: N803
-    locShiftList,  # noqa: N803
-    workflowDriver,  # noqa: N803
+    calibrationData,
+    numExperiments,
+    covarianceMatrixList,
+    edpNamesList,
+    edpLengthsList,
+    normalizingFactors,
+    locShiftList,
+    workflowDriver,
     prediction_current,
 ):
     all_proposals = []
-    all_PLP = []  # noqa: N806
+    all_PLP = []
 
     # deltas = propose(np.zeros(len(current)), Em, Nm_steps)
     deltas = rng.multivariate_normal(np.zeros(len(current)), Em, Nm_steps)
@@ -275,7 +275,7 @@ def MCMC_MH(  # noqa: D103, N802, PLR0913, PLR0917
             current = proposal
             posterior_current = posterior_proposal
             likelihood_current = likelihood_proposal
-            numAccepts += 1  # noqa: N806
+            numAccepts += 1
             prediction_current = prediction_proposal
 
     # gather all last samples
@@ -331,7 +331,7 @@ def MCMC_MH(  # noqa: D103, N802, PLR0913, PLR0917
 #     return new_beta, log_evidence, Wm_n, ESS
 
 
-def get_weights(dBeta, log_likelihoods):  # noqa: N803, D103
+def get_weights(dBeta, log_likelihoods):
     log_weights = dBeta * log_likelihoods
     log_sum_weights = logsumexp(log_weights)
     log_weights_normalized = log_weights - log_sum_weights
@@ -342,14 +342,14 @@ def get_weights(dBeta, log_likelihoods):  # noqa: N803, D103
     return weights_normalized, cov_weights, std_weights_normalized
 
 
-def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):  # noqa: N803, D103
+def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):
     max_beta = 1.0
-    dBeta = min(max_beta, 1.0 - beta)  # noqa: N806
+    dBeta = min(max_beta, 1.0 - beta)
 
     weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
 
     while cov_weights > (threshold) or (std_weights == 0):
-        dBeta = dBeta * 0.99  # noqa: N806, PLR6104
+        dBeta = dBeta * 0.99
 
         # while (cov_weights > (threshold+0.00000005) or (std_weights == 0)):
         #     if ((cov_weights > (threshold+1.0)) or  (std_weights == 0)):
@@ -371,21 +371,21 @@ def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):  # noq
         #     if ((cov_weights > (threshold+0.00000005)) or  (std_weights == 0)):
         #         dBeta = dBeta*0.99999999
 
-        if dBeta < 1e-3:  # noqa: PLR2004
-            dBeta = 1e-3  # noqa: N806
+        if dBeta < 1e-3:
+            dBeta = 1e-3
             weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
             break
         weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
 
-    beta = beta + dBeta  # noqa: PLR6104
-    if beta > 0.95:  # noqa: PLR2004
+    beta = beta + dBeta
+    if beta > 0.95:
         beta = 1
     log_evidence = logsumexp(dBeta * log_likelihoods) - np.log(len(log_likelihoods))
 
     try:
-        ESS = int(1 / np.sum((weights / np.sum(weights)) ** 2))  # noqa: N806
+        ESS = int(1 / np.sum((weights / np.sum(weights)) ** 2))
     except OverflowError as err:
-        ESS = 0  # noqa: N806
+        ESS = 0
         logFile.write(str(err))
 
     return beta, log_evidence, weights, ESS

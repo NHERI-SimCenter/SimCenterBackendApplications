@@ -1,18 +1,18 @@
-import json  # noqa: CPY001, D100, EXE002, INP001
+import json
 import sys
 
 
-def main(inputFile, outputFile):  # noqa: N803, D103
-    extraArgs = sys.argv[3:]  # noqa: N806
+def main(inputFile, outputFile):
+    extraArgs = sys.argv[3:]
 
     # initialize the log file
-    with open(inputFile) as f:  # noqa: PLW1514, PTH123
+    with open(inputFile) as f:
         data = json.load(f)
 
     for k, val in zip(extraArgs[0::2], extraArgs[1::2]):
         data[k] = val
 
-    with open(outputFile, 'w') as outfile:  # noqa: PLW1514, PTH123
+    with open(outputFile, 'w') as outfile:
         json.dump(data, outfile)
 
 

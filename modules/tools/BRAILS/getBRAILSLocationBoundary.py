@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2024 The Regents of the University of California
 #
 # This file is a part of SimCenter backend applications.
@@ -48,28 +48,28 @@ from brails.workflow.FootprintHandler import FootprintHandler
 
 
 # Define a standard way of printing program outputs:
-def log_msg(msg):  # noqa: D103
+def log_msg(msg):
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
-    print(formatted_msg)  # noqa: T201
+    print(formatted_msg)
 
 
 # Define a way to call BRAILS FootprintHandler:
-def runBrails(latMin, latMax, longMin, longMax, locationStr, outputfile):  # noqa: N802, N803, D103
+def runBrails(latMin, latMax, longMin, longMax, locationStr, outputfile):
     # Initialize FootprintHandler:
-    fpHandler = FootprintHandler()  # noqa: N806
+    fpHandler = FootprintHandler()
     if locationStr == '""':
-        locationStr = ''  # noqa: N806
+        locationStr = ''
     # Run FootprintHandler to generate the boundary GeoJSON file for the entered location:
-    if locationStr == '':  # noqa: PLC1901
-        fpHandler._FootprintHandler__bbox2poly(  # noqa: SLF001
+    if locationStr == '':
+        fpHandler._FootprintHandler__bbox2poly(
             (longMin, latMin, longMax, latMax), outfile=outputfile
         )
     else:
-        fpHandler._FootprintHandler__fetch_roi(locationStr, outfile=outputfile)  # noqa: SLF001
+        fpHandler._FootprintHandler__fetch_roi(locationStr, outfile=outputfile)
 
 
 # Define a way to collect GUI input:
-def main(args):  # noqa: D103
+def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--latMin', default=None, type=float)
     parser.add_argument('--latMax', default=None, type=float)
@@ -81,10 +81,10 @@ def main(args):  # noqa: D103
     args = parser.parse_args(args)
 
     # Create the folder for the user-defined output directory, if it does not exist:
-    outdir = os.path.abspath(args.outputFile).replace(  # noqa: PTH100
+    outdir = os.path.abspath(args.outputFile).replace(
         os.path.split(args.outputFile)[-1], ''
     )
-    os.makedirs(outdir, exist_ok=True)  # noqa: PTH103
+    os.makedirs(outdir, exist_ok=True)
 
     # Run BRAILS FootprintHandler with the user-defined arguments:
     runBrails(

@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2022 Leland Stanford Junior University
 # Copyright (c) 2022 The Regents of the University of California
 #
@@ -44,7 +44,7 @@ import numpy as np
 import requests
 
 
-class USGS_HazardCurve:  # noqa: D101
+class USGS_HazardCurve:
     def __init__(
         self,
         longitude=None,
@@ -55,37 +55,37 @@ class USGS_HazardCurve:  # noqa: D101
         tag=None,
     ):
         if self._load_config():
-            print('USGS_HazardCurve.__init__: configuration loaded.')  # noqa: T201
+            print('USGS_HazardCurve.__init__: configuration loaded.')
         else:
-            print('USGS_HazardCurve.__init__: error in loading configuration file.')  # noqa: T201
+            print('USGS_HazardCurve.__init__: error in loading configuration file.')
             return
 
         if self._check_edition(edition):
             self.edition = self._check_edition(edition)
         else:
-            print(  # noqa: T201
+            print(
                 f'USGS_HazardCurve.__init__: edition {edition} is not supported by USGS.'
             )
             return
 
         query_region = self._get_region(longitude, latitude)
         if query_region is None:
-            print(  # noqa: T201
+            print(
                 f'USGS_HazardCurve.__init__: site (lon, lat) = ({longitude},{latitude}) is not supported.'
             )
             return
-        else:  # noqa: RET505
+        else:
             self.longitude = longitude
             self.latitude = latitude
             self.region = query_region
-            print(  # noqa: T201
+            print(
                 f'USGS_HazardCurve.__init__: site (lon, lat) = ({longitude},{latitude}) is found in USGS region {self.region}.'
             )
 
         if self._check_region(self.region):
-            print(f'USGS_HazardCurve.__init__: region {self.region} is set up.')  # noqa: T201
+            print(f'USGS_HazardCurve.__init__: region {self.region} is set up.')
         else:
-            print(  # noqa: T201
+            print(
                 f'USGS_HazardCurve.__init__: region {self.region} is not supported by edition {self.edition}.'
             )
             return
@@ -93,7 +93,7 @@ class USGS_HazardCurve:  # noqa: D101
         if self._check_vs30(vs30):
             self.vs30 = self._check_vs30(vs30)
         else:
-            print(  # noqa: T201
+            print(
                 f'USGS_HazardCurve.__init__: vs30 {vs30} is not supported by edition {self.edition} and region {self.region}.'
             )
             return
@@ -101,39 +101,39 @@ class USGS_HazardCurve:  # noqa: D101
         if self._check_imt(imt):
             self.imt = imt
         else:
-            print(f'USGS_HazardCurve.__init__: imt {imt} is not supported.')  # noqa: T201
+            print(f'USGS_HazardCurve.__init__: imt {imt} is not supported.')
             return
 
         self.tag = tag
         # return
-        print('USGS_HazardCurve.__init__: configuration done.')  # noqa: T201
+        print('USGS_HazardCurve.__init__: configuration done.')
         return
 
     def _load_config(self):
-        cur_path = os.path.dirname(os.path.abspath(__file__))  # noqa: PTH100, PTH120
-        config_file = os.path.join(cur_path, 'lib', 'USGS_HazardCurveConfig.json')  # noqa: PTH118
+        cur_path = os.path.dirname(os.path.abspath(__file__))
+        config_file = os.path.join(cur_path, 'lib', 'USGS_HazardCurveConfig.json')
         try:
-            with open(config_file) as f:  # noqa: PLW1514, PTH123
+            with open(config_file) as f:
                 self.config = json.load(f)
-            return True  # noqa: TRY300
-        except:  # noqa: E722
+            return True
+        except:
             self.config = {}
             return False
 
-    def _check_edition(self, edition, auto_correction=True):  # noqa: FBT002
+    def _check_edition(self, edition, auto_correction=True):
         # available editions
         ed_list = self.config.get('parameters').get('edition').get('values')
         self.avail_editions = [x.get('value') for x in ed_list]
-        print(  # noqa: T201
+        print(
             f'USGS_HazardCurve._check_edition: available editions: {self.avail_editions}'
         )
 
         # check
         if edition in self.avail_editions:
             return edition
-        elif auto_correction:  # noqa: RET505
+        elif auto_correction:
             edition = self.avail_editions[0]
-            return edition  # noqa: RET504
+            return edition
         else:
             return False
 
@@ -167,9 +167,9 @@ class USGS_HazardCurve:  # noqa: D101
         )
 
         # check
-        if region in self.avail_regions:  # noqa: SIM103
+        if region in self.avail_regions:
             return True
-        else:  # noqa: RET505
+        else:
             return False
 
     def _check_vs30(self, vs30):
@@ -207,17 +207,17 @@ class USGS_HazardCurve:  # noqa: D101
             for x in imt_available
             if x.startswith('SA')
         ]
-        print('Periods available = ', period_available)  # noqa: T201
+        print('Periods available = ', period_available)
         if imt in imt_available:
             self.imt_list = [imt]
             return True
-        else:  # noqa: RET505
+        else:
             cur_period = float(imt.replace('P', '.')[2:])
             if cur_period < np.min(period_available) or cur_period > np.max(
                 period_available
             ):
                 return False
-            else:  # noqa: RET505
+            else:
                 # interpolate periods
                 self.period_list = []
                 for i, p in enumerate(period_available):
@@ -231,33 +231,33 @@ class USGS_HazardCurve:  # noqa: D101
                 # print('self.imt_list = ',self.imt_list)
                 return True
 
-    def fetch_url(self):  # noqa: D102
+    def fetch_url(self):
         self.res_json = []
 
         for cur_imt in self.imt_list:
             # set url
             usgs_url = f'https://earthquake.usgs.gov/nshmp-haz-ws/hazard/{self.edition}/{self.region}/{self.longitude}/{self.latitude}/{cur_imt}/{self.vs30}'
 
-            print(f'USGS_HazardCurve.fetch_url: {usgs_url}.\n')  # noqa: T201
+            print(f'USGS_HazardCurve.fetch_url: {usgs_url}.\n')
             # request
-            res = requests.get(usgs_url)  # noqa: S113
-            if res.status_code == 200:  # noqa: PLR2004
+            res = requests.get(usgs_url)
+            if res.status_code == 200:
                 self.res_json.append(res.json())
                 # print('USGS_HazardCurve.fetch_url: {}'.format(self.res_json))
             else:
                 # try 10 more times to overcome the api traffic issue
-                for i in range(10):  # noqa: B007
-                    res = requests.get(usgs_url)  # noqa: S113
-                    if res.status_code == 200:  # noqa: PLR2004
+                for i in range(10):
+                    res = requests.get(usgs_url)
+                    if res.status_code == 200:
                         self.res_json.append(res.json())
                         return True
                 self.res_json.append(None)
-                print('USGS_HazardCurve.fetch_url: cannot get the data')  # noqa: T201
+                print('USGS_HazardCurve.fetch_url: cannot get the data')
                 return False
 
         return True
 
-    def get_hazard_curve(self):  # noqa: D102
+    def get_hazard_curve(self):
         cur_ims = []
         cur_mafs = []
         cur_rps = []
@@ -289,4 +289,4 @@ class USGS_HazardCurve:  # noqa: D101
 
         dict_hc = {'SiteID': self.tag, 'ReturnPeriod': self.rps, 'IM': self.ims}
 
-        return dict_hc  # noqa: RET504
+        return dict_hc

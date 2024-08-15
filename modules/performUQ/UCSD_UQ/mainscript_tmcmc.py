@@ -1,7 +1,7 @@
 """authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, Aakash Bangalore Satish*
 affiliation: University of California, San Diego, *SimCenter, University of California, Berkeley
 
-"""  # noqa: CPY001, D205, D400, INP001
+"""
 
 # ======================================================================================================================
 import os
@@ -25,14 +25,14 @@ from runTMCMC import run_TMCMC
 # ======================================================================================================================
 
 
-def computeModelPosteriorProbabilities(modelPriorProbabilities, modelEvidences):  # noqa: N802, N803, D103
+def computeModelPosteriorProbabilities(modelPriorProbabilities, modelEvidences):
     denominator = np.dot(modelPriorProbabilities, modelEvidences)
     return modelPriorProbabilities * modelEvidences / denominator
 
 
-def computeModelPosteriorProbabilitiesUsingLogEvidences(  # noqa: N802, D103
-    modelPriorProbabilities,  # noqa: N803
-    modelLogEvidences,  # noqa: N803
+def computeModelPosteriorProbabilitiesUsingLogEvidences(
+    modelPriorProbabilities,
+    modelLogEvidences,
 ):
     deltas = modelLogEvidences - np.min(modelLogEvidences)
     denominator = np.dot(modelPriorProbabilities, np.exp(deltas))
@@ -42,15 +42,15 @@ def computeModelPosteriorProbabilitiesUsingLogEvidences(  # noqa: N802, D103
 # ======================================================================================================================
 
 
-class TMCMC_Data:  # noqa: D101
+class TMCMC_Data:
     def __init__(
         self,
-        mainscriptPath: str,  # noqa: N803
-        workdirMain: str,  # noqa: N803
-        runType: str,  # noqa: N803
-        workflowDriver: str,  # noqa: N803
-        logFile: TextIO,  # noqa: N803
-        numBurnInSteps: int = 10,  # noqa: N803
+        mainscriptPath: str,
+        workdirMain: str,
+        runType: str,
+        workflowDriver: str,
+        logFile: TextIO,
+        numBurnInSteps: int = 10,
     ) -> None:
         self.mainscriptPath = mainscriptPath
         self.workdirMain = workdirMain
@@ -65,31 +65,31 @@ class TMCMC_Data:  # noqa: D101
         self.numBurnInSteps = numBurnInSteps
         self.numSkipSteps = 1
 
-    def getMPI_size(self):  # noqa: N802, D102
+    def getMPI_size(self):
         if self.runType == 'runningRemote':
-            from mpi4py import MPI  # noqa: PLC0415
+            from mpi4py import MPI
 
             self.comm = MPI.COMM_WORLD
             self.MPI_size = self.comm.Get_size()
 
-    def updateUQInfo(self, numberOfSamples, seedVal):  # noqa: N802, N803, D102
+    def updateUQInfo(self, numberOfSamples, seedVal):
         self.numberOfSamples = numberOfSamples
         self.seedVal = seedVal
 
-    def findNumProcessorsAvailable(self):  # noqa: N802, D102
+    def findNumProcessorsAvailable(self):
         if self.runType == 'runningLocal':
-            import multiprocessing as mp  # noqa: PLC0415
+            import multiprocessing as mp
 
             self.numProcessors = mp.cpu_count()
         elif self.runType == 'runningRemote':
-            from mpi4py import MPI  # noqa: PLC0415
+            from mpi4py import MPI
 
             self.comm = MPI.COMM_WORLD
             self.numProcessors = self.comm.Get_size()
         else:
             self.numProcessors = 1
 
-    def getNumChains(self, numberOfSamples, runType, numProcessors):  # noqa: N802, N803, D102
+    def getNumChains(self, numberOfSamples, runType, numProcessors):
         if runType == 'runningLocal':
             self.numChains = int(min(numProcessors, self.recommendedNumChains))
         elif runType == 'runningRemote':
@@ -99,7 +99,7 @@ class TMCMC_Data:  # noqa: D101
 
         self.numChains = max(self.numChains, numberOfSamples)
 
-    def getNumStepsPerChainAfterBurnIn(self, numParticles, numChains):  # noqa: N802, N803, D102
+    def getNumStepsPerChainAfterBurnIn(self, numParticles, numChains):
         self.numStepsAfterBurnIn = (
             int(np.ceil(numParticles / numChains)) * self.numSkipSteps
         )
@@ -110,7 +110,7 @@ class TMCMC_Data:  # noqa: D101
 
 
 # ======================================================================================================================
-def main(input_args):  # noqa: D103
+def main(input_args):
     t1 = time.time()
 
     # Initialize analysis
@@ -121,9 +121,9 @@ def main(input_args):  # noqa: D103
     # driver_file = input_args[4]
     # input_json_filename = input_args[5]
 
-    mainscript_path = os.path.abspath(__file__)  # noqa: PTH100
-    working_directory = os.path.abspath(input_args[0])  # noqa: PTH100
-    template_directory = os.path.abspath(input_args[1])  # noqa: PTH100
+    mainscript_path = os.path.abspath(__file__)
+    working_directory = os.path.abspath(input_args[0])
+    template_directory = os.path.abspath(input_args[1])
     run_type = input_args[2]  # either "runningLocal" or "runningRemote"
     driver_file = input_args[3]
     input_json_filename = input_args[4]
@@ -133,8 +133,8 @@ def main(input_args):  # noqa: D103
 
     # Remove dakotaTab and dakotaTabPrior files if they already exist in the working directory
     try:
-        os.remove('dakotaTab.out')  # noqa: PTH107
-        os.remove('dakotTabPrior.out')  # noqa: PTH107
+        os.remove('dakotaTab.out')
+        os.remove('dakotTabPrior.out')
     except OSError:
         pass
 
@@ -149,18 +149,18 @@ def main(input_args):  # noqa: D103
         number_of_samples,
         seed_value,
         calibration_data_filename,
-        loglikelihood_module,  # noqa: F841
-        write_outputs,  # noqa: F841
+        loglikelihood_module,
+        write_outputs,
         variables_list,
         edp_names_list,
         edp_lengths_list,
-        models_dict,  # noqa: F841
+        models_dict,
         total_number_of_models_in_ensemble,
     ) = parseDataFunction(
         input_json_filename_full_path,
         logfile,
         working_directory,
-        os.path.dirname(mainscript_path),  # noqa: PTH120
+        os.path.dirname(mainscript_path),
     )
     syncLogFile(logfile)
 
@@ -234,12 +234,12 @@ def main(input_args):  # noqa: D103
         logfile,
         run_type,
     )
-    defaultErrorVariances = cov_matrix_options_instance.getDefaultErrorVariances()  # noqa: N806, F841
+    defaultErrorVariances = cov_matrix_options_instance.getDefaultErrorVariances()
     covariance_matrix_list = cov_matrix_options_instance.createCovarianceMatrix()
 
     # ======================================================================================================================
     # Get log-likelihood function
-    LL_Handler = LogLikelihoodHandler(  # noqa: N806
+    LL_Handler = LogLikelihoodHandler(
         data=transformed_calibration_data,
         covariance_matrix_blocks_list=covariance_matrix_list,
         list_of_data_segment_lengths=edp_lengths_list,
@@ -264,10 +264,10 @@ def main(input_args):  # noqa: D103
     logfile.write(f'\n\tNumber of particles: {number_of_samples}')
 
     # number of max MCMC steps
-    number_of_MCMC_steps = (  # noqa: N806
+    number_of_MCMC_steps = (
         tmcmc_data_instance.numBurnInSteps + tmcmc_data_instance.numStepsAfterBurnIn
     )
-    max_number_of_MCMC_steps = 10  # noqa: N806
+    max_number_of_MCMC_steps = 10
     logfile.write(f'\n\tNumber of MCMC steps in first stage: {number_of_MCMC_steps}')
     logfile.write(
         f'\n\tMax. number of MCMC steps in any stage: {max_number_of_MCMC_steps}'
@@ -303,7 +303,7 @@ def main(input_args):  # noqa: D103
 
         syncLogFile(logfile)
 
-        mytrace, log_evidence = run_TMCMC(  # noqa: F841
+        mytrace, log_evidence = run_TMCMC(
             number_of_samples,
             number_of_samples,
             all_distributions_list,
@@ -374,7 +374,7 @@ def main(input_args):  # noqa: D103
 
         syncLogFile(logfile)
 
-    modelPosteriorProbabilities = computeModelPosteriorProbabilities(  # noqa: N806
+    modelPosteriorProbabilities = computeModelPosteriorProbabilities(
         model_prior_probabilities, model_evidences
     )
 
@@ -405,7 +405,7 @@ def main(input_args):  # noqa: D103
 # ======================================================================================================================
 
 if __name__ == '__main__':
-    inputArgs = sys.argv  # noqa: N816
+    inputArgs = sys.argv
     main(inputArgs)
 
 # ======================================================================================================================

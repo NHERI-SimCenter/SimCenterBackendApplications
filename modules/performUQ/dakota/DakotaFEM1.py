@@ -1,41 +1,41 @@
-# import functions for Python 2.X support  # noqa: CPY001, D100, INP001
+# import functions for Python 2.X support
 import os
 import sys
 
 if sys.version.startswith('2'):
-    range = xrange  # noqa: A001, F821
-    string_types = basestring  # noqa: F821
+    range = xrange
+    string_types = basestring
 else:
     string_types = str
 
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 import argparse
 import platform
 import shutil
 import stat
-import subprocess  # noqa: S404
+import subprocess
 
 import numpy as np
 from preprocessJSON import preProcessDakota
 
 
-def main(args):  # noqa: D103
+def main(args):
     # First we need to set the path and environment
-    home = os.path.expanduser('~')  # noqa: PTH111
+    home = os.path.expanduser('~')
     env = os.environ
     if os.getenv('PEGASUS_WF_UUID') is not None:
-        print('Pegasus job detected - Pegasus will set up the env')  # noqa: T201
+        print('Pegasus job detected - Pegasus will set up the env')
     elif platform.system() == 'Darwin':
-        env['PATH'] = env['PATH'] + f':{home}/bin'  # noqa: PLR6104
-        env['PATH'] = env['PATH'] + f':{home}/dakota/bin'  # noqa: PLR6104
+        env['PATH'] = env['PATH'] + f':{home}/bin'
+        env['PATH'] = env['PATH'] + f':{home}/dakota/bin'
     elif platform.system() == 'Linux':
-        env['PATH'] = env['PATH'] + f':{home}/bin'  # noqa: PLR6104
-        env['PATH'] = env['PATH'] + f':{home}/dakota/dakota-6.5/bin'  # noqa: PLR6104
+        env['PATH'] = env['PATH'] + f':{home}/bin'
+        env['PATH'] = env['PATH'] + f':{home}/dakota/dakota-6.5/bin'
     elif platform.system() == 'Windows':
         pass
     else:
-        print(f'PLATFORM {platform.system} NOT RECOGNIZED')  # noqa: T201
+        print(f'PLATFORM {platform.system} NOT RECOGNIZED')
 
     parser = argparse.ArgumentParser()
 
@@ -65,17 +65,17 @@ def main(args):  # noqa: D103
     parser.add_argument('--keepSamples', default='True')
     parser.add_argument('--runType')
 
-    args, unknowns = parser.parse_known_args()  # noqa: F841
+    args, unknowns = parser.parse_known_args()
 
     # Reading input arguments
-    aimName = args.filenameBIM  # noqa: N806
-    samName = args.filenameSAM  # noqa: N806
-    evtName = args.filenameEVENT  # noqa: N806
-    edpName = args.filenameEDP  # noqa: N806
-    simName = args.filenameSIM  # noqa: N806
-    driverFile = args.driverFile  # noqa: N806
+    aimName = args.filenameBIM
+    samName = args.filenameSAM
+    evtName = args.filenameEVENT
+    edpName = args.filenameEDP
+    simName = args.filenameSIM
+    driverFile = args.driverFile
 
-    uqData = dict(  # noqa: C408, N806
+    uqData = dict(
         method=args.method,
         samples=args.samples,
         seed=args.seed,
@@ -89,26 +89,26 @@ def main(args):  # noqa: D103
         trainingMethod=args.trainingMethod,
         concurrency=args.concurrency,
         keepSamples=args.keepSamples
-        not in ['False', 'False', 'false', 'false', False],  # noqa: PLR6201
+        not in ['False', 'False', 'false', 'false', False],
     )
 
-    runDakota = args.runType  # noqa: N806
+    runDakota = args.runType
 
-    myScriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N806
+    myScriptDir = os.path.dirname(os.path.realpath(__file__))
 
     # desktop applications
     if (
         uqData['samples'] is None
     ):  # this happens with new applications, workflow to change
-        print('RUNNING PREPROCESSOR\n')  # noqa: T201
-        osType = platform.system()  # noqa: N806
-        preprocessorCommand = f'"{myScriptDir}/preprocessDakota" {aimName} {samName} {evtName} {edpName} {simName} {driverFile} {runDakota} {osType}'  # noqa: N806
-        subprocess.Popen(preprocessorCommand, shell=True).wait()  # noqa: S602
-        print('DONE RUNNING PREPROCESSOR\n')  # noqa: T201
+        print('RUNNING PREPROCESSOR\n')
+        osType = platform.system()
+        preprocessorCommand = f'"{myScriptDir}/preprocessDakota" {aimName} {samName} {evtName} {edpName} {simName} {driverFile} {runDakota} {osType}'
+        subprocess.Popen(preprocessorCommand, shell=True).wait()
+        print('DONE RUNNING PREPROCESSOR\n')
 
     else:
-        scriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N806, F841
-        numRVs = preProcessDakota(  # noqa: N806, F841
+        scriptDir = os.path.dirname(os.path.realpath(__file__))
+        numRVs = preProcessDakota(
             aimName,
             evtName,
             samName,
@@ -121,18 +121,18 @@ def main(args):  # noqa: D103
 
         shutil.move(aimName, 'aim.j')
         shutil.move(evtName, 'evt.j')
-        if os.path.isfile(samName):  # noqa: PTH113
+        if os.path.isfile(samName):
             shutil.move(samName, 'sam.j')
         shutil.move(edpName, 'edp.j')
 
     # Setting Workflow Driver Name
-    workflowDriverName = 'workflow_driver'  # noqa: N806
+    workflowDriverName = 'workflow_driver'
     if (platform.system() == 'Windows') and (runDakota == 'runningLocal'):
-        workflowDriverName = 'workflow_driver.bat'  # noqa: N806
+        workflowDriverName = 'workflow_driver.bat'
 
     # Change permission of workflow driver
-    st = os.stat(workflowDriverName)  # noqa: PTH116
-    os.chmod(workflowDriverName, st.st_mode | stat.S_IEXEC)  # noqa: PTH101
+    st = os.stat(workflowDriverName)
+    os.chmod(workflowDriverName, st.st_mode | stat.S_IEXEC)
 
     # copy the dakota input file to the main working dir for the structure
     shutil.move('dakota.in', '../')
@@ -141,18 +141,18 @@ def main(args):  # noqa: D103
     os.chdir('../')
 
     if runDakota == 'runningLocal':
-        dakotaCommand = (  # noqa: N806
+        dakotaCommand = (
             'dakota -input dakota.in -output dakota.out -error dakota.err'
         )
-        print('running Dakota: ', dakotaCommand)  # noqa: T201
+        print('running Dakota: ', dakotaCommand)
         try:
-            result = subprocess.check_output(  # noqa: S602
+            result = subprocess.check_output(
                 dakotaCommand, stderr=subprocess.STDOUT, shell=True
             )
             returncode = 0
         except subprocess.CalledProcessError as e:
-            result = e.output  # noqa: F841
-            returncode = e.returncode  # noqa: F841
+            result = e.output
+            returncode = e.returncode
 
 
 if __name__ == '__main__':

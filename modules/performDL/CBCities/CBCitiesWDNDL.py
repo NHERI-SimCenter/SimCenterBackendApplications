@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -47,39 +47,39 @@ import numpy as np
 import pandas as pd
 
 
-def log_msg(msg):  # noqa: D103
+def log_msg(msg):
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
 
-    print(formatted_msg)  # noqa: T201
+    print(formatted_msg)
 
 
-from CBCitiesMethods import *  # noqa: E402, F403
+from CBCitiesMethods import *
 
 
-def run_DL_calc(aim_file_path, saveDir, output_name):  # noqa: N802, N803, D103
+def run_DL_calc(aim_file_path, saveDir, output_name):
     # Load Data
 
-    print('Loading the pipeline json file...')  # noqa: T201
+    print('Loading the pipeline json file...')
 
     # Open the AIM file
-    with open(aim_file_path) as f:  # noqa: PLW1514, PTH123
-        pipe = AIM_data = json.load(f)  # noqa: N806, F841
+    with open(aim_file_path) as f:
+        pipe = AIM_data = json.load(f)
 
-    add_failrate2pipe(pipe)  # noqa: F405
+    add_failrate2pipe(pipe)
 
-    failureRateArray = pipe['fail_prob']  # noqa: N806
-    avgRr = np.average(failureRateArray)  # noqa: N806
+    failureRateArray = pipe['fail_prob']
+    avgRr = np.average(failureRateArray)
 
-    df = pd.DataFrame({'DV': '0', 'RepairRate': avgRr}, index=[0])  # noqa: PD901
+    df = pd.DataFrame({'DV': '0', 'RepairRate': avgRr}, index=[0])
 
-    savePath = posixpath.join(saveDir, output_name)  # noqa: N806
+    savePath = posixpath.join(saveDir, output_name)
 
     df.to_csv(savePath, index=False)
 
     return 0
 
 
-def main(args):  # noqa: D103
+def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--filenameDL')
     parser.add_argument('-p', '--demandFile', default=None)

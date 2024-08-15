@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -94,27 +94,27 @@ OPENSHA_IM_GMPE = {
 
 IM_GMPE = {'LOCAL': LOCAL_IM_GMPE, 'OPENSHA': OPENSHA_IM_GMPE}
 
-import collections  # noqa: E402
-import json  # noqa: E402
-import os  # noqa: E402
-import socket  # noqa: E402
-import sys  # noqa: E402
-import time  # noqa: E402
-from pathlib import Path  # noqa: E402
+import collections
+import json
+import os
+import socket
+import sys
+import time
+from pathlib import Path
 
-import pandas as pd  # noqa: E402
-from gmpe import SignificantDurationModel, openSHAGMPE  # noqa: E402
-from tqdm import tqdm  # noqa: E402
+import pandas as pd
+from gmpe import SignificantDurationModel, openSHAGMPE
+from tqdm import tqdm
 
 if 'stampede2' not in socket.gethostname():
     from FetchOpenQuake import get_site_rup_info_oq
-    from FetchOpenSHA import *  # noqa: F403
-import threading  # noqa: E402
+    from FetchOpenSHA import *
+import threading
 
-import ujson  # noqa: E402
+import ujson
 
 
-class IM_Calculator:  # noqa: D101
+class IM_Calculator:
     # Chiou & Youngs (2014) GMPE class
     CY = None
     # Abrahamson, Silvar, & Kamai (2014)
@@ -125,17 +125,17 @@ class IM_Calculator:  # noqa: D101
     CB = None
 
     # profile
-    timeGetRuptureInfo = 0  # noqa: N815
-    timeGetIM = 0  # noqa: N815
+    timeGetRuptureInfo = 0
+    timeGetIM = 0
 
     def __init__(
         self,
-        source_info=dict(),  # noqa: B006, C408, ARG002
-        im_dict=dict(),  # noqa: B006, C408
-        gmpe_dict=dict(),  # noqa: B006, C408
-        gmpe_weights_dict=dict(),  # noqa: B006, C408
+        source_info=dict(),
+        im_dict=dict(),
+        gmpe_dict=dict(),
+        gmpe_weights_dict=dict(),
         im_type=None,
-        site_info=dict(),  # noqa: B006, C408
+        site_info=dict(),
     ):
         # basic set-ups
         self.set_im_gmpe(im_dict, gmpe_dict, gmpe_weights_dict)
@@ -143,11 +143,11 @@ class IM_Calculator:  # noqa: D101
         self.set_sites(site_info)
         # self.set_source(source_info)
 
-    def set_source(self, source_info):  # noqa: D102
+    def set_source(self, source_info):
         # set seismic source
         self.source_info = source_info.copy()
         gmpe_list = set()
-        for _, item in self.gmpe_dict.items():  # noqa: PERF102
+        for _, item in self.gmpe_dict.items():
             gmpe_list = gmpe_list.union(set(item))
         if source_info['Type'] == 'ERF':
             if (
@@ -159,7 +159,7 @@ class IM_Calculator:  # noqa: D101
                 source_index = source_info.get('SourceIndex', None)
                 rupture_index = source_info.get('RuptureIndex', None)
                 # start = time.process_time_ns()
-                site_rup_dict, station_info = get_rupture_info_CY2014(  # noqa: F405
+                site_rup_dict, station_info = get_rupture_info_CY2014(
                     self.erf, source_index, rupture_index, self.site_info
                 )
                 # self.timeGetRuptureInfo += time.process_time_ns() - start
@@ -171,7 +171,7 @@ class IM_Calculator:  # noqa: D101
                 or 'Campbell & Bozorgnia (2014)' in gmpe_list
             ):
                 # start = time.process_time_ns()
-                site_rup_dict, station_info = get_PointSource_info_CY2014(  # noqa: F405
+                site_rup_dict, station_info = get_PointSource_info_CY2014(
                     source_info, self.site_info
                 )
                 # self.timeGetRuptureInfo += time.process_time_ns() - start
@@ -190,43 +190,43 @@ class IM_Calculator:  # noqa: D101
         self.site_rup_dict = site_rup_dict
         self.site_info = station_info
 
-    def set_im_gmpe(self, im_dict, gmpe_dict, gmpe_weights_dict):  # noqa: D102
+    def set_im_gmpe(self, im_dict, gmpe_dict, gmpe_weights_dict):
         # set im and gmpe information
         self.im_dict = im_dict.copy()
         self.gmpe_dict = gmpe_dict.copy()
         self.gmpe_weights_dict = gmpe_weights_dict.copy()
 
-    def set_im_type(self, im_type):  # noqa: D102
+    def set_im_type(self, im_type):
         # set im type
         if im_type is None:
             self.im_type = None
         elif list(self.im_dict.keys()) and (
             im_type not in list(self.im_dict.keys())
         ):
-            print(  # noqa: T201
+            print(
                 f'IM_Calculator.set_im_type: warning - {im_type} is not in the defined IM lists.'
             )
             self.im_type = None
         else:
             self.im_type = im_type
 
-    def set_sites(self, site_info):  # noqa: D102
+    def set_sites(self, site_info):
         # set sites
         self.site_info = site_info
 
-    def calculate_im(self):  # noqa: C901, D102
+    def calculate_im(self):
         # set up intensity measure calculations
         # current im type
         im_type = self.im_type
         if im_type is None:
-            print('IM_Calculator.calculate_im: error - no IM type found.')  # noqa: T201
+            print('IM_Calculator.calculate_im: error - no IM type found.')
             return None
         # get current im dict
         cur_im_dict = self.im_dict.get(im_type)
         # get gmpe list
         gmpe_list = self.gmpe_dict.get(im_type, None)
         if gmpe_list is None:
-            print(  # noqa: T201
+            print(
                 f'IM_Calculator.calculate_im: error - no GMPE list found for {im_type}.'
             )
             return None
@@ -251,7 +251,7 @@ class IM_Calculator:  # noqa: D101
                 else:
                     gmpe_weights_list_opensha = None
             else:
-                print(  # noqa: T201
+                print(
                     f'IM_Calculator.calculate_im: error - {cur_gmpe} is not supported.'
                 )
                 return None
@@ -265,7 +265,7 @@ class IM_Calculator:  # noqa: D101
                 gmpe_weights=gmpe_weights_list_local,
             )
         else:
-            res_local = dict()  # noqa: C408
+            res_local = dict()
         if len(gmpe_list_opensha) > 0:
             res_opensha = self.get_im_from_opensha(
                 self.source_info,
@@ -278,14 +278,14 @@ class IM_Calculator:  # noqa: D101
                 gmpe_weights=gmpe_weights_list_opensha,
             )
         else:
-            res_opensha = dict()  # noqa: C408
+            res_opensha = dict()
 
         # collect/combine im results
         if len(res_local) + len(res_opensha) == 0:
-            print(  # noqa: T201
+            print(
                 'IM_Calculator.calculate_im: error - no results available... please check GMPE availability'
             )
-            return dict()  # noqa: C408
+            return dict()
         if len(res_local) == 0:
             res = res_opensha
         elif len(res_opensha) == 0:
@@ -299,7 +299,7 @@ class IM_Calculator:  # noqa: D101
         # return
         return res
 
-    def get_im_from_opensha(  # noqa: D102, PLR6301
+    def get_im_from_opensha(
         self,
         source_info,
         gmpe_list,
@@ -312,16 +312,16 @@ class IM_Calculator:  # noqa: D101
     ):
         # Computing IM
         res_list = []
-        res = dict()  # noqa: C408
+        res = dict()
         curgmpe_info = {}
         station_list = station_info.get('SiteList')
         im_info.update({'Type': im_type})
         for cur_gmpe in gmpe_list:
             # set up site properties
-            siteSpec, sites, site_prop = get_site_prop(cur_gmpe, station_list)  # noqa: N806, F405
+            siteSpec, sites, site_prop = get_site_prop(cur_gmpe, station_list)
             curgmpe_info['Type'] = cur_gmpe
             curgmpe_info['Parameters'] = gmpe_para
-            cur_res, station_info = get_IM(  # noqa: F405
+            cur_res, station_info = get_IM(
                 curgmpe_info,
                 erf,
                 sites,
@@ -341,7 +341,7 @@ class IM_Calculator:  # noqa: D101
         # return
         return res
 
-    def get_im_from_local(  # noqa: C901, D102
+    def get_im_from_local(
         self,
         source_info,
         gmpe_list,
@@ -351,33 +351,33 @@ class IM_Calculator:  # noqa: D101
     ):
         # initiate
         res_list = []
-        res = dict()  # noqa: C408
+        res = dict()
         # check IM type
         if im_type not in list(LOCAL_IM_GMPE.keys()):
-            print(  # noqa: T201
+            print(
                 f'ComputeIntensityMeasure.get_im_from_local: error - IM type {im_type} not supported'
             )
             return res
         # get available gmpe list
         avail_gmpe = LOCAL_IM_GMPE.get(im_type)
         # back compatibility for now (useful if other local GMPEs for SA is included)
-        cur_T = im_info.get('Periods', None)  # noqa: N806
+        cur_T = im_info.get('Periods', None)
         # source and rupture
         if source_info['Type'] == 'PointSource':
             # magnitude
             eq_magnitude = source_info['Magnitude']
-            eq_loc = [  # noqa: F841
+            eq_loc = [
                 source_info['Location']['Latitude'],
                 source_info['Location']['Longitude'],
                 source_info['Location']['Depth'],
             ]
             # maf
-            meanAnnualRate = None  # noqa: N806
+            meanAnnualRate = None
         elif source_info['Type'] == 'ERF':
             source_index = source_info.get('SourceIndex', None)
             rupture_index = source_info.get('RuptureIndex', None)
-            if None in [source_index, rupture_index]:  # noqa: PLR6201
-                print(  # noqa: T201
+            if None in [source_index, rupture_index]:
+                print(
                     'ComputeIntensityMeasure.get_im_from_local: error - source/rupture index not given.'
                 )
                 return res
@@ -387,21 +387,21 @@ class IM_Calculator:  # noqa: D101
             # maf
             # timeSpan = erf.getTimeSpan()
             # meanAnnualRate = erf.getSource(source_index).getRupture(rupture_index).getMeanAnnualRate(timeSpan.getDuration())
-            meanAnnualRate = source_info['MeanAnnualRate']  # noqa: N806
+            meanAnnualRate = source_info['MeanAnnualRate']
         elif source_info['Type'] == 'oqSourceXML':
             source_index = source_info.get('SourceIndex', None)
             rupture_index = source_info.get('RuptureIndex', None)
-            if None in [source_index, rupture_index]:  # noqa: PLR6201
-                print(  # noqa: T201
+            if None in [source_index, rupture_index]:
+                print(
                     'ComputeIntensityMeasure.get_im_from_local: error - source/rupture index not given.'
                 )
                 return res
             # magnitude
             eq_magnitude = source_info['Magnitude']
             # maf
-            meanAnnualRate = source_info['MeanAnnualRate']  # noqa: N806
+            meanAnnualRate = source_info['MeanAnnualRate']
         else:
-            print(  # noqa: T201
+            print(
                 'ComputeIntensityMeasure.get_im_from_local: error - source type {} not supported'.format(
                     source_info['Type']
                 )
@@ -410,7 +410,7 @@ class IM_Calculator:  # noqa: D101
         for cur_gmpe in gmpe_list:
             gm_collector = []
             if cur_gmpe not in avail_gmpe:
-                print(  # noqa: T201
+                print(
                     f'ComputeIntensityMeasure.get_im_from_local: warning - {cur_gmpe} is not available.'
                 )
                 continue
@@ -418,14 +418,14 @@ class IM_Calculator:  # noqa: D101
                 # current site-rupture distance
                 cur_dist = cur_site['rRup']
                 cur_vs30 = cur_site['vs30']
-                tmpResult = {  # noqa: N806
+                tmpResult = {
                     'Mean': [],
                     'TotalStdDev': [],
                     'InterEvStdDev': [],
                     'IntraEvStdDev': [],
                 }
                 if cur_gmpe == 'Bommer, Stafford & Alarcon (2009)':
-                    mean, stdDev, interEvStdDev, intraEvStdDev = (  # noqa: N806
+                    mean, stdDev, interEvStdDev, intraEvStdDev = (
                         SignificantDurationModel.bommer_stafford_alarcon_ds_2009(
                             magnitude=eq_magnitude,
                             distance=cur_dist,
@@ -438,7 +438,7 @@ class IM_Calculator:  # noqa: D101
                     tmpResult['InterEvStdDev'].append(float(interEvStdDev))
                     tmpResult['IntraEvStdDev'].append(float(intraEvStdDev))
                 elif cur_gmpe == 'Afshari & Stewart (2016)':
-                    mean, stdDev, interEvStdDev, intraEvStdDev = (  # noqa: N806
+                    mean, stdDev, interEvStdDev, intraEvStdDev = (
                         SignificantDurationModel.afshari_stewart_ds_2016(
                             magnitude=eq_magnitude,
                             distance=cur_dist,
@@ -452,30 +452,30 @@ class IM_Calculator:  # noqa: D101
                     tmpResult['IntraEvStdDev'].append(float(intraEvStdDev))
                 elif cur_gmpe == 'Chiou & Youngs (2014)':
                     # start = time.process_time_ns()
-                    tmpResult = self.CY.get_IM(  # noqa: N806
+                    tmpResult = self.CY.get_IM(
                         eq_magnitude, self.site_rup_dict, cur_site, im_info
                     )
                     # self.timeGetIM += time.process_time_ns() - start
                 elif cur_gmpe == 'Abrahamson, Silva & Kamai (2014)':
                     # start = time.process_time_ns()
-                    tmpResult = self.ASK.get_IM(  # noqa: N806
+                    tmpResult = self.ASK.get_IM(
                         eq_magnitude, self.site_rup_dict, cur_site, im_info
                     )
                     # self.timeGetIM += time.process_time_ns() - start
                 elif cur_gmpe == 'Boore, Stewart, Seyhan & Atkinson (2014)':
                     # start = time.process_time_ns()
-                    tmpResult = self.BSSA.get_IM(  # noqa: N806
+                    tmpResult = self.BSSA.get_IM(
                         eq_magnitude, self.site_rup_dict, cur_site, im_info
                     )
                     # self.timeGetIM += time.process_time_ns() - start
                 elif cur_gmpe == 'Campbell & Bozorgnia (2014)':
                     # start = time.process_time_ns()
-                    tmpResult = self.CB.get_IM(  # noqa: N806
+                    tmpResult = self.CB.get_IM(
                         eq_magnitude, self.site_rup_dict, cur_site, im_info
                     )
                     # self.timeGetIM += time.process_time_ns() - start
                 else:
-                    print(  # noqa: T201
+                    print(
                         f'ComputeIntensityMeasure.get_im_from_local: gmpe_name {cur_gmpe} is not supported.'
                     )
                 # collect sites
@@ -508,18 +508,18 @@ class IM_Calculator:  # noqa: D101
         return res
 
 
-def collect_multi_im_res(res_dict):  # noqa: C901, D103
+def collect_multi_im_res(res_dict):
     res_list = []
-    if 'PGA' in res_dict.keys():  # noqa: SIM118
+    if 'PGA' in res_dict.keys():
         res_list.append(res_dict['PGA'])
-    if 'SA' in res_dict.keys():  # noqa: SIM118
+    if 'SA' in res_dict.keys():
         res_list.append(res_dict['SA'])
-    if 'PGV' in res_dict.keys():  # noqa: SIM118
+    if 'PGV' in res_dict.keys():
         res_list.append(res_dict['PGV'])
-    res = dict()  # noqa: C408
+    res = dict()
     num_res = len(res_list)
     if num_res == 0:
-        print('IM_Calculator._collect_res: error - the res_list is empty')  # noqa: T201
+        print('IM_Calculator._collect_res: error - the res_list is empty')
         return res
     for i, cur_res in enumerate(res_list):
         if i == 0:
@@ -527,18 +527,18 @@ def collect_multi_im_res(res_dict):  # noqa: C901, D103
             res['IM'] = [cur_res['IM']]
             if cur_res.get('Periods', None) is None:
                 res['Periods'] = [None]
-            elif type(cur_res.get('Periods')) in [float, int]:  # noqa: PLR6201
+            elif type(cur_res.get('Periods')) in [float, int]:
                 res['Periods'] = [cur_res.get('Periods')]
             else:
                 res['Periods'] = cur_res.get('Periods')
         else:
             res['IM'].append(cur_res['IM'])
             if cur_res.get('Periods', None) is None:
-                res['Periods'] = res['Periods'] + [None]  # noqa: PLR6104
-            elif type(cur_res.get('Periods')) in [float, int]:  # noqa: PLR6201
-                res['Periods'] = res['Periods'] + [cur_res.get('Periods')]  # noqa: PLR6104
+                res['Periods'] = res['Periods'] + [None]
+            elif type(cur_res.get('Periods')) in [float, int]:
+                res['Periods'] = res['Periods'] + [cur_res.get('Periods')]
             else:
-                res['Periods'] = res['Periods'] + cur_res.get('Periods')  # noqa: PLR6104
+                res['Periods'] = res['Periods'] + cur_res.get('Periods')
             # combine ground motion characteristics
             for j in range(len(cur_res['GroundMotions'])):
                 tmp_res = cur_res['GroundMotions'][j].get(
@@ -552,16 +552,16 @@ def collect_multi_im_res(res_dict):  # noqa: C901, D103
     return res
 
 
-def collect_multi_im_res_hdf5(res_list, im_list):  # noqa: D103
-    res = dict()  # noqa: C408
+def collect_multi_im_res_hdf5(res_list, im_list):
+    res = dict()
     num_res = len(res_list)
     if num_res == 0:
-        print('IM_Calculator._collect_res: error - the res_list is empty')  # noqa: T201
+        print('IM_Calculator._collect_res: error - the res_list is empty')
         return res
-    num_sites = len(res_list[list(res_list.keys())[0]]['GroundMotions'])  # noqa: RUF015
+    num_sites = len(res_list[list(res_list.keys())[0]]['GroundMotions'])
     collected_mean = np.zeros([num_sites, len(im_list)])
-    collected_intraStd = np.zeros([num_sites, len(im_list)])  # noqa: N806
-    collected_interStd = np.zeros([num_sites, len(im_list)])  # noqa: N806
+    collected_intraStd = np.zeros([num_sites, len(im_list)])
+    collected_interStd = np.zeros([num_sites, len(im_list)])
     for i, im in enumerate(im_list):
         if im.startswith('PGA'):
             collected_mean[:, i] = np.array(
@@ -623,12 +623,12 @@ def collect_multi_im_res_hdf5(res_list, im_list):  # noqa: D103
     return res
 
 
-def get_im_dict(im_info):  # noqa: D103
+def get_im_dict(im_info):
     if im_info.get('Type', None) == 'Vector':
         im_dict = im_info.copy()
         im_dict.pop('Type')
-        if 'PGV' in im_dict.keys():  # noqa: SIM118
-            PGV_dict = im_dict.pop('PGV')  # noqa: N806
+        if 'PGV' in im_dict.keys():
+            PGV_dict = im_dict.pop('PGV')
             im_dict.update({'PGV': PGV_dict})
     else:
         # back compatibility
@@ -638,26 +638,26 @@ def get_im_dict(im_info):  # noqa: D103
     return im_dict
 
 
-def get_gmpe_from_im_vector(im_info, gmpe_info):  # noqa: D103
-    gmpe_dict = dict()  # noqa: C408
-    gmpe_weights_dict = dict()  # noqa: C408
+def get_gmpe_from_im_vector(im_info, gmpe_info):
+    gmpe_dict = dict()
+    gmpe_weights_dict = dict()
     # check IM info type
     if im_info.get('Type', None) != 'Vector':
-        print(  # noqa: T201
+        print(
             'ComputeIntensityMeasure.get_gmpe_from_im_vector: error: IntensityMeasure Type should be Vector.'
         )
         return gmpe_dict, gmpe_weights_dict
-    else:  # noqa: RET505
+    else:
         im_keys = list(im_info.keys())
         im_keys.remove('Type')
         for cur_im in im_keys:
             cur_gmpe = im_info[cur_im].get('GMPE', None)
             cur_weights = im_info[cur_im].get('GMPEWeights', None)
             if cur_gmpe is None:
-                print(  # noqa: T201
+                print(
                     f'ComputeIntensityMeasure.get_gmpe_from_im_vector: warning: GMPE not found for {cur_im}'
                 )
-            elif type(cur_gmpe) == str:  # noqa: E721
+            elif type(cur_gmpe) == str:
                 if cur_gmpe == 'NGAWest2 2014 Averaged':
                     cur_gmpe = [
                         'Abrahamson, Silva & Kamai (2014)',
@@ -672,15 +672,15 @@ def get_gmpe_from_im_vector(im_info, gmpe_info):  # noqa: D103
             gmpe_dict.update({cur_im: cur_gmpe})
             gmpe_weights_dict.update({cur_im: cur_weights})
     # global parameters if any
-    gmpe_dict.update({'Parameters': gmpe_info.get('Parameters', dict())})  # noqa: C408
+    gmpe_dict.update({'Parameters': gmpe_info.get('Parameters', dict())})
     # return
     return gmpe_dict, gmpe_weights_dict
 
 
-def get_gmpe_from_im_legency(im_info, gmpe_info, gmpe_weights=None):  # noqa: D103
+def get_gmpe_from_im_legency(im_info, gmpe_info, gmpe_weights=None):
     # back compatibility for getting ims and gmpes
-    gmpe_dict = dict()  # noqa: C408
-    gmpe_weights_dict = dict()  # noqa: C408
+    gmpe_dict = dict()
+    gmpe_weights_dict = dict()
     if gmpe_info['Type'] == 'NGAWest2 2014 Averaged':
         gmpe_list = [
             'Abrahamson, Silva & Kamai (2014)',
@@ -700,37 +700,37 @@ def get_gmpe_from_im_legency(im_info, gmpe_info, gmpe_weights=None):  # noqa: D1
         gmpe_dict.update({im_type: gmpe_list})
         gmpe_weights_dict = {im_type: gmpe_weights}
     # global parameters if any
-    gmpe_dict.update({'Parameters': gmpe_info.get('Parameters', dict())})  # noqa: C408
+    gmpe_dict.update({'Parameters': gmpe_info.get('Parameters', dict())})
     # return
     return gmpe_dict, gmpe_weights_dict
 
 
-def compute_im(  # noqa: C901, D103
+def compute_im(
     scenarios,
     stations,
-    EqRupture_info,  # noqa: N803
+    EqRupture_info,
     gmpe_info,
     im_info,
     generator_info,
     output_dir,
     filename='IntensityMeasureMeanStd.hdf5',
-    mth_flag=True,  # noqa: FBT002
+    mth_flag=True,
 ):
     # Calling OpenSHA to compute median PSA
-    if len(scenarios) < 10:  # noqa: PLR2004
+    if len(scenarios) < 10:
         filename = 'IntensityMeasureMeanStd.json'
-        saveInJson = True  # noqa: N806
+        saveInJson = True
         im_raw = {}
     else:
-        saveInJson = False  # noqa: N806
-    filename = os.path.join(output_dir, filename)  # noqa: PTH118
+        saveInJson = False
+    filename = os.path.join(output_dir, filename)
     im_list = []
-    if 'PGA' in im_info.keys():  # noqa: SIM118
+    if 'PGA' in im_info.keys():
         im_list.append('PGA')
-    if 'SA' in im_info.keys():  # noqa: SIM118
+    if 'SA' in im_info.keys():
         for cur_period in im_info['SA']['Periods']:
-            im_list.append(f'SA({cur_period!s})')  # noqa: PERF401
-    if 'PGV' in im_info.keys():  # noqa: SIM118
+            im_list.append(f'SA({cur_period!s})')
+    if 'PGV' in im_info.keys():
         im_list.append('PGV')
     # Stations
     station_list = [
@@ -787,11 +787,11 @@ def compute_im(  # noqa: C901, D103
             site_info=stations,
         )
         if EqRupture_info['EqRupture']['Type'] == 'ERF':
-            im_calculator.erf = getERF(EqRupture_info)  # noqa: F405
+            im_calculator.erf = getERF(EqRupture_info)
         else:
             im_calculator.erf = None
         gmpe_set = set()
-        for _, item in gmpe_dict.items():  # noqa: PERF102
+        for _, item in gmpe_dict.items():
             gmpe_set = gmpe_set.union(set(item))
         for gmpe in gmpe_set:
             if gmpe == 'Chiou & Youngs (2014)':
@@ -804,8 +804,8 @@ def compute_im(  # noqa: C901, D103
                 im_calculator.CB = openSHAGMPE.campbell_bozorgnia_2014()
         # for i in tqdm(range(len(scenarios.keys())), desc=f"Evaluate GMPEs for {len(scenarios.keys())} scenarios"):
         # Initialize an hdf5 file for IMmeanStd
-        if os.path.exists(filename):  # noqa: PTH110
-            os.remove(filename)  # noqa: PTH107
+        if os.path.exists(filename):
+            os.remove(filename)
         for i in tqdm(
             range(len(scenarios.keys())),
             desc=f'Evaluate GMPEs for {len(scenarios.keys())} scenarios',
@@ -817,17 +817,17 @@ def compute_im(  # noqa: C901, D103
             source_info = scenarios[key]
             im_calculator.set_source(source_info)
             # Computing IM
-            res_list = dict()  # noqa: C408
+            res_list = dict()
             for cur_im_type in list(im_dict.keys()):
                 im_calculator.set_im_type(cur_im_type)
                 res_list.update({cur_im_type: im_calculator.calculate_im()})
             # Collecting outputs
             # collectedResult.update({'SourceIndex':source_info['SourceIndex'], 'RuptureIndex':source_info['RuptureIndex']})
             if saveInJson:
-                collectedResult = collect_multi_im_res(res_list)  # noqa: N806
+                collectedResult = collect_multi_im_res(res_list)
                 im_raw.update({key: collectedResult})
             else:
-                collectedResult = collect_multi_im_res_hdf5(res_list, im_list)  # noqa: N806
+                collectedResult = collect_multi_im_res_hdf5(res_list, im_list)
                 with h5py.File(filename, 'a') as f:
                     # Add a group named by the scenario index and has four dataset
                     # mean, totalSTd, interStd,itrastd
@@ -879,21 +879,21 @@ def compute_im(  # noqa: C901, D103
 
         # order the res_dict by id
         res_ordered = collections.OrderedDict(sorted(res_dict.items()))
-        for i, cur_res in res_ordered.items():  # noqa: B007
+        for i, cur_res in res_ordered.items():
             im_raw.append(cur_res)
 
-    print(  # noqa: T201
+    print(
         f'ComputeIntensityMeasure: mean and standard deviation of intensity measures {time.time() - t_start} sec'
     )
 
     if saveInJson:
-        with open(filename, 'w') as f:  # noqa: PLW1514, PTH123
+        with open(filename, 'w') as f:
             ujson.dump(im_raw, f, indent=1)
     # return
     return filename, im_list
 
 
-def compute_im_para(  # noqa: D103
+def compute_im_para(
     ids,
     scenario_infos,
     im_dict,
@@ -902,8 +902,8 @@ def compute_im_para(  # noqa: D103
     station_info,
     res_dict,
 ):
-    for i, id in enumerate(ids):  # noqa: A001
-        print(f'ComputeIntensityMeasure: Scenario #{id + 1}.')  # noqa: T201
+    for i, id in enumerate(ids):
+        print(f'ComputeIntensityMeasure: Scenario #{id + 1}.')
         scenario_info = scenario_infos[i]
         # create a IM calculator
         im_calculator = IM_Calculator(
@@ -928,7 +928,7 @@ def compute_im_para(  # noqa: D103
     # return
 
 
-def export_im(  # noqa: C901, D103, PLR0912
+def export_im(
     stations,
     im_list,
     im_data,
@@ -952,7 +952,7 @@ def export_im(  # noqa: C901, D103, PLR0912
     num_scenarios = len(eq_data)
     eq_data = np.array(eq_data)
     # Saving large files to HDF while small files to JSON
-    if num_scenarios > 100000:  # noqa: PLR2004
+    if num_scenarios > 100000:
         # Pandas DataFrame
         h_scenarios = ['Scenario-' + str(x) for x in range(1, num_scenarios + 1)]
         h_eq = [
@@ -966,15 +966,15 @@ def export_im(  # noqa: C901, D103, PLR0912
         ]
         for x in range(1, im_data[0][0, :, :].shape[1] + 1):
             for y in im_list:
-                h_eq.append('Record-' + str(x) + f'-{y}')  # noqa: PERF401
+                h_eq.append('Record-' + str(x) + f'-{y}')
         index = pd.MultiIndex.from_product([h_scenarios, h_eq])
         columns = ['Site-' + str(x) for x in range(1, num_stations + 1)]
-        df = pd.DataFrame(index=index, columns=columns, dtype=float)  # noqa: PD901
+        df = pd.DataFrame(index=index, columns=columns, dtype=float)
         # Data
         for i in range(num_stations):
             tmp = []
             for j in range(num_scenarios):
-                tmp.append(stations[i]['lat'])  # noqa: FURB113
+                tmp.append(stations[i]['lat'])
                 tmp.append(stations[i]['lon'])
                 tmp.append(int(stations[i]['vs30']))
                 tmp.append(eq_data[j][0])
@@ -983,14 +983,14 @@ def export_im(  # noqa: C901, D103, PLR0912
                 tmp.append(eq_data[j][3])
                 for x in np.ndarray.tolist(im_data[j][i, :, :].T):
                     for y in x:
-                        tmp.append(y)  # noqa: PERF402
+                        tmp.append(y)
             df['Site-' + str(i + 1)] = tmp
         # HDF output
-        try:  # noqa: SIM105
-            os.remove(os.path.join(output_dir, filename.replace('.json', '.h5')))  # noqa: PTH107, PTH118
-        except:  # noqa: S110, E722
+        try:
+            os.remove(os.path.join(output_dir, filename.replace('.json', '.h5')))
+        except:
             pass
-        hdf = pd.HDFStore(os.path.join(output_dir, filename.replace('.json', '.h5')))  # noqa: PTH118
+        hdf = pd.HDFStore(os.path.join(output_dir, filename.replace('.json', '.h5')))
         hdf.put('SiteIM', df, format='table', complib='zlib')
         hdf.close()
     else:
@@ -1006,7 +1006,7 @@ def export_im(  # noqa: C901, D103, PLR0912
             tmp.update({'IMS': im_list})
             tmp_im = []
             for j in range(num_scenarios):
-                tmp_im.append(np.ndarray.tolist(im_data[j][i, :, :]))  # noqa: PERF401
+                tmp_im.append(np.ndarray.tolist(im_data[j][i, :, :]))
             if len(tmp_im) == 1:
                 # Simplifying the data structure if only one scenario exists
                 tmp_im = tmp_im[0]
@@ -1022,7 +1022,7 @@ def export_im(  # noqa: C901, D103, PLR0912
                 ssd = cur_eq[2]
             else:
                 ssd = 'N/A'
-            if len(cur_eq) > 3 and cur_eq[3]:  # noqa: PLR2004
+            if len(cur_eq) > 3 and cur_eq[3]:
                 srd = cur_eq[3]
             else:
                 srd = 'N/A'
@@ -1036,7 +1036,7 @@ def export_im(  # noqa: C901, D103, PLR0912
             maf_out.append(tmp)
         res = {'Station_lnIM': res, 'Earthquake_MAF': maf_out}
         # save SiteIM.json
-        with open(os.path.join(output_dir, filename), 'w') as f:  # noqa: PLW1514, PTH118, PTH123
+        with open(os.path.join(output_dir, filename), 'w') as f:
             json.dump(res, f, indent=2)
     # export the event grid and station csv files
     if csv_flag:
@@ -1048,7 +1048,7 @@ def export_im(  # noqa: C901, D103, PLR0912
         lon = [stations[j]['lon'] for j in range(len(stations))]
         # vs30 = [stations[j]['vs30'] for j in range(len(stations))]
         # zTR = [stations[j]['DepthToRock'] for j in range(len(stations))]
-        df = pd.DataFrame(  # noqa: PD901
+        df = pd.DataFrame(
             {
                 'GP_file': station_name,
                 'Longitude': lon,
@@ -1059,41 +1059,41 @@ def export_im(  # noqa: C901, D103, PLR0912
         )
         # if cur_eq[2]:
         # 	df['SiteSourceDistance'] = cur_eq[2]
-        output_dir = os.path.join(  # noqa: PTH118
-            os.path.dirname(Path(output_dir)),  # noqa: PTH120
-            os.path.basename(Path(output_dir)),  # noqa: PTH119
+        output_dir = os.path.join(
+            os.path.dirname(Path(output_dir)),
+            os.path.basename(Path(output_dir)),
         )
         # separate directory for IM
-        output_dir = os.path.join(output_dir, 'IMs')  # noqa: PTH118
+        output_dir = os.path.join(output_dir, 'IMs')
         try:
-            os.makedirs(output_dir)  # noqa: PTH103
-        except:  # noqa: E722
-            print('HazardSimulation: output folder already exists.')  # noqa: T201
+            os.makedirs(output_dir)
+        except:
+            print('HazardSimulation: output folder already exists.')
         # save the csv
-        df.to_csv(os.path.join(output_dir, 'EventGrid.csv'), index=False)  # noqa: PTH118
+        df.to_csv(os.path.join(output_dir, 'EventGrid.csv'), index=False)
         # output station#.csv
         # csv header
-        csvHeader = im_list  # noqa: N806
+        csvHeader = im_list
         for cur_scen in range(len(im_data)):
             if len(im_data) > 1:
                 # IMPORTANT: the scenario index starts with 1 in the front end.
                 cur_scen_folder = 'scenario' + str(int(scenario_ids[cur_scen]) + 1)
-                try:  # noqa: SIM105
-                    os.mkdir(os.path.join(output_dir, cur_scen_folder))  # noqa: PTH102, PTH118
-                except:  # noqa: S110, E722
+                try:
+                    os.mkdir(os.path.join(output_dir, cur_scen_folder))
+                except:
                     pass
                     # print('ComputeIntensityMeasure: scenario folder already exists.')
-                cur_output_dir = os.path.join(output_dir, cur_scen_folder)  # noqa: PTH118
+                cur_output_dir = os.path.join(output_dir, cur_scen_folder)
             else:
                 cur_output_dir = output_dir
             # current IM data
             cur_im_data = im_data[cur_scen]
             for i, site_id in enumerate(station_name):
-                df = dict()  # noqa: C408, PD901
+                df = dict()
                 # Loop over all intensity measures
                 for cur_im_tag in range(len(csvHeader)):
                     if (csvHeader[cur_im_tag].startswith('SA')) or (
-                        csvHeader[cur_im_tag] in ['PGA', 'PGV']  # noqa: PLR6201
+                        csvHeader[cur_im_tag] in ['PGA', 'PGV']
                     ):
                         df.update(
                             {
@@ -1106,108 +1106,108 @@ def export_im(  # noqa: C901, D103, PLR0912
                         df.update(
                             {csvHeader[cur_im_tag]: cur_im_data[i, cur_im_tag, :]}
                         )
-                df = pd.DataFrame(df)  # noqa: PD901
+                df = pd.DataFrame(df)
                 # Combine PGD from liquefaction, landslide and fault
                 if (
                     'liq_PGD_h' in df.columns
                     or 'ls_PGD_h' in df.columns
                     or 'fd_PGD_h' in df.columns
                 ):
-                    PGD_h = np.zeros(df.shape[0])  # noqa: N806
+                    PGD_h = np.zeros(df.shape[0])
                     if 'liq_PGD_h' in df.columns:
-                        PGD_h += df['liq_PGD_h'].to_numpy()  # noqa: N806
+                        PGD_h += df['liq_PGD_h'].to_numpy()
                     if 'ls_PGD_h' in df.columns:
-                        PGD_h += df['ls_PGD_h'].to_numpy()  # noqa: N806
+                        PGD_h += df['ls_PGD_h'].to_numpy()
                     if 'fd_PGD_h' in df.columns:
-                        PGD_h += df['fd_PGD_h'].to_numpy()  # noqa: N806
+                        PGD_h += df['fd_PGD_h'].to_numpy()
                     df['PGD_h'] = PGD_h
                 if (
                     'liq_PGD_v' in df.columns
                     or 'ls_PGD_v' in df.columns
                     or 'fd_PGD_v' in df.columns
                 ):
-                    PGD_v = np.zeros(df.shape[0])  # noqa: N806
+                    PGD_v = np.zeros(df.shape[0])
                     if 'liq_PGD_v' in df.columns:
-                        PGD_v += df['liq_PGD_v'].to_numpy()  # noqa: N806
+                        PGD_v += df['liq_PGD_v'].to_numpy()
                     if 'ls_PGD_v' in df.columns:
-                        PGD_v += df['ls_PGD_v'].to_numpy()  # noqa: N806
+                        PGD_v += df['ls_PGD_v'].to_numpy()
                     if 'fd_PGD_v' in df.columns:
-                        PGD_v += df['fd_PGD_v'].to_numpy()  # noqa: N806
+                        PGD_v += df['fd_PGD_v'].to_numpy()
                     df['PGD_v'] = PGD_v
-                colToDrop = []  # noqa: N806
+                colToDrop = []
                 for col in df.columns:
                     if (
                         (not col.startswith('SA'))
-                        and (col not in ['PGA', 'PGV', 'PGD_h', 'PGD_v'])  # noqa: PLR6201
+                        and (col not in ['PGA', 'PGV', 'PGD_h', 'PGD_v'])
                         and (col not in gf_im_list)
                     ):
-                        colToDrop.append(col)  # noqa: PERF401
-                df.drop(columns=colToDrop, inplace=True)  # noqa: PD002
+                        colToDrop.append(col)
+                df.drop(columns=colToDrop, inplace=True)
                 # if 'liq_prob' in df.columns:
                 # 	df.drop(columns=['liq_prob'], inplace=True)
                 # if 'liq_susc' in df.columns:
                 # 	df.drop(columns=['liq_susc'], inplace=True)
-                df.fillna('NaN', inplace=True)  # noqa: PD002
-                df.to_csv(os.path.join(cur_output_dir, site_id), index=False)  # noqa: PTH118
+                df.fillna('NaN', inplace=True)
+                df.to_csv(os.path.join(cur_output_dir, site_id), index=False)
 
         # output the site#.csv file including all scenarios
         if len(im_data) > 1:
-            print('ComputeIntensityMeasure: saving all selected scenarios.')  # noqa: T201
+            print('ComputeIntensityMeasure: saving all selected scenarios.')
             # lopp over sites
             for i, site_id in enumerate(station_name):
-                df = dict()  # noqa: C408, PD901
+                df = dict()
                 for cur_im_tag in range(len(csvHeader)):
                     tmp_list = []
                     # loop over all scenarios
                     for cur_scen in range(len(im_data)):
-                        tmp_list = (  # noqa: PLR6104
+                        tmp_list = (
                             tmp_list + im_data[cur_scen][i, cur_im_tag, :].tolist()
                         )
                     if (csvHeader[cur_im_tag].startswith('SA')) or (
-                        csvHeader[cur_im_tag] in ['PGA', 'PGV']  # noqa: PLR6201
+                        csvHeader[cur_im_tag] in ['PGA', 'PGV']
                     ):
                         df.update({csvHeader[cur_im_tag]: np.exp(tmp_list)})
                     else:
                         df.update({csvHeader[cur_im_tag]: tmp_list})
-                df = pd.DataFrame(df)  # noqa: PD901
+                df = pd.DataFrame(df)
                 # Combine PGD from liquefaction, landslide and fault
                 if (
                     'liq_PGD_h' in df.columns
                     or 'ls_PGD_h' in df.columns
                     or 'fd_PGD_h' in df.columns
                 ):
-                    PGD_h = np.zeros(df.shape[0])  # noqa: N806
+                    PGD_h = np.zeros(df.shape[0])
                     if 'liq_PGD_h' in df.columns:
-                        PGD_h += df['liq_PGD_h'].to_numpy()  # noqa: N806
+                        PGD_h += df['liq_PGD_h'].to_numpy()
                     if 'ls_PGD_h' in df.columns:
-                        PGD_h += df['ls_PGD_h'].to_numpy()  # noqa: N806
+                        PGD_h += df['ls_PGD_h'].to_numpy()
                     if 'fd_PGD_h' in df.columns:
-                        PGD_h += df['fd_PGD_h'].to_numpy()  # noqa: N806
+                        PGD_h += df['fd_PGD_h'].to_numpy()
                     df['PGD_h'] = PGD_h
                 if (
                     'liq_PGD_v' in df.columns
                     or 'ls_PGD_v' in df.columns
                     or 'fd_PGD_v' in df.columns
                 ):
-                    PGD_v = np.zeros(df.shape[0])  # noqa: N806
+                    PGD_v = np.zeros(df.shape[0])
                     if 'liq_PGD_v' in df.columns:
-                        PGD_v += df['liq_PGD_v'].to_numpy()  # noqa: N806
+                        PGD_v += df['liq_PGD_v'].to_numpy()
                     if 'ls_PGD_v' in df.columns:
-                        PGD_v += df['ls_PGD_v'].to_numpy()  # noqa: N806
+                        PGD_v += df['ls_PGD_v'].to_numpy()
                     if 'fd_PGD_v' in df.columns:
-                        PGD_v += df['fd_PGD_v'].to_numpy()  # noqa: N806
+                        PGD_v += df['fd_PGD_v'].to_numpy()
                     df['PGD_v'] = PGD_v
-                colToDrop = []  # noqa: N806
+                colToDrop = []
                 for col in df.columns:
                     if (
                         (not col.startswith('SA'))
-                        and (col not in ['PGA', 'PGV', 'PGD_h', 'PGD_v'])  # noqa: PLR6201
+                        and (col not in ['PGA', 'PGV', 'PGD_h', 'PGD_v'])
                         and (col not in gf_im_list)
                     ):
                         colToDrop.append(col)
-                df.drop(columns=colToDrop, inplace=True)  # noqa: PD002
-                df.fillna('NaN', inplace=True)  # noqa: PD002
-                df.to_csv(os.path.join(output_dir, site_id), index=False)  # noqa: PTH118
+                df.drop(columns=colToDrop, inplace=True)
+                df.fillna('NaN', inplace=True)
+                df.to_csv(os.path.join(output_dir, site_id), index=False)
     # return
     return 0
     # except:
@@ -1215,7 +1215,7 @@ def export_im(  # noqa: C901, D103, PLR0912
     # return 1
 
 
-def compute_weighted_res(res_list, gmpe_weights):  # noqa: C901, D103
+def compute_weighted_res(res_list, gmpe_weights):
     # compute weighted average of gmpe results
     # initialize the return res (these three attributes are identical in different gmpe results)
     res = {
@@ -1229,7 +1229,7 @@ def compute_weighted_res(res_list, gmpe_weights):  # noqa: C901, D103
     num_gmpe = len(res_list)
     # check number of weights
     if num_gmpe != len(gmpe_weights):
-        print(  # noqa: T201
+        print(
             'ComputeIntensityMeasure: please check the weights of different GMPEs.'
         )
         return 1
@@ -1237,20 +1237,20 @@ def compute_weighted_res(res_list, gmpe_weights):  # noqa: C901, D103
     num_site = len(res_list[0]['GroundMotions'])
     # loop over different sites
     gm_collector = []
-    for site_tag in range(num_site):  # noqa: PLR1702
+    for site_tag in range(num_site):
         # loop over different GMPE
         tmp_res = {}
         for i, cur_res in enumerate(res_list):
-            cur_gmResults = cur_res['GroundMotions'][site_tag]  # noqa: N806
+            cur_gmResults = cur_res['GroundMotions'][site_tag]
             # get keys
             im_keys = list(cur_gmResults.keys())
             for cur_im in im_keys:
                 if cur_im not in list(tmp_res.keys()):
-                    if cur_im in ['Location', 'SiteData']:  # noqa: PLR6201
+                    if cur_im in ['Location', 'SiteData']:
                         tmp_res.update({cur_im: cur_gmResults[cur_im]})
                     else:
                         tmp_res.update({cur_im: {}})
-                if cur_im not in ['Location', 'SiteData']:  # noqa: PLR6201
+                if cur_im not in ['Location', 'SiteData']:
                     # get components
                     comp_keys = list(cur_gmResults[cur_im].keys())
                     # loop over different components
@@ -1280,7 +1280,7 @@ def compute_weighted_res(res_list, gmpe_weights):  # noqa: C901, D103
                                     )
                                 else:
                                     # mean
-                                    tmp_res[cur_im][cur_comp][j] = (  # noqa: PLR6104
+                                    tmp_res[cur_im][cur_comp][j] = (
                                         tmp_res[cur_im][cur_comp][j]
                                         + cur_value * gmpe_weights[i]
                                     )

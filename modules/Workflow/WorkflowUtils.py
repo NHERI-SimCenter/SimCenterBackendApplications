@@ -1,40 +1,40 @@
-# written: fmk, adamzs  # noqa: CPY001, D100, INP001
+# written: fmk, adamzs
 
 # import functions for Python 2.X support
 import sys
 
 if sys.version.startswith('2'):
-    range = xrange  # noqa: A001, F821
-    string_types = basestring  # noqa: F821
+    range = xrange
+    string_types = basestring
 else:
     string_types = str
 
 import os
-import subprocess  # noqa: S404
+import subprocess
 from time import gmtime, strftime
 
 
-class WorkFlowInputError(Exception):  # noqa: D101
+class WorkFlowInputError(Exception):
     def __init__(self, value):
         self.value = value
 
-    def __str__(self):  # noqa: D105
+    def __str__(self):
         return repr(self.value)
 
 
 try:
-    basestring  # noqa: B018
+    basestring
 except NameError:
     basestring = str
 
 
-def workflow_log(msg):  # noqa: D103
+def workflow_log(msg):
     # ISO-8601 format, e.g. 2018-06-16T20:24:04Z
-    print('%s %s' % (strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg))  # noqa: T201, UP031
+    print('%s %s' % (strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg))
 
 
 # function to return result of invoking an application
-def runApplication(application_plus_args):  # noqa: N802, D103
+def runApplication(application_plus_args):
     if application_plus_args[0] == 'python':
         command = f'python "{application_plus_args[1]}" ' + ' '.join(
             application_plus_args[2:]
@@ -45,7 +45,7 @@ def runApplication(application_plus_args):  # noqa: N802, D103
         )
 
     try:
-        result = subprocess.check_output(  # noqa: S602
+        result = subprocess.check_output(
             command, stderr=subprocess.STDOUT, shell=True
         )
         # for line in result.split('\n'):
@@ -57,23 +57,23 @@ def runApplication(application_plus_args):  # noqa: N802, D103
         returncode = e.returncode
 
     if returncode != 0:
-        workflow_log('NON-ZERO RETURN CODE: %s' % returncode)  # noqa: UP031
+        workflow_log('NON-ZERO RETURN CODE: %s' % returncode)
     return command, result, returncode
 
 
-def add_full_path(possible_filename):  # noqa: D103
+def add_full_path(possible_filename):
     if not isinstance(possible_filename, basestring):
         return possible_filename
-    if os.path.exists(possible_filename):  # noqa: PTH110
-        if os.path.isdir(possible_filename):  # noqa: PTH112
-            return os.path.abspath(possible_filename) + '/'  # noqa: PTH100
-        else:  # noqa: RET505
-            return os.path.abspath(possible_filename)  # noqa: PTH100
+    if os.path.exists(possible_filename):
+        if os.path.isdir(possible_filename):
+            return os.path.abspath(possible_filename) + '/'
+        else:
+            return os.path.abspath(possible_filename)
     else:
         return possible_filename
 
 
-def recursive_iter(obj):  # noqa: D103
+def recursive_iter(obj):
     if isinstance(obj, dict):
         for k, v in obj.items():
             if isinstance(v, basestring):
@@ -88,5 +88,5 @@ def recursive_iter(obj):  # noqa: D103
                 recursive_iter(item)
 
 
-def relative2fullpath(json_object):  # noqa: D103
+def relative2fullpath(json_object):
     recursive_iter(json_object)

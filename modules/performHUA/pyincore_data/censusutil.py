@@ -1,4 +1,4 @@
-# Based on the IN-CORE censusutil method  # noqa: INP001, D100
+# Based on the IN-CORE censusutil method
 # Modified by Dr. Stevan Gavrilovic, UC Berkeley, SimCenter
 
 
@@ -22,17 +22,17 @@ logger = globals.LOGGER
 
 
 class CensusUtil:
-    """Utility methods for Census data and API"""  # noqa: D400
+    """Utility methods for Census data and API"""
 
     @staticmethod
     def generate_census_api_url(
-        state: str = None,  # noqa: RUF013
-        county: str = None,  # noqa: RUF013
-        year: str = None,  # noqa: RUF013
-        data_source: str = None,  # noqa: RUF013
-        columns: str = None,  # noqa: RUF013
-        geo_type: str = None,  # noqa: RUF013
-        data_name: str = None,  # noqa: RUF013
+        state: str = None,
+        county: str = None,
+        year: str = None,
+        data_source: str = None,
+        columns: str = None,
+        geo_type: str = None,
+        data_name: str = None,
     ):
         """Create url string to access census data api.
 
@@ -56,13 +56,13 @@ class CensusUtil:
         if state is None:
             error_msg = 'State value must be provided.'
             logger.error(error_msg)
-            raise Exception(error_msg)  # noqa: DOC501, TRY002
+            raise Exception(error_msg)
 
         if geo_type is not None:
             if county is None:
                 error_msg = 'State and county value must be provided when geo_type is provided.'
                 logger.error(error_msg)
-                raise Exception(error_msg)  # noqa: DOC501, TRY002
+                raise Exception(error_msg)
 
         # Set up url for Census API
         base_url = f'https://api.census.gov/data/{year}/{data_source}'
@@ -93,31 +93,31 @@ class CensusUtil:
         Returns:
             dict, object: A json list and a dataframe for census api result
 
-        """  # noqa: D400
+        """
         # Obtain Census API JSON Data
-        request_json = requests.get(data_url)  # noqa: S113
+        request_json = requests.get(data_url)
 
-        if request_json.status_code != 200:  # noqa: PLR2004
+        if request_json.status_code != 200:
             error_msg = 'Failed to download the data from Census API. Please check your parameters.'
             # logger.error(error_msg)
-            raise Exception(error_msg)  # noqa: DOC501, TRY002
+            raise Exception(error_msg)
 
         # Convert the requested json into pandas dataframe
 
         api_json = request_json.json()
         api_df = pd.DataFrame(columns=api_json[0], data=api_json[1:])
 
-        return api_df  # noqa: RET504
+        return api_df
 
     @staticmethod
-    def get_blockdata_for_demographics(  # noqa: C901
+    def get_blockdata_for_demographics(
         state_counties: list,
         census_vars: list,
         vintage: str = '2010',
-        out_csv: bool = False,  # noqa: FBT001, FBT002
-        out_shapefile: bool = False,  # noqa: FBT001, FBT002
-        out_geopackage: bool = False,  # noqa: FBT001, FBT002
-        out_geojson: bool = False,  # noqa: FBT001, FBT002
+        out_csv: bool = False,
+        out_shapefile: bool = False,
+        out_geopackage: bool = False,
+        out_geojson: bool = False,
         file_name: str = 'file_name',
         output_dir: str = 'output_dir',
     ):
@@ -135,7 +135,7 @@ class CensusUtil:
             file_name (str): Name of the output files.
             output_dir (str): Name of directory used to save output files.
 
-        """  # noqa: D400
+        """
         # ***********************
         # Get the population data
         # ***********************
@@ -146,7 +146,7 @@ class CensusUtil:
         get_pop_vars = 'GEO_ID,NAME'
         int_vars = census_vars
 
-        if vintage == '2000' or vintage == '2010':  # noqa: PLR1714
+        if vintage == '2000' or vintage == '2010':
             dataset_name += '/sf1'
 
             # If no variable parameters passed by the user, use the default for 2000 and 2010 vintage
@@ -190,21 +190,21 @@ class CensusUtil:
                     get_pop_vars += ',' + var
 
         else:
-            print('Only 2000, 2010, and 2020 decennial census supported')  # noqa: T201
+            print('Only 2000, 2010, and 2020 decennial census supported')
             return None
 
         # Make directory to save output
-        if not os.path.exists(output_dir):  # noqa: PTH110
-            os.mkdir(output_dir)  # noqa: PTH102
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
 
         # Make a directory to save downloaded shapefiles
         shapefile_dir = Path(output_dir) / 'shapefiletemp'
 
-        if not os.path.exists(shapefile_dir):  # noqa: PTH110
-            os.mkdir(shapefile_dir)  # noqa: PTH102
+        if not os.path.exists(shapefile_dir):
+            os.mkdir(shapefile_dir)
 
         # Set to hold the states - needed for 2020 census shapefile download
-        stateSet = set()  # noqa: N806
+        stateSet = set()
 
         # loop through counties
         appended_countydata = []  # start an empty container for the county data
@@ -212,8 +212,8 @@ class CensusUtil:
             # deconcatenate state and county values
             state = state_county[0:2]
             county = state_county[2:5]
-            logger.debug('State:  ' + state)  # noqa: G003
-            logger.debug('County: ' + county)  # noqa: G003
+            logger.debug('State:  ' + state)
+            logger.debug('County: ' + county)
 
             # Add the state to the set
             stateSet.add(state)
@@ -223,7 +223,7 @@ class CensusUtil:
                 state, county, vintage, dataset_name, get_pop_vars, 'block:*'
             )
 
-            logger.info('Census API data from: ' + api_hyperlink)  # noqa: G003
+            logger.info('Census API data from: ' + api_hyperlink)
 
             # Obtain Census API JSON Data
             apidf = CensusUtil.request_census_api(api_hyperlink)
@@ -255,9 +255,9 @@ class CensusUtil:
         for var in int_vars:
             cen_block[var] = cen_block[var].astype(int)
             # cen_block[var] = pd.to_numeric(cen_block[var], errors='coerce').convert_dtypes()
-            print(var + ' converted from object to integer')  # noqa: T201
+            print(var + ' converted from object to integer')
 
-        if (vintage == '2000' or vintage == '2010') and not census_vars:  # noqa: PLR1714
+        if (vintage == '2000' or vintage == '2010') and not census_vars:
             # Generate new variables
             cen_block['pwhitebg'] = cen_block['P005003'] / cen_block['P005001'] * 100
             cen_block['pblackbg'] = cen_block['P005004'] / cen_block['P005001'] * 100
@@ -310,7 +310,7 @@ class CensusUtil:
         merge_id = 'GEOID' + vintage[2:4]
 
         # Tigerline provides the blocks for each county, thus each county needs to be downloaded individually
-        if vintage == '2000' or vintage == '2010':  # noqa: PLR1714
+        if vintage == '2000' or vintage == '2010':
             if vintage == '2000':
                 merge_id = 'BLKIDFP00'
 
@@ -327,7 +327,7 @@ class CensusUtil:
                     + filename
                     + '.zip'
                 )
-                print(  # noqa: T201
+                print(
                     (
                         'Downloading Census Block Shapefiles for State_County: '
                         + state_county
@@ -336,19 +336,19 @@ class CensusUtil:
                     ).format(filename=filename)
                 )
 
-                zip_file = os.path.join(shapefile_dir, filename + '.zip')  # noqa: PTH118
-                urllib.request.urlretrieve(shapefile_url, zip_file)  # noqa: S310
+                zip_file = os.path.join(shapefile_dir, filename + '.zip')
+                urllib.request.urlretrieve(shapefile_url, zip_file)
 
                 with ZipFile(zip_file, 'r') as zip_obj:
                     zip_obj.extractall(path=shapefile_dir)
 
                 # Delete the zip file
-                os.remove(zip_file)  # noqa: PTH107
+                os.remove(zip_file)
 
-                if Path(zip_file).is_file() == True:  # noqa: E712
-                    print('Error deleting the zip file ', zip_file)  # noqa: T201
+                if Path(zip_file).is_file() == True:
+                    print('Error deleting the zip file ', zip_file)
 
-                print('filename', f'{filename}.shp')  # noqa: T201
+                print('filename', f'{filename}.shp')
 
                 # Read shapefile to GeoDataFrame
                 gdf = gpd.read_file(f'{shapefile_dir}/{filename}.shp')
@@ -368,7 +368,7 @@ class CensusUtil:
                 path = Path(f'{shapefile_dir}/{filename}.shp')
 
                 # if file does not exist
-                if path.is_file() == False:  # noqa: E712
+                if path.is_file() == False:
                     # Use wget to download the TIGER Shapefile for a county
                     # options -quiet = turn off wget output
                     # add directory prefix to save files to folder named after program name
@@ -378,7 +378,7 @@ class CensusUtil:
                         + '.zip'
                     )
 
-                    print(  # noqa: T201
+                    print(
                         (
                             'Downloading Census Block Shapefiles for State: '
                             + state
@@ -387,20 +387,20 @@ class CensusUtil:
                         ).format(filename=filename)
                     )
 
-                    zip_file = os.path.join(shapefile_dir, filename + '.zip')  # noqa: PTH118
-                    urllib.request.urlretrieve(shapefile_url, zip_file)  # noqa: S310
+                    zip_file = os.path.join(shapefile_dir, filename + '.zip')
+                    urllib.request.urlretrieve(shapefile_url, zip_file)
 
                     with ZipFile(zip_file, 'r') as zip_obj:
                         zip_obj.extractall(path=shapefile_dir)
 
                     # Delete the zip file
-                    os.remove(zip_file)  # noqa: PTH107
+                    os.remove(zip_file)
 
-                    if Path(zip_file).is_file() == True:  # noqa: E712
-                        print('Error deleting the zip file ', zip_file)  # noqa: T201
+                    if Path(zip_file).is_file() == True:
+                        print('Error deleting the zip file ', zip_file)
 
                 else:
-                    print(f'Found file {filename}.shp in cache')  # noqa: T201
+                    print(f'Found file {filename}.shp in cache')
 
                 # Read shapefile to GeoDataFrame
                 gdf = gpd.read_file(f'{shapefile_dir}/{filename}.shp')
@@ -414,12 +414,12 @@ class CensusUtil:
         # Create dataframe from appended block files
         shp_block = pd.concat(appended_shp_files)
 
-        print(  # noqa: T201
+        print(
             'Merging the census population demographics information to the shapefile'
         )
 
         # Clean Data - Merge Census demographic data to the appended shapefiles
-        cen_shp_block_merged = pd.merge(  # noqa: PD015
+        cen_shp_block_merged = pd.merge(
             shp_block, cen_block, left_on=merge_id, right_on='blockid', how='left'
         )
 
@@ -469,19 +469,19 @@ class CensusUtil:
         #            logger.error(error_msg)
         #            raise Exception(error_msg)
 
-        print('Done creating population demographics shapefile')  # noqa: T201
+        print('Done creating population demographics shapefile')
 
         return cen_block[save_columns]
 
     @staticmethod
-    def get_blockgroupdata_for_income(  # noqa: C901
+    def get_blockgroupdata_for_income(
         state_counties: list,
         acs_vars: list,
         vintage: str = '2010',
-        out_csv: bool = False,  # noqa: FBT001, FBT002
-        out_shapefile: bool = False,  # noqa: FBT001, FBT002
-        out_geopackage: bool = False,  # noqa: FBT001, FBT002
-        out_geojson: bool = False,  # noqa: FBT001, FBT002
+        out_csv: bool = False,
+        out_shapefile: bool = False,
+        out_geopackage: bool = False,
+        out_geojson: bool = False,
         file_name: str = 'file_name',
         output_dir: str = 'output_dir',
     ):
@@ -499,7 +499,7 @@ class CensusUtil:
             file_name (str): Name of the output files.
             output_dir (str): Name of directory used to save output files.
 
-        """  # noqa: D400
+        """
         # dataset_name (str): ACS dataset name.
         dataset_name = 'acs/acs5'
 
@@ -564,17 +564,17 @@ B19001_016E,B19001_017E,B19013_001E'
                 get_income_vars += ',' + var
 
         # Make directory to save output
-        if not os.path.exists(output_dir):  # noqa: PTH110
-            os.mkdir(output_dir)  # noqa: PTH102
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
 
         # Make a directory to save downloaded shapefiles
         shapefile_dir = Path(output_dir) / 'shapefiletemp'
 
-        if not os.path.exists(shapefile_dir):  # noqa: PTH110
-            os.mkdir(shapefile_dir)  # noqa: PTH102
+        if not os.path.exists(shapefile_dir):
+            os.mkdir(shapefile_dir)
 
         # Set to hold the states - needed for 2020 census shapefile download
-        stateSet = set()  # noqa: N806
+        stateSet = set()
 
         # loop through counties
         appended_countydata = []  # start an empty container for the county data
@@ -582,8 +582,8 @@ B19001_016E,B19001_017E,B19013_001E'
             # deconcatenate state and county values
             state = state_county[0:2]
             county = state_county[2:5]
-            logger.debug('State:  ' + state)  # noqa: G003
-            logger.debug('County: ' + county)  # noqa: G003
+            logger.debug('State:  ' + state)
+            logger.debug('County: ' + county)
 
             # Add the state to the set
             stateSet.add(state)
@@ -606,7 +606,7 @@ B19001_016E,B19001_017E,B19013_001E'
                     'block%20group',
                 )
 
-            logger.info('Census API data from: ' + api_hyperlink)  # noqa: G003
+            logger.info('Census API data from: ' + api_hyperlink)
 
             # Obtain Census API JSON Data
             apidf = CensusUtil.request_census_api(api_hyperlink)
@@ -655,7 +655,7 @@ B19001_016E,B19001_017E,B19013_001E'
                 cen_blockgroup[var], errors='coerce'
             ).convert_dtypes()
             # cen_blockgroup[var] = cen_blockgroup[var].astype(int)
-            print(var + ' converted from object to integer')  # noqa: T201
+            print(var + ' converted from object to integer')
 
         # ### Obtain Data - Download and extract shapefiles
         # The Block Group IDs in the Census data are associated with the Block Group boundaries that can be mapped.
@@ -714,7 +714,7 @@ B19001_016E,B19001_017E,B19013_001E'
                     + '.zip'
                 )
 
-                print(  # noqa: T201
+                print(
                     (
                         'Downloading Census Block Shapefiles for State_County: '
                         + state_county
@@ -723,17 +723,17 @@ B19001_016E,B19001_017E,B19013_001E'
                     ).format(filename=filename)
                 )
 
-                zip_file = os.path.join(shapefile_dir, filename + '.zip')  # noqa: PTH118
-                urllib.request.urlretrieve(shapefile_url, zip_file)  # noqa: S310
+                zip_file = os.path.join(shapefile_dir, filename + '.zip')
+                urllib.request.urlretrieve(shapefile_url, zip_file)
 
                 with ZipFile(zip_file, 'r') as zip_obj:
                     zip_obj.extractall(path=shapefile_dir)
 
                 # Delete the zip file
-                os.remove(zip_file)  # noqa: PTH107
+                os.remove(zip_file)
 
-                if Path(zip_file).is_file() == True:  # noqa: E712
-                    print('Error deleting the zip file ', zip_file)  # noqa: T201
+                if Path(zip_file).is_file() == True:
+                    print('Error deleting the zip file ', zip_file)
 
                 # Read shapefile to GeoDataFrame
                 gdf = gpd.read_file(f'{shapefile_dir}/{filename}.shp')
@@ -744,7 +744,7 @@ B19001_016E,B19001_017E,B19013_001E'
                 # Append county data
                 appended_shp_files.append(gdf)
 
-        elif vintage == '2015' or vintage == '2020':  # noqa: PLR1714
+        elif vintage == '2015' or vintage == '2020':
             merge_id_right = 'bgid'
 
             # loop through the states
@@ -755,7 +755,7 @@ B19001_016E,B19001_017E,B19013_001E'
                 path = Path(f'{shapefile_dir}/{filename}.shp')
 
                 # if file does not exist
-                if path.is_file() == False:  # noqa: E712
+                if path.is_file() == False:
                     # Use wget to download the TIGER Shapefile for the state
                     # options -quiet = turn off wget output
                     # add directory prefix to save files to folder named after program name
@@ -765,7 +765,7 @@ B19001_016E,B19001_017E,B19013_001E'
                         + '.zip'
                     )
 
-                    print(  # noqa: T201
+                    print(
                         (
                             'Downloading Census Block Shapefiles for State: '
                             + state
@@ -774,20 +774,20 @@ B19001_016E,B19001_017E,B19013_001E'
                         ).format(filename=filename)
                     )
 
-                    zip_file = os.path.join(shapefile_dir, filename + '.zip')  # noqa: PTH118
-                    urllib.request.urlretrieve(shapefile_url, zip_file)  # noqa: S310
+                    zip_file = os.path.join(shapefile_dir, filename + '.zip')
+                    urllib.request.urlretrieve(shapefile_url, zip_file)
 
                     with ZipFile(zip_file, 'r') as zip_obj:
                         zip_obj.extractall(path=shapefile_dir)
 
                     # Delete the zip file
-                    os.remove(zip_file)  # noqa: PTH107
+                    os.remove(zip_file)
 
-                    if Path(zip_file).is_file() == True:  # noqa: E712
-                        print('Error deleting the zip file ', zip_file)  # noqa: T201
+                    if Path(zip_file).is_file() == True:
+                        print('Error deleting the zip file ', zip_file)
 
                 else:
-                    print(f'Found file {filename}.shp in cache: ', path)  # noqa: T201
+                    print(f'Found file {filename}.shp in cache: ', path)
 
                 # Read shapefile to GeoDataFrame
                 gdf = gpd.read_file(f'{shapefile_dir}/{filename}.shp')
@@ -801,10 +801,10 @@ B19001_016E,B19001_017E,B19013_001E'
         # Create dataframe from appended county data
         shp_blockgroup = pd.concat(appended_shp_files)
 
-        print('Merging the ACS household income information to the shapefile')  # noqa: T201
+        print('Merging the ACS household income information to the shapefile')
 
         # Clean Data - Merge Census demographic data to the appended shapefiles
-        cen_shp_blockgroup_merged = pd.merge(  # noqa: PD015
+        cen_shp_blockgroup_merged = pd.merge(
             shp_blockgroup,
             cen_blockgroup,
             left_on=merge_id_left,
@@ -858,7 +858,7 @@ B19001_016E,B19001_017E,B19013_001E'
         #            logger.error(error_msg)
         #            raise Exception(error_msg)
 
-        print('Done creating household income shapefile')  # noqa: T201
+        print('Done creating household income shapefile')
 
         return cen_blockgroup[save_columns]
 
@@ -874,7 +874,7 @@ B19001_016E,B19001_017E,B19013_001E'
 
         """
         # save cen_shp_blockgroup_merged shapefile
-        print(  # noqa: T201
+        print(
             'Shapefile data file saved to: ' + programname + '/' + savefile + '.shp'
         )
         in_gpd.to_file(programname + '/' + savefile + '.shp')
@@ -891,7 +891,7 @@ B19001_016E,B19001_017E,B19013_001E'
 
         """
         # save cen_shp_blockgroup_merged geojson
-        print(  # noqa: T201
+        print(
             'Geodatabase data file saved to: '
             + programname
             + '/'
@@ -912,7 +912,7 @@ B19001_016E,B19001_017E,B19013_001E'
 
         """
         # save cen_shp_blockgroup_merged shapefile
-        print(  # noqa: T201
+        print(
             'GeoPackage data file saved to: '
             + programname
             + '/'
@@ -936,7 +936,7 @@ B19001_016E,B19001_017E,B19013_001E'
 
         """
         # Save cen_blockgroup dataframe with save_column variables to csv named savefile
-        print('CSV data file saved to: ' + programname + '/' + savefile + '.csv')  # noqa: T201
+        print('CSV data file saved to: ' + programname + '/' + savefile + '.csv')
         in_pd[save_columns].to_csv(
             programname + '/' + savefile + '.csv', index=False
         )

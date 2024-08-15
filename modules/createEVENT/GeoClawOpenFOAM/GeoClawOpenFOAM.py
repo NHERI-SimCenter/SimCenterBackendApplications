@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2019 The Regents of the University of California
 #
 # This file is part of the SimCenter Backend Applications.
@@ -38,8 +38,8 @@
 import argparse
 
 
-def main(inputFile, evtFile, getRV):  # noqa: ARG001, N803, D103
-    print('Finished GeoClawOpenFOAM application')  # noqa: T201
+def main(inputFile, evtFile, getRV):
+    print('Finished GeoClawOpenFOAM application')
 
 
 if __name__ == '__main__':

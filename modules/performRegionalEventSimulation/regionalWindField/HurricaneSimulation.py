@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2021 Leland Stanford Junior University
 # Copyright (c) 2021 The Regents of the University of California
 #
@@ -43,13 +43,13 @@ import logging
 import os
 import sys
 
-from ComputeIntensityMeasure import *  # noqa: F403
-from CreateScenario import *  # noqa: F403
-from CreateStation import *  # noqa: F403
+from ComputeIntensityMeasure import *
+from CreateScenario import *
+from CreateStation import *
 
 if __name__ == '__main__':
     logger = logging.getLogger()
-    handlerStream = logging.StreamHandler(sys.stdout)  # noqa: N816
+    handlerStream = logging.StreamHandler(sys.stdout)
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--hazard_config')
     args = parser.parse_args()
-    with open(args.hazard_config) as f:  # noqa: PLW1514, PTH123
+    with open(args.hazard_config) as f:
         hazard_info = json.load(f)
 
     # Directory
@@ -68,55 +68,55 @@ if __name__ == '__main__':
     input_dir = dir_info['Input']
     output_dir = dir_info['Output']
     try:
-        os.mkdir(f'{output_dir}')  # noqa: PTH102
-    except:  # noqa: E722
-        print('HurricaneSimulation: output folder already exists.')  # noqa: T201
+        os.mkdir(f'{output_dir}')
+    except:
+        print('HurricaneSimulation: output folder already exists.')
 
     # Sites and stations
-    print('HurricaneSimulation: creating stations.')  # noqa: T201
+    print('HurricaneSimulation: creating stations.')
     site_info = hazard_info['Site']
     if site_info['Type'] == 'From_CSV':
-        input_file = os.path.join(input_dir, site_info['input_file'])  # noqa: PTH118
+        input_file = os.path.join(input_dir, site_info['input_file'])
         output_file = site_info.get('output_file', False)
         if output_file:
-            output_file = os.path.join(output_dir, output_file)  # noqa: PTH118
-        min_ID = site_info['min_ID']  # noqa: N816
-        max_ID = site_info['max_ID']  # noqa: N816
+            output_file = os.path.join(output_dir, output_file)
+        min_ID = site_info['min_ID']
+        max_ID = site_info['max_ID']
         # Creating stations from the csv input file
-        stations = create_stations(input_file, output_file, min_ID, max_ID)  # noqa: F405
+        stations = create_stations(input_file, output_file, min_ID, max_ID)
     if stations:
-        print('HurricaneSimulation: stations created.')  # noqa: T201
+        print('HurricaneSimulation: stations created.')
     else:
-        print(  # noqa: T201
+        print(
             'HurricaneSimulation: please check the "Input" directory in the configuration json file.'
         )
-        exit()  # noqa: PLR1722
+        exit()
 
     # Scenarios
-    print('HurricaneSimulation: creating scenarios.')  # noqa: T201
+    print('HurricaneSimulation: creating scenarios.')
     scenario_info = hazard_info['Scenario']
     if scenario_info['Type'] == 'Wind':
         # Creating wind scenarios
         event_info = hazard_info['Event']
-        scenarios = create_wind_scenarios(  # noqa: F405
+        scenarios = create_wind_scenarios(
             scenario_info, event_info, stations, input_dir
         )
     else:
-        print('HurricaneSimulation: currently only supports wind simulations.')  # noqa: T201
-    print('HurricaneSimulation: scenarios created.')  # noqa: T201
+        print('HurricaneSimulation: currently only supports wind simulations.')
+    print('HurricaneSimulation: scenarios created.')
 
     # Computing intensity measures
-    print('HurricaneSimulation: computing intensity measures.')  # noqa: T201
+    print('HurricaneSimulation: computing intensity measures.')
     if scenario_info['Type'] == 'Wind':
         if 'Simulation' in scenario_info['Generator']:
             if scenario_info['ModelType'] == 'LinearAnalyticalPy':
                 # simulating storm
-                storm_simu = simulate_storm(  # noqa: F405
+                storm_simu = simulate_storm(
                     scenarios, event_info, 'LinearAnalytical'
                 )
             elif scenario_info['ModelType'] == 'LinearAnalytical':
                 # simulation storm (c++ binary)
-                storm_simu = simulate_storm_cpp(  # noqa: F405
+                storm_simu = simulate_storm_cpp(
                     site_info,
                     scenario_info,
                     scenarios,
@@ -125,17 +125,17 @@ if __name__ == '__main__':
                     dir_info,
                 )
             else:
-                print(  # noqa: T201
+                print(
                     'HurricaneSimulation: currently supporting LinearAnalytical model type.'
                 )
             # converting peak wind speed
-            pws = convert_wind_speed(event_info, storm_simu)  # noqa: F405
+            pws = convert_wind_speed(event_info, storm_simu)
             # saving results
-            export_pws(stations, pws, output_dir, filename='EventGrid.csv')  # noqa: F405
+            export_pws(stations, pws, output_dir, filename='EventGrid.csv')
         else:
-            print('HurricaneSimulation: currently only supporting wind simulations.')  # noqa: T201
+            print('HurricaneSimulation: currently only supporting wind simulations.')
     else:
-        print(  # noqa: T201
+        print(
             'HurricaneSimulation currently only supports earthquake and wind simulations.'
         )
-    print('HurricaneSimulation: intensity measures computed.')  # noqa: T201
+    print('HurricaneSimulation: intensity measures computed.')

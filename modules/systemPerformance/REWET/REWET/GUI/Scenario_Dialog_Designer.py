@@ -1,14 +1,14 @@
 """Created on Fri Oct 28 14:09:49 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""
 
 from PyQt5 import QtGui, QtWidgets
 
 from .Scenario_Dialog_Window import Ui_Scenario_Dialog
 
 
-class Scenario_Dialog_Designer(Ui_Scenario_Dialog):  # noqa: D101
+class Scenario_Dialog_Designer(Ui_Scenario_Dialog):
     def __init__(self):
         self._window = QtWidgets.QDialog()
         self.setupUi(self._window)
@@ -20,7 +20,7 @@ class Scenario_Dialog_Designer(Ui_Scenario_Dialog):  # noqa: D101
         )
         self.probability_line.textChanged.connect(self.probabilityValidatorHelper)
 
-    def probabilityValidatorHelper(self, text):  # noqa: N802, D102
+    def probabilityValidatorHelper(self, text):
         if float(text) > 1:
             self.probability_line.setText(self.last_probability)
         else:

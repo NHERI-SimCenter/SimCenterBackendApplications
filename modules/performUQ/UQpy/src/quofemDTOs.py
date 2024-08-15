@@ -1,72 +1,72 @@
-from __future__ import annotations  # noqa: CPY001, D100, INP001
+from __future__ import annotations
 
 from typing import Any, Dict, List
 
 from pydantic import BaseModel
 
-from .distributions.UniformDTOs import DistributionDTO  # noqa: TCH001
-from .modules.ModuleDTOs import ModuleDTO  # noqa: TCH001
-from .sampling.mcmc.StretchDto import StretchDto  # noqa: TCH001
+from .distributions.UniformDTOs import DistributionDTO
+from .modules.ModuleDTOs import ModuleDTO
+from .sampling.mcmc.StretchDto import StretchDto
 
 
-class ApplicationData(BaseModel):  # noqa: D101
+class ApplicationData(BaseModel):
     MS_Path: str
-    mainScript: str  # noqa: N815
-    postprocessScript: str  # noqa: N815
+    mainScript: str
+    postprocessScript: str
 
 
-class FEM(BaseModel):  # noqa: D101
+class FEM(BaseModel):
     Application: str
     ApplicationData: ApplicationData
 
 
-class UQ(BaseModel):  # noqa: D101
+class UQ(BaseModel):
     Application: str
-    ApplicationData: Dict[str, Any]  # noqa: UP006
+    ApplicationData: Dict[str, Any]
 
 
-class Applications(BaseModel):  # noqa: D101
+class Applications(BaseModel):
     FEM: FEM
     UQ: UQ
 
 
-class EDPItem(BaseModel):  # noqa: D101
+class EDPItem(BaseModel):
     length: int
     name: str
     type: str
 
 
-class SubsetSimulationData(BaseModel):  # noqa: D101
-    conditionalProbability: float  # noqa: N815
-    failureThreshold: int  # noqa: N815
-    maxLevels: int  # noqa: N815
-    mcmcMethodData: StretchDto  # noqa: N815
+class SubsetSimulationData(BaseModel):
+    conditionalProbability: float
+    failureThreshold: int
+    maxLevels: int
+    mcmcMethodData: StretchDto
 
 
-class ReliabilityMethodData(BaseModel):  # noqa: D101
+class ReliabilityMethodData(BaseModel):
     method: str
-    subsetSimulationData: SubsetSimulationData  # noqa: N815
+    subsetSimulationData: SubsetSimulationData
 
 
-class RandomVariable(BaseModel):  # noqa: D101
+class RandomVariable(BaseModel):
     distribution: str
-    inputType: str  # noqa: N815
+    inputType: str
     lowerbound: int
     name: str
-    refCount: int  # noqa: N815
+    refCount: int
     upperbound: int
     value: str
-    variableClass: str  # noqa: N815
+    variableClass: str
 
 
-class Model(BaseModel):  # noqa: D101
+class Model(BaseModel):
     Applications: Applications
-    EDP: List[EDPItem]  # noqa: UP006
-    FEM: Dict[str, Any]  # noqa: UP006
+    EDP: List[EDPItem]
+    FEM: Dict[str, Any]
     UQ: ModuleDTO
     # correlationMatrix: List[int]
-    localAppDir: str  # noqa: N815
-    randomVariables: List[DistributionDTO]  # noqa: N815, UP006
-    remoteAppDir: str  # noqa: N815
-    runType: str  # noqa: N815
-    workingDir: str  # noqa: N815
+    localAppDir: str
+    randomVariables: List[DistributionDTO]
+    remoteAppDir: str
+    runType: str
+    workingDir: str

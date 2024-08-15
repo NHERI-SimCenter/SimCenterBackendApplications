@@ -1,4 +1,4 @@
-# # noqa: INP001
+#
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: D400
+"""
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -47,16 +47,16 @@ class of7Others:
     -------
             gfiletext: Get all the text for the gravity file
 
-    """  # noqa: D205, D404
+    """
 
     #############################################################
-    def othersheader(self, fileclas, fileloc, fileobjec):  # noqa: PLR6301
+    def othersheader(self, fileclas, fileloc, fileobjec):
         """Creates the text for the header
 
         Variable
         -----------
                 header: Header for the other-files
-        """  # noqa: D400, D401
+        """
         header = (
             """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
@@ -66,7 +66,7 @@ class of7Others:
 |	   | O |
 \\*---------------------------------------------------------------------------*/ 
 FoamFile
-{\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\t"""  # noqa: W291
+{\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\t"""
             + fileclas
             + """;\n\tlocation\t"""
             + '"'
@@ -78,7 +78,7 @@ FoamFile
         )
 
         # Return the header for U file
-        return header  # noqa: RET504
+        return header
 
     #############################################################
     def gfiletext(self, data):
@@ -88,7 +88,7 @@ FoamFile
         ---------
                 data: all the JSON data
 
-        """  # noqa: D400, D401
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -101,7 +101,7 @@ FoamFile
             hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
         )
 
-        if int(simtype) == 4:  # noqa: PLR2004
+        if int(simtype) == 4:
             gz = -9.81
         else:
             # Get the gravity from dakota.json file
@@ -109,17 +109,17 @@ FoamFile
                 hydroutil.extract_element_from_json(data, ['Events', 'Gravity'])
             )
             # Depending on the inputs, initialize gravity in the right direction
-            if int(gravity) == 11:  # noqa: PLR2004
+            if int(gravity) == 11:
                 gx = 9.81
-            elif int(gravity) == 12:  # noqa: PLR2004
+            elif int(gravity) == 12:
                 gy = 9.81
-            elif int(gravity) == 13:  # noqa: PLR2004
+            elif int(gravity) == 13:
                 gz = 9.81
-            elif int(gravity) == 21:  # noqa: PLR2004
+            elif int(gravity) == 21:
                 gx = -9.81
-            elif int(gravity) == 22:  # noqa: PLR2004
+            elif int(gravity) == 22:
                 gy = -9.81
-            elif int(gravity) == 23:  # noqa: PLR2004
+            elif int(gravity) == 23:
                 gz = -9.81
 
         # Get the header text for the gravity-file
@@ -128,7 +128,7 @@ FoamFile
         )
 
         # All other data
-        gfiletext = gfiletext + 'dimensions\t[0 1 -2 0 0 0 0];\n'  # noqa: PLR6104
+        gfiletext = gfiletext + 'dimensions\t[0 1 -2 0 0 0 0];\n'
         gfiletext = (
             gfiletext
             + 'value\t('
@@ -140,4 +140,4 @@ FoamFile
             + ');\n'
         )
 
-        return gfiletext  # noqa: RET504
+        return gfiletext

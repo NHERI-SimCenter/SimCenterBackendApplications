@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -48,16 +48,16 @@ import numpy as np
 import pandas as pd
 
 if 'stampede2' not in socket.gethostname():
-    from FetchOpenSHA import *  # noqa: F403
+    from FetchOpenSHA import *
 
 
-def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):  # noqa: C901, D103
+def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):
     # If there is a filter
     if scenario_info['Generator'].get('method', None) == 'ScenarioSpecific':
-        SourceIndex = scenario_info['Generator'].get('SourceIndex', None)  # noqa: N806
-        RupIndex = scenario_info['Generator'].get('RuptureIndex', None)  # noqa: N806
+        SourceIndex = scenario_info['Generator'].get('SourceIndex', None)
+        RupIndex = scenario_info['Generator'].get('RuptureIndex', None)
         if (SourceIndex is None) or (RupIndex is None):
-            print(  # noqa: T201
+            print(
                 'Both SourceIndex and RuptureIndex are needed for'
                 'ScenarioSpecific analysis'
             )
@@ -87,7 +87,7 @@ def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):  # noqa: C901
                 else:
                     rups_requested.append(int(rups))
             rups_requested = np.array(rups_requested)
-            rups_requested = (  # noqa: PLR6104
+            rups_requested = (
                 rups_requested - 1
             )  # The input index starts from 1, not 0
             rups_available = list(range(num_scenarios))
@@ -104,13 +104,13 @@ def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):  # noqa: C901
     return rups_to_run
 
 
-def load_earthquake_rupFile(scenario_info, rupFilePath):  # noqa: N802, N803, D103
+def load_earthquake_rupFile(scenario_info, rupFilePath):
     # Getting earthquake rupture forecast data
     source_type = scenario_info['EqRupture']['Type']
     try:
-        with open(rupFilePath) as f:  # noqa: PLW1514, PTH123
+        with open(rupFilePath) as f:
             user_scenarios = json.load(f)
-    except:  # noqa: E722
+    except:
         sys.exit(f'CreateScenario: source file {rupFilePath} not found.')
     # number of features (i.e., ruptures)
     num_scenarios = len(user_scenarios.get('features', []))
@@ -150,8 +150,8 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):  # noqa: N802, N803, D1
                 }
             )
     elif source_type == 'PointSource':
-        sourceID = 0  # noqa: N806
-        rupID = 0  # noqa: N806
+        sourceID = 0
+        rupID = 0
         for rup_tag in rups_to_run:
             try:
                 cur_rup = user_scenarios.get('features')[rup_tag]
@@ -172,14 +172,14 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):  # noqa: N802, N803, D1
                         }
                     }
                 )
-                rupID = rupID + 1  # noqa: N806, PLR6104
-            except:  # noqa: PERF203, E722
-                print('Please check point-source inputs.')  # noqa: T201
+                rupID = rupID + 1
+            except:
+                print('Please check point-source inputs.')
     # return
     return scenario_data
 
 
-def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile):  # noqa: C901, N803, D103
+def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile):
     # Collecting all possible earthquake scenarios
     lat = []
     lon = []
@@ -189,30 +189,30 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
     # Reference location
     mlat = np.mean(lat)
     mlon = np.mean(lon)
-    import json  # noqa: PLC0415
+    import json
 
-    from openquake.commonlib import readinput  # noqa: PLC0415
-    from openquake.hazardlib import nrml, site, sourceconverter  # noqa: PLC0415
-    from openquake.hazardlib.calc.filters import (  # noqa: PLC0415
+    from openquake.commonlib import readinput
+    from openquake.hazardlib import nrml, site, sourceconverter
+    from openquake.hazardlib.calc.filters import (
         SourceFilter,
         get_distances,
     )
-    from openquake.hazardlib.geo.mesh import Mesh  # noqa: PLC0415
-    from openquake.hazardlib.geo.surface.base import BaseSurface  # noqa: PLC0415
+    from openquake.hazardlib.geo.mesh import Mesh
+    from openquake.hazardlib.geo.surface.base import BaseSurface
 
     try:
-        with open(rupFile) as f:  # noqa: PLW1514, PTH123
+        with open(rupFile) as f:
             user_scenarios = json.load(f)
-    except:  # noqa: E722
+    except:
         sys.exit(f'CreateScenario: source file {rupFile} not found.')
     # number of features (i.e., ruptures)
     num_scenarios = len(user_scenarios.get('features', []))
     if num_scenarios < 1:
         sys.exit('CreateScenario: source file is empty.')
     rups_to_run = get_rups_to_run(scenario_info, user_scenarios, num_scenarios)
-    in_dir = os.path.join(work_dir, 'Input')  # noqa: PTH118
+    in_dir = os.path.join(work_dir, 'Input')
     oq = readinput.get_oqparam(
-        dict(  # noqa: C408
+        dict(
             calculation_mode='classical',
             inputs={'site_model': [siteFile]},
             intensity_measure_types_and_levels="{'PGA': [0.1], 'SA(0.1)': [0.1]}",  # place holder for initiating oqparam. Not used in ERF
@@ -235,7 +235,7 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
     rupture_mesh_spacing = scenario_info['EqRupture']['rupture_mesh_spacing']
     rupture_mesh_spacing = scenario_info['EqRupture']['rupture_mesh_spacing']
     [src_nrml] = nrml.read(
-        os.path.join(in_dir, scenario_info['EqRupture']['sourceFile'])  # noqa: PTH118
+        os.path.join(in_dir, scenario_info['EqRupture']['sourceFile'])
     )
     conv = sourceconverter.SourceConverter(
         scenario_info['EqRupture']['investigation_time'],
@@ -249,12 +249,12 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
     sources = []
     sources_dist = []
     sources_id = []
-    id = 0  # noqa: A001
-    siteMeanCol = site.SiteCollection.from_points([mlon], [mlat])  # noqa: N806
+    id = 0
+    siteMeanCol = site.SiteCollection.from_points([mlon], [mlat])
     srcfilter = SourceFilter(siteMeanCol, oq.maximum_distance)
     for i in range(len(src_nrml)):
         subnode = src_nrml[i]
-        subSrc = src_raw[i]  # noqa: N806
+        subSrc = src_raw[i]
         tag = (
             subnode.tag.rsplit('}')[1]
             if subnode.tag.startswith('{')
@@ -263,7 +263,7 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
         if tag == 'sourceGroup':
             for j in range(len(subnode)):
                 subsubnode = subnode[j]
-                subsubSrc = subSrc[j]  # noqa: N806
+                subsubSrc = subSrc[j]
                 subtag = (
                     subsubnode.tag.rsplit('}')[1]
                     if subsubnode.tag.startswith('{')
@@ -275,22 +275,22 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
                 ):
                     subsubSrc.id = id
                     sources_id.append(id)
-                    id += 1  # noqa: A001
+                    id += 1
                     sources.append(subsubSrc)
-                    sourceMesh = subsubSrc.polygon.discretize(rupture_mesh_spacing)  # noqa: N806
-                    sourceSurface = BaseSurface(sourceMesh)  # noqa: N806
-                    siteMesh = Mesh(siteMeanCol.lon, siteMeanCol.lat)  # noqa: N806
+                    sourceMesh = subsubSrc.polygon.discretize(rupture_mesh_spacing)
+                    sourceSurface = BaseSurface(sourceMesh)
+                    siteMesh = Mesh(siteMeanCol.lon, siteMeanCol.lat)
                     sources_dist.append(sourceSurface.get_min_distance(siteMesh))
         elif (
             tag.endswith('Source') and srcfilter.get_close_sites(subSrc) is not None
         ):
             subSrc.id = id
             sources_id.append(id)
-            id += 1  # noqa: A001
+            id += 1
             sources.append(subSrc)
-            sourceMesh = subSrc.polygon.discretize(rupture_mesh_spacing)  # noqa: N806
-            sourceSurface = BaseSurface(sourceMesh)  # noqa: N806
-            siteMesh = Mesh(siteMeanCol.lon, siteMeanCol.lat)  # noqa: N806
+            sourceMesh = subSrc.polygon.discretize(rupture_mesh_spacing)
+            sourceSurface = BaseSurface(sourceMesh)
+            siteMesh = Mesh(siteMeanCol.lon, siteMeanCol.lat)
             sources_dist.append(sourceSurface.get_min_distance(siteMesh))
     sources_df = pd.DataFrame.from_dict(
         {'source': sources, 'sourceDist': sources_dist, 'sourceID': sources_id}
@@ -298,8 +298,8 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
     sources_df = sources_df.sort_values(['sourceDist'], ascending=(True))
     sources_df = sources_df.set_index('sourceID')
     allrups = []
-    allrups_rRup = []  # noqa: N806
-    allrups_srcId = []  # noqa: N806
+    allrups_rRup = []
+    allrups_srcId = []
     allrups_mar = []
     for src in sources_df['source']:
         src_rups = list(src.iter_ruptures())
@@ -322,7 +322,7 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
     maf_list_n = [-x for x in rups_df['MeanAnnualRate']]
     sort_ids = np.argsort(maf_list_n)
     rups_df = rups_df.iloc[sort_ids]
-    rups_df.reset_index(drop=True, inplace=True)  # noqa: PD002
+    rups_df.reset_index(drop=True, inplace=True)
     # rups_df = rups_df = rups_df.sort_values(['MeanAnnualRate'], ascending = (False))
     rups_df = rups_df.loc[rups_to_run, :]
     scenario_data = {}
@@ -351,14 +351,14 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
     return scenario_data
 
 
-def load_earthquake_scenarios(scenario_info, stations, dir_info):  # noqa: D103
+def load_earthquake_scenarios(scenario_info, stations, dir_info):
     # Number of scenarios
-    source_num = scenario_info.get('Number', 1)  # noqa: F841
+    source_num = scenario_info.get('Number', 1)
     # sampling method
-    samp_method = scenario_info['EqRupture'].get('Sampling', 'Random')  # noqa: F841
+    samp_method = scenario_info['EqRupture'].get('Sampling', 'Random')
     # source model
     source_model = scenario_info['EqRupture']['Model']
-    eq_source = getERF(scenario_info)  # noqa: F405
+    eq_source = getERF(scenario_info)
     # Getting earthquake rupture forecast data
     source_type = scenario_info['EqRupture']['Type']
     # Collecting all sites
@@ -368,19 +368,19 @@ def load_earthquake_scenarios(scenario_info, stations, dir_info):  # noqa: D103
         lat.append(s['Latitude'])
         lon.append(s['Longitude'])
     # load scenario file
-    user_scenario_file = os.path.join(  # noqa: PTH118
+    user_scenario_file = os.path.join(
         dir_info.get('Input'), scenario_info.get('EqRupture').get('UserScenarioFile')
     )
     try:
-        with open(user_scenario_file) as f:  # noqa: PLW1514, PTH123
+        with open(user_scenario_file) as f:
             user_scenarios = json.load(f)
-    except:  # noqa: E722
-        print(f'CreateScenario: source file {user_scenario_file} not found.')  # noqa: T201
+    except:
+        print(f'CreateScenario: source file {user_scenario_file} not found.')
         return {}
     # number of features (i.e., ruptures)
     num_scenarios = len(user_scenarios.get('features', []))
     if num_scenarios < 1:
-        print('CreateScenario: source file is empty.')  # noqa: T201
+        print('CreateScenario: source file is empty.')
         return {}
     # get rupture and source ids
     scenario_data = {}
@@ -389,11 +389,11 @@ def load_earthquake_scenarios(scenario_info, stations, dir_info):  # noqa: D103
         cur_id_source = cur_rup.get('properties').get('Source', None)
         cur_id_rupture = cur_rup.get('properties').get('Rupture', None)
         if cur_id_rupture is None or cur_id_source is None:
-            print(  # noqa: T201
+            print(
                 f'CreateScenario: rupture #{rup_tag} does not have valid source/rupture ID - skipped.'
             )
             continue
-        cur_source, cur_rupture = get_source_rupture(  # noqa: F405
+        cur_source, cur_rupture = get_source_rupture(
             eq_source, cur_id_source, cur_id_rupture
         )
         scenario_data.update(
@@ -410,10 +410,10 @@ def load_earthquake_scenarios(scenario_info, stations, dir_info):  # noqa: D103
                     ),
                     'SourceIndex': cur_id_source,
                     'RuptureIndex': cur_id_rupture,
-                    'SiteSourceDistance': get_source_distance(  # noqa: F405
+                    'SiteSourceDistance': get_source_distance(
                         eq_source, cur_id_source, lat, lon
                     ),
-                    'SiteRuptureDistance': get_rupture_distance(  # noqa: F405
+                    'SiteRuptureDistance': get_rupture_distance(
                         eq_source, cur_id_source, cur_id_rupture, lat, lon
                     ),
                 }
@@ -424,24 +424,24 @@ def load_earthquake_scenarios(scenario_info, stations, dir_info):  # noqa: D103
     return scenario_data
 
 
-def create_earthquake_scenarios(  # noqa: C901, D103
+def create_earthquake_scenarios(
     scenario_info,
     stations,
     work_dir,
-    openquakeSiteFile=None,  # noqa: N803
+    openquakeSiteFile=None,
 ):
     # # Number of scenarios
     # source_num = scenario_info.get('Number', 1)
     # if source_num == 'All':
     #     # Large number to consider all sources in the ERF
     #     source_num = 10000000
-    out_dir = os.path.join(work_dir, 'Output')  # noqa: PTH118
+    out_dir = os.path.join(work_dir, 'Output')
     if scenario_info['Generator'] == 'Simulation':
-        # TODO:  # noqa: TD002
-        print('Physics-based earthquake simulation is under development.')  # noqa: T201
+        # TODO:
+        print('Physics-based earthquake simulation is under development.')
         return 1
     # Searching earthquake ruptures that fulfill the request
-    elif scenario_info['Generator'] == 'Selection':  # noqa: RET505
+    elif scenario_info['Generator'] == 'Selection':
         # Collecting all possible earthquake scenarios
         lat = []
         lon = []
@@ -457,31 +457,31 @@ def create_earthquake_scenarios(  # noqa: C901, D103
         t_start = time.time()
         if source_type == 'ERF':
             if (
-                'SourceIndex' in scenario_info['EqRupture'].keys()  # noqa: SIM118
-                and 'RuptureIndex' in scenario_info['EqRupture'].keys()  # noqa: SIM118
+                'SourceIndex' in scenario_info['EqRupture'].keys()
+                and 'RuptureIndex' in scenario_info['EqRupture'].keys()
             ):
                 source_model = scenario_info['EqRupture']['Model']
-                eq_source = getERF(scenario_info)  # noqa: F405
+                eq_source = getERF(scenario_info)
                 # check source index list and rupture index list
-                if type(scenario_info['EqRupture']['SourceIndex']) == int:  # noqa: E721
+                if type(scenario_info['EqRupture']['SourceIndex']) == int:
                     source_index_list = [scenario_info['EqRupture']['SourceIndex']]
                 else:
                     source_index_list = scenario_info['EqRupture']['SourceIndex']
-                if type(scenario_info['EqRupture']['RuptureIndex']) == int:  # noqa: E721
+                if type(scenario_info['EqRupture']['RuptureIndex']) == int:
                     rup_index_list = [scenario_info['EqRupture']['RuptureIndex']]
                 else:
                     rup_index_list = scenario_info['EqRupture']['RuptureIndex']
                 if len(source_index_list) != len(rup_index_list):
-                    print(  # noqa: T201
+                    print(
                         f'CreateScenario: source number {len(source_index_list)} should be matched by rupture number {len(rup_index_list)}'
                     )
-                    return dict()  # noqa: C408
+                    return dict()
                 # loop over all scenarios
-                scenario_data = dict()  # noqa: C408
+                scenario_data = dict()
                 for i in range(len(source_index_list)):
                     cur_source_index = source_index_list[i]
                     cur_rup_index = rup_index_list[i]
-                    distToSource = get_source_distance(  # noqa: N806, F405
+                    distToSource = get_source_distance(
                         eq_source, cur_source_index, lat, lon
                     )
                     scenario_data.update(
@@ -492,7 +492,7 @@ def create_earthquake_scenarios(  # noqa: C901, D103
                                 'SourceIndex': cur_source_index,
                                 'RuptureIndex': cur_rup_index,
                                 'SiteSourceDistance': distToSource,
-                                'SiteRuptureDistance': get_rupture_distance(  # noqa: F405
+                                'SiteRuptureDistance': get_rupture_distance(
                                     eq_source,
                                     cur_source_index,
                                     cur_rup_index,
@@ -503,17 +503,17 @@ def create_earthquake_scenarios(  # noqa: C901, D103
                         }
                     )
                 return scenario_data
-            else:  # noqa: RET505
+            else:
                 source_model = scenario_info['EqRupture']['Model']
                 source_name = scenario_info['EqRupture'].get('Name', None)
-                min_M = scenario_info['EqRupture'].get('min_Mag', 5.0)  # noqa: N806
-                max_M = scenario_info['EqRupture'].get('max_Mag', 9.0)  # noqa: N806
-                max_R = scenario_info['EqRupture'].get('max_Dist', 1000.0)  # noqa: N806
-                eq_source = getERF(scenario_info)  # noqa: F405
-                erf_data = export_to_json(  # noqa: F405, F841
+                min_M = scenario_info['EqRupture'].get('min_Mag', 5.0)
+                max_M = scenario_info['EqRupture'].get('max_Mag', 9.0)
+                max_R = scenario_info['EqRupture'].get('max_Dist', 1000.0)
+                eq_source = getERF(scenario_info)
+                erf_data = export_to_json(
                     eq_source,
                     ref_station,
-                    outfile=os.path.join(out_dir, 'RupFile.geojson'),  # noqa: PTH118
+                    outfile=os.path.join(out_dir, 'RupFile.geojson'),
                     EqName=source_name,
                     minMag=min_M,
                     maxMag=max_M,
@@ -556,10 +556,10 @@ def create_earthquake_scenarios(  # noqa: C901, D103
                 # del erf_data
         elif source_type == 'PointSource':
             # Export to a geojson format RupFile.json
-            outfile = os.path.join(out_dir, 'RupFile.geojson')  # noqa: PTH118
-            pointSource_data = {'type': 'FeatureCollection'}  # noqa: N806
+            outfile = os.path.join(out_dir, 'RupFile.geojson')
+            pointSource_data = {'type': 'FeatureCollection'}
             feature_collection = []
-            newRup = {  # noqa: N806
+            newRup = {
                 'type': 'Feature',
                 'properties': {
                     'Type': source_type,
@@ -571,7 +571,7 @@ def create_earthquake_scenarios(  # noqa: C901, D103
                     'Rupture': 0,
                 },
             }
-            newRup['geometry'] = dict()  # noqa: C408
+            newRup['geometry'] = dict()
             newRup['geometry'].update({'type': 'Point'})
             newRup['geometry'].update(
                 {
@@ -584,32 +584,32 @@ def create_earthquake_scenarios(  # noqa: C901, D103
             feature_collection.append(newRup)
             pointSource_data.update({'features': feature_collection})
             if outfile is not None:
-                print(f'The collected point source ruptures are saved in {outfile}')  # noqa: T201
-                with open(outfile, 'w') as f:  # noqa: PLW1514, PTH123
+                print(f'The collected point source ruptures are saved in {outfile}')
+                with open(outfile, 'w') as f:
                     json.dump(pointSource_data, f, indent=2)
         elif source_type == 'oqSourceXML':
-            import FetchOpenQuake  # noqa: PLC0415
+            import FetchOpenQuake
 
-            siteFile = os.path.join(work_dir, 'Input', openquakeSiteFile)  # noqa: PTH118, N806
+            siteFile = os.path.join(work_dir, 'Input', openquakeSiteFile)
             FetchOpenQuake.export_rupture_to_json(
                 scenario_info, mlon, mlat, siteFile, work_dir
             )
-        print(  # noqa: T201
+        print(
             f'CreateScenario: all scenarios configured {time.time() - t_start} sec'
         )
     # return
     return None
 
 
-def sample_scenarios(  # noqa: D103
-    rup_info=[],  # noqa: B006
+def sample_scenarios(
+    rup_info=[],
     sample_num=1,
     sample_type='Random',
     source_name=None,
-    min_M=0.0,  # noqa: N803
+    min_M=0.0,
 ):
     if len(rup_info) == 0:
-        print(  # noqa: T201
+        print(
             'CreateScenario.sample_scenarios: no available scenario provided - please relax earthquake filters.'
         )
         return []
@@ -636,16 +636,16 @@ def sample_scenarios(  # noqa: D103
         s_tag = np.random.choice(tag, sample_num, p=maf_list_n).tolist()
 
     else:
-        print('CreateScenario.sample_scenarios: please specify a sampling method.')  # noqa: T201
+        print('CreateScenario.sample_scenarios: please specify a sampling method.')
         s_tag = []
 
     # return
     return s_tag
 
 
-def create_wind_scenarios(scenario_info, stations, data_dir):  # noqa: D103
+def create_wind_scenarios(scenario_info, stations, data_dir):
     # Number of scenarios
-    source_num = scenario_info.get('Number', 1)  # noqa: F841
+    source_num = scenario_info.get('Number', 1)
     # Directly defining earthquake ruptures
     if scenario_info['Generator'] == 'Simulation':
         # Collecting site locations
@@ -655,50 +655,50 @@ def create_wind_scenarios(scenario_info, stations, data_dir):  # noqa: D103
             lat.append(s['Latitude'])
             lon.append(s['Longitude'])
         # Save Stations.csv
-        df = pd.DataFrame({'lat': lat, 'lon': lon})  # noqa: PD901
+        df = pd.DataFrame({'lat': lat, 'lon': lon})
         df.to_csv(data_dir + 'Stations.csv', index=False, header=False)
         # Save Lat_w.csv
         lat_w = np.linspace(min(lat) - 0.5, max(lat) + 0.5, 100)
-        df = pd.DataFrame({'lat_w': lat_w})  # noqa: PD901
+        df = pd.DataFrame({'lat_w': lat_w})
         df.to_csv(data_dir + 'Lat_w.csv', index=False, header=False)
         # Parsing Terrain info
-        df = pd.read_csv(  # noqa: PD901
+        df = pd.read_csv(
             data_dir + scenario_info['Terrain']['Longitude'],
             header=None,
             index_col=None,
         )
         df.to_csv(data_dir + 'Long_wr.csv', header=False, index=False)
-        df = pd.read_csv(  # noqa: PD901
+        df = pd.read_csv(
             data_dir + scenario_info['Terrain']['Latitude'],
             header=None,
             index_col=None,
         )
         df.to_csv(data_dir + 'Lat_wr.csv', header=False, index=False)
-        df = pd.read_csv(  # noqa: PD901
+        df = pd.read_csv(
             data_dir + scenario_info['Terrain']['Size'], header=None, index_col=None
         )
         df.to_csv(data_dir + 'wr_sizes.csv', header=False, index=False)
-        df = pd.read_csv(  # noqa: PD901
+        df = pd.read_csv(
             data_dir + scenario_info['Terrain']['z0'], header=None, index_col=None
         )
         df.to_csv(data_dir + 'z0r.csv', header=False, index=False)
         # Parsing storm properties
         param = []
-        param.append(scenario_info['Storm']['Landfall']['Latitude'])  # noqa: FURB113
+        param.append(scenario_info['Storm']['Landfall']['Latitude'])
         param.append(scenario_info['Storm']['Landfall']['Longitude'])
         param.append(scenario_info['Storm']['LandingAngle'])
         param.append(scenario_info['Storm']['Pressure'])
         param.append(scenario_info['Storm']['Speed'])
         param.append(scenario_info['Storm']['Radius'])
-        df = pd.DataFrame({'param': param})  # noqa: PD901
+        df = pd.DataFrame({'param': param})
         df.to_csv(data_dir + 'param.csv', index=False, header=False)
-        df = pd.read_csv(  # noqa: PD901
+        df = pd.read_csv(
             data_dir + scenario_info['Storm']['Track'], header=None, index_col=None
         )
         df.to_csv(data_dir + 'Track.csv', header=False, index=False)
         # Saving del_par.csv
         del_par = [0, 0, 0]  # default
-        df = pd.DataFrame({'del_par': del_par})  # noqa: PD901
+        df = pd.DataFrame({'del_par': del_par})
         df.to_csv(data_dir + 'del_par.csv', header=False, index=False)
         # Parsing resolution data
         delta_p = [1000.0, scenario_info['Resolution']['DivRad'], 1000000.0]
@@ -706,7 +706,7 @@ def create_wind_scenarios(scenario_info, stations, data_dir):  # noqa: D103
         delta_p.extend(
             [scenario_info['MeasureHeight'], 10, scenario_info['MeasureHeight']]
         )
-        df = pd.DataFrame({'delta_p': delta_p})  # noqa: PD901
+        df = pd.DataFrame({'delta_p': delta_p})
         df.to_csv(data_dir + 'delta_p.csv', header=False, index=False)
     else:
-        print('Currently only supporting Simulation generator.')  # noqa: T201
+        print('Currently only supporting Simulation generator.')

@@ -1,40 +1,40 @@
-# %%  # noqa: CPY001, D100, INP001
+# %%
 import json
 import os
 import time
 from datetime import datetime
-from subprocess import PIPE, run  # noqa: S404
+from subprocess import PIPE, run
 
 # change the directory to the current directory
-os.chdir(os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 
 # %%
 # helper function to call the tapis command
-def call(command):  # noqa: D103
+def call(command):
     command = command.split()
     command.append('-f')
     command.append('json')
-    result = run(command, stdout=PIPE, stderr=PIPE, text=True, check=False)  # noqa: S603, UP022
+    result = run(command, stdout=PIPE, stderr=PIPE, text=True, check=False)
     result = json.loads(result.stdout)
-    return result  # noqa: RET504
+    return result
 
 
 # %%
-def Submit_tapis_job():  # noqa: N802, D103
-    with open('TapisFiles/information.json') as file:  # noqa: PLW1514, PTH123
+def Submit_tapis_job():
+    with open('TapisFiles/information.json') as file:
         information = json.load(file)
     file.close()
 
     profile = call('tapis profiles show self')
     username = profile['username']
     email = profile['email']
-    savingDirectory = information['directory']  # noqa: N806
+    savingDirectory = information['directory']
 
-    if not os.path.exists(savingDirectory):  # noqa: PTH110
-        os.makedirs(savingDirectory)  # noqa: PTH103
+    if not os.path.exists(savingDirectory):
+        os.makedirs(savingDirectory)
 
-    print('Uploading files to designsafe storage')  # noqa: T201
+    print('Uploading files to designsafe storage')
     call(
         f'tapis files mkdir agave://designsafe.storage.default/{username}/  physics_based'
     )
@@ -68,10 +68,10 @@ def Submit_tapis_job():  # noqa: N802, D103
     }
 
     # Generate a timestamp to append to the job name an
-    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')  # noqa: DTZ005
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
     jobname = f'PhysicsBasedMotion_M9_{username}_{timestamp}'
 
-    print('Submitting job')  # noqa: T201
+    print('Submitting job')
     jobdict['name'] = jobname
     jobdict['inputs']['inputDirectory'] = (
         f'agave://designsafe.storage.default/{username}/physics_based/M9/'
@@ -80,7 +80,7 @@ def Submit_tapis_job():  # noqa: N802, D103
 
     # submit the job
     jobfile = './TapisFiles/job.json'
-    json.dump(jobdict, open(jobfile, 'w'), indent=2)  # noqa: PLW1514, PTH123, SIM115
+    json.dump(jobdict, open(jobfile, 'w'), indent=2)
     res = call(f'tapis jobs submit -F {jobfile}')
 
     # delete the job file
@@ -95,30 +95,30 @@ def Submit_tapis_job():  # noqa: N802, D103
         status = call(f'tapis jobs status {jobid} ')['status']
         if count == 0:
             last_status = status
-            print('Job status: ', status)  # noqa: T201
+            print('Job status: ', status)
         count += 1
         if last_status != status:
-            print('Job status: ', status)  # noqa: T201
+            print('Job status: ', status)
             last_status = status
         if status == 'FAILED':
-            print('Job failed')  # noqa: T201
+            print('Job failed')
             break
 
         time.sleep(10)
     # # %%
 
     # # %%
-    print('Downloading extracted motions')  # noqa: T201
-    archivePath = call(f'tapis jobs show {jobid}')['archivePath']  # noqa: N806
-    archivePath = f'agave://designsafe.storage.default/{archivePath}/M9'  # noqa: N806
+    print('Downloading extracted motions')
+    archivePath = call(f'tapis jobs show {jobid}')['archivePath']
+    archivePath = f'agave://designsafe.storage.default/{archivePath}/M9'
 
     files = call(f'tapis files list {archivePath}/Events/')
     if len(files) == 0:
-        print('No files in the archive')  # noqa: T201
+        print('No files in the archive')
     else:
         command = f'tapis files download {archivePath}/Events/ -W {savingDirectory}/'
         command = command.split()
-        run(command, stdout=PIPE, stderr=PIPE, text=True, check=False)  # noqa: S603, UP022
+        run(command, stdout=PIPE, stderr=PIPE, text=True, check=False)
 
     return res
 

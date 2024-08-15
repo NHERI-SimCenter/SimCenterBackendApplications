@@ -1,10 +1,10 @@
-from pathlib import Path  # noqa: CPY001, D100, INP001
+from pathlib import Path
 
 
-def createTemplate(variableNames, templateName):  # noqa: N802, N803, D103
-    filePath = Path('./' + templateName)  # noqa: N806
+def createTemplate(variableNames, templateName):
+    filePath = Path('./' + templateName)
 
-    with open(filePath, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(filePath, 'w') as f:
         f.write(f'{len(variableNames)}\n')
 
         for name in variableNames:

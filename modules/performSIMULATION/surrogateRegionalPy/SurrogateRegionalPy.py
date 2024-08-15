@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -50,24 +50,24 @@ import os
 import sys
 
 
-def main(aimName, samName, evtName, edpName, simName, getRV):  # noqa: N803, D103
+def main(aimName, samName, evtName, edpName, simName, getRV):
     #
     # Find the GI and SAM files
     #
 
-    with open(aimName, encoding='utf-8') as f:  # noqa: PTH123
-        root_AIM = json.load(f)  # noqa: N806
-        GI = root_AIM['GeneralInformation']  # noqa: N806
+    with open(aimName, encoding='utf-8') as f:
+        root_AIM = json.load(f)
+        GI = root_AIM['GeneralInformation']
 
-    with open(samName, encoding='utf-8') as f:  # noqa: PTH123
-        SAM = json.load(f)  # noqa: N806
+    with open(samName, encoding='utf-8') as f:
+        SAM = json.load(f)
 
     #
     # Get user-uploaded filter script
     #
     # sy - so far works only for single model
-    filterFileName = root_AIM['Simulation']['filterFileName']  # noqa: N806
-    filateFilePath = root_AIM['Simulation']['filterFilePath']  # noqa: N806
+    filterFileName = root_AIM['Simulation']['filterFileName']
+    filateFilePath = root_AIM['Simulation']['filterFilePath']
     sys.path.insert(0, filateFilePath)
     analysis_script = importlib.__import__(
         filterFileName[:-3],
@@ -79,7 +79,7 @@ def main(aimName, samName, evtName, edpName, simName, getRV):  # noqa: N803, D10
         0,
     )
     model_distributor = analysis_script.model_distributor
-    modelName = model_distributor(GI, SAM)  # noqa: N806
+    modelName = model_distributor(GI, SAM)
 
     if getRV:
         runDefault(root_AIM, aimName, samName, evtName, edpName, simName, getRV)
@@ -97,11 +97,11 @@ def main(aimName, samName, evtName, edpName, simName, getRV):  # noqa: N803, D10
         runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName)
 
 
-def runDefault(root_AIM, aimName, samName, evtName, edpName, simName, getRV=False):  # noqa: FBT002, N802, N803, D103
+def runDefault(root_AIM, aimName, samName, evtName, edpName, simName, getRV=False):
     #
     # Find app name
     #
-    mySimAppName = root_AIM['Simulation']['DefaultAnalysis']['Buildings'][  # noqa: N806
+    mySimAppName = root_AIM['Simulation']['DefaultAnalysis']['Buildings'][
         'Application'
     ]
 
@@ -110,36 +110,36 @@ def runDefault(root_AIM, aimName, samName, evtName, edpName, simName, getRV=Fals
     #
     root_AIM['Simulation'] = root_AIM['Simulation']['DefaultAnalysis']['Buildings']
 
-    currentDir = os.getcwd()  # noqa: PTH109, N806
-    newAimName = os.path.join(currentDir, os.path.basename(aimName))  # noqa: PTH118, PTH119, N806
+    currentDir = os.getcwd()
+    newAimName = os.path.join(currentDir, os.path.basename(aimName))
 
-    with open(newAimName, 'w', encoding='utf-8') as f:  # noqa: FURB103, PTH123
+    with open(newAimName, 'w', encoding='utf-8') as f:
         json_object = json.dumps(root_AIM)
         f.write(json_object)
     #
     # overwrite with default AIM.json file
     #
     s = [
-        os.path.dirname(__file__),  # noqa: PTH120
+        os.path.dirname(__file__),
         '..',
         '..',
         'Workflow',
         'WorkflowApplications.json',
     ]
-    workflowAppJsonPath = os.path.join(*s)  # noqa: PTH118, N806
-    with open(workflowAppJsonPath, encoding='utf-8') as f:  # noqa: PTH123
-        workflowAppDict = json.load(f)  # noqa: N806
-        appList = workflowAppDict['SimulationApplications']['Applications']  # noqa: N806
-        myApp = next(item for item in appList if item['Name'] == mySimAppName)  # noqa: N806
+    workflowAppJsonPath = os.path.join(*s)
+    with open(workflowAppJsonPath, encoding='utf-8') as f:
+        workflowAppDict = json.load(f)
+        appList = workflowAppDict['SimulationApplications']['Applications']
+        myApp = next(item for item in appList if item['Name'] == mySimAppName)
         s = [
-            os.path.dirname(__file__),  # noqa: PTH120
+            os.path.dirname(__file__),
             '..',
             '..',
             '..',
-            os.path.dirname(myApp['ExecutablePath']),  # noqa: PTH120
+            os.path.dirname(myApp['ExecutablePath']),
         ]
-        mySimAppPath = os.path.join(*s)  # noqa: PTH118, N806
-        mySimAppName = os.path.basename(myApp['ExecutablePath'])  # noqa: PTH119, N806
+        mySimAppPath = os.path.join(*s)
+        mySimAppName = os.path.basename(myApp['ExecutablePath'])
 
     #
     # run correct backend app
@@ -184,12 +184,12 @@ def runDefault(root_AIM, aimName, samName, evtName, edpName, simName, getRV=Fals
         )
 
 
-def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):  # noqa: C901, N802, N803, D103
+def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):
     #
     # Augment to params.in file
     #
 
-    GIkeys = [  # noqa: N806
+    GIkeys = [
         'Latitude',
         'Longitude',
         'NumberOfStories',
@@ -199,7 +199,7 @@ def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):  # noqa: C901,
         'PlanArea',
         'ReplacementCost',
     ]
-    SAMkeys_properties = [  # noqa: N806
+    SAMkeys_properties = [
         'dampingRatio',
         'K0',
         'Sy',
@@ -212,59 +212,59 @@ def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):  # noqa: C901,
         'eta_soft',
         'a_k',
     ]
-    SAMkeys_nodes = ['mass']  # noqa: N806
+    SAMkeys_nodes = ['mass']
 
-    with open('params.in') as f:  # noqa: FURB101, PLW1514, PTH123
-        paramsStr = f.read()  # noqa: N806
-    nAddParams = 0  # noqa: N806
+    with open('params.in') as f:
+        paramsStr = f.read()
+    nAddParams = 0
 
     for key in GI:
         if key in GIkeys:
             val = GI[key]
             if not isinstance(val, str):
-                paramsStr += f'{key} {val}\n'  # noqa: N806
+                paramsStr += f'{key} {val}\n'
             else:
-                paramsStr += f'{key} "{val}"\n'  # noqa: N806
-            nAddParams += 1  # noqa: N806
+                paramsStr += f'{key} "{val}"\n'
+            nAddParams += 1
 
     # For damping
     for key in SAM['Properties']:
         if key in SAMkeys_properties:
             val = SAM['Properties'][key]
             if not isinstance(val, str):
-                paramsStr += f'{key} {val}\n'  # noqa: N806
+                paramsStr += f'{key} {val}\n'
             else:
-                paramsStr += f'{key} "{val}"\n'  # noqa: N806
-            nAddParams += 1  # noqa: N806
+                paramsStr += f'{key} "{val}"\n'
+            nAddParams += 1
 
     # For material properties
-    for SAM_elem in SAM['Properties']['uniaxialMaterials']:  # noqa: N806
+    for SAM_elem in SAM['Properties']['uniaxialMaterials']:
         for key in SAM_elem:
             if key in SAMkeys_properties:
                 val = SAM_elem[key]
                 if not isinstance(val, str):
-                    paramsStr += '{}-{} {}\n'.format(key, SAM_elem['name'], val)  # noqa: N806
+                    paramsStr += '{}-{} {}\n'.format(key, SAM_elem['name'], val)
                 else:
-                    paramsStr += '{}-{} "{}"\n'.format(key, SAM_elem['name'], val)  # noqa: N806
-                nAddParams += 1  # noqa: N806
+                    paramsStr += '{}-{} "{}"\n'.format(key, SAM_elem['name'], val)
+                nAddParams += 1
 
     # For mass
-    for SAM_node in SAM['Geometry']['nodes']:  # noqa: N806
+    for SAM_node in SAM['Geometry']['nodes']:
         for key in SAM_node:
             if key in SAMkeys_nodes:
                 val = SAM_node[key]
                 if not isinstance(val, str):
-                    paramsStr += '{}-{} {}\n'.format(key, SAM_node['name'], val)  # noqa: N806
+                    paramsStr += '{}-{} {}\n'.format(key, SAM_node['name'], val)
                 else:
-                    paramsStr += '{}-{} "{}"\n'.format(key, SAM_node['name'], val)  # noqa: N806
-                nAddParams += 1  # noqa: N806
+                    paramsStr += '{}-{} "{}"\n'.format(key, SAM_node['name'], val)
+                nAddParams += 1
 
-    stringList = paramsStr.split('\n')  # noqa: N806
+    stringList = paramsStr.split('\n')
     stringList.remove(stringList[0])  # remove # params (will be added later)
-    stringList = set(stringList)  # remove duplicates  # noqa: N806
-    stringList = [i for i in stringList if i]  # remove empty  # noqa: N806
-    stringList = [str(len(stringList))] + stringList  # noqa: N806, RUF005
-    with open('params.in', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+    stringList = set(stringList)  # remove duplicates
+    stringList = [i for i in stringList if i]  # remove empty
+    stringList = [str(len(stringList))] + stringList
+    with open('params.in', 'w') as f:
         f.write('\n'.join(stringList))
 
     f.close()
@@ -273,41 +273,41 @@ def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):  # noqa: C901,
     # get sur model info
     #
 
-    surFileName = None  # noqa: N806
+    surFileName = None
     for model in root_AIM['Simulation']['Models']:
         if model['modelName'] == modelName:
-            surFileName = model['fileName']  # noqa: N806
+            surFileName = model['fileName']
 
     if surFileName is None:
-        print(f'surrogate model {modelName} is not found')  # noqa: T201
-        exit(-1)  # noqa: PLR1722
+        print(f'surrogate model {modelName} is not found')
+        exit(-1)
 
     #
     # find surrogate model prediction app
     #
 
     s = [
-        os.path.dirname(__file__),  # noqa: PTH120
+        os.path.dirname(__file__),
         '..',
         '..',
         'Workflow',
         'WorkflowApplications.json',
     ]
-    workflowAppJsonPath = os.path.join(*s)  # noqa: PTH118, N806
-    with open(workflowAppJsonPath, encoding='utf-8') as f:  # noqa: PTH123
-        workflowAppDict = json.load(f)  # noqa: N806
-        appList = workflowAppDict['SimulationApplications']['Applications']  # noqa: N806
-        simAppName = 'SurrogateSimulation'  # noqa: N806
-        myApp = next(item for item in appList if item['Name'] == simAppName)  # noqa: N806
+    workflowAppJsonPath = os.path.join(*s)
+    with open(workflowAppJsonPath, encoding='utf-8') as f:
+        workflowAppDict = json.load(f)
+        appList = workflowAppDict['SimulationApplications']['Applications']
+        simAppName = 'SurrogateSimulation'
+        myApp = next(item for item in appList if item['Name'] == simAppName)
         s = [
-            os.path.dirname(__file__),  # noqa: PTH120
+            os.path.dirname(__file__),
             '..',
             '..',
             '..',
-            os.path.dirname(myApp['ExecutablePath']),  # noqa: PTH120
+            os.path.dirname(myApp['ExecutablePath']),
         ]
-        mySurrogatePath = os.path.join(*s)  # noqa: PTH118, N806
-        mySurrogateName = os.path.basename(myApp['ExecutablePath'])  # noqa: PTH119, N806
+        mySurrogatePath = os.path.join(*s)
+        mySurrogateName = os.path.basename(myApp['ExecutablePath'])
 
     #
     # import surrogate functions
@@ -319,9 +319,9 @@ def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):  # noqa: C901,
         r'..\\..\\..\\..\\input_data\\' + surFileName
     )
 
-    currentDir = os.getcwd()  # noqa: PTH109, N806
-    newAimName = os.path.join(currentDir, os.path.basename(aimName))  # noqa: PTH118, PTH119, N806
-    with open(newAimName, 'w', encoding='utf-8') as f:  # noqa: FURB103, PTH123
+    currentDir = os.getcwd()
+    newAimName = os.path.join(currentDir, os.path.basename(aimName))
+    with open(newAimName, 'w', encoding='utf-8') as f:
         json_object = json.dumps(root_AIM)
         f.write(json_object)
 

@@ -1,7 +1,7 @@
 """Created on Fri Jan  6 00:08:01 2023
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""
 
 import sys
 
@@ -14,7 +14,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvas
 from PyQt5 import QtCore, QtWidgets
 
 
-class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
+class Symbology_Designer(Ui_Symbology_Dialog):
     def __init__(self, sym, data, val_column):
         super().__init__()
         self._window = QtWidgets.QDialog()
@@ -43,9 +43,9 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
         self.add_up_button.clicked.connect(lambda: self.addByButton('UP'))
         self.add_below_button.clicked.connect(lambda: self.addByButton('DOWN'))
 
-        self.sample_legend_widget  # noqa: B018
+        self.sample_legend_widget
 
-    def initializeForm(self):  # noqa: N802, D102
+    def initializeForm(self):
         self.method_combo.setCurrentText(self.sym['Method'])
         if (
             self.sym['Method'] == 'FisherJenks'
@@ -58,12 +58,12 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
         self.updateTable()
         # self.updateLegendSample()
 
-    def addByButton(self, add_location):  # noqa: N802, D102
-        to_be_added_row = None  # noqa: F841
+    def addByButton(self, add_location):
+        to_be_added_row = None
         selected_item_list = self.range_table.selectedItems()
         if len(selected_item_list) == 0:
             return
-        else:  # noqa: RET505
+        else:
             selected_row = selected_item_list[0].row()
 
         if add_location == 'UP':
@@ -96,26 +96,26 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
         self.sym['kw'] = kw
 
         if self.sym['Method'] != 'UserDefined':
-            self.method_combo.blockSignals(True)  # noqa: FBT003
+            self.method_combo.blockSignals(True)
             self.sym['Method'] = 'UserDefined'
             self.no_clases_line.setEnabled(False)
             self.method_combo.setCurrentText('User Defined')
-            self.method_combo.blockSignals(False)  # noqa: FBT003
+            self.method_combo.blockSignals(False)
         self.updateTable()
 
-    def numberOfClassEditingFinished(self):  # noqa: N802, D102
+    def numberOfClassEditingFinished(self):
         k = float(self.no_clases_line.text())
         k = int(k)
         kw = {'k': k}
         self.sym['kw'] = kw
         self.updateTable()
 
-    def colorChanged(self, text):  # noqa: N802, D102
+    def colorChanged(self, text):
         self.sym['Color'] = text
         self.updateLegendSample()
 
-    def updateLegendSample(self):  # noqa: N802, D102
-        fig, ax = plt.subplots()  # noqa: F841
+    def updateLegendSample(self):
+        fig, ax = plt.subplots()
         self.plotted_map.plot(
             ax=ax,
             cax=self.ax1,
@@ -126,8 +126,8 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
         self.legend_widget.draw()
         # self.mpl_map.canvas.fig.tight_layout()
 
-    def updateTable(self):  # noqa: N802, D102
-        self.range_table.blockSignals(True)  # noqa: FBT003
+    def updateTable(self):
+        self.range_table.blockSignals(True)
         self.clearRangeTable()
         if self.sym['Method'] == 'FisherJenks':
             self.class_data = mapclassify.FisherJenks(self.data, self.sym['kw']['k'])
@@ -171,15 +171,15 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
             self.range_table.setItem(number_of_rows, 1, end_item)
             self.range_table.setItem(number_of_rows, 2, count_item)
 
-        self.range_table.blockSignals(False)  # noqa: FBT003
+        self.range_table.blockSignals(False)
         self.updateLegendSample()
 
-    def clearRangeTable(self):  # noqa: N802, D102
-        for i in range(self.range_table.rowCount()):  # noqa: B007
+    def clearRangeTable(self):
+        for i in range(self.range_table.rowCount()):
             self.range_table.removeRow(0)
 
-    def methodChanged(self, text):  # noqa: N802, D102
-        print(text)  # noqa: T201
+    def methodChanged(self, text):
+        print(text)
         if text == 'FisherJenks':
             self.sym['Method'] = 'FisherJenks'
         elif text == 'Equal Interval':
@@ -187,7 +187,7 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
         elif text == 'User Defined':
             self.sym['Method'] = 'UserDefined'
 
-        if text == 'FisherJenks' or text == 'Equal Interval':  # noqa: PLR1714
+        if text == 'FisherJenks' or text == 'Equal Interval':
             k = float(self.no_clases_line.text())
             k = int(k)
             kw = {'k': k}
@@ -196,20 +196,20 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
             # bins = self.getUserDefinedBins()
             try:
                 kw = {'bins': self.bins}
-            except:  # noqa: E722
+            except:
                 kw = {'bins': self.class_data}
         else:
-            raise  # noqa: PLE0704
+            raise
 
         self.sym['kw'] = kw
         self.updateTable()
 
-    def currentItemChanged(self, current, previous):  # noqa: ARG002, N802, D102
-        if current != None:  # noqa: E711
+    def currentItemChanged(self, current, previous):
+        if current != None:
             self.current_item_value = float(current.text())
-        print('cur ' + repr(self.current_item_value))  # noqa: T201
+        print('cur ' + repr(self.current_item_value))
 
-    def tableDataChanged(self, item):  # noqa: N802, D102
+    def tableDataChanged(self, item):
         # row = item.row()
         # col = item.column()
 
@@ -218,8 +218,8 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
         try:
             new_item_value = float(item.text())
             if new_item_value < self.data.min() or new_item_value > self.data.max():
-                raise  # noqa: PLE0704
-        except:  # noqa: E722
+                raise
+        except:
             self.range_table.item(item.row(), item.column()).setText(
                 str(previous_item_value)
             )
@@ -233,18 +233,18 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
         self.sym['kw'] = kw
 
         if self.sym['Method'] != 'UserDefined':
-            self.method_combo.blockSignals(True)  # noqa: FBT003
+            self.method_combo.blockSignals(True)
             self.sym['Method'] = 'UserDefined'
             self.no_clases_line.setEnabled(False)
             self.method_combo.setCurrentText('User Defined')
-            self.method_combo.blockSignals(False)  # noqa: FBT003
+            self.method_combo.blockSignals(False)
         self.updateTable()
 
         return
 
-    def findBeginingRowFor(self, value):  # noqa: N802, D102
+    def findBeginingRowFor(self, value):
         if self.range_table.rowCount() == 0:
-            raise  # noqa: PLE0704
+            raise
 
         for i in range(self.range_table.rowCount() - 1):
             current_item_value = float(self.range_table.item(i, 0).text())
@@ -253,9 +253,9 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
                 return i
         return self.range_table.rowCount() - 1
 
-    def findEndingRowFor(self, value):  # noqa: N802, D102
+    def findEndingRowFor(self, value):
         if self.range_table.rowCount() == 0:
-            raise  # noqa: PLE0704
+            raise
 
         for i in range(self.range_table.rowCount() - 1):
             current_item_value = float(self.range_table.item(i, 1).text())
@@ -264,21 +264,21 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
                 return i + 1
         return self.range_table.rowCount() - 1
 
-    def removeButtonClicked(self):  # noqa: N802, D102
+    def removeButtonClicked(self):
         selected_item_list = self.range_table.selectedItems()
         if len(selected_item_list) == 0:
             return
         selected_row = selected_item_list[0].row()
         self.removeRow(selected_row)
 
-    def removeRow(self, row):  # noqa: N802, D102
-        if row == 0 and self.range_table.rowCount() >= 2:  # noqa: PLR2004
+    def removeRow(self, row):
+        if row == 0 and self.range_table.rowCount() >= 2:
             item_text = self.range_table.item(row, 0).text()
             self.range_table.removeRow(0)
             self.range_table.item(0, 0).setText(item_text)
         elif (
             row == self.range_table.rowCount() - 1
-            and self.range_table.rowCount() >= 2  # noqa: PLR2004
+            and self.range_table.rowCount() >= 2
         ):
             item_text = self.range_table.item(row, 1).text()
             self.range_table.removeRow(row)
@@ -296,8 +296,8 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
 if __name__ == '__main__':
     symbology = {'Method': 'FisherJenks', 'kw': {'k': 5}}
     s = gpd.read_file('ss2.shp')
-    print(s.columns)  # noqa: T201
+    print(s.columns)
     app = QtWidgets.QApplication(sys.argv)
     ss = Symbology_Designer(symbology, s['restoratio'])
-    ss._window.show()  # noqa: SLF001
+    ss._window.show()
     sys.exit(app.exec_())

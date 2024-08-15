@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -47,20 +47,20 @@ import pandas as pd
 from scipy.spatial import cKDTree
 
 
-def ckdnearest(gdfA, gdfB, gdfB_cols=['pgv']):  # noqa: B006, N803, D103
-    A = np.concatenate([np.array(geom.coords) for geom in gdfA.geometry.to_list()])  # noqa: N806
-    B = [np.array(geom.coords) for geom in gdfB.geometry.to_list()]  # noqa: N806
+def ckdnearest(gdfA, gdfB, gdfB_cols=['pgv']):
+    A = np.concatenate([np.array(geom.coords) for geom in gdfA.geometry.to_list()])
+    B = [np.array(geom.coords) for geom in gdfB.geometry.to_list()]
     B_ix = tuple(
         itertools.chain.from_iterable(
             [itertools.repeat(i, x) for i, x in enumerate(list(map(len, B)))]
         )
     )
-    B = np.concatenate(B)  # noqa: N806
+    B = np.concatenate(B)
     ckd_tree = cKDTree(B)
-    dist, idx = ckd_tree.query(A, k=1)  # noqa: F841
+    dist, idx = ckd_tree.query(A, k=1)
     idx = itemgetter(*idx)(B_ix)
     gdf = pd.concat([gdfA, gdfB.loc[idx, gdfB_cols].reset_index(drop=True)], axis=1)
-    return gdf  # noqa: RET504
+    return gdf
 
 
 # def pgv_node2pipe(pipe_info,node_info):
@@ -73,7 +73,7 @@ def ckdnearest(gdfA, gdfB, gdfB_cols=['pgv']):  # noqa: B006, N803, D103
 #     return pgvs
 
 
-def pgv_node2pipe(pipe_info, node_info):  # noqa: D103
+def pgv_node2pipe(pipe_info, node_info):
     res = []
 
     node_ids = np.array(node_info['node_id'])
@@ -88,14 +88,14 @@ def pgv_node2pipe(pipe_info, node_info):  # noqa: D103
     return res
 
 
-def get_prefix(file_path):  # noqa: D103
+def get_prefix(file_path):
     file_name = file_path.split('/')[-1]
     prefix = file_name.split('.')[0]
-    return prefix  # noqa: RET504
+    return prefix
 
 
 # Get the PGV value for the pipe
-def add_pgv2pipe(pipe):  # noqa: D103
+def add_pgv2pipe(pipe):
     reg_event = pipe['RegionalEvent']
     events = pipe['Events'][0]
 
@@ -107,27 +107,27 @@ def add_pgv2pipe(pipe):  # noqa: D103
 
     pgvs = np.array([])
 
-    for eventFile, scaleFactor in event_array:  # noqa: N806
+    for eventFile, scaleFactor in event_array:
         # Discard the numbering at the end of the csv file name
-        eventFile = eventFile[: len(eventFile) - 8]  # noqa: N806, PLW2901
+        eventFile = eventFile[: len(eventFile) - 8]
 
         # Get the path to the event file
-        path_Event_File = posixpath.join(event_folder_path, eventFile)  # noqa: N806
+        path_Event_File = posixpath.join(event_folder_path, eventFile)
 
         # Read in the event file IM List
-        eventIMList = pd.read_csv(path_Event_File, header=0)  # noqa: N806
+        eventIMList = pd.read_csv(path_Event_File, header=0)
 
-        PGVCol = eventIMList.loc[:, 'PGV']  # noqa: N806
+        PGVCol = eventIMList.loc[:, 'PGV']
 
         pgv_unit = event_units['PGV']
 
         # Scale the PGVs and account for units - fragility functions are in inch per second
         if pgv_unit == 'cmps':
-            PGVCol = PGVCol.apply(lambda x: cm2inch(x) * scaleFactor)  # noqa: B023, N806
+            PGVCol = PGVCol.apply(lambda x: cm2inch(x) * scaleFactor)
         elif pgv_unit == 'inps':
             continue
         else:
-            print("Error, only 'cmps' and 'inps' units are supported for PGV")  # noqa: T201
+            print("Error, only 'cmps' and 'inps' units are supported for PGV")
 
         pgvs = np.append(pgvs, PGVCol.values)
 
@@ -163,28 +163,28 @@ k_dict = {
 }
 
 
-def cm2inch(cm):  # noqa: D103
+def cm2inch(cm):
     return 39.3701 * cm / 100
 
 
-def calculate_fail_repairrate(k, pgv, l):  # noqa: E741, D103
+def calculate_fail_repairrate(k, pgv, l):
     rr = k * 0.00187 * pgv / 1000
     failure_rate = 1 - np.power(np.e, -rr * l)
 
-    return failure_rate  # noqa: RET504
+    return failure_rate
 
 
-def get_pipe_failrate(pipe):  # noqa: D103
-    pipe_GI = pipe['GeneralInformation']  # noqa: N806
+def get_pipe_failrate(pipe):
+    pipe_GI = pipe['GeneralInformation']
 
-    m, l, pgv = pipe_GI['material'], pipe_GI['length'], pipe['pgv']  # noqa: E741
+    m, l, pgv = pipe_GI['material'], pipe_GI['length'], pipe['pgv']
 
-    pipeRR = calculate_fail_repairrate(k_dict[m], l, pgv)  # noqa: N806
+    pipeRR = calculate_fail_repairrate(k_dict[m], l, pgv)
 
-    return pipeRR  # noqa: RET504
+    return pipeRR
 
 
-def add_failrate2pipe(pipe):  # noqa: D103
+def add_failrate2pipe(pipe):
     pipe = add_pgv2pipe(pipe)
 
     pipe['fail_prob'] = get_pipe_failrate(pipe)
@@ -209,21 +209,21 @@ def add_failrate2pipe(pipe):  # noqa: D103
 #    print (f'saved to {save_path}')
 
 
-def get_bar_ranges(space):  # noqa: D103
+def get_bar_ranges(space):
     ranges = []
     for i in range(1, len(space)):
-        ranges.append((space[i - 1], space[i]))  # noqa: PERF401
+        ranges.append((space[i - 1], space[i]))
     return ranges
 
 
-def get_failure_groups(fail_probs, min_thre=1e-3, num_groups=10):  # noqa: D103
+def get_failure_groups(fail_probs, min_thre=1e-3, num_groups=10):
     valid_fails = [fail_prob for fail_prob in fail_probs if fail_prob > min_thre]
-    count, space = np.histogram(valid_fails, num_groups)  # noqa: F841
+    count, space = np.histogram(valid_fails, num_groups)
     ranges = get_bar_ranges(space)
-    return ranges  # noqa: RET504
+    return ranges
 
 
-def get_failed_pipes_mask(pipe_info, groups):  # noqa: D103
+def get_failed_pipes_mask(pipe_info, groups):
     broken_pipes = np.zeros(len(pipe_info))
 
     for r in groups:
@@ -241,12 +241,12 @@ def get_failed_pipes_mask(pipe_info, groups):  # noqa: D103
     return broken_pipes
 
 
-def generate_leak_diameter(pipe_diam, min_ratio=0.05, max_ratio=0.25):  # noqa: D103
+def generate_leak_diameter(pipe_diam, min_ratio=0.05, max_ratio=0.25):
     r = np.random.uniform(min_ratio, max_ratio)
     return pipe_diam * r
 
 
-def get_leak_sizes(pipe_info):  # noqa: D103
+def get_leak_sizes(pipe_info):
     leak_size = np.zeros(len(pipe_info))
     for index, row in pipe_info.iterrows():
         d, repair = row['diameter'], row['repair']
@@ -256,11 +256,11 @@ def get_leak_sizes(pipe_info):  # noqa: D103
     return leak_size
 
 
-def fail_pipes_number(pipe_info):  # noqa: D103
+def fail_pipes_number(pipe_info):
     fail_probs = np.array(pipe_info['fail_prob'])
     groups = get_failure_groups(fail_probs)
 
     failed_pipes_mask = get_failed_pipes_mask(pipe_info, groups)
     num_failed_pipes = sum(failed_pipes_mask)
-    print(f'number of failed pipes are : {num_failed_pipes}')  # noqa: T201
+    print(f'number of failed pipes are : {num_failed_pipes}')
     return num_failed_pipes

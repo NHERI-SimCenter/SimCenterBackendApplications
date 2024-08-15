@@ -1,4 +1,4 @@
-# from scipy.stats import multivariate_normal  # noqa: CPY001, D100, INP001
+# from scipy.stats import multivariate_normal
 
 # def log_likelihood(residuals, mean, cov):
 #     return multivariate_normal.logpdf(residuals, mean=mean, cov=cov)
@@ -6,7 +6,7 @@
 import numpy as np
 
 
-def log_likelihood(residuals, mean, cov):  # noqa: ARG001, D103
+def log_likelihood(residuals, mean, cov):
     length = len(residuals)
     if np.shape(cov)[0] == np.shape(cov)[1] == 1:
         # If there is a single variance value that is constant for all residual terms, then this is the case of
@@ -26,11 +26,11 @@ def log_likelihood(residuals, mean, cov):  # noqa: ARG001, D103
         # Mahalanobis distance]
         #                = -1/2*[t1 + t2 + t3]
         t1 = length * np.log(2 * np.pi)
-        eigenValues, eigenVectors = np.linalg.eigh(cov)  # noqa: N806
+        eigenValues, eigenVectors = np.linalg.eigh(cov)
         logdet = np.sum(np.log(eigenValues))
-        eigenValuesReciprocal = 1.0 / eigenValues  # noqa: N806
+        eigenValuesReciprocal = 1.0 / eigenValues
         z = eigenVectors * np.sqrt(eigenValuesReciprocal)
-        mahalanobisDistance = np.square(np.dot(residuals, z)).sum()  # noqa: N806
+        mahalanobisDistance = np.square(np.dot(residuals, z)).sum()
         ll = -0.5 * (t1 + logdet + mahalanobisDistance)
 
     return ll

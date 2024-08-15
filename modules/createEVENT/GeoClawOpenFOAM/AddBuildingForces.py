@@ -1,30 +1,30 @@
-#!/usr/bin/env python  # noqa: CPY001, D100, EXE001
+#!/usr/bin/env python
 import argparse
 import json
 import os
 
 
-def validateCaseDirectoryStructure(caseDir):  # noqa: N802, N803
+def validateCaseDirectoryStructure(caseDir):
     """This method validates that the provided case directory is valid and contains the 0, constant and system directory
     It also checks that system directory contains the controlDict
-    """  # noqa: D205, D400, D401, D404
-    if not os.path.isdir(caseDir):  # noqa: PTH112
+    """
+    if not os.path.isdir(caseDir):
         return False
 
-    caseDirList = os.listdir(caseDir)  # noqa: N806
-    necessaryDirs = ['0', 'constant', 'system']  # noqa: N806
+    caseDirList = os.listdir(caseDir)
+    necessaryDirs = ['0', 'constant', 'system']
     if any(aDir not in caseDirList for aDir in necessaryDirs):
         return False
 
-    controlDictPath = os.path.join(caseDir, 'system/controlDict')  # noqa: PTH118, N806
-    if not os.path.exists(controlDictPath):  # noqa: SIM103, PTH110
+    controlDictPath = os.path.join(caseDir, 'system/controlDict')
+    if not os.path.exists(controlDictPath):
         return False
 
     return True
 
 
-def findFunctionsDictionary(controlDictLines):  # noqa: N802, N803
-    """This method will find functions dictionary in the controlDict"""  # noqa: D400, D401, D404
+def findFunctionsDictionary(controlDictLines):
+    """This method will find functions dictionary in the controlDict"""
     for line in controlDictLines:
         if line.startswith('functions'):
             return (True, controlDictLines.index(line) + 2)
@@ -32,13 +32,13 @@ def findFunctionsDictionary(controlDictLines):  # noqa: N802, N803
     return [False, len(controlDictLines)]
 
 
-def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):  # noqa: N802, N803
-    """This method will write the force dictionary"""  # noqa: D400, D401, D404
+def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):
+    """This method will write the force dictionary"""
     for line in ['\t\n', '\tbuildingsForces\n', '\t{\n', '\t}\n', '\n']:
         controlDictLines.insert(lineIndex, line)
-        lineIndex += 1  # noqa: N806
+        lineIndex += 1
 
-    forceDictionary = {  # noqa: N806
+    forceDictionary = {
         'type': 'forces',
         'libs': '("libforces.so")',
         'writeControl': 'timeStep',
@@ -50,17 +50,17 @@ def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):  # 
         'CofR': '(0 0 0)',
     }
 
-    lineIndex -= 2  # noqa: N806
+    lineIndex -= 2
     for key, value in forceDictionary.items():
         controlDictLines.insert(lineIndex, '\t\t' + key + '\t' + str(value) + ';\n')
-        lineIndex += 1  # noqa: N806
+        lineIndex += 1
 
     for line in ['\n', '\t\tbinData\n', '\t\t{\n', '\t\t}\n', '\n']:
         controlDictLines.insert(lineIndex, line)
-        lineIndex += 1  # noqa: N806
+        lineIndex += 1
 
-    lineIndex -= 2  # noqa: N806
-    binDictionary = {  # noqa: N806
+    lineIndex -= 2
+    binDictionary = {
         'nBin': str(floorsCount),
         'direction': '(0 0 1)',
         'cumulative': 'no',
@@ -70,38 +70,38 @@ def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):  # 
         controlDictLines.insert(
             lineIndex, '\t\t\t' + key + '\t' + str(value) + ';\n'
         )
-        lineIndex += 1  # noqa: N806
+        lineIndex += 1
 
 
-def AddBuildingsForces(floorsCount, patches):  # noqa: N802, N803
-    """First, we need to validate the case directory structure"""  # noqa: D400
+def AddBuildingsForces(floorsCount, patches):
+    """First, we need to validate the case directory structure"""
     # if not validateCaseDirectoryStructure(caseDir):
     #     print("Invalid OpenFOAM Case Directory!")
     #     sys.exit(-1)
 
     # controlDictPath = os.path.join(caseDir, "system/controlDict")
-    controlDictPath = 'system/controlDict'  # noqa: N806
-    with open(controlDictPath) as controlDict:  # noqa: N806, PLW1514, PTH123
-        controlDictLines = controlDict.readlines()  # noqa: N806
+    controlDictPath = 'system/controlDict'
+    with open(controlDictPath) as controlDict:
+        controlDictLines = controlDict.readlines()
 
-    [isFound, lineIndex] = findFunctionsDictionary(controlDictLines)  # noqa: N806
+    [isFound, lineIndex] = findFunctionsDictionary(controlDictLines)
 
     # If we cannot find the function dictionary, we will create one
     if not isFound:
         for line in ['\n', 'functions\n', '{\n', '}\n']:
             controlDictLines.insert(lineIndex, line)
-            lineIndex += 1  # noqa: N806
+            lineIndex += 1
 
     # Now we can add the building forces
     writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches)
 
     # Writing updated controlDict
-    with open(controlDictPath, 'w') as controlDict:  # noqa: N806, PLW1514, PTH123
+    with open(controlDictPath, 'w') as controlDict:
         controlDict.writelines(controlDictLines)
 
 
-def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
-    with open(BIMFilePath) as BIMFile:  # noqa: N806, PLW1514, PTH123
+def GetFloorsCount(BIMFilePath):
+    with open(BIMFilePath) as BIMFile:
         bim = json.load(BIMFile)
 
     return int(bim['GeneralInformation']['stories'])

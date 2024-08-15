@@ -1,33 +1,33 @@
-from typing import Literal, Union  # noqa: CPY001, D100, INP001
+from typing import Literal, Union
 
 import numpy as np
 from pydantic import BaseModel, Field, PositiveFloat, validator
 from typing_extensions import Annotated
 
 
-class RVCommonData(BaseModel):  # noqa: D101
+class RVCommonData(BaseModel):
     name: str
     value: str
-    refCount: int  # noqa: N815
+    refCount: int
 
 
-class UniformParameters(RVCommonData):  # noqa: D101
-    variableClass: Literal['Uncertain']  # noqa: N815
+class UniformParameters(RVCommonData):
+    variableClass: Literal['Uncertain']
     distribution: Literal['Uniform']
-    inputType: Literal['Parameters']  # noqa: N815
+    inputType: Literal['Parameters']
     lowerbound: float = 0.0
     upperbound: float = 1.0
 
     @validator('upperbound')
-    def upper_bound_not_bigger_than_lower_bound(v, values):  # noqa: N805, D102
+    def upper_bound_not_bigger_than_lower_bound(v, values):
         if 'lowerbound' in values and v <= values['lowerbound']:
-            raise ValueError(  # noqa: TRY003
-                f"The upper bound must be bigger than the lower bound {values['lowerbound']}. Got a value of {v}."  # noqa: EM102
+            raise ValueError(
+                f"The upper bound must be bigger than the lower bound {values['lowerbound']}. Got a value of {v}."
             )
         return v
 
-    def init_to_text(self):  # noqa: D102
-        from UQpy.distributions.collection.Uniform import Uniform  # noqa: PLC0415
+    def init_to_text(self):
+        from UQpy.distributions.collection.Uniform import Uniform
 
         c = Uniform
 
@@ -46,12 +46,12 @@ class UniformParameters(RVCommonData):  # noqa: D101
         return {'loc': loc, 'scale': scale}
 
 
-class UniformMoments(RVCommonData):  # noqa: D101
-    variableClass: Literal['Uncertain']  # noqa: N815
+class UniformMoments(RVCommonData):
+    variableClass: Literal['Uncertain']
     distribution: Literal['Uniform']
-    inputType: Literal['Moments']  # noqa: N815
+    inputType: Literal['Moments']
     mean: float
-    standardDev: PositiveFloat  # noqa: N815
+    standardDev: PositiveFloat
 
     def _to_scipy(self):
         loc = self.mean - np.sqrt(12) * self.standardDev / 2
@@ -59,11 +59,11 @@ class UniformMoments(RVCommonData):  # noqa: D101
         return {'loc': loc, 'scale': scale}
 
 
-class UniformDataset(RVCommonData):  # noqa: D101
-    variableClass: Literal['Uncertain']  # noqa: N815
+class UniformDataset(RVCommonData):
+    variableClass: Literal['Uncertain']
     distribution: Literal['Uniform']
-    inputType: Literal['Dataset']  # noqa: N815
-    dataDir: str  # noqa: N815
+    inputType: Literal['Dataset']
+    dataDir: str
 
     def _to_scipy(self):
         data = readFile(self.dataDir)
@@ -72,8 +72,8 @@ class UniformDataset(RVCommonData):  # noqa: D101
         return {'loc': low, 'scale': high - low}
 
 
-def readFile(path):  # noqa: N802, D103
-    with open(path) as f:  # noqa: PLW1514, PTH123
+def readFile(path):
+    with open(path) as f:
         return np.genfromtxt(f)
 
 

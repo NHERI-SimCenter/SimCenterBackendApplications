@@ -1,11 +1,11 @@
-# written: UQ team @ SimCenter  # noqa: CPY001, D100, INP001
+# written: UQ team @ SimCenter
 
 # import functions for Python 2.X support
 import sys
 
 if sys.version.startswith('2'):
-    range = xrange  # noqa: A001, F821
-    string_types = basestring  # noqa: F821
+    range = xrange
+    string_types = basestring
 else:
     string_types = str
 
@@ -13,10 +13,10 @@ import json
 import os
 import platform
 import stat
-import subprocess  # noqa: S404
+import subprocess
 import sys
 
-inputArgs = sys.argv  # noqa: N816
+inputArgs = sys.argv
 
 workdir_main = inputArgs[1]
 workdir_temp = inputArgs[2]
@@ -33,23 +33,23 @@ if run_type == 'runningLocal':
     if sys.platform == 'darwin':
         OpenSees = 'OpenSees'
         surrogate = 'surrogateBuild.py'
-        natafExe = 'nataf_gsa'  # noqa: N816
+        natafExe = 'nataf_gsa'
         Feap = 'feappv'
         Dakota = 'dakota'
-        plomScript = 'runPLoM.py'  # noqa: N816
+        plomScript = 'runPLoM.py'
         workflow_driver = 'workflow_driver'
-        osType = 'Darwin'  # noqa: N816
+        osType = 'Darwin'
 
     # Windows
     else:
         OpenSees = 'OpenSees'
         Feap = 'Feappv41.exe'
         surrogate = 'surrogateBuild.py'
-        natafExe = 'nataf_gsa.exe'  # noqa: N816
+        natafExe = 'nataf_gsa.exe'
         Dakota = 'dakota'
-        plomScript = 'runPLoM.py'  # noqa: N816
+        plomScript = 'runPLoM.py'
         workflow_driver = 'workflow_driver.bat'
-        osType = 'Windows'  # noqa: N816
+        osType = 'Windows'
 
 # Stampede @ DesignSafe, DON'T EDIT
 elif run_type == 'runningRemote':
@@ -57,16 +57,16 @@ elif run_type == 'runningRemote':
     Feap = '/home1/00477/tg457427/bin/feappv'
     Dakota = 'dakota'
     workflow_driver = 'workflow_driver'
-    osType = 'Linux'  # noqa: N816
+    osType = 'Linux'
 
 # change workdir to the templatedir
 os.chdir(workdir_temp)
-cwd = os.getcwd()  # noqa: PTH109
+cwd = os.getcwd()
 
-print(cwd)  # noqa: T201
+print(cwd)
 
 # open the dakota json file
-with open('dakota.json') as data_file:  # noqa: PLW1514, PTH123
+with open('dakota.json') as data_file:
     data = json.load(data_file)
 
 uq_data = data['UQ_Method']
@@ -74,40 +74,40 @@ fem_data = data['fem']
 rnd_data = data['randomVariables']
 my_edps = data['EDP']
 
-myScriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N816
-inputFile = 'dakota.json'  # noqa: N816
+myScriptDir = os.path.dirname(os.path.realpath(__file__))
+inputFile = 'dakota.json'
 
-osType = platform.system()  # noqa: N816
+osType = platform.system()
 # preprocessorCommand = '"{}/preprocessSimCenterUQ" {} {} {} {}'.format(myScriptDir, inputFile, workflow_driver, run_type, osType)
 # subprocess.Popen(preprocessorCommand, shell=True).wait()
 # print("DONE RUNNING PREPROCESSOR\n")
 
 
 # edps = samplingData["edps"]
-numResponses = 0  # noqa: N816
-responseDescriptors = []  # noqa: N816
+numResponses = 0
+responseDescriptors = []
 
 for edp in my_edps:
     responseDescriptors.append(edp['name'])
-    numResponses += 1  # noqa: SIM113, N816
+    numResponses += 1
 
-femProgram = fem_data['program']  # noqa: N816
-print(femProgram)  # noqa: T201
+femProgram = fem_data['program']
+print(femProgram)
 
 if run_type == 'runningLocal':
-    os.chmod(workflow_driver, stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)  # noqa: PTH101
+    os.chmod(workflow_driver, stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
 
 # command = Dakota + ' -input dakota.in -output dakota.out -error dakota.err'
 
 # Change permission of workflow driver
-st = os.stat(workflow_driver)  # noqa: PTH116
-os.chmod(workflow_driver, st.st_mode | stat.S_IEXEC)  # noqa: PTH101
+st = os.stat(workflow_driver)
+os.chmod(workflow_driver, st.st_mode | stat.S_IEXEC)
 
 # change dir to the main working dir for the structure
 os.chdir('../')
 
-cwd = os.getcwd()  # noqa: PTH109
-print(cwd)  # noqa: T201
+cwd = os.getcwd()
+print(cwd)
 
 if run_type == 'runningLocal':
     #    p = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
@@ -122,32 +122,32 @@ if run_type == 'runningLocal':
 
     if uq_data['uqType'] == 'Train GP Surrogate Model':
         # simCenterUQCommand = 'python "{}/{}" {} {} {}'.format(myScriptDir,surrogate,workdir_main,osType,run_type)
-        simCenterUQCommand = '"{}" "{}/{}" "{}" {} {}'.format(  # noqa: N816
+        simCenterUQCommand = '"{}" "{}/{}" "{}" {} {}'.format(
             data['python'], myScriptDir, surrogate, workdir_main, osType, run_type
         )
     elif (
         uq_data['uqType'] == 'Sensitivity Analysis'
         or uq_data['uqType'] == 'Forward Propagation'
     ):
-        simCenterUQCommand = (  # noqa: N816
+        simCenterUQCommand = (
             f'"{myScriptDir}/{natafExe}" "{workdir_main}" {osType} {run_type}'
         )
     elif uq_data['uqType'] == 'Train PLoM Model':
-        simCenterUQCommand = '"{}" "{}/{}" "{}" {} {}'.format(  # noqa: N816
+        simCenterUQCommand = '"{}" "{}/{}" "{}" {} {}'.format(
             data['python'], myScriptDir, plomScript, workdir_main, osType, run_type
         )
 
-    print('running SimCenterUQ: ', simCenterUQCommand)  # noqa: T201
+    print('running SimCenterUQ: ', simCenterUQCommand)
 
     # subprocess.Popen(simCenterUQCommand, shell=True).wait()
 
     try:
-        result = subprocess.check_output(  # noqa: S602
+        result = subprocess.check_output(
             simCenterUQCommand, stderr=subprocess.STDOUT, shell=True
         )
         returncode = 0
-        print('DONE SUCESS')  # noqa: T201
+        print('DONE SUCESS')
     except subprocess.CalledProcessError as e:
         result = e.output
         returncode = e.returncode
-        print('DONE FAIL')  # noqa: T201
+        print('DONE FAIL')

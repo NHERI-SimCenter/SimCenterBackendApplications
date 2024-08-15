@@ -1,10 +1,10 @@
-from typing import Literal  # noqa: CPY001, D100, INP001
+from typing import Literal
 
 from pydantic import Field
 from src.UQpyDTO import UQpyDTO
 
 
-class ModifiedMetropolisHastingsDto(UQpyDTO):  # noqa: D101
+class ModifiedMetropolisHastingsDto(UQpyDTO):
     method: Literal['Modified Metropolis Hastings'] = 'Modified Metropolis Hastings'
     burn_length: int = Field(default=0, alias='burn-in', ge=0)
     jump: int = Field(default=1, ge=0)
@@ -15,8 +15,8 @@ class ModifiedMetropolisHastingsDto(UQpyDTO):  # noqa: D101
     concatenate_chains = True
     proposal_is_symmetric = False
 
-    def init_to_text(self):  # noqa: D102
-        from UQpy.sampling.mcmc.ModifiedMetropolisHastings import (  # noqa: PLC0415
+    def init_to_text(self):
+        from UQpy.sampling.mcmc.ModifiedMetropolisHastings import (
             ModifiedMetropolisHastings,
         )
 

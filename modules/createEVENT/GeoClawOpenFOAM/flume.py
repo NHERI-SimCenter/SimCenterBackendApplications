@@ -1,4 +1,4 @@
-# # noqa: INP001
+#
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: D400
+"""
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -53,7 +53,7 @@ class flume:
             generateflume: Create STL files for the flume
             extremedata: Get the extreme values and building information
 
-    """  # noqa: D400, D404
+    """
 
     #############################################################
     def generateflume(self, breadth, path):
@@ -64,7 +64,7 @@ class flume:
                 breadth: Breadth f the flume
                 path: Path where dakota.json exists - where we need to put STL files
 
-        """  # noqa: D400, D401
+        """
         # Get the triangulated flume
         extremeval = self.flumedata('FlumeData.txt')
         self.breadth = breadth
@@ -113,14 +113,14 @@ class flume:
         return extremeval
 
     #############################################################
-    def flumedata(self, IpPTFile):  # noqa: N803
+    def flumedata(self, IpPTFile):
         """Gets information about the flume to create STL files
 
         Arguments:
         ---------
                 IpPTFile: File with points of the flume
 
-        """  # noqa: D400, D401
+        """
         # Get the data for the boundary
         data_boun = np.genfromtxt(IpPTFile, delimiter=',', dtype=(float, float))
 
@@ -132,7 +132,7 @@ class flume:
         )
 
         # Initialize segments for left and right
-        segmentLR = []  # noqa: N806
+        segmentLR = []
 
         # Loop over all coordinates and create coordinates
         for ii in range(data_boun.shape[0]):
@@ -143,8 +143,8 @@ class flume:
                 segmentLR.extend([(ii, 0)])
 
         # Triangulate the polygon
-        ALR = dict(vertices=data_boun, segments=segmentLR)  # noqa: C408, N806
-        BLR = tr.triangulate(ALR)  # noqa: N806
+        ALR = dict(vertices=data_boun, segments=segmentLR)
+        BLR = tr.triangulate(ALR)
 
         # Get the tringles and vertices
         nm_triangle = BLR['triangles'].tolist()
@@ -162,10 +162,10 @@ class flume:
             n0 = self.npt[ii, 0]
             n1 = self.npt[ii, 1]
             n2 = self.npt[ii, 2]
-            centroidX = (1 / 3) * (  # noqa: N806
+            centroidX = (1 / 3) * (
                 self.npa[n0, 0] + self.npa[n1, 0] + self.npa[n2, 0]
             )
-            centroidZ = (1 / 3) * (  # noqa: N806
+            centroidZ = (1 / 3) * (
                 self.npa[n0, 1] + self.npa[n1, 1] + self.npa[n2, 1]
             )
             po = Point(centroidX, centroidZ)
@@ -188,7 +188,7 @@ class flume:
         ---------
                 none
 
-        """  # noqa: D400, D401
+        """
         self.npa_right = np.zeros(shape=(self.npa.shape[0], 3))
         self.npa_right[:, 0] = self.npa[:, 0]
         self.npa_right[:, 2] = self.npa[:, 1]
@@ -202,7 +202,7 @@ class flume:
         ---------
                 none
 
-        """  # noqa: D400, D401
+        """
         self.npa_left = np.zeros(shape=(self.npa.shape[0], 3))
         self.npa_left[:, 0] = self.npa[:, 0]
         self.npa_left[:, 2] = self.npa[:, 1]
@@ -216,7 +216,7 @@ class flume:
         ---------
                 none
 
-        """  # noqa: D400
+        """
         self.npt_left = np.array(self.npt)
         self.npt_left[:, [1, 0]] = self.npt_left[:, [0, 1]]
 
@@ -228,7 +228,7 @@ class flume:
         ---------
                 none
 
-        """  # noqa: D400
+        """
         self.npa_front = np.zeros(shape=(4, 3))
         self.npa_front[0, :] = self.npa_right[0, :]
         self.npa_front[1, :] = self.npa_right[self.npa_right.shape[0] - 1, :]
@@ -243,7 +243,7 @@ class flume:
         ---------
                 none
 
-        """  # noqa: D400
+        """
         self.npt_front = np.array([[0, 1, 2], [1, 3, 2]])
 
     ####################################################################
@@ -254,7 +254,7 @@ class flume:
         ---------
                 none
 
-        """  # noqa: D400
+        """
         self.npa_back = np.zeros(shape=(4, 3))
         self.npa_back[0, :] = self.npa_right[self.npa_right.shape[0] - 3, :]
         self.npa_back[1, :] = self.npa_right[self.npa_right.shape[0] - 2, :]
@@ -269,7 +269,7 @@ class flume:
         ---------
                 none
 
-        """  # noqa: D400
+        """
         self.npt_back = np.array([[3, 1, 0], [0, 2, 3]])
 
     ####################################################################
@@ -280,7 +280,7 @@ class flume:
         ---------
                 none
 
-        """  # noqa: D400
+        """
         self.npa_top = np.zeros(shape=(4, 3))
         self.npa_top[0, :] = self.npa_right[self.npa_right.shape[0] - 1, :]
         self.npa_top[1, :] = self.npa_right[self.npa_right.shape[0] - 2, :]
@@ -295,7 +295,7 @@ class flume:
         ---------
                 none
 
-        """  # noqa: D400
+        """
         self.npt_top = np.array([[2, 0, 1], [2, 1, 3]])
 
     ####################################################################
@@ -306,7 +306,7 @@ class flume:
         ---------
                 none
 
-        """  # noqa: D400
+        """
         # Create the coordinate vector
         self.npa_bottom = []
 
@@ -341,7 +341,7 @@ class flume:
         ---------
                 none
 
-        """  # noqa: D400
+        """
         # Create the coordinate vector
         self.npt_bottom = []
         ntri = 2
@@ -352,7 +352,7 @@ class flume:
 
             # Get the triangles
             npt_temp = np.array([[0, 1, 2], [1, 3, 2]])
-            npt_temp = npt_temp + ii * ntri  # noqa: PLR6104
+            npt_temp = npt_temp + ii * ntri
 
             # Concatenate as necessary
             if ii == 0:
@@ -361,7 +361,7 @@ class flume:
                 self.npt_bottom = np.concatenate((self.npt_bottom, npt_temp), axis=0)
 
     #############################################################
-    def writeSTL(self, base_filename, npa, npt, path):  # noqa: N802, PLR6301
+    def writeSTL(self, base_filename, npa, npt, path):
         """Write the STL files for each patch
 
         Arguments:
@@ -371,26 +371,26 @@ class flume:
                 npt: List of triangles
                 path: Location where dakota.json file exists
 
-        """  # noqa: D400
+        """
         # Create a filename
         filename = base_filename + '.stl'
         # Create the STL file
         cells = [('triangle', npt)]
         meshio.write_points_cells(filename, npa, cells)
         # Modify first and last line
-        with open(filename) as f:  # noqa: PLW1514, PTH123
+        with open(filename) as f:
             lines = f.readlines()
             lines[0] = 'solid ' + base_filename + '\n'
             lines[len(lines) - 1] = 'endsolid ' + base_filename + '\n'
         # Write the updated file
-        with open(filename, 'w') as f:  # noqa: PLW1514, PTH123
+        with open(filename, 'w') as f:
             f.writelines(lines)
         # Move the file to constant/triSurface folder
-        newfilepath = os.path.join(path, 'constant', 'triSurface', filename)  # noqa: PTH118
-        os.replace(filename, newfilepath)  # noqa: PTH105
+        newfilepath = os.path.join(path, 'constant', 'triSurface', filename)
+        os.replace(filename, newfilepath)
 
     #############################################################
-    def extremedata(self, extreme, breadth):  # noqa: PLR6301
+    def extremedata(self, extreme, breadth):
         """Creates the STL files for the flume
 
         Arguments:
@@ -399,20 +399,20 @@ class flume:
                 extreme: Maximum limits
                 breadth: Breadth of the flume
 
-        """  # noqa: D400, D401
+        """
         # Write the Max-Min values for the blockMesh
-        BMXmin = extreme[0] - 0.25 * (extreme[1] - extreme[0])  # noqa: N806
-        BMXmax = extreme[1] + 0.25 * (extreme[1] - extreme[0])  # noqa: N806
-        BMYmin = -0.625 * breadth  # noqa: N806
-        BMYmax = 0.625 * breadth  # noqa: N806
-        BMZmin = extreme[2] - 0.25 * (extreme[3] - extreme[2])  # noqa: N806
-        BMZmax = extreme[3] + 0.25 * (extreme[3] - extreme[2])  # noqa: N806
+        BMXmin = extreme[0] - 0.25 * (extreme[1] - extreme[0])
+        BMXmax = extreme[1] + 0.25 * (extreme[1] - extreme[0])
+        BMYmin = -0.625 * breadth
+        BMYmax = 0.625 * breadth
+        BMZmin = extreme[2] - 0.25 * (extreme[3] - extreme[2])
+        BMZmax = extreme[3] + 0.25 * (extreme[3] - extreme[2])
 
         # Write the temporary file
         filename = 'temp_geometry.txt'
-        if os.path.exists(filename):  # noqa: PTH110
-            os.remove(filename)  # noqa: PTH107
-        tempfileID = open('temp_geometry.txt', 'w')  # noqa: N806, PLW1514, PTH123, SIM115
+        if os.path.exists(filename):
+            os.remove(filename)
+        tempfileID = open('temp_geometry.txt', 'w')
 
         # Write the extreme values to the files
         tempfileID.write(
@@ -429,6 +429,6 @@ class flume:
             + str(BMZmax)
             + '\n'
         )
-        tempfileID.close  # noqa: B018
+        tempfileID.close
 
         return 0

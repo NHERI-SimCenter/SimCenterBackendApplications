@@ -1,25 +1,25 @@
-# import functions for Python 2.X support  # noqa: CPY001, D100, INP001
+# import functions for Python 2.X support
 import os
 import sys
 
 if sys.version.startswith('2'):
-    range = xrange  # noqa: A001, F821
-    string_types = basestring  # noqa: F821
+    range = xrange
+    string_types = basestring
 else:
     string_types = str
 
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 import argparse
 import platform
 import shutil
 import stat
-import subprocess  # noqa: S404
+import subprocess
 
 from preprocessJSON import preProcessDakota
 
 
-def main(args):  # noqa: D103
+def main(args):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--workflowInput')
@@ -30,54 +30,54 @@ def main(args):  # noqa: D103
     parser.add_argument('--filesWithEDP', nargs='*')
     parser.add_argument('--workdir')
 
-    args, unknowns = parser.parse_known_args()  # noqa: F841
+    args, unknowns = parser.parse_known_args()
 
-    inputFile = args.workflowInput  # noqa: N806, F841
-    runType = args.runType  # noqa: N806, F841
-    workflow_driver = args.driverFile  # noqa: F841
-    outputFile = args.workflowOutput  # noqa: N806, F841
-    rvFiles = args.filesWithRV  # noqa: N806, F841
-    edpFiles = args.filesWithEDP  # noqa: N806, F841
+    inputFile = args.workflowInput
+    runType = args.runType
+    workflow_driver = args.driverFile
+    outputFile = args.workflowOutput
+    rvFiles = args.filesWithRV
+    edpFiles = args.filesWithEDP
 
-    myScriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N806
+    myScriptDir = os.path.dirname(os.path.realpath(__file__))
 
     # desktop applications
     if (
-        uqData['samples'] is None  # noqa: F821
+        uqData['samples'] is None
     ):  # this happens with new applications, workflow to change
-        print('RUNNING PREPROCESSOR\n')  # noqa: T201
-        osType = platform.system()  # noqa: N806
-        preprocessorCommand = f'"{myScriptDir}/preprocessDakota" {bimName} {samName} {evtName} {edpName} {simName} {driverFile} {runDakota} {osType}'  # noqa: N806, F821
-        subprocess.Popen(preprocessorCommand, shell=True).wait()  # noqa: S602
-        print('DONE RUNNING PREPROCESSOR\n')  # noqa: T201
+        print('RUNNING PREPROCESSOR\n')
+        osType = platform.system()
+        preprocessorCommand = f'"{myScriptDir}/preprocessDakota" {bimName} {samName} {evtName} {edpName} {simName} {driverFile} {runDakota} {osType}'
+        subprocess.Popen(preprocessorCommand, shell=True).wait()
+        print('DONE RUNNING PREPROCESSOR\n')
 
     else:
-        scriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N806, F841
-        numRVs = preProcessDakota(  # noqa: N806, F841
-            bimName,  # noqa: F821
-            evtName,  # noqa: F821
-            samName,  # noqa: F821
-            edpName,  # noqa: F821
-            simName,  # noqa: F821
-            driverFile,  # noqa: F821
-            runDakota,  # noqa: F821
-            uqData,  # noqa: F821
+        scriptDir = os.path.dirname(os.path.realpath(__file__))
+        numRVs = preProcessDakota(
+            bimName,
+            evtName,
+            samName,
+            edpName,
+            simName,
+            driverFile,
+            runDakota,
+            uqData,
         )
 
-        shutil.move(bimName, 'bim.j')  # noqa: F821
-        shutil.move(evtName, 'evt.j')  # noqa: F821
-        if os.path.isfile(samName):  # noqa: PTH113, F821
-            shutil.move(samName, 'sam.j')  # noqa: F821
-        shutil.move(edpName, 'edp.j')  # noqa: F821
+        shutil.move(bimName, 'bim.j')
+        shutil.move(evtName, 'evt.j')
+        if os.path.isfile(samName):
+            shutil.move(samName, 'sam.j')
+        shutil.move(edpName, 'edp.j')
 
     # Setting Workflow Driver Name
-    workflowDriverName = 'workflow_driver'  # noqa: N806
-    if (platform.system() == 'Windows') and (runDakota == 'run'):  # noqa: F821
-        workflowDriverName = 'workflow_driver.bat'  # noqa: N806
+    workflowDriverName = 'workflow_driver'
+    if (platform.system() == 'Windows') and (runDakota == 'run'):
+        workflowDriverName = 'workflow_driver.bat'
 
     # Change permission of workflow driver
-    st = os.stat(workflowDriverName)  # noqa: PTH116
-    os.chmod(workflowDriverName, st.st_mode | stat.S_IEXEC)  # noqa: PTH101
+    st = os.stat(workflowDriverName)
+    os.chmod(workflowDriverName, st.st_mode | stat.S_IEXEC)
 
     # copy the dakota input file to the main working dir for the structure
     shutil.move('dakota.in', '../')
@@ -85,19 +85,19 @@ def main(args):  # noqa: D103
     # change dir to the main working dir for the structure
     os.chdir('../')
 
-    if runDakota == 'run':  # noqa: F821
-        dakotaCommand = (  # noqa: N806
+    if runDakota == 'run':
+        dakotaCommand = (
             'dakota -input dakota.in -output dakota.out -error dakota.err'
         )
-        print('running Dakota: ', dakotaCommand)  # noqa: T201
+        print('running Dakota: ', dakotaCommand)
         try:
-            result = subprocess.check_output(  # noqa: S602
+            result = subprocess.check_output(
                 dakotaCommand, stderr=subprocess.STDOUT, shell=True
             )
             returncode = 0
         except subprocess.CalledProcessError as e:
-            result = e.output  # noqa: F841
-            returncode = e.returncode  # noqa: F841
+            result = e.output
+            returncode = e.returncode
 
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-# This file is used to declare all global constants.  # noqa: CPY001, D100, INP001
+# This file is used to declare all global constants.
 # All user input parameters are summarized here.
 # Developed by GUAN, XINGQUAN @ UCLA in Feb 2019
 # Be cautious with line 19 - 25:
@@ -25,7 +25,7 @@ steel = SteelMaterial(
 )  # Unit: ksi
 
 # The path where THIS file is located is the base directory
-baseDirectory = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N816
+baseDirectory = os.path.dirname(os.path.realpath(__file__))
 
 ##########################################################################
 #            User Defined Ratios Involved in Design                      #

@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -44,27 +44,27 @@ import posixpath
 
 import numpy as np
 import pandas as pd
-from CBCitiesMethods import *  # noqa: F403
+from CBCitiesMethods import *
 
 
-def main(node_info, pipe_info):  # noqa: D103
+def main(node_info, pipe_info):
     # Load Data
 
-    print('Loading the node json file...')  # noqa: T201
+    print('Loading the node json file...')
 
-    with open(node_info) as f:  # noqa: PLW1514, PTH123
-        node_data = json.load(f)  # noqa: F841
+    with open(node_info) as f:
+        node_data = json.load(f)
 
-    with open(pipe_info) as f:  # noqa: PLW1514, PTH123
+    with open(pipe_info) as f:
         pipe_data = json.load(f)
 
     min_id = int(pipe_data[0]['id'])
     max_id = int(pipe_data[0]['id'])
 
-    allPipes = []  # noqa: N806
+    allPipes = []
 
     for pipe in pipe_data:
-        AIM_file = pipe['file']  # noqa: N806
+        AIM_file = pipe['file']
 
         asst_id = pipe['id']
 
@@ -72,8 +72,8 @@ def main(node_info, pipe_info):  # noqa: D103
         max_id = max(int(asst_id), max_id)
 
         # Open the AIM file
-        with open(AIM_file) as f:  # noqa: PLW1514, PTH123
-            pipe = AIM_data = json.load(f)  # noqa: N806, F841, PLW2901
+        with open(AIM_file) as f:
+            pipe = AIM_data = json.load(f)
 
         allPipes.append(pipe)
 
@@ -81,33 +81,33 @@ def main(node_info, pipe_info):  # noqa: D103
     #    pgv_csv_files = glob('../data/rupture/rupture62_im/*.csv')
 
     # Mapping & Saving
-    import multiprocessing as mp  # noqa: PLC0415
+    import multiprocessing as mp
 
     pool = mp.Pool(mp.cpu_count() - 1)
-    results = pool.map(add_failrate2pipe, [pipe for pipe in allPipes])  # noqa: C416, F405
+    results = pool.map(add_failrate2pipe, [pipe for pipe in allPipes])
     pool.close()
 
-    df = pd.DataFrame({'DV': {}, 'MeanFailureProbability': {}})  # noqa: PD901
+    df = pd.DataFrame({'DV': {}, 'MeanFailureProbability': {}})
 
     for pipe in results:
-        failureProbArray = pipe['fail_prob']  # noqa: N806
-        avgFailureProb = np.average(failureProbArray)  # noqa: N806
+        failureProbArray = pipe['fail_prob']
+        avgFailureProb = np.average(failureProbArray)
         pipe_id = pipe['GeneralInformation']['AIM_id']
 
-        print('pipe_id: ', pipe_id)  # noqa: T201
+        print('pipe_id: ', pipe_id)
         #        print("failureProbArray: ",failureProbArray)
-        print('avgFailureProb: ', avgFailureProb)  # noqa: T201
+        print('avgFailureProb: ', avgFailureProb)
 
         df2 = pd.DataFrame(
             {'DV': pipe_id, 'MeanFailureProbability': avgFailureProb}, index=[0]
         )
-        df = pd.concat([df, df2], axis=0)  # noqa: PD901
+        df = pd.concat([df, df2], axis=0)
 
     # Get the directory for saving the results, assume it is the same one with the AIM file
-    aimDir = os.path.dirname(pipe_info)  # noqa: PTH120, N806
-    aimFileName = os.path.basename(pipe_info)  # noqa: PTH119, N806, F841
+    aimDir = os.path.dirname(pipe_info)
+    aimFileName = os.path.basename(pipe_info)
 
-    saveDir = posixpath.join(aimDir, f'DV_{min_id}-{max_id}.csv')  # noqa: N806
+    saveDir = posixpath.join(aimDir, f'DV_{min_id}-{max_id}.csv')
 
     df.to_csv(saveDir, index=False)
 
@@ -117,7 +117,7 @@ def main(node_info, pipe_info):  # noqa: D103
 
 if __name__ == '__main__':
     # Defining the command line arguments
-    workflowArgParser = argparse.ArgumentParser(  # noqa: N816
+    workflowArgParser = argparse.ArgumentParser(
         'Run the CB-cities water distribution damage and loss workflow.',
         allow_abbrev=False,
     )
@@ -133,7 +133,7 @@ if __name__ == '__main__':
     )
 
     # Parsing the command line arguments
-    wfArgs = workflowArgParser.parse_args()  # noqa: N816
+    wfArgs = workflowArgParser.parse_args()
 
     # update the local app dir with the default - if needed
     #    if wfArgs.appDir is None:
