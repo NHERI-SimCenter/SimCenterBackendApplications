@@ -1,7 +1,7 @@
 """Created on Thu Jan  5 16:31:32 2023
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 import os
 
@@ -71,7 +71,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: D101
             'Shapefile file (*.shp)',
         )
 
-        if file[0] == '':  # noqa: PLC1901
+        if file[0] == '':
             return
         split_addr = os.path.split(file[0])
         self.current_substitute_directory = split_addr[0]
@@ -93,7 +93,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: D101
 
         number_list = pd.Series(index=self.demand_node_layers.index, data=0)
         for ind, val in joined_map['index_right'].iteritems():  # noqa: B007
-            number_list.loc[val] = number_list.loc[val] + 1  # noqa: PLR6104
+            number_list.loc[val] = number_list.loc[val] + 1
 
         number_list = number_list[number_list > 1]
         number_list = number_list.sort_values(ascending=False)
@@ -111,7 +111,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: D101
             index=self.subsitute_layer.index.unique(), data=0
         )
         for ind in joined_map.index.to_list():
-            index_number_list.loc[ind] = index_number_list.loc[ind] + 1  # noqa: PLR6104
+            index_number_list.loc[ind] = index_number_list.loc[ind] + 1
 
         index_number_list = index_number_list[index_number_list > 1]
         index_number_list = index_number_list.sort_values(ascending=False)

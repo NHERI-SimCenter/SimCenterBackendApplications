@@ -55,7 +55,7 @@ def create_SAM(AIM_file, SAM_file):  # noqa: N802, N803, D103
 
     # load AIM
 
-    with open(AIM_file) as f:  # noqa: PLW1514, PTH123
+    with open(AIM_file) as f:  # noqa: PTH123
         root_AIM = json.load(f)  # noqa: N806
 
     print('General Information tab is ignored')  # noqa: T201
@@ -70,7 +70,7 @@ def create_SAM(AIM_file, SAM_file):  # noqa: N802, N803, D103
     )
     print(surrogate_path)  # noqa: T201
 
-    with open(surrogate_path) as f:  # noqa: PLW1514, PTH123
+    with open(surrogate_path) as f:  # noqa: PTH123
         surrogate_model = json.load(f)
 
     # find SAM in surrogate json
@@ -80,7 +80,7 @@ def create_SAM(AIM_file, SAM_file):  # noqa: N802, N803, D103
     # sanity check
 
     if root_AIM['Applications']['EDP']['Application'] != 'SurrogateEDP':
-        with open('../workflow.err', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+        with open('../workflow.err', 'w') as f:  # noqa: PTH123
             f.write('Please select [None] in the EDP tab.')
         exit(-1)  # noqa: PLR1722
 
@@ -88,13 +88,13 @@ def create_SAM(AIM_file, SAM_file):  # noqa: N802, N803, D103
         root_AIM['Applications']['Simulation']['Application']
         != 'SurrogateSimulation'
     ):
-        with open('../workflow.err', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+        with open('../workflow.err', 'w') as f:  # noqa: PTH123
             f.write('Please select [None] in the FEM tab.')
         exit(-1)  # noqa: PLR1722
 
     # write SAM.json
 
-    with open(SAM_file, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(SAM_file, 'w') as f:  # noqa: PTH123
         json.dump(root_SAM, f, indent=2)
 
 

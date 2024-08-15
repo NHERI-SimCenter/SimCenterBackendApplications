@@ -1,4 +1,4 @@
-import math  # noqa: CPY001, D100, INP001
+import math  # noqa: INP001, D100
 import os
 
 import numpy as np
@@ -32,7 +32,7 @@ class Hydraulic_Simulation:  # noqa: D101
             raise ValueError('temp folder type is not str')  # noqa: EM101, TRY003
 
         if settings['save_time_step'] == True:  # noqa: E712
-            if temp_folder == '':  # noqa: PLC1901
+            if temp_folder == '':
                 self.temp_directory = (
                     str(worker_rank) + '_' + repr(current_stop_time)
                 )
@@ -42,7 +42,7 @@ class Hydraulic_Simulation:  # noqa: D101
                 )
 
         elif settings['save_time_step'] == False:  # noqa: E712
-            if temp_folder == '':  # noqa: PLC1901
+            if temp_folder == '':
                 self.temp_directory = str(worker_rank)
             else:
                 self.temp_directory = os.path.join(temp_folder, str(worker_rank))  # noqa: PTH118
@@ -70,7 +70,7 @@ class Hydraulic_Simulation:  # noqa: D101
             )
 
             sim.manipulateTimeOrder(current_stop_time, current_stop_time)
-            rr, i_run_successful = sim.run_sim(  # noqa: F841
+            rr, i_run_successful = sim.run_sim(
                 file_prefix=temp_file_dest,
                 start_time=current_stop_time,
                 iModified=False,
@@ -129,7 +129,7 @@ class Hydraulic_Simulation:  # noqa: D101
                 )
             )
             sim.manipulateTimeOrder(current_stop_time, current_stop_time)
-            rr, i_run_successful = sim.run_sim(  # noqa: F841
+            rr, i_run_successful = sim.run_sim(
                 file_prefix=temp_file_dest,
                 start_time=current_stop_time,
                 iModified=False,

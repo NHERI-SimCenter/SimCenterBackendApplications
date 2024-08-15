@@ -1,4 +1,4 @@
-# python code to open the .mat file  # noqa: CPY001, D100, INP001
+# python code to open the .mat file  # noqa: INP001, D100
 # and put data into a SimCenter JSON file
 
 import json
@@ -57,7 +57,7 @@ def parseWindMatFile(matFileIn, windFileOutName):  # noqa: N802, N803, D103
         myJson['Fy'] = np.array(Fy).tolist()
         myJson['Tz'] = np.array(Tz).tolist()
         myJson['t'] = np.array(t).tolist()
-        with open(windFileOutName, 'w') as f:  # noqa: PLW1514, PTH123
+        with open(windFileOutName, 'w') as f:  # noqa: PTH123
             json.dump(myJson, f)
 
         # file = open(windFileOutName,"w")
@@ -127,7 +127,7 @@ def parseWindMatFile(matFileIn, windFileOutName):  # noqa: N802, N803, D103
         # Check valid JSON file,
         validate = True
         if validate:
-            with open(windFileOutName) as infile:  # noqa: FURB101, PLW1514, PTH123
+            with open(windFileOutName) as infile:  # noqa: PTH123
                 json_data = infile.read()
 
             # Try to parse the JSON data
@@ -166,13 +166,13 @@ def createSpectraJson(  # noqa: N802, D103
     myJson['s_target_real'] = np.real(s_target).tolist()
     myJson['s_target_imag'] = np.imag(s_target).tolist()
 
-    with open(windFileOutName, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(windFileOutName, 'w') as f:  # noqa: PTH123
         json.dump(myJson, f)
 
     # Check valid JSON file
     validate = True
     if validate:
-        with open(windFileOutName) as infile:  # noqa: FURB101, PLW1514, PTH123
+        with open(windFileOutName) as infile:  # noqa: PTH123
             json_data = infile.read()
 
         # Try to parse the JSON data
@@ -279,5 +279,5 @@ def createPODJson(  # noqa: N802, D103
     myJson['fs'] = fs
     myJson['Vref'] = vRef
 
-    with open(filename, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(filename, 'w') as f:  # noqa: PTH123
         json.dump(myJson, f)

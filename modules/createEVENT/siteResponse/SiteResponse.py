@@ -1,5 +1,5 @@
-import json  # noqa: CPY001, D100, INP001
-import subprocess  # noqa: S404
+import json  # noqa: INP001, D100
+import subprocess
 import sys
 
 from calibration import createMaterial

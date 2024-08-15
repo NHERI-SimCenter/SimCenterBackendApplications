@@ -5,7 +5,7 @@ Revised in Feb. 2019
 
 # Modified by: Stevan Gavrilovic @ SimCenter, UC Berkeley
 # Last revision: 09/2020
-"""  # noqa: CPY001, D400, D404, INP001
+"""  # noqa: INP001, D400, D404
 
 ##########################################################################
 #                       Load Built-in Packages                           #
@@ -14,7 +14,7 @@ Revised in Feb. 2019
 # Please add all the imported modules in the part below
 import copy
 import os
-import pickle  # noqa: S403
+import pickle
 import sys
 from pathlib import Path
 
@@ -38,7 +38,7 @@ from global_variables import (
 ##########################################################################
 
 
-def seismic_design(base_directory, pathDataFolder, workingDirectory):  # noqa: C901, D103, N803, PLR0912, PLR0914, PLR0915
+def seismic_design(base_directory, pathDataFolder, workingDirectory):  # noqa: C901, N803, D103, PLR0912, PLR0915
     # **************** Debug using only **********************************
     # building_id = 'Test3'
     # from global_variables import base_directory
@@ -132,7 +132,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):  # noqa: C
         )
         building_1.read_story_drift()
 
-        iteration = iteration + 1  # noqa: PLR6104
+        iteration = iteration + 1
     # Assign the last member size to building instance
     building_1.member_size = copy.deepcopy(last_member)
     # Add a check here: if the program does not go into previous while loop,
@@ -457,7 +457,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):  # noqa: C
     # ********************************************************************
     # ///////// Revise Member to Satisfy Connection Requirement //////////
     # ********************************************************************
-    for [target_story_index, target_connection_no] in not_feasible_connection:  # noqa: PLR1702
+    for [target_story_index, target_connection_no] in not_feasible_connection:
         # For connection not satisfy the geometry limit
         while not connection_set[target_story_index][
             target_connection_no
@@ -1002,7 +1002,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):  # noqa: C
                 not_feasible_construction_connection.append([story, connection_no])
 
     # Revise column sizes for new construction connection because of SCWB
-    for [  # noqa: PLR1702
+    for [
         target_story_index,
         target_connection_no,
     ] in not_feasible_construction_connection:

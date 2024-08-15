@@ -1,4 +1,4 @@
-# written: UQ team @ SimCenter  # noqa: CPY001, D100, INP001
+# written: UQ team @ SimCenter  # noqa: INP001, D100
 
 # import functions for Python 2.X support
 import sys
@@ -13,7 +13,7 @@ import json
 import os
 import platform
 import stat
-import subprocess  # noqa: S404
+import subprocess
 import sys
 
 inputArgs = sys.argv  # noqa: N816
@@ -66,7 +66,7 @@ cwd = os.getcwd()  # noqa: PTH109
 print(cwd)  # noqa: T201
 
 # open the dakota json file
-with open('dakota.json') as data_file:  # noqa: PLW1514, PTH123
+with open('dakota.json') as data_file:  # noqa: PTH123
     data = json.load(data_file)
 
 uq_data = data['UQ_Method']

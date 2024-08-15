@@ -1,11 +1,11 @@
 """Created on Wed Apr  8 20:19:10 2020
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 import logging
 import os
-import pickle  # noqa: S403
+import pickle
 import sys
 
 import Damage
@@ -81,7 +81,7 @@ class StochasticModel:  # noqa: D101
         Result.
 
         """  # noqa: D205, D400, D401
-        while self.timeline.iContinue():  # noqa: PLR1702
+        while self.timeline.iContinue():
             sys.stdout.flush()
             current_stop_time = self.timeline.getCurrentStopTime()
             print('--------------------------------------')  # noqa: T201

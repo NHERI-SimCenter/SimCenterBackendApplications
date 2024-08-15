@@ -68,10 +68,10 @@ def main(threads=1):  # noqa: C901, D103
     if use_dask:
         log_msg(f'{threads} threads requested. Using DASK.')
 
-        import math  # noqa: PLC0415
+        import math
 
-        from dask import delayed  # noqa: PLC0415
-        from dask.distributed import Client, LocalCluster  # noqa: PLC0415
+        from dask import delayed
+        from dask.distributed import Client, LocalCluster
 
         @delayed
         def read_csv_files(file_list, header):

@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017, The Regents of the University of California (Regents).  # noqa: D100, INP001
+# Copyright (c) 2016-2017, The Regents of the University of California (Regents).  # noqa: INP001, D100
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -66,7 +66,7 @@ def readPressureProbes(fileName):  # noqa: N802, N803
     p = []
     time = []
 
-    with open(fileName) as f:  # noqa: PLW1514, PTH123
+    with open(fileName) as f:  # noqa: PTH123
         for line in f:
             if line.startswith('#'):
                 if line.startswith('# Probe'):
@@ -265,7 +265,7 @@ def write_open_foam_vector_field(p, file_name):
     format.
 
     """  # noqa: D205, D401
-    f = open(file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    f = open(file_name, 'w+')  # noqa: SIM115, PTH123
     f.write('%d' % len(p[:, 2]))
     f.write('\n(')
     for i in range(len(p[:, 2])):
@@ -279,7 +279,7 @@ def read_openFoam_scalar_field(file_name):  # noqa: N802
     """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""  # noqa: D401
     sField = []  # noqa: N806
 
-    with open(file_name) as f:  # noqa: PLW1514, PTH123
+    with open(file_name) as f:  # noqa: PTH123
         itrf = iter(f)
         next(itrf)
         for line in itrf:
@@ -298,7 +298,7 @@ def read_openFoam_vector_field(file_name):  # noqa: N802
     """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""  # noqa: D401
     vField = []  # noqa: N806
 
-    with open(file_name) as f:  # noqa: PLW1514, PTH123
+    with open(file_name) as f:  # noqa: PTH123
         for line in f:
             if line.startswith('('):
                 line = line.replace('(', '')  # noqa: PLW2901
@@ -321,7 +321,7 @@ def read_openFoam_tensor_field(file_name):  # noqa: N802
 
     row_count = 9
 
-    with open(file_name) as f:  # noqa: PLW1514, PTH123
+    with open(file_name) as f:  # noqa: PTH123
         for line in f:
             if line.startswith('('):
                 line = line.replace('(', '')  # noqa: PLW2901
@@ -349,7 +349,7 @@ def read_openFoam_symmetric_tensor_field(file_name):  # noqa: N802
 
     row_count = 6
 
-    with open(file_name) as f:  # noqa: PLW1514, PTH123
+    with open(file_name) as f:  # noqa: PTH123
         for line in f:
             if line.startswith('('):
                 line = line.replace('(', '')  # noqa: PLW2901
@@ -431,7 +431,7 @@ def read_velocity_probes(fileName):  # noqa: N803
     U = []  # noqa: N806
     time = []
 
-    with open(fileName) as f:  # noqa: PLW1514, PTH123
+    with open(fileName) as f:  # noqa: PTH123
         for line in f:
             if line.startswith('#'):
                 if line.startswith('# Probe'):
@@ -467,7 +467,7 @@ def read_velocity_probes(fileName):  # noqa: N803
 
 def calculate_length_scale(u, uav, dt, min_corr=0.0):
     """Calculates the length scale of a velocity time history given."""  # noqa: D401
-    u = u - np.mean(u)  # noqa: PLR6104
+    u = u - np.mean(u)
 
     corr = signal.correlate(u, u, mode='full')
 
@@ -635,7 +635,7 @@ class VelocityData:
         self.Rw = np.var(self.U[:, 2, :], axis=1)  # gets reynolds stress
 
         for i in range(self.component_count):
-            self.I[:, i] = self.I[:, i] / self.Uav  # noqa: PLR6104
+            self.I[:, i] = self.I[:, i] / self.Uav
 
         # Calculate the length scale profiles.
         self.L = np.zeros((self.probe_count, self.component_count))
@@ -655,7 +655,7 @@ class VelocityData:
             self.uw_bar[i] = np.cov(self.U[i, 0, :], self.U[i, 2, :])[0, 1]
 
     def get_Uav(self, z):  # noqa: N802, D102
-        from scipy import interpolate  # noqa: PLC0415
+        from scipy import interpolate
 
         f = interpolate.interp1d(self.z, self.Uav)
 
@@ -711,7 +711,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):  # noqa: 
     json_path = os.path.join(  # noqa: PTH118
         case_path, 'constant', 'simCenter', 'input', 'EmptyDomainCFD.json'
     )
-    with open(json_path) as json_file:  # noqa: PLW1514, PTH123
+    with open(json_path) as json_file:  # noqa: PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1333,7 +1333,7 @@ if __name__ == '__main__':
     json_path = os.path.join(  # noqa: PTH118
         case_path, 'constant', 'simCenter', 'input', 'EmptyDomainCFD.json'
     )
-    with open(json_path) as json_file:  # noqa: PLW1514, PTH123
+    with open(json_path) as json_file:  # noqa: PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary

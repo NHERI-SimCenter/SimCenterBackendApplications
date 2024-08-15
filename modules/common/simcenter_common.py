@@ -80,7 +80,7 @@ def log_msg(msg='', prepend_timestamp=True):  # noqa: FBT002
     print(formatted_msg)  # noqa: T201
 
     if globals().get('log_file', None) is not None:
-        with open(globals()['log_file'], 'a') as f:  # noqa: PLW1514, PTH123
+        with open(globals()['log_file'], 'a') as f:  # noqa: PTH123
             f.write('\n' + formatted_msg)
 
 
@@ -231,13 +231,13 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
             unit_length = 'inch'
         f_length = globals().get(unit_length, None)
         if f_length is None:
-            raise ValueError(f'Specified length unit not recognized: {unit_length}')  # noqa: DOC501, EM102, TRY003
+            raise ValueError(f'Specified length unit not recognized: {unit_length}')  # noqa: EM102, TRY003
 
         # if no time unit is specified, 'sec' is assumed
         unit_time = output_units.get('time', 'sec')
         f_time = globals().get(unit_time, None)
         if f_time is None:
-            raise ValueError(f'Specified time unit not recognized: {unit_time}')  # noqa: DOC501, EM102, TRY003
+            raise ValueError(f'Specified time unit not recognized: {unit_time}')  # noqa: EM102, TRY003
 
         scale_factors = {}
 
@@ -253,7 +253,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
 
                 f_in = globals().get(input_unit, None)
                 if f_in is None:
-                    raise ValueError(f'Input unit not recognized: {input_unit}')  # noqa: DOC501, EM102, TRY003
+                    raise ValueError(f'Input unit not recognized: {input_unit}')  # noqa: EM102, TRY003
 
                 unit_type = None
                 for base_unit_type, unit_set in globals()['unit_types'].items():
@@ -261,7 +261,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
                         unit_type = base_unit_type
 
                 if unit_type is None:
-                    raise ValueError(f'Failed to identify unit type: {input_unit}')  # noqa: DOC501, EM102, TRY003
+                    raise ValueError(f'Failed to identify unit type: {input_unit}')  # noqa: EM102, TRY003
 
                 # the output unit depends on the unit type
                 if unit_type == 'acceleration':
@@ -274,7 +274,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
                     f_out = 1.0 / f_length
 
                 else:
-                    raise ValueError(  # noqa: DOC501, TRY003
+                    raise ValueError(  # noqa: TRY003
                         f'Unexpected unit type in workflow: {unit_type}'  # noqa: EM102
                     )
 
@@ -289,7 +289,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
 def get_unit_bases(input_units):
     """Decouple input units"""  # noqa: D400
     # special case: if the input unit is not specified then do nothing
-    if input_units is None:  # noqa: PLR1702
+    if input_units is None:
         input_unit_bases = {}
 
     else:

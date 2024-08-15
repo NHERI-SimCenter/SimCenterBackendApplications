@@ -125,14 +125,14 @@ def chooseARandomPreefix(damage_input_dir):  # noqa: N802
     random_prefix = random.choices(string.ascii_letters, k=number_of_prefix)
     s = ''
     for letter in random_prefix:
-        s = s + letter  # noqa: PLR6104
+        s = s + letter
     random_prefix = s
 
     while random_prefix in prefix_list:
         random_prefix = random.choices(string.ascii_letters, k=number_of_prefix)
         s = ''
         for letter in random_prefix:
-            s = s + letter  # noqa: PLR6104
+            s = s + letter
         random_prefix = s
 
     return random_prefix
@@ -584,7 +584,7 @@ if __name__ == '__main__':
     )
 
     system_std_out = sys.stdout
-    with open(rewet_log_path, 'w') as log_file:  # noqa: PLW1514, PTH123
+    with open(rewet_log_path, 'w') as log_file:  # noqa: PTH123
         sys.stdout = log_file
         REWET_starter = Starter()
         REWET_starter.run(settings_json_file_path)
@@ -653,7 +653,7 @@ if __name__ == '__main__':
                         consider_leak=False,
                         leak_ratio=1,
                     )
-                    time_series_result[single_requested_result][  # noqa: PLR6104
+                    time_series_result[single_requested_result][
                         realization_number
                     ].index = (
                         time_series_result[single_requested_result][
@@ -695,7 +695,7 @@ if __name__ == '__main__':
                 / cur_json_file_name
             )
 
-            with open(cur_json_file_path) as f:  # noqa: PLW1514, PTH123
+            with open(cur_json_file_path) as f:  # noqa: PTH123
                 json_data = json.load(f)
 
             for single_requested_result in requested_result:
@@ -720,7 +720,7 @@ if __name__ == '__main__':
                     junction_json_data
                 )
 
-            with open(cur_json_file_path, 'w') as f:  # noqa: PLW1514, PTH123
+            with open(cur_json_file_path, 'w') as f:  # noqa: PTH123
                 json_data = json.dump(json_data, f, indent=2)
 
         res_agg_mean = dict()  # noqa: C408
@@ -790,7 +790,7 @@ if __name__ == '__main__':
                     {id: {'GeneralInformation': generalInfo, 'R2Dres': R2Dres}}
                 )
         det_json['WaterDistributionNetwork'].update({WDNtype: json_to_attach})
-    with open(det_json_path, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(det_json_path, 'w') as f:  # noqa: PTH123
         json.dump(det_json, f, indent=2)
 
     ts_result_json_path = cur_json_file_path = (
@@ -814,6 +814,6 @@ if __name__ == '__main__':
                 i
             ] = time_series_result[single_requested_result][i].to_dict()
 
-    with open(ts_result_json_path, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(ts_result_json_path, 'w') as f:  # noqa: PTH123
         json.dump(time_series_result_struc, f, indent=2)
     print('here')  # noqa: T201

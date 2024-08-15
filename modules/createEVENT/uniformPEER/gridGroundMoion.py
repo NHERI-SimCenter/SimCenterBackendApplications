@@ -64,13 +64,13 @@ def main(inputArgs, err):  # noqa: N803, D103
 
 
 class gmCluster:  # noqa: D101
-    def __init__(self, inputArgs, err):  # noqa: ARG002, C901, N803, PLR0912, PLR0914, PLR0915
+    def __init__(self, inputArgs, err):  # noqa: ARG002, C901, N803, PLR0912, PLR0915
         np.random.seed(seed=42)
         curDir = os.path.dirname(__file__)  # noqa: PTH120, N806
         gmDataBaseDir = os.path.join(curDir, 'gmdata.json')  # noqa: PTH118, N806
         inputJsonPath = inputArgs[1]  # noqa: N806
 
-        with open(inputJsonPath) as fj:  # noqa: PLW1514, PTH123
+        with open(inputJsonPath) as fj:  # noqa: PTH123
             inputJson = json.load(fj)  # noqa: N806
 
         nim = len(inputJson['IM'])
@@ -250,7 +250,7 @@ class gmCluster:  # noqa: D101
         #
         # Read Database
         #
-        with open(gmDataBaseDir) as fd:  # noqa: PLW1514, PTH123
+        with open(gmDataBaseDir) as fd:  # noqa: PTH123
             gmData = json.load(fd)  # noqa: N806
 
         RSN = gmData['RSN']  # noqa: N806
@@ -370,7 +370,7 @@ class gmCluster:  # noqa: D101
             )
             IM_log_ref2 = IM_log_ref.copy()  # noqa: N806
 
-            scaling_exponent = (  # noqa: PLR6104
+            scaling_exponent = (
                 scaling_exponent / scaling_exponent[id_im_scaling_ancher]
             )
             scaling_exponent2 = np.delete(
@@ -502,7 +502,7 @@ class gmCluster:  # noqa: D101
         my_results['gm_RSN'] = [int(RSN[int(flat_gm_ID[myid])]) for myid in idx]
         my_results['gm_scale'] = [flat_gm_scale[myid] for myid in idx]
 
-        with open('gridIM_output.json', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+        with open('gridIM_output.json', 'w') as f:  # noqa: PTH123
             f.write(json.dumps(my_results))
 
         #
@@ -511,7 +511,7 @@ class gmCluster:  # noqa: D101
 
         # import matplotlib.pyplot as plt
         # import matplotlib.ticker as mticker
-        from scipy import interpolate  # noqa: PLC0415
+        from scipy import interpolate
 
         # plt.style.use('default')
         #
@@ -737,7 +737,7 @@ class gmCluster:  # noqa: D101
 
             xx = np.linspace(lowerboundX, upperboundX, 20)
             yy = np.linspace(lowerboundY, upperboundY, 20)
-            xxx, yyy = np.meshgrid(xx, yy)  # noqa: F841
+            xxx, yyy = np.meshgrid(xx, yy)
             f = interpolate.interp2d(
                 (X.reshape(-1)), (Y.reshape(-1)), flat_grid_error
             )
@@ -949,13 +949,13 @@ class gmCluster:  # noqa: D101
 
         # plt.savefig('gridIM_coverage.png',bbox_inches='tight')
         if nim == 2 or nim == 3:  # noqa: PLR1714, PLR2004
-            with open(r'gridIM_coverage.html', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+            with open(r'gridIM_coverage.html', 'w') as f:  # noqa: PTH123
                 f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
             f.close()
 
 
 if __name__ == '__main__':
-    errf = open('gridIM_log.err', 'w')  # noqa: PLW1514, PTH123, SIM115
+    errf = open('gridIM_log.err', 'w')  # noqa: SIM115, PTH123
     main(sys.argv, errf)
     # try:
     #     main(sys.argv,errf)

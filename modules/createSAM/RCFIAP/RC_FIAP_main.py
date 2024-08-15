@@ -1,4 +1,4 @@
-# ############################################################### ##  # noqa: CPY001, D100, INP001
+# ############################################################### ##  # noqa: INP001, D100
 # RC_FIAP (Reinforced Concrete Frame Inelastic Analysis Platform) ##
 # ##
 # Developed by:                                                   ##
@@ -81,7 +81,7 @@ class BeamElasticElement:  # noqa: D101
 
 
 class BeamDesing:  # noqa: D101
-    def __init__(  # noqa: PLR0913, PLR0917
+    def __init__(  # noqa: PLR0913
         self,
         EleTag,  # noqa: N803
         b,
@@ -137,7 +137,7 @@ class BeamDesing:  # noqa: D101
 
 
 class ColDesing:  # noqa: D101
-    def __init__(  # noqa: PLR0913, PLR0917
+    def __init__(  # noqa: PLR0913
         self,
         EleTag,  # noqa: N803
         b,
@@ -230,7 +230,7 @@ class TclLogger:  # noqa: D101
         if os.path.exists(pathFile):  # noqa: PTH110
             os.remove(pathFile)  # noqa: PTH107
 
-        with open(pathFile, 'a+') as file_object:  # noqa: PLW1514, PTH123
+        with open(pathFile, 'a+') as file_object:  # noqa: PTH123
             appendEOL = False  # noqa: N806
             # Move read cursor to the start of file.
             file_object.seek(0)
@@ -409,13 +409,13 @@ def runBuildingDesign(BIM_file, EVENT_file, SAM_file, getRV):  # noqa: ARG001, N
 
     root_SAM['NodeMapping'] = node_map
 
-    with open(SAM_file, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(SAM_file, 'w') as f:  # noqa: PTH123
         json.dump(root_SAM, f, indent=2)
 
 
 # Main functionality
 class RCFIAP:  # noqa: D101
-    def Design(self, rootSIM):  # noqa: C901, D102, N802, N803, PLR0914, PLR0915
+    def Design(self, rootSIM):  # noqa: C901, N802, N803, D102, PLR0915
         def __init__(rootSIM):  # noqa: N803, N807
             self.rootSIM = rootSIM
 
@@ -553,7 +553,7 @@ class RCFIAP:  # noqa: D101
         # Colmuns P-M design
         def AsColumn():  # noqa: C901, N802
             verif = False
-            while verif == False:  # noqa: E712, PLR1702
+            while verif == False:  # noqa: E712
                 for ndb in db_v:
                     db = ndb / 8.0 * inch
                     Ab = pi * db**2.0 / 4.0  # noqa: N806
@@ -1329,7 +1329,7 @@ class RCFIAP:  # noqa: D101
             # self.ui.tabWidget.setCurrentIndex(1)
 
     # Creation of the nonlinear model
-    def CreateNLM(self, rootSIM, outputLogger, preparePushover):  # noqa: C901, D102, N802, N803, PLR0914, PLR0915
+    def CreateNLM(self, rootSIM, outputLogger, preparePushover):  # noqa: C901, N802, N803, D102, PLR0915
         def __init__(rootSIM):  # noqa: N803, N807
             self.rootSIM = rootSIM
             self.outputLogger = outputLogger
@@ -2999,7 +2999,7 @@ class RCFIAP:  # noqa: D101
         op.rayleigh(alphaM, betaKcurr, betaKinit, betaKcomm)  # RAYLEIGH damping
 
     # Pushover function
-    def Pushover(self, rootSIM):  # noqa: C901, D102, N802, N803, PLR0914, PLR0915
+    def Pushover(self, rootSIM):  # noqa: C901, N802, N803, D102, PLR0915
         def __init__(rootSIM):  # noqa: N803, N807
             self.rootSIM = rootSIM
 
@@ -3135,7 +3135,7 @@ class RCFIAP:  # noqa: D101
                 op.reactions()
                 for node in ListNodesBasal:
                     # print('ind Basal ', node[0])
-                    VBasal = VBasal + op.nodeReaction(node[0], 1)  # noqa: N806, PLR6104
+                    VBasal = VBasal + op.nodeReaction(node[0], 1)  # noqa: N806
                 VBasal_v = np.append(VBasal_v, VBasal)  # noqa: N806
                 DriftTecho = op.nodeDisp(ctrlNode, dispDir) / htot  # noqa: N806
                 DriftTecho_v = np.append(DriftTecho_v, DriftTecho)  # noqa: N806
@@ -3265,8 +3265,8 @@ class RCFIAP:  # noqa: D101
                 # for factor in factor_v:
                 # op.integrator('DisplacementControl',ctrlNode,dispDir,factor*dU)  # determine the next time step for an analysis
                 # for fact in fact_v:
-                for j in alg:  # noqa: PLC0206
-                    for i in test:  # noqa: PLC0206
+                for j in alg:
+                    for i in test:
                         for fact in [1, 20, 50]:
                             if ok != 0 and j >= 4 and i != 7:  # noqa: PLR2004
                                 # print('Trying ',str(alg[j]))
@@ -3317,7 +3317,7 @@ class RCFIAP:  # noqa: D101
                 op.reactions()
                 for node in ListNodesBasal:
                     # print('ind Basal ', node[0])
-                    VBasal = VBasal + op.nodeReaction(node[0], 1)  # noqa: N806, PLR6104
+                    VBasal = VBasal + op.nodeReaction(node[0], 1)  # noqa: N806
                 VBasal_v = np.append(VBasal_v, VBasal)  # noqa: N806
                 DriftTecho = op.nodeDisp(ctrlNode, dispDir) / htot  # noqa: N806
                 DriftTecho_v = np.append(DriftTecho_v, DriftTecho)  # noqa: N806
@@ -3390,7 +3390,7 @@ class RCFIAP:  # noqa: D101
                 singlePush1(dref, mu, IDctrlNode, IDctrlDOF, nSteps)
             )
         else:
-            maxDriftPiso, maxDriftTecho, maxDriftTecho2, VBasal_v, DriftTecho_v = (  # noqa: F841, N806
+            maxDriftPiso, maxDriftTecho, maxDriftTecho2, VBasal_v, DriftTecho_v = (  # noqa: N806
                 singlePush(dref, mu, IDctrlNode, IDctrlDOF, nSteps)
             )
 

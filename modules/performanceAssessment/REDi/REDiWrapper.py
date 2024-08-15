@@ -143,7 +143,7 @@ def get_first_value(val: dict, num_levels: int) -> int:  # noqa: D103
         return next_val
 
 
-def main(args):  # noqa: C901, D103, PLR0914, PLR0915
+def main(args):  # noqa: C901, D103, PLR0915
     print('***Running REDi Seismic Downtime engine***\n')  # noqa: T201
 
     pelicun_results_dir = Path(args.dirnameOutput)
@@ -283,14 +283,14 @@ def main(args):  # noqa: C901, D103, PLR0914, PLR0915
     replacementTime = float(DL_info['ReplacementTime']['Median'])  # noqa: N806
 
     # convert replacement time to days from worker_days
-    replacementTime = replacementTime / num_workers  # noqa: N806, PLR6104
+    replacementTime = replacementTime / num_workers  # noqa: N806
 
     rediInputDict['replacement_time'] = replacementTime
 
     final_results_dict = dict()  # noqa: C408
     log_output: List[str] = []  # noqa: FA100
 
-    for sample in range(num_samples):  # noqa: PLR1702
+    for sample in range(num_samples):
         if buildingirreparableOrCollapsed[sample]:
             # Convert the replacement time coming out of Pelicun (worker-days) into days by dividing by the number of workers
             replacement_time = DVReplacementDict['Time'][sample] / num_workers
