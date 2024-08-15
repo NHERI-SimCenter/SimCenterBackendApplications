@@ -1,4 +1,4 @@
-from typing import Literal, Union
+from typing import Literal, Union  # noqa: INP001, D100
 
 from pydantic import Field
 from src.sampling.mcmc.StretchDto import SamplingMethod
@@ -6,22 +6,22 @@ from src.UQpyDTO import UQpyDTO
 from typing_extensions import Annotated
 
 
-class ReliabilityMethodBaseDTO(UQpyDTO):
+class ReliabilityMethodBaseDTO(UQpyDTO):  # noqa: D101
     pass
 
 
-class SubsetSimulationDTO(ReliabilityMethodBaseDTO):
+class SubsetSimulationDTO(ReliabilityMethodBaseDTO):  # noqa: D101
     method: Literal['Subset Simulation'] = 'Subset Simulation'
-    conditionalProbability: float
+    conditionalProbability: float  # noqa: N815
     failure_threshold: float = Field(..., alias='failureThreshold')
-    maxLevels: int
+    maxLevels: int  # noqa: N815
     samples_per_subset: int
-    samplingMethod: SamplingMethod
+    samplingMethod: SamplingMethod  # noqa: N815
 
     # def __post_init__(self):
     # self.samplingMethod.n_chains=int(self.samples_per_subset*self.conditionalProbability)
 
-    def init_to_text(self):
+    def init_to_text(self):  # noqa: D102
         from UQpy.reliability.SubsetSimulation import (
             SubsetSimulation,
         )
@@ -83,7 +83,7 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):
             '\tfile.write(json.dumps(output_data))\n'
         )
 
-        prerequisite_str = '\n'.join(
+        prerequisite_str = '\n'.join(  # noqa: FLY002
             [
                 initial_sampler,
                 import_statement,
@@ -109,15 +109,15 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):
             '\t\telse:',
             f'\t\t\treturn {self.failure_threshold} - res',
             '\telse:',
-            "\t\traise ValueError(f'Result not found in results.out file for sample evaluation "
+            "\t\traise ValueError(f'Result not found in results.out file for sample evaluation "  # noqa: ISC003
             + "{index}')",
         ]
 
-        with open('postprocess_script.py', 'w') as f:
+        with open('postprocess_script.py', 'w') as f:  # noqa: PTH123
             f.write('\n'.join(postprocess_script_code))
 
 
-class FormDTO(ReliabilityMethodBaseDTO):
+class FormDTO(ReliabilityMethodBaseDTO):  # noqa: D101
     method: Literal['FORM'] = 'FORM'
 
 

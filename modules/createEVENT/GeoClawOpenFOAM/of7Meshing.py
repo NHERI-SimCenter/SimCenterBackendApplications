@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -51,7 +51,7 @@ class of7Meshing:
     -------
             meshcheck: Check all the meshing
 
-    """
+    """  # noqa: D205, D404
 
     #############################################################
     def meshcheck(self, data, fipath):
@@ -61,7 +61,7 @@ class of7Meshing:
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -75,28 +75,28 @@ class of7Meshing:
             return 0
 
         # Other mesh software
-        elif int(mesher[0]) == 1:
+        elif int(mesher[0]) == 1:  # noqa: RET505
             meshfile = hydroutil.extract_element_from_json(
                 data, ['Events', 'MeshFile']
             )
             if meshfile == [None]:
                 return -1
-            else:
+            else:  # noqa: RET505
                 meshfile = ', '.join(
                     hydroutil.extract_element_from_json(data, ['Events', 'MeshFile'])
                 )
-                meshfilepath = os.path.join(fipath, meshfile)
-                if not os.path.isfile(meshfilepath):
+                meshfilepath = os.path.join(fipath, meshfile)  # noqa: PTH118
+                if not os.path.isfile(meshfilepath):  # noqa: PTH113
                     return -1
 
         # Mesh dictionaries
-        elif int(mesher[0]) == 2:
+        elif int(mesher[0]) == 2:  # noqa: PLR2004
             # Get path of bm and shm
-            bmfile = os.path.join(fipath, 'blockMeshDict')
-            shmfile = os.path.join(fipath, 'snappyHexMeshDict')
+            bmfile = os.path.join(fipath, 'blockMeshDict')  # noqa: PTH118
+            shmfile = os.path.join(fipath, 'snappyHexMeshDict')  # noqa: PTH118
 
             # Check if both blockmeshdict or SHM do not exist
-            if (not os.path.isfile(bmfile)) and (not os.path.isfile(shmfile)):
+            if (not os.path.isfile(bmfile)) and (not os.path.isfile(shmfile)):  # noqa: PTH113
                 return -1
 
         # Return 0 if all is right
@@ -109,7 +109,7 @@ class of7Meshing:
         Variable
         -----------
                 header: Header for the solver-files
-        """
+        """  # noqa: D400, D401
         header = (
             """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
@@ -119,14 +119,14 @@ class of7Meshing:
 |	   | O |
 \\*---------------------------------------------------------------------------*/ 
 FoamFile
-{\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"system";\n\tobject\t"""
+{\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"system";\n\tobject\t"""  # noqa: W291
             + fileobjec
             + """;\n}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
         )
 
         # Return the header for meshing file
-        return header
+        return header  # noqa: RET504
 
     #############################################################
     def bmeshtext(self, data):
@@ -136,7 +136,7 @@ FoamFile
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401
         # Read the geometry data file
         data_geoext = np.genfromtxt('temp_geometry.txt', dtype=(float))
 
@@ -148,7 +148,7 @@ FoamFile
 
         # Get the mesh sizes
         nx = 100 * int(meshsize)
-        if abs(data_geoext[1] - data_geoext[0]) > 0.000001:
+        if abs(data_geoext[1] - data_geoext[0]) > 0.000001:  # noqa: PLR2004
             ny = math.ceil(
                 5
                 * nx
@@ -284,7 +284,7 @@ FoamFile
         # Add merge patch pairs
         bmeshtext = bmeshtext + 'mergePatchPairs\n(\n);\n'
 
-        return bmeshtext
+        return bmeshtext  # noqa: RET504
 
     #############################################################
     def sfetext(self):
@@ -294,7 +294,7 @@ FoamFile
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401
         # Read the geometry data file
         data_geoext = np.genfromtxt('temp_geometry.txt', dtype=(float))
 
@@ -314,10 +314,10 @@ FoamFile
         sfetext = sfetext + 'Right.stl\n' + stlinfo + '\n\n'
         if int(data_geoext[6]) == 1:
             sfetext = sfetext + 'Building.stl\n' + stlinfo + '\n\n'
-        elif int(data_geoext[6]) == 2:
+        elif int(data_geoext[6]) == 2:  # noqa: PLR2004
             sfetext = sfetext + 'Building.stl\n' + stlinfo + '\n\n'
             sfetext = sfetext + 'OtherBuilding.stl\n' + stlinfo + '\n\n'
-        elif int(data_geoext[6]) == 3:
+        elif int(data_geoext[6]) == 3:  # noqa: PLR2004
             sfetext = sfetext + 'OtherBuilding.stl\n' + stlinfo + '\n\n'
 
         return sfetext
@@ -330,7 +330,7 @@ FoamFile
         ---------
                 None
 
-        """
+        """  # noqa: D400, D401
         # Read the geometry data file
         data_geoext = np.genfromtxt('temp_geometry.txt', dtype=(float))
 
@@ -360,7 +360,7 @@ FoamFile
             shmtext = (
                 shmtext + '\tBuilding.stl {type triSurfaceMesh; name Building;}\n'
             )
-        elif int(data_geoext[6]) == 2:
+        elif int(data_geoext[6]) == 2:  # noqa: PLR2004
             shmtext = (
                 shmtext + '\tBuilding.stl {type triSurfaceMesh; name Building;}\n'
             )
@@ -368,7 +368,7 @@ FoamFile
                 shmtext
                 + '\tOtherBuilding.stl {type triSurfaceMesh; name OtherBuilding;}\n'
             )
-        elif int(data_geoext[6]) == 3:
+        elif int(data_geoext[6]) == 3:  # noqa: PLR2004
             shmtext = (
                 shmtext
                 + '\tOtherBuilding.stl {type triSurfaceMesh; name OtherBuilding;}\n'
@@ -377,8 +377,8 @@ FoamFile
         shmtext = shmtext + '};\n\n'
 
         # Castellated mesh generation
-        maxLocalCells = int(meshsize) * 2000000
-        maxGlobalCells = int(meshsize) * 10000000
+        maxLocalCells = int(meshsize) * 2000000  # noqa: N806
+        maxGlobalCells = int(meshsize) * 10000000  # noqa: N806
         shmtext = shmtext + 'castellatedMeshControls\n{\n\t'
         shmtext = shmtext + 'maxLocalCells\t' + str(maxLocalCells) + ';\n\t'
         shmtext = shmtext + 'maxGlobalCells\t' + str(maxGlobalCells) + ';\n\t'
@@ -396,10 +396,10 @@ FoamFile
         shmtext = shmtext + '{file "Right.eMesh"; level 3;}\n'
         if int(data_geoext[6]) == 1:
             shmtext = shmtext + '\t\t{file "Building.eMesh"; level 3;}\n'
-        elif int(data_geoext[6]) == 2:
+        elif int(data_geoext[6]) == 2:  # noqa: PLR2004
             shmtext = shmtext + '\t\t{file "Building.eMesh"; level 3;}\n'
             shmtext = shmtext + '\t\t{file "OtherBuilding.eMesh"; level 3;}\n'
-        elif int(data_geoext[6]) == 3:
+        elif int(data_geoext[6]) == 3:  # noqa: PLR2004
             shmtext = shmtext + '\t\t{file "OtherBuilding.eMesh"; level 3;}\n'
         shmtext = shmtext + '\t);\n\n'
 
@@ -413,10 +413,10 @@ FoamFile
         shmtext = shmtext + 'Right {level (2 2);}\n'
         if int(data_geoext[6]) == 1:
             shmtext = shmtext + '\t\tBuilding {level (2 2);}\n'
-        elif int(data_geoext[6]) == 2:
+        elif int(data_geoext[6]) == 2:  # noqa: PLR2004
             shmtext = shmtext + '\t\tBuilding {level (2 2);}\n'
             shmtext = shmtext + '\t\tOtherBuilding {level (2 2);}\n'
-        elif int(data_geoext[6]) == 3:
+        elif int(data_geoext[6]) == 3:  # noqa: PLR2004
             shmtext = shmtext + '\t\tOtherBuilding {level (2 2);}\n'
         shmtext = shmtext + '\t};\n\n'
 
@@ -505,10 +505,10 @@ FoamFile
         shmtext = shmtext + 'debug\t0;\n'
         shmtext = shmtext + 'mergeTolerance\t1E-6;\n'
 
-        return shmtext
+        return shmtext  # noqa: RET504
 
     #############################################################
-    def scripts(self, data, path):
+    def scripts(self, data, path):  # noqa: C901
         """Create the scripts for caserun.sh
 
         Arguments:
@@ -516,7 +516,7 @@ FoamFile
                 data: all the JSON data
                 path: Path where dakota.json file is located
 
-        """
+        """  # noqa: D400
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -538,7 +538,7 @@ FoamFile
             caseruntext = caseruntext + 'echo snappyHexMesh running...\n'
             caseruntext = caseruntext + 'snappyHexMesh > snappyHexMesh.log\n'
             # Copy polyMesh folder
-            path2c = os.path.join('2', 'polyMesh')
+            path2c = os.path.join('2', 'polyMesh')  # noqa: PTH118
             caseruntext = caseruntext + 'cp -r ' + path2c + ' constant\n'
             caseruntext = caseruntext + 'rm -fr 1 2\n\n'
 
@@ -569,34 +569,34 @@ FoamFile
                 caseruntext = (
                     caseruntext + 'ideasToFoam $MESHFILE > ideasToFoam.log\n\n'
                 )
-            elif int(meshsoftware[0]) == 2:
+            elif int(meshsoftware[0]) == 2:  # noqa: PLR2004
                 caseruntext = (
                     caseruntext + 'cfx4ToFoam $MESHFILE > cfx4ToFoam.log\n\n'
                 )
-            elif int(meshsoftware[0]) == 3:
+            elif int(meshsoftware[0]) == 3:  # noqa: PLR2004
                 caseruntext = (
                     caseruntext + 'gambitToFoam $MESHFILE > gambitToFoam.log\n\n'
                 )
-            elif int(meshsoftware[0]) == 4:
+            elif int(meshsoftware[0]) == 4:  # noqa: PLR2004
                 caseruntext = (
                     caseruntext + 'gmshToFoam $MESHFILE > gmshToFoam.log\n\n'
                 )
 
-        elif int(mesher[0]) == 2:
+        elif int(mesher[0]) == 2:  # noqa: PLR2004
             # COPY THE FILES TO THE RIGHT LOCATION
             caseruntext = 'Copying mesh dictionaries...\n'
             # blockMesh
-            bmfile = os.path.join(path, 'blockMeshDict')
-            if os.path.isfile(bmfile):
-                bmfilenew = os.path.join('system', 'blockMeshDict')
+            bmfile = os.path.join(path, 'blockMeshDict')  # noqa: PTH118
+            if os.path.isfile(bmfile):  # noqa: PTH113
+                bmfilenew = os.path.join('system', 'blockMeshDict')  # noqa: PTH118
                 caseruntext = caseruntext + 'cp ' + bmfile + ' ' + bmfilenew + '\n'
                 caseruntext = caseruntext + 'echo blockMesh running...\n'
                 caseruntext = caseruntext + 'blockMesh > blockMesh.log\n\n'
 
             # surfaceFeatureExtract
-            sfdfile = os.path.join(path, 'surfaceFeatureExtractDict')
-            if os.path.isfile(sfdfile):
-                sfdfilenew = os.path.join('system', 'surfaceFeatureExtractDict')
+            sfdfile = os.path.join(path, 'surfaceFeatureExtractDict')  # noqa: PTH118
+            if os.path.isfile(sfdfile):  # noqa: PTH113
+                sfdfilenew = os.path.join('system', 'surfaceFeatureExtractDict')  # noqa: PTH118
                 caseruntext = caseruntext + 'cp ' + sfdfile + ' ' + sfdfilenew + '\n'
                 caseruntext = caseruntext + 'echo surfaceFeatureExtract running...\n'
                 caseruntext = (
@@ -605,13 +605,13 @@ FoamFile
                 )
 
             # snappyHexMesh
-            shmfile = os.path.join(path, 'snappyHexMeshDict')
-            if os.path.isfile(shmfile):
-                shmfilenew = os.path.join('system', 'snappyHexMeshDict')
+            shmfile = os.path.join(path, 'snappyHexMeshDict')  # noqa: PTH118
+            if os.path.isfile(shmfile):  # noqa: PTH113
+                shmfilenew = os.path.join('system', 'snappyHexMeshDict')  # noqa: PTH118
                 caseruntext = caseruntext + 'cp ' + shmfile + ' ' + shmfilenew + '\n'
                 caseruntext = caseruntext + 'echo snappyHexMesh running...\n'
                 caseruntext = caseruntext + 'snappyHexMesh > snappyHexMesh.log\n'
-                path2c = os.path.join('2', 'polyMesh')
+                path2c = os.path.join('2', 'polyMesh')  # noqa: PTH118
                 caseruntext = caseruntext + 'cp -r ' + path2c + ' constant\n'
                 caseruntext = caseruntext + 'rm -fr 1 2\n'
 
@@ -629,11 +629,11 @@ FoamFile
         caseruntext = (
             caseruntext
             + 'cp cdictforce '
-            + os.path.join('system', 'controlDict')
+            + os.path.join('system', 'controlDict')  # noqa: PTH118
             + '\n\n'
         )
 
         # Write to caserun file
-        scriptfile = open('caserun.sh', 'a')
+        scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
         scriptfile.write(caseruntext)
         scriptfile.close()

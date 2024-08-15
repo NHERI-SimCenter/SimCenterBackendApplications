@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2023 The Regents of the University of California
 #
 # This file is a part of SimCenter backend applications.
@@ -48,67 +48,67 @@ from brails.InventoryGenerator import InventoryGenerator
 
 
 # Define a standard way of printing program outputs:
-def log_msg(msg):
+def log_msg(msg):  # noqa: D103
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
-    print(formatted_msg)
+    print(formatted_msg)  # noqa: T201
 
 
 # Define a way to call BRAILS InventoryGenerator:
-def runBrails(
-    latMin,
-    latMax,
-    longMin,
-    longMax,
-    locationStr,
-    lengthUnit,
-    fpSource,
-    fpAttrMap,
-    invInput,
-    invAttributeMap,
-    attrRequested,
-    outputFile,
+def runBrails(  # noqa: N802, D103, PLR0913
+    latMin,  # noqa: N803
+    latMax,  # noqa: N803
+    longMin,  # noqa: N803
+    longMax,  # noqa: N803
+    locationStr,  # noqa: N803
+    lengthUnit,  # noqa: N803
+    fpSource,  # noqa: N803
+    fpAttrMap,  # noqa: N803
+    invInput,  # noqa: N803
+    invAttributeMap,  # noqa: N803
+    attrRequested,  # noqa: N803
+    outputFile,  # noqa: N803
     seed,
-    numBuildings,
-    getAllBuildings,
-    gKey,
+    numBuildings,  # noqa: N803
+    getAllBuildings,  # noqa: N803
+    gKey,  # noqa: N803
 ):
     # Format location input based on the GUI input:
     if locationStr == '""':
-        locationStr = ''
+        locationStr = ''  # noqa: N806
     if 'geojson' in fpSource.lower():
-        locationInp = fpSource
-        fpSource = 'osm'
+        locationInp = fpSource  # noqa: N806
+        fpSource = 'osm'  # noqa: N806
     elif locationStr == '':
-        locationInp = (longMin, latMin, longMax, latMax)
+        locationInp = (longMin, latMin, longMax, latMax)  # noqa: N806
     else:
-        locationInp = locationStr
+        locationInp = locationStr  # noqa: N806
 
     # Parse baseline inventory input from GUI collected values:
     if invInput == 'None':
-        baselineInvInp = ''
+        baselineInvInp = ''  # noqa: N806
     elif invInput == 'NSI':
-        baselineInvInp = 'nsi'
+        baselineInvInp = 'nsi'  # noqa: N806
     else:
-        baselineInvInp = invInput
+        baselineInvInp = invInput  # noqa: N806
 
     # Get attribute map input by processing the GUI input:
     if baselineInvInp and invAttributeMap:
-        attrmapInp = invAttributeMap
+        attrmapInp = invAttributeMap  # noqa: N806
     elif fpAttrMap:
-        attrmapInp = fpAttrMap
+        attrmapInp = fpAttrMap  # noqa: N806
     else:
-        attrmapInp = ''
+        attrmapInp = ''  # noqa: N806
 
     # Format number of buildings and requested attributes inputs by parsing the
     # GUI input:
     if getAllBuildings:
-        numBuildings = 'all'
+        numBuildings = 'all'  # noqa: N806
 
     if attrRequested not in ['all', 'hazuseq']:
-        attrRequested = attrRequested.split(',')
+        attrRequested = attrRequested.split(',')  # noqa: N806
 
     # Initialize InventoryGenerator:
-    invGenerator = InventoryGenerator(
+    invGenerator = InventoryGenerator(  # noqa: N806
         location=locationInp,
         fpSource=fpSource,
         baselineInv=baselineInvInp,
@@ -127,7 +127,7 @@ def runBrails(
 
 
 # Define a way to collect GUI input:
-def main(args):
+def main(args):  # noqa: D103
     parser = argparse.ArgumentParser()
     parser.add_argument('--latMin', default=None, type=float)
     parser.add_argument('--latMax', default=None, type=float)
@@ -149,10 +149,10 @@ def main(args):
     args = parser.parse_args(args)
 
     # Create the folder for the user-defined output directory, if it does not exist:
-    outdir = os.path.abspath(args.outputFile).replace(
+    outdir = os.path.abspath(args.outputFile).replace(  # noqa: PTH100
         os.path.split(args.outputFile)[-1], ''
     )
-    os.makedirs(outdir, exist_ok=True)
+    os.makedirs(outdir, exist_ok=True)  # noqa: PTH103
 
     # Run BRAILS InventoryGenerator with the user-defined arguments:
     runBrails(

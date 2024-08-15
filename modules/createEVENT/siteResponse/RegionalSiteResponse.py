@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -52,23 +52,23 @@ from pathlib import Path
 import numpy as np
 from scipy import integrate
 
-this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
 main_dir = this_dir.parents[1]
 sys.path.insert(0, str(main_dir / 'common'))
-from simcenter_common import *
+from simcenter_common import *  # noqa: E402, F403
 
-convert_EDP = {'max_abs_acceleration': 'PGA'}
+convert_EDP = {'max_abs_acceleration': 'PGA'}  # noqa: N816
 
-gravityG = 9.81  # m/s2
+gravityG = 9.81  # m/s2  # noqa: N816
 # default element size before wave length check
-elementSize = 0.5  # m
+elementSize = 0.5  # m  # noqa: N816
 # site class B, m/s
 VsRock = 760
-plotFlag = False
+plotFlag = False  # noqa: N816
 
 
-def get_scale_factors(input_units, output_units):
-    """Determine the scale factor to convert input event to internal event data"""
+def get_scale_factors(input_units, output_units):  # noqa: C901
+    """Determine the scale factor to convert input event to internal event data"""  # noqa: D400
     # special case: if the input unit is not specified then do not do any scaling
     if input_units is None:
         scale_factors = {'ALL': 1.0}
@@ -80,13 +80,13 @@ def get_scale_factors(input_units, output_units):
         unit_length = output_units.get('length', 'inch')
         f_length = globals().get(unit_length, None)
         if f_length is None:
-            raise ValueError(f'Specified length unit not recognized: {unit_length}')
+            raise ValueError(f'Specified length unit not recognized: {unit_length}')  # noqa: EM102, TRY003
 
         # if no time unit is specified, 'sec' is assumed
         unit_time = output_units.get('time', 'sec')
         f_time = globals().get(unit_time, None)
         if f_time is None:
-            raise ValueError(f'Specified time unit not recognized: {unit_time}')
+            raise ValueError(f'Specified time unit not recognized: {unit_time}')  # noqa: EM102, TRY003
 
         scale_factors = {}
 
@@ -99,8 +99,8 @@ def get_scale_factors(input_units, output_units):
                 # get the scale factor to standard units
                 f_in = globals().get(input_unit, None)
                 if f_in is None:
-                    raise ValueError(
-                        f'Input unit for event files not recognized: {input_unit}'
+                    raise ValueError(  # noqa: TRY003
+                        f'Input unit for event files not recognized: {input_unit}'  # noqa: EM102
                     )
 
                 unit_type = None
@@ -109,7 +109,7 @@ def get_scale_factors(input_units, output_units):
                         unit_type = base_unit_type
 
                 if unit_type is None:
-                    raise ValueError(f'Failed to identify unit type: {input_unit}')
+                    raise ValueError(f'Failed to identify unit type: {input_unit}')  # noqa: EM102, TRY003
 
                 # the output unit depends on the unit type
                 if unit_type == 'acceleration':
@@ -122,8 +122,8 @@ def get_scale_factors(input_units, output_units):
                     f_out = 1.0 / f_length
 
                 else:
-                    raise ValueError(
-                        f'Unexpected unit type in workflow: {unit_type}'
+                    raise ValueError(  # noqa: TRY003
+                        f'Unexpected unit type in workflow: {unit_type}'  # noqa: EM102
                     )
 
                 # the scale factor is the product of input and output scaling
@@ -134,7 +134,7 @@ def get_scale_factors(input_units, output_units):
     return scale_factors
 
 
-def postProcess(evtName, input_units, f_scale_units):
+def postProcess(evtName, input_units, f_scale_units):  # noqa: N802, N803, D103
     # if f_scale_units is None
     if None in [input_units, f_scale_units]:
         f_scale = 1.0
@@ -157,28 +157,28 @@ def postProcess(evtName, input_units, f_scale_units):
     # acc_surf = acc[:,-2] / 9.81
     # KZ, 03/07/2022: removed the unit conversion here (did in createGM4BIM)
     acc_surf = acc[:, -3]
-    dT = time[1] - time[0]
+    dT = time[1] - time[0]  # noqa: N806
 
-    timeSeries = dict(
+    timeSeries = dict(  # noqa: C408, N806
         name='accel_X',
         type='Value',
         dT=dT,
         data=[x * f_scale for x in acc_surf.tolist()],
     )
 
-    patterns = dict(type='UniformAcceleration', timeSeries='accel_X', dof=1)
+    patterns = dict(type='UniformAcceleration', timeSeries='accel_X', dof=1)  # noqa: C408
 
     # KZ, 01/17/2022: I added global y direction
     # KZ, 03/07/2022: removed the unit conversion here (did in createGM4BIM)
     acc_surf_y = acc[:, -1]
-    timeSeries_y = dict(
+    timeSeries_y = dict(  # noqa: C408, N806
         name='accel_Y',
         type='Value',
         dT=dT,
         data=[y * f_scale for y in acc_surf_y.tolist()],
     )
 
-    patterns_y = dict(type='UniformAcceleration', timeSeries='accel_Y', dof=2)
+    patterns_y = dict(type='UniformAcceleration', timeSeries='accel_Y', dof=2)  # noqa: C408
 
     # KZ, 01/17/2022: I updated this section accordingly
     """
@@ -193,7 +193,7 @@ def postProcess(evtName, input_units, f_scale_units):
         pattern = [patterns]
     )
     """
-    evts = dict(
+    evts = dict(  # noqa: C408
         RandomVariables=[],
         name='SiteResponseTool',
         type='Seismic',
@@ -204,35 +204,35 @@ def postProcess(evtName, input_units, f_scale_units):
         pattern=[patterns, patterns_y],
     )
 
-    dataToWrite = dict(Events=[evts])
+    dataToWrite = dict(Events=[evts])  # noqa: C408, N806
 
-    with open(evtName, 'w') as outfile:
+    with open(evtName, 'w') as outfile:  # noqa: PTH123
         json.dump(dataToWrite, outfile, indent=4)
 
-    print('DONE postProcess')
+    print('DONE postProcess')  # noqa: T201
 
     return 0
 
 
-def run_opensees(
-    BIM_file,
-    EVENT_file,
+def run_opensees(  # noqa: D103
+    BIM_file,  # noqa: N803
+    EVENT_file,  # noqa: N803
     event_path,
     model_script,
     model_script_path,
     ndm,
-    getRV,
+    getRV,  # noqa: N803
 ):
-    sys.path.insert(0, os.getcwd())
+    sys.path.insert(0, os.getcwd())  # noqa: PTH109
 
-    print('**************** run_opensees ****************')
+    print('**************** run_opensees ****************')  # noqa: T201
     # load the model builder script
-    with open(BIM_file) as f:
-        BIM_in = json.load(f)
+    with open(BIM_file) as f:  # noqa: PTH123
+        BIM_in = json.load(f)  # noqa: N806
 
     model_params = BIM_in['GeneralInformation']
-    model_units = BIM_in['GeneralInformation']['units']
-    location = BIM_in['GeneralInformation']['location']
+    model_units = BIM_in['GeneralInformation']['units']  # noqa: F841
+    location = BIM_in['GeneralInformation']['location']  # noqa: F841
 
     # convert units if necessary
     # KZ, 01/17/2022: Vs30 and DepthToRock are not subjected to the model_units for now...
@@ -253,14 +253,14 @@ def run_opensees(
     else:
         get_records(BIM_file, EVENT_file, event_path)
         # load the event file
-        with open(EVENT_file) as f:
-            EVENT_in_All = json.load(f)
-            EVENT_in = EVENT_in_All['Events'][0]
+        with open(EVENT_file) as f:  # noqa: PTH123
+            EVENT_in_All = json.load(f)  # noqa: N806
+            EVENT_in = EVENT_in_All['Events'][0]  # noqa: N806
 
         event_list = EVENT_in['timeSeries']
-        pattern_list = EVENT_in['pattern']
+        pattern_list = EVENT_in['pattern']  # noqa: F841
 
-        fileNames = ['xInput', 'yInput']
+        fileNames = ['xInput', 'yInput']  # noqa: N806
         # define the time series
         for evt_i, event in enumerate(event_list):
             acc = event['data']
@@ -276,13 +276,13 @@ def run_opensees(
 
         # run the analysis
         shutil.copyfile(
-            os.path.join(model_script_path, model_script),
-            os.path.join(os.getcwd(), model_script),
+            os.path.join(model_script_path, model_script),  # noqa: PTH118
+            os.path.join(os.getcwd(), model_script),  # noqa: PTH109, PTH118
         )
 
         build_model(model_params, int(ndm) - 1)
 
-        subprocess.Popen('OpenSees ' + model_script, shell=True).wait()
+        subprocess.Popen('OpenSees ' + model_script, shell=True).wait()  # noqa: S602
 
         # FMK
         # update Event file with acceleration recorded at surface
@@ -310,11 +310,11 @@ def run_opensees(
         postProcess('fmkEVENT', input_units, f_scale_units)
 
 
-def get_records(BIM_file, EVENT_file, data_dir):
-    with open(BIM_file) as f:
+def get_records(BIM_file, EVENT_file, data_dir):  # noqa: N803, D103
+    with open(BIM_file) as f:  # noqa: PTH123
         bim_file = json.load(f)
 
-    with open(EVENT_file) as f:
+    with open(EVENT_file) as f:  # noqa: PTH123
         event_file = json.load(f)
 
     event_id = event_file['Events'][0]['event_id']
@@ -324,7 +324,7 @@ def get_records(BIM_file, EVENT_file, data_dir):
         event_data = np.array(bim_file['Events']['Events']).T
         event_loc = np.where(event_data == event_id)[0][1]
         f_scale_user = float(event_data.T[event_loc][1])
-    except:
+    except:  # noqa: E722
         f_scale_user = 1.0
 
     # FMK scale_factor = dict([(evt['fileName'], evt.get('factor',1.0)) for evt in bim_file["Events"]["Events"]])[event_id]
@@ -333,14 +333,14 @@ def get_records(BIM_file, EVENT_file, data_dir):
 
     event_file['Events'][0].update(load_record(event_id, data_dir, scale_factor))
 
-    with open(EVENT_file, 'w') as f:
+    with open(EVENT_file, 'w') as f:  # noqa: PTH123
         json.dump(event_file, f, indent=2)
 
 
-def write_RV(BIM_file, EVENT_file, data_dir):
+def write_RV(BIM_file, EVENT_file, data_dir):  # noqa: N802, N803, D103
     # Copied from SimCenterEvent, write name of motions
 
-    with open(BIM_file) as f:
+    with open(BIM_file) as f:  # noqa: PTH123
         bim_data = json.load(f)
 
     event_file = {'randomVariables': [], 'Events': []}
@@ -368,7 +368,7 @@ def write_RV(BIM_file, EVENT_file, data_dir):
             }
         )
 
-        RV_elements = np.array(events).T[0].tolist()
+        RV_elements = np.array(events).T[0].tolist()  # noqa: N806
         # RV_elements = []
         # for event in events:
         #    if event['EventClassification'] == 'Earthquake':
@@ -397,16 +397,16 @@ def write_RV(BIM_file, EVENT_file, data_dir):
             load_record(events[0][0], data_dir, empty=len(events) > 1)
         )
 
-    with open(EVENT_file, 'w') as f:
+    with open(EVENT_file, 'w') as f:  # noqa: PTH123
         json.dump(event_file, f, indent=2)
 
 
-def load_record(fileName, data_dir, scale_factor=1.0, empty=False):
+def load_record(fileName, data_dir, scale_factor=1.0, empty=False):  # noqa: FBT002, N803, D103
     # Copied from SimCenterEvent, write data of motions into Event
 
-    fileName = fileName.split('x')[0]
+    fileName = fileName.split('x')[0]  # noqa: N806
 
-    with open(posixpath.join(data_dir, f'{fileName}.json')) as f:
+    with open(posixpath.join(data_dir, f'{fileName}.json')) as f:  # noqa: PTH123
         event_data = json.load(f)
 
     event_dic = {
@@ -421,7 +421,7 @@ def load_record(fileName, data_dir, scale_factor=1.0, empty=False):
         for i, (src_label, tar_label) in enumerate(
             zip(['data_x', 'data_y'], ['accel_X', 'accel_Y'])
         ):
-            if src_label in event_data.keys():
+            if src_label in event_data.keys():  # noqa: SIM118
                 event_dic['timeSeries'].append(
                     {
                         'name': tar_label,
@@ -441,34 +441,34 @@ def load_record(fileName, data_dir, scale_factor=1.0, empty=False):
     return event_dic
 
 
-def build_model(model_params, numEvt):
+def build_model(model_params, numEvt):  # noqa: N803, D103
     try:
-        depthToRock = model_params['DepthToRock']
-    except:
-        depthToRock = 0
-    Vs30 = model_params['Vs30']
+        depthToRock = model_params['DepthToRock']  # noqa: N806
+    except:  # noqa: E722
+        depthToRock = 0  # noqa: N806
+    Vs30 = model_params['Vs30']  # noqa: N806
 
     # Vs30 model
-    thickness, Vs = SVM(Vs30, depthToRock, VsRock, elementSize)
+    thickness, Vs = SVM(Vs30, depthToRock, VsRock, elementSize)  # noqa: N806
 
-    numElems = len(Vs)
+    numElems = len(Vs)  # noqa: N806
     # Config model
-    f = open('freefield_config.tcl', 'w')
+    f = open('freefield_config.tcl', 'w')  # noqa: SIM115, PTH123
     f.write('# site response configuration file\n')
     f.write(f'set soilThick {thickness:.1f}\n')
     f.write(f'set numLayers {numElems:d}\n')
     f.write('# layer thickness - bottom to top\n')
-    eleVsize = thickness / numElems
-    travelTime = 0
+    eleVsize = thickness / numElems  # noqa: N806
+    travelTime = 0  # noqa: N806
     for ii in range(numElems):
         f.write(f'set layerThick({ii + 1:d}) {eleVsize:.2f}\n')
         f.write(f'set nElemY({ii + 1:d}) 1\n')
         f.write(f'set sElemY({ii + 1:d}) {eleVsize:.3f}\n')
-        travelTime += eleVsize / Vs[ii]
+        travelTime += eleVsize / Vs[ii]  # noqa: N806
 
     # time averaged shear wave velocity
-    averageVs = thickness / travelTime
-    naturalFrequency = averageVs / 4 / thickness  # Vs/4H
+    averageVs = thickness / travelTime  # noqa: N806
+    naturalFrequency = averageVs / 4 / thickness  # Vs/4H  # noqa: N806
 
     f.write(f'set nElemT {numElems:d}\n')
     f.write('# motion file (used if the input arguments do not include motion)\n')
@@ -491,17 +491,17 @@ def build_model(model_params, numEvt):
     f.close()
 
     # Create Material
-    f = open('freefield_material.tcl', 'w')
+    f = open('freefield_material.tcl', 'w')  # noqa: SIM115, PTH123
 
     if model_params['Model'] in 'BA':
         # Borja and Amies 1994 J2 model
-        rhoSoil = model_params['Den']
+        rhoSoil = model_params['Den']  # noqa: N806
         poisson = 0.3
         sig_v = rhoSoil * gravityG * eleVsize * 0.5
         for ii in range(numElems):
             f.write(f'set rho({ii + 1:d}) {rhoSoil:.1f}\n')
-            shearG = rhoSoil * Vs[ii] * Vs[ii]
-            bulkK = shearG * 2.0 * (1 + poisson) / 3.0 / (1.0 - 2.0 * poisson)
+            shearG = rhoSoil * Vs[ii] * Vs[ii]  # noqa: N806
+            bulkK = shearG * 2.0 * (1 + poisson) / 3.0 / (1.0 - 2.0 * poisson)  # noqa: N806
             f.write(f'set shearG({ii + 1:d}) {shearG:.2f}\n')
             f.write(f'set bulkK({ii + 1:d}) {bulkK:.2f}\n')
             f.write(
@@ -521,13 +521,13 @@ def build_model(model_params, numEvt):
             )
     elif model_params['Model'] in 'PIMY':
         # PIMY model
-        rhoSoil = model_params['Den']
+        rhoSoil = model_params['Den']  # noqa: N806
         poisson = 0.3
         sig_v = rhoSoil * gravityG * eleVsize * 0.5
         for ii in range(numElems):
             f.write(f'set rho({numElems - ii:d}) {rhoSoil:.1f}\n')
-            shearG = rhoSoil * Vs[ii] * Vs[ii]
-            bulkK = shearG * 2.0 * (1 + poisson) / 3.0 / (1.0 - 2.0 * poisson)
+            shearG = rhoSoil * Vs[ii] * Vs[ii]  # noqa: N806
+            bulkK = shearG * 2.0 * (1 + poisson) / 3.0 / (1.0 - 2.0 * poisson)  # noqa: N806
             f.write(f'set Vs({numElems - ii:d}) {Vs[ii]:.2f}\n')
             f.write(f'set shearG({numElems - ii:d}) {shearG:.2f}\n')
             f.write(f'set bulkK({numElems - ii:d}) {bulkK:.2f}\n')
@@ -553,7 +553,7 @@ def build_model(model_params, numEvt):
                 f'set mat({numElems - ii:d}) "PressureIndependMultiYield {numElems - ii:d} 3 $rho({numElems - ii:d}) $shearG({numElems - ii:d}) $bulkK({numElems - ii:d}) $su({numElems - ii:d}) 0.1 0.0 2116.0 0.0 31"\n\n\n'
             )
     else:
-        rhoSoil = model_params['Den']
+        rhoSoil = model_params['Den']  # noqa: N806
         poisson = 0.3
         for ii in range(numElems):
             f.write(f'set rho({ii + 1:d}) {rhoSoil:.1f}\n')
@@ -569,15 +569,15 @@ def build_model(model_params, numEvt):
     f.close()
 
 
-def SVM(Vs30, depthToRock, VsRock, elementSize):
+def SVM(Vs30, depthToRock, VsRock, elementSize):  # noqa: N802, N803, D103
     # Sediment Velocity Model (SVM)
     # Developed by Jian Shi and Domniki Asimaki (2018)
     # Generates a shear velocity profile from Vs30 for shallow crust profiles
     # Valid for 173.1 m/s < Vs30 < 1000 m/s
 
     # Check Vs30
-    if Vs30 < 173.1 or Vs30 > 1000:
-        print(f'Caution: Vs30 {Vs30} is not within the valid range of the SVM! \n')
+    if Vs30 < 173.1 or Vs30 > 1000:  # noqa: PLR2004
+        print(f'Caution: Vs30 {Vs30} is not within the valid range of the SVM! \n')  # noqa: T201
 
     # Parameters specific to: California
     z_star = 2.5  # [m] depth considered to have constant Vs
@@ -593,13 +593,13 @@ def SVM(Vs30, depthToRock, VsRock, elementSize):
     s4 = -7.6187e-3
 
     #  SVM Parameters f(Vs30)
-    Vs0 = p1 * (Vs30**2) + p2 * Vs30 + p3
+    Vs0 = p1 * (Vs30**2) + p2 * Vs30 + p3  # noqa: N806
     k = np.exp(r1 * (Vs30**r2) + r3)
     n = s1 * np.exp(s2 * Vs30) + s3 * np.exp(s4 * Vs30)
 
     # Check element size for max. frequency
-    maxFrequency = 50  # Hz
-    waveLength = Vs0 / maxFrequency
+    maxFrequency = 50  # Hz  # noqa: N806
+    waveLength = Vs0 / maxFrequency  # noqa: N806
     # Need four elements per wavelength
     if 4.0 * elementSize <= waveLength:
         step_size = elementSize
@@ -612,7 +612,7 @@ def SVM(Vs30, depthToRock, VsRock, elementSize):
     )  # discretize depth to bedrock
 
     # Vs Profile
-    Vs = np.zeros(len(z))
+    Vs = np.zeros(len(z))  # noqa: N806
     Vs[0] = Vs0
     for ii in range(1, len(z)):
         if z[ii] <= z_star:
@@ -622,9 +622,9 @@ def SVM(Vs30, depthToRock, VsRock, elementSize):
 
     if depthToRock > 0:
         thickness = depthToRock
-        Vs_cropped = Vs[np.where(z <= depthToRock)]
+        Vs_cropped = Vs[np.where(z <= depthToRock)]  # noqa: N806
     else:
-        Vs_cropped = Vs[np.where(Vs <= VsRock)]
+        Vs_cropped = Vs[np.where(Vs <= VsRock)]  # noqa: N806
         thickness = z[len(Vs_cropped) - 1] + 0.5 * step_size
 
     if plotFlag:
@@ -633,7 +633,7 @@ def SVM(Vs30, depthToRock, VsRock, elementSize):
         fig = plt.figure()
         plt.plot(Vs, z, label='Vs profile')
         plt.plot(Vs_cropped, z[0 : len(Vs_cropped)], label='Vs profile to bedrock')
-        plt.grid(True)
+        plt.grid(True)  # noqa: FBT003
         ax = plt.gca()
         ax.invert_yaxis()
         plt.legend()

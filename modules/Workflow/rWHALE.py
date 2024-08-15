@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -50,7 +50,7 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
 
 import importlib
 
@@ -59,7 +59,7 @@ from sWHALE import runSWhale
 from whale.main import log_div, log_msg
 
 
-def main(
+def main(  # noqa: C901, D103
     run_type,
     input_file,
     app_registry,
@@ -69,10 +69,10 @@ def main(
     working_dir,
     app_dir,
     log_file,
-    site_response,
-    parallelType,
-    mpiExec,
-    numPROC,
+    site_response,  # noqa: ARG001
+    parallelType,  # noqa: N803
+    mpiExec,  # noqa: N803
+    numPROC,  # noqa: N803
 ):
     #
     # check if running in a parallel mpi job
@@ -83,9 +83,9 @@ def main(
     #   - else set numP = 1, procID = 0 and doParallel = False
     #
 
-    numP = 1
-    procID = 0
-    doParallel = False
+    numP = 1  # noqa: N806
+    procID = 0  # noqa: N806
+    doParallel = False  # noqa: N806
 
     mpi_spec = importlib.util.find_spec('mpi4py')
     found = mpi_spec is not None
@@ -93,26 +93,26 @@ def main(
         from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
-        numP = comm.Get_size()
-        procID = comm.Get_rank()
-        if numP < 2:
-            doParallel = False
-            numP = 1
-            procID = 0
+        numP = comm.Get_size()  # noqa: N806
+        procID = comm.Get_rank()  # noqa: N806
+        if numP < 2:  # noqa: PLR2004
+            doParallel = False  # noqa: N806
+            numP = 1  # noqa: N806
+            procID = 0  # noqa: N806
         else:
-            doParallel = True
+            doParallel = True  # noqa: N806
 
     # save the reference dir in the input file
-    with open(input_file, encoding='utf-8') as f:
-        inputs = json.load(f)
+    with open(input_file, encoding='utf-8') as f:  # noqa: PTH123
+        inputs = json.load(f)  # noqa: F841
 
-    # TODO: if the ref dir is needed, do NOT save it to the input file, store it
+    # TODO: if the ref dir is needed, do NOT save it to the input file, store it  # noqa: TD002
     # somewhere else in a file that i not shared among processes
     # inputs['refDir'] = reference_dir
     # with open(input_file, 'w') as f:
     #    json.dump(inputs, f, indent=2)
 
-    # TODO: remove the commented section below, I only kept it for now to make
+    # TODO: remove the commented section below, I only kept it for now to make  # noqa: TD002
     # sure it is not needed
 
     # if working_dir is not None:
@@ -120,11 +120,11 @@ def main(
     # else:
     #    runDir = inputs['runDir']
 
-    if not os.path.exists(working_dir):
-        os.mkdir(working_dir)
+    if not os.path.exists(working_dir):  # noqa: PTH110
+        os.mkdir(working_dir)  # noqa: PTH102
 
     # initialize log file
-    if parallelType == 'parSETUP' or parallelType == 'seqRUN':
+    if parallelType == 'parSETUP' or parallelType == 'seqRUN':  # noqa: PLR1714
         if log_file == 'log.txt':
             log_file_path = working_dir + '/log.txt'
         else:
@@ -152,7 +152,7 @@ def main(
     if force_cleanup:
         log_msg('Forced cleanup turned on.')
 
-    WF = whale.Workflow(
+    WF = whale.Workflow(  # noqa: N806
         run_type,
         input_file,
         app_registry,
@@ -185,23 +185,23 @@ def main(
         WF.workflow_apps['Building'].pref['filter'] = bldg_id_filter
 
     # initialize the working directory
-    if parallelType == 'seqRUN' or parallelType == 'parSETUP':
+    if parallelType == 'seqRUN' or parallelType == 'parSETUP':  # noqa: PLR1714
         WF.init_workdir()
 
     # prepare the basic inputs for individual assets
-    if parallelType == 'seqRUN' or parallelType == 'parSETUP':
+    if parallelType == 'seqRUN' or parallelType == 'parSETUP':  # noqa: PLR1714
         asset_files = WF.create_asset_files()
 
     if parallelType != 'parSETUP':
         asset_files = WF.augment_asset_files()
 
     # run the regional event & do mapping
-    if parallelType == 'seqRUN' or parallelType == 'parSETUP':
+    if parallelType == 'seqRUN' or parallelType == 'parSETUP':  # noqa: PLR1714
         # run event
         WF.perform_regional_event()
 
         # now for each asset, do regional mapping
-        for asset_type, assetIt in asset_files.items():
+        for asset_type, assetIt in asset_files.items():  # noqa: N806
             WF.perform_regional_mapping(assetIt, asset_type)
 
     if parallelType == 'parSETUP':
@@ -209,31 +209,31 @@ def main(
 
     # now for each asset run dl workflow .. in parallel if requested
     count = 0
-    for asset_type, assetIt in asset_files.items():
+    for asset_type, assetIt in asset_files.items():  # noqa: N806
         # perform the regional mapping
         # WF.perform_regional_mapping(assetIt, asset_type)
 
-        # TODO: not elegant code, fix later
-        with open(assetIt, encoding='utf-8') as f:
+        # TODO: not elegant code, fix later  # noqa: TD002
+        with open(assetIt, encoding='utf-8') as f:  # noqa: PTH123
             asst_data = json.load(f)
 
         # Sometimes multiple asset types need to be analyzed together, e.g., pipelines and nodes in a water network
         run_asset_type = asset_type
 
-        if asset_type == 'Buildings' or asset_type == 'TransportationNetwork':
+        if asset_type == 'Buildings' or asset_type == 'TransportationNetwork':  # noqa: PLR1714
             pass
         elif asset_type == 'WaterNetworkNodes':
             continue  # Run the nodes with the pipelines, i.e., the water distribution network
         elif asset_type == 'WaterNetworkPipelines':
             run_asset_type = 'WaterDistributionNetwork'  # Run the pipelines with the entire water distribution network
         else:
-            print('No support for asset type: ', asset_type)
+            print('No support for asset type: ', asset_type)  # noqa: T201
 
         # The preprocess app sequence (previously get_RV)
         preprocess_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']
 
         # The workflow app sequence
-        WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']
+        WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']  # noqa: N806
         # For each asset
         for asst in asst_data:
             if count % numP == procID:
@@ -258,12 +258,12 @@ def main(
             count = count + 1
 
         # wait for every process to finish
-        if doParallel == True:
+        if doParallel == True:  # noqa: E712
             comm.Barrier()
 
         # aggregate results
         if (
-            asset_type == 'Buildings'
+            asset_type == 'Buildings'  # noqa: PLR1714
             or asset_type == 'TransportationNetwork'
             or asset_type == 'WaterDistributionNetwork'
         ):
@@ -271,7 +271,7 @@ def main(
 
         elif asset_type == 'WaterNetworkPipelines':
             # Provide the headers and out types
-            headers = dict(DV=[0])
+            headers = dict(DV=[0])  # noqa: C408
 
             out_types = ['DV']
 
@@ -283,7 +283,7 @@ def main(
                     headers=headers,
                 )
 
-        if doParallel == True:
+        if doParallel == True:  # noqa: E712
             comm.Barrier()
 
     WF.combine_assets_results(asset_files)
@@ -292,7 +292,7 @@ def main(
     # add system performance
     #
     system_performance_performed = False
-    for asset_type in asset_files.keys():
+    for asset_type in asset_files.keys():  # noqa: SIM118
         performed = WF.perform_system_performance_assessment(asset_type)
         if performed:
             system_performance_performed = True
@@ -311,7 +311,7 @@ def main(
         if procID == 0:
             WF.cleanup_workdir()
 
-        if doParallel == True:
+        if doParallel == True:  # noqa: E712
             comm.Barrier()
 
     log_msg('Workflow completed.')
@@ -322,7 +322,7 @@ def main(
 if __name__ == '__main__':
     # Defining the command line arguments
 
-    workflowArgParser = argparse.ArgumentParser(
+    workflowArgParser = argparse.ArgumentParser(  # noqa: N816
         'Run the NHERI SimCenter rWHALE workflow for a set of assets.',
         allow_abbrev=False,
     )
@@ -343,8 +343,8 @@ if __name__ == '__main__':
     workflowArgParser.add_argument(
         '-r',
         '--registry',
-        default=os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
+        default=os.path.join(  # noqa: PTH118
+            os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
             'WorkflowApplications.json',
         ),
         help='Path to file containing registered workflow applications',
@@ -358,13 +358,13 @@ if __name__ == '__main__':
     workflowArgParser.add_argument(
         '-d',
         '--referenceDir',
-        default=os.path.join(os.getcwd(), 'input_data'),
+        default=os.path.join(os.getcwd(), 'input_data'),  # noqa: PTH109, PTH118
         help='Relative paths in the config file are referenced to this directory.',
     )
     workflowArgParser.add_argument(
         '-w',
         '--workDir',
-        default=os.path.join(os.getcwd(), 'Results'),
+        default=os.path.join(os.getcwd(), 'Results'),  # noqa: PTH109, PTH118
         help='Absolute path to the working directory.',
     )
     workflowArgParser.add_argument(
@@ -406,11 +406,11 @@ if __name__ == '__main__':
     )
 
     # Parsing the command line arguments
-    wfArgs = workflowArgParser.parse_args()
+    wfArgs = workflowArgParser.parse_args()  # noqa: N816
 
     # update the local app dir with the default - if needed
     if wfArgs.appDir is None:
-        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
         wfArgs.appDir = workflow_dir.parents[1]
 
     if wfArgs.check:
@@ -419,7 +419,7 @@ if __name__ == '__main__':
         run_type = 'runningLocal'
 
     # Calling the main workflow method and passing the parsed arguments
-    numPROC = int(wfArgs.numP)
+    numPROC = int(wfArgs.numP)  # noqa: N816
 
     main(
         run_type=run_type,

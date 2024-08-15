@@ -1,4 +1,4 @@
-# This file is used to include all user defined classes and functions
+# This file is used to include all user defined classes and functions  # noqa: INP001, D100
 # Developed by GUAN, XINGQUAN @ UCLA in June 2018
 # Updated in Sept. 2018
 
@@ -37,9 +37,9 @@ class ElasticAnalysis:
     (16) gravity and earthquake loads combination
     (17) copy baseline .tcl files
     (18) run OpenSees.exe
-    """
+    """  # noqa: D205, D400, D404
 
-    def __init__(self, building, for_drift_only=False, for_period_only=False):
+    def __init__(self, building, for_drift_only=False, for_period_only=False):  # noqa: FBT002
         """This function is used to call all methods to write .tcl files required for an elastic analysis OpenSees model.
         :param building: a class defined in "building_information.py" file
         :param for_drift_only: a boolean variable.
@@ -48,7 +48,7 @@ class ElasticAnalysis:
         :param for_period_only: a boolean variable.
                                 True means we only perform the eigen value analysis to obtain the period
                                 Otherwise, all load types will be considered.
-        """
+        """  # noqa: D205, D401, D404
         # Change the working directory to folder where .tcl files will be saved
         Path(building.directory['building elastic model']).mkdir(
             parents=True, exist_ok=True
@@ -79,9 +79,9 @@ class ElasticAnalysis:
         # Call method to run OpenSees.exe for performing elastic analysis
         self.run_OpenSees_program(building)
 
-    def write_nodes(self, building):
+    def write_nodes(self, building):  # noqa: D102
         # Create a .tcl file and write the node information
-        with open('DefineNodes2DModel.tcl', 'w') as tclfile:
+        with open('DefineNodes2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write(
                 '# This file will be used to define all nodes \n'
             )  # Introduce the file usage
@@ -89,15 +89,15 @@ class ElasticAnalysis:
 
             tclfile.write('# Set bay width and story height \n')
             tclfile.write(
-                'set\tBayWidth\t[expr %.2f*12]; \n'
+                'set\tBayWidth\t[expr %.2f*12]; \n'  # noqa: UP031
                 % (building.geometry['X bay width'])
             )
             tclfile.write(
-                'set\tFirstStory\t[expr %.2f*12]; \n'
+                'set\tFirstStory\t[expr %.2f*12]; \n'  # noqa: UP031
                 % (building.geometry['first story height'])
             )
             tclfile.write(
-                'set\tTypicalStory\t[expr %.2f*12]; \n\n\n'
+                'set\tTypicalStory\t[expr %.2f*12]; \n\n\n'  # noqa: UP031
                 % (building.geometry['typical story height'])
             )
 
@@ -112,7 +112,7 @@ class ElasticAnalysis:
                 ):  # j is column label
                     tclfile.write('node\t%i%i%i' % (j, i, 1))  # Node label
                     tclfile.write('\t[expr %i*$BayWidth]' % (j - 1))  # X coordinate
-                    if i <= 2:
+                    if i <= 2:  # noqa: PLR2004
                         tclfile.write(
                             '\t[expr %i*$FirstStory];' % (i - 1)
                         )  # Y coordinate
@@ -137,7 +137,7 @@ class ElasticAnalysis:
                     '\t[expr %i*$BayWidth]'
                     % (building.geometry['number of X bay'] + 1)
                 )  # X coordinate
-                if i <= 2:
+                if i <= 2:  # noqa: PLR2004
                     tclfile.write(
                         '\t[expr %i*$FirstStory]; ' % (i - 1)
                     )  # Y coordinate
@@ -193,9 +193,9 @@ class ElasticAnalysis:
                 '# puts "Extra nodes for leaning column springs defined"\n'
             )
 
-    def write_fixities(self, building):
+    def write_fixities(self, building):  # noqa: D102
         # Create a .tcl file to write boundary for the model
-        with open('DefineFixities2DModel.tcl', 'w') as tclfile:
+        with open('DefineFixities2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write(
                 '# This file will be used to define the fixity at all column bases \n\n\n'
             )
@@ -209,9 +209,9 @@ class ElasticAnalysis:
             )
             tclfile.write('# puts "All column base fixities have been defined"')
 
-    def write_floor_constraint(self, building):
+    def write_floor_constraint(self, building):  # noqa: D102
         # Create a .tcl file to write floor constrain, i.e., equal DOF
-        with open('DefineFloorConstraint2DModel.tcl', 'w') as tclfile:
+        with open('DefineFloorConstraint2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# This file will be used to define floor constraint \n\n')
             tclfile.write(
                 'set\tConstrainDOF\t1;\t# Nodes at same floor level have identical lateral displacement \n\n'
@@ -233,9 +233,9 @@ class ElasticAnalysis:
                 tclfile.write('\t# Pier 1 to Leaning column\n\n')
             tclfile.write('# puts "Floor constraint defined"')
 
-    def write_beam(self, building):
+    def write_beam(self, building):  # noqa: D102
         # Create a .tcl file to write beam elements
-        with open('DefineBeams2DModel.tcl', 'w') as tclfile:
+        with open('DefineBeams2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# This file will be used to define beam elements \n\n\n')
             tclfile.write('# Define beam section sizes \n')
             for i in range(2, building.geometry['number of story'] + 2):
@@ -290,9 +290,9 @@ class ElasticAnalysis:
                 tclfile.write('\n')
             tclfile.write('# puts "Beams defined"')
 
-    def write_column(self, building):
+    def write_column(self, building):  # noqa: D102
         # Create a .tcl file to define all column elements
-        with open('DefineColumns2DModel.tcl', 'w') as tclfile:
+        with open('DefineColumns2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# This file will be used to define columns \n\n\n')
 
             # Define exterior column sizes
@@ -388,9 +388,9 @@ class ElasticAnalysis:
                 tclfile.write('\t$AreaRigid\t$Es\t$IRigid\t$PDeltaTransf; \n\n')
             tclfile.write('# puts "Columns defined"')
 
-    def write_leaning_column_spring(self, building):
+    def write_leaning_column_spring(self, building):  # noqa: D102
         # Create a .tcl file to write all rotational springs for leaning column
-        with open('DefineLeaningColumnSpring.tcl', 'w') as tclfile:
+        with open('DefineLeaningColumnSpring.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# This file will be used to define column hinges \n\n')
             for i in range(2, building.geometry['number of story'] + 2):
                 # Spring below the floor level i
@@ -445,9 +445,9 @@ class ElasticAnalysis:
             tclfile.write('\n')
             tclfile.write('# puts "Leaning column springs defined"')
 
-    def write_mass(self, building):
+    def write_mass(self, building):  # noqa: D102
         # Create a .tcl file to write nodal mass
-        with open('DefineMasses2DModel.tcl', 'w') as tclfile:
+        with open('DefineMasses2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# This file will be used to define all nodal masses \n\n')
 
             # Write values for floor weights, tributary mass ratio, and nodal mass
@@ -496,9 +496,9 @@ class ElasticAnalysis:
                 '# puts "Nodal mass defined"'
             )  # Write puts command which denotes the ending of the .tcl file
 
-    def write_all_recorder(self):
+    def write_all_recorder(self):  # noqa: D102
         # Create a .tcl file to write all recorders for output
-        with open('DefineAllRecorders2DModel.tcl', 'w') as tclfile:
+        with open('DefineAllRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write(
                 '# This file will be used to define all recorders \n\n\n'
             )  # File explanation
@@ -534,9 +534,9 @@ class ElasticAnalysis:
             tclfile.write('cd\t$baseDir\n')
             tclfile.write('# puts "All recorders defined"')
 
-    def write_story_drift_recorder(self, building):
+    def write_story_drift_recorder(self, building):  # noqa: D102
         # Create a .tcl file to write story drift recorder for output
-        with open('DefineStoryDriftRecorders2DModel.tcl', 'w') as tclfile:
+        with open('DefineStoryDriftRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define story drift recorders\n\n\n')
             tclfile.write('cd\t$baseDir/$dataDir/StoryDrifts\n\n')
 
@@ -562,9 +562,9 @@ class ElasticAnalysis:
             )
             tclfile.write('\t-dof\t1\t-perpDirn\t2; \n')
 
-    def write_node_displacement_recorder(self, building):
+    def write_node_displacement_recorder(self, building):  # noqa: D102
         # Create a .tcl file to write node displacement recorder for output
-        with open('DefineNodeDisplacementRecorders2DModel.tcl', 'w') as tclfile:
+        with open('DefineNodeDisplacementRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define node displacement recorders\n\n\n')
             tclfile.write('cd\t$baseDir/$dataDir/NodeDisplacements\n\n')
             # Write the node displacement recorder for node at each floor level
@@ -576,9 +576,9 @@ class ElasticAnalysis:
                     tclfile.write('\t%i%i%i' % (j, i, 1))
                 tclfile.write('\t-dof\t1\t2\t3\tdisp; \n')
 
-    def write_beam_force_recorder(self, building):
+    def write_beam_force_recorder(self, building):  # noqa: D102
         # Create a .tcl file to write beam force recorder for output
-        with open('DefineGlobalBeamForceRecorders2DModel.tcl', 'w') as tclfile:
+        with open('DefineGlobalBeamForceRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define global beam force recorders\n\n\n')
             tclfile.write('cd\t$baseDir/$dataDir/GlobalBeamForces\n\n')
 
@@ -592,9 +592,9 @@ class ElasticAnalysis:
                     tclfile.write('\t%i%i%i%i%i%i%i' % (2, j, i, 1, j + 1, i, 1))
                 tclfile.write('\tforce; \n')
 
-    def write_column_force_recorder(self, building):
+    def write_column_force_recorder(self, building):  # noqa: D102
         # Create a .tcl file to write column force recorder for output
-        with open('DefineGlobalColumnForceRecorders2DModel.tcl', 'w') as tclfile:
+        with open('DefineGlobalColumnForceRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define global column force recorders\n\n\n')
             tclfile.write('cd\t$baseDir/$dataDir/GlobalColumnForces\n\n')
 
@@ -610,9 +610,9 @@ class ElasticAnalysis:
                     tclfile.write('\t%i%i%i%i%i%i%i' % (3, j, i, 1, j, i + 1, 1))
                 tclfile.write('\tforce;\n')
 
-    def write_gravity_dead_load(self, building):
+    def write_gravity_dead_load(self, building):  # noqa: D102
         # Create a .tcl file that writes the gravity dead load on the model
-        with open('DefineGravityDeadLoads2DModel.tcl', 'w') as tclfile:
+        with open('DefineGravityDeadLoads2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define gravity dead loads\n\n\n')
 
             # Assign the beam dead load values
@@ -711,9 +711,9 @@ class ElasticAnalysis:
 
             tclfile.write('# puts "Dead load defined"')
 
-    def write_gravity_live_load(self, building):
+    def write_gravity_live_load(self, building):  # noqa: D102
         # Create a .tcl file to write live load
-        with open('DefineGravityLiveLoads2DModel.tcl', 'w') as tclfile:
+        with open('DefineGravityLiveLoads2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define gravity live loads\n\n\n')
 
             # Assign the beam dead load values
@@ -812,9 +812,9 @@ class ElasticAnalysis:
 
             tclfile.write('# puts "Live load defined"')
 
-    def write_earthquake_load(self, building):
+    def write_earthquake_load(self, building):  # noqa: D102
         # Create a .tcl file to write earthquake load
-        with open('DefineEarthquakeLaterLoads2DModel.tcl', 'w') as tclfile:
+        with open('DefineEarthquakeLaterLoads2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define gravity live loads\n\n\n')
 
             # Assign the beam dead load values
@@ -899,10 +899,10 @@ class ElasticAnalysis:
             tclfile.write('\n}\n')
             tclfile.write('# puts "Earthquake load defined"')
 
-    def write_gravity_earthquake_load(self, building):
+    def write_gravity_earthquake_load(self, building):  # noqa: D102
         # Create a .tcl file to write the combination of earthquake and gravity loads
         # This load case is used to calculate story drift
-        with open('DefineGravityEarthquakeLoads2DModel.tcl', 'w') as tclfile:
+        with open('DefineGravityEarthquakeLoads2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define gravity live loads\n\n\n')
 
             # Assign the beam dead load values
@@ -1019,7 +1019,7 @@ class ElasticAnalysis:
     def copy_baseline_files(self, building, for_drift_only, for_period_only):
         """Some .tcl files are fixed, i.e., no need to change for different OpenSees models.
         Therefore, just copy these .tcl files from the baseline folder
-        """
+        """  # noqa: D205, D400, D401
         # define a list which includes all baseline files' names
         file_list = [
             'Database.csv',
@@ -1051,21 +1051,21 @@ class ElasticAnalysis:
         )
         new_string_for_drift = '[list GravityEarthquake]'
         if for_drift_only:
-            with open('Model.tcl') as file:
+            with open('Model.tcl') as file:  # noqa: PTH123
                 content = file.read()
             new_content = content.replace(old_string, new_string_for_drift)
-            with open('Model.tcl', 'w') as file:
+            with open('Model.tcl', 'w') as file:  # noqa: PTH123
                 file.write(new_content)
         # Revise "Model.tcl" file if we only want to obtain period
         new_string_for_period = '[list EigenValue]'
         if for_period_only:
-            with open('Model.tcl') as file:
+            with open('Model.tcl') as file:  # noqa: PTH123
                 content = file.read()
             new_content = content.replace(old_string, new_string_for_period)
-            with open('Model.tcl', 'w') as file:
+            with open('Model.tcl', 'w') as file:  # noqa: PTH123
                 file.write(new_content)
 
-    def run_OpenSees_program(self, building):
+    def run_OpenSees_program(self, building):  # noqa: ARG002, N802, D102
         # This method is used to run the "RunModel.bat" file. OpenSees.exe program is thus run.
         cmd = 'OpenSees Model.tcl'
-        subprocess.Popen(cmd, shell=True).wait()
+        subprocess.Popen(cmd, shell=True).wait()  # noqa: S602

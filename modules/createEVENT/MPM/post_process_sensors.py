@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017, The Regents of the University of California (Regents).
+# Copyright (c) 2016-2017, The Regents of the University of California (Regents).  # noqa: INP001
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -58,14 +58,14 @@ import pandas as pd
 if __name__ == '__main__':
     # CLI parser
     input_args = sys.argv[1:]
-    print(
+    print(  # noqa: T201
         'post_process_sensors.py - Backend-script post_process_sensors.py reached main. Starting...'
     )
-    print(
+    print(  # noqa: T201
         'post_process_sensors.py - Backend-script post_process_sensors.py running: '
         + str(sys.argv[0])
     )
-    print(
+    print(  # noqa: T201
         'post_process_sensors.py - Backend-script post_process_sensors.py received input args: '
         + str(input_args)
     )
@@ -88,9 +88,9 @@ if __name__ == '__main__':
     # sensor_data_dir = arguments.input_directory
     # output_dir = arguments.output_directory
     # sensor_files = (arguments.files).split(',')
-    print('Sensor data directory: ', sensor_data_dir)
-    print('Output directory: ', output_dir)
-    print('Sensor files: ', sensor_files)
+    print('Sensor data directory: ', sensor_data_dir)  # noqa: T201
+    print('Output directory: ', output_dir)  # noqa: T201
+    print('Sensor files: ', sensor_files)  # noqa: T201
     # json_path =  os.path.join(case_path, "constant", "simCenter", "input", "MPM.json")
     # with open(json_path) as json_file:
     #     json_data =  json.load(json_file)
@@ -106,25 +106,25 @@ if __name__ == '__main__':
     sensor_data = {}
     for sensor_file in sensor_files:
         # Remove any leading '/' from the sensor file
-        sensor_file = sensor_file.lstrip('/')
+        sensor_file = sensor_file.lstrip('/')  # noqa: PLW2901
         # Remove whitespace from the sensor file
-        sensor_file = sensor_file.strip()
-        sensor_file = sensor_file.split(
+        sensor_file = sensor_file.strip()  # noqa: PLW2901
+        sensor_file = sensor_file.split(  # noqa: PLW2901
             '.'
         )  # Split the sensor file by the '.' character
         if sensor_file[-1] != 'csv':
-            print(
+            print(  # noqa: T201
                 'Error: Sensor file is not a csv file. Please provide a csv file. Will skip this file: '
                 + sensor_file[0]
                 + '.'
                 + sensor_file[-1]
             )
             continue
-        sensor_file = sensor_file[
+        sensor_file = sensor_file[  # noqa: PLW2901
             0
         ]  # Get the first part of the sensor file, which is the sensor name
         sensor_data[sensor_file] = pd.read_csv(
-            os.path.join(sensor_data_dir, sensor_file + '.csv'),
+            os.path.join(sensor_data_dir, sensor_file + '.csv'),  # noqa: PTH118
             header=None,
             skiprows=1,
             delimiter=',',
@@ -136,7 +136,7 @@ if __name__ == '__main__':
 
         please_convert_to_date_time = False  # May want to use this later, as wave-flumes tend to report time in date-time formats
         if (
-            please_convert_to_date_time == True
+            please_convert_to_date_time == True  # noqa: E712
             and sensor_data[sensor_file]['time'].dtype != 'datetime64[ns]'
         ):
             sensor_data[sensor_file]['time'] = pd.to_datetime(
@@ -144,24 +144,24 @@ if __name__ == '__main__':
             )
 
     # Make sure the output directory exists, and save the sensor raw data to the output directory if they aren't already there
-    if not os.path.exists(output_dir):
-        print(
+    if not os.path.exists(output_dir):  # noqa: PTH110
+        print(  # noqa: T201
             'Output directory not found... Creating output directory: '
             + output_dir
             + '...'
         )
-        os.makedirs(output_dir)
+        os.makedirs(output_dir)  # noqa: PTH103
     if output_dir != sensor_data_dir:
         for sensor_name in sensor_names:
-            print('Save ' + os.path.join(output_dir, sensor_name) + '.csv' + '...')
+            print('Save ' + os.path.join(output_dir, sensor_name) + '.csv' + '...')  # noqa: T201, PTH118
             sensor_data[sensor_name].to_csv(
-                os.path.join(output_dir, sensor_name + '.csv'),
+                os.path.join(output_dir, sensor_name + '.csv'),  # noqa: PTH118
                 index=False,
             )
 
     # Plot the sensor data, and save the plots to the output directory (html and png files)
     for sensor_name in sensor_names:
-        print('Plotting ' + sensor_name + '...')
+        print('Plotting ' + sensor_name + '...')  # noqa: T201
         fig, axes = plt.subplots(1, 1)
         sensor_name_png = sensor_name + '.png'
         sensor_name_html = sensor_name + '.webp'
@@ -172,21 +172,21 @@ if __name__ == '__main__':
         )
         axes.set_xlabel('Time [s]')
         axes.set_ylabel('Sensor Measurement')
-        print('Save ' + os.path.join(output_dir, sensor_name_png) + '...')
+        print('Save ' + os.path.join(output_dir, sensor_name_png) + '...')  # noqa: T201, PTH118
         plt.savefig(
-            os.path.join(output_dir, sensor_name_png),
+            os.path.join(output_dir, sensor_name_png),  # noqa: PTH118
             dpi=300,
             bbox_inches='tight',
         )  # save the plot as a png file
-        print('Save ' + os.path.join(output_dir, sensor_name_html) + '...')
+        print('Save ' + os.path.join(output_dir, sensor_name_html) + '...')  # noqa: T201, PTH118
         plt.savefig(
-            os.path.join(output_dir, sensor_name_html),
+            os.path.join(output_dir, sensor_name_html),  # noqa: PTH118
             dpi=300,
             bbox_inches='tight',
         )  # save the plot as an html file
         plt.show()
         plt.close()
 
-    print(
+    print(  # noqa: T201
         'post_process_sensors.py - Backend-script post_process_sensors.py reached end of main. Finished.'
     )

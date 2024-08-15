@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -47,7 +47,7 @@ class of7Solve:
     -------
             fvSchemetext: Get all the text for the fvSchemes
 
-    """
+    """  # noqa: D205, D404
 
     #############################################################
     def solverheader(self, fileobjec):
@@ -56,7 +56,7 @@ class of7Solve:
         Variable
         -----------
                 header: Header for the solver-files
-        """
+        """  # noqa: D400, D401
         header = (
             """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
@@ -66,114 +66,114 @@ class of7Solve:
 |	   | O |
 \\*---------------------------------------------------------------------------*/ 
 FoamFile
-{\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"system";\n\tobject\t"""
+{\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"system";\n\tobject\t"""  # noqa: W291
             + fileobjec
             + """;\n}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
         )
 
         # Return the header for U file
-        return header
+        return header  # noqa: RET504
 
     #############################################################
-    def fvSchemetext(self, data):
+    def fvSchemetext(self, data):  # noqa: ARG002, N802
         """Creates the necessary text for fvSchemes for openfoam7
 
         Arguments:
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401
         # Get the header text for the U-file
-        fvSchemetext = self.solverheader('fvSchemes')
+        fvSchemetext = self.solverheader('fvSchemes')  # noqa: N806
 
         # Add all other items
         # ddt
-        fvSchemetext = fvSchemetext + 'ddtSchemes\n{\n\tdefault\tEuler;\n}\n\n'
+        fvSchemetext = fvSchemetext + 'ddtSchemes\n{\n\tdefault\tEuler;\n}\n\n'  # noqa: N806
 
         # grad
-        fvSchemetext = fvSchemetext + 'gradSchemes\n{\n\tdefault\tGauss linear;\n}\n'
+        fvSchemetext = fvSchemetext + 'gradSchemes\n{\n\tdefault\tGauss linear;\n}\n'  # noqa: N806
 
         # div
-        fvSchemetext = fvSchemetext + '\ndivSchemes\n{\n\t'
-        fvSchemetext = fvSchemetext + 'div(rhoPhi,U)\tGauss limitedLinearV 1;\n\t'
-        fvSchemetext = fvSchemetext + 'div(U)\tGauss linear;\n\t'
-        fvSchemetext = (
+        fvSchemetext = fvSchemetext + '\ndivSchemes\n{\n\t'  # noqa: N806
+        fvSchemetext = fvSchemetext + 'div(rhoPhi,U)\tGauss limitedLinearV 1;\n\t'  # noqa: N806
+        fvSchemetext = fvSchemetext + 'div(U)\tGauss linear;\n\t'  # noqa: N806
+        fvSchemetext = (  # noqa: N806
             fvSchemetext
             + 'div((rhoPhi|interpolate(porosity)),U)\tGauss limitedLinearV 1;\n\t'
         )
-        fvSchemetext = (
+        fvSchemetext = (  # noqa: N806
             fvSchemetext + 'div(rhoPhiPor,UPor)\tGauss limitedLinearV 1;\n\t'
         )
-        fvSchemetext = fvSchemetext + 'div(rhoPhi,UPor)\tGauss limitedLinearV 1;\n\t'
-        fvSchemetext = fvSchemetext + 'div(rhoPhiPor,U)\tGauss limitedLinearV 1;\n\t'
-        fvSchemetext = fvSchemetext + 'div(phi,alpha)\tGauss vanLeer;\n\t'
-        fvSchemetext = (
+        fvSchemetext = fvSchemetext + 'div(rhoPhi,UPor)\tGauss limitedLinearV 1;\n\t'  # noqa: N806
+        fvSchemetext = fvSchemetext + 'div(rhoPhiPor,U)\tGauss limitedLinearV 1;\n\t'  # noqa: N806
+        fvSchemetext = fvSchemetext + 'div(phi,alpha)\tGauss vanLeer;\n\t'  # noqa: N806
+        fvSchemetext = (  # noqa: N806
             fvSchemetext + 'div(phirb,alpha)\tGauss interfaceCompression;\n\t'
         )
-        fvSchemetext = (
+        fvSchemetext = (  # noqa: N806
             fvSchemetext + 'div((muEff*dev(T(grad(U)))))\tGauss linear;\n\t'
         )
-        fvSchemetext = fvSchemetext + 'div(phi,k)\tGauss upwind;\n\t'
-        fvSchemetext = fvSchemetext + 'div(phi,epsilon)\tGauss upwind;\n\t'
-        fvSchemetext = (
+        fvSchemetext = fvSchemetext + 'div(phi,k)\tGauss upwind;\n\t'  # noqa: N806
+        fvSchemetext = fvSchemetext + 'div(phi,epsilon)\tGauss upwind;\n\t'  # noqa: N806
+        fvSchemetext = (  # noqa: N806
             fvSchemetext + 'div((phi|interpolate(porosity)),k)\tGauss upwind;\n\t'
         )
-        fvSchemetext = (
+        fvSchemetext = (  # noqa: N806
             fvSchemetext + 'div((phi*interpolate(rho)),k)\tGauss upwind;\n\t'
         )
-        fvSchemetext = (
+        fvSchemetext = (  # noqa: N806
             fvSchemetext
             + 'div((phi|interpolate(porosity)),epsilon)\tGauss upwind;\n\t'
         )
-        fvSchemetext = fvSchemetext + 'div(phi,omega)\tGauss upwind;\n\t'
-        fvSchemetext = (
+        fvSchemetext = fvSchemetext + 'div(phi,omega)\tGauss upwind;\n\t'  # noqa: N806
+        fvSchemetext = (  # noqa: N806
             fvSchemetext
             + 'div((phi|interpolate(porosity)),omega)\tGauss upwind;\n\t'
         )
-        fvSchemetext = (
+        fvSchemetext = (  # noqa: N806
             fvSchemetext + 'div((phi*interpolate(rho)),omega)\tGauss upwind;\n\t'
         )
-        fvSchemetext = (
+        fvSchemetext = (  # noqa: N806
             fvSchemetext + 'div((phi*interpolate(rho)),epsilon)\tGauss upwind;\n'
         )
-        fvSchemetext = fvSchemetext + '}\n\n'
+        fvSchemetext = fvSchemetext + '}\n\n'  # noqa: N806
 
         # Laplacian
-        fvSchemetext = (
+        fvSchemetext = (  # noqa: N806
             fvSchemetext
             + 'laplacianSchemes\n{\n\tdefault\tGauss linear corrected;\n}\n\n'
         )
 
         # interpolation
-        fvSchemetext = (
+        fvSchemetext = (  # noqa: N806
             fvSchemetext + 'interpolationSchemes\n{\n\tdefault\tlinear;\n}\n\n'
         )
 
         # snGrad
-        fvSchemetext = (
+        fvSchemetext = (  # noqa: N806
             fvSchemetext + 'snGradSchemes\n{\n\tdefault\tcorrected;\n}\n\n'
         )
 
         # flux
-        fvSchemetext = fvSchemetext + 'fluxRequired\n{\n\t'
-        fvSchemetext = fvSchemetext + 'default\tno;\n\t'
-        fvSchemetext = fvSchemetext + 'p_rgh;\n\t'
-        fvSchemetext = fvSchemetext + 'pcorr;\n\t'
-        fvSchemetext = fvSchemetext + 'alpha.water;\n'
-        fvSchemetext = fvSchemetext + '}\n'
+        fvSchemetext = fvSchemetext + 'fluxRequired\n{\n\t'  # noqa: N806
+        fvSchemetext = fvSchemetext + 'default\tno;\n\t'  # noqa: N806
+        fvSchemetext = fvSchemetext + 'p_rgh;\n\t'  # noqa: N806
+        fvSchemetext = fvSchemetext + 'pcorr;\n\t'  # noqa: N806
+        fvSchemetext = fvSchemetext + 'alpha.water;\n'  # noqa: N806
+        fvSchemetext = fvSchemetext + '}\n'  # noqa: N806
 
-        return fvSchemetext
+        return fvSchemetext  # noqa: RET504
 
     #############################################################
-    def fvSolntext(self, data):
+    def fvSolntext(self, data):  # noqa: N802
         """Creates the necessary text for fvSolution for openfoam7
 
         Arguments:
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -188,99 +188,99 @@ FoamFile
         )
 
         # Get the header text for the U-file
-        fvSolntext = self.solverheader('fvSolution')
+        fvSolntext = self.solverheader('fvSolution')  # noqa: N806
 
         # Other data
-        fvSolntext = fvSolntext + 'solvers\n{\n\t'
+        fvSolntext = fvSolntext + 'solvers\n{\n\t'  # noqa: N806
 
         # solvers: alpha
-        fvSolntext = fvSolntext + '"alpha.water.*"\n\t{\n\t\t'
-        fvSolntext = fvSolntext + 'nAlphaCorr\t1;\n\t\t'
-        fvSolntext = fvSolntext + 'nAlphaSubCycles\t2;\n\t\t'
-        fvSolntext = fvSolntext + 'alphaOuterCorrectors\tyes;\n\t\t'
-        fvSolntext = fvSolntext + 'cAlpha\t1;\n\t\t'
-        fvSolntext = fvSolntext + 'MULESCorr\tno;\n\t\t'
-        fvSolntext = fvSolntext + 'nLimiterIter\t3;\n\t\t'
-        fvSolntext = fvSolntext + 'solver\tsmoothSolver;\n\t\t'
-        fvSolntext = fvSolntext + 'smoother\tsymGaussSeidel;\n\t\t'
-        fvSolntext = fvSolntext + 'tolerance\t1e-08;\n\t\t'
-        fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n\n\t'
+        fvSolntext = fvSolntext + '"alpha.water.*"\n\t{\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'nAlphaCorr\t1;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'nAlphaSubCycles\t2;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'alphaOuterCorrectors\tyes;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'cAlpha\t1;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'MULESCorr\tno;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'nLimiterIter\t3;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'solver\tsmoothSolver;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'smoother\tsymGaussSeidel;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'tolerance\t1e-08;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n\n\t'  # noqa: N806
 
         # solvers: pcorr
-        fvSolntext = fvSolntext + '"pcorr.*"\n\t{\n\t\t'
-        fvSolntext = fvSolntext + 'solver\tPCG;\n\t\t'
-        fvSolntext = fvSolntext + 'preconditioner\tDIC;\n\t\t'
-        fvSolntext = fvSolntext + 'tolerance\t1e-05;\n\t\t'
-        fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n\n\t'
+        fvSolntext = fvSolntext + '"pcorr.*"\n\t{\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'solver\tPCG;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'preconditioner\tDIC;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'tolerance\t1e-05;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n\n\t'  # noqa: N806
 
         # solvers: pcorrFinal
-        fvSolntext = fvSolntext + 'pcorrFinal\n\t{\n\t\t'
-        fvSolntext = fvSolntext + '$pcorr;\n\t\t'
-        fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n\n\t'
+        fvSolntext = fvSolntext + 'pcorrFinal\n\t{\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + '$pcorr;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n\n\t'  # noqa: N806
 
         # solvers: p_rgh
-        fvSolntext = fvSolntext + 'p_rgh\n\t{\n\t\t'
-        fvSolntext = fvSolntext + 'solver\tPCG;\n\t\t'
-        fvSolntext = fvSolntext + 'preconditioner\tDIC;\n\t\t'
-        fvSolntext = fvSolntext + 'tolerance\t1e-07;\n\t\t'
-        fvSolntext = fvSolntext + 'relTol\t0.05;\n\t}\n\n\t'
+        fvSolntext = fvSolntext + 'p_rgh\n\t{\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'solver\tPCG;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'preconditioner\tDIC;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'tolerance\t1e-07;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'relTol\t0.05;\n\t}\n\n\t'  # noqa: N806
 
         # solvers: p_rghFinal
-        fvSolntext = fvSolntext + 'p_rghFinal\n\t{\n\t\t'
-        fvSolntext = fvSolntext + '$p_rgh;\n\t\t'
-        fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n\n\t'
+        fvSolntext = fvSolntext + 'p_rghFinal\n\t{\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + '$p_rgh;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n\n\t'  # noqa: N806
 
         # solvers: U
-        fvSolntext = fvSolntext + 'U\n\t{\n\t\t'
-        fvSolntext = fvSolntext + 'solver\tsmoothSolver;\n\t\t'
-        fvSolntext = fvSolntext + 'smoother\tsymGaussSeidel;\n\t\t'
-        fvSolntext = fvSolntext + 'tolerance\t1e-06;\n\t\t'
-        fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n'
+        fvSolntext = fvSolntext + 'U\n\t{\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'solver\tsmoothSolver;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'smoother\tsymGaussSeidel;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'tolerance\t1e-06;\n\t\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n'  # noqa: N806
 
         # Turbulece variables (if exist)
-        if (int(turb) == 1) or (int(turb) == 2):
-            fvSolntext = fvSolntext + '\n\t'
-            fvSolntext = fvSolntext + '"(k|epsilon|omega|B|nuTilda).*"\n\t{\n\t\t'
-            fvSolntext = fvSolntext + 'solver\tsmoothSolver;\n\t\t'
-            fvSolntext = fvSolntext + 'smoother\tsymGaussSeidel;\n\t\t'
-            fvSolntext = fvSolntext + 'tolerance\t1e-08;\n\t\t'
-            fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n'
+        if (int(turb) == 1) or (int(turb) == 2):  # noqa: PLR2004
+            fvSolntext = fvSolntext + '\n\t'  # noqa: N806
+            fvSolntext = fvSolntext + '"(k|epsilon|omega|B|nuTilda).*"\n\t{\n\t\t'  # noqa: N806
+            fvSolntext = fvSolntext + 'solver\tsmoothSolver;\n\t\t'  # noqa: N806
+            fvSolntext = fvSolntext + 'smoother\tsymGaussSeidel;\n\t\t'  # noqa: N806
+            fvSolntext = fvSolntext + 'tolerance\t1e-08;\n\t\t'  # noqa: N806
+            fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n'  # noqa: N806
 
         # solvers: cellDisplacement (for flume)
-        if int(simtype) == 4:
+        if int(simtype) == 4:  # noqa: PLR2004
             # solvers: cellDisplacement (for flume)
-            fvSolntext = fvSolntext + '\n\t'
-            fvSolntext = fvSolntext + 'cellDisplacement\n\t{\n\t\t'
-            fvSolntext = fvSolntext + 'solver\tGAMG;\n\t\t'
-            fvSolntext = fvSolntext + 'tolerance\t1e-05;\n\t\t'
-            fvSolntext = fvSolntext + 'relTol\t0;\n\t\t'
-            fvSolntext = fvSolntext + 'smoother\tGaussSeidel;\n\t\t'
-            fvSolntext = fvSolntext + 'cacheAgglomeration\tfalse;\n\t\t'
-            fvSolntext = fvSolntext + 'nCellsInCoarsestLevel\t10;\n\t\t'
-            fvSolntext = fvSolntext + 'agglomerator\tfaceAreaPair;\n\t\t'
-            fvSolntext = fvSolntext + 'mergeLevels\t1;\n\t}\n\n\t'
+            fvSolntext = fvSolntext + '\n\t'  # noqa: N806
+            fvSolntext = fvSolntext + 'cellDisplacement\n\t{\n\t\t'  # noqa: N806
+            fvSolntext = fvSolntext + 'solver\tGAMG;\n\t\t'  # noqa: N806
+            fvSolntext = fvSolntext + 'tolerance\t1e-05;\n\t\t'  # noqa: N806
+            fvSolntext = fvSolntext + 'relTol\t0;\n\t\t'  # noqa: N806
+            fvSolntext = fvSolntext + 'smoother\tGaussSeidel;\n\t\t'  # noqa: N806
+            fvSolntext = fvSolntext + 'cacheAgglomeration\tfalse;\n\t\t'  # noqa: N806
+            fvSolntext = fvSolntext + 'nCellsInCoarsestLevel\t10;\n\t\t'  # noqa: N806
+            fvSolntext = fvSolntext + 'agglomerator\tfaceAreaPair;\n\t\t'  # noqa: N806
+            fvSolntext = fvSolntext + 'mergeLevels\t1;\n\t}\n\n\t'  # noqa: N806
 
             # solvers: cellDisplacementFinal(for flume)
-            fvSolntext = fvSolntext + 'cellDisplacementFinal\n\t{\n\t\t'
-            fvSolntext = fvSolntext + '$cellDisplacement;\n\t\t'
-            fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n'
+            fvSolntext = fvSolntext + 'cellDisplacementFinal\n\t{\n\t\t'  # noqa: N806
+            fvSolntext = fvSolntext + '$cellDisplacement;\n\t\t'  # noqa: N806
+            fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n'  # noqa: N806
 
         # Close solvers
-        fvSolntext = fvSolntext + '}\n\n'
+        fvSolntext = fvSolntext + '}\n\n'  # noqa: N806
 
         # PIMPLE
-        fvSolntext = fvSolntext + 'PIMPLE\n{\n\t'
-        fvSolntext = fvSolntext + 'momentumPredictor\tno;\n\t'
-        fvSolntext = fvSolntext + 'nOuterCorrectors\t1;\n\t'
-        fvSolntext = fvSolntext + 'nCorrectors\t3;\n\t'
-        fvSolntext = fvSolntext + 'nNonOrthogonalCorrectors\t0;\n}\n\n'
+        fvSolntext = fvSolntext + 'PIMPLE\n{\n\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'momentumPredictor\tno;\n\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'nOuterCorrectors\t1;\n\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'nCorrectors\t3;\n\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'nNonOrthogonalCorrectors\t0;\n}\n\n'  # noqa: N806
 
         # Relaxation factors
-        fvSolntext = fvSolntext + 'relaxationFactors\n{\n\t'
-        fvSolntext = fvSolntext + 'fields\n\t{\n\t}\n\t'
-        fvSolntext = fvSolntext + 'equations\n\t{\n\t\t".*"\t1;\n\t}\n}'
+        fvSolntext = fvSolntext + 'relaxationFactors\n{\n\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'fields\n\t{\n\t}\n\t'  # noqa: N806
+        fvSolntext = fvSolntext + 'equations\n\t{\n\t\t".*"\t1;\n\t}\n}'  # noqa: N806
 
-        return fvSolntext
+        return fvSolntext  # noqa: RET504
 
     #############################################################
     def cdicttext(self, data):
@@ -290,7 +290,7 @@ FoamFile
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -301,7 +301,7 @@ FoamFile
         simtype = ', '.join(
             hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
         )
-        if int(simtype) == 4:
+        if int(simtype) == 4:  # noqa: PLR2004
             cdicttext = cdicttext + '\napplication \t olaDyMFlow;\n\n'
         else:
             cdicttext = cdicttext + '\napplication \t olaFlow;\n\n'
@@ -314,14 +314,14 @@ FoamFile
             cdicttext = cdicttext + 'startFrom \t latestTime;\n\n'
         elif restart == 'No':
             # Start time
-            startT = ', '.join(
+            startT = ', '.join(  # noqa: N806
                 hydroutil.extract_element_from_json(data, ['Events', 'StartTime'])
             )
             cdicttext = cdicttext + 'startFrom \t startTime;\n\n'
             cdicttext = cdicttext + 'startTime \t' + startT + ';\n\n'
 
         # End time
-        endT = ', '.join(
+        endT = ', '.join(  # noqa: N806
             hydroutil.extract_element_from_json(data, ['Events', 'EndTime'])
         )
         cdicttext = cdicttext + 'stopAt \t endTime;\n\n'
@@ -349,7 +349,7 @@ FoamFile
         cdicttext = cdicttext + 'maxAlphaCo \t 1.0;\n\n'
         cdicttext = cdicttext + 'maxDeltaT \t 1;\n\n'
 
-        return cdicttext
+        return cdicttext  # noqa: RET504
 
     #############################################################
     def cdictcheck(self, data):
@@ -359,29 +359,29 @@ FoamFile
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
         # Start time
-        startT = hydroutil.extract_element_from_json(data, ['Events', 'StartTime'])
+        startT = hydroutil.extract_element_from_json(data, ['Events', 'StartTime'])  # noqa: N806
         if startT == [None]:
             return -1
 
         # End time
-        endT = hydroutil.extract_element_from_json(data, ['Events', 'EndTime'])
+        endT = hydroutil.extract_element_from_json(data, ['Events', 'EndTime'])  # noqa: N806
         if endT == [None]:
             return -1
 
         # deltaT
-        deltaT = hydroutil.extract_element_from_json(
+        deltaT = hydroutil.extract_element_from_json(  # noqa: N806
             data, ['Events', 'TimeInterval']
         )
         if deltaT == [None]:
             return -1
 
         # WriteT
-        writeT = hydroutil.extract_element_from_json(
+        writeT = hydroutil.extract_element_from_json(  # noqa: N806
             data, ['Events', 'WriteInterval']
         )
         if writeT == [None]:
@@ -391,7 +391,7 @@ FoamFile
         return 0
 
     #############################################################
-    def cdictFtext(self, data):
+    def cdictFtext(self, data):  # noqa: N802
         """Creates the necessary text for controlDict for openfoam7
         This is used for force computation with Dakota
 
@@ -399,7 +399,7 @@ FoamFile
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D205, D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -410,7 +410,7 @@ FoamFile
         simtype = ', '.join(
             hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
         )
-        if int(simtype) == 4:
+        if int(simtype) == 4:  # noqa: PLR2004
             cdicttext = cdicttext + '\napplication \t olaDyMFlow;\n\n'
         else:
             cdicttext = cdicttext + '\napplication \t olaFlow;\n\n'
@@ -423,21 +423,21 @@ FoamFile
             cdicttext = cdicttext + 'startFrom \t latestTime;\n\n'
         elif restart == 'No':
             # Start time
-            startT = ', '.join(
+            startT = ', '.join(  # noqa: N806
                 hydroutil.extract_element_from_json(data, ['Events', 'StartTime'])
             )
             cdicttext = cdicttext + 'startFrom \t startTime;\n\n'
             cdicttext = cdicttext + 'startTime \t' + startT + ';\n\n'
 
         # End time
-        endT = ', '.join(
+        endT = ', '.join(  # noqa: N806
             hydroutil.extract_element_from_json(data, ['Events', 'EndTime'])
         )
         cdicttext = cdicttext + 'stopAt \t endTime;\n\n'
         cdicttext = cdicttext + 'endTime \t' + endT + ';\n\n'
 
         # Time interval
-        deltaT = ', '.join(
+        deltaT = ', '.join(  # noqa: N806
             hydroutil.extract_element_from_json(data, ['Events', 'TimeInterval'])
         )
         cdicttext = cdicttext + 'deltaT \t' + deltaT + ';\n\n'
@@ -446,7 +446,7 @@ FoamFile
         cdicttext = cdicttext + 'writeControl \t adjustableRunTime;\n\n'
 
         # Write interval
-        writeT = ', '.join(
+        writeT = ', '.join(  # noqa: N806
             hydroutil.extract_element_from_json(data, ['Events', 'WriteInterval'])
         )
         cdicttext = cdicttext + 'writeInterval \t' + writeT + ';\n\n'
@@ -489,4 +489,4 @@ FoamFile
         cdicttext = cdicttext + 'direction\t(1 0 0);\n\t\t\t'
         cdicttext = cdicttext + 'cumulative\tno;\n\t\t}\n\t}\n}'
 
-        return cdicttext
+        return cdicttext  # noqa: RET504

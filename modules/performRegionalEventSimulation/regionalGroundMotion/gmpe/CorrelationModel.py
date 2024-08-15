@@ -1,4 +1,4 @@
-#
+#  # noqa: N999, D100
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -44,7 +44,7 @@ import pandas as pd
 from scipy.interpolate import interp1d, interp2d
 
 
-def baker_jayaram_correlation_2008(im1, im2, flag_orth=False):
+def baker_jayaram_correlation_2008(im1, im2, flag_orth=False):  # noqa: FBT002, C901
     """Computing inter-event correlation coeffcieint between Sa of two periods
     Reference:
         Baker and Jayaram (2008) Correlation of Spectral Acceleration
@@ -58,46 +58,46 @@ def baker_jayaram_correlation_2008(im1, im2, flag_orth=False):
         rho: correlation coefficient
     Note:
         The valid range of T1 and T2 is 0.01s ~ 10.0s
-    """
+    """  # noqa: D205, D400, D401
     # Parse periods from im1 and im2
     if im1.startswith('SA'):
-        T1 = float(im1[3:-1])
+        T1 = float(im1[3:-1])  # noqa: N806
     elif im1.startswith('PGA'):
-        T1 = 0.0
+        T1 = 0.0  # noqa: N806
     else:
         return 0.0
     if im2.startswith('SA'):
-        T2 = float(im2[3:-1])
+        T2 = float(im2[3:-1])  # noqa: N806
     elif im2.startswith('PGA'):
-        T2 = 0.0
+        T2 = 0.0  # noqa: N806
     else:
         return 0.0
 
     # Compute Tmin and Tmax (lower bounds 0.01 for T < 0.01)
-    Tmin = max(min([T1, T2]), 0.01)
-    Tmax = max(max([T1, T2]), 0.01)
+    Tmin = max(min([T1, T2]), 0.01)  # noqa: N806
+    Tmax = max(max([T1, T2]), 0.01)  # noqa: N806, PLW3301
     # Coefficient C1
-    C1 = 1.0 - np.cos(np.pi / 2.0 - 0.366 * np.log(Tmax / max([Tmin, 0.109])))
+    C1 = 1.0 - np.cos(np.pi / 2.0 - 0.366 * np.log(Tmax / max([Tmin, 0.109])))  # noqa: N806
     # Coefficient C2
-    if Tmax < 0.2:
-        C2 = 1.0 - 0.105 * (1.0 - 1.0 / (1.0 + np.exp(100.0 * Tmax - 5.0))) * (
+    if Tmax < 0.2:  # noqa: PLR2004
+        C2 = 1.0 - 0.105 * (1.0 - 1.0 / (1.0 + np.exp(100.0 * Tmax - 5.0))) * (  # noqa: N806
             Tmax - Tmin
         ) / (Tmax - 0.0099)
     else:
-        C2 = 0.0
+        C2 = 0.0  # noqa: N806
     # Coefficient C3
-    if Tmax < 0.109:
-        C3 = C2
+    if Tmax < 0.109:  # noqa: PLR2004
+        C3 = C2  # noqa: N806
     else:
-        C3 = C1
+        C3 = C1  # noqa: N806
     # Coefficient C4
-    C4 = C1 + 0.5 * (np.sqrt(C3) - C3) * (1.0 + np.cos(np.pi * Tmin / 0.109))
+    C4 = C1 + 0.5 * (np.sqrt(C3) - C3) * (1.0 + np.cos(np.pi * Tmin / 0.109))  # noqa: N806
     # rho for a single component
-    if Tmax <= 0.109:
+    if Tmax <= 0.109:  # noqa: PLR2004
         rho = C2
-    elif Tmin > 0.109:
+    elif Tmin > 0.109:  # noqa: PLR2004
         rho = C1
-    elif Tmax < 0.2:
+    elif Tmax < 0.2:  # noqa: PLR2004
         rho = min([C2, C4])
     else:
         rho = C4
@@ -108,7 +108,7 @@ def baker_jayaram_correlation_2008(im1, im2, flag_orth=False):
     return rho
 
 
-def bradley_correlation_2011(IM, T=None, flag_Ds=True):
+def bradley_correlation_2011(IM, T=None, flag_Ds=True):  # noqa: FBT002, C901, N803, PLR0911
     """Computing inter-event correlation coeffcieint between Sa(T) and Ds575/D595
     Reference:
         Bradley (2011) Correlation of Significant Duration with Amplitude and
@@ -122,105 +122,105 @@ def bradley_correlation_2011(IM, T=None, flag_Ds=True):
         rho: correlation coefficient
     Note:
         The valid range of T is 0.01s ~ 10.0s
-    """
+    """  # noqa: D205, D400, D401
     # PGA
-    if IM == 'PGA':
+    if IM == 'PGA':  # noqa: RET503
         if flag_Ds:
             return -0.442
-        else:
+        else:  # noqa: RET505
             return -0.305
     elif IM == 'PGV':
         if flag_Ds:
             return -0.259
-        else:
+        else:  # noqa: RET505
             return -0.211
     elif IM == 'ASI':
         if flag_Ds:
             return -0.411
-        else:
+        else:  # noqa: RET505
             return -0.370
     elif IM == 'SI':
         if flag_Ds:
             return -0.131
-        else:
+        else:  # noqa: RET505
             return -0.079
     elif IM == 'DSI':
         if flag_Ds:
             return 0.074
-        else:
+        else:  # noqa: RET505
             return 0.163
     elif IM == 'CAV':
         if flag_Ds:
             return 0.077
-        else:
+        else:  # noqa: RET505
             return 0.122
     elif IM == 'Ds595':
         if flag_Ds:
             return 0.843
-        else:
+        else:  # noqa: RET505
             return None
     elif IM == 'Sa':
         if flag_Ds:
-            if T < 0.09:
+            if T < 0.09:  # noqa: PLR2004
                 a_p = -0.45
                 a_c = -0.39
                 b_p = 0.01
                 b_c = 0.09
-            elif T < 0.30:
+            elif T < 0.30:  # noqa: PLR2004
                 a_p = -0.39
                 a_c = -0.39
                 b_p = 0.09
                 b_c = 0.30
-            elif T < 1.40:
+            elif T < 1.40:  # noqa: PLR2004
                 a_p = -0.39
                 a_c = -0.06
                 b_p = 0.30
                 b_c = 1.40
-            elif T < 6.50:
+            elif T < 6.50:  # noqa: PLR2004
                 a_p = -0.06
                 a_c = 0.16
                 b_p = 1.40
                 b_c = 6.50
-            elif T <= 10.0:
+            elif T <= 10.0:  # noqa: PLR2004
                 a_p = 0.16
                 a_c = 0.00
                 b_p = 6.50
                 b_c = 10.00
-        elif T < 0.04:
+        elif T < 0.04:  # noqa: PLR2004
             a_p = -0.41
             a_c = -0.41
             b_p = 0.01
             b_c = 0.04
-        elif T < 0.08:
+        elif T < 0.08:  # noqa: PLR2004
             a_p = -0.41
             a_c = -0.38
             b_p = 0.04
             b_c = 0.08
-        elif T < 0.26:
+        elif T < 0.26:  # noqa: PLR2004
             a_p = -0.38
             a_c = -0.35
             b_p = 0.08
             b_c = 0.26
-        elif T < 1.40:
+        elif T < 1.40:  # noqa: PLR2004
             a_p = -0.35
             a_c = -0.02
             b_p = 0.26
             b_c = 1.40
-        elif T <= 6.00:
+        elif T <= 6.00:  # noqa: PLR2004
             a_p = -0.02
             a_c = 0.23
             b_p = 1.40
             b_c = 6.00
-        elif T <= 10.00:
+        elif T <= 10.00:  # noqa: PLR2004
             a_p = 0.23
             a_c = 0.02
             b_p = 6.00
             b_c = 10.0
         rho = a_p + np.log(T / b_p) / np.log(b_c / b_p) * (a_c - a_p)
-        return rho
+        return rho  # noqa: RET504
 
 
-def jayaram_baker_correlation_2009(im, h, flag_clustering=False):
+def jayaram_baker_correlation_2009(im, h, flag_clustering=False):  # noqa: FBT002
     """Computing intra-event correlation coeffcieint between Sa(T) at two sites
     Reference:
         Jayaram and Baker (2009) Correlation model for spatially distributed
@@ -232,16 +232,16 @@ def jayaram_baker_correlation_2009(im, h, flag_clustering=False):
                          the region (default: false)
     Output:
         rho: correlation between normalized intra-event residuals
-    """
+    """  # noqa: D205, D400, D401
     # parse period form im
     try:
         # for Sa
         if im.startswith('SA'):
-            T = float(im[3:-1])
+            T = float(im[3:-1])  # noqa: N806
         elif im.startswith('PGA'):
-            T = 0.0
+            T = 0.0  # noqa: N806
     except ValueError:
-        print(
+        print(  # noqa: T201
             f'CorrelationModel.jayaram_baker_correlation_2009: error - cannot handle {im}'
         )
 
@@ -252,7 +252,7 @@ def jayaram_baker_correlation_2009(im, h, flag_clustering=False):
     else:
         b = 40.7 - 15.0 * T
     rho = np.exp(-3.0 * h / b)
-    return rho
+    return rho  # noqa: RET504
 
 
 def load_loth_baker_correlation_2013(datapath):
@@ -266,14 +266,14 @@ def load_loth_baker_correlation_2013(datapath):
         B1: short-range coregionalization matrix
         B2: long-range coregionalization matrix
         B3: Nugget effect correlationalization matrix
-    """
-    B2 = pd.read_csv(datapath + 'loth_baker_correlation_2013_B2.csv', header=0)
-    B1 = pd.read_csv(datapath + 'loth_baker_correlation_2013_B1.csv', header=0)
-    B3 = pd.read_csv(datapath + 'loth_baker_correlation_2013_B3.csv', header=0)
+    """  # noqa: D205, D400, D401
+    B2 = pd.read_csv(datapath + 'loth_baker_correlation_2013_B2.csv', header=0)  # noqa: N806
+    B1 = pd.read_csv(datapath + 'loth_baker_correlation_2013_B1.csv', header=0)  # noqa: N806
+    B3 = pd.read_csv(datapath + 'loth_baker_correlation_2013_B3.csv', header=0)  # noqa: N806
     return B1, B2, B3
 
 
-def compute_rho_loth_baker_correlation_2013(T1, T2, h, B1, B2, B3):
+def compute_rho_loth_baker_correlation_2013(T1, T2, h, B1, B2, B3):  # noqa: N803
     """Computing intra-event correlation coeffcieint between Sa(Ti) and Sa(Tj)
     at two sites
     Reference:
@@ -290,7 +290,7 @@ def compute_rho_loth_baker_correlation_2013(T1, T2, h, B1, B2, B3):
         rho: correlation between Sa(Ti) and Sa(Tj) at two sites
     Note:
         The valid range for T1 and T2 is 0.01s ~ 10.0s
-    """
+    """  # noqa: D205, D400, D401
     # Interpolation functions
     f1 = interp2d(B1['Period (s)'], B1['Period (s)'], B1.iloc[:, 1:])
     f2 = interp2d(B2['Period (s)'], B2['Period (s)'], B2.iloc[:, 1:])
@@ -300,13 +300,13 @@ def compute_rho_loth_baker_correlation_2013(T1, T2, h, B1, B2, B3):
     b2 = f2(T1, T2)
     b3 = f3(T1, T2)
     # Covariance functions
-    Ch = b1 * np.exp(-3.0 * h / 20.0) + b2 * np.exp(-3.0 * h / 70.0) + b3 * (h == 0)
+    Ch = b1 * np.exp(-3.0 * h / 20.0) + b2 * np.exp(-3.0 * h / 70.0) + b3 * (h == 0)  # noqa: N806
     # Correlation coefficient
     rho = Ch
-    return rho
+    return rho  # noqa: RET504
 
 
-def loth_baker_correlation_2013(stations, im_name_list, num_simu):
+def loth_baker_correlation_2013(stations, im_name_list, num_simu):  # noqa: C901
     """Simulating intra-event residuals
     Reference:
         Loth and Baker (2013) A spatial cross-correlation model of spectral
@@ -319,7 +319,7 @@ def loth_baker_correlation_2013(stations, im_name_list, num_simu):
         residuals: intra-event residuals
     Note:
         The valid range for T1 and T2 is 0.01s ~ 10.0s
-    """
+    """  # noqa: D205, D400, D401
     # Parse periods from intensity measure list
     periods = []
     for cur_im in im_name_list:
@@ -328,13 +328,13 @@ def loth_baker_correlation_2013(stations, im_name_list, num_simu):
                 periods.append(float(cur_im[3:-1]))
             elif cur_im.startswith('PGA'):
                 periods.append(0.0)
-        except ValueError:
-            print(
+        except ValueError:  # noqa: PERF203
+            print(  # noqa: T201
                 f'CorrelationModel.loth_baker_correlation_2013: error - cannot handle {cur_im}'
             )
     # Loading modeling coefficients
-    B1, B2, B3 = load_loth_baker_correlation_2013(
-        os.path.dirname(__file__) + '/data/'
+    B1, B2, B3 = load_loth_baker_correlation_2013(  # noqa: N806
+        os.path.dirname(__file__) + '/data/'  # noqa: PTH120
     )
     # Computing distance matrix
     num_stations = len(stations)
@@ -346,7 +346,7 @@ def loth_baker_correlation_2013(stations, im_name_list, num_simu):
             stn_dist[i, j] = get_distance_from_lat_lon(loc_i, loc_j)
     # Creating a covariance matrices for each of the principal components
     num_periods = len(periods)
-    covMatrix = np.zeros((num_stations * num_periods, num_stations * num_periods))
+    covMatrix = np.zeros((num_stations * num_periods, num_stations * num_periods))  # noqa: N806
     for i in range(num_periods):
         for j in range(num_periods):
             covMatrix[
@@ -364,7 +364,7 @@ def loth_baker_correlation_2013(stations, im_name_list, num_simu):
         tmp = []
         for j in range(num_stations):
             for k in range(num_periods):
-                tmp.append(residuals_raw[i, j + k * num_stations])
+                tmp.append(residuals_raw[i, j + k * num_stations])  # noqa: PERF401
         residuals_reorder.append(tmp)
     residuals_reorder = np.array(residuals_reorder)
     residuals = (
@@ -373,7 +373,7 @@ def loth_baker_correlation_2013(stations, im_name_list, num_simu):
         .swapaxes(1, 2)
     )
     # return
-    return residuals
+    return residuals  # noqa: RET504
 
 
 def load_markhvida_ceferino_baker_correlation_2017(datapath):
@@ -388,18 +388,18 @@ def load_markhvida_ceferino_baker_correlation_2017(datapath):
         B1: short-range coregionalization matrix
         B2: long-range coregionalization matrix
         B3: Nugget effect correlationalization matrix
-    """
-    MCB_model = pd.read_csv(
+    """  # noqa: D205, D400, D401
+    MCB_model = pd.read_csv(  # noqa: N806
         datapath + 'markhvida_ceferino_baker_correlation_2017_model_coeff.csv',
         index_col=None,
         header=0,
     )
-    MCB_pca = pd.read_csv(
+    MCB_pca = pd.read_csv(  # noqa: N806
         datapath + 'markhvida_ceferino_baker_correlation_2017_pca_coeff.csv',
         index_col=None,
         header=0,
     )
-    MCB_var = pd.read_csv(
+    MCB_var = pd.read_csv(  # noqa: N806
         datapath + 'markhvida_ceferino_baker_correlation_2017_var_scale.csv',
         index_col=None,
         header=0,
@@ -407,7 +407,7 @@ def load_markhvida_ceferino_baker_correlation_2017(datapath):
     return MCB_model, MCB_pca, MCB_var
 
 
-def markhvida_ceferino_baker_correlation_2017(
+def markhvida_ceferino_baker_correlation_2017(  # noqa: C901
     stations,
     im_name_list,
     num_simu,
@@ -427,7 +427,7 @@ def markhvida_ceferino_baker_correlation_2017(
         residuals: intra-event residuals
     Note:
         The valid range for T1 and T2 is 0.01s ~ 5.0s
-    """
+    """  # noqa: D205, D400, D401
     # Parse periods from intensity measure list
     periods = []
     for cur_im in im_name_list:
@@ -437,16 +437,16 @@ def markhvida_ceferino_baker_correlation_2017(
             elif cur_im.startswith('PGA'):
                 periods.append(0.0)
             else:
-                raise ValueError(
-                    f'CorrelationModel Markhvida et al. (2017): error - cannot handle {cur_im}'
+                raise ValueError(  # noqa: TRY003, TRY301
+                    f'CorrelationModel Markhvida et al. (2017): error - cannot handle {cur_im}'  # noqa: EM102
                 )
-        except ValueError:
-            print(
+        except ValueError:  # noqa: PERF203
+            print(  # noqa: T201
                 f'CorrelationModel.loth_baker_correlation_2013: error - cannot handle {cur_im}'
             )
     # Loading factors
-    MCB_model, MCB_pca, MCB_var = load_markhvida_ceferino_baker_correlation_2017(
-        os.path.dirname(__file__) + '/data/'
+    MCB_model, MCB_pca, MCB_var = load_markhvida_ceferino_baker_correlation_2017(  # noqa: N806
+        os.path.dirname(__file__) + '/data/'  # noqa: PTH120
     )
     c0 = MCB_model.loc[MCB_model['Type'] == 'c0']
     c0 = c0[c0.keys()[1:]]
@@ -473,7 +473,7 @@ def markhvida_ceferino_baker_correlation_2017(
     c1 = c1 / MCB_var.iloc[0, num_pc - 1]
     c2 = c2 / MCB_var.iloc[0, num_pc - 1]
     # Creating a covariance matrices for each of the principal components
-    covMatrix = np.zeros((num_stations, num_stations, num_pc))
+    covMatrix = np.zeros((num_stations, num_stations, num_pc))  # noqa: N806
     for i in range(num_pc):
         if c1.iloc[0, i] == 0:
             # nug
@@ -494,7 +494,7 @@ def markhvida_ceferino_baker_correlation_2017(
         ).T
     # Interpolating model_coef by periods
     interp_fun = interp1d(model_periods, model_coef, axis=0)
-    model_Tmax = 5.0
+    model_Tmax = 5.0  # noqa: N806
     simu_periods = [i for i in periods if i <= model_Tmax]
     if (len(simu_periods) == 1) and (simu_periods[0] == 0):
         # for PGA only (using 0.01 sec as the approxiamate)
@@ -511,8 +511,8 @@ def markhvida_ceferino_baker_correlation_2017(
         )
     # Appending residuals for periods greater than model_Tmax (fixing at 5.0)
     if max(periods) > model_Tmax:
-        Tmax_coef = interp_fun(model_Tmax)
-        Tmax_residuals = np.empty([num_stations, 1, num_simu])
+        Tmax_coef = interp_fun(model_Tmax)  # noqa: N806
+        Tmax_residuals = np.empty([num_stations, 1, num_simu])  # noqa: N806
         for i in range(num_simu):
             Tmax_residuals[:, :, i] = np.matmul(
                 residuals_pca[:, i, :], np.matrix(Tmax_coef).T
@@ -536,16 +536,16 @@ def load_du_ning_correlation_2021(datapath):
         DN_model: model coeff.
         DN_pca: pca coeff.
         DN_var: var of pca
-    """
-    DN_model = pd.read_csv(
+    """  # noqa: D205, D400, D401
+    DN_model = pd.read_csv(  # noqa: N806
         datapath + 'du_ning_correlation_2021_model_coeff.csv',
         index_col=None,
         header=0,
     )
-    DN_pca = pd.read_csv(
+    DN_pca = pd.read_csv(  # noqa: N806
         datapath + 'du_ning_correlation_2021_pca_coeff.csv', index_col=None, header=0
     )
-    DN_var = pd.read_csv(
+    DN_var = pd.read_csv(  # noqa: N806
         datapath + 'du_ning_correlation_2021_var_scale.csv', index_col=None, header=0
     )
     return DN_model, DN_pca, DN_var
@@ -566,7 +566,7 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
         residuals: intra-event residuals
     Note:
         The valid range for T1 and T2 is 0.01s ~ 5.0s
-    """
+    """  # noqa: D205, D400, D401
     # Parse periods_ims from intensity measure list
     periods_ims = []
     for cur_im in im_name_list:
@@ -575,8 +575,8 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
         else:
             periods_ims.append(cur_im)
     # Loading factors
-    DN_model, DN_pca, DN_var = load_du_ning_correlation_2021(
-        os.path.dirname(__file__) + '/data/'
+    DN_model, DN_pca, DN_var = load_du_ning_correlation_2021(  # noqa: N806
+        os.path.dirname(__file__) + '/data/'  # noqa: PTH120
     )
     c1 = DN_model.loc[DN_model['Type'] == 'c1']
     c1 = c1[c1.keys()[1:]]
@@ -610,7 +610,7 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
     a1 = a1 / DN_var.iloc[0, num_pc - 1]
     a2 = a2 / DN_var.iloc[0, num_pc - 1]
     # Creating a covariance matrices for each of the principal components
-    covMatrix = np.zeros((num_stations, num_stations, num_pc))
+    covMatrix = np.zeros((num_stations, num_stations, num_pc))  # noqa: N806
     for i in range(num_pc):
         if a1.iloc[0, i] == 0:
             # nug
@@ -630,17 +630,17 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
             mu, covMatrix[:, :, i], num_simu
         ).T
     # Interpolating model_coef by periods
-    pseudo_periods = [x for x in model_periods if type(x) == float] + [
+    pseudo_periods = [x for x in model_periods if type(x) == float] + [  # noqa: E721
         ims_map[x]
         for x in model_periods
-        if type(x) == str
+        if type(x) == str  # noqa: E721
     ]
     interp_fun = interp1d(pseudo_periods, model_coef, axis=0)
-    model_Tmax = 10.0
-    simu_periods = [min(i, model_Tmax) for i in periods_ims if type(i) == float] + [
+    model_Tmax = 10.0  # noqa: N806
+    simu_periods = [min(i, model_Tmax) for i in periods_ims if type(i) == float] + [  # noqa: E721
         ims_map[i]
         for i in periods_ims
-        if type(i) == str
+        if type(i) == str  # noqa: E721
     ]
     if (len(simu_periods) == 1) and (simu_periods[0] == 0):
         # for PGA only (using 0.01 sec as the approximate)
@@ -660,7 +660,7 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
     return residuals
 
 
-def baker_bradley_correlation_2017(im1=None, im2=None):
+def baker_bradley_correlation_2017(im1=None, im2=None):  # noqa: C901
     """Correlation between Sa and other IMs
     Baker, J. W., and Bradley, B. A. (2017). “Intensity measure correlations observed in
     the NGA-West2 database, and dependence of correlations on rupture and site parameters.”
@@ -671,7 +671,7 @@ def baker_bradley_correlation_2017(im1=None, im2=None):
         im2: 2nd intensity measure name
     Output:
         rho: correlation coefficient
-    """
+    """  # noqa: D205, D400
     # im map:
     im_map = {'DS575H': 0, 'DS595H': 1, 'PGA': 2, 'PGV': 3}
 
@@ -683,7 +683,7 @@ def baker_bradley_correlation_2017(im1=None, im2=None):
     else:
         tmp_tag = im_map.get(im1.upper(), None)
         if tmp_tag is None:
-            print(
+            print(  # noqa: T201
                 f'CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for unknown {im1}'
             )
             return 0.0
@@ -695,7 +695,7 @@ def baker_bradley_correlation_2017(im1=None, im2=None):
     else:
         tmp_tag = im_map.get(im2.upper(), None)
         if tmp_tag is None:
-            print(
+            print(  # noqa: T201
                 f'CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for unknown {im2}'
             )
             return 0.0
@@ -720,7 +720,7 @@ def baker_bradley_correlation_2017(im1=None, im2=None):
     # one Sa + one non-Sa
     im_list.remove('SA')
     im_tag = im_list[0]
-    T = [x for x in period_list if x is not None][0]
+    T = [x for x in period_list if x is not None][0]  # noqa: N806, RUF015
     # modeling coefficients
     a = [
         [0.00, -0.45, -0.39, -0.39, -0.06, 0.16],
@@ -744,7 +744,7 @@ def baker_bradley_correlation_2017(im1=None, im2=None):
     ]
 
     # rho
-    if im_tag < 2:
+    if im_tag < 2:  # noqa: PLR2004
         for j in range(1, len(e[im_tag])):
             if e[im_tag][j] >= T:
                 rho = a[im_tag][j] + (b[im_tag][j] - a[im_tag][j]) / np.log(
@@ -763,7 +763,7 @@ def baker_bradley_correlation_2017(im1=None, im2=None):
     return rho
 
 
-def get_distance_from_lat_lon(site_loc1, site_loc2):
+def get_distance_from_lat_lon(site_loc1, site_loc2):  # noqa: D103
     # earth radius (km)
     earth_radius_avg = 6371.0
     # site lat and lon
@@ -788,4 +788,4 @@ def get_distance_from_lat_lon(site_loc1, site_loc2):
         )
     )
     # return
-    return dist
+    return dist  # noqa: RET504

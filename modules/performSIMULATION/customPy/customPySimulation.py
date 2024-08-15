@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2022 Leland Stanford Junior University
 # Copyright (c) 2022 The Regents of the University of California
 #
@@ -46,14 +46,14 @@ import sys
 from pathlib import Path
 
 # import the common constants and methods
-this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
 main_dir = this_dir.parents[1]
 
 sys.path.insert(0, str(main_dir / 'common'))
 
-from simcenter_common import *
+from simcenter_common import *  # noqa: E402, F403
 
-convert_EDP = {
+convert_EDP = {  # noqa: N816
     'max_abs_acceleration': 'PFA',
     'max_rel_disp': 'PFD',
     'max_drift': 'PID',
@@ -63,44 +63,44 @@ convert_EDP = {
 }
 
 
-def write_RV():
+def write_RV():  # noqa: N802, D103
     # create an empty SIM file
 
-    SIM = {}
+    SIM = {}  # noqa: N806
 
-    with open('SIM.json', 'w', encoding='utf-8') as f:
+    with open('SIM.json', 'w', encoding='utf-8') as f:  # noqa: PTH123
         json.dump(SIM, f, indent=2)
 
-    # TODO: check simulation data exists and contains all important fields
-    # TODO: get simulation data & write to SIM file
+    # TODO: check simulation data exists and contains all important fields  # noqa: TD002
+    # TODO: get simulation data & write to SIM file  # noqa: TD002
 
 
-def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_path):
+def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_path):  # noqa: C901, N803, D103
     # these imports are here to save time when the app is called without
     # the -getRV flag
     import sys
 
-    log_msg('Startring simulation script...')
+    log_msg('Startring simulation script...')  # noqa: F405
 
-    working_dir = os.getcwd()
+    working_dir = os.getcwd()  # noqa: PTH109
 
-    sys.path.insert(0, os.getcwd())
+    sys.path.insert(0, os.getcwd())  # noqa: PTH109
 
     # load the AIM file
-    with open(AIM_input_path, encoding='utf-8') as f:
-        AIM_in = json.load(f)
+    with open(AIM_input_path, encoding='utf-8') as f:  # noqa: PTH123
+        AIM_in = json.load(f)  # noqa: N806
 
     # load the SAM file
-    with open(SAM_input_path, encoding='utf-8') as f:
-        SAM_in = json.load(f)
+    with open(SAM_input_path, encoding='utf-8') as f:  # noqa: PTH123
+        SAM_in = json.load(f)  # noqa: N806
 
     # load the event file
-    with open(EVENT_input_path, encoding='utf-8') as f:
-        EVENT_in = json.load(f)['Events'][0]
+    with open(EVENT_input_path, encoding='utf-8') as f:  # noqa: PTH123
+        EVENT_in = json.load(f)['Events'][0]  # noqa: N806
 
     # load the EDP file
-    with open(EDP_input_path, encoding='utf-8') as f:
-        EDP_in = json.load(f)
+    with open(EDP_input_path, encoding='utf-8') as f:  # noqa: PTH123
+        EDP_in = json.load(f)  # noqa: N806
 
     # KZ: commented out --> we're running at the current workdir
     # sys.path.insert(0, SAM_in['modelPath'])
@@ -111,16 +111,16 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_p
     custom_script_path = SAM_in['mainScript']
 
     # copy the custom scripts to the current directory if not yet
-    if os.path.exists(custom_script_path):
+    if os.path.exists(custom_script_path):  # noqa: PTH110
         pass
     else:
         custom_script_dir = SAM_in.get('modelPath', None)
         if custom_script_dir is None:
-            log_msg('No modelPath found in the SAM file.')
+            log_msg('No modelPath found in the SAM file.')  # noqa: F405
         else:
-            shutil.copytree(custom_script_dir, os.getcwd(), dirs_exist_ok=True)
-            log_msg(
-                f'Custom scripts copied from {custom_script_dir} to {os.getcwd()}'
+            shutil.copytree(custom_script_dir, os.getcwd(), dirs_exist_ok=True)  # noqa: PTH109
+            log_msg(  # noqa: F405
+                f'Custom scripts copied from {custom_script_dir} to {os.getcwd()}'  # noqa: PTH109
             )
 
     custom_script = importlib.__import__(
@@ -136,23 +136,23 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_p
     custom_analysis = custom_script.custom_analysis
 
     # run the analysis
-    EDP_res = custom_analysis(AIM=AIM_in, EVENT=EVENT_in, SAM=SAM_in, EDP=EDP_in)
+    EDP_res = custom_analysis(AIM=AIM_in, EVENT=EVENT_in, SAM=SAM_in, EDP=EDP_in)  # noqa: N806
 
     os.chdir(working_dir)
     results_txt = ''
 
-    EDP_list = EDP_in['EngineeringDemandParameters'][0]['responses']
+    EDP_list = EDP_in['EngineeringDemandParameters'][0]['responses']  # noqa: N806
     # KZ: rewriting the parsing step of EDP_res to EDP_list
     for response in EDP_list:
-        print('response = ', response)
+        print('response = ', response)  # noqa: T201
         response['scalar_data'] = []
         try:
             val = EDP_res.get(response['type'], None)
-            print('val = ', val)
+            print('val = ', val)  # noqa: T201
             if val is None:
                 # try conversion
                 edp_name = convert_EDP.get(response['type'], None)
-                print('edp_name = ', edp_name)
+                print('edp_name = ', edp_name)  # noqa: T201
                 if edp_name is not None:
                     if 'PID' in edp_name:
                         cur_floor = response['floor2']
@@ -166,12 +166,12 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_p
                     if len(dofs) == 0:
                         dofs = [1, 2]  # default is bidirection
                         response['dofs'] = dofs
-                    print('dofs = ', dofs)
+                    print('dofs = ', dofs)  # noqa: T201
                     for cur_dof in dofs:
                         key_name = (
                             '1-' + edp_name + f'-{int(cur_floor)}-{int(cur_dof)}'
                         )
-                        print('key_name = ', key_name)
+                        print('key_name = ', key_name)  # noqa: T201
                         res = EDP_res.get(key_name, None)
                         if res is None:
                             response['scalar_data'].append('NaN')
@@ -179,14 +179,14 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_p
                         else:
                             response['scalar_data'].append(float(EDP_res[key_name]))
                             results_txt += str(float(EDP_res[key_name])) + ' '
-                            print('response = ', response)
+                            print('response = ', response)  # noqa: T201
                 else:
                     response['scalar_data'] = ['NaN']
                     results_txt += 'NaN '
             else:
                 response['scalar_data'] = [float(val)]
                 results_txt += str(float(EDP_res[response['type']])) + ' '
-        except:
+        except:  # noqa: E722
             response['scalar_data'] = ['NaN']
             results_txt += 'NaN '
         # edp = EDP_res[response['type']][response['id']]
@@ -196,10 +196,10 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_p
         # print(response)
     results_txt = results_txt[:-1]
 
-    with open(EDP_input_path, 'w', encoding='utf-8') as f:
+    with open(EDP_input_path, 'w', encoding='utf-8') as f:  # noqa: PTH123
         json.dump(EDP_in, f, indent=2)
 
-    with open('results.out', 'w', encoding='utf-8') as f:
+    with open('results.out', 'w', encoding='utf-8') as f:  # noqa: PTH123
         f.write(results_txt)
 
     """
@@ -304,7 +304,7 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_p
         json.dump(EDP_in, f, indent=2)
     """
 
-    log_msg('Simulation script finished.')
+    log_msg('Simulation script finished.')  # noqa: F405
 
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -51,7 +51,7 @@ class of7Process:
     -------
             pprocesstext: Get all the text for the post-processing
 
-    """
+    """  # noqa: D205, D404
 
     #############################################################
     def pprocesstext(self, data, path):
@@ -61,7 +61,7 @@ class of7Process:
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
         solver = of7Solve()
@@ -70,7 +70,7 @@ class of7Process:
         pprocessfile = ', '.join(
             hydroutil.extract_element_from_json(data, ['Events', 'PProcessFile'])
         )
-        pprocesspath = os.path.join(path, pprocessfile)
+        pprocesspath = os.path.join(path, pprocessfile)  # noqa: PTH118
         pp_data = np.genfromtxt(pprocesspath, delimiter=',')
         num_points = np.shape(pp_data)[0]
         ptext = '\t\t(\n'
@@ -89,27 +89,27 @@ class of7Process:
 
         # Fields required
         value = 0
-        pprocessV = hydroutil.extract_element_from_json(
+        pprocessV = hydroutil.extract_element_from_json(  # noqa: N806
             data, ['Events', 'PPVelocity']
         )
         if pprocessV != [None]:
-            pprocessV = ', '.join(
+            pprocessV = ', '.join(  # noqa: N806
                 hydroutil.extract_element_from_json(data, ['Events', 'PPVelocity'])
             )
             if pprocessV == 'Yes':
                 value += 1
-        pprocessP = hydroutil.extract_element_from_json(
+        pprocessP = hydroutil.extract_element_from_json(  # noqa: N806
             data, ['Events', 'PPPressure']
         )
         if pprocessP != [None]:
-            pprocessP = ', '.join(
+            pprocessP = ', '.join(  # noqa: N806
                 hydroutil.extract_element_from_json(data, ['Events', 'PPPressure'])
             )
             if pprocessP == 'Yes':
                 value += 2
         if value == 1:
             fieldtext = '(U)'
-        elif value == 2:
+        elif value == 2:  # noqa: PLR2004
             fieldtext = '(p_rgh)'
         else:
             fieldtext = '(U p_rgh)'
@@ -132,17 +132,17 @@ class of7Process:
         sampletext = sampletext + ');\n\n'
         sampletext = sampletext + 'fields\t' + fieldtext + ';\n'
 
-        return sampletext
+        return sampletext  # noqa: RET504
 
     #############################################################
-    def pprocesscdict(self, data, path):
+    def pprocesscdict(self, data, path):  # noqa: C901
         """Creates the necessary files for new controldict for post-processing for openfoam7
 
         Arguments:
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
         solver = of7Solve()
@@ -154,7 +154,7 @@ class of7Process:
         simtype = ', '.join(
             hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
         )
-        if int(simtype) == 4:
+        if int(simtype) == 4:  # noqa: PLR2004
             cdicttext = cdicttext + '\napplication \t olaDyMFlow;\n\n'
         else:
             cdicttext = cdicttext + '\napplication \t olaFlow;\n\n'
@@ -167,21 +167,21 @@ class of7Process:
             cdicttext = cdicttext + 'startFrom \t latestTime;\n\n'
         elif restart == 'No':
             # Start time
-            startT = ', '.join(
+            startT = ', '.join(  # noqa: N806
                 hydroutil.extract_element_from_json(data, ['Events', 'StartTime'])
             )
             cdicttext = cdicttext + 'startFrom \t startTime;\n\n'
             cdicttext = cdicttext + 'startTime \t' + startT + ';\n\n'
 
         # End time
-        endT = ', '.join(
+        endT = ', '.join(  # noqa: N806
             hydroutil.extract_element_from_json(data, ['Events', 'EndTime'])
         )
         cdicttext = cdicttext + 'stopAt \t endTime;\n\n'
         cdicttext = cdicttext + 'endTime \t' + endT + ';\n\n'
 
         # Time interval
-        deltaT = ', '.join(
+        deltaT = ', '.join(  # noqa: N806
             hydroutil.extract_element_from_json(data, ['Events', 'TimeInterval'])
         )
         cdicttext = cdicttext + 'deltaT \t' + deltaT + ';\n\n'
@@ -190,7 +190,7 @@ class of7Process:
         cdicttext = cdicttext + 'writeControl \t adjustableRunTime;\n\n'
 
         # Write interval
-        writeT = ', '.join(
+        writeT = ', '.join(  # noqa: N806
             hydroutil.extract_element_from_json(data, ['Events', 'WriteInterval'])
         )
         cdicttext = cdicttext + 'writeInterval \t' + writeT + ';\n\n'
@@ -212,7 +212,7 @@ class of7Process:
         pprocessfile = ', '.join(
             hydroutil.extract_element_from_json(data, ['Events', 'PProcessFile'])
         )
-        pprocesspath = os.path.join(path, pprocessfile)
+        pprocesspath = os.path.join(path, pprocessfile)  # noqa: PTH118
         pp_data = np.genfromtxt(pprocesspath, delimiter=',')
         num_points = np.shape(pp_data)[0]
         ptext = '\t\t\t\t(\n'
@@ -231,27 +231,27 @@ class of7Process:
 
         # Fields required
         value = 0
-        pprocessV = hydroutil.extract_element_from_json(
+        pprocessV = hydroutil.extract_element_from_json(  # noqa: N806
             data, ['Events', 'PPVelocity']
         )
         if pprocessV != [None]:
-            pprocessV = ', '.join(
+            pprocessV = ', '.join(  # noqa: N806
                 hydroutil.extract_element_from_json(data, ['Events', 'PPVelocity'])
             )
             if pprocessV == 'Yes':
                 value += 1
-        pprocessP = hydroutil.extract_element_from_json(
+        pprocessP = hydroutil.extract_element_from_json(  # noqa: N806
             data, ['Events', 'PPPressure']
         )
         if pprocessP != [None]:
-            pprocessP = ', '.join(
+            pprocessP = ', '.join(  # noqa: N806
                 hydroutil.extract_element_from_json(data, ['Events', 'PPPressure'])
             )
             if pprocessP == 'Yes':
                 value += 2
         if value == 1:
             fieldtext = '(U)'
-        elif value == 2:
+        elif value == 2:  # noqa: PLR2004
             fieldtext = '(p_rgh)'
         else:
             fieldtext = '(U p_rgh)'
@@ -275,17 +275,17 @@ class of7Process:
         cdicttext = cdicttext + '\t\tfields\t' + fieldtext + ';\n'
         cdicttext = cdicttext + '\t}\n}'
 
-        return cdicttext
+        return cdicttext  # noqa: RET504
 
     #############################################################
-    def scripts(self, data, path):
+    def scripts(self, data, path):  # noqa: ARG002
         """Creates the necessary postprocessing in scripts
 
         Arguments:
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -294,7 +294,7 @@ class of7Process:
         )
         if pprocess == [None]:
             return 0
-        else:
+        else:  # noqa: RET505
             pprocess = ', '.join(
                 hydroutil.extract_element_from_json(
                     data, ['Events', 'Postprocessing']
@@ -307,13 +307,13 @@ class of7Process:
                 # Reconstruct case
                 caseruntext = caseruntext + 'reconstructPar > reconstruct.log \n'
                 # Move new controlDict
-                cdictpppath = os.path.join('system', 'controlDict')
+                cdictpppath = os.path.join('system', 'controlDict')  # noqa: PTH118
                 caseruntext = caseruntext + 'cp cdictpp ' + cdictpppath + '\n'
                 # Move the wavemakerfile (if exists)
-                if os.path.exists(os.path.join('constant', 'wavemakerMovement.txt')):
+                if os.path.exists(os.path.join('constant', 'wavemakerMovement.txt')):  # noqa: PTH110, PTH118
                     caseruntext = caseruntext + 'mkdir extras\n'
-                    wavepath = os.path.join('constant', 'wavemakerMovement.txt')
-                    wavepathnew = os.path.join('extras', 'wavemakerMovement.txt')
+                    wavepath = os.path.join('constant', 'wavemakerMovement.txt')  # noqa: PTH118
+                    wavepathnew = os.path.join('extras', 'wavemakerMovement.txt')  # noqa: PTH118
                     caseruntext = (
                         caseruntext + 'mv ' + wavepath + ' ' + wavepathnew + '\n'
                     )
@@ -321,16 +321,16 @@ class of7Process:
                 caseruntext = (
                     caseruntext
                     + 'cp sample '
-                    + os.path.join('system', 'sample')
+                    + os.path.join('system', 'sample')  # noqa: PTH118
                     + '\n'
                 )
                 # Start the postprocessing
                 caseruntext = caseruntext + 'postProcess -func sample \n\n'
 
         # Write to caserun file
-        scriptfile = open('caserun.sh', 'a')
+        scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
         scriptfile.write(caseruntext)
-        scriptfile.close()
+        scriptfile.close()  # noqa: RET503
 
     #############################################################
     def pprocesscheck(self, data, path):
@@ -340,7 +340,7 @@ class of7Process:
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -351,11 +351,11 @@ class of7Process:
 
         if pprocess == 'No':
             return 0
-        else:
-            pprocessV = ', '.join(
+        else:  # noqa: RET505
+            pprocessV = ', '.join(  # noqa: N806
                 hydroutil.extract_element_from_json(data, ['Events', 'PPVelocity'])
             )
-            pprocessP = ', '.join(
+            pprocessP = ', '.join(  # noqa: N806
                 hydroutil.extract_element_from_json(data, ['Events', 'PPPressure'])
             )
             if pprocessV == 'Yes' or pprocessP == 'Yes':
@@ -364,13 +364,13 @@ class of7Process:
                 )
                 if pprocessfile == [None]:
                     return -1
-                else:
+                else:  # noqa: RET505
                     pprocessfile = ', '.join(
                         hydroutil.extract_element_from_json(
                             data, ['Events', 'PProcessFile']
                         )
                     )
-                    if not os.path.exists(os.path.join(path, pprocessfile)):
+                    if not os.path.exists(os.path.join(path, pprocessfile)):  # noqa: PTH110, PTH118
                         return -1
             else:
                 return 0

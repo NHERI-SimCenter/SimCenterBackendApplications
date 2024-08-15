@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Node_Damage_Model_Help_Window.ui'
+# Form implementation generated from reading ui file 'Node_Damage_Model_Help_Window.ui'  # noqa: N999, D100
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,8 +8,8 @@
 from PyQt5 import QtCore, QtWidgets
 
 
-class Ui_Node_Damage_Model_Help:
-    def setupUi(self, Node_Damage_Model_Help):
+class Ui_Node_Damage_Model_Help:  # noqa: D101
+    def setupUi(self, Node_Damage_Model_Help):  # noqa: N802, N803, D102
         Node_Damage_Model_Help.setObjectName('Node_Damage_Model_Help')
         Node_Damage_Model_Help.resize(340, 130)
         Node_Damage_Model_Help.setMinimumSize(QtCore.QSize(340, 130))
@@ -31,7 +31,7 @@ class Ui_Node_Damage_Model_Help:
         self.verticalLayout_2.addWidget(self.label_3)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName('horizontalLayout_2')
-        spacerItem = QtWidgets.QSpacerItem(
+        spacerItem = QtWidgets.QSpacerItem(  # noqa: N806
             40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
         )
         self.horizontalLayout_2.addItem(spacerItem)
@@ -45,7 +45,7 @@ class Ui_Node_Damage_Model_Help:
         self.retranslateUi(Node_Damage_Model_Help)
         QtCore.QMetaObject.connectSlotsByName(Node_Damage_Model_Help)
 
-    def retranslateUi(self, Node_Damage_Model_Help):
+    def retranslateUi(self, Node_Damage_Model_Help):  # noqa: N802, N803, D102
         _translate = QtCore.QCoreApplication.translate
         Node_Damage_Model_Help.setWindowTitle(
             _translate('Node_Damage_Model_Help', 'Help')

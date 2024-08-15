@@ -1,35 +1,35 @@
-import argparse
+import argparse  # noqa: INP001, D100
 import json
 
 
-class FloorForces:
+class FloorForces:  # noqa: D101
     def __init__(self):
         self.X = [0]
         self.Y = [0]
         self.Z = [0]
 
 
-def directionToDof(direction):
-    """Converts direction to degree of freedom"""
-    directioMap = {'X': 1, 'Y': 2, 'Z': 3}
+def directionToDof(direction):  # noqa: N802
+    """Converts direction to degree of freedom"""  # noqa: D400, D401
+    directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
 
     return directioMap[direction]
 
 
-def addFloorForceToEvent(
-    timeSeriesArray,
-    patternsArray,
+def addFloorForceToEvent(  # noqa: N802
+    timeSeriesArray,  # noqa: N803
+    patternsArray,  # noqa: N803
     force,
     direction,
     floor,
-    dT,
+    dT,  # noqa: N803
 ):
-    """Add force (one component) time series and pattern in the event file"""
-    seriesName = 'HydroForceSeries_' + str(floor) + direction
-    timeSeries = {'name': seriesName, 'dT': dT, 'type': 'Value', 'data': force}
+    """Add force (one component) time series and pattern in the event file"""  # noqa: D400
+    seriesName = 'HydroForceSeries_' + str(floor) + direction  # noqa: N806
+    timeSeries = {'name': seriesName, 'dT': dT, 'type': 'Value', 'data': force}  # noqa: N806
 
     timeSeriesArray.append(timeSeries)
-    patternName = 'HydroForcePattern_' + str(floor) + direction
+    patternName = 'HydroForcePattern_' + str(floor) + direction  # noqa: N806
     pattern = {
         'name': patternName,
         'timeSeries': seriesName,
@@ -41,10 +41,10 @@ def addFloorForceToEvent(
     patternsArray.append(pattern)
 
 
-def addFloorForceToEvent(patternsArray, force, direction, floor):
-    """Add force (one component) time series and pattern in the event file"""
-    seriesName = 'HydroForceSeries_' + str(floor) + direction
-    patternName = 'HydroForcePattern_' + str(floor) + direction
+def addFloorForceToEvent(patternsArray, force, direction, floor):  # noqa: ARG001, N802, N803, F811
+    """Add force (one component) time series and pattern in the event file"""  # noqa: D400
+    seriesName = 'HydroForceSeries_' + str(floor) + direction  # noqa: N806
+    patternName = 'HydroForcePattern_' + str(floor) + direction  # noqa: N806
     pattern = {
         'name': patternName,
         'timeSeries': seriesName,
@@ -56,19 +56,19 @@ def addFloorForceToEvent(patternsArray, force, direction, floor):
     patternsArray.append(pattern)
 
 
-def addFloorPressure(pressureArray, floor):
-    """Add floor pressure in the event file"""
-    floorPressure = {'story': str(floor), 'pressure': [0.0, 0.0]}
+def addFloorPressure(pressureArray, floor):  # noqa: N802, N803
+    """Add floor pressure in the event file"""  # noqa: D400
+    floorPressure = {'story': str(floor), 'pressure': [0.0, 0.0]}  # noqa: N806
 
     pressureArray.append(floorPressure)
 
 
-def writeEVENT(forces, eventFilePath):
-    """This method writes the EVENT.json file"""
-    timeSeriesArray = []
-    patternsArray = []
-    pressureArray = []
-    hydroEventJson = {
+def writeEVENT(forces, eventFilePath):  # noqa: N802, N803
+    """This method writes the EVENT.json file"""  # noqa: D400, D401, D404
+    timeSeriesArray = []  # noqa: N806, F841
+    patternsArray = []  # noqa: N806
+    pressureArray = []  # noqa: N806
+    hydroEventJson = {  # noqa: N806
         'type': 'Hydro',  # Using HydroUQ
         'subtype': 'MPM',  # Using ClaymoreUW Material Point Method
         # "timeSeries": [], # From GeoClawOpenFOAM
@@ -80,21 +80,21 @@ def writeEVENT(forces, eventFilePath):
     }
 
     # Creating the event dictionary that will be used to export the EVENT json file
-    eventDict = {'randomVariables': [], 'Events': [hydroEventJson]}
+    eventDict = {'randomVariables': [], 'Events': [hydroEventJson]}  # noqa: N806
 
     # Adding floor forces
-    for floorForces in forces:
+    for floorForces in forces:  # noqa: N806
         floor = forces.index(floorForces) + 1
         addFloorForceToEvent(patternsArray, floorForces.X, 'X', floor)
         addFloorForceToEvent(patternsArray, floorForces.Y, 'Y', floor)
         # addFloorPressure(pressureArray, floor) # From GeoClawOpenFOAM
 
-    with open(eventFilePath, 'w', encoding='utf-8') as eventsFile:
+    with open(eventFilePath, 'w', encoding='utf-8') as eventsFile:  # noqa: PTH123, N806
         json.dump(eventDict, eventsFile)
 
 
-def GetFloorsCount(BIMFilePath):
-    with open(BIMFilePath, encoding='utf-8') as BIMFile:
+def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
+    with open(BIMFilePath, encoding='utf-8') as BIMFile:  # noqa: PTH123, N806
         bim = json.load(BIMFile)
     return int(bim['GeneralInformation']['stories'])
 
@@ -116,12 +116,12 @@ if __name__ == '__main__':
     # Parsing arguments
     arguments, unknowns = parser.parse_known_args()
 
-    if arguments.getRV == True:
+    if arguments.getRV == True:  # noqa: E712
         # Read the number of floors
         # Reads BIM file
-        floorsCount = GetFloorsCount(arguments.filenameAIM)
+        floorsCount = GetFloorsCount(arguments.filenameAIM)  # noqa: N816
         forces = []
-        for i in range(floorsCount):
-            forces.append(FloorForces())
+        for i in range(floorsCount):  # noqa: B007
+            forces.append(FloorForces())  # noqa: PERF401
         # Write the event file
         writeEVENT(forces, arguments.filenameEVENT)

@@ -1,16 +1,16 @@
 """Created on Thu Oct 27 19:19:02 2022
 
 @author: snaeimi
-"""
+"""  # noqa: N999, D400
 
 import os
 
 from PyQt5 import QtGui, QtWidgets
 
 
-class Hydraulic_Tab_Designer:
+class Hydraulic_Tab_Designer:  # noqa: D101
     def __init__(self):
-        """These are variables that are shared between ui and settings."""
+        """These are variables that are shared between ui and settings."""  # noqa: D401
         self.setHydraulicSettings(self.settings)
 
         """
@@ -41,9 +41,9 @@ class Hydraulic_Tab_Designer:
         self.hydraulic_time_step_line.textEdited.connect(
             self.hydraulicTimeStepValidatorHelper
         )
-        self.current_inp_directory = os.getcwd()
+        self.current_inp_directory = os.getcwd()  # noqa: PTH109
 
-    def getHydraulicSettings(self):
+    def getHydraulicSettings(self):  # noqa: N802, D102
         if self.wn_inp == '':
             self.errorMSG(
                 'REWET', 'Water distribution network File must be provided'
@@ -65,7 +65,7 @@ class Hydraulic_Tab_Designer:
 
         return True
 
-    def setHydraulicUI(self):
+    def setHydraulicUI(self):  # noqa: N802, D102
         self.wdn_addr_line.setText(self.wn_inp)
         self.last_demand_ratio_value = self.demand_ratio
         self.demand_ratio_line.setText(str(self.last_demand_ratio_value))
@@ -81,7 +81,7 @@ class Hydraulic_Tab_Designer:
         self.required_pressure_line.setText(str(self.required_pressure))
         self.hydraulic_time_step_line.setText(str(self.hydraulic_time_step))
 
-    def setHydraulicSettings(self, settings):
+    def setHydraulicSettings(self, settings):  # noqa: N802, D102
         self.wn_inp = settings.process['WN_INP']
         self.demand_ratio = settings.process['demand_ratio']
         self.solver = settings.process['solver_type']
@@ -89,24 +89,24 @@ class Hydraulic_Tab_Designer:
         self.required_pressure = settings.scenario['required_pressure']
         self.hydraulic_time_step = settings.scenario['hydraulic_time_step']
 
-    def demandRatioValidatorHelper(self, x):
+    def demandRatioValidatorHelper(self, x):  # noqa: N802, D102
         if float(x) > 1:
             self.demand_ratio_line.setText(self.last_demand_ratio_value)
         else:
             self.last_demand_ratio_value = x
         # print(x)
 
-    def hydraulicTimeStepValidatorHelper(self, x):
+    def hydraulicTimeStepValidatorHelper(self, x):  # noqa: ARG002, N802, D102
         try:
             hydraulic_time_step = int(float(self.hydraulic_time_step_line.text()))
-        except:
+        except:  # noqa: E722
             hydraulic_time_step = 0
         simulation_time_step = int(float(self.simulation_time_step_line.text()))
 
         if hydraulic_time_step > simulation_time_step:
             self.hydraulic_time_step_line.setText(str(simulation_time_step))
 
-    def wdnFileBroweserClicked(self):
+    def wdnFileBroweserClicked(self):  # noqa: N802, D102
         file = QtWidgets.QFileDialog.getOpenFileName(
             self.asli_MainWindow,
             'Open file',

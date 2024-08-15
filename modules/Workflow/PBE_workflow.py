@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -46,25 +46,25 @@ import os
 import sys
 
 if sys.version.startswith('2'):
-    range = xrange
-    string_types = basestring
+    range = xrange  # noqa: A001, F821
+    string_types = basestring  # noqa: F821
 else:
     string_types = str
 
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
 
 import whale.main as whale
 from whale.main import log_div, log_msg
 
 
-def main(run_type, input_file, app_registry):
+def main(run_type, input_file, app_registry):  # noqa: D103
     # initialize the log file
-    with open(input_file) as f:
+    with open(input_file) as f:  # noqa: PTH123
         inputs = json.load(f)
-    runDir = inputs['runDir']
+    runDir = inputs['runDir']  # noqa: N806
 
     whale.log_file = runDir + '/log.txt'
-    with open(whale.log_file, 'w') as f:
+    with open(whale.log_file, 'w') as f:  # noqa: PTH123
         f.write('PBE workflow\n')
 
     # echo the inputs
@@ -81,10 +81,10 @@ def main(run_type, input_file, app_registry):
             is not None
         ):
             run_type = 'loss_only'
-    except:
+    except:  # noqa: S110, E722
         pass
 
-    WF = whale.Workflow(
+    WF = whale.Workflow(  # noqa: N806
         run_type,
         input_file,
         app_registry,
@@ -112,13 +112,13 @@ def main(run_type, input_file, app_registry):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
-        print('\nNeed three arguments, e.g.:\n')
-        print(
-            '    python %s action workflowinputfile.json workflowapplications.json'
+    if len(sys.argv) != 4:  # noqa: PLR2004
+        print('\nNeed three arguments, e.g.:\n')  # noqa: T201
+        print(  # noqa: T201
+            '    python %s action workflowinputfile.json workflowapplications.json'  # noqa: UP031
             % sys.argv[0]
         )
-        print('\nwhere: action is either check or run\n')
-        exit(1)
+        print('\nwhere: action is either check or run\n')  # noqa: T201
+        exit(1)  # noqa: PLR1722
 
     main(run_type=sys.argv[1], input_file=sys.argv[2], app_registry=sys.argv[3])

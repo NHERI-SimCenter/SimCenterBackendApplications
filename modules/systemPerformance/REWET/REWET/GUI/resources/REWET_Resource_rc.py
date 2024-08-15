@@ -1,4 +1,4 @@
-# Resource object code
+# Resource object code  # noqa: INP001, D100
 #
 # Created by: The Resource Compiler for PyQt5 (Qt v5.12.9)
 #
@@ -717,13 +717,13 @@ else:
     qt_resource_struct = qt_resource_struct_v2
 
 
-def qInitResources():
+def qInitResources():  # noqa: N802, D103
     QtCore.qRegisterResourceData(
         rcc_version, qt_resource_struct, qt_resource_name, qt_resource_data
     )
 
 
-def qCleanupResources():
+def qCleanupResources():  # noqa: N802, D103
     QtCore.qUnregisterResourceData(
         rcc_version, qt_resource_struct, qt_resource_name, qt_resource_data
     )

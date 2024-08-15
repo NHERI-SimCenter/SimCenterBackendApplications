@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3  # noqa: EXE001
 
 """Plot the wave kinematics (elevation, velocity, acceleration) for linear waves
 Different locations, times and superposition of frequencies can be used.
-"""
+"""  # noqa: D205
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,10 +11,10 @@ import numpy as np
 from welib.tools.figure import defaultRC
 
 defaultRC()
-from welib.hydro.morison import *
-from welib.hydro.wavekin import *
-from welib.hydro.wavekin import elevation2d, kinematics2d, wavenumber
-from welib.tools.colors import python_colors
+from welib.hydro.morison import *  # noqa: E402, F403
+from welib.hydro.wavekin import *  # noqa: E402, F403
+from welib.hydro.wavekin import elevation2d, kinematics2d, wavenumber  # noqa: E402
+from welib.tools.colors import python_colors  # noqa: E402
 
 fig, axes = plt.subplots(2, 2, sharey=False, figsize=(6.4, 4.8))  # (6.4,4.8)
 fig.subplots_adjust(
@@ -65,8 +65,8 @@ time = np.linspace(0, 2 * T[0] / 2, 5)
 vel, acc = kinematics2d(a, f, k, eps, h, time, z, x)
 # eta = elevation2d(a, f, k, eps, time, x)
 ax = axes[1, 0]
-sT = ['0', 'T/4', 'T/2', '3T/4']
-for it, t in enumerate(time[:-1]):
+sT = ['0', 'T/4', 'T/2', '3T/4']  # noqa: N816
+for it, t in enumerate(time[:-1]):  # noqa: B007
     ax.plot(
         vel[:, it],
         z,
@@ -74,7 +74,7 @@ for it, t in enumerate(time[:-1]):
         c=python_colors(it),
         label=f'vel, t={sT[it]}',
     )
-for it, t in enumerate(time[:-1]):
+for it, t in enumerate(time[:-1]):  # noqa: B007
     ax.plot(
         acc[:, it],
         z,

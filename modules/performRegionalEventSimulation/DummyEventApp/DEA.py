@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -40,8 +40,8 @@
 import argparse
 
 
-def simulate_event(in1, in2):
-    print(f'SIMULATING EVENT: {in1}, {in2}')
+def simulate_event(in1, in2):  # noqa: D103
+    print(f'SIMULATING EVENT: {in1}, {in2}')  # noqa: T201
 
 
 if __name__ == '__main__':

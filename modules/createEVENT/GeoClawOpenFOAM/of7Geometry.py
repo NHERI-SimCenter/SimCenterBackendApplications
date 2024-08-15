@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -55,10 +55,10 @@ class of7Geometry:
             geomcheck: Checks if all files required for creating the geometry exists
             createSTL: Creates the STL files
 
-    """
+    """  # noqa: D205, D404
 
     #############################################################
-    def geomcheck(self, data, path):
+    def geomcheck(self, data, path):  # noqa: C901, PLR0911
         """Checks if all files required for creating the geometry exists
 
         Arguments:
@@ -66,7 +66,7 @@ class of7Geometry:
                 data: all the JSON data
                 path: Path to where the dakota.json exists
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -76,14 +76,14 @@ class of7Geometry:
         )
 
         # Simtype: Multiscale with SW solutions
-        if int(simtype) == 1 or int(simtype) == 2:
+        if int(simtype) == 1 or int(simtype) == 2:  # noqa: PLR2004
             # Get the number of bathymetry files
             numbathy = hydroutil.extract_element_from_json(
                 data, ['Events', 'NumBathymetryFiles']
             )
             if numbathy == [None]:
                 return -1
-            else:
+            else:  # noqa: RET505
                 numbathy = ', '.join(
                     hydroutil.extract_element_from_json(
                         data, ['Events', 'NumBathymetryFiles']
@@ -99,14 +99,14 @@ class of7Geometry:
                     )
                     if bathyfilename == [None]:
                         return -1
-                    else:
+                    else:  # noqa: RET505
                         bathyfilename = ', '.join(
                             hydroutil.extract_element_from_json(
                                 data, ['Events', 'BathymetryFile' + str(ii)]
                             )
                         )
                         bathyfilepath = os.join.path(path, bathyfilename)
-                        if not os.path.isfile(bathyfilepath):
+                        if not os.path.isfile(bathyfilepath):  # noqa: PTH113
                             return -1
 
             if int(simtype) == 1:
@@ -116,7 +116,7 @@ class of7Geometry:
                 )
                 if numsoln == [None]:
                     return -1
-                else:
+                else:  # noqa: RET505
                     numsoln = ', '.join(
                         hydroutil.extract_element_from_json(
                             data, ['Events', 'NumSolutionFiles']
@@ -132,14 +132,14 @@ class of7Geometry:
                     )
                     if solnfilename == [None]:
                         return -1
-                    else:
+                    else:  # noqa: RET505
                         solnfilename = ', '.join(
                             hydroutil.extract_element_from_json(
                                 data, ['Events', 'SWSolutionFile' + str(ii)]
                             )
                         )
                         solnfilepath = os.join.path(path, solnfilename)
-                        if not os.path.isfile(solnfilepath):
+                        if not os.path.isfile(solnfilepath):  # noqa: PTH113
                             return -1
 
                 # Check the SW-CFD interface file
@@ -148,50 +148,50 @@ class of7Geometry:
                 )
                 if swcfdfile == [None]:
                     return -1
-                else:
+                else:  # noqa: RET505
                     swcfdfile = ', '.join(
                         hydroutil.extract_element_from_json(
                             data, ['Events', 'SWCFDInteFile']
                         )
                     )
                     swcfdfilepath = os.join.path(path, swcfdfile)
-                    if not os.path.isfile(swcfdfilepath):
+                    if not os.path.isfile(swcfdfilepath):  # noqa: PTH113
                         return -1
 
         # STL file
-        elif int(simtype) == 3:
+        elif int(simtype) == 3:  # noqa: PLR2004
             # Entry.stl
             entrypath = os.join.path(path, 'Entry.stl')
-            if not os.path.isfile(entrypath):
+            if not os.path.isfile(entrypath):  # noqa: PTH113
                 return -1
 
             # Exit.stl
             exitpath = os.join.path(path, 'Exit.stl')
-            if not os.path.isfile(exitpath):
+            if not os.path.isfile(exitpath):  # noqa: PTH113
                 return -1
 
             # Top.stl
             toppath = os.join.path(path, 'Top.stl')
-            if not os.path.isfile(toppath):
+            if not os.path.isfile(toppath):  # noqa: PTH113
                 return -1
 
             # Bottom.stl
             bottompath = os.join.path(path, 'Bottom.stl')
-            if not os.path.isfile(bottompath):
+            if not os.path.isfile(bottompath):  # noqa: PTH113
                 return -1
 
             # Left.stl
             leftpath = os.join.path(path, 'Left.stl')
-            if not os.path.isfile(leftpath):
+            if not os.path.isfile(leftpath):  # noqa: PTH113
                 return -1
 
             # Right.stl
             rightpath = os.join.path(path, 'Right.stl')
-            if not os.path.isfile(rightpath):
+            if not os.path.isfile(rightpath):  # noqa: PTH113
                 return -1
 
         # Wave flume
-        elif int(simtype) == 4:
+        elif int(simtype) == 4:  # noqa: PLR2004
             # Get the flume type
             flumetype = ', '.join(
                 hydroutil.extract_element_from_json(
@@ -207,13 +207,13 @@ class of7Geometry:
                 )
                 if numsegs == [None]:
                     return -1
-                else:
+                else:  # noqa: RET505
                     numsegs = ', '.join(
                         hydroutil.extract_element_from_json(
                             data, ['Events', 'NumFlumeSegments']
                         )
                     )
-                    if int(numsegs) < 4:
+                    if int(numsegs) < 4:  # noqa: PLR2004
                         return -1
                     flumesegs = hydroutil.extract_element_from_json(
                         data, ['Events', 'FlumeSegments']
@@ -227,7 +227,7 @@ class of7Geometry:
         return 0
 
     #############################################################
-    def createOFSTL(self, data, path):
+    def createOFSTL(self, data, path):  # noqa: C901, N802
         """Creates the STL files
 
         Arguments:
@@ -235,7 +235,7 @@ class of7Geometry:
                 data: all the JSON data
                 path: Path to where the dakota.json exists
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -253,18 +253,18 @@ class of7Geometry:
                 return -1
 
         # Bathymetry only
-        elif int(simtype) == 2:
-            print('Bathy')
+        elif int(simtype) == 2:  # noqa: PLR2004
+            print('Bathy')  # noqa: T201
             finalgeom = GeoClawBathy()
             # Create geometry (i.e. STL files) and extreme file
             ecode = finalgeom.creategeom(data, path)
             if ecode < 0:
                 return -1
 
-        elif int(simtype) == 3:
+        elif int(simtype) == 3:  # noqa: PLR2004
             return 0
 
-        elif int(simtype) == 4:
+        elif int(simtype) == 4:  # noqa: PLR2004
             # Get the flume type
             flumetype = ', '.join(
                 hydroutil.extract_element_from_json(
@@ -298,7 +298,7 @@ class of7Geometry:
         ---------
                 NONE
 
-        """
+        """  # noqa: D400
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -308,14 +308,14 @@ class of7Geometry:
         )
 
         # Combine STL files for Hydro mesh or using mesh dict
-        if int(mesher[0]) == 0 or int(mesher[0]) == 2:
+        if int(mesher[0]) == 0 or int(mesher[0]) == 2:  # noqa: PLR2004
             # Get building flag from temp-geometry file
             geofile = 'temp_geometry.txt'
             data_geoext = np.genfromtxt(geofile, dtype=(float))
             flag = int(data_geoext[6])
 
             # If translate file exists, use it
-            if os.path.exists('translate.sh'):
+            if os.path.exists('translate.sh'):  # noqa: PTH110
                 caseruntext = 'echo Translating building STL files...\n'
                 caseruntext = caseruntext + 'chmod +x translate.sh\n'
                 caseruntext = caseruntext + './translate.sh\n\n'
@@ -324,14 +324,14 @@ class of7Geometry:
                 caseruntext = 'echo Combining STL files for usage...\n'
 
             # Join all paths
-            entryf = os.path.join('constant', 'triSurface', 'Entry.stl')
-            exitf = os.path.join('constant', 'triSurface', 'Exit.stl')
-            topf = os.path.join('constant', 'triSurface', 'Top.stl')
-            bottomf = os.path.join('constant', 'triSurface', 'Bottom.stl')
-            leftf = os.path.join('constant', 'triSurface', 'Left.stl')
-            rightf = os.path.join('constant', 'triSurface', 'Right.stl')
-            buildingf = os.path.join('constant', 'triSurface', 'Building.stl')
-            otherbuildingf = os.path.join(
+            entryf = os.path.join('constant', 'triSurface', 'Entry.stl')  # noqa: PTH118
+            exitf = os.path.join('constant', 'triSurface', 'Exit.stl')  # noqa: PTH118
+            topf = os.path.join('constant', 'triSurface', 'Top.stl')  # noqa: PTH118
+            bottomf = os.path.join('constant', 'triSurface', 'Bottom.stl')  # noqa: PTH118
+            leftf = os.path.join('constant', 'triSurface', 'Left.stl')  # noqa: PTH118
+            rightf = os.path.join('constant', 'triSurface', 'Right.stl')  # noqa: PTH118
+            buildingf = os.path.join('constant', 'triSurface', 'Building.stl')  # noqa: PTH118
+            otherbuildingf = os.path.join(  # noqa: PTH118
                 'constant', 'triSurface', 'OtherBuilding.stl'
             )
             all01 = (
@@ -348,7 +348,7 @@ class of7Geometry:
                 + ' '
                 + rightf
             )
-            full = os.path.join('constant', 'triSurface', 'Full.stl')
+            full = os.path.join('constant', 'triSurface', 'Full.stl')  # noqa: PTH118
 
             # For different building cases
             if flag == 0:
@@ -357,7 +357,7 @@ class of7Geometry:
                 caseruntext = (
                     caseruntext + all01 + ' ' + buildingf + ' > ' + full + '\n\n'
                 )
-            elif flag == 2:
+            elif flag == 2:  # noqa: PLR2004
                 caseruntext = (
                     caseruntext
                     + all01
@@ -369,7 +369,7 @@ class of7Geometry:
                     + full
                     + '\n\n'
                 )
-            elif flag == 3:
+            elif flag == 3:  # noqa: PLR2004
                 caseruntext = (
                     caseruntext
                     + all01
@@ -380,6 +380,6 @@ class of7Geometry:
                     + '\n\n'
                 )
             # Write to caserun file
-            scriptfile = open('caserun.sh', 'a')
+            scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
             scriptfile.write(caseruntext)
             scriptfile.close()

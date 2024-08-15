@@ -1,4 +1,4 @@
-from wntrfr.sim.results import SimulationResults
+from wntrfr.sim.results import SimulationResults  # noqa: D100
 
 
 class SimulationResults(SimulationResults):

@@ -1,7 +1,7 @@
 """Created on Thu Nov 10 18:26:02 2022
 
 @author: snaeimi
-"""
+"""  # noqa: N999, D400
 
 # Imports
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as Canvas
@@ -12,7 +12,7 @@ from matplotlib.figure import Figure
 from PyQt5 import QtWidgets
 
 
-class MplCanvas(Canvas):
+class MplCanvas(Canvas):  # noqa: D101
     def __init__(self):
         self.fig = Figure(figsize=(100, 40), dpi=100, tight_layout=True)
         self.ax = self.fig.add_subplot(111)
@@ -24,7 +24,7 @@ class MplCanvas(Canvas):
 
 
 # Matplotlib widget
-class MplWidget(QtWidgets.QWidget):
+class MplWidget(QtWidgets.QWidget):  # noqa: D101
     def __init__(self, parent=None):
         QtWidgets.QWidget.__init__(self, parent)  # Inherit from QWidget
         self.canvas = MplCanvas()  # Create canvas object

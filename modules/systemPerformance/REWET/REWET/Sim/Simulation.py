@@ -1,4 +1,4 @@
-import math
+import math  # noqa: INP001, D100
 import os
 
 import numpy as np
@@ -7,7 +7,7 @@ from EnhancedWNTR.sim.epanet import EpanetSimulator
 from EnhancedWNTR.sim.results import SimulationResults
 
 
-class Hydraulic_Simulation:
+class Hydraulic_Simulation:  # noqa: D101
     def __init__(
         self,
         wn,
@@ -28,24 +28,24 @@ class Hydraulic_Simulation:
         self.wn.options.hydraulic.demand_model = 'PDA'
 
         temp_folder = settings['temp_directory']
-        if type(temp_folder) != str:
-            raise ValueError('temp folder type is not str')
+        if type(temp_folder) != str:  # noqa: E721
+            raise ValueError('temp folder type is not str')  # noqa: EM101, TRY003
 
-        if settings['save_time_step'] == True:
+        if settings['save_time_step'] == True:  # noqa: E712
             if temp_folder == '':
                 self.temp_directory = (
                     str(worker_rank) + '_' + repr(current_stop_time)
                 )
             else:
-                self.temp_directory = os.path.join(
+                self.temp_directory = os.path.join(  # noqa: PTH118
                     temp_folder, str(worker_rank) + '_' + repr(current_stop_time)
                 )
 
-        elif settings['save_time_step'] == False:
+        elif settings['save_time_step'] == False:  # noqa: E712
             if temp_folder == '':
                 self.temp_directory = str(worker_rank)
             else:
-                self.temp_directory = os.path.join(temp_folder, str(worker_rank))
+                self.temp_directory = os.path.join(temp_folder, str(worker_rank))  # noqa: PTH118
         else:
             raise ValueError(
                 "Unknown value for settings 'save_time_step': " + repr()
@@ -53,18 +53,18 @@ class Hydraulic_Simulation:
         self._prev_isolated_junctions = prev_isolated_junctions
         self._prev_isolated_links = prev_isolated_links
 
-    def removeNonDemandNegativeNodeByPythonMinorLoss(self, maximum_iteration):
+    def removeNonDemandNegativeNodeByPythonMinorLoss(self, maximum_iteration):  # noqa: N802, D102
         current_stop_time = self.current_stop_time
-        minimum_pressure = self.minimum_pressure
-        required_pressure = self.required_pressure
+        minimum_pressure = self.minimum_pressure  # noqa: F841
+        required_pressure = self.required_pressure  # noqa: F841
         temp_file_dest = self.temp_directory
         orginal_c_dict = {}
         for itrr in range(maximum_iteration):
-            print(itrr)
+            print(itrr)  # noqa: T201
             sim = EpanetSimulator(self.wn)
             self.s = sim
             self._prev_isolated_junctions, self._prev_isolated_links = (
-                sim._get_isolated_junctions_and_links(
+                sim._get_isolated_junctions_and_links(  # noqa: SLF001
                     self._prev_isolated_junctions, self._prev_isolated_links
                 )
             )
@@ -100,31 +100,31 @@ class Hydraulic_Simulation:
                     orginal_c_dict[pipe_name] = new_closed_pipes[pipe_name]
         return orginal_c_dict
 
-    def isolateReservoirs(self, isolated_nodes):
+    def isolateReservoirs(self, isolated_nodes):  # noqa: N802, D102
         for reservoir_name, reservoir in self.wn.reservoirs():
-            if self.wn._node_reg.get_usage(reservoir_name) == None:
-                reservoir._is_isolated = True
+            if self.wn._node_reg.get_usage(reservoir_name) == None:  # noqa: SLF001, E711
+                reservoir._is_isolated = True  # noqa: SLF001
                 isolated_nodes.add(reservoir_name)
         return isolated_nodes
 
-    def isolateTanks(self, isolated_nodes):
+    def isolateTanks(self, isolated_nodes):  # noqa: N802, D102
         for tank_name, tank in self.wn.tanks():
-            if self.wn._node_reg.get_usage(tank_name) == None:
-                tank._is_isolated = True
+            if self.wn._node_reg.get_usage(tank_name) == None:  # noqa: SLF001, E711
+                tank._is_isolated = True  # noqa: SLF001
                 isolated_nodes.add(tank_name)
         return isolated_nodes
 
-    def removeNonDemandNegativeNodeByPythonClose(self, maximum_iteration):
+    def removeNonDemandNegativeNodeByPythonClose(self, maximum_iteration):  # noqa: N802, D102
         current_stop_time = self.current_stop_time
-        minimum_pressure = self.minimum_pressure
-        required_pressure = self.required_pressure
+        minimum_pressure = self.minimum_pressure  # noqa: F841
+        required_pressure = self.required_pressure  # noqa: F841
         temp_file_dest = self.temp_directory
         self.closed_pipes = {}
         for itrr in range(maximum_iteration):
-            print(itrr)
+            print(itrr)  # noqa: T201
             sim = EpanetSimulator(self.wn)
             self._prev_isolated_junctions, self._prev_isolated_links = (
-                sim._get_isolated_junctions_and_links(
+                sim._get_isolated_junctions_and_links(  # noqa: SLF001
                     self._prev_isolated_junctions, self._prev_isolated_links
                 )
             )
@@ -156,25 +156,25 @@ class Hydraulic_Simulation:
         # self.closed_pipes = orginal_c_dict
         # return orginal_c_dict
 
-    def rollBackPipeMinorLoss(self, altered_pipes):
+    def rollBackPipeMinorLoss(self, altered_pipes):  # noqa: N802, D102
         for pipe_name in altered_pipes:
             self.wn.get_link(pipe_name).minor_loss = altered_pipes[pipe_name]
 
-    def rollBackPipeClose(self):
+    def rollBackPipeClose(self):  # noqa: N802, D102
         altered_pipes = self.closed_pipes
         for pipe_name in altered_pipes:
             pipe = self.wn.get_link(pipe_name)
             pipe.initial_status = altered_pipes[pipe_name]
 
-    def performSimulation(self, next_event_time, iModified):
+    def performSimulation(self, next_event_time, iModified):  # noqa: N802, N803, D102
         current_stop_time = self.current_stop_time
-        minimum_pressure = self.minimum_pressure
-        required_pressure = self.required_pressure
+        minimum_pressure = self.minimum_pressure  # noqa: F841
+        required_pressure = self.required_pressure  # noqa: F841
         temp_file_dest = self.temp_directory
         sim = EpanetSimulator(self.wn)
         # self.s=sim
         self._prev_isolated_junctions, self._prev_isolated_links = (
-            sim._get_isolated_junctions_and_links(
+            sim._get_isolated_junctions_and_links(  # noqa: SLF001
                 self._prev_isolated_junctions, self._prev_isolated_links
             )
         )
@@ -184,10 +184,10 @@ class Hydraulic_Simulation:
         self._prev_isolated_junctions = self.isolateTanks(
             self._prev_isolated_junctions
         )
-        print('***********')
-        print(len(self._prev_isolated_junctions))
-        print(len(self._prev_isolated_links))
-        print('-----------')
+        print('***********')  # noqa: T201
+        print(len(self._prev_isolated_junctions))  # noqa: T201
+        print(len(self._prev_isolated_links))  # noqa: T201
+        print('-----------')  # noqa: T201
         sim.manipulateTimeOrder(
             current_stop_time, next_event_time
         )  # , change_time_step=True, min_correction_time_step=self._min_correction_time)
@@ -198,10 +198,10 @@ class Hydraulic_Simulation:
         )
         return rr, i_run_successful
 
-    def estimateRun(self, next_event_time, iModified):
+    def estimateRun(self, next_event_time, iModified):  # noqa: N802, N803, D102
         current_stop_time = self.current_stop_time
-        minimum_pressure = self.minimum_pressure
-        required_pressure = self.required_pressure
+        minimum_pressure = self.minimum_pressure  # noqa: F841
+        required_pressure = self.required_pressure  # noqa: F841
 
         sim = EpanetSimulator(self.wn)
         duration = self.wn.options.time.duration
@@ -210,7 +210,7 @@ class Hydraulic_Simulation:
 
         temp_file_dest = self.temp_directory
         self._prev_isolated_junctions, self._prev_isolated_links = (
-            sim._get_isolated_junctions_and_links(
+            sim._get_isolated_junctions_and_links(  # noqa: SLF001
                 self._prev_isolated_junctions, self._prev_isolated_links
             )
         )
@@ -231,10 +231,10 @@ class Hydraulic_Simulation:
 
         return rr, i_run_successful
 
-    def estimateWithoutRun(self, result, next_event_time):
+    def estimateWithoutRun(self, result, next_event_time):  # noqa: N802, D102
         current_stop_time = self.current_stop_time
-        minimum_pressure = self.minimum_pressure
-        required_pressure = self.required_pressure
+        minimum_pressure = self.minimum_pressure  # noqa: F841
+        required_pressure = self.required_pressure  # noqa: F841
 
         time = result.node['demand'].index.to_list()
         unreliable_time_list = result.maximum_trial_time
@@ -247,7 +247,7 @@ class Hydraulic_Simulation:
                 break
 
         if last_valid_time == -1:
-            raise ValueError('Last reliabale time is not found')
+            raise ValueError('Last reliabale time is not found')  # noqa: EM101, TRY003
 
         time_step = min(
             self.wn.options.time.hydraulic_timestep,
@@ -266,7 +266,7 @@ class Hydraulic_Simulation:
         sim = EpanetSimulator(self.wn)
 
         self._prev_isolated_junctions, self._prev_isolated_links = (
-            sim._get_isolated_junctions_and_links(
+            sim._get_isolated_junctions_and_links(  # noqa: SLF001
                 self._prev_isolated_junctions, self._prev_isolated_links
             )
         )
@@ -280,8 +280,8 @@ class Hydraulic_Simulation:
         # available_node_list = [node_name for node_name in self.wn.node_name_list if self.wn.get_node(node_name)._is_isolated == False]
         # available_link_list = [link_name for link_name in self.wn.link_name_list if self.wn.get_link(link_name)._is_isolated == False]
 
-        available_node_list = [node_name for node_name in self.wn.node_name_list]
-        available_link_list = [link_name for link_name in self.wn.link_name_list]
+        available_node_list = [node_name for node_name in self.wn.node_name_list]  # noqa: C416
+        available_link_list = [link_name for link_name in self.wn.link_name_list]  # noqa: C416
 
         available_node_list = [
             node_name
@@ -331,7 +331,7 @@ class Hydraulic_Simulation:
             # print("---------------")
             # print(result_node_head)
             # print("---------------")
-            if first_step == True:
+            if first_step == True:  # noqa: E712
                 first_step = False
             else:
                 self.updateTankHeadsAndPressure(
@@ -367,7 +367,7 @@ class Hydraulic_Simulation:
         }
         return rr, True
 
-    def updateTankHeadsAndPressure(
+    def updateTankHeadsAndPressure(  # noqa: N802
         self,
         demand,
         head,
@@ -379,7 +379,7 @@ class Hydraulic_Simulation:
         ----------
         wn: wntrfr.network.WaterNetworkModel
 
-        """
+        """  # noqa: D205
         dt = time_step
         # print(sim_time)
         demand_na = demand.loc[sim_time].isna()
@@ -388,7 +388,7 @@ class Hydraulic_Simulation:
 
         for tank_name, tank in self.wn.tanks():
             # checks if the node is isolated.
-            if tank._is_isolated == True:
+            if tank._is_isolated == True:  # noqa: SLF001, E712
                 continue
 
             # checks of this node has been isolated at the last valid time. if
@@ -411,7 +411,7 @@ class Hydraulic_Simulation:
             else:
                 q_net = 0.0
 
-            dV = q_net * dt
+            dV = q_net * dt  # noqa: N806
 
             previous_head = head.loc[sim_time, tank_name]
             if tank.vol_curve is None:
@@ -424,8 +424,8 @@ class Hydraulic_Simulation:
 
                 previous_level = previous_head - tank.elevation
 
-                V0 = np.interp(previous_level, level_x, volume_y)
-                V1 = V0 + dV
+                V0 = np.interp(previous_level, level_x, volume_y)  # noqa: N806
+                V1 = V0 + dV  # noqa: N806
                 new_level = np.interp(V1, volume_y, level_x)
                 delta_h = new_level - previous_level
 
@@ -443,7 +443,7 @@ class Hydraulic_Simulation:
             head.loc[sim_time, tank_name] = new_head
             pressure.loc[sim_time, tank_name] = new_head - tank.elevation
 
-    def approximateNewResult(
+    def approximateNewResult(  # noqa: N802, D102
         self,
         rr,
         current_stop_time,
@@ -460,7 +460,7 @@ class Hydraulic_Simulation:
         not_isolated_tanks = [
             tank_name
             for tank_name, tank in self.wn.tanks()
-            if tank._is_isolated == False
+            if tank._is_isolated == False  # noqa: SLF001, E712
         ]
         # isolated_tanks     = [tank_name for tank_name in self.tanks_name_list if tank_name in self._prev_isolated_junctions]
         # isolated_nodes     = [node_name for node_name in self.node_name_list  if node_name in self._prev_isolated_junctions]
@@ -472,11 +472,11 @@ class Hydraulic_Simulation:
             ]
             tank_min_level_list = [
                 self.wn.get_node(l).min_level
-                for l in not_isolated_tanks
+                for l in not_isolated_tanks  # noqa: E741
             ]
             tank_max_level_list = [
                 self.wn.get_node(l).max_level
-                for l in not_isolated_tanks
+                for l in not_isolated_tanks  # noqa: E741
             ]
 
             tanks_min_heads = [
@@ -494,9 +494,9 @@ class Hydraulic_Simulation:
             tanks_min_heads = pd.Series(tanks_min_heads, not_isolated_tanks)
             tanks_max_heads = pd.Series(tanks_max_heads, not_isolated_tanks)
 
-            print(current_stop_time)
-            print(time_step)
-            print(end_time)
+            print(current_stop_time)  # noqa: T201
+            print(time_step)  # noqa: T201
+            print(end_time)  # noqa: T201
             for time_step_iter in range(
                 current_stop_time + time_step, end_time + 1, time_step
             ):
@@ -544,11 +544,11 @@ class Hydraulic_Simulation:
             ]
             tank_min_level_list = [
                 self.wn.get_node(l).min_level
-                for l in not_isolated_tanks
+                for l in not_isolated_tanks  # noqa: E741
             ]
             tank_max_level_list = [
                 self.wn.get_node(l).max_level
-                for l in not_isolated_tanks
+                for l in not_isolated_tanks  # noqa: E741
             ]
 
             tanks_min_heads = [

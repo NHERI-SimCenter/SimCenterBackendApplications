@@ -1,4 +1,4 @@
-import os
+import os  # noqa: INP001, D100
 import sys
 import warnings
 from enum import Enum
@@ -6,7 +6,7 @@ from itertools import starmap
 
 import geopandas as gpd
 import numpy as np
-import pandas
+import pandas  # noqa: ICN001
 import rasterio as rio
 import shapely
 from pyproj import CRS, Transformer
@@ -15,7 +15,7 @@ from scipy.spatial import ConvexHull
 
 
 # Helper functions
-def sampleRaster(
+def sampleRaster(  # noqa: N802
     raster_file_path,
     raster_crs,
     x,
@@ -23,8 +23,8 @@ def sampleRaster(
     interp_scheme='nearest',
     dtype=None,
 ):
-    """Performs 2D interpolation at (x,y) pairs. Accepted interp_scheme = 'nearest', 'linear', 'cubic', and 'quintic'"""
-    print(f'Sampling from the Raster File: {os.path.basename(raster_file_path)}...')
+    """Performs 2D interpolation at (x,y) pairs. Accepted interp_scheme = 'nearest', 'linear', 'cubic', and 'quintic'"""  # noqa: D400, D401
+    print(f'Sampling from the Raster File: {os.path.basename(raster_file_path)}...')  # noqa: T201, PTH119
     invalid_value = np.nan
     xy_crs = CRS.from_user_input(4326)
     raster_crs = CRS.from_user_input(raster_crs)
@@ -32,10 +32,10 @@ def sampleRaster(
         try:
             raster_data = raster_file.read()
             if raster_data.shape[0] > 1:
-                warnings.warn(
+                warnings.warn(  # noqa: B028
                     f'More than one band in the file {raster_file_path}, the first band is used.'
                 )
-        except:
+        except:  # noqa: E722
             sys.exit(f'Can not read data from {raster_file_path}')
         if xy_crs != raster_crs:
             # make transformer for reprojection
@@ -81,24 +81,28 @@ def sampleRaster(
     if dtype is not None:
         sample = sample.astype(dtype)
     # clean up invalid values (returned as 1e38 by NumPy)
-    sample[abs(sample) > 1e10] = invalid_value
+    sample[abs(sample) > 1e10] = invalid_value  # noqa: PLR2004
     return sample
 
 
 # Helper functions
-def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):
-    """Performs spatial join of vector_file with xy'"""
-    print(f'Sampling from the Vector File: {os.path.basename(vector_file_path)}...')
-    invalid_value = np.nan
+def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ARG001, N802
+    """Performs spatial join of vector_file with xy'"""  # noqa: D400, D401
+    print(f'Sampling from the Vector File: {os.path.basename(vector_file_path)}...')  # noqa: T201, PTH119
+    invalid_value = np.nan  # noqa: F841
     xy_crs = CRS.from_user_input(4326)
     vector_gdf = gpd.read_file(vector_file_path)
 
     try:
         user_crs_input = CRS.from_user_input(vector_crs).to_epsg()
         if vector_gdf.crs.to_epsg() != user_crs_input:
-            sys.exit(f"The CRS of vector file {vector_file_path} is {vector_gdf.crs}, and doesn't match the input CRS ({xy_crs}) defined for liquefaction triggering models")
-    except:
-        print("The input CRS ({xy_crs}) defined for liquefaction triggering models is invalid. The CRS of vector files are used")
+            sys.exit(
+                f"The CRS of vector file {vector_file_path} is {vector_gdf.crs}, and doesn't match the input CRS ({xy_crs}) defined for liquefaction triggering models"
+            )
+    except:  # noqa: E722
+        print(  # noqa: T201
+            'The input CRS ({xy_crs}) defined for liquefaction triggering models is invalid. The CRS of vector files are used'
+        )
     # if vector_gdf.crs != vector_crs:
     #     sys.exit(f"The CRS of vector file {vector_file_path} is {vector_gdf.crs}, and doesn't match the input CRS ({xy_crs}) defined for liquefaction triggering models")
 
@@ -119,8 +123,8 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):
         vertices = sites[np.append(vertices, vertices[0])]
         centroid = np.mean(vertices, axis=0)
         vertices = vertices + 0.05 * (vertices - centroid)
-        RoI = shapely.geometry.Polygon(vertices)
-    except:
+        RoI = shapely.geometry.Polygon(vertices)  # noqa: N806
+    except:  # noqa: E722
         centroid = shapely.geometry.Point(np.mean(x), np.mean(y))
         points = [shapely.geometry.Point(x[i], y[i]) for i in range(len(x))]
         if len(points) == 1:
@@ -136,8 +140,8 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):
             )
             for angle in angles
         ]
-        RoI = shapely.geometry.Polygon(circle_points)
-    data = dict()
+        RoI = shapely.geometry.Polygon(circle_points)  # noqa: N806
+    data = dict()  # noqa: C408
     for col in vector_gdf.columns:
         data.update({col: []})
     for row_index in vector_gdf.index:
@@ -158,14 +162,14 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):
     )
     merged = merged.set_index('index_right').sort_index().drop(columns=['geometry'])
     gdf_sites = pandas.merge(gdf_sites, merged, on='index', how='left')
-    gdf_sites.drop(columns=['geometry', 'index'], inplace=True)
+    gdf_sites.drop(columns=['geometry', 'index'], inplace=True)  # noqa: PD002
     return gdf_sites
 
 
-def find_additional_output_req(liq_info, current_step):
+def find_additional_output_req(liq_info, current_step):  # noqa: D103
     additional_output_keys = []
     if current_step == 'Triggering':
-        trigging_parameters = liq_info['Triggering']['Parameters'].keys()
+        trigging_parameters = liq_info['Triggering']['Parameters'].keys()  # noqa: F841
         triger_dist_water = liq_info['Triggering']['Parameters'].get(
             'DistWater', None
         )
@@ -174,7 +178,7 @@ def find_additional_output_req(liq_info, current_step):
         lat_dist_water = liq_info['LateralSpreading']['Parameters'].get(
             'DistWater', None
         )
-        if 'LateralSpreading' in liq_info.keys():
+        if 'LateralSpreading' in liq_info.keys():  # noqa: SIM118
             lat_dist_water = liq_info['LateralSpreading']['Parameters'].get(
                 'DistWater', None
             )
@@ -185,7 +189,7 @@ def find_additional_output_req(liq_info, current_step):
     return additional_output_keys
 
 
-class liq_susc_enum(Enum):
+class liq_susc_enum(Enum):  # noqa: D101
     very_high = 5
     high = 4
     moderate = 3
@@ -195,7 +199,7 @@ class liq_susc_enum(Enum):
 
 
 # Triggering:
-class Liquefaction:
+class Liquefaction:  # noqa: D101
     def __init__(self) -> None:
         pass
 
@@ -249,7 +253,7 @@ class ZhuEtal2017(Liquefaction):
     ----------
     .. [1] Zhu, J., Baise, L.G., and Thompson, E.M., 2017, An Updated Geospatial Liquefaction Model for Global Application, Bulletin of the Seismological Society of America, vol. 107, no. 3, pp. 1365-1385.
 
-    """
+    """  # noqa: D400
 
     def __init__(self, parameters, stations) -> None:
         self.stations = stations
@@ -262,7 +266,7 @@ class ZhuEtal2017(Liquefaction):
         self.vs30 = None  # (m/s)
         self.interpolate_spatial_parameters(parameters)
 
-    def interpolate_spatial_parameters(self, parameters):
+    def interpolate_spatial_parameters(self, parameters):  # noqa: D102
         # site coordinate in CRS 4326
         lat_station = [site['lat'] for site in self.stations]
         lon_station = [site['lon'] for site in self.stations]
@@ -326,14 +330,14 @@ class ZhuEtal2017(Liquefaction):
                 lat_station,
             )
         self.vs30 = np.array([site['vs30'] for site in self.stations])
-        print('Sampling finished')
+        print('Sampling finished')  # noqa: T201
 
-    def run(self, ln_im_data, eq_data, im_list, output_keys, additional_output_keys):
+    def run(self, ln_im_data, eq_data, im_list, output_keys, additional_output_keys):  # noqa: D102
         if ('PGA' in im_list) and ('PGV' in im_list):
             num_stations = len(self.stations)
             num_scenarios = len(eq_data)
-            PGV_col_id = [i for i, x in enumerate(im_list) if x == 'PGV'][0]
-            PGA_col_id = [i for i, x in enumerate(im_list) if x == 'PGA'][0]
+            PGV_col_id = [i for i, x in enumerate(im_list) if x == 'PGV'][0]  # noqa: N806, RUF015
+            PGA_col_id = [i for i, x in enumerate(im_list) if x == 'PGA'][0]  # noqa: N806, RUF015
             for scenario_id in range(num_scenarios):
                 num_rlzs = ln_im_data[scenario_id].shape[2]
                 im_data_scen = np.zeros(
@@ -349,11 +353,11 @@ class ZhuEtal2017(Liquefaction):
                         im_data_scen[:, len(im_list) + i, rlz_id] = model_output[key]
                 ln_im_data[scenario_id] = im_data_scen
             im_list = im_list + output_keys
-            additional_output = dict()
+            additional_output = dict()  # noqa: C408
             for key in additional_output_keys:
                 item = getattr(self, key, None)
                 if item is None:
-                    warnings.warn(
+                    warnings.warn(  # noqa: B028
                         f"Additional output {key} is not available in the liquefaction trigging model 'ZhuEtal2017'."
                     )
                 else:
@@ -369,7 +373,7 @@ class ZhuEtal2017(Liquefaction):
         return ln_im_data, eq_data, im_list, additional_output
 
     def model(self, pgv, pga, mag):
-        """Model"""
+        """Model"""  # noqa: D400
         # zero prob_liq
         zero_prob_liq = 1e-5  # decimal
 
@@ -394,7 +398,7 @@ class ZhuEtal2017(Liquefaction):
         ind_global = ~(self.dist_to_water <= model_transition)
 
         # set cap of precip to 1700 mm
-        self.precip[self.precip > 1700] = 1700
+        self.precip[self.precip > 1700] = 1700  # noqa: PLR2004
 
         # x = b0 + b1*var1 + ...
         # if len(ind_global) > 0:
@@ -435,22 +439,22 @@ class ZhuEtal2017(Liquefaction):
         )  # set prob to > "0" to avoid 0% in log
 
         # for pgv_mag < 3 cm/s, set prob to "0"
-        prob_liq[pgv_mag < 3] = zero_prob_liq
+        prob_liq[pgv_mag < 3] = zero_prob_liq  # noqa: PLR2004
         # for pga_mag < 0.1 g, set prob to "0"
-        prob_liq[pga_mag < 0.1] = zero_prob_liq
+        prob_liq[pga_mag < 0.1] = zero_prob_liq  # noqa: PLR2004
         # for vs30 > 620 m/s, set prob to "0"
-        prob_liq[self.vs30 > 620] = zero_prob_liq
+        prob_liq[self.vs30 > 620] = zero_prob_liq  # noqa: PLR2004
 
         # calculate sigma_mu
-        sigma_mu = (np.exp(0.25) - 1) * prob_liq
+        sigma_mu = (np.exp(0.25) - 1) * prob_liq  # noqa: F841
 
         # determine liquefaction susceptibility category
-        liq_susc[liq_susc_val > -1.15] = liq_susc_enum['very_high'].value
-        liq_susc[liq_susc_val <= -1.15] = liq_susc_enum['high'].value
-        liq_susc[liq_susc_val <= -1.95] = liq_susc_enum['moderate'].value
-        liq_susc[liq_susc_val <= -3.15] = liq_susc_enum['low'].value
-        liq_susc[liq_susc_val <= -3.20] = liq_susc_enum['very_low'].value
-        liq_susc[liq_susc_val <= -38.1] = liq_susc_enum['none'].value
+        liq_susc[liq_susc_val > -1.15] = liq_susc_enum['very_high'].value  # noqa: PLR2004
+        liq_susc[liq_susc_val <= -1.15] = liq_susc_enum['high'].value  # noqa: PLR2004
+        liq_susc[liq_susc_val <= -1.95] = liq_susc_enum['moderate'].value  # noqa: PLR2004
+        liq_susc[liq_susc_val <= -3.15] = liq_susc_enum['low'].value  # noqa: PLR2004
+        liq_susc[liq_susc_val <= -3.20] = liq_susc_enum['very_low'].value  # noqa: PLR2004
+        liq_susc[liq_susc_val <= -38.1] = liq_susc_enum['none'].value  # noqa: PLR2004
 
         # liq_susc[prob_liq==zero_prob_liq] = 'none'
 
@@ -488,7 +492,7 @@ class Hazus2020(Liquefaction):
     .. [1] Federal Emergency Management Agency (FEMA), 2020, Hazus Earthquake Model - Technical Manual, Hazus 4.2 SP3, 436 pp. https://www.fema.gov/flood-maps/tools-resources/flood-map-products/hazus/user-technical-manuals.
     .. [2] Liao, S.S., Veneziano, D., and Whitman, R.V., 1988, Regression Models for Evaluating Liquefaction Probability, Journal of Geotechnical Engineering, vol. 114, no. 4, pp. 389-411.
 
-    """
+    """  # noqa: D205, D400
 
     def __init__(self, parameters, stations) -> None:
         self.stations = stations
@@ -496,7 +500,7 @@ class Hazus2020(Liquefaction):
         self.gw_depth = None  # (m)
         self.interpolate_spatial_parameters(parameters)
 
-    def interpolate_spatial_parameters(self, parameters):
+    def interpolate_spatial_parameters(self, parameters):  # noqa: D102
         # site coordinate in CRS 4326
         lat_station = [site['lat'] for site in self.stations]
         lon_station = [site['lon'] for site in self.stations]
@@ -516,17 +520,17 @@ class Hazus2020(Liquefaction):
                 np.array([site['liqSusc'] for site in self.stations]),
                 columns=['liqSusc'],
             )
-            SusceptibilityKey = 'liqSusc'
+            SusceptibilityKey = 'liqSusc'  # noqa: N806
         else:
-            SusceptibilityFile = parameters['SusceptibilityFile']
+            SusceptibilityFile = parameters['SusceptibilityFile']  # noqa: N806
             liq_susc_samples = sampleVector(
                 SusceptibilityFile, parameters['inputCRS'], lon_station, lat_station
             )
-            SusceptibilityKey = parameters['SusceptibilityKey']
+            SusceptibilityKey = parameters['SusceptibilityKey']  # noqa: N806
         self.liq_susc = []
         for susc in liq_susc_samples[SusceptibilityKey].unique():
             if susc not in list(liq_susc_enum.__members__.keys()):
-                warnings.warn(
+                warnings.warn(  # noqa: B028
                     f'Unkown susceptibility "{susc}" defined, and is treated as "none".'
                 )
         for row_index in liq_susc_samples.index:
@@ -545,13 +549,13 @@ class Hazus2020(Liquefaction):
         self.liq_susc = np.array(self.liq_susc)
         # liq_susc = liq_susc_samples[parameters["SusceptibilityKey"]].fillna("NaN")
         # self.liq_susc = liq_susc.to_numpy()
-        print('Sampling finished')
+        print('Sampling finished')  # noqa: T201
 
-    def run(self, ln_im_data, eq_data, im_list, output_keys, additional_output_keys):
+    def run(self, ln_im_data, eq_data, im_list, output_keys, additional_output_keys):  # noqa: D102
         if 'PGA' in im_list:
             num_stations = len(self.stations)
             num_scenarios = len(eq_data)
-            PGA_col_id = [i for i, x in enumerate(im_list) if x == 'PGA'][0]
+            PGA_col_id = [i for i, x in enumerate(im_list) if x == 'PGA'][0]  # noqa: N806, RUF015
             for scenario_id in range(num_scenarios):
                 num_rlzs = ln_im_data[scenario_id].shape[2]
                 im_data_scen = np.zeros(
@@ -566,11 +570,11 @@ class Hazus2020(Liquefaction):
                         im_data_scen[:, len(im_list) + i, rlz_id] = model_output[key]
                 ln_im_data[scenario_id] = im_data_scen
             im_list = im_list + output_keys
-            additional_output = dict()
+            additional_output = dict()  # noqa: C408
             for key in additional_output_keys:
                 item = getattr(self, key, None)
                 if item is None:
-                    warnings.warn(
+                    warnings.warn(  # noqa: B028
                         f"Additional output {key} is not available in the liquefaction trigging model 'Hazus2020'."
                     )
                 else:
@@ -588,9 +592,9 @@ class Hazus2020(Liquefaction):
         mag,  # upstream PBEE RV
         gw_depth,  # geotechnical/geologic
         liq_susc,  # fixed/toggles
-        return_inter_params=False,  # to get intermediate params
+        return_inter_params=False,  # to get intermediate params  # noqa: FBT002, ARG004
     ):
-        """Model"""
+        """Model"""  # noqa: D400
         # zero prob_liq
         zero_prob_liq = 1e-5  # decimal
 
@@ -655,7 +659,7 @@ class Hazus2020(Liquefaction):
         # for pga_mag < 0.1 g, set prob to "0"
         # magnitude correction, from Baise & Rashidian (2020) and Allstadt et al. (2022)
         pga_mag = pga / (10**2.24 / mag**2.56)
-        prob_liq[pga_mag < 0.1] = zero_prob_liq
+        prob_liq[pga_mag < 0.1] = zero_prob_liq  # noqa: PLR2004
 
         return {'liq_prob': prob_liq, 'liq_susc': liq_susc}
 
@@ -704,7 +708,7 @@ class Hazus2020_with_ZhuEtal2017(ZhuEtal2017):
     """
 
     def model(self, pgv, pga, mag):
-        """Model"""
+        """Model"""  # noqa: D400
         # zero prob_liq
         zero_prob_liq = 1e-5  # decimal
 
@@ -724,7 +728,7 @@ class Hazus2020_with_ZhuEtal2017(ZhuEtal2017):
         ind_global = ~(self.dist_to_water <= model_transition)
 
         # set cap of precip to 1700 mm
-        self.precip[self.precip > 1700] = 1700
+        self.precip[self.precip > 1700] = 1700  # noqa: PLR2004
 
         # x = b0 + b1*var1 + ...
         # if len(ind_global) > 0:
@@ -751,12 +755,12 @@ class Hazus2020_with_ZhuEtal2017(ZhuEtal2017):
         liq_susc_val[np.isnan(liq_susc_val)] = -99.0
 
         # determine liquefaction susceptibility category
-        liq_susc[liq_susc_val > -1.15] = liq_susc_enum['very_high'].value
-        liq_susc[liq_susc_val <= -1.15] = liq_susc_enum['high'].value
-        liq_susc[liq_susc_val <= -1.95] = liq_susc_enum['moderate'].value
-        liq_susc[liq_susc_val <= -3.15] = liq_susc_enum['low'].value
-        liq_susc[liq_susc_val <= -3.20] = liq_susc_enum['very_low'].value
-        liq_susc[liq_susc_val <= -38.1] = liq_susc_enum['none'].value
+        liq_susc[liq_susc_val > -1.15] = liq_susc_enum['very_high'].value  # noqa: PLR2004
+        liq_susc[liq_susc_val <= -1.15] = liq_susc_enum['high'].value  # noqa: PLR2004
+        liq_susc[liq_susc_val <= -1.95] = liq_susc_enum['moderate'].value  # noqa: PLR2004
+        liq_susc[liq_susc_val <= -3.15] = liq_susc_enum['low'].value  # noqa: PLR2004
+        liq_susc[liq_susc_val <= -3.20] = liq_susc_enum['very_low'].value  # noqa: PLR2004
+        liq_susc[liq_susc_val <= -38.1] = liq_susc_enum['none'].value  # noqa: PLR2004
         # Below are HAZUS
         # magnitude correction, from Baise & Rashidian (2020) and Allstadt et al. (2022)
         pga_mag = pga / (10**2.24 / mag**2.56)
@@ -814,17 +818,17 @@ class Hazus2020_with_ZhuEtal2017(ZhuEtal2017):
 
         # Zhu et al. (2017) boundary constraints
         # for pga_mag < 0.1 g, set prob to "0"
-        prob_liq[pga_mag < 0.1] = zero_prob_liq
+        prob_liq[pga_mag < 0.1] = zero_prob_liq  # noqa: PLR2004
         # for vs30 > 620 m/s, set prob to "0"
-        prob_liq[self.vs30 > 620] = zero_prob_liq
+        prob_liq[self.vs30 > 620] = zero_prob_liq  # noqa: PLR2004
         # for precip > 1700 mm, set prob to "0"
-        prob_liq[self.precip > 1700] = zero_prob_liq
+        prob_liq[self.precip > 1700] = zero_prob_liq  # noqa: PLR2004
 
         return {'liq_prob': prob_liq, 'liq_susc': liq_susc}
 
 
 # Lateral Spreading:
-class LateralSpread:
+class LateralSpread:  # noqa: D101
     def __init__(self) -> None:
         pass
 
@@ -868,13 +872,13 @@ class Hazus2020Lateral(LateralSpread):
         super().__init__()
         self.stations = stations
         dist_to_water = parameters.get('DistWater')
-        if type(dist_to_water) == np.array:
+        if type(dist_to_water) == np.array:  # noqa: E721
             self.dist_to_water = dist_to_water
         elif dist_to_water == 'Defined ("distWater") in Site File (.csv)':
             self.dist_to_water = np.array(
                 [site['distWater'] for site in self.stations]
             )
-        elif os.path.exists(os.path.dirname(dist_to_water)):
+        elif os.path.exists(os.path.dirname(dist_to_water)):  # noqa: PTH110, PTH120
             lat_station = [site['lat'] for site in self.stations]
             lon_station = [site['lon'] for site in self.stations]
             self.dist_to_water = sampleRaster(
@@ -883,7 +887,7 @@ class Hazus2020Lateral(LateralSpread):
         else:
             self.dist_to_water = np.zeros(len(self.stations))
 
-    def run(self, ln_im_data, eq_data, im_list):
+    def run(self, ln_im_data, eq_data, im_list):  # noqa: D102
         output_keys = ['liq_PGD_h']
         if (
             ('PGA' in im_list)
@@ -892,11 +896,11 @@ class Hazus2020Lateral(LateralSpread):
         ):
             num_stations = len(self.stations)
             num_scenarios = len(eq_data)
-            PGA_col_id = [i for i, x in enumerate(im_list) if x == 'PGA'][0]
-            liq_prob_col_id = [i for i, x in enumerate(im_list) if x == 'liq_prob'][
+            PGA_col_id = [i for i, x in enumerate(im_list) if x == 'PGA'][0]  # noqa: N806, RUF015
+            liq_prob_col_id = [i for i, x in enumerate(im_list) if x == 'liq_prob'][  # noqa: RUF015
                 0
             ]
-            liq_susc_col_id = [i for i, x in enumerate(im_list) if x == 'liq_susc'][
+            liq_susc_col_id = [i for i, x in enumerate(im_list) if x == 'liq_susc'][  # noqa: RUF015
                 0
             ]
             for scenario_id in range(num_scenarios):
@@ -931,9 +935,9 @@ class Hazus2020Lateral(LateralSpread):
         prob_liq,
         dist_water,  # geotechnical/geologic
         liq_susc,  # fixed/toggles
-        extrapolate_expected_pgdef=True,
+        extrapolate_expected_pgdef=True,  # noqa: FBT002
     ):
-        """Model"""
+        """Model"""  # noqa: D400
         # initialize arrays
 
         # get threshold pga against liquefaction
@@ -950,19 +954,19 @@ class Hazus2020Lateral(LateralSpread):
         # get normalized displacement in inches, a, for M=7
         expected_pgdef = np.ones(pga.shape) * np.nan
         expected_pgdef[ratio <= 1] = 1e-3  # above 1e-3 cm, or 1e-5 m
-        expected_pgdef[np.logical_and(ratio > 1, ratio <= 2)] = (
-            12 * ratio[np.logical_and(ratio > 1, ratio <= 2)] - 12
+        expected_pgdef[np.logical_and(ratio > 1, ratio <= 2)] = (  # noqa: PLR2004
+            12 * ratio[np.logical_and(ratio > 1, ratio <= 2)] - 12  # noqa: PLR2004
         )
-        expected_pgdef[np.logical_and(ratio > 2, ratio <= 3)] = (
-            18 * ratio[np.logical_and(ratio > 2, ratio <= 3)] - 24
+        expected_pgdef[np.logical_and(ratio > 2, ratio <= 3)] = (  # noqa: PLR2004
+            18 * ratio[np.logical_and(ratio > 2, ratio <= 3)] - 24  # noqa: PLR2004
         )
         if extrapolate_expected_pgdef is True:
-            expected_pgdef[ratio > 3] = 70 * ratio[ratio > 3] - 180
+            expected_pgdef[ratio > 3] = 70 * ratio[ratio > 3] - 180  # noqa: PLR2004
         else:
-            expected_pgdef[np.logical_and(ratio > 3, ratio <= 4)] = (
-                70 * ratio[np.logical_and(ratio > 3, ratio <= 4)] - 180
+            expected_pgdef[np.logical_and(ratio > 3, ratio <= 4)] = (  # noqa: PLR2004
+                70 * ratio[np.logical_and(ratio > 3, ratio <= 4)] - 180  # noqa: PLR2004
             )
-            expected_pgdef[ratio > 4] = 100
+            expected_pgdef[ratio > 4] = 100  # noqa: PLR2004
         expected_pgdef *= 2.54  # convert from inches to cm
 
         # magnitude correction
@@ -971,7 +975,7 @@ class Hazus2020Lateral(LateralSpread):
         # susceptibility to lateral spreading only for deposits found near water body (dw < dw_cutoff)
         pgdef = k_delta * expected_pgdef * prob_liq
         pgdef = pgdef / 100  # also convert from cm to m
-        pgdef[dist_water > 25] = 1e-5
+        pgdef[dist_water > 25] = 1e-5  # noqa: PLR2004
 
         # keep pgdef to minimum of 1e-5 m
         pgdef = np.maximum(pgdef, 1e-5)
@@ -986,11 +990,11 @@ class Hazus2020Lateral(LateralSpread):
         #     output['ratio'] = ratio
 
         # return
-        return output
+        return output  # noqa: RET504
 
 
 # Settlement:
-class GroundSettlement:
+class GroundSettlement:  # noqa: D101
     def __init__(self) -> None:
         pass
 
@@ -1030,9 +1034,9 @@ class Hazus2020Vertical(GroundSettlement):
     def model(
         prob_liq,  # geotechnical/geologic
         liq_susc,  # fixed/toggles
-        return_inter_params=False,  # to get intermediate params
+        return_inter_params=False,  # to get intermediate params  # noqa: FBT002
     ):
-        """Model"""
+        """Model"""  # noqa: D400
         # initialize arrays
         # get threshold pga against liquefaction, in cm
         pgdef = np.ones(liq_susc.shape) * np.nan
@@ -1061,15 +1065,15 @@ class Hazus2020Vertical(GroundSettlement):
         # return
         return output
 
-    def run(self, ln_im_data, eq_data, im_list):
+    def run(self, ln_im_data, eq_data, im_list):  # noqa: D102
         output_keys = ['liq_PGD_v']
         if ('liq_susc' in im_list) and ('liq_prob' in im_list):
             num_stations = ln_im_data[0].shape[0]
             num_scenarios = len(eq_data)
-            liq_prob_col_id = [i for i, x in enumerate(im_list) if x == 'liq_prob'][
+            liq_prob_col_id = [i for i, x in enumerate(im_list) if x == 'liq_prob'][  # noqa: RUF015
                 0
             ]
-            liq_susc_col_id = [i for i, x in enumerate(im_list) if x == 'liq_susc'][
+            liq_susc_col_id = [i for i, x in enumerate(im_list) if x == 'liq_susc'][  # noqa: RUF015
                 0
             ]
             for scenario_id in range(num_scenarios):

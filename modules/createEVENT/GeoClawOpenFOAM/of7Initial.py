@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -48,7 +48,7 @@ class of7Initial:
     -------
             alphatext: Get all the text for the setFieldsDict
 
-    """
+    """  # noqa: D205, D404
 
     #############################################################
     def alphatext(self, data, fipath):
@@ -58,7 +58,7 @@ class of7Initial:
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -73,8 +73,8 @@ class of7Initial:
         # Read the values
         if int(simtype) == 1:
             fname = 'SWAlpha.txt'
-            swalphafile = os.path.join(fipath, fname)
-            with open(swalphafile) as f:
+            swalphafile = os.path.join(fipath, fname)  # noqa: PTH118
+            with open(swalphafile) as f:  # noqa: PTH123
                 gloalpha, localalpha, x1, y1, z1, x2, y2, z2 = (
                     float(x) for x in next(f).split(',')
                 )
@@ -173,7 +173,7 @@ class of7Initial:
 
         alphatext = alphatext + '\n);'
 
-        return alphatext
+        return alphatext  # noqa: RET504
 
     #############################################################
     def alphaheader(self):
@@ -182,7 +182,7 @@ class of7Initial:
         Variable
         -----------
                 header: Header for the setFields-file
-        """
+        """  # noqa: D400, D401
         header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
@@ -192,10 +192,10 @@ class of7Initial:
 \\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"system";\n\tobject\tsetFieldsDict;\n}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
         # Return the header for U file
-        return header
+        return header  # noqa: RET504
 
     #############################################################
     def alphacheck(self, data, fipath):
@@ -205,7 +205,7 @@ FoamFile
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -218,8 +218,8 @@ FoamFile
         if simtype == 1:
             # Check for the file exists
             fname = 'SWAlpha.txt'
-            swalphafile = os.path.join(fipath, fname)
-            if not os.path.exists(swalphafile):
+            swalphafile = os.path.join(fipath, fname)  # noqa: PTH118
+            if not os.path.exists(swalphafile):  # noqa: PTH110
                 return -1
 
         # For all types other than the shallow water
@@ -237,7 +237,7 @@ FoamFile
             )
             if numreg == [None]:
                 return -1
-            else:
+            else:  # noqa: RET505
                 numreg = ', '.join(
                     hydroutil.extract_element_from_json(
                         data, ['Events', 'NumAlphaRegion']
@@ -256,7 +256,7 @@ FoamFile
                 )
                 if region == [None]:
                     return -1
-                else:
+                else:  # noqa: RET505
                     region = ', '.join(
                         hydroutil.extract_element_from_json(
                             data, ['Events', 'InitialAlphaRegion' + str(ii)]
@@ -266,14 +266,14 @@ FoamFile
                     # Convert the regions to list of floats
                     nums = [float(n) for n in regsegs.split()]
                     # Check if 6 coordinates + 1 alpha number
-                    if len(nums) != 7:
+                    if len(nums) != 7:  # noqa: PLR2004
                         return -1
 
         # Return 0 if all is right
         return 0
 
     #############################################################
-    def scripts(self, data, path):
+    def scripts(self, data, path):  # noqa: ARG002
         """Create the scripts for caserun.sh
 
         Arguments:
@@ -281,12 +281,12 @@ FoamFile
                 data: all the JSON data
                 path: Path where dakota.json file is located
 
-        """
+        """  # noqa: D400
         # Setfields
         caseruntext = 'echo Setting fields...\n'
         caseruntext = caseruntext + 'setFields > setFields.log\n\n'
 
         # Write to caserun file
-        scriptfile = open('caserun.sh', 'a')
+        scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
         scriptfile.write(caseruntext)
         scriptfile.close()

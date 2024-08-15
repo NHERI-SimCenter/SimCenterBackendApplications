@@ -1,7 +1,7 @@
 """authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, Aakash Bangalore Satish*
 affiliation: University of California, San Diego, *SimCenter, University of California, Berkeley
 
-"""
+"""  # noqa: INP001, D205, D400
 
 # ======================================================================================================================
 import json
@@ -14,7 +14,7 @@ sys.path.append(str(path_to_common_uq))
 
 
 # ======================================================================================================================
-def main(input_args):
+def main(input_args):  # noqa: D103
     # # Initialize analysis
     # path_to_UCSD_UQ_directory = Path(input_args[2]).resolve().parent
     # path_to_working_directory = Path(input_args[3]).resolve()
@@ -24,7 +24,7 @@ def main(input_args):
     # input_file_name = input_args[7]
 
     # Initialize analysis
-    path_to_UCSD_UQ_directory = Path(input_args[0]).resolve().parent
+    path_to_UCSD_UQ_directory = Path(input_args[0]).resolve().parent  # noqa: N806, F841
     path_to_working_directory = Path(input_args[1]).resolve()
     path_to_template_directory = Path(input_args[2]).resolve()
     run_type = input_args[3]  # either "runningLocal" or "runningRemote"
@@ -36,7 +36,7 @@ def main(input_args):
 
     input_file_full_path = path_to_template_directory / input_file_name
 
-    with open(input_file_full_path, encoding='utf-8') as f:
+    with open(input_file_full_path, encoding='utf-8') as f:  # noqa: PTH123
         inputs = json.load(f)
 
     uq_inputs = inputs['UQ']

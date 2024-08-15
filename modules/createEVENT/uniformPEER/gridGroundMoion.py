@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2021 Leland Stanford Junior University
 # Copyright (c) 2021 The Regents of the University of California
 #
@@ -43,7 +43,7 @@
 #
 
 
-# TODO recommended ranges???
+# TODO recommended ranges???  # noqa: TD002, TD004
 
 
 # import matplotlib.pyplot as plt
@@ -59,19 +59,19 @@ from scipy.spatial import distance_matrix
 from scipy.stats import gmean, qmc
 
 
-def main(inputArgs, err):
-    gms = gmCluster(inputArgs, err)
+def main(inputArgs, err):  # noqa: N803, D103
+    gms = gmCluster(inputArgs, err)  # noqa: F841
 
 
-class gmCluster:
-    def __init__(self, inputArgs, err):
+class gmCluster:  # noqa: D101
+    def __init__(self, inputArgs, err):  # noqa: ARG002, C901, N803, PLR0912, PLR0915
         np.random.seed(seed=42)
-        curDir = os.path.dirname(__file__)
-        gmDataBaseDir = os.path.join(curDir, 'gmdata.json')
-        inputJsonPath = inputArgs[1]
+        curDir = os.path.dirname(__file__)  # noqa: PTH120, N806
+        gmDataBaseDir = os.path.join(curDir, 'gmdata.json')  # noqa: PTH118, N806
+        inputJsonPath = inputArgs[1]  # noqa: N806
 
-        with open(inputJsonPath) as fj:
-            inputJson = json.load(fj)
+        with open(inputJsonPath) as fj:  # noqa: PTH123
+            inputJson = json.load(fj)  # noqa: N806
 
         nim = len(inputJson['IM'])
 
@@ -81,7 +81,7 @@ class gmCluster:
         im_names = []
         im_periods = []
         i = 0
-        for imName, value in inputJson['IM'].items():
+        for imName, value in inputJson['IM'].items():  # noqa: N806
             im_names += [imName]
             im_ub[i] = float(value['upperBound'])
             im_lb[i] = float(value['lowerBound'])
@@ -94,25 +94,25 @@ class gmCluster:
                     + imName
                     + ' should be smaller than upperbound'
                 )
-                print(msg)
-                print(im_ub[i])
-                print(im_lb[i])
+                print(msg)  # noqa: T201
+                print(im_ub[i])  # noqa: T201
+                print(im_lb[i])  # noqa: T201
                 errf.write(msg)
                 errf.close()
-                exit(-1)
+                exit(-1)  # noqa: PLR1722
 
-            i += 1
+            i += 1  # noqa: SIM113
 
         npergrid = int(inputJson['numSampPerBin'])
 
-        # TODO: Convert the units... Or fix the units......
+        # TODO: Convert the units... Or fix the units......  # noqa: TD002
 
         # nim = len(im_names)
         ngrid = np.prod(im_nbins)
         #
         # Clustring parameters
         #
-        numEQmax = int(
+        numEQmax = int(  # noqa: N806
             max(1, round(ngrid / 10))
         )  # Maximum number of records from the single earthquake
         # numEQmax = 1
@@ -134,7 +134,7 @@ class gmCluster:
             if im_names[ni].startswith('PSA') or im_names[ni].startswith('PGA'):
                 # scaling anchor
                 if not found_scaling_anchor:
-                    id_im_scaling_ancher = ni  # TODO
+                    id_im_scaling_ancher = ni  # TODO  # noqa: TD002, TD004
                     found_scaling_anchor = True
                     nim_eff = nim - 1
 
@@ -143,54 +143,54 @@ class gmCluster:
             for ni in range(len(im_names)):
                 if im_names[ni].startswith('PG') or im_names[ni].startswith('Ia'):
                     if not found_scaling_anchor:
-                        id_im_scaling_ancher = ni  # TODO
+                        id_im_scaling_ancher = ni  # TODO  # noqa: TD002, TD004
                         found_scaling_anchor = True
                         nim_eff = nim - 1
 
         if nim <= 0:
             # ERROR
             msg = 'number of IMs should be greater than 1'
-            print(msg)
+            print(msg)  # noqa: T201
             errf.write(msg)
             errf.close()
-            exit(-1)
+            exit(-1)  # noqa: PLR1722
 
         elif nim_eff == 0:
             # One variable we have is the scaling anchor
-            myID = [1]
-            Scaling_ref = np.linspace(log_im_lb[0], log_im_ub[0], int(im_nbins[0]))
-            IM_log_ref = np.zeros(0)  # dummy
-            isGrid = True
+            myID = [1]  # noqa: N806
+            Scaling_ref = np.linspace(log_im_lb[0], log_im_ub[0], int(im_nbins[0]))  # noqa: N806
+            IM_log_ref = np.zeros(0)  # dummy  # noqa: N806
+            isGrid = True  # noqa: N806
 
         elif nim_eff == 1:
             if found_scaling_anchor:
                 if found_scaling_anchor:
-                    myID = np.delete([0, 1], id_im_scaling_ancher)
-                    Scaling_ref = np.linspace(
+                    myID = np.delete([0, 1], id_im_scaling_ancher)  # noqa: N806
+                    Scaling_ref = np.linspace(  # noqa: N806
                         log_im_lb[id_im_scaling_ancher],
                         log_im_ub[id_im_scaling_ancher],
                         int(im_nbins[id_im_scaling_ancher]),
                     )
                 else:
-                    myID = [0]
-                X = np.linspace(
+                    myID = [0]  # noqa: N806
+                X = np.linspace(  # noqa: N806
                     log_im_lb[myID[0]], log_im_ub[myID[0]], int(im_nbins[myID[0]])
                 )
-                IM_log_ref = X[np.newaxis].T
-                isGrid = True
+                IM_log_ref = X[np.newaxis].T  # noqa: N806
+                isGrid = True  # noqa: N806
 
-        elif nim_eff == 2:
+        elif nim_eff == 2:  # noqa: PLR2004
             if found_scaling_anchor:
-                myID = np.delete([0, 1, 2], id_im_scaling_ancher)
-                Scaling_ref = np.linspace(
+                myID = np.delete([0, 1, 2], id_im_scaling_ancher)  # noqa: N806
+                Scaling_ref = np.linspace(  # noqa: N806
                     log_im_lb[id_im_scaling_ancher],
                     log_im_ub[id_im_scaling_ancher],
                     int(im_nbins[id_im_scaling_ancher]),
                 )
             else:
-                myID = [0, 1]
+                myID = [0, 1]  # noqa: N806
 
-            X, Y = np.meshgrid(
+            X, Y = np.meshgrid(  # noqa: N806
                 np.linspace(
                     log_im_lb[myID[0]], log_im_ub[myID[0]], int(im_nbins[myID[0]])
                 ),
@@ -198,20 +198,20 @@ class gmCluster:
                     log_im_lb[myID[1]], log_im_ub[myID[1]], int(im_nbins[myID[1]])
                 ),
             )
-            IM_log_ref = np.vstack([X.reshape(-1), Y.reshape(-1)]).T
-            isGrid = True
-        elif nim_eff == 3:
+            IM_log_ref = np.vstack([X.reshape(-1), Y.reshape(-1)]).T  # noqa: N806
+            isGrid = True  # noqa: N806
+        elif nim_eff == 3:  # noqa: PLR2004
             if found_scaling_anchor:
-                myID = np.delete([0, 1, 2, 3], id_im_scaling_ancher)
-                Scaling_ref = np.linspace(
+                myID = np.delete([0, 1, 2, 3], id_im_scaling_ancher)  # noqa: N806
+                Scaling_ref = np.linspace(  # noqa: N806
                     log_im_lb[id_im_scaling_ancher],
                     log_im_ub[id_im_scaling_ancher],
                     int(im_nbins[id_im_scaling_ancher]),
                 )
             else:
-                myID = [0, 1, 2]
+                myID = [0, 1, 2]  # noqa: N806
 
-            X, Y, Z = np.meshgrid(
+            X, Y, Z = np.meshgrid(  # noqa: N806
                 np.linspace(
                     log_im_lb[myID[0]], log_im_ub[myID[0]], int(im_nbins[myID[0]])
                 ),
@@ -222,49 +222,49 @@ class gmCluster:
                     log_im_lb[myID[2]], log_im_ub[myID[2]], int(im_nbins[myID[2]])
                 ),
             )
-            IM_log_ref = np.vstack([X.reshape(-1), Y.reshape(-1), Z.reshape(-1)]).T
-            isGrid = True
+            IM_log_ref = np.vstack([X.reshape(-1), Y.reshape(-1), Z.reshape(-1)]).T  # noqa: N806
+            isGrid = True  # noqa: N806
         else:
             if found_scaling_anchor:
-                myID = np.delete(range(nim_eff + 1), id_im_scaling_ancher)
-                Scaling_ref = np.linspace(
+                myID = np.delete(range(nim_eff + 1), id_im_scaling_ancher)  # noqa: N806
+                Scaling_ref = np.linspace(  # noqa: N806
                     log_im_lb[id_im_scaling_ancher],
                     log_im_ub[id_im_scaling_ancher],
                     int(im_nbins[id_im_scaling_ancher]),
                 )
             else:
-                myID = range(nim_eff)
+                myID = range(nim_eff)  # noqa: N806
 
             # Let us do LHS sampling
             sampler = qmc.LatinHypercube(d=nim)
-            U = sampler.random(n=ngrid)
-            X = np.zeros((ngrid, nim_eff))
+            U = sampler.random(n=ngrid)  # noqa: N806
+            X = np.zeros((ngrid, nim_eff))  # noqa: N806
             for i in range(nim_eff):
                 X[:, i] = (
                     U[:, i] * (log_im_ub[myID[i]] - log_im_lb[myID[i]])
                     + log_im_lb[myID[i]]
                 )
-            IM_log_ref = X
-            isGrid = False
+            IM_log_ref = X  # noqa: N806
+            isGrid = False  # noqa: N806
 
         #
         # Read Database
         #
-        with open(gmDataBaseDir) as fd:
-            gmData = json.load(fd)
+        with open(gmDataBaseDir) as fd:  # noqa: PTH123
+            gmData = json.load(fd)  # noqa: N806
 
-        RSN = gmData['RSN']
-        geomPSA = gmData['geomPSA']
-        geomPGA = gmData['geomPGA']
-        geomPGV = gmData['geomPGV']
-        geomPGD = gmData['geomPGD']
-        geomDS575 = gmData['geomDS575']
-        geomDS595 = gmData['geomDS595']
-        geomIa = gmData['geomIa']
+        RSN = gmData['RSN']  # noqa: N806
+        geomPSA = gmData['geomPSA']  # noqa: N806
+        geomPGA = gmData['geomPGA']  # noqa: N806
+        geomPGV = gmData['geomPGV']  # noqa: N806
+        geomPGD = gmData['geomPGD']  # noqa: N806
+        geomDS575 = gmData['geomDS575']  # noqa: N806
+        geomDS595 = gmData['geomDS595']  # noqa: N806
+        geomIa = gmData['geomIa']  # noqa: N806
 
         periods = gmData['period']
         numgm = gmData['numgm']
-        eqnameID = gmData['eqnameID']
+        eqnameID = gmData['eqnameID']  # noqa: N806
         units = gmData['unit']
 
         #
@@ -277,30 +277,30 @@ class gmCluster:
         # Compute SaRatio(T_lowbound,T_cond,T_highbound) and Ds575
         #
 
-        IM_log_data_pool = np.zeros((numgm, 0))
+        IM_log_data_pool = np.zeros((numgm, 0))  # noqa: N806
         scaling_exponent = np.zeros((nim,))
         myunits = []
         for ni in range(nim):
             if im_names[ni].startswith('PSA'):
-                Sa_T1 = np.zeros((numgm,))
-                T_cond = float(im_periods[ni][0])  # central (<= 5.0)
+                Sa_T1 = np.zeros((numgm,))  # noqa: N806
+                T_cond = float(im_periods[ni][0])  # central (<= 5.0)  # noqa: N806
                 for ng in range(numgm):
                     Sa_T1[ng] = np.interp(T_cond, periods, geomPSA[ng])
 
-                Sa1_pool = Sa_T1[np.newaxis].T
-                IM_log_data_pool = np.hstack([IM_log_data_pool, np.log(Sa1_pool)])
+                Sa1_pool = Sa_T1[np.newaxis].T  # noqa: N806
+                IM_log_data_pool = np.hstack([IM_log_data_pool, np.log(Sa1_pool)])  # noqa: N806
                 scaling_exponent[ni] = 1
 
                 myunits += ['(' + units['PSA'] + ')']
             elif im_names[ni] == 'SaRatio':
-                Sa_T1 = np.zeros((numgm,))
-                Sa_T_geomean = np.zeros((numgm,))
+                Sa_T1 = np.zeros((numgm,))  # noqa: N806
+                Sa_T_geomean = np.zeros((numgm,))  # noqa: N806
 
-                T_lowbound = float(im_periods[ni][0])  # low-bound
-                T_cond = float(im_periods[ni][1])  # central (<= 5.0)
-                T_highbound = float(im_periods[ni][2])  # high-bound
+                T_lowbound = float(im_periods[ni][0])  # low-bound  # noqa: N806
+                T_cond = float(im_periods[ni][1])  # central (<= 5.0)  # noqa: N806
+                T_highbound = float(im_periods[ni][2])  # high-bound  # noqa: N806
 
-                idx_T_range = np.where(
+                idx_T_range = np.where(  # noqa: N806
                     (np.array(periods) > T_lowbound)
                     * (np.array(periods) < T_highbound)
                 )[0]
@@ -311,8 +311,8 @@ class gmCluster:
                         np.array(geomPSA[ng])[idx_T_range.astype(int)]
                     )
 
-                SaRatio_pool = (Sa_T1 / Sa_T_geomean)[np.newaxis].T
-                IM_log_data_pool = np.hstack(
+                SaRatio_pool = (Sa_T1 / Sa_T_geomean)[np.newaxis].T  # noqa: N806
+                IM_log_data_pool = np.hstack(  # noqa: N806
                     [IM_log_data_pool, np.log(SaRatio_pool)]
                 )
                 scaling_exponent[ni] = 0
@@ -320,55 +320,55 @@ class gmCluster:
                 myunits += ['']
             elif im_names[ni] == 'DS575':
                 ds_pool = (np.array(geomDS575))[np.newaxis].T
-                IM_log_data_pool = np.hstack([IM_log_data_pool, np.log(ds_pool)])
+                IM_log_data_pool = np.hstack([IM_log_data_pool, np.log(ds_pool)])  # noqa: N806
                 scaling_exponent[ni] = 0
                 myunits += ['(' + units['DS575'] + ')']
 
             elif im_names[ni] == 'DS595':
                 ds_pool = (np.array(geomDS595))[np.newaxis].T
-                IM_log_data_pool = np.hstack([IM_log_data_pool, np.log(ds_pool)])
+                IM_log_data_pool = np.hstack([IM_log_data_pool, np.log(ds_pool)])  # noqa: N806
                 scaling_exponent[ni] = 0
                 myunits += ['(' + units['DS595'] + ')']
 
             elif im_names[ni] == 'PGA':
                 pg_pool = (np.array(geomPGA))[np.newaxis].T
-                IM_log_data_pool = np.hstack([IM_log_data_pool, np.log(pg_pool)])
+                IM_log_data_pool = np.hstack([IM_log_data_pool, np.log(pg_pool)])  # noqa: N806
                 scaling_exponent[ni] = 1
                 myunits += ['(' + units['PGA'] + ')']
 
             elif im_names[ni] == 'PGV':
                 pg_pool = (np.array(geomPGV))[np.newaxis].T
-                IM_log_data_pool = np.hstack([IM_log_data_pool, np.log(pg_pool)])
+                IM_log_data_pool = np.hstack([IM_log_data_pool, np.log(pg_pool)])  # noqa: N806
                 scaling_exponent[ni] = 1
                 myunits += ['(' + units['PGV'] + ')']
 
             elif im_names[ni] == 'PGD':
                 pg_pool = (np.array(geomPGD))[np.newaxis].T
-                IM_log_data_pool = np.hstack([IM_log_data_pool, np.log(pg_pool)])
+                IM_log_data_pool = np.hstack([IM_log_data_pool, np.log(pg_pool)])  # noqa: N806
                 scaling_exponent[ni] = 1
                 myunits += ['(' + units['PGD'] + ')']
 
             elif im_names[ni] == 'Ia':
                 ai_pool = (np.array(geomIa))[np.newaxis].T
-                IM_log_data_pool = np.hstack([IM_log_data_pool, np.log(ai_pool)])
+                IM_log_data_pool = np.hstack([IM_log_data_pool, np.log(ai_pool)])  # noqa: N806
                 scaling_exponent[ni] = 2
                 myunits += ['(' + units['Ia'] + ')']
             else:
                 msg = 'unrecognized IM name ' + im_names[ni]
-                print(msg)
+                print(msg)  # noqa: T201
                 errf.write(msg)
                 errf.close()
-                exit(-1)
+                exit(-1)  # noqa: PLR1722
 
         if found_scaling_anchor:
-            IM_log_data_scaling_anchor = IM_log_data_pool[:, id_im_scaling_ancher]
+            IM_log_data_scaling_anchor = IM_log_data_pool[:, id_im_scaling_ancher]  # noqa: N806
             # IM_log_ref_scaling_anchor = IM_log_ref[:,id_im_scaling_ancher]
-            IM_log_ref_scaling_anchor = Scaling_ref
+            IM_log_ref_scaling_anchor = Scaling_ref  # noqa: N806
 
-            IM_log_data_pool2 = np.delete(
+            IM_log_data_pool2 = np.delete(  # noqa: N806
                 IM_log_data_pool.copy(), id_im_scaling_ancher, 1
             )
-            IM_log_ref2 = IM_log_ref.copy()
+            IM_log_ref2 = IM_log_ref.copy()  # noqa: N806
 
             scaling_exponent = (
                 scaling_exponent / scaling_exponent[id_im_scaling_ancher]
@@ -377,24 +377,24 @@ class gmCluster:
                 scaling_exponent.copy(), id_im_scaling_ancher
             )
             log_im_range2 = np.delete(log_im_range.copy(), id_im_scaling_ancher)
-            lenRef2 = np.mean(1 / np.delete(im_nbins.copy(), id_im_scaling_ancher))
+            lenRef2 = np.mean(1 / np.delete(im_nbins.copy(), id_im_scaling_ancher))  # noqa: N806
         else:
-            IM_log_data_pool2 = IM_log_data_pool
-            IM_log_ref2 = IM_log_ref
+            IM_log_data_pool2 = IM_log_data_pool  # noqa: N806
+            IM_log_ref2 = IM_log_ref  # noqa: N806
             scaling_exponent2 = scaling_exponent
             log_im_range2 = log_im_range
-            lenRef2 = np.linalg.norm(1 / im_nbins)
+            lenRef2 = np.linalg.norm(1 / im_nbins)  # noqa: N806
 
         if id_im_scaling_ancher >= 0:
             if isGrid:
-                nScalingGrid = im_nbins[id_im_scaling_ancher]
-                nGridPerIM = ngrid / im_nbins[id_im_scaling_ancher]
+                nScalingGrid = im_nbins[id_im_scaling_ancher]  # noqa: N806
+                nGridPerIM = ngrid / im_nbins[id_im_scaling_ancher]  # noqa: N806
             else:
-                nScalingGrid = ngrid
-                nGridPerIM = ngrid / im_nbins[id_im_scaling_ancher]
+                nScalingGrid = ngrid  # noqa: N806
+                nGridPerIM = ngrid / im_nbins[id_im_scaling_ancher]  # noqa: N806
         else:
-            nScalingGrid = 1
-            nGridPerIM = ngrid
+            nScalingGrid = 1  # noqa: N806
+            nGridPerIM = ngrid  # noqa: N806
 
         sf_min = 0.5  # minimum of no-panalty scaling
         sf_max = 10.0  # maximum of no-pad nalty scaling
@@ -404,9 +404,9 @@ class gmCluster:
         # selected_gm_err_list =[]
         # selected_gm_eqID_list =[]
         # selected_gm_scale_list =[]
-        selected_gm_ID = []
+        selected_gm_ID = []  # noqa: N806
         selected_gm_err = []
-        selected_gm_eqID = []
+        selected_gm_eqID = []  # noqa: N806
         selected_gm_scale = []
 
         err_sum = np.zeros((int(nScalingGrid), int(nGridPerIM)))
@@ -434,8 +434,8 @@ class gmCluster:
                 penalty_pool = np.zeros((numgm,))
 
             else:
-                SaT_ref = np.exp(IM_log_ref_scaling_anchor[nsa])
-                Sa_T1 = np.exp(IM_log_data_scaling_anchor)
+                SaT_ref = np.exp(IM_log_ref_scaling_anchor[nsa])  # noqa: N806
+                Sa_T1 = np.exp(IM_log_data_scaling_anchor)  # noqa: N806
 
                 # penalty for scaling factor
 
@@ -447,12 +447,12 @@ class gmCluster:
                 penalty_pool[temptag2] = (sf_max - sf_pool[temptag2]) ** 2
 
             if IM_log_data_pool2.shape[1] > 0:
-                IM_log_data_pool3 = (
+                IM_log_data_pool3 = (  # noqa: N806
                     IM_log_data_pool2
                     + np.log(sf_pool[np.newaxis]).T * scaling_exponent2[np.newaxis]
                 )
-                normData = IM_log_data_pool3 / log_im_range2
-                normRefGrid = IM_log_ref2 / log_im_range2
+                normData = IM_log_data_pool3 / log_im_range2  # noqa: N806
+                normRefGrid = IM_log_ref2 / log_im_range2  # noqa: N806
                 err_mat = (
                     distance_matrix(normData, normRefGrid, p=2) ** 2 / lenRef2**2
                     + np.tile(penalty_pool, (int(nGridPerIM), 1)).T * sf_penalty
@@ -469,8 +469,8 @@ class gmCluster:
 
             count = 0
             for ng in minerr_tag[:, ngr]:
-                cureqID = eqnameID[ng]
-                cureqID_existnum = np.sum(cureqID == np.array(selected_gm_eqID))
+                cureqID = eqnameID[ng]  # noqa: N806
+                cureqID_existnum = np.sum(cureqID == np.array(selected_gm_eqID))  # noqa: N806
 
                 if (selected_gm_ID.count(ng) == 0) and (cureqID_existnum < numEQmax):
                     break  # we only consider this
@@ -478,21 +478,21 @@ class gmCluster:
                 count += 1
                 if ng == minerr_tag[-1, ngr]:
                     msg = 'not enough ground motion to match your criteria'
-                    print(msg)
+                    print(msg)  # noqa: T201
                     errf.write(msg)
                     errf.close()
-                    exit(-1)
+                    exit(-1)  # noqa: PLR1722
 
-            selected_gm_ID += [ng]
+            selected_gm_ID += [ng]  # noqa: N806
             selected_gm_err += [minerr[count, ngr]]
-            selected_gm_eqID += [cureqID]
+            selected_gm_eqID += [cureqID]  # noqa: N806
             selected_gm_scale += [sf_pool[ng]]
 
             err_sum[nsa, ngr] += err_pure[ng, ngr]
 
-        flat_gm_ID = selected_gm_ID
+        flat_gm_ID = selected_gm_ID  # noqa: N806
         flat_gm_scale = selected_gm_scale
-        flat_RSN = [RSN[myid] for myid in flat_gm_ID]
+        flat_RSN = [RSN[myid] for myid in flat_gm_ID]  # noqa: N806, F841
 
         #
         # Write the results
@@ -502,7 +502,7 @@ class gmCluster:
         my_results['gm_RSN'] = [int(RSN[int(flat_gm_ID[myid])]) for myid in idx]
         my_results['gm_scale'] = [flat_gm_scale[myid] for myid in idx]
 
-        with open('gridIM_output.json', 'w') as f:
+        with open('gridIM_output.json', 'w') as f:  # noqa: PTH123
             f.write(json.dumps(my_results))
 
         #
@@ -522,12 +522,12 @@ class gmCluster:
         # except:
         #     pass
 
-        theLogIM = []
-        LogIMref = []
+        theLogIM = []  # noqa: N806
+        LogIMref = []  # noqa: N806
         for idx in range(nim):
-            theLogSF = np.log(np.array(selected_gm_scale) ** scaling_exponent[idx])
-            theLogIM += [np.array(IM_log_data_pool[selected_gm_ID, idx]) + theLogSF]
-            LogIMref += [
+            theLogSF = np.log(np.array(selected_gm_scale) ** scaling_exponent[idx])  # noqa: N806
+            theLogIM += [np.array(IM_log_data_pool[selected_gm_ID, idx]) + theLogSF]  # noqa: N806
+            LogIMref += [  # noqa: N806
                 np.linspace(log_im_lb[idx], log_im_ub[idx], int(im_nbins[idx]))
             ]
 
@@ -538,7 +538,7 @@ class gmCluster:
 
         colorscale = [[0, 'rgb(0,0,255)'], [1, 'rgb(255,0,0)']]
 
-        if nim == 3:
+        if nim == 3:  # noqa: PLR2004
             flat_grid_error = err_sum.T.flatten() / npergrid
 
             if found_scaling_anchor:
@@ -555,7 +555,7 @@ class gmCluster:
             # reference points
             #
 
-            X, Y, Z = np.meshgrid(LogIMref[idx1], LogIMref[idx2], LogIMref[idx3])
+            X, Y, Z = np.meshgrid(LogIMref[idx1], LogIMref[idx2], LogIMref[idx3])  # noqa: N806
 
             fig = px.scatter_3d(
                 x=np.exp(X.reshape(-1)),
@@ -569,9 +569,9 @@ class gmCluster:
             )
 
             fig.update_traces(
-                marker=dict(
+                marker=dict(  # noqa: C408
                     size=7,
-                    line=dict(width=2),
+                    line=dict(width=2),  # noqa: C408
                 )
             )
 
@@ -590,17 +590,17 @@ class gmCluster:
                 y=np.exp(theLogIM[idx2]),
                 z=np.exp(theLogIM[idx3]),
                 mode='markers',
-                marker=dict(
+                marker=dict(  # noqa: C408
                     size=4,
-                    line=dict(width=1, color='black'),
+                    line=dict(width=1, color='black'),  # noqa: C408
                     color='orange',
                 ),
                 name='selected ground motion',
             )
 
             fig.update_layout(
-                scene=dict(
-                    xaxis=dict(
+                scene=dict(  # noqa: C408
+                    xaxis=dict(  # noqa: C408
                         tickmode='array',
                         # tickvals=[im_lb[idx1],im_ub[idx1],0.001,0.01,0.1,1,10,100],),
                         tickvals=[
@@ -620,7 +620,7 @@ class gmCluster:
                         ],
                         title=im_names[idx1] + myunits[idx1],
                     ),
-                    yaxis=dict(
+                    yaxis=dict(  # noqa: C408
                         tickmode='array',
                         # tickvals=[im_lb[idx2],im_ub[idx2],0.001,0.01,0.1,1,10,100],),
                         tickvals=[
@@ -640,7 +640,7 @@ class gmCluster:
                         ],
                         title=im_names[idx2] + myunits[idx2],
                     ),
-                    zaxis=dict(
+                    zaxis=dict(  # noqa: C408
                         tickmode='array',
                         # tickvals=[im_lb[idx3],im_ub[idx3],0.001,0.01,0.1,1,10,100],),
                         tickvals=[
@@ -662,7 +662,7 @@ class gmCluster:
                     ),
                     aspectmode='cube',
                 ),
-                legend=dict(
+                legend=dict(  # noqa: C408
                     x=0,
                     y=0,
                     xanchor='left',
@@ -673,8 +673,8 @@ class gmCluster:
                 height=500,
                 width=550,
                 legend_orientation='h',
-                scene_camera=dict(eye=dict(x=2, y=2, z=0.6)),
-                margin=dict(l=20, r=20, t=20, b=20),
+                scene_camera=dict(eye=dict(x=2, y=2, z=0.6)),  # noqa: C408
+                margin=dict(l=20, r=20, t=20, b=20),  # noqa: C408
             )
 
             """
@@ -715,7 +715,7 @@ class gmCluster:
 
             ax.view_init(10, 30)
             """
-        if nim == 2:
+        if nim == 2:  # noqa: PLR2004
             flat_grid_error = err_sum.flatten() / npergrid
 
             idx1 = 0
@@ -725,15 +725,15 @@ class gmCluster:
             # data points
             #
 
-            X, Y = np.meshgrid(LogIMref[idx1], LogIMref[idx2])
+            X, Y = np.meshgrid(LogIMref[idx1], LogIMref[idx2])  # noqa: N806
 
             #
             # interpolated area
             #
-            lowerboundX = np.min(np.log(im_lb[0]) - log_im_range[0] * 0.05)
-            upperboundX = np.max(np.log(im_ub[0]) + log_im_range[0] * 0.05)
-            lowerboundY = np.min(np.log(im_lb[1]) - log_im_range[1] * 0.05)
-            upperboundY = np.max(np.log(im_ub[1]) + log_im_range[1] * 0.05)
+            lowerboundX = np.min(np.log(im_lb[0]) - log_im_range[0] * 0.05)  # noqa: N806
+            upperboundX = np.max(np.log(im_ub[0]) + log_im_range[0] * 0.05)  # noqa: N806
+            lowerboundY = np.min(np.log(im_lb[1]) - log_im_range[1] * 0.05)  # noqa: N806
+            upperboundY = np.max(np.log(im_ub[1]) + log_im_range[1] * 0.05)  # noqa: N806
 
             xx = np.linspace(lowerboundX, upperboundX, 20)
             yy = np.linspace(lowerboundY, upperboundY, 20)
@@ -756,9 +756,9 @@ class gmCluster:
                 color_continuous_scale=colorscale,
             )
             fig.update_traces(
-                marker=dict(
+                marker=dict(  # noqa: C408
                     size=15,
-                    line=dict(width=2, color='black'),
+                    line=dict(width=2, color='black'),  # noqa: C408
                 )
             )
 
@@ -769,9 +769,9 @@ class gmCluster:
                 x=np.exp(theLogIM[idx1]),
                 y=np.exp(theLogIM[idx2]),
                 mode='markers',
-                marker=dict(
+                marker=dict(  # noqa: C408
                     size=5,
-                    line=dict(width=1, color='black'),
+                    line=dict(width=1, color='black'),  # noqa: C408
                     color='orange',
                 ),
                 name='selected ground motion',
@@ -795,7 +795,7 @@ class gmCluster:
             )
 
             fig.update_layout(
-                xaxis=dict(
+                xaxis=dict(  # noqa: C408
                     tickmode='array',
                     # tickvals=[im_lb[idx1],im_ub[idx1],0.001,0.01,0.1,1,10,100],),
                     tickvals=[
@@ -815,7 +815,7 @@ class gmCluster:
                     ],
                     title=im_names[idx1] + myunits[idx1],
                 ),
-                yaxis=dict(
+                yaxis=dict(  # noqa: C408
                     tickmode='array',
                     # tickvals=[im_lb[idx2],im_ub[idx2],0.001,0.01,0.1,1,10,100],),
                     tickvals=[
@@ -835,7 +835,7 @@ class gmCluster:
                     ],
                     title=im_names[idx2] + myunits[idx2],
                 ),
-                legend=dict(
+                legend=dict(  # noqa: C408
                     x=0,
                     y=-0.1,
                     xanchor='left',
@@ -846,7 +846,7 @@ class gmCluster:
                 height=500,
                 width=550,
                 legend_orientation='h',
-                margin=dict(l=20, r=20, t=20, b=20),
+                margin=dict(l=20, r=20, t=20, b=20),  # noqa: C408
             )
             fig.update_coloraxes(
                 cmin=0,
@@ -948,14 +948,14 @@ class gmCluster:
         #     plt.xlabel(im_names[idx1]);
 
         # plt.savefig('gridIM_coverage.png',bbox_inches='tight')
-        if nim == 2 or nim == 3:
-            with open(r'gridIM_coverage.html', 'w') as f:
+        if nim == 2 or nim == 3:  # noqa: PLR1714, PLR2004
+            with open(r'gridIM_coverage.html', 'w') as f:  # noqa: PTH123
                 f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
             f.close()
 
 
 if __name__ == '__main__':
-    errf = open('gridIM_log.err', 'w')
+    errf = open('gridIM_log.err', 'w')  # noqa: SIM115, PTH123
     main(sys.argv, errf)
     # try:
     #     main(sys.argv,errf)

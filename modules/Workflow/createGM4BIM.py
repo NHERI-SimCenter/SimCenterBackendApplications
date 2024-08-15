@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2019 The Regents of the University of California
 #
 # This file is part of the RDT Application.
@@ -48,16 +48,16 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from computeResponseSpectrum import *
+from computeResponseSpectrum import *  # noqa: F403
 
-this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
 main_dir = this_dir.parents[0]
 sys.path.insert(0, str(main_dir / 'common'))
-from simcenter_common import *
+from simcenter_common import *  # noqa: E402, F403
 
 
-def get_scale_factors(input_units, output_units):
-    """Determine the scale factor to convert input event to internal event data"""
+def get_scale_factors(input_units, output_units):  # noqa: C901
+    """Determine the scale factor to convert input event to internal event data"""  # noqa: D400
     # special case: if the input unit is not specified then do not do any scaling
     if input_units is None:
         scale_factors = {'ALL': 1.0}
@@ -69,13 +69,13 @@ def get_scale_factors(input_units, output_units):
         unit_length = output_units.get('length', 'inch')
         f_length = globals().get(unit_length, None)
         if f_length is None:
-            raise ValueError(f'Specified length unit not recognized: {unit_length}')
+            raise ValueError(f'Specified length unit not recognized: {unit_length}')  # noqa: EM102, TRY003
 
         # if no time unit is specified, 'sec' is assumed
         unit_time = output_units.get('time', 'sec')
         f_time = globals().get(unit_time, None)
         if f_time is None:
-            raise ValueError(f'Specified time unit not recognized: {unit_time}')
+            raise ValueError(f'Specified time unit not recognized: {unit_time}')  # noqa: EM102, TRY003
 
         scale_factors = {}
 
@@ -88,8 +88,8 @@ def get_scale_factors(input_units, output_units):
                 # get the scale factor to standard units
                 f_in = globals().get(input_unit, None)
                 if f_in is None:
-                    raise ValueError(
-                        f'Input unit for event files not recognized: {input_unit}'
+                    raise ValueError(  # noqa: TRY003
+                        f'Input unit for event files not recognized: {input_unit}'  # noqa: EM102
                     )
 
                 unit_type = None
@@ -98,7 +98,7 @@ def get_scale_factors(input_units, output_units):
                         unit_type = base_unit_type
 
                 if unit_type is None:
-                    raise ValueError(f'Failed to identify unit type: {input_unit}')
+                    raise ValueError(f'Failed to identify unit type: {input_unit}')  # noqa: EM102, TRY003
 
                 # the output unit depends on the unit type
                 if unit_type == 'acceleration':
@@ -111,8 +111,8 @@ def get_scale_factors(input_units, output_units):
                     f_out = 1.0 / f_length
 
                 else:
-                    raise ValueError(
-                        f'Unexpected unit type in workflow: {unit_type}'
+                    raise ValueError(  # noqa: TRY003
+                        f'Unexpected unit type in workflow: {unit_type}'  # noqa: EM102
                     )
 
                 # the scale factor is the product of input and output scaling
@@ -123,37 +123,37 @@ def get_scale_factors(input_units, output_units):
     return scale_factors
 
 
-def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
-    if not os.path.isdir(inputDir):
-        print(f'input dir: {inputDir} does not exist')
+def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: C901, N802, N803, D103, PLR0915
+    if not os.path.isdir(inputDir):  # noqa: PTH112
+        print(f'input dir: {inputDir} does not exist')  # noqa: T201
         return 0
 
-    if not os.path.exists(outputDir):
-        os.mkdir(outputDir)
+    if not os.path.exists(outputDir):  # noqa: PTH110
+        os.mkdir(outputDir)  # noqa: PTH102
 
     #
     # FMK bug fix - have to copy AIM files back to the inputDir dir as code below assumes they are there
     #
 
     extension = 'AIM.json'
-    the_dir = os.path.abspath(inputDir)
+    the_dir = os.path.abspath(inputDir)  # noqa: PTH100
     for item in os.listdir(the_dir):
-        item_path = os.path.join(the_dir, item)
-        if os.path.isdir(item_path):
-            template_dir = os.path.join(item_path, 'templatedir')
+        item_path = os.path.join(the_dir, item)  # noqa: PTH118
+        if os.path.isdir(item_path):  # noqa: PTH112
+            template_dir = os.path.join(item_path, 'templatedir')  # noqa: PTH118
             for the_file in os.listdir(template_dir):
                 if the_file.endswith(extension):
-                    bim_path = os.path.join(template_dir, the_file)
+                    bim_path = os.path.join(template_dir, the_file)  # noqa: PTH118
                     shutil.copy(bim_path, the_dir)
 
     # siteFiles = glob(f"{inputDir}/*BIM.json")
     # KZ: changing BIM to AIM
-    siteFiles = glob(f'{inputDir}/*AIM.json')
+    siteFiles = glob(f'{inputDir}/*AIM.json')  # noqa: PTH207, N806
 
-    GP_file = []
-    Longitude = []
-    Latitude = []
-    id = []
+    GP_file = []  # noqa: N806, F841
+    Longitude = []  # noqa: N806
+    Latitude = []  # noqa: N806
+    id = []  # noqa: A001
     sites = []
     # site im dictionary
     periods = np.array(
@@ -202,7 +202,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
         '1-PGD-0-1': [],
         '1-PGD-0-2': [],
     }
-    for Ti in periods:
+    for Ti in periods:  # noqa: N806
         dict_im_all.update(
             {
                 (f'SA({Ti}s)', 0, 1, 'median'): [],
@@ -237,7 +237,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
             '1-PGD-0-1': [],
             '1-PGD-0-2': [],
         }
-        for Ti in periods:
+        for Ti in periods:  # noqa: N806
             dict_im.update(
                 {
                     (f'SA({Ti}s)', 0, 1, 'median'): [],
@@ -248,16 +248,16 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
             )
             dict_im_site.update({f'1-SA({Ti}s)-0-1': [], f'1-SA({Ti}s)-0-2': []})
 
-        with open(site) as f:
-            All_json = json.load(f)
-            generalInfo = All_json['GeneralInformation']
+        with open(site) as f:  # noqa: PTH123
+            All_json = json.load(f)  # noqa: N806
+            generalInfo = All_json['GeneralInformation']  # noqa: N806
             Longitude.append(generalInfo['Longitude'])
             Latitude.append(generalInfo['Latitude'])
             # siteID = generalInfo['BIM_id']
             # KZ: changing BIM to AIM
-            siteID = generalInfo['AIM_id']
+            siteID = generalInfo['AIM_id']  # noqa: N806
             # get unit info (needed for determining the simulated acc unit)
-            unitInfo = All_json['units']
+            unitInfo = All_json['units']  # noqa: N806
             # get scaling factor for surface acceleration
             acc_unit = {'AccelerationEvent': 'g'}
             f_scale_units = get_scale_factors(acc_unit, unitInfo)
@@ -277,12 +277,12 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
 
             id.append(int(siteID))
 
-            siteFileName = f'Site_{siteID}.csv'
+            siteFileName = f'Site_{siteID}.csv'  # noqa: N806
             sites.append(siteFileName)
 
-            workdirs = glob(f'{inputDir}/{siteID}/workdir.*')
-            siteEventFiles = []
-            siteEventFactors = []
+            workdirs = glob(f'{inputDir}/{siteID}/workdir.*')  # noqa: PTH207
+            siteEventFiles = []  # noqa: N806
+            siteEventFactors = []  # noqa: N806
 
             # initialization
             psa_x = []
@@ -295,10 +295,10 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
             pgd_y = []
 
             for workdir in workdirs:
-                head, sep, sampleID = workdir.partition('workdir.')
+                head, sep, sampleID = workdir.partition('workdir.')  # noqa: N806
                 # print(sampleID)
 
-                eventName = f'Event_{siteID}_{sampleID}'
+                eventName = f'Event_{siteID}_{sampleID}'  # noqa: N806
                 # print(eventName)
                 shutil.copy(f'{workdir}/fmkEVENT', f'{outputDir}/{eventName}.json')
 
@@ -306,17 +306,17 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
                 siteEventFactors.append(1.0)
 
                 # compute ground motion intensity measures
-                with open(f'{outputDir}/{eventName}.json') as f:
+                with open(f'{outputDir}/{eventName}.json') as f:  # noqa: PTH123, PLW2901
                     cur_gm = json.load(f)
                 cur_seismograms = cur_gm['Events'][0]['timeSeries']
-                num_seismograms = len(cur_seismograms)
+                num_seismograms = len(cur_seismograms)  # noqa: F841
                 # im_X and im_Y
                 for cur_time_series in cur_seismograms:
                     dt = cur_time_series.get('dT')
                     acc = [x / f_scale for x in cur_time_series.get('data')]
-                    acc_hist = np.array([[dt * x for x in range(len(acc))], acc])
+                    acc_hist = np.array([[dt * x for x in range(len(acc))], acc])  # noqa: F841
                     # get intensity measure
-                    my_response_spectrum_calc = NewmarkBeta(
+                    my_response_spectrum_calc = NewmarkBeta(  # noqa: F405
                         acc, dt, periods, damping=0.05, units='g'
                     )
                     tmp, time_series, accel, vel, disp = (
@@ -345,7 +345,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
             dict_im_site['1-PGV-0-2'] = pgv_y
             dict_im_site['1-PGD-0-1'] = pgd_x
             dict_im_site['1-PGD-0-2'] = pgd_y
-            for jj, Ti in enumerate(periods):
+            for jj, Ti in enumerate(periods):  # noqa: N806
                 cur_sa = f'1-SA({Ti}s)-0-1'
                 dict_im_site[cur_sa] = [tmp[jj] for tmp in psa_x]
                 cur_sa = f'1-SA({Ti}s)-0-2'
@@ -426,7 +426,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
             dict_im[('PGD', 0, 1, 'beta')].append(s_pgd_x)
             dict_im[('PGD', 0, 2, 'median')].append(m_pgd_y)
             dict_im[('PGD', 0, 2, 'beta')].append(s_pgd_y)
-            for jj, Ti in enumerate(periods):
+            for jj, Ti in enumerate(periods):  # noqa: N806
                 cur_sa = f'SA({Ti}s)'
                 dict_im[(cur_sa, 0, 1, 'median')].append(m_psa_x[jj])
                 dict_im[(cur_sa, 0, 1, 'beta')].append(s_psa_x[jj])
@@ -445,20 +445,20 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
             df_im.to_csv(f'{inputDir}/{siteID}/IM.csv', index=False)
 
             # create site csv
-            siteDF = pd.DataFrame(
+            siteDF = pd.DataFrame(  # noqa: N806
                 list(zip(siteEventFiles, siteEventFactors)),
                 columns=['TH_file', 'factor'],
             )
             siteDF.to_csv(f'{outputDir}/{siteFileName}', index=False)
 
     # create the EventFile
-    gridDF = pd.DataFrame(
+    gridDF = pd.DataFrame(  # noqa: N806
         list(zip(sites, Longitude, Latitude)),
         columns=['GP_file', 'Longitude', 'Latitude'],
     )
 
     # change the writing mode to append for paralleling workflow
-    if os.path.exists(f'{outputDir}/EventGrid.csv'):
+    if os.path.exists(f'{outputDir}/EventGrid.csv'):  # noqa: PTH110
         # EventGrid.csv has been created
         gridDF.to_csv(
             f'{outputDir}/EventGrid.csv', mode='a', index=False, header=False
@@ -467,18 +467,18 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
         # EventGrid.csv to be created
         gridDF.to_csv(f'{outputDir}/EventGrid.csv', index=False)
     # gridDF.to_csv(f"{outputDir}/EventGrid.csv", index=False)
-    print(f'EventGrid.csv saved to {outputDir}')
+    print(f'EventGrid.csv saved to {outputDir}')  # noqa: T201
 
     # create pandas
-    im_csv_path = os.path.dirname(os.path.dirname(outputDir))
+    im_csv_path = os.path.dirname(os.path.dirname(outputDir))  # noqa: PTH120
     df_im_all = pd.DataFrame.from_dict(dict_im_all)
     try:
-        os.mkdir(os.path.join(im_csv_path, 'Results'))
-    except:
-        print('Results folder already exists')
+        os.mkdir(os.path.join(im_csv_path, 'Results'))  # noqa: PTH102, PTH118
+    except:  # noqa: E722
+        print('Results folder already exists')  # noqa: T201
     # KZ: 10/19/2022, minor patch for Buildings
     df_im_all.to_csv(
-        os.path.join(
+        os.path.join(  # noqa: PTH118
             im_csv_path,
             'Results',
             'Buildings',
@@ -487,7 +487,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
         index=False,
     )
     df_im_all.to_csv(
-        os.path.join(im_csv_path, f'IM_{min(id)}-{max(id)}.csv'),
+        os.path.join(im_csv_path, f'IM_{min(id)}-{max(id)}.csv'),  # noqa: PTH118
         index=False,
     )
 
@@ -501,7 +501,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
 if __name__ == '__main__':
     # Defining the command line arguments
 
-    workflowArgParser = argparse.ArgumentParser(
+    workflowArgParser = argparse.ArgumentParser(  # noqa: N816
         'Create ground motions for BIM.', allow_abbrev=False
     )
 
@@ -516,8 +516,8 @@ if __name__ == '__main__':
     workflowArgParser.add_argument('--removeInput', action='store_true')
 
     # Parsing the command line arguments
-    wfArgs = workflowArgParser.parse_args()
+    wfArgs = workflowArgParser.parse_args()  # noqa: N816
 
-    print(wfArgs)
+    print(wfArgs)  # noqa: T201
     # Calling the main function
     createFilesForEventGrid(wfArgs.inputDir, wfArgs.outputDir, wfArgs.removeInput)

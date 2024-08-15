@@ -1,7 +1,7 @@
 """Created on Tue Nov  1 20:36:29 2022
 
 @author: snaeimi
-"""
+"""  # noqa: N999, D400
 
 from PyQt5 import QtGui, QtWidgets
 
@@ -9,7 +9,7 @@ from .Node_Damage_Model_Help_Designer import Node_Damage_Model_Help_Designer
 from .Node_Damage_Model_Window import Ui_Node_Damage_Model
 
 
-class Node_Damage_Model_Designer(Ui_Node_Damage_Model):
+class Node_Damage_Model_Designer(Ui_Node_Damage_Model):  # noqa: D101
     def __init__(self, node_damage_model):
         self._window = QtWidgets.QDialog()
         self.setupUi(self._window)
@@ -170,11 +170,11 @@ class Node_Damage_Model_Designer(Ui_Node_Damage_Model):
         self.buttonBox.accepted.connect(self.okButtonPressed)
         self.help_button.clicked.connect(self.showHelpByButton)
 
-    def showHelpByButton(self):
+    def showHelpByButton(self):  # noqa: N802, D102
         help_dialog_box = Node_Damage_Model_Help_Designer()
-        help_dialog_box._window.exec_()
+        help_dialog_box._window.exec_()  # noqa: SLF001
 
-    def okButtonPressed(self):
+    def okButtonPressed(self):  # noqa: C901, N802, D102
         a = self.a_line.text()
         b = self.b_line.text()
         c = self.c_line.text()
@@ -260,12 +260,12 @@ class Node_Damage_Model_Designer(Ui_Node_Damage_Model):
 
         self._window.accept()
 
-    def errorMSG(self, error_title, error_msg, error_more_msg=None):
+    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: N802, D102
         error_widget = QtWidgets.QMessageBox()
         error_widget.setIcon(QtWidgets.QMessageBox.Critical)
         error_widget.setText(error_msg)
         error_widget.setWindowTitle(error_title)
         error_widget.setStandardButtons(QtWidgets.QMessageBox.Ok)
-        if error_more_msg != None:
+        if error_more_msg != None:  # noqa: E711
             error_widget.setInformativeText(error_more_msg)
         error_widget.exec_()

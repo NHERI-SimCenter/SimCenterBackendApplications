@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -45,10 +45,10 @@ from pathlib import Path, PurePath
 import numpy as np
 
 
-def write_RV(EVENT_input_path):
+def write_RV(EVENT_input_path):  # noqa: C901, N802, N803, D103
     # open the event file and get the list of events
-    with open(EVENT_input_path, encoding='utf-8') as f:
-        EVENT_in = json.load(f)
+    with open(EVENT_input_path, encoding='utf-8') as f:  # noqa: PTH123
+        EVENT_in = json.load(f)  # noqa: N806
 
     # if there is a list of possible events, load all of them
     if len(EVENT_in['randomVariables']) > 0:
@@ -73,7 +73,7 @@ def write_RV(EVENT_input_path):
         file_sample_dict[filename][0].append(e_i)
         file_sample_dict[filename][1].append(int(sample_id))
 
-    EDP_output = None
+    EDP_output = None  # noqa: N806
 
     for filename in file_sample_dict:
         # get the header
@@ -101,29 +101,29 @@ def write_RV(EVENT_input_path):
 
         if EDP_output is None:
             if len(samples.shape) > 1:
-                EDP_output = np.zeros((len(event_list), samples.shape[1]))
+                EDP_output = np.zeros((len(event_list), samples.shape[1]))  # noqa: N806
             else:
-                EDP_output = np.zeros(len(event_list))
+                EDP_output = np.zeros(len(event_list))  # noqa: N806
 
         EDP_output[file_sample_dict[filename][0]] = samples
 
     if len(EDP_output.shape) == 1:
-        EDP_output = np.reshape(EDP_output, (EDP_output.shape[0], 1))
+        EDP_output = np.reshape(EDP_output, (EDP_output.shape[0], 1))  # noqa: N806
 
-    EDP_output = EDP_output.T
+    EDP_output = EDP_output.T  # noqa: N806
 
     for c_i, col in enumerate(header):
         f_i = f_scale.get(col.strip(), f_scale.get('ALL', None))
         if f_i is None:
-            raise ValueError(f'No units defined for {col}')
+            raise ValueError(f'No units defined for {col}')  # noqa: EM102, TRY003
 
         EDP_output[c_i] *= f_i
 
-    EDP_output = EDP_output.T
+    EDP_output = EDP_output.T  # noqa: N806
 
     index = np.reshape(np.arange(EDP_output.shape[0]), (EDP_output.shape[0], 1))
 
-    EDP_output = np.concatenate([index, EDP_output], axis=1)
+    EDP_output = np.concatenate([index, EDP_output], axis=1)  # noqa: N806
 
     working_dir = Path(PurePath(EVENT_input_path).parent)
     # working_dir = posixpath.dirname(EVENT_input_path)
@@ -132,7 +132,7 @@ def write_RV(EVENT_input_path):
     header_out = []
     for h_label in header:
         # remove leading and trailing whitespace
-        h_label = h_label.strip()
+        h_label = h_label.strip()  # noqa: PLW2901
 
         # convert suffixes to the loc-dir format used by the SimCenter
         if h_label.endswith('_h'):  # horizontal
@@ -159,24 +159,24 @@ def write_RV(EVENT_input_path):
     )
 
 
-# TODO: consider removing this function
+# TODO: consider removing this function  # noqa: TD002
 # It is not used currently
-def create_EDP(EVENT_input_path, EDP_input_path):
+def create_EDP(EVENT_input_path, EDP_input_path):  # noqa: N802, N803, D103
     # load the EDP file
-    with open(EDP_input_path, encoding='utf-8') as f:
-        EDP_in = json.load(f)
+    with open(EDP_input_path, encoding='utf-8') as f:  # noqa: PTH123
+        EDP_in = json.load(f)  # noqa: N806
 
     # load the EVENT file
-    with open(EVENT_input_path, encoding='utf-8') as f:
-        EVENT_in = json.load(f)
+    with open(EVENT_input_path, encoding='utf-8') as f:  # noqa: PTH123
+        EVENT_in = json.load(f)  # noqa: N806
 
     # store the IM(s) in the EDP file
     for edp in EDP_in['EngineeringDemandParameters'][0]['responses']:
         for im in EVENT_in['Events']:
-            if edp['type'] in im.keys():
+            if edp['type'] in im.keys():  # noqa: SIM118
                 edp['scalar_data'] = [im[edp['type']]]
 
-    with open(EDP_input_path, 'w', encoding='utf-8') as f:
+    with open(EDP_input_path, 'w', encoding='utf-8') as f:  # noqa: PTH123
         json.dump(EDP_in, f, indent=2)
 
 

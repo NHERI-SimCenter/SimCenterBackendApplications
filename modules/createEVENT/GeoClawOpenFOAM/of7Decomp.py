@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -47,7 +47,7 @@ class of7Decomp:
     -------
             decomptext: Get all the text for the decomposeParDict
 
-    """
+    """  # noqa: D205, D404
 
     #############################################################
     def decomptext(self, data):
@@ -57,7 +57,7 @@ class of7Decomp:
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -75,7 +75,7 @@ class of7Decomp:
 
         decomptext = decomptext + 'method\tscotch;\n\n'
 
-        return decomptext
+        return decomptext  # noqa: RET504
 
     #############################################################
     def decompheader(self):
@@ -84,7 +84,7 @@ class of7Decomp:
         Variable
         -----------
                 header: Header for the decomposeparDict-file
-        """
+        """  # noqa: D400, D401
         header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
@@ -94,13 +94,13 @@ class of7Decomp:
 \\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"system";\n\tobject\tdecomposeParDict;\n}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
         # Return the header for U file
-        return header
+        return header  # noqa: RET504
 
     #############################################################
-    def scripts(self, data, path):
+    def scripts(self, data, path):  # noqa: ARG002
         """Create the scripts for caserun.sh
 
         Arguments:
@@ -108,7 +108,7 @@ FoamFile
                 data: all the JSON data
                 path: Path where dakota.json file is located
 
-        """
+        """  # noqa: D400
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -134,7 +134,7 @@ FoamFile
             caseruntext = (
                 caseruntext + 'echo Starting CFD simulation in parallel...\n'
             )
-            if int(simtype) == 4:
+            if int(simtype) == 4:  # noqa: PLR2004
                 caseruntext = (
                     caseruntext
                     + 'ibrun -n '
@@ -151,12 +151,12 @@ FoamFile
 
         else:
             caseruntext = 'echo Starting CFD simulation in serial...\n'
-            if int(simtype) == 4:
+            if int(simtype) == 4:  # noqa: PLR2004
                 caseruntext = caseruntext + 'olaDyMFlow > olaDyMFlow.log\n\n'
             else:
                 caseruntext = caseruntext + 'olaFlow > olaFlow.log\n\n'
 
         # Write to caserun file
-        scriptfile = open('caserun.sh', 'a')
+        scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
         scriptfile.write(caseruntext)
         scriptfile.close()

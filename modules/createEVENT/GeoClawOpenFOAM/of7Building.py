@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""
+"""  # noqa: D400
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -52,10 +52,10 @@ class of7Building:
             buildcheck: Checks if all files required for creating the building exists
             createbuilds: Creates the STL files
 
-    """
+    """  # noqa: D205, D404
 
     #############################################################
-    def buildcheck(self, data, path):
+    def buildcheck(self, data, path):  # noqa: C901, PLR0911
         """Checks if all files required for creating the building exists
 
         Arguments:
@@ -63,14 +63,14 @@ class of7Building:
                 data: all the JSON data
                 path: Path to where the dakota.json exists
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
         # Check if a translate script exists.
         # If so delete it
-        if os.path.exists('translate.sh'):
-            os.remove('translate.sh')
+        if os.path.exists('translate.sh'):  # noqa: PTH110
+            os.remove('translate.sh')  # noqa: PTH107
 
         # Check for STL file
         # Get the type of building definition
@@ -95,22 +95,22 @@ class of7Building:
                     builddata = builddata.replace(',', ' ')
                     nums = [float(n) for n in builddata.split()]
                     buildtype = nums[0]
-                    if int(buildtype) == -1 or int(buildtype) == 2:
+                    if int(buildtype) == -1 or int(buildtype) == 2:  # noqa: PLR2004
                         stlfile = hydroutil.extract_element_from_json(
                             data, ['Events', 'BuildingSTLFile']
                         )
                         if stlfile == [None]:
                             return -1
-                        else:
+                        else:  # noqa: RET505
                             stlfile = ', '.join(
                                 hydroutil.extract_element_from_json(
                                     data, ['Events', 'BuildingSTLFile']
                                 )
                             )
-                            if not os.path.exists(os.path.join(path, stlfile)):
+                            if not os.path.exists(os.path.join(path, stlfile)):  # noqa: PTH110, PTH118
                                 return -1
 
-                    if int(buildtype) == -2 or int(buildtype) == -1:
+                    if int(buildtype) == -2 or int(buildtype) == -1:  # noqa: PLR2004
                         numbuildres += 1
                         # Check GI
                         depth = hydroutil.extract_element_from_json(
@@ -171,23 +171,23 @@ class of7Building:
             )
             if int(buildshape) == 0:
                 return -1
-            elif int(buildshape) == 1:
+            elif int(buildshape) == 1:  # noqa: RET505
                 stlfile = hydroutil.extract_element_from_json(
                     data, ['Events', 'BuildingSTLFile']
                 )
                 if stlfile == [None]:
                     return -1
-                else:
+                else:  # noqa: RET505
                     stlfile = ', '.join(
                         hydroutil.extract_element_from_json(
                             data, ['Events', 'BuildingSTLFile']
                         )
                     )
-                    if not os.path.exists(os.path.join(path, stlfile)):
+                    if not os.path.exists(os.path.join(path, stlfile)):  # noqa: PTH110, PTH118
                         return -1
 
             # Check if building distribution selected
-            buildDist = ', '.join(
+            buildDist = ', '.join(  # noqa: N806
                 hydroutil.extract_element_from_json(data, ['Events', 'BuildDist'])
             )
             if int(buildDist) == 0:
@@ -204,7 +204,7 @@ class of7Building:
                 data: all the JSON data
                 path: Path to where the dakota.json exists
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -229,7 +229,7 @@ class of7Building:
                 data: all the JSON data
                 path: Path to where the dakota.json exists
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -255,7 +255,7 @@ class of7Building:
                 nums = [float(n) for n in builddata.split()]
                 buildtype = nums[0]
 
-                if int(buildtype) == -2:
+                if int(buildtype) == -2:  # noqa: PLR2004
                     # Create a temporary file using GI information (Response)
                     self.buildcubeGI(data, path)
                     # Increment response buildign number
@@ -266,14 +266,14 @@ class of7Building:
                     # Increment response buildign number
                     numresbuild += 1
                 elif int(buildtype) == 1:
-                    print('no response + cuboid')
+                    print('no response + cuboid')  # noqa: T201
                     # Create a temporary file
                     # Call flume to build an STL
                     # Combine all STL to building + number
                     # Increment response buildign number
                     numotherbuild += 1
-                elif int(buildtype) == 2:
-                    print('no response + STL')
+                elif int(buildtype) == 2:  # noqa: PLR2004
+                    print('no response + STL')  # noqa: T201
                     # Check if STL file exists
                     # Increment response buildign number
                     numotherbuild += 1
@@ -284,7 +284,7 @@ class of7Building:
         self.buildflagadd(numresbuild, numotherbuild)
 
     #############################################################
-    def buildpara(self, data, path):
+    def buildpara(self, data, path):  # noqa: ARG002
         """Creates the STL files for the buildings using parametrized data
 
         Arguments:
@@ -292,12 +292,12 @@ class of7Building:
                 data: all the JSON data
                 path: Path to where the dakota.json exists
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
-        hydroutil = hydroUtils()
+        hydroutil = hydroUtils()  # noqa: F841
 
     #############################################################
-    def buildcubeGI(self, data, path):
+    def buildcubeGI(self, data, path):  # noqa: ARG002, N802
         """Creates the STL files for the buildings using parametrized data
 
         Arguments:
@@ -305,9 +305,9 @@ class of7Building:
                 data: all the JSON data
                 path: Path to where the dakota.json exists
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
-        hydroutil = hydroUtils()
+        hydroutil = hydroUtils()  # noqa: F841
 
         # Create the building STL file
         base_filename = 'Building'
@@ -354,28 +354,28 @@ class of7Building:
         cells = [('triangle', npt)]
         meshio.write_points_cells(filename, npa, cells)
         # Modify first and last line
-        with open(filename) as f:
+        with open(filename) as f:  # noqa: PTH123
             lines = f.readlines()
             lines[0] = 'solid ' + base_filename + '\n'
             lines[len(lines) - 1] = 'endsolid ' + base_filename + '\n'
         # Write the updated file
-        with open(filename, 'w') as f:
+        with open(filename, 'w') as f:  # noqa: PTH123
             f.writelines(lines)
 
         # Create the translation script
-        if os.path.exists('translate.sh'):
-            with open('translate.sh', 'a') as f:
-                buildpath = os.path.join('constant', 'triSurface', 'Building.stl')
+        if os.path.exists('translate.sh'):  # noqa: PTH110
+            with open('translate.sh', 'a') as f:  # noqa: PTH123
+                buildpath = os.path.join('constant', 'triSurface', 'Building.stl')  # noqa: PTH118
                 lines = 'cp Building.stl ' + buildpath + '\n'
                 f.writelines(lines)
         else:
-            with open('translate.sh', 'w') as f:
-                buildpath = os.path.join('constant', 'triSurface', 'Building.stl')
+            with open('translate.sh', 'w') as f:  # noqa: PTH123
+                buildpath = os.path.join('constant', 'triSurface', 'Building.stl')  # noqa: PTH118
                 lines = 'cp Building.stl ' + buildpath + '\n'
                 f.writelines(lines)
 
     #############################################################
-    def readResSTL(self, data, path, ztrans):
+    def readResSTL(self, data, path, ztrans):  # noqa: N802
         """Creates the STL files for the buildings using parametrized data
 
         Arguments:
@@ -384,7 +384,7 @@ class of7Building:
                 path: Path to where the dakota.json exists
                 ztrans: Translation distance in z-direction
 
-        """
+        """  # noqa: D400, D401
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -394,8 +394,8 @@ class of7Building:
         )
 
         # Read the stlfile
-        stlfilepath = os.path.join(path, stlfile)
-        print(stlfilepath)
+        stlfilepath = os.path.join(path, stlfile)  # noqa: PTH118
+        print(stlfilepath)  # noqa: T201
         mesh = meshio.read(stlfilepath, file_format='stl')
 
         mesh.points[:, 0] = mesh.points[:, 0] / (max(abs(mesh.points[:, 0])))
@@ -436,23 +436,23 @@ class of7Building:
         meshio.write_points_cells('Building.stl', mesh.points, mesh.cells)
 
         # Modify first and last line
-        with open('Building.stl') as f:
+        with open('Building.stl') as f:  # noqa: PTH123
             lines = f.readlines()
             lines[0] = 'solid ' + 'Building' + '\n'
             lines[len(lines) - 1] = 'endsolid ' + 'Building' + '\n'
 
         # Write the updated file
-        with open('Building.stl', 'w') as f:
+        with open('Building.stl', 'w') as f:  # noqa: PTH123
             f.writelines(lines)
 
         # Move the file to constant/triSurface folder
-        newfilepath = os.path.join(path, 'constant', 'triSurface', 'Building.stl')
-        os.replace('Building.stl', newfilepath)
+        newfilepath = os.path.join(path, 'constant', 'triSurface', 'Building.stl')  # noqa: PTH118
+        os.replace('Building.stl', newfilepath)  # noqa: PTH105
 
         # Create the translation script
-        if os.path.exists('translate.sh'):
-            with open('translate.sh', 'a') as f:
-                buildpath = os.path.join('constant', 'triSurface', 'Building.stl')
+        if os.path.exists('translate.sh'):  # noqa: PTH110
+            with open('translate.sh', 'a') as f:  # noqa: PTH123
+                buildpath = os.path.join('constant', 'triSurface', 'Building.stl')  # noqa: PTH118
                 lines = 'export FILE="' + buildpath + '"\n'
                 lines = (
                     lines
@@ -466,8 +466,8 @@ class of7Building:
                 )
                 f.writelines(lines)
         else:
-            with open('translate.sh', 'w') as f:
-                buildpath = os.path.join('constant', 'triSurface', 'Building.stl')
+            with open('translate.sh', 'w') as f:  # noqa: PTH123
+                buildpath = os.path.join('constant', 'triSurface', 'Building.stl')  # noqa: PTH118
                 lines = 'export FILE="' + buildpath + '"\n'
                 lines = (
                     lines
@@ -490,7 +490,7 @@ class of7Building:
                 numresbuild: Number of building with response
                 numotherbuild: NUmber of other buildings
 
-        """
+        """  # noqa: D400
         # Get building flag
         if numresbuild == 0 and numotherbuild == 0:
             flag = 0
@@ -502,5 +502,5 @@ class of7Building:
             flag = 3
 
         # Add building flag to temp file
-        with open('temp_geometry.txt', 'a') as f:
+        with open('temp_geometry.txt', 'a') as f:  # noqa: PTH123
             f.writelines(str(flag) + '\n')

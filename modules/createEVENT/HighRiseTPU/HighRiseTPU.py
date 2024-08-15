@@ -1,4 +1,4 @@
-# python code to open the TPU .mat file
+# python code to open the TPU .mat file  # noqa: INP001, D100
 # and put data into a SimCenter JSON file for
 # wind tunnel data
 
@@ -7,21 +7,21 @@ import sys
 
 import scipy.io as sio
 
-inputArgs = sys.argv
+inputArgs = sys.argv  # noqa: N816
 
-print('Number of arguments: %d' % len(sys.argv))
-print('The arguments are: %s' % str(sys.argv))
+print('Number of arguments: %d' % len(sys.argv))  # noqa: T201
+print('The arguments are: %s' % str(sys.argv))  # noqa: T201, UP031
 
 # set filenames
-matFileIN = sys.argv[1]
-jsonFileOUT = sys.argv[2]
+matFileIN = sys.argv[1]  # noqa: N816
+jsonFileOUT = sys.argv[2]  # noqa: N816
 
-dataDir = os.getcwd()
-scriptDir = os.path.dirname(os.path.realpath(__file__))
+dataDir = os.getcwd()  # noqa: PTH109, N816
+scriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N816
 
 
-def parseTPU_HighRise_MatFile(matFileIn, windFileOutName):
-    file = open(windFileOutName, 'w', encoding='utf-8')
+def parseTPU_HighRise_MatFile(matFileIn, windFileOutName):  # noqa: N802, N803, D103
+    file = open(windFileOutName, 'w', encoding='utf-8')  # noqa: SIM115, PTH123
     file.write('{\n')
     mat_contents = sio.loadmat(matFileIn)
     depth = mat_contents['Building_depth'][0][0]
@@ -31,42 +31,42 @@ def parseTPU_HighRise_MatFile(matFileIn, windFileOutName):
     frequency = mat_contents['Sample_frequency'][0][0]
     angle = mat_contents['Wind_direction_angle'][0][0]
     # uH = mat_contents['Uh_AverageWindSpeed'][0][0];
-    uH = float(mat_contents['Uh_AverageWindSpeed'][0])
-    print(uH)
-    print(depth)
-    print(height)
-    file.write('"windSpeed":%f,' % uH)
-    file.write('"depth":%f,' % depth)
-    file.write('"height":%f,' % height)
-    file.write('"breadth":%f,' % breadth)
-    file.write('"period":%f,' % period)
+    uH = float(mat_contents['Uh_AverageWindSpeed'][0])  # noqa: N806
+    print(uH)  # noqa: T201
+    print(depth)  # noqa: T201
+    print(height)  # noqa: T201
+    file.write('"windSpeed":%f,' % uH)  # noqa: UP031
+    file.write('"depth":%f,' % depth)  # noqa: UP031
+    file.write('"height":%f,' % height)  # noqa: UP031
+    file.write('"breadth":%f,' % breadth)  # noqa: UP031
+    file.write('"period":%f,' % period)  # noqa: UP031
     file.write('"units":{"length":"m","time":"sec"},')
-    file.write('"frequency":%f,' % frequency)
-    file.write('"incidenceAngle":%f,' % angle)
+    file.write('"frequency":%f,' % frequency)  # noqa: UP031
+    file.write('"incidenceAngle":%f,' % angle)  # noqa: UP031
     file.write('"tapLocations": [')
     locations = mat_contents['Location_of_measured_points']
-    numLocations = locations.shape[1]
+    numLocations = locations.shape[1]  # noqa: N806
     # get xMax and yMax .. assuming first sensor is 1m from building edge
     # location on faces cannot be obtained from the inputs, at least not with
     # current documentation, awaing email from TPU
 
-    xMax = max(locations[0]) + 1
-    yMax = max(locations[1]) + 1
+    xMax = max(locations[0]) + 1  # noqa: N806, F841
+    yMax = max(locations[1]) + 1  # noqa: N806, F841
 
     for loc in range(numLocations):
         tag = locations[2][loc]
-        xLoc = locations[0][loc]
-        yLoc = locations[1][loc]
+        xLoc = locations[0][loc]  # noqa: N806
+        yLoc = locations[1][loc]  # noqa: N806
         face = locations[3][loc]
 
-        X = xLoc
-        Y = yLoc
-        if face == 2:
-            xLoc = X - breadth
-        elif face == 3:
-            xLoc = X - breadth - depth
-        elif face == 4:
-            xLoc = X - 2 * breadth - depth
+        X = xLoc  # noqa: N806
+        Y = yLoc  # noqa: N806, F841
+        if face == 2:  # noqa: PLR2004
+            xLoc = X - breadth  # noqa: N806
+        elif face == 3:  # noqa: PLR2004
+            xLoc = X - breadth - depth  # noqa: N806
+        elif face == 4:  # noqa: PLR2004
+            xLoc = X - 2 * breadth - depth  # noqa: N806
 
         if loc == numLocations - 1:
             file.write(
@@ -79,16 +79,16 @@ def parseTPU_HighRise_MatFile(matFileIn, windFileOutName):
 
     file.write(',"pressureCoefficients": [')
     coefficients = mat_contents['Wind_pressure_coefficients']
-    numLocations = coefficients.shape[1]
-    numValues = coefficients.shape[0]
+    numLocations = coefficients.shape[1]  # noqa: N806
+    numValues = coefficients.shape[0]  # noqa: N806
     for loc in range(numLocations):
         file.write('{"id": %d , "data":[' % (loc + 1))
         for i in range(numValues - 1):
-            file.write('%f,' % coefficients[i, loc])
+            file.write('%f,' % coefficients[i, loc])  # noqa: UP031
         if loc != numLocations - 1:
-            file.write('%f]},' % coefficients[numValues - 1, loc])
+            file.write('%f]},' % coefficients[numValues - 1, loc])  # noqa: UP031
         else:
-            file.write('%f]}]' % coefficients[numValues - 1, loc])
+            file.write('%f]}]' % coefficients[numValues - 1, loc])  # noqa: UP031
 
     file.write('}')
     file.close()

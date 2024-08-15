@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -46,14 +46,14 @@ import numpy as np
 import pandas as pd
 
 
-def log_msg(msg):
-    print(
-        '{} {}'.format(datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S:%fZ')[:-4], msg)
+def log_msg(msg):  # noqa: D103
+    print(  # noqa: T201
+        '{} {}'.format(datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S:%fZ')[:-4], msg)  # noqa: DTZ003
     )
 
 
-def main(threads=1):
-    headers = dict(
+def main(threads=1):  # noqa: C901, D103
+    headers = dict(  # noqa: C408
         IM=[0, 1, 2, 3],
         BIM=[
             0,
@@ -85,13 +85,13 @@ def main(threads=1):
             data[data == ''] = np.nan
 
             tuples = [tuple(h) for h in res[:first_row].T[1:]]
-            MI = pd.MultiIndex.from_tuples(tuples, names=res[:first_row].T[0])
+            MI = pd.MultiIndex.from_tuples(tuples, names=res[:first_row].T[0])  # noqa: N806
 
-            df = pd.DataFrame(
+            df = pd.DataFrame(  # noqa: PD901
                 data, columns=MI, index=res[first_row:].T[0], dtype=float
             )
 
-            return df
+            return df  # noqa: RET504
 
         @delayed
         def read_csv_files_np(file_list, header):
@@ -106,7 +106,7 @@ def main(threads=1):
     for res_type in ['IM', 'BIM', 'EDP', 'DM', 'DV']:
         log_msg(f'Loading {res_type} files...')
 
-        files = glob.glob(f'./results/{res_type}/*/{res_type}_*.csv')
+        files = glob.glob(f'./results/{res_type}/*/{res_type}_*.csv')  # noqa: PTH207
         # files = files[:1000]
 
         if len(files) > 0:
@@ -115,7 +115,7 @@ def main(threads=1):
                 chunk = math.ceil(file_count / threads)
                 df_list = []
 
-                print(f'Creating threads for {file_count} files...')
+                print(f'Creating threads for {file_count} files...')  # noqa: T201
 
                 for t_i in range(threads):
                     # print(t_i)
@@ -152,7 +152,7 @@ def main(threads=1):
                 log_msg('Concatenating all files')
                 df_all = pd.concat(df_list, axis=0, sort=False)
 
-            df_all.sort_index(axis=0, inplace=True)
+            df_all.sort_index(axis=0, inplace=True)  # noqa: PD002
 
             # save the results
             log_msg('Saving results')
@@ -168,7 +168,7 @@ def main(threads=1):
             # df_all.to_csv('{}.csv'.format(res_type))
 
         else:
-            print(f'No {res_type} files found')
+            print(f'No {res_type} files found')  # noqa: T201
 
     if use_dask:
         log_msg('Closing cluster...')
@@ -178,7 +178,7 @@ def main(threads=1):
     # aggregate the realizations files
     log_msg('Aggregating individual realizations...')
 
-    files = glob.glob(
+    files = glob.glob(  # noqa: PTH207
         './results/{}/*/{}_*.hdf'.format('realizations', 'realizations')
     )
 
@@ -199,7 +199,7 @@ def main(threads=1):
 
             df_all.index = df_all.index.astype(np.int32)
 
-            df_all.sort_index(axis=0, inplace=True)
+            df_all.sort_index(axis=0, inplace=True)  # noqa: PD002
 
             try:
                 df_all.astype(np.float32).to_hdf(
@@ -210,7 +210,7 @@ def main(threads=1):
                     complevel=1,
                     complib='blosc:blosclz',
                 )
-            except:
+            except:  # noqa: E722
                 df_all.to_hdf(
                     'realizations.hdf',
                     key,
@@ -228,7 +228,7 @@ def main(threads=1):
 if __name__ == '__main__':
     # Defining the command line arguments
 
-    workflowArgParser = argparse.ArgumentParser('Aggregate the results from rWHALE.')
+    workflowArgParser = argparse.ArgumentParser('Aggregate the results from rWHALE.')  # noqa: N816
 
     workflowArgParser.add_argument(
         '-threads',

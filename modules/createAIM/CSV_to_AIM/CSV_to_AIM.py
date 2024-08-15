@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -44,7 +44,7 @@ import os
 import sys
 
 
-def create_asset_files(output_file, asset_source_file, asset_filter, doParallel):
+def create_asset_files(output_file, asset_source_file, asset_filter, doParallel):  # noqa: C901, N803, D103
     # these imports are here to save time when the app is called without
     # the -getRV flag
     import importlib
@@ -54,9 +54,9 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
     import pandas as pd
 
     # check if running parallel
-    numP = 1
-    procID = 0
-    runParallel = False
+    numP = 1  # noqa: N806
+    procID = 0  # noqa: N806
+    runParallel = False  # noqa: N806
 
     if doParallel == 'True':
         mpi_spec = importlib.util.find_spec('mpi4py')
@@ -64,18 +64,18 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
         if found:
             from mpi4py import MPI
 
-            runParallel = True
+            runParallel = True  # noqa: N806
             comm = MPI.COMM_WORLD
-            numP = comm.Get_size()
-            procID = comm.Get_rank()
-            if numP < 2:
-                doParallel = 'False'
-                runParallel = False
-                numP = 1
-                procID = 0
+            numP = comm.Get_size()  # noqa: N806
+            procID = comm.Get_rank()  # noqa: N806
+            if numP < 2:  # noqa: PLR2004
+                doParallel = 'False'  # noqa: N806
+                runParallel = False  # noqa: N806
+                numP = 1  # noqa: N806
+                procID = 0  # noqa: N806
 
     # Get the out dir, may not always be in the results folder if multiple assets are used
-    outDir = os.path.dirname(output_file)
+    outDir = os.path.dirname(output_file)  # noqa: PTH120, N806
 
     # check if a filter is provided
     if asset_filter is not None:
@@ -93,7 +93,7 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
 
     # if there is a filter, then pull out only the required assets
     if asset_filter is not None:
-        assets_available = assets_df.index.values
+        assets_available = assets_df.index.values  # noqa: PD011
         assets_to_run = assets_requested[
             np.where(np.isin(assets_requested, assets_available))[0]
         ]
@@ -102,18 +102,18 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
         selected_assets = assets_df
 
     # identify the labels
-    labels = selected_assets.columns.values
+    labels = selected_assets.columns.values  # noqa: PD011
 
     assets_array = []
 
     # for each asset...
     count = 0
     for asset_id, asset in selected_assets.iterrows():
-        if runParallel == False or (count % numP) == procID:
+        if runParallel == False or (count % numP) == procID:  # noqa: E712
             # initialize the AIM file
-            AIM_i = {
+            AIM_i = {  # noqa: N806
                 'RandomVariables': [],
-                'GeneralInformation': dict(
+                'GeneralInformation': dict(  # noqa: C408
                     AIM_id=str(int(asset_id)),
                     location={
                         'latitude': asset['Latitude'],
@@ -126,40 +126,40 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
             for label in labels:
                 AIM_i['GeneralInformation'].update({label: asset[label]})
 
-            AIM_file_name = f'{asset_id}-AIM.json'
+            AIM_file_name = f'{asset_id}-AIM.json'  # noqa: N806
 
-            AIM_file_name = os.path.join(outDir, AIM_file_name)
+            AIM_file_name = os.path.join(outDir, AIM_file_name)  # noqa: PTH118, N806
 
-            with open(AIM_file_name, 'w', encoding='utf-8') as f:
+            with open(AIM_file_name, 'w', encoding='utf-8') as f:  # noqa: PTH123
                 json.dump(AIM_i, f, indent=2)
 
-            assets_array.append(dict(id=str(asset_id), file=AIM_file_name))
+            assets_array.append(dict(id=str(asset_id), file=AIM_file_name))  # noqa: C408
 
         count = count + 1
 
     if procID != 0:
         # if not P0, write data to output file with procID in name and barrier
 
-        output_file = os.path.join(outDir, f'tmp_{procID}.json')
+        output_file = os.path.join(outDir, f'tmp_{procID}.json')  # noqa: PTH118
 
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
             json.dump(assets_array, f, indent=0)
 
         comm.Barrier()
 
     else:
-        if runParallel == True:
+        if runParallel == True:  # noqa: E712
             # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append
             comm.Barrier()
 
             for i in range(1, numP):
-                fileToAppend = os.path.join(outDir, f'tmp_{i}.json')
-                with open(fileToAppend, encoding='utf-8') as data_file:
+                fileToAppend = os.path.join(outDir, f'tmp_{i}.json')  # noqa: PTH118, N806
+                with open(fileToAppend, encoding='utf-8') as data_file:  # noqa: PTH123
                     json_data = data_file.read()
-                assetsToAppend = json.loads(json_data)
+                assetsToAppend = json.loads(json_data)  # noqa: N806
                 assets_array += assetsToAppend
 
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
             json.dump(assets_array, f, indent=2)
 
 

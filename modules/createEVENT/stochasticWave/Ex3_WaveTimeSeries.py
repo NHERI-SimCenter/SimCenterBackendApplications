@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3  # noqa: EXE001
 
-"""Generate wave time series based on the Jonswap spectrum"""
+"""Generate wave time series based on the Jonswap spectrum"""  # noqa: D400
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,11 +10,11 @@ from numpy.random import seed, uniform
 from welib.tools.figure import defaultRC
 
 defaultRC()
-from welib.hydro.morison import *
-from welib.hydro.spectra import jonswap
-from welib.hydro.wavekin import *
-from welib.hydro.wavekin import elevation2d, wavenumber
-from welib.tools.spectral import fft_wrap
+from welib.hydro.morison import *  # noqa: E402, F403
+from welib.hydro.spectra import jonswap  # noqa: E402
+from welib.hydro.wavekin import *  # noqa: E402, F403
+from welib.hydro.wavekin import elevation2d, wavenumber  # noqa: E402
+from welib.tools.spectral import fft_wrap  # noqa: E402
 
 # --- Random seed
 seed(None)
@@ -29,8 +29,8 @@ g = 9.80665  # Gravity[m/s2]
 
 # --- Jonswap spectrum
 dt = t[1] - t[0]  # timestep [s]
-df = 1 / np.max(t)  # step size for frequency
-fHighCut = 1 / (dt) / 2.0  # Highest frequency in calculations
+df = 1 / np.max(t)  # step size for frequency  # noqa: PD901
+fHighCut = 1 / (dt) / 2.0  # Highest frequency in calculations  # noqa: N816
 freq = np.arange(df, fHighCut, df)
 S = jonswap(freq, Hs, Tp=Tp, g=9.80665)
 

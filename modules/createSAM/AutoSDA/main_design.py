@@ -1,4 +1,4 @@
-# This file is the main file that calls function to perform seismic design
+# This file is the main file that calls function to perform seismic design  # noqa: INP001, D100
 # Users need to specify the system argument in this file.
 # Users also need to specify the variables in "global_variables.py"
 
@@ -35,13 +35,13 @@ start_time = time.time()
 
 # ********************* Single Building Case Ends Here *******************
 IDs = [11]
-for id in IDs:
+for id in IDs:  # noqa: A001
     building_id = 'Test' + str(id)
-    print('Design for Building ID = ', building_id)
+    print('Design for Building ID = ', building_id)  # noqa: T201
     seismic_design(building_id, baseDirectory)
 
 # ********************* Single Building Case Ends Here *******************
 
 end_time = time.time()
 
-print('Running time is: %s seconds' % round(end_time - start_time, 2))
+print('Running time is: %s seconds' % round(end_time - start_time, 2))  # noqa: T201, UP031

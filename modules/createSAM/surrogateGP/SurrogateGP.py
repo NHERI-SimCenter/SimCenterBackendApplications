@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2022 Leland Stanford Junior University
 # Copyright (c) 2022 The Regents of the University of California
 #
@@ -48,53 +48,53 @@ import os
 import sys
 
 
-def create_SAM(AIM_file, SAM_file):
+def create_SAM(AIM_file, SAM_file):  # noqa: N802, N803, D103
     #
     # Find SAM.json info from surrogate model file
     #
 
     # load AIM
 
-    with open(AIM_file) as f:
-        root_AIM = json.load(f)
+    with open(AIM_file) as f:  # noqa: PTH123
+        root_AIM = json.load(f)  # noqa: N806
 
-    print('General Information tab is ignored')
-    root_SAM = root_AIM['Applications']['Modeling']
+    print('General Information tab is ignored')  # noqa: T201
+    root_SAM = root_AIM['Applications']['Modeling']  # noqa: N806
 
     # find and load surrogate json
 
     # surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])
-    surrogate_path = os.path.join(
-        os.getcwd(),
+    surrogate_path = os.path.join(  # noqa: PTH118
+        os.getcwd(),  # noqa: PTH109
         root_SAM['ApplicationData']['mainScript'],
     )
-    print(surrogate_path)
+    print(surrogate_path)  # noqa: T201
 
-    with open(surrogate_path) as f:
+    with open(surrogate_path) as f:  # noqa: PTH123
         surrogate_model = json.load(f)
 
     # find SAM in surrogate json
 
-    root_SAM = surrogate_model['SAM']
+    root_SAM = surrogate_model['SAM']  # noqa: N806
 
     # sanity check
 
     if root_AIM['Applications']['EDP']['Application'] != 'SurrogateEDP':
-        with open('../workflow.err', 'w') as f:
+        with open('../workflow.err', 'w') as f:  # noqa: PTH123
             f.write('Please select [None] in the EDP tab.')
-        exit(-1)
+        exit(-1)  # noqa: PLR1722
 
     if (
         root_AIM['Applications']['Simulation']['Application']
         != 'SurrogateSimulation'
     ):
-        with open('../workflow.err', 'w') as f:
+        with open('../workflow.err', 'w') as f:  # noqa: PTH123
             f.write('Please select [None] in the FEM tab.')
-        exit(-1)
+        exit(-1)  # noqa: PLR1722
 
     # write SAM.json
 
-    with open(SAM_file, 'w') as f:
+    with open(SAM_file, 'w') as f:  # noqa: PTH123
         json.dump(root_SAM, f, indent=2)
 
 

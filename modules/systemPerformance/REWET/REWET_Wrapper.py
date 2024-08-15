@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2024 The Regents of the University of California
 # Copyright (c) 2024 Leland Stanford Junior University
 #
@@ -57,22 +57,22 @@ from shapely import geometry
 # except:
 # This is only for now
 # print("HERE")
-this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
 # main_dir = this_dir.parent
 
 
 sys.path.insert(0, str(this_dir / 'REWET'))
-from initial import Starter
-from Result_Project import Project_Result
+from initial import Starter  # noqa: E402
+from Result_Project import Project_Result  # noqa: E402
 
 
-def createScnearioList(run_directory, scn_number):
-    damage_input_dir = os.path.join(
+def createScnearioList(run_directory, scn_number):  # noqa: N802, D103
+    damage_input_dir = os.path.join(  # noqa: PTH118
         run_directory, 'Results', 'WaterDistributionNetwork', 'damage_input'
     )
 
-    if not os.path.exists(damage_input_dir):
-        os.makedirs(damage_input_dir)
+    if not os.path.exists(damage_input_dir):  # noqa: PTH110
+        os.makedirs(damage_input_dir)  # noqa: PTH103
 
     # REWET_input_data["damage_input_dir"] = damage_input_dir
 
@@ -100,7 +100,7 @@ def createScnearioList(run_directory, scn_number):
     return scenario_list, prefix
 
 
-def chooseARandomPreefix(damage_input_dir):
+def chooseARandomPreefix(damage_input_dir):  # noqa: N802
     """Choses a random prefix for sceranio and pipe, node, pump and tank damage
     file. The is important to find and unused prefix so if this script is being
     ran in parallel, then files are not being overwritten.
@@ -115,7 +115,7 @@ def chooseARandomPreefix(damage_input_dir):
     random_prefix : str
         The Chosen random prefix string.
 
-    """
+    """  # noqa: D205
     number_of_prefix = 4
     dir_list = os.listdir(damage_input_dir)
 
@@ -155,10 +155,10 @@ def chooseARandomPreefix(damage_input_dir):
     -------
     None.
 
-    """
+    """  # noqa: RET503, W291
 
 
-def getDLFileName(run_dir, dl_file_path, scn_number):
+def getDLFileName(run_dir, dl_file_path, scn_number):  # noqa: N802
     """If dl_file_path is not given, the path is acquired from rwhale input data.
 
     Parameters
@@ -175,11 +175,11 @@ def getDLFileName(run_dir, dl_file_path, scn_number):
     None.
 
     """
-    if dl_file_path == None:
+    if dl_file_path == None:  # noqa: E711
         file_name = f'WaterDistributionNetwork_{scn_number}.json'
-        run_dir = run_dir
-        file_dir = os.path.join(run_dir, 'Results', 'WaterDistributionNetwork')
-        file_path = os.path.join(file_dir, file_name)
+        run_dir = run_dir  # noqa: PLW0127
+        file_dir = os.path.join(run_dir, 'Results', 'WaterDistributionNetwork')  # noqa: PTH118
+        file_path = os.path.join(file_dir, file_name)  # noqa: PTH118
     else:
         file_path = dl_file_path
         file_dir = Path(dl_file_path).parent
@@ -187,7 +187,7 @@ def getDLFileName(run_dir, dl_file_path, scn_number):
     return file_path, file_dir
 
 
-def setSettingsData(input_json, REWET_input_data):
+def setSettingsData(input_json, REWET_input_data):  # noqa: ARG001, N802, N803, D103
     policy_file_name = rwhale_input_Data['SystemPerformance'][
         'WaterDistributionNetwork'
     ]['Policy Definition']
@@ -195,7 +195,7 @@ def setSettingsData(input_json, REWET_input_data):
         'WaterDistributionNetwork'
     ]['Policy DefinitionPath']
 
-    policy_config_file = os.path.join(Path(policy_file_path), Path(policy_file_name))
+    policy_config_file = os.path.join(Path(policy_file_path), Path(policy_file_name))  # noqa: PTH118
 
     REWET_input_data['settings']['RUN_TIME'] = rwhale_input_Data[
         'SystemPerformance'
@@ -228,7 +228,7 @@ def setSettingsData(input_json, REWET_input_data):
         'SystemPerformance'
     ]['WaterDistributionNetwork']['minimum_job_time']
     REWET_input_data['settings']['Restortion_config_file'] = (
-        policy_config_file  # TODO: SINA unmark it
+        policy_config_file  # TODO: SINA unmark it  # noqa: TD002
     )
 
     p = rwhale_input_Data['SystemPerformance']['WaterDistributionNetwork'][
@@ -349,7 +349,7 @@ def setSettingsData(input_json, REWET_input_data):
 
     # Not Supposed to be in R2DTool GUI ############
     REWET_input_data['settings']['minimum_simulation_time'] = (
-        0  # TODO : HERE #REWET_input_data["event_time"] + REWET_input_data["settings"]["simulation_time_step"]
+        0  # TODO : HERE #REWET_input_data["event_time"] + REWET_input_data["settings"]["simulation_time_step"]  # noqa: TD002
     )
     REWET_input_data['settings']['save_time_step'] = True
     REWET_input_data['settings']['record_restoration_agent_logs'] = True
@@ -385,11 +385,11 @@ def setSettingsData(input_json, REWET_input_data):
     REWET_input_data['settings']['Pipe_damage_input_method'] = 'pickle'
 
 
-def create_path(path):
+def create_path(path):  # noqa: D103
     if isinstance(path, str):
         path = Path(path)
     not_existing_hir = []
-    while os.path.exists(path) == False:
+    while os.path.exists(path) == False:  # noqa: PTH110, E712
         not_existing_hir.append(path.name)
         path = path.parent
 
@@ -402,7 +402,7 @@ def create_path(path):
 
 if __name__ == '__main__':
     # Setting arg parser
-    argParser = argparse.ArgumentParser('Preprocess rwhale workflow to REWET input.')
+    argParser = argparse.ArgumentParser('Preprocess rwhale workflow to REWET input.')  # noqa: N816
 
     argParser.add_argument(
         '--input',
@@ -436,9 +436,9 @@ if __name__ == '__main__':
 
     # learning about parallel or serial settings
 
-    numP = 1
-    procID = 0
-    doParallel = False
+    numP = 1  # noqa: N816
+    procID = 0  # noqa: N816
+    doParallel = False  # noqa: N816
 
     mpi_spec = importlib.util.find_spec('mpi4py')
     found = mpi_spec is not None
@@ -446,17 +446,17 @@ if __name__ == '__main__':
         from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
-        numP = comm.Get_size()
-        procID = comm.Get_rank()
-        if numP < 2:
-            doParallel = False
-            numP = 1
-            procID = 0
-            print(
+        numP = comm.Get_size()  # noqa: N816
+        procID = comm.Get_rank()  # noqa: N816
+        if numP < 2:  # noqa: PLR2004
+            doParallel = False  # noqa: N816
+            numP = 1  # noqa: N816
+            procID = 0  # noqa: N816
+            print(  # noqa: T201
                 'Parallel running is not possible. Number of CPUS are are not enough.'
             )
         else:
-            doParallel = True
+            doParallel = True  # noqa: N816
 
     # Setting up run settings
 
@@ -464,7 +464,7 @@ if __name__ == '__main__':
     REWET_input_data['settings'] = {}
 
     # print(parser_data.input)
-    rwhale_input_Data = preprocessorIO.readJSONFile(parser_data.input)
+    rwhale_input_Data = preprocessorIO.readJSONFile(parser_data.input)  # noqa: N816
     setSettingsData(rwhale_input_Data, REWET_input_data)
     event_time = rwhale_input_Data['SystemPerformance']['WaterDistributionNetwork'][
         'eventTime'
@@ -486,11 +486,11 @@ if __name__ == '__main__':
         'WaterDistributionNetwork'
     ]['ApplicationData']['Realizations']
 
-    REWET_input_data['settings']['result_directory'] = os.path.join(
+    REWET_input_data['settings']['result_directory'] = os.path.join(  # noqa: PTH118
         run_directory, 'Results', 'WaterDistributionNetwork', 'REWET_Result'
     )
 
-    REWET_input_data['settings']['temp_directory'] = os.path.join(
+    REWET_input_data['settings']['temp_directory'] = os.path.join(  # noqa: PTH118
         run_directory, 'Results', 'WaterDistributionNetwork', 'REWET_RunFiles'
     )
 
@@ -502,7 +502,7 @@ if __name__ == '__main__':
     damage_save_path_hir = damage_save_path
     create_path(damage_save_path_hir)
 
-    if parser_data.number == None:
+    if parser_data.number == None:  # noqa: E711
         scneario_list_path = damage_save_path / 'scenario_table.xlsx'
     else:
         scneario_list_path = (
@@ -526,7 +526,7 @@ if __name__ == '__main__':
 
         scenario_table = preprocessorIO.create_scneario_table()
 
-        if parser_data.number == None:
+        if parser_data.number == None:  # noqa: E711
             Damage_file_name = list(range(number_of_realization))
 
         else:
@@ -557,7 +557,7 @@ if __name__ == '__main__':
         )
 
     command = (
-        'python '
+        'python '  # noqa: ISC003
         + 'C:\\Users\\naeim\\Desktop\\REWET\\main.py -j '
         + str(settings_json_file_path)
     )
@@ -584,7 +584,7 @@ if __name__ == '__main__':
     )
 
     system_std_out = sys.stdout
-    with open(rewet_log_path, 'w') as log_file:
+    with open(rewet_log_path, 'w') as log_file:  # noqa: PTH123
         sys.stdout = log_file
         REWET_starter = Starter()
         REWET_starter.run(settings_json_file_path)
@@ -597,13 +597,13 @@ if __name__ == '__main__':
         requested_result = ['DL', 'QN']
         substitute_ft = {'DL': 'Delivery', 'QN': 'Quantity'}
         consistency_time_window = 0  # 7200
-        iConsider_leak = False  # True
+        iConsider_leak = False  # True  # noqa: N816
         # the following does not matter if iConsider_leak is false
         leak_ratio = {'DL': 0.75, 'QN': 0}
 
         sub_asset_list = ['Junction', 'Pipe', 'Reservoir']
-        sub_asset_name_to_id = dict()
-        sub_asset_id_to_name = dict()
+        sub_asset_name_to_id = dict()  # noqa: C408
+        sub_asset_id_to_name = dict()  # noqa: C408
         for sub_asset in sub_asset_list:
             sc_geojson_file = preprocessorIO.readJSONFile(sc_geojson)
             sub_asset_data = [
@@ -635,11 +635,11 @@ if __name__ == '__main__':
             )
         )
 
-        for scn_name, row in p.project.scenario_list.iterrows():
+        for scn_name, row in p.project.scenario_list.iterrows():  # noqa: B007
             realization_number = int(scn_name.strip('SCN_'))
             for single_requested_result in requested_result:
                 if (
-                    single_requested_result == 'DL'
+                    single_requested_result == 'DL'  # noqa: PLR1714
                     or single_requested_result == 'QN'
                 ):
                     # Running Output module's method to get DL time series status
@@ -675,12 +675,12 @@ if __name__ == '__main__':
                         res_agg[single_requested_result] = res[
                             single_requested_result
                         ].to_dict()
-                        for key in res_agg[single_requested_result].keys():
+                        for key in res_agg[single_requested_result].keys():  # noqa: SIM118
                             res_agg[single_requested_result][key] = [
                                 res_agg[single_requested_result][key]
                             ]
                     else:
-                        for key in res_agg[single_requested_result].keys():
+                        for key in res_agg[single_requested_result].keys():  # noqa: SIM118
                             res_agg[single_requested_result][key].append(
                                 res[single_requested_result][key]
                             )
@@ -695,7 +695,7 @@ if __name__ == '__main__':
                 / cur_json_file_name
             )
 
-            with open(cur_json_file_path) as f:
+            with open(cur_json_file_path) as f:  # noqa: PTH123
                 json_data = json.load(f)
 
             for single_requested_result in requested_result:
@@ -707,10 +707,10 @@ if __name__ == '__main__':
                     'Junction', {}
                 )
 
-                for junction_name in req_result.keys():
+                for junction_name in req_result.keys():  # noqa: SIM118
                     junction_id = sub_asset_name_to_id['Junction'][junction_name]
                     cur_junction = junction_json_data.get(junction_id, {})
-                    cur_junction_SP = cur_junction.get('SystemPerformance', {})
+                    cur_junction_SP = cur_junction.get('SystemPerformance', {})  # noqa: N816
                     cur_junction_SP[result_key] = float(req_result[junction_name])
 
                     cur_junction['SystemPerformance'] = cur_junction_SP
@@ -720,11 +720,11 @@ if __name__ == '__main__':
                     junction_json_data
                 )
 
-            with open(cur_json_file_path, 'w') as f:
+            with open(cur_json_file_path, 'w') as f:  # noqa: PTH123
                 json_data = json.dump(json_data, f, indent=2)
 
-        res_agg_mean = dict()
-        res_agg_std = dict()
+        res_agg_mean = dict()  # noqa: C408
+        res_agg_std = dict()  # noqa: C408
         for single_requested_result in requested_result:
             res_agg[single_requested_result] = pd.DataFrame(
                 res_agg[single_requested_result]
@@ -748,12 +748,12 @@ if __name__ == '__main__':
     inp_json = preprocessorIO.readJSONFile(sc_geojson)
     inp_json = inp_json['features']
     for WDNtype in ['Reservoir', 'Junction']:
-        json_to_attach = dict()
+        json_to_attach = dict()  # noqa: C408
         for ft in inp_json:
             prop = ft['properties']
             if prop['type'] == WDNtype:
-                id = str(ft['id'])
-                generalInfo = dict()
+                id = str(ft['id'])  # noqa: A001
+                generalInfo = dict()  # noqa: C408, N816
                 json_geometry = ft['geometry']
                 shapely_geometry = geometry.shape(json_geometry)
                 wkt_geometry = shapely_geometry.wkt
@@ -765,7 +765,7 @@ if __name__ == '__main__':
                     if key == 'id':
                         continue
                     generalInfo.update({key: item})
-                R2Dres = dict()
+                R2Dres = dict()  # noqa: C408
                 asset_name = sub_asset_id_to_name[WDNtype][id]
                 for single_requested_result in requested_result:
                     if asset_name not in res_agg_mean[single_requested_result].index:
@@ -790,7 +790,7 @@ if __name__ == '__main__':
                     {id: {'GeneralInformation': generalInfo, 'R2Dres': R2Dres}}
                 )
         det_json['WaterDistributionNetwork'].update({WDNtype: json_to_attach})
-    with open(det_json_path, 'w') as f:
+    with open(det_json_path, 'w') as f:  # noqa: PTH123
         json.dump(det_json, f, indent=2)
 
     ts_result_json_path = cur_json_file_path = (
@@ -814,6 +814,6 @@ if __name__ == '__main__':
                 i
             ] = time_series_result[single_requested_result][i].to_dict()
 
-    with open(ts_result_json_path, 'w') as f:
+    with open(ts_result_json_path, 'w') as f:  # noqa: PTH123
         json.dump(time_series_result_struc, f, indent=2)
-    print('here')
+    print('here')  # noqa: T201

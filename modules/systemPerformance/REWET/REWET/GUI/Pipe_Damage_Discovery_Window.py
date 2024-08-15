@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Pipe_Damage_Discovery_Window.ui'
+# Form implementation generated from reading ui file 'Pipe_Damage_Discovery_Window.ui'  # noqa: N999, D100
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,8 +8,8 @@
 from PyQt5 import QtCore, QtWidgets
 
 
-class Ui_pipe_damage_discovery:
-    def setupUi(self, pipe_damage_discovery):
+class Ui_pipe_damage_discovery:  # noqa: D101
+    def setupUi(self, pipe_damage_discovery):  # noqa: N802, D102
         pipe_damage_discovery.setObjectName('pipe_damage_discovery')
         pipe_damage_discovery.resize(450, 400)
         pipe_damage_discovery.setMinimumSize(QtCore.QSize(450, 400))
@@ -79,7 +79,7 @@ class Ui_pipe_damage_discovery:
         self.buttonBox.rejected.connect(pipe_damage_discovery.reject)
         QtCore.QMetaObject.connectSlotsByName(pipe_damage_discovery)
 
-    def retranslateUi(self, pipe_damage_discovery):
+    def retranslateUi(self, pipe_damage_discovery):  # noqa: N802, D102
         _translate = QtCore.QCoreApplication.translate
         pipe_damage_discovery.setWindowTitle(
             _translate('pipe_damage_discovery', 'Pipe Damaeg Discovery')

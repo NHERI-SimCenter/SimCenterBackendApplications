@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3  # noqa: EXE001
 
-"""Compute inline/total hydrodynamic force and moments on a monopile using Morison's equation"""
+"""Compute inline/total hydrodynamic force and moments on a monopile using Morison's equation"""  # noqa: D400
 
 import argparse
 from fractions import Fraction
@@ -13,9 +13,9 @@ import pandas as pd
 from welib.tools.figure import defaultRC
 
 defaultRC()
-from welib.hydro.morison import *
-from welib.hydro.wavekin import *
-from welib.tools.colors import python_colors
+from welib.hydro.morison import *  # noqa: E402, F403
+from welib.hydro.wavekin import *  # noqa: E402, F403
+from welib.tools.colors import python_colors  # noqa: E402
 
 # --- Parameters
 g = 9.81  # gravity [m/s^2]
@@ -28,7 +28,7 @@ a = 3  # wave peak amplitude [m]
 T = 12.0  # period [s]
 eps = 0  # phase shift [rad]
 f = 1.0 / T
-k = wavenumber(f, h, g)
+k = wavenumber(f, h, g)  # noqa: F405
 
 nz = 30  # number of points used in the z direction to compute loads
 
@@ -58,21 +58,21 @@ XLIMM = [-2500, 2500]  # For inline moment
 
 for it, t in enumerate(time[:-1]):
     # Wave kinematics
-    eta = elevation2d(a, f, k, eps, t, x=0)
+    eta = elevation2d(a, f, k, eps, t, x=0)  # noqa: F405
     z = np.linspace(-h, eta, nz)
-    u, du = kinematics2d(a, f, k, eps, h, t, z, Wheeler=True, eta=eta)
-    u0, du0 = kinematics2d(a, f, k, eps, h, t, z)
+    u, du = kinematics2d(a, f, k, eps, h, t, z, Wheeler=True, eta=eta)  # noqa: F405
+    u0, du0 = kinematics2d(a, f, k, eps, h, t, z)  # noqa: F405
     # Wave loads with wheeler
-    p_tot = inline_load(u, du, D, CD, CM, rho)
-    p_inertia = inline_load(u, du, D, CD * 0, CM, rho)
-    p_drag = inline_load(u, du, D, CD, CM * 0, rho)
-    dM = p_tot * (z - z_ref)  # [Nm/m]
+    p_tot = inline_load(u, du, D, CD, CM, rho)  # noqa: F405
+    p_inertia = inline_load(u, du, D, CD * 0, CM, rho)  # noqa: F405
+    p_drag = inline_load(u, du, D, CD, CM * 0, rho)  # noqa: F405
+    dM = p_tot * (z - z_ref)  # [Nm/m]  # noqa: N816
 
     # Wave loads without Wheeler
-    p_tot0 = inline_load(u0, du0, D, CD, CM, rho)
-    p_inertia0 = inline_load(u0, du0, D, CD * 0, CM, rho)
-    p_drag0 = inline_load(u0, du0, D, CD, CM * 0, rho)
-    dM0 = p_tot0 * (z - z_ref)  # [Nm/m]
+    p_tot0 = inline_load(u0, du0, D, CD, CM, rho)  # noqa: F405
+    p_inertia0 = inline_load(u0, du0, D, CD * 0, CM, rho)  # noqa: F405
+    p_drag0 = inline_load(u0, du0, D, CD, CM * 0, rho)  # noqa: F405
+    dM0 = p_tot0 * (z - z_ref)  # [Nm/m]  # noqa: N816
 
     # Plot inline force
     ax = axes1[int(it / 4), np.mod(it, 4)]
@@ -132,10 +132,10 @@ fig2.savefig('moments.png')
 time = np.linspace(0, 60.0, 6001)
 
 veta = np.zeros(time.shape)
-vF = np.zeros(time.shape)
-vM = np.zeros(time.shape)
-vF0 = np.zeros(time.shape)
-vM0 = np.zeros(time.shape)
+vF = np.zeros(time.shape)  # noqa: N816
+vM = np.zeros(time.shape)  # noqa: N816
+vF0 = np.zeros(time.shape)  # noqa: N816
+vM0 = np.zeros(time.shape)  # noqa: N816
 
 XLIM = [-75, 75]  # For inline force
 XLIMM = [-2500, 2500]  # For inline moment
@@ -148,18 +148,18 @@ force = np.zeros((len(time), nz))
 
 for it, t in enumerate(time):
     # Wave kinematics
-    veta[it] = elevation2d(a, f, k, eps, t, x=0)
+    veta[it] = elevation2d(a, f, k, eps, t, x=0)  # noqa: F405
     z = np.linspace(-h, veta[it], nz)
-    u, du = kinematics2d(a, f, k, eps, h, t, z, Wheeler=True, eta=veta[it])
-    u0, du0 = kinematics2d(a, f, k, eps, h, t, z)
+    u, du = kinematics2d(a, f, k, eps, h, t, z, Wheeler=True, eta=veta[it])  # noqa: F405
+    u0, du0 = kinematics2d(a, f, k, eps, h, t, z)  # noqa: F405
     # Wave loads with Wheeler
-    p_tot = inline_load(u, du, D, CD, CM, rho)
-    vF[it] = np.trapz(p_tot, z)  # [N]
-    vM[it] = np.trapz(p_tot * (z - z_ref), z)  # [Nm]
+    p_tot = inline_load(u, du, D, CD, CM, rho)  # noqa: F405
+    vF[it] = np.trapz(p_tot, z)  # [N]  # noqa: NPY201
+    vM[it] = np.trapz(p_tot * (z - z_ref), z)  # [Nm]  # noqa: NPY201
     # Wave loads without Wheeler
-    p_tot0 = inline_load(u0, du0, D, CD, CM, rho)
-    vF0[it] = np.trapz(p_tot0, z)  # [N]
-    vM0[it] = np.trapz(p_tot0 * (z - z_ref), z)  # [Nm]
+    p_tot0 = inline_load(u0, du0, D, CD, CM, rho)  # noqa: F405
+    vF0[it] = np.trapz(p_tot0, z)  # [N]  # noqa: NPY201
+    vM0[it] = np.trapz(p_tot0 * (z - z_ref), z)  # [Nm]  # noqa: NPY201
 
     elevation[it, :] = z.copy()
     velocity[it, :] = u.copy()
@@ -174,20 +174,20 @@ fig.subplots_adjust(
 # axes[0] = axes[0]
 axes[0].plot(time / T, veta, 'k-')
 axes[0].set_ylabel('Elevation [m]')
-axes[0].grid(True)
+axes[0].grid(True)  # noqa: FBT003
 # axes[1] = axes[1]
 axes[1].plot(time / T, vF0 / 1e6, label='Standard')
 axes[1].plot(time / T, vF / 1e6, 'k-', label='Wheeler Correction')
 axes[1].set_ylabel('Streamwise Load, Cumulative [MN]')
 axes[1].legend()
-axes[1].grid(True)
+axes[1].grid(True)  # noqa: FBT003
 # axes[2] = axes[2]
 axes[2].plot(time / T, vM0 / 1e6, label='Standard')
 axes[2].plot(time / T, vM / 1e6, 'k-', label='Wheeler Correction')
 axes[2].set_ylabel('Sea-Bed Moment [MNm]')
 axes[2].set_xlabel('Dimensionless Time, t/T [-]')
 axes[2].legend()
-axes[2].grid(True)
+axes[2].grid(True)  # noqa: FBT003
 
 # fig.savefig('IntegratedPileLoads.png')
 # fig.savefig('IntegratedPileLoads.webp')
@@ -251,7 +251,7 @@ for i in range(nz):
 # results_df.to_csv('results.out', sep=' ', encoding='utf-8', header=False, index=False)
 
 
-def main(df=None):
+def main(df=None):  # noqa: D103
     return df
 
 
@@ -328,7 +328,7 @@ if __name__ == '__main__':
     # plt.savefig('MorisonLoads.png')
 
     # plt.show()
-    print('End of __main__ in Ex4_WaveLoads.py')
+    print('End of __main__ in Ex4_WaveLoads.py')  # noqa: T201
     main()
 
 

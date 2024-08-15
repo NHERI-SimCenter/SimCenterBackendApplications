@@ -1,16 +1,16 @@
-from py_linq import Enumerable
+from py_linq import Enumerable  # noqa: INP001, D100
 from pydantic import BaseModel
 
 
-class UQpyDTO(BaseModel):
+class UQpyDTO(BaseModel):  # noqa: D101
     @staticmethod
-    def is_primitive(obj):
+    def is_primitive(obj):  # noqa: D102
         return not hasattr(obj, '__dict__')
 
     # def init_to_text(self) -> (str, str):
     #     pass
 
-    def generate_code(self):
+    def generate_code(self):  # noqa: D102
         prerequisite_list = ''
         fields = Enumerable(self.__dict__.items())
         objects = fields.where(lambda x: not UQpyDTO.is_primitive(x[1]))

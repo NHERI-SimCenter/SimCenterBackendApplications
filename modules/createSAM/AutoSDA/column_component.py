@@ -1,4 +1,4 @@
-# This file is used to define the class of column, which includes the axial, shear, and flexural strengths of column
+# This file is used to define the class of column, which includes the axial, shear, and flexural strengths of column  # noqa: INP001, D100
 # Developed by GUAN, XINGQUAN @ UCLA in Apr. 2018
 # Updated in Oct. 2018
 
@@ -18,7 +18,7 @@ class Column:
     (2) Column demand, a dictionary including axial, shear, and flexural demands.
     (3) Column strength, a dictionary including axial, shear, and flexural strengths.
     (4) Column flag, an integer with value of zero or nonzero. If it's zero, the column is feasible.
-    """
+    """  # noqa: D205, D404
 
     def __init__(
         self,
@@ -27,8 +27,8 @@ class Column:
         shear_demand,
         moment_demand_bot,
         moment_demand_top,
-        Lx,
-        Ly,
+        Lx,  # noqa: N803
+        Ly,  # noqa: N803
         steel,
     ):
         """This function initializes the attributes of class of column.
@@ -39,7 +39,7 @@ class Column:
         :param moment_demand_top: a float number which describes moment demand at top of column.
         :param Lx: unbraced length in x direction.
         :param Ly: unbraced length in y direction.
-        """
+        """  # noqa: D205, D401, D404
         # Assign the necessary information for column class
         self.section = search_section_property(section_size, SECTION_DATABASE)
         self.demand = {
@@ -77,7 +77,7 @@ class Column:
         Seismic Design Manual Table D1.1.
         :param steel: a class defined in "steel_material.py" file.
         :return: a boolean variable which denotes the flange check results.
-        """
+        """  # noqa: D205, D401, D404
         flange_limit = 0.30 * np.sqrt(steel.E / steel.Fy)
         # If flag is still zero after checking the limitation. Then the highly ductile requirement is met.
         # Otherwise, it is not satisfied.
@@ -91,11 +91,11 @@ class Column:
         Seismic Design Manual Table D1.1.
         :param steel: a class defined in "steel_material.py" file.
         :return: a boolean variable which denotes the flange check results.
-        """
+        """  # noqa: D205, D401, D404
         # Compute the limit for web depth-to-thickness ratio
         phi = 0.9
-        Ca = self.demand['axial'] / (phi * steel.Fy * self.section['A'])
-        if Ca <= 0.125:
+        Ca = self.demand['axial'] / (phi * steel.Fy * self.section['A'])  # noqa: N806
+        if Ca <= 0.125:  # noqa: PLR2004
             web_limit = 2.45 * np.sqrt(steel.E / steel.Fy) * (1 - 0.93 * Ca)
         else:
             web_limit = np.max(
@@ -115,10 +115,10 @@ class Column:
         :param steel: a class defined in "steel_material.py" file.
         :return: a float number denoting the axial strength
                  and a boolean variable denoting whether the column strength is enough.
-        """
+        """  # noqa: D205, D401, D404
         # Default values for two coefficient
-        Kx = 1.0
-        Ky = 1.0
+        Kx = 1.0  # noqa: N806
+        Ky = 1.0  # noqa: N806
         slenderness_ratio = max(
             [
                 Kx * self.unbraced_length['x'] / self.section['rx'],
@@ -126,14 +126,14 @@ class Column:
             ]
         )
         # Compute elastic buckling stress
-        Fe = np.pi**2 * steel.E / (slenderness_ratio**2)
+        Fe = np.pi**2 * steel.E / (slenderness_ratio**2)  # noqa: N806
         # Calculate critical stress
         if slenderness_ratio <= (4.71 * np.sqrt(steel.E / steel.Fy)):
-            Fcr = 0.658 ** (steel.Fy / Fe) * steel.Fy
+            Fcr = 0.658 ** (steel.Fy / Fe) * steel.Fy  # noqa: N806
         else:
-            Fcr = 0.877 * Fe
+            Fcr = 0.877 * Fe  # noqa: N806
         # Compute nominal compressive strength
-        Pn = Fcr * self.section['A']
+        Pn = Fcr * self.section['A']  # noqa: N806
         # Store axial strength into "strength" dictionary
         phi = 0.9
         self.strength['axial'] = phi * Pn
@@ -148,10 +148,10 @@ class Column:
         :param steel: a class defined in "steel_material.py" file.
         :return: a float number denoting shear strength
                  and a boolean variable denoting whether shear strength is enough.
-        """
-        Cv = 1.0
+        """  # noqa: D205, D401, D404
+        Cv = 1.0  # noqa: N806
         # Compute nominal shear strength
-        Vn = 0.6 * steel.Fy * (self.section['tw'] * self.section['d']) * Cv
+        Vn = 0.6 * steel.Fy * (self.section['tw'] * self.section['d']) * Cv  # noqa: N806
         phi = 0.9
         # Store the shear strength into "strength" dictionary
         self.strength['shear'] = phi * Vn
@@ -166,7 +166,7 @@ class Column:
         :param steel:  a class defined in "steel_material.py" file.
         :return: a float number denoting the flexural strength
                  and a boolean denoting whether flexural strength is enough.
-        """
+        """  # noqa: D205, D401, D404
         # Compute the distance between center lines of top and bottom flanges
         h0 = self.section['d'] - self.section['tf']
         # Determine coefficient: based whether it is a "W" section
@@ -175,37 +175,37 @@ class Column:
         else:
             c = h0 / 2 * np.sqrt(self.section['Iy'] / self.section['Cw'])
         # Compute Lp and Lr, both of which are necessary to determine flexural strength
-        Lp = 1.76 * self.section['ry'] * np.sqrt(steel.E / steel.Fy)
+        Lp = 1.76 * self.section['ry'] * np.sqrt(steel.E / steel.Fy)  # noqa: N806
         temp1 = np.sqrt(
             (self.section['J'] * c / (self.section['Sx'] * h0)) ** 2
             + 6.76 * (0.7 * steel.Fy / steel.E) ** 2
         )
         temp2 = np.sqrt(self.section['J'] * c / (self.section['Sx'] * h0) + temp1)
-        Lr = 1.95 * self.section['rts'] * steel.E / (0.7 * steel.Fy) * temp2
+        Lr = 1.95 * self.section['rts'] * steel.E / (0.7 * steel.Fy) * temp2  # noqa: N806
         # Unbraced length
-        Lb = min([self.unbraced_length['x'], self.unbraced_length['y']])
+        Lb = min([self.unbraced_length['x'], self.unbraced_length['y']])  # noqa: N806
         # Compute moment capacity governed by plastic yielding
-        Mp = steel.Fy * self.section['Zx']
+        Mp = steel.Fy * self.section['Zx']  # noqa: N806
 
         # Compute MA, MB, and MC coefficients, all of which are necessary to compute Cb coefficient
         # See page 16.1-46 in Seismic Design Manual
-        M_max = np.max(
+        M_max = np.max(  # noqa: N806
             [abs(self.demand['moment bottom']), abs(self.demand['moment top'])]
         )
         linear_function = interpolate.interp1d(
             [0, 1], [self.demand['moment bottom'], (-1) * self.demand['moment top']]
         )
-        [MA, MB, MC] = np.abs(linear_function([0.25, 0.50, 0.75]))
-        Cb = 12.5 * M_max / (2.5 * M_max + 3 * MA + 4 * MB + 3 * MC)
+        [MA, MB, MC] = np.abs(linear_function([0.25, 0.50, 0.75]))  # noqa: N806
+        Cb = 12.5 * M_max / (2.5 * M_max + 3 * MA + 4 * MB + 3 * MC)  # noqa: N806
 
         # Calculate moment capacity based on unbraced length: case-by-case analysis
         # Case I: flexural strength is governed by plastic yielding
         # Case II: flexural strength is governed by lateral torsional buckling with Lp < Lb <= Lr
         # Case III: flexural strength is governed by lateral torsional buckling with Lb > Lr
         if Lb <= Lp:
-            Mn = Mp
+            Mn = Mp  # noqa: N806
         elif Lb <= Lr:
-            Mn = Cb * (
+            Mn = Cb * (  # noqa: N806
                 Mp
                 - (Mp - 0.7 * steel.Fy * self.section['Sx']) * (Lb - Lp) / (Lr - Lp)
             )
@@ -215,10 +215,10 @@ class Column:
                 / (self.section['Sx'] * h0)
                 * (Lb / self.section['rts']) ** 2
             )
-            Fcr = Cb * np.pi**2 * steel.E / ((Lb / self.section['rts']) ** 2) * temp
-            Mn = Fcr * self.section['Sx']
+            Fcr = Cb * np.pi**2 * steel.E / ((Lb / self.section['rts']) ** 2) * temp  # noqa: N806
+            Mn = Fcr * self.section['Sx']  # noqa: N806
         # Attention no matter which case the column is, the flexural strength cannot exceed plastic moment capacity
-        Mn = np.min([Mn, Mp])
+        Mn = np.min([Mn, Mp])  # noqa: N806
 
         # Store the flexural strength into "strength" dictionary
         phi = 0.9
@@ -232,21 +232,21 @@ class Column:
     def check_combined_loads(self):
         """This method is whether the strength is sufficient for column subjected to combined loading.
         :return: a boolean variable denoting whether the strength is sufficient under combined loading.
-        """
+        """  # noqa: D205, D401, D404
         # Obtain the axial capacity and moment capacity
         phi = 0.9
-        Pc = self.strength['axial'] / phi
-        Mcx = self.strength['flexural'] / phi
-        Pr = self.demand['axial']
+        Pc = self.strength['axial'] / phi  # noqa: N806
+        Mcx = self.strength['flexural'] / phi  # noqa: N806
+        Pr = self.demand['axial']  # noqa: N806
         # Determine the governing moment:
         # Maximum value from moments at two ends
-        Mrx = np.max(
+        Mrx = np.max(  # noqa: N806
             [abs(self.demand['moment bottom']), abs(self.demand['moment top'])]
         )
         # Case-by-case analysis:
         # Case I: axial load ratio is less than or equal to 0.2
         # Case II: axial load ratio is greater than 0.2
-        if Pr / Pc <= 0.2:
+        if Pr / Pc <= 0.2:  # noqa: PLR2004
             combination = Pr / Pc + 8 / 9 * (Mrx / Mcx)
         else:
             combination = Pr / (2 * Pc) + (Mrx / Mcx)
@@ -259,17 +259,17 @@ class Column:
     def check_flag(self):
         """This method is used check whether the column passes all checks.
         :return: a boolean variable indicating whether column is feasible or not.
-        """
+        """  # noqa: D205, D401, D404
         self.flag = True
-        for key in self.is_feasible.keys():
-            if self.is_feasible[key] == False:
+        for key in self.is_feasible.keys():  # noqa: SIM118
+            if self.is_feasible[key] == False:  # noqa: E712
                 self.flag = False
         return self.flag
 
     def compute_demand_capacity_ratio(self):
         """This method is used to calculate the demand to capacity ratios for column components
         :return: a dictionary which includes ratios for axial force, shear force, flexural moment, and combined loading.
-        """
+        """  # noqa: D205, D401, D404
         self.demand_capacity_ratio['axial'] = (
             self.demand['axial'] / self.strength['axial']
         )
@@ -284,7 +284,7 @@ class Column:
     def calculate_hinge_parameters(self, steel):
         """This method is used to compute the modeling parameters for plastic hinge using modified IMK material model.
         :return: a dictionary including each parameters required for nonlinear modeling in OpenSees.
-        """
+        """  # noqa: D205, D401, D404
         # Following content is based on the following reference:
         # [1] Hysteretic models that incorporate strength and stiffness deterioration
         # [2] Deterioration modeling of steel components in support of collapse prediction of steel moment frames under
@@ -304,18 +304,18 @@ class Column:
         # Note that for column, the unbraced length is the column length itself.
         # units: kips, inches
         # Note that column unbraced length is in feet, remember to convert it to inches
-        c1 = 25.4  # c1_unit
-        c2 = 6.895  # c2_unit
+        c1 = 25.4  # c1_unit  # noqa: F841
+        c2 = 6.895  # c2_unit  # noqa: F841
         h = self.section['d'] - 2 * self.section['tf']  # Web depth
         # Capping moment to yielding moment ratio. Lignos et al. used 1.05 whereas Prof. Burton used 1.11.
-        McMy = (
+        McMy = (  # noqa: N806
             12.5
             * (h / self.section['tw']) ** (-0.2)
             * (self.unbraced_length['x'] * 12.0 / self.section['ry']) ** (-0.4)
             * (1 - self.demand_capacity_ratio['axial']) ** (0.4)
         )
-        McMy = max(McMy, 1.0)
-        McMy = min(McMy, 1.3)
+        McMy = max(McMy, 1.0)  # noqa: N806
+        McMy = min(McMy, 1.3)  # noqa: N806
         # Beam component rotational stiffness
         self.plastic_hinge['K0'] = (
             6 * steel.E * self.section['Ix'] / (self.unbraced_length['x'] * 12.0)
@@ -323,7 +323,7 @@ class Column:
         # Flexual strength
         self.plastic_hinge['Myp'] = self.section['Zx'] * steel.Fy
         # Effective flexural strength
-        if self.demand_capacity_ratio['axial'] <= 0.2:
+        if self.demand_capacity_ratio['axial'] <= 0.2:  # noqa: PLR2004
             self.plastic_hinge['My'] = (
                 1.15
                 * steel.Ry
@@ -340,7 +340,7 @@ class Column:
                 * (1 - self.demand_capacity_ratio['axial'])
             )
         # Reference cumulative plastic rotation:
-        if self.demand_capacity_ratio['axial'] <= 0.35:
+        if self.demand_capacity_ratio['axial'] <= 0.35:  # noqa: PLR2004
             self.plastic_hinge['Lambda'] = (
                 255000
                 * (h / self.section['tw']) ** (-2.14)

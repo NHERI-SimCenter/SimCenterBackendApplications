@@ -1,4 +1,4 @@
-# This file is used to include all user defined classes and functions
+# This file is used to include all user defined classes and functions  # noqa: INP001, D100
 # Developed by GUAN, XINGQUAN @ UCLA in Dec 2018
 
 # Modified by: Stevan Gavrilovic @ SimCenter, UC Berkeley
@@ -35,7 +35,7 @@ class NonlinearAnalysis:
     (14) copy baseline files and revise if necessary
     (15) define various recorders for output
     (16) define pushover loading pattern
-    """
+    """  # noqa: D205, D400, D404
 
     def __init__(
         self,
@@ -59,10 +59,10 @@ class NonlinearAnalysis:
                                y: from 0 to (bay number+1)
         :param analysis_type: a string specifies which analysis type the current model is for
                               options: 'EigenValueAnalysis', 'PushoverAnalysis', 'DynamicAnalysis'
-        """
+        """  # noqa: D205, D400, D401, D404
         # User-hints: if wrong analysis_type is input
         if (
-            analysis_type != 'EigenValueAnalysis'
+            analysis_type != 'EigenValueAnalysis'  # noqa: PLR1714
             and analysis_type != 'PushoverAnalysis'
             and analysis_type != 'DynamicAnalysis'
         ):
@@ -73,15 +73,15 @@ class NonlinearAnalysis:
             sys.exit(99)
 
         # Change the working directory to the target building folder
-        if not os.path.exists(building.directory['building nonlinear model']):
-            os.makedirs(building.directory['building nonlinear model'])
+        if not os.path.exists(building.directory['building nonlinear model']):  # noqa: PTH110
+            os.makedirs(building.directory['building nonlinear model'])  # noqa: PTH103
         os.chdir(building.directory['building nonlinear model'])
         # Change the working directory to the desired folder (EigenValueAnalysis, PushoverAnalysis, or DynamicAnalysis)
         target_folder = (
             building.directory['building nonlinear model'] + '/' + analysis_type
         )
-        if not os.path.exists(target_folder):
-            os.makedirs(target_folder)
+        if not os.path.exists(target_folder):  # noqa: PTH110
+            os.makedirs(target_folder)  # noqa: PTH103
         os.chdir(target_folder)
 
         # Call methods to write .tcl files for the building
@@ -115,14 +115,14 @@ class NonlinearAnalysis:
             self.write_damping(building)
             self.write_dynamic_analysis_parameters(building)
 
-    def write_nodes(self, building, column_set, beam_set):
+    def write_nodes(self, building, column_set, beam_set):  # noqa: C901
         """Create a .tcl file to write node tags and coordinates for nonlinear analysis model
         :param building: a class defined in "building_information.py"
         :param column_set: a list[x][y] and each element is a class defined in "column_component.py"
         :param beam_set: a list[x][z] and each element is a class defined in "beam_component.py"
         :return: a .tcl file
-        """
-        with open('DefineNodes2DModel.tcl', 'w') as tclfile:
+        """  # noqa: D205, D400
+        with open('DefineNodes2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write(
                 '# This file will be used to define all nodes \n'
             )  # Introduce the file usage
@@ -130,15 +130,15 @@ class NonlinearAnalysis:
 
             tclfile.write('# Set bay width and story height\n')
             tclfile.write(
-                'set\tBayWidth\t[expr %.2f*12]; \n'
+                'set\tBayWidth\t[expr %.2f*12]; \n'  # noqa: UP031
                 % (building.geometry['X bay width'])
             )
             tclfile.write(
-                'set\tFirstStory\t[expr %.2f*12]; \n'
+                'set\tFirstStory\t[expr %.2f*12]; \n'  # noqa: UP031
                 % (building.geometry['first story height'])
             )
             tclfile.write(
-                'set\tTypicalStory\t[expr %.2f*12]; \n\n'
+                'set\tTypicalStory\t[expr %.2f*12]; \n\n'  # noqa: UP031
                 % (building.geometry['typical story height'])
             )
 
@@ -196,7 +196,7 @@ class NonlinearAnalysis:
                         'NodesAroundPanelZone\t%i\t%i\t[expr %i*$BayWidth]'
                         % (j, i, j - 1)
                     )
-                    if i <= 2:
+                    if i <= 2:  # noqa: PLR2004
                         tclfile.write(
                             '\t[expr %i*$FirstStory+0*$TypicalStory]' % (i - 1)
                         )
@@ -219,7 +219,7 @@ class NonlinearAnalysis:
                     '\t[expr %i*$BayWidth]'
                     % (building.geometry['number of X bay'] + 1)
                 )  # X coordinate
-                if i <= 2:
+                if i <= 2:  # noqa: PLR2004
                     tclfile.write(
                         '\t[expr %i*$FirstStory+0*$TypicalStory];' % (i - 1)
                     )  # Y coordinate
@@ -276,8 +276,8 @@ class NonlinearAnalysis:
         """Create a .tcl file to write boundary for the model
         :param building: a class defined in "building_information.py"
         :return: a .tcl file
-        """
-        with open('DefineFixities2DModel.tcl', 'w') as tclfile:
+        """  # noqa: D205, D400
+        with open('DefineFixities2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write(
                 '# This file will be used to define the fixity at all column bases \n\n\n'
             )
@@ -295,9 +295,9 @@ class NonlinearAnalysis:
         """Create a .tcl file to write floor constraint, i.e., equal DOF
         :param building: a class defined in "building_information.py"
         :return: a .tcl file
-        """
+        """  # noqa: D205, D400
         # Create a .tcl file to write floor constraint, i.e., equal DOF
-        with open('DefineFloorConstraint2DModel.tcl', 'w') as tclfile:
+        with open('DefineFloorConstraint2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# This file will be used to define floor constraint \n')
             tclfile.write(
                 '# Nodes at same floor level have identical lateral displacement\n'
@@ -331,9 +331,9 @@ class NonlinearAnalysis:
         :param building: a class defined in "building_information.py"
         :param beam_set: a list[x][z] and each element is a class defined in "beam_component.py"
         :return: a .tcl file
-        """
+        """  # noqa: D205, D400
         material_tag = 70001
-        with open('DefineBeamHingeMaterials2DModel.tcl', 'w') as tclfile:
+        with open('DefineBeamHingeMaterials2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write(
                 '# This file will be used to define beam hinge material models\n\n\n'
             )
@@ -405,9 +405,9 @@ class NonlinearAnalysis:
         :param building: a class defined in "building_information.py"
         :param column_set: a list[x][y] and each element is a class defined in "column_component.py" file
         :return: a .tcl file
-        """
+        """  # noqa: D205, D400
         material_tag = 60001
-        with open('DefineColumnHingeMaterials2DModel.tcl', 'w') as tclfile:
+        with open('DefineColumnHingeMaterials2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write(
                 '# This file will be used to define column hinge material models\n\n\n'
             )
@@ -492,8 +492,8 @@ class NonlinearAnalysis:
         """Create a .tcl file to define the beam element
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
-        """
-        with open('DefineBeams2DModel.tcl', 'w') as tclfile:
+        """  # noqa: D205, D400
+        with open('DefineBeams2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# This file will be used to define beam elements \n\n\n')
             tclfile.write('# Define beam section sizes \n')
             for i in range(
@@ -559,8 +559,8 @@ class NonlinearAnalysis:
         """Create a .tcl file to define column element
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
-        """
-        with open('DefineColumns2DModel.tcl', 'w') as tclfile:
+        """  # noqa: D205, D400
+        with open('DefineColumns2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# This file will be used to define columns \n\n\n')
 
             # Define exterior column sizes
@@ -669,8 +669,8 @@ class NonlinearAnalysis:
         """Create a .tcl file to define beam hinge element (rotational spring)
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
-        """
-        with open('DefineBeamHinges2DModel.tcl', 'w') as tclfile:
+        """  # noqa: D205, D400
+        with open('DefineBeamHinges2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# This file will be used to define beam hinges \n\n\n')
 
             tclfile.write(
@@ -717,8 +717,8 @@ class NonlinearAnalysis:
         """Create a .tcl file to define column hinge element (rotational spring)
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
-        """
-        with open('DefineColumnHinges2DModel.tcl', 'w') as tclfile:
+        """  # noqa: D205, D400
+        with open('DefineColumnHinges2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# This file will be used to define column hinges\n\n\n')
             for i in range(
                 1, building.geometry['number of story'] + 1
@@ -822,8 +822,8 @@ class NonlinearAnalysis:
         """Create a .tcl file which defines the mass of each floor at each node
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
-        """
-        with open('DefineMasses2DModel.tcl', 'w') as tclfile:
+        """  # noqa: D205, D400
+        with open('DefineMasses2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# This file will be used to define all nodal masses \n\n')
 
             # Write values for floor weights, tributary mass ratio, and nodal mass
@@ -876,8 +876,8 @@ class NonlinearAnalysis:
         """Create a .tcl file that defines the elements in panel zone
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
-        """
-        with open('DefinePanelZoneElements.tcl', 'w') as tclfile:
+        """  # noqa: D205, D400
+        with open('DefinePanelZoneElements.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write(
                 '# This file will be used to define elements in panel zones \n\n'
             )
@@ -899,7 +899,7 @@ class NonlinearAnalysis:
                 tclfile.write('\n')
             tclfile.write('puts "Panel zone elements defined"')
 
-    def write_panel_zone_springs(
+    def write_panel_zone_springs(  # noqa: D102
         self,
         building,
         column_set,
@@ -907,7 +907,7 @@ class NonlinearAnalysis:
         connection_set,
     ):
         # Create a .tcl file that defines the springs involved in panel zones
-        with open('DefinePanelZoneSprings.tcl', 'w') as tclfile:
+        with open('DefinePanelZoneSprings.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write(
                 '# This file will be used to define springs in panel zone \n\n'
             )
@@ -935,13 +935,13 @@ class NonlinearAnalysis:
                         '\t$Es\t$Fy'
                     )  # Young's modulus and Yielding stress
                     tclfile.write(
-                        '\t%.2f' % column_set[i - 2][j - 1].section['d']
+                        '\t%.2f' % column_set[i - 2][j - 1].section['d']  # noqa: UP031
                     )  # column depth
                     tclfile.write(
-                        '\t%.2f' % column_set[i - 2][j - 1].section['bf']
+                        '\t%.2f' % column_set[i - 2][j - 1].section['bf']  # noqa: UP031
                     )  # column flange width
                     tclfile.write(
-                        '\t%.2f' % column_set[i - 2][j - 1].section['tf']
+                        '\t%.2f' % column_set[i - 2][j - 1].section['tf']  # noqa: UP031
                     )  # column flange thickness
                     # Use actual panel zone thickness rather than the assumed column web thickness
                     tclfile.write(
@@ -955,11 +955,11 @@ class NonlinearAnalysis:
                         # note that j is the column number.
                         # the number of beam at each floor level is one less than that of columns
                         tclfile.write(
-                            '\t%.2f' % beam_set[i - 2][j - 1].section['d']
+                            '\t%.2f' % beam_set[i - 2][j - 1].section['d']  # noqa: UP031
                         )  # beam depth
                     else:
                         tclfile.write(
-                            '\t%.2f' % beam_set[i - 2][-1].section['d']
+                            '\t%.2f' % beam_set[i - 2][-1].section['d']  # noqa: UP031
                         )  # beam depth
                     tclfile.write(
                         '\t1.1\t0.03; \n'
@@ -967,9 +967,9 @@ class NonlinearAnalysis:
                 tclfile.write('\n')
             tclfile.write('puts "Panel zone springs defined"')
 
-    def write_gravity_load(self, building):
+    def write_gravity_load(self, building):  # noqa: D102
         # Create a .tcl file to write gravity load: 1.00 DL + 0.25 LL
-        with open('DefineGravityLoads2DModel.tcl', 'w') as tclfile:
+        with open('DefineGravityLoads2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define expected gravity loads\n\n\n')
 
             # Assign the beam dead load values
@@ -1048,9 +1048,9 @@ class NonlinearAnalysis:
 
             tclfile.write('puts "Expected gravity loads defined"')
 
-    def write_pushover_loading(self, building):
+    def write_pushover_loading(self, building):  # noqa: D102
         # Create a .tcl file to write lateral pushover loading
-        with open('DefinePushoverLoading2DModel.tcl', 'w') as tclfile:
+        with open('DefinePushoverLoading2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define pushover loading\n\n\n')
             tclfile.write('pattern\tPlain\t200\tLinear\t{\n\n')
             tclfile.write('# Pushover pattern\n')
@@ -1072,9 +1072,9 @@ class NonlinearAnalysis:
                 tclfile.write('\n')
             tclfile.write('}')
 
-    def write_base_reaction_recorder(self, building):
+    def write_base_reaction_recorder(self, building):  # noqa: D102
         # Create a .tcl file to write the recorders for base reactions
-        with open('DefineBaseReactionRecorders2DModel.tcl', 'w') as tclfile:
+        with open('DefineBaseReactionRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define base node reaction recorders\n\n\n')
             tclfile.write('cd\t$baseDir/$dataDir/BaseReactions\n\n')
 
@@ -1096,9 +1096,9 @@ class NonlinearAnalysis:
             tclfile.write('\t%i%i' % (building.geometry['number of X bay'] + 2, 1))
             tclfile.write('\t-dof\t1\treaction;\n\n')
 
-    def write_beam_hinge_recorder(self, building):
+    def write_beam_hinge_recorder(self, building):  # noqa: D102
         # Create a .tcl file to record beam hinge forces and deformation
-        with open('DefineBeamHingeRecorders2DModel.tcl', 'w') as tclfile:
+        with open('DefineBeamHingeRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define beam hinge force-deformation recorders\n\n\n')
             tclfile.write('cd\t$baseDir/$dataDir/BeamHingeMoment\n\n')
 
@@ -1129,9 +1129,9 @@ class NonlinearAnalysis:
                 tclfile.write('\tdeformation;\n')
             tclfile.write('\n')
 
-    def write_column_hinge_recorder(self, building):
+    def write_column_hinge_recorder(self, building):  # noqa: D102
         # Create a .tcl file to record column hinge forces and deformations
-        with open('DefineColumnHingeRecorders2DModel.tcl', 'w') as tclfile:
+        with open('DefineColumnHingeRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define column hinge force-deformation recorders\n\n\n')
             tclfile.write('cd\t$baseDir/$dataDir/ColumnHingeMoment\n\n')
 
@@ -1162,9 +1162,9 @@ class NonlinearAnalysis:
                 tclfile.write('\tdeformation;')
             tclfile.write('\n')
 
-    def write_beam_force_recorder(self, building):
+    def write_beam_force_recorder(self, building):  # noqa: D102
         # Create a .tcl file to write beam element forces recorder for output
-        with open('DefineGlobalBeamForceRecorders2DModel.tcl', 'w') as tclfile:
+        with open('DefineGlobalBeamForceRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define global beam force recorders\n\n\n')
             tclfile.write('cd\t$baseDir/$dataDir/GlobalBeamForces\n\n')
             tclfile.write('# X-Direction beam element global force recorders\n')
@@ -1177,9 +1177,9 @@ class NonlinearAnalysis:
                     tclfile.write('\t%i%i%i%i%i%i%i' % (2, j, i, 1, j + 1, i, 1))
                 tclfile.write('\tforce\n')
 
-    def write_column_force_recorder(self, building):
+    def write_column_force_recorder(self, building):  # noqa: D102
         # Create a .tcl file to write column element forces recorder for output
-        with open('DefineGlobalColumnForceRecorders2DModel.tcl', 'w') as tclfile:
+        with open('DefineGlobalColumnForceRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define global column force recorders\n\n\n')
             tclfile.write('cd\t$baseDir/$dataDir/GlobalBeamForces\n\n')
             tclfile.write('# Column element global force recorders\n')
@@ -1195,9 +1195,9 @@ class NonlinearAnalysis:
                 tclfile.write('\tforce;\n')
             tclfile.write('\n')
 
-    def write_node_displacement_recorder(self, building):
+    def write_node_displacement_recorder(self, building):  # noqa: D102
         # Create a .tcl file to write the node displacements recorder for output
-        with open('DefineNodeDisplacementRecorders2DModel.tcl', 'w') as tclfile:
+        with open('DefineNodeDisplacementRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define node displacement recorders\n\n\n')
             tclfile.write('cd\t$baseDir/$dataDir/NodeDisplacements\n\n')
             for i in range(1, building.geometry['number of story'] + 2):
@@ -1211,9 +1211,9 @@ class NonlinearAnalysis:
                         tclfile.write('\t%i%i%i%i' % (j, i, 1, 1))
                 tclfile.write('\t-dof\t1\tdisp;\n')
 
-    def write_story_drift_recorder(self, building, analysis_type):
+    def write_story_drift_recorder(self, building, analysis_type):  # noqa: D102
         # Create a .tcl file to write story drift recorder for output
-        with open('DefineStoryDriftRecorders2DModel.tcl', 'w') as tclfile:
+        with open('DefineStoryDriftRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define story drift recorders\n\n\n')
 
             if analysis_type == 'PushoverAnalysis':
@@ -1262,9 +1262,9 @@ class NonlinearAnalysis:
             )
             tclfile.write('\t-dof\t1\t-perpDirn\t2; \n')
 
-    def write_node_acceleration_recorder(self, building):
+    def write_node_acceleration_recorder(self, building):  # noqa: D102
         # Create a .tcl file to record absolute node acceleration
-        with open('DefineNodeAccelerationRecorders2DModel.tcl', 'w') as tclfile:
+        with open('DefineNodeAccelerationRecorders2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# Define node acceleration recorders\n\n\n')
             tclfile.write(
                 'cd $baseDir/$dataDir/EQ_$eqNumber/Scale_$scale/NodeAccelerations\n\n'
@@ -1281,9 +1281,9 @@ class NonlinearAnalysis:
                         tclfile.write('\t%i%i%i%i' % (j, i, 1, 1))
                 tclfile.write('\t-dof\t1\taccel;\n')
 
-    def write_damping(self, building):
+    def write_damping(self, building):  # noqa: D102
         # Create a .tcl file to define damping for dynamic analysis
-        with open('DefineDamping2DModel.tcl', 'w') as tclfile:
+        with open('DefineDamping2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# This file will be used to define damping\n\n')
 
             tclfile.write('# A damping ratio of 2% is used for steel buildings\n')
@@ -1346,9 +1346,9 @@ class NonlinearAnalysis:
             tclfile.write('\t-rayleigh\t$alpha0\t0.0\t0.0\t0.0;\n\n')
             tclfile.write('puts "Rayleigh damping defined"')
 
-    def write_dynamic_analysis_parameters(self, building):
+    def write_dynamic_analysis_parameters(self, building):  # noqa: D102
         # Create a .tcl file to define all parameters pertinent to dynamic analysis solver
-        with open('DefineDynamicAnalysisParameters2DModel.tcl', 'w') as tclfile:
+        with open('DefineDynamicAnalysisParameters2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write(
                 '# This file will be used to define analysis parameters relevant to dynamic solver\n\n\n'
             )
@@ -1380,7 +1380,7 @@ class NonlinearAnalysis:
         :param analysis_type: a string specifies the analysis type that the current nonlinear model is for
                               options: 'EigenValueAnalysis', 'PushoverAnalysis', 'DynamicAnalysis'
         :return:
-        """
+        """  # noqa: D205, D400, D401
         # Change the working directory to the folder where baseline .tcl files are stored
         source_dir = (
             building.directory['baseline files nonlinear'] + '/' + analysis_type
@@ -1409,33 +1409,33 @@ class NonlinearAnalysis:
             # Revise the baseline file: EigenValueAnalysis.tcl if building has less than four stories.
             # Default EigenValueAnalysis.tcl file analyzes four modes.
             # For buildings which have three stories or below, they might only have 1st mode, 2nd mode, and 3rd mode.
-            if building.geometry['number of story'] <= 3:
+            if building.geometry['number of story'] <= 3:  # noqa: PLR2004
                 # This is to change the number of desired mode
                 new_mode = 'set nEigenL 3'
                 # Releast the equal DOF constraints for buildings with less than 3 stories
-                with open('Model.tcl') as file:
+                with open('Model.tcl') as file:  # noqa: PTH123
                     content = file.read()
                 new_content = content.replace(
                     'source DefineFloorConstraint2DModel.tcl',
                     '# source DefineFloorConstraint2DModel.tcl',
                 )
-                with open('Model.tcl', 'w') as file:
+                with open('Model.tcl', 'w') as file:  # noqa: PTH123
                     file.write(new_content)
             # This is to change the node tag to record eigen vector
             old_string = '**EIGENVECTOR_NODE**'
             new_string = '1110'
             for floor in range(1, building.geometry['number of story'] + 1):
                 new_string += ' %i%i%i%i' % (1, floor + 1, 1, 1)
-            with open('EigenValueAnalysis.tcl') as file:
+            with open('EigenValueAnalysis.tcl') as file:  # noqa: PTH123
                 content = file.read()
             new_content = content.replace(old_mode, new_mode)
             new_content = new_content.replace(old_string, new_string)
-            with open('EigenValueAnalysis.tcl', 'w') as file:
+            with open('EigenValueAnalysis.tcl', 'w') as file:  # noqa: PTH123
                 file.write(new_content)
 
             # Perform Eigen Analysis to obtain the periods which will be necessary for raleigh damping in dynamic part
             cmd = 'OpenSees Model.tcl'
-            subprocess.Popen(cmd, shell=True).wait()
+            subprocess.Popen(cmd, shell=True).wait()  # noqa: S602
 
         # Update pushover parameters contained Model.tcl when performing pushover analysis
         elif analysis_type == 'PushoverAnalysis':
@@ -1452,11 +1452,11 @@ class NonlinearAnalysis:
                 '0.01',
                 '%.2f' % (0.1 * building.geometry['floor height'][-1] * 12),
             ]  # DisplamentMaximum should be in inch.
-            with open('Model.tcl') as file:
+            with open('Model.tcl') as file:  # noqa: PTH123
                 content = file.read()
             for indx in range(len(old_string)):
                 content = content.replace(old_string[indx], new_string[indx])
-            with open('Model.tcl', 'w') as file:
+            with open('Model.tcl', 'w') as file:  # noqa: PTH123
                 file.write(content)
 
         # Update Model.tcl and RunIDA2DModel.tcl files for dynamic analysis
@@ -1477,7 +1477,7 @@ class NonlinearAnalysis:
             os.chdir(
                 building.directory['building nonlinear model'] + '/' + analysis_type
             )
-            with open('Model.tcl') as file:
+            with open('Model.tcl') as file:  # noqa: PTH123
                 content = file.read()
             content = content.replace(
                 old_periods[0], str(periods[0])
@@ -1486,10 +1486,10 @@ class NonlinearAnalysis:
                 old_periods[1], str(periods[2])
             )  # Third-mode period
             # Write the updated content into Model.tcl
-            with open('Model.tcl', 'w') as file:
+            with open('Model.tcl', 'w') as file:  # noqa: PTH123
                 file.write(content)
             # Update dynamic parameters in RunIDA2DModel.tcl
-            with open('RunIDA2DModel.tcl') as file:
+            with open('RunIDA2DModel.tcl') as file:  # noqa: PTH123
                 content = file.read()
             old_string = [
                 '**NumberOfGroundMotions**',
@@ -1500,5 +1500,5 @@ class NonlinearAnalysis:
             for indx in range(len(old_string)):
                 content = content.replace(old_string[indx], str(new_string[indx]))
             # Write the new content back into RunIDA2DModel.tcl
-            with open('RunIDA2DModel.tcl', 'w') as file:
+            with open('RunIDA2DModel.tcl', 'w') as file:  # noqa: PTH123
                 file.write(content)

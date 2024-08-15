@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017, The Regents of the University of California (Regents).
+# Copyright (c) 2016-2017, The Regents of the University of California (Regents).  # noqa: INP001, D100
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -54,30 +54,30 @@ from plotly.subplots import make_subplots
 from scipy import signal
 
 
-def readPressureProbes(fileName):
+def readPressureProbes(fileName):  # noqa: N802, N803
     """Created on Wed May 16 14:31:42 2018
 
     Reads pressure probe data from OpenFOAM and return the probe location, time, and the pressure
     for each time step.
 
     @author: Abiy
-    """
+    """  # noqa: D400, D401
     probes = []
     p = []
     time = []
 
-    with open(fileName) as f:
+    with open(fileName) as f:  # noqa: PTH123
         for line in f:
             if line.startswith('#'):
                 if line.startswith('# Probe'):
-                    line = line.replace('(', '')
-                    line = line.replace(')', '')
-                    line = line.split()
+                    line = line.replace('(', '')  # noqa: PLW2901
+                    line = line.replace(')', '')  # noqa: PLW2901
+                    line = line.split()  # noqa: PLW2901
                     probes.append([float(line[3]), float(line[4]), float(line[5])])
                 else:
                     continue
             else:
-                line = line.split()
+                line = line.split()  # noqa: PLW2901
                 time.append(float(line[0]))
                 p_probe_i = np.zeros([len(probes)])
                 for i in range(len(probes)):
@@ -106,7 +106,7 @@ def read_pressure_data(file_names):
     time, pressure
         Returns the pressure time and pressure data of the connected file.
 
-    """
+    """  # noqa: D205, D401, D404
     no_files = len(file_names)
     connected_time = []  # Connected array of time
     connected_p = []  # connected array of pressure.
@@ -128,7 +128,7 @@ def read_pressure_data(file_names):
                 index = np.where(time2 > time1[-1])[0][0]
                 # index += 1
 
-            except:
+            except:  # noqa: E722
                 # sys.exit('Fatal Error!: the pressure files have time gap')
                 index = 0  # Joint them even if they have a time gap
 
@@ -136,7 +136,7 @@ def read_pressure_data(file_names):
             connected_p = np.concatenate((connected_p, p2[index:]))
 
         time1 = time2
-        p1 = p2
+        p1 = p2  # noqa: F841
     return probes, connected_time, connected_p
 
 
@@ -144,7 +144,7 @@ class PressureData:
     """A class that holds a pressure data and performs the following operations:
     - mean and rms pressure coefficients
     - peak pressure coefficients
-    """
+    """  # noqa: D205, D400
 
     def __init__(
         self,
@@ -172,8 +172,8 @@ class PressureData:
         self.probe_count = np.shape(self.probes)[0]
 
     def __read_cfd_data(self):
-        if os.path.isdir(self.path):
-            print('Reading from path : %s' % (self.path))
+        if os.path.isdir(self.path):  # noqa: PTH112
+            print('Reading from path : %s' % (self.path))  # noqa: T201, UP031
             time_names = os.listdir(self.path)
             sorted_index = np.argsort(np.float64(time_names)).tolist()
             # print(sorted_index)
@@ -181,7 +181,7 @@ class PressureData:
             file_names = []
 
             for i in range(len(sorted_index)):
-                file_name = os.path.join(self.path, time_names[sorted_index[i]], 'p')
+                file_name = os.path.join(self.path, time_names[sorted_index[i]], 'p')  # noqa: PTH118
                 file_names.append(file_name)
 
             # print(file_names)
@@ -190,30 +190,30 @@ class PressureData:
 
             # self.p = np.transpose(self.p) # OpenFOAM gives p/rho
         else:
-            print('Cannot find the file path: %s' % (self.path))
+            print('Cannot find the file path: %s' % (self.path))  # noqa: T201, UP031
 
     def __set_time(self):
-        if self.start_time != None:
+        if self.start_time != None:  # noqa: E711
             start_index = int(np.argmax(self.time > self.start_time))
             self.time = self.time[start_index:]
             # self.cp = self.cp[:,start_index:]
-            try:
+            try:  # noqa: SIM105
                 self.p = self.p[:, start_index:]
-            except:
+            except:  # noqa: S110, E722
                 pass
 
-        if self.end_time != None:
+        if self.end_time != None:  # noqa: E711
             end_index = int(np.argmax(self.time > self.end_time))
             self.time = self.time[:end_index]
             # self.cp = self.cp[:,:end_index]
-            try:
+            try:  # noqa: SIM105
                 self.p = self.p[:, :end_index]
-            except:
+            except:  # noqa: S110, E722
                 pass
 
 
-def von_karman_spectrum(f, Uav, I, L, comp=0):
-    psd = np.zeros(len(f))
+def von_karman_spectrum(f, Uav, I, L, comp=0):  # noqa: N803, E741, D103
+    psd = np.zeros(len(f))  # noqa: F841
 
     if comp == 0:
         return (
@@ -223,7 +223,7 @@ def von_karman_spectrum(f, Uav, I, L, comp=0):
             / np.power(1.0 + 70.8 * np.power(f * L / Uav, 2.0), 5.0 / 6.0)
         )
 
-    if comp == 1 or comp == 2:
+    if comp == 1 or comp == 2:  # noqa: RET503, PLR1714, PLR2004
         return (
             4.0
             * np.power(I * Uav, 2.0)
@@ -251,7 +251,7 @@ def psd(x, dt, nseg):
     freq, spectra
         Returns the frequency and spectra of the signal
 
-    """
+    """  # noqa: D205, D401
     x_no_mean = x - np.mean(x)
     freq, spectra = signal.welch(
         x_no_mean, fs=1.0 / dt, nperseg=len(x_no_mean) / nseg
@@ -264,8 +264,8 @@ def write_open_foam_vector_field(p, file_name):
     """Writes a given vector-field (n x 3) array to OpenFOAM 'vectorField'
     format.
 
-    """
-    f = open(file_name, 'w+')
+    """  # noqa: D205, D401
+    f = open(file_name, 'w+')  # noqa: SIM115, PTH123
     f.write('%d' % len(p[:, 2]))
     f.write('\n(')
     for i in range(len(p[:, 2])):
@@ -275,58 +275,58 @@ def write_open_foam_vector_field(p, file_name):
     f.close()
 
 
-def read_openFoam_scalar_field(file_name):
-    """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""
-    sField = []
+def read_openFoam_scalar_field(file_name):  # noqa: N802
+    """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""  # noqa: D401
+    sField = []  # noqa: N806
 
-    with open(file_name) as f:
+    with open(file_name) as f:  # noqa: PTH123
         itrf = iter(f)
         next(itrf)
         for line in itrf:
-            if line.startswith('(') or line.startswith(')'):
+            if line.startswith('(') or line.startswith(')'):  # noqa: PIE810
                 continue
-            else:
-                line = line.split()
+            else:  # noqa: RET507
+                line = line.split()  # noqa: PLW2901
                 sField.append(float(line[0]))
 
-    sField = np.asarray(sField, dtype=np.float32)
+    sField = np.asarray(sField, dtype=np.float32)  # noqa: N806
 
-    return sField
+    return sField  # noqa: RET504
 
 
-def read_openFoam_vector_field(file_name):
-    """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""
-    vField = []
+def read_openFoam_vector_field(file_name):  # noqa: N802
+    """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""  # noqa: D401
+    vField = []  # noqa: N806
 
-    with open(file_name) as f:
+    with open(file_name) as f:  # noqa: PTH123
         for line in f:
             if line.startswith('('):
-                line = line.replace('(', '')
-                line = line.replace(')', '')
-                line = line.split()
+                line = line.replace('(', '')  # noqa: PLW2901
+                line = line.replace(')', '')  # noqa: PLW2901
+                line = line.split()  # noqa: PLW2901
 
-                if len(line) < 3:
+                if len(line) < 3:  # noqa: PLR2004
                     continue
 
                 vField.append([float(line[0]), float(line[1]), float(line[2])])
 
-    vField = np.asarray(vField, dtype=np.float32)
+    vField = np.asarray(vField, dtype=np.float32)  # noqa: N806
 
-    return vField
+    return vField  # noqa: RET504
 
 
-def read_openFoam_tensor_field(file_name):
-    """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""
-    vField = []
+def read_openFoam_tensor_field(file_name):  # noqa: N802
+    """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""  # noqa: D401
+    vField = []  # noqa: N806
 
     row_count = 9
 
-    with open(file_name) as f:
+    with open(file_name) as f:  # noqa: PTH123
         for line in f:
             if line.startswith('('):
-                line = line.replace('(', '')
-                line = line.replace(')', '')
-                line = line.split()
+                line = line.replace('(', '')  # noqa: PLW2901
+                line = line.replace(')', '')  # noqa: PLW2901
+                line = line.split()  # noqa: PLW2901
 
                 if len(line) < row_count:
                     continue
@@ -338,23 +338,23 @@ def read_openFoam_tensor_field(file_name):
 
                 vField.append(row)
 
-    vField = np.asarray(vField, dtype=np.float32)
+    vField = np.asarray(vField, dtype=np.float32)  # noqa: N806
 
-    return vField
+    return vField  # noqa: RET504
 
 
-def read_openFoam_symmetric_tensor_field(file_name):
-    """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""
-    vField = []
+def read_openFoam_symmetric_tensor_field(file_name):  # noqa: N802
+    """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""  # noqa: D401
+    vField = []  # noqa: N806
 
     row_count = 6
 
-    with open(file_name) as f:
+    with open(file_name) as f:  # noqa: PTH123
         for line in f:
             if line.startswith('('):
-                line = line.replace('(', '')
-                line = line.replace(')', '')
-                line = line.split()
+                line = line.replace('(', '')  # noqa: PLW2901
+                line = line.replace(')', '')  # noqa: PLW2901
+                line = line.split()  # noqa: PLW2901
 
                 if len(line) < row_count:
                     continue
@@ -365,9 +365,9 @@ def read_openFoam_symmetric_tensor_field(file_name):
 
                 vField.append(row)
 
-    vField = np.asarray(vField, dtype=np.float32)
+    vField = np.asarray(vField, dtype=np.float32)  # noqa: N806
 
-    return vField
+    return vField  # noqa: RET504
 
 
 def read_velocity_data(path):
@@ -385,35 +385,35 @@ def read_velocity_data(path):
     time, pressure
         Returns the velocity time and velocity data of the connected file.
 
-    """
+    """  # noqa: D205, D401, D404
     num_files = len(path)
     connected_time = []  # Connected array of time
-    connected_U = []  # connected array of pressure.
+    connected_U = []  # connected array of pressure.  # noqa: N806
 
     time1 = []
-    U1 = []
+    U1 = []  # noqa: N806
     time2 = []
-    U2 = []
+    U2 = []  # noqa: N806
     probes = []
 
     for i in range(num_files):
-        probes, time2, U2 = read_velocity_probes(path[i])
+        probes, time2, U2 = read_velocity_probes(path[i])  # noqa: N806
         if i != 0:
             try:
                 index = np.where(time2 > time1[-1])[0][0]
-            except:
+            except:  # noqa: E722
                 # sys.exit('Fatal Error!: the pressure files have time gap')
                 index = 0  # Join them even if they have a time gap
             connected_time = np.concatenate((connected_time, time2[index:]))
-            connected_U = np.concatenate((connected_U, U2[index:]))
+            connected_U = np.concatenate((connected_U, U2[index:]))  # noqa: N806
         else:
             connected_time = time2
-            connected_U = U2
+            connected_U = U2  # noqa: N806
 
         time1 = time2
-        U1 = U2
+        U1 = U2  # noqa: N806, F841
     shape = np.shape(connected_U)
-    U = np.zeros((shape[1], shape[2], shape[0]))
+    U = np.zeros((shape[1], shape[2], shape[0]))  # noqa: N806
 
     for i in range(shape[1]):
         for j in range(shape[2]):
@@ -421,33 +421,33 @@ def read_velocity_data(path):
     return probes, connected_time, U
 
 
-def read_velocity_probes(fileName):
+def read_velocity_probes(fileName):  # noqa: N803
     """Created on Wed May 16 14:31:42 2018
 
     Reads velocity probe data from OpenFOAM and return the probe location, time,
     and the velocity vector for each time step.
-    """
+    """  # noqa: D400, D401
     probes = []
-    U = []
+    U = []  # noqa: N806
     time = []
 
-    with open(fileName) as f:
+    with open(fileName) as f:  # noqa: PTH123
         for line in f:
             if line.startswith('#'):
                 if line.startswith('# Probe'):
-                    line = line.replace('(', '')
-                    line = line.replace(')', '')
-                    line = line.split()
+                    line = line.replace('(', '')  # noqa: PLW2901
+                    line = line.replace(')', '')  # noqa: PLW2901
+                    line = line.split()  # noqa: PLW2901
                     probes.append([float(line[3]), float(line[4]), float(line[5])])
                 else:
                     continue
             else:
-                line = line.replace('(', '')
-                line = line.replace(')', '')
-                line = line.split()
+                line = line.replace('(', '')  # noqa: PLW2901
+                line = line.replace(')', '')  # noqa: PLW2901
+                line = line.split()  # noqa: PLW2901
                 try:
                     time.append(float(line[0]))
-                except:
+                except:  # noqa: S112, E722
                     continue
                 u_probe_i = np.zeros([len(probes), 3])
                 for i in range(len(probes)):
@@ -460,13 +460,13 @@ def read_velocity_probes(fileName):
 
     probes = np.asarray(probes, dtype=np.float32)
     time = np.asarray(time, dtype=np.float32)
-    U = np.asarray(U, dtype=np.float32)
+    U = np.asarray(U, dtype=np.float32)  # noqa: N806
 
     return probes, time, U
 
 
 def calculate_length_scale(u, uav, dt, min_corr=0.0):
-    """Calculates the length scale of a velocity time history given."""
+    """Calculates the length scale of a velocity time history given."""  # noqa: D401
     u = u - np.mean(u)
 
     corr = signal.correlate(u, u, mode='full')
@@ -479,12 +479,12 @@ def calculate_length_scale(u, uav, dt, min_corr=0.0):
 
     corr = corr[:loc]
 
-    L = uav * np.trapz(corr, dx=dt)
+    L = uav * np.trapz(corr, dx=dt)  # noqa: NPY201, N806
 
-    return L
+    return L  # noqa: RET504
 
 
-def psd(x, dt, nseg):
+def psd(x, dt, nseg):  # noqa: F811
     """Calculates the power spectral density of a given signal using the welch
     method.
 
@@ -502,7 +502,7 @@ def psd(x, dt, nseg):
     freq, spectra
         Returns the frequency and spectra of the signal
 
-    """
+    """  # noqa: D205, D401
     x_no_mean = x - np.mean(x)
     freq, spectra = signal.welch(
         x_no_mean, fs=1.0 / dt, nperseg=len(x_no_mean) / nseg
@@ -516,13 +516,13 @@ class VelocityData:
     - mean velocity profile
     - turbulence intensity profiles
     - integral scale of turbulence profiles
-    """
+    """  # noqa: D205, D400
 
     def __init__(
         self,
         path,
         sampling_rate=400,
-        filter_data=False,
+        filter_data=False,  # noqa: FBT002
         filter_freq=400,
         start_time=None,
         end_time=None,
@@ -551,14 +551,14 @@ class VelocityData:
         self.__calculate_all()
 
     def __read_cfd_data(self):
-        if os.path.isdir(self.path):
-            print('Reading from path : %s' % (self.path))
+        if os.path.isdir(self.path):  # noqa: PTH112
+            print('Reading from path : %s' % (self.path))  # noqa: T201, UP031
             time_names = os.listdir(self.path)
             sorted_index = np.argsort(np.float64(time_names)).tolist()
             file_names = []
 
             for i in range(len(sorted_index)):
-                file_name = os.path.join(self.path, time_names[sorted_index[i]], 'U')
+                file_name = os.path.join(self.path, time_names[sorted_index[i]], 'U')  # noqa: PTH118
                 file_names.append(file_name)
 
             self.probes, self.time, self.U = read_velocity_data(file_names)
@@ -576,14 +576,14 @@ class VelocityData:
             # Coefficient of variation
             cv = np.std(np.diff(self.time)) / np.mean(np.diff(self.time))
 
-            if cv > 1.0e-4:
+            if cv > 1.0e-4:  # noqa: PLR2004
                 self.__adjust_time_step()
 
         else:
-            print('Cannot find the file path: %s' % (self.path))
+            print('Cannot find the file path: %s' % (self.path))  # noqa: T201, UP031
 
     def __adjust_time_step(self):
-        if self.resample_dt == None:
+        if self.resample_dt == None:  # noqa: E711
             dt = np.mean(np.diff(self.time))
         else:
             dt = self.resample_dt
@@ -592,7 +592,7 @@ class VelocityData:
 
         shape = np.shape(self.U)
 
-        U = np.zeros((shape[0], shape[1], len(time)))
+        U = np.zeros((shape[0], shape[1], len(time)))  # noqa: N806
 
         for i in range(shape[0]):
             for j in range(shape[1]):
@@ -611,12 +611,12 @@ class VelocityData:
                     self.U[i, j, :] = signal.sosfilt(low_pass, self.U[i, j, :])
 
     def __set_time(self):
-        if self.start_time != None:
+        if self.start_time != None:  # noqa: E711
             start_index = int(np.argmax(self.time > self.start_time))
             self.time = self.time[start_index:]
             self.U = self.U[:, :, start_index:]
 
-        if self.end_time != None:
+        if self.end_time != None:  # noqa: E711
             end_index = int(np.argmax(self.time > self.end_time))
             self.time = self.time[:end_index]
             self.U = self.U[:, :, :end_index]
@@ -654,7 +654,7 @@ class VelocityData:
             self.uv_bar[i] = np.cov(self.U[i, 0, :], self.U[i, 1, :])[0, 1]
             self.uw_bar[i] = np.cov(self.U[i, 0, :], self.U[i, 2, :])[0, 1]
 
-    def get_Uav(self, z):
+    def get_Uav(self, z):  # noqa: N802, D102
         from scipy import interpolate
 
         f = interpolate.interp1d(self.z, self.Uav)
@@ -670,48 +670,48 @@ def copy_vtk_planes_and_order(input_path, output_path, field):
     input_path: path of the vtk files in the postProcessing directory
     ouput_path: path to write the vtk files in order
 
-    """
-    if not os.path.isdir(input_path):
-        print(f'Cannot find the path for: {input_path}')
+    """  # noqa: D205, D401, D404
+    if not os.path.isdir(input_path):  # noqa: PTH112
+        print(f'Cannot find the path for: {input_path}')  # noqa: T201
         return
 
-    if not os.path.isdir(output_path):
-        print(f'Cannot find the path for: {output_path}')
+    if not os.path.isdir(output_path):  # noqa: PTH112
+        print(f'Cannot find the path for: {output_path}')  # noqa: T201
         return
 
-    print(f'Reading from path: {input_path}')
+    print(f'Reading from path: {input_path}')  # noqa: T201
     time_names = os.listdir(input_path)
     times = np.float64(time_names)
     sorted_index = np.argsort(times).tolist()
 
     n_times = len(times)
 
-    print(f'\tNumber of time directories: {n_times} ')
-    print(f'\tTime step: {np.mean(np.diff(times)):.4f} s')
-    print(
+    print(f'\tNumber of time directories: {n_times} ')  # noqa: T201
+    print(f'\tTime step: {np.mean(np.diff(times)):.4f} s')  # noqa: T201
+    print(  # noqa: T201
         f'\tTotal duration: {times[sorted_index[-1]] - times[sorted_index[0]]:.4f} s'
     )
 
     for i in range(n_times):
         index = sorted_index[i]
-        pathi = os.path.join(input_path, time_names[index])
+        pathi = os.path.join(input_path, time_names[index])  # noqa: PTH118
         os.listdir(pathi)
 
         new_name = f'{field}_T{i + 1:04d}.vtk'
         for f in os.listdir(pathi):
             if f.endswith('.vtk'):
-                new_path = os.path.join(output_path, new_name)
-                old_path = os.path.join(pathi, f)
+                new_path = os.path.join(output_path, new_name)  # noqa: PTH118
+                old_path = os.path.join(pathi, f)  # noqa: PTH118
                 shutil.copyfile(old_path, new_path)
-                print(f'Copied path: {old_path}')
+                print(f'Copied path: {old_path}')  # noqa: T201
 
 
-def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
+def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):  # noqa: D103
     # Read JSON data
-    json_path = os.path.join(
+    json_path = os.path.join(  # noqa: PTH118
         case_path, 'constant', 'simCenter', 'input', 'EmptyDomainCFD.json'
     )
-    with open(json_path) as json_file:
+    with open(json_path) as json_file:  # noqa: PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -719,7 +719,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
 
     ref_h = wc_data['referenceHeight']
 
-    prof_path = os.path.join(case_path, 'postProcessing', prof_name)
+    prof_path = os.path.join(case_path, 'postProcessing', prof_name)  # noqa: PTH118
 
     prof = VelocityData(prof_path, start_time=None, end_time=None)
 
@@ -736,26 +736,26 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
     prof_np[:, 8] = prof.L[:, 2]
 
     # Read the target wind profile data
-    tar_path = os.path.join(case_path, 'constant', 'boundaryData', 'inlet')
+    tar_path = os.path.join(case_path, 'constant', 'boundaryData', 'inlet')  # noqa: PTH118
 
-    tar_p = read_openFoam_vector_field(os.path.join(tar_path, 'points'))
-    tar_U = read_openFoam_scalar_field(os.path.join(tar_path, 'U'))
-    tar_R = read_openFoam_symmetric_tensor_field(os.path.join(tar_path, 'R'))
-    tar_L = read_openFoam_tensor_field(os.path.join(tar_path, 'L'))
+    tar_p = read_openFoam_vector_field(os.path.join(tar_path, 'points'))  # noqa: PTH118
+    tar_U = read_openFoam_scalar_field(os.path.join(tar_path, 'U'))  # noqa: PTH118, N806
+    tar_R = read_openFoam_symmetric_tensor_field(os.path.join(tar_path, 'R'))  # noqa: PTH118, N806
+    tar_L = read_openFoam_tensor_field(os.path.join(tar_path, 'L'))  # noqa: PTH118, N806
 
-    tar_U_ref = np.interp(ref_h, tar_p[:, 2], tar_U)
+    tar_U_ref = np.interp(ref_h, tar_p[:, 2], tar_U)  # noqa: N806, F841
 
-    tar_Iu = np.sqrt(tar_R[:, 0]) / tar_U
-    tar_Iv = np.sqrt(tar_R[:, 3]) / tar_U
-    tar_Iw = np.sqrt(tar_R[:, 5]) / tar_U
+    tar_Iu = np.sqrt(tar_R[:, 0]) / tar_U  # noqa: N806
+    tar_Iv = np.sqrt(tar_R[:, 3]) / tar_U  # noqa: N806
+    tar_Iw = np.sqrt(tar_R[:, 5]) / tar_U  # noqa: N806
     tar_uw = tar_R[:, 2]
 
-    tar_Lu = tar_L[:, 0]
-    tar_Lv = tar_L[:, 3]
-    tar_Lw = tar_L[:, 6]
+    tar_Lu = tar_L[:, 0]  # noqa: N806
+    tar_Lv = tar_L[:, 3]  # noqa: N806
+    tar_Lw = tar_L[:, 6]  # noqa: N806
 
-    tar_I = np.zeros((3, len(tar_Iu)))
-    tar_L = np.zeros((3, len(tar_Lu)))
+    tar_I = np.zeros((3, len(tar_Iu)))  # noqa: N806
+    tar_L = np.zeros((3, len(tar_Lu)))  # noqa: N806
 
     tar_I[0, :] = tar_Iu
     tar_I[1, :] = tar_Iv
@@ -788,7 +788,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         go.Scatter(
             x=tar_U,
             y=tar_p[:, 2],
-            line=dict(color='black', width=3.0, dash='dot'),
+            line=dict(color='black', width=3.0, dash='dot'),  # noqa: C408
             mode='lines',
             name='Target',
         ),
@@ -799,7 +799,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         go.Scatter(
             x=prof_np[:, 1],
             y=prof_np[:, 0],
-            line=dict(color='firebrick', width=2.5),
+            line=dict(color='firebrick', width=2.5),  # noqa: C408
             mode='lines+markers',
             name=prof_name,
         ),
@@ -833,7 +833,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         go.Scatter(
             x=tar_Iu,
             y=tar_p[:, 2],
-            line=dict(color='black', width=3.0, dash='dot'),
+            line=dict(color='black', width=3.0, dash='dot'),  # noqa: C408
             mode='lines',
             name='Target',
         ),
@@ -844,7 +844,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         go.Scatter(
             x=prof_np[:, 2],
             y=prof_np[:, 0],
-            line=dict(color='firebrick', width=2.5),
+            line=dict(color='firebrick', width=2.5),  # noqa: C408
             mode='lines+markers',
             name=prof_name,
         ),
@@ -877,7 +877,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         go.Scatter(
             x=tar_Iw,
             y=tar_p[:, 2],
-            line=dict(color='black', width=3.0, dash='dot'),
+            line=dict(color='black', width=3.0, dash='dot'),  # noqa: C408
             mode='lines',
             name='Target',
         ),
@@ -888,7 +888,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         go.Scatter(
             x=prof_np[:, 3],
             y=prof_np[:, 0],
-            line=dict(color='firebrick', width=2.5),
+            line=dict(color='firebrick', width=2.5),  # noqa: C408
             mode='lines+markers',
             name=prof_name,
         ),
@@ -921,7 +921,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         go.Scatter(
             x=tar_Iw,
             y=tar_p[:, 2],
-            line=dict(color='black', width=3.0, dash='dot'),
+            line=dict(color='black', width=3.0, dash='dot'),  # noqa: C408
             mode='lines',
             name='Target',
         ),
@@ -932,7 +932,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         go.Scatter(
             x=prof_np[:, 4],
             y=prof_np[:, 0],
-            line=dict(color='firebrick', width=2.5),
+            line=dict(color='firebrick', width=2.5),  # noqa: C408
             mode='lines+markers',
             name=prof_name,
         ),
@@ -965,7 +965,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         go.Scatter(
             x=tar_uw,
             y=tar_p[:, 2],
-            line=dict(color='black', width=3.0, dash='dot'),
+            line=dict(color='black', width=3.0, dash='dot'),  # noqa: C408
             mode='lines',
             name='Target',
         ),
@@ -976,7 +976,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         go.Scatter(
             x=prof_np[:, 5],
             y=prof_np[:, 0],
-            line=dict(color='firebrick', width=2.5),
+            line=dict(color='firebrick', width=2.5),  # noqa: C408
             mode='lines+markers',
             name=prof_name,
         ),
@@ -1009,7 +1009,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         go.Scatter(
             x=tar_Lu,
             y=tar_p[:, 2],
-            line=dict(color='black', width=3.0, dash='dot'),
+            line=dict(color='black', width=3.0, dash='dot'),  # noqa: C408
             mode='lines',
             name='Target',
         ),
@@ -1020,7 +1020,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         go.Scatter(
             x=prof_np[:, 6],
             y=prof_np[:, 0],
-            line=dict(color='firebrick', width=2.5),
+            line=dict(color='firebrick', width=2.5),  # noqa: C408
             mode='lines+markers',
             name=prof_name,
         ),
@@ -1053,7 +1053,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         go.Scatter(
             x=tar_Lv,
             y=tar_p[:, 2],
-            line=dict(color='black', width=3.0, dash='dot'),
+            line=dict(color='black', width=3.0, dash='dot'),  # noqa: C408
             mode='lines',
             name='Target',
         ),
@@ -1064,7 +1064,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         go.Scatter(
             x=prof_np[:, 7],
             y=prof_np[:, 0],
-            line=dict(color='firebrick', width=2.5),
+            line=dict(color='firebrick', width=2.5),  # noqa: C408
             mode='lines+markers',
             name=prof_name,
         ),
@@ -1097,7 +1097,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         go.Scatter(
             x=tar_Lw,
             y=tar_p[:, 2],
-            line=dict(color='black', width=3.0, dash='dot'),
+            line=dict(color='black', width=3.0, dash='dot'),  # noqa: C408
             mode='lines',
             name='Target',
         ),
@@ -1108,7 +1108,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         go.Scatter(
             x=prof_np[:, 8],
             y=prof_np[:, 0],
-            line=dict(color='firebrick', width=2.5),
+            line=dict(color='firebrick', width=2.5),  # noqa: C408
             mode='lines+markers',
             name=prof_name,
         ),
@@ -1139,7 +1139,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
     fig.update_layout(height=850, width=1200, title_text='', showlegend=False)
     fig.show()
     fig.write_html(
-        os.path.join(output_path, prof_name + '.html'),
+        os.path.join(output_path, prof_name + '.html'),  # noqa: PTH118
         include_mathjax='cdn',
     )
 
@@ -1170,8 +1170,8 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
             vertical_spacing=0.15,
         )
 
-        U_ref_prof = np.interp(spec_h[i], prof_np[:, 0], prof_np[:, 1])
-        U_ref_tar = np.interp(spec_h[i], tar_p[:, 2], tar_U)
+        U_ref_prof = np.interp(spec_h[i], prof_np[:, 0], prof_np[:, 1])  # noqa: N806
+        U_ref_tar = np.interp(spec_h[i], tar_p[:, 2], tar_U)  # noqa: N806
 
         # Plot each component
         for j in range(ncomp):
@@ -1185,8 +1185,8 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
             spec = freq * spec / u_var
             freq = freq * spec_h[i] / U_ref_prof
 
-            tar_Iz = tar_I[j, loc_tar]
-            tar_Lz = tar_L[j, loc_tar]
+            tar_Iz = tar_I[j, loc_tar]  # noqa: N806
+            tar_Lz = tar_L[j, loc_tar]  # noqa: N806
 
             vonk_f = np.logspace(np.log10(f_min), np.log10(f_max), 200)
             vonk_psd = von_karman_spectrum(vonk_f, U_ref_tar, tar_Iz, tar_Lz, j)
@@ -1198,7 +1198,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
                 go.Scatter(
                     x=freq,
                     y=spec,
-                    line=dict(color='firebrick', width=1.5),
+                    line=dict(color='firebrick', width=1.5),  # noqa: C408
                     mode='lines',
                     name=prof_name,
                 ),
@@ -1209,7 +1209,7 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
                 go.Scatter(
                     x=vonk_f,
                     y=vonk_psd,
-                    line=dict(color='black', width=3.0, dash='dot'),
+                    line=dict(color='black', width=3.0, dash='dot'),  # noqa: C408
                     mode='lines',
                     name='Target(von Karman)',
                 ),
@@ -1240,15 +1240,15 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
         fig.update_layout(height=450, width=1500, title_text='', showlegend=False)
         fig.show()
         fig.write_html(
-            os.path.join(
+            os.path.join(  # noqa: PTH118
                 output_path, 'spectra_' + prof_name + '_H' + str(1 + i) + '.html'
             ),
             include_mathjax='cdn',
         )
 
 
-def plot_pressure_profile(case_path, output_path, prof_name):
-    prof_path = os.path.join(case_path, 'postProcessing', prof_name)
+def plot_pressure_profile(case_path, output_path, prof_name):  # noqa: D103
+    prof_path = os.path.join(case_path, 'postProcessing', prof_name)  # noqa: PTH118
 
     prof = PressureData(
         prof_path, start_time=1.0, end_time=None, u_ref=0.0, rho=1.25, p_ref=0.0
@@ -1271,7 +1271,7 @@ def plot_pressure_profile(case_path, output_path, prof_name):
         go.Scatter(
             x=prof.x - np.min(prof.x),
             y=std_p,
-            line=dict(color='firebrick', width=2.5),
+            line=dict(color='firebrick', width=2.5),  # noqa: C408
             mode='lines+markers',
             name=prof_name,
         ),
@@ -1303,7 +1303,7 @@ def plot_pressure_profile(case_path, output_path, prof_name):
     fig.update_layout(height=400, width=800, title_text='', showlegend=False)
     fig.show()
     fig.write_html(
-        os.path.join(output_path, 'pressure_' + prof_name + '.html'),
+        os.path.join(output_path, 'pressure_' + prof_name + '.html'),  # noqa: PTH118
         include_mathjax='cdn',
     )
 
@@ -1325,15 +1325,15 @@ if __name__ == '__main__':
 
     case_path = arguments.case
 
-    print('Case full path: ', case_path)
+    print('Case full path: ', case_path)  # noqa: T201
 
     # prof_name = sys.argv[2]
 
     # Read JSON data
-    json_path = os.path.join(
+    json_path = os.path.join(  # noqa: PTH118
         case_path, 'constant', 'simCenter', 'input', 'EmptyDomainCFD.json'
     )
-    with open(json_path) as json_file:
+    with open(json_path) as json_file:  # noqa: PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1342,12 +1342,12 @@ if __name__ == '__main__':
     wind_profiles = rm_data['windProfiles']
     vtk_planes = rm_data['vtkPlanes']
 
-    prof_output_path = os.path.join(
+    prof_output_path = os.path.join(  # noqa: PTH118
         case_path, 'constant', 'simCenter', 'output', 'windProfiles'
     )
 
     # Check if it exists and remove files
-    if os.path.exists(prof_output_path):
+    if os.path.exists(prof_output_path):  # noqa: PTH110
         shutil.rmtree(prof_output_path)
 
     # Create new path
@@ -1357,8 +1357,8 @@ if __name__ == '__main__':
     for prof in wind_profiles:
         name = prof['name']
         field = prof['field']
-        print(name)
-        print(field)
+        print(name)  # noqa: T201
+        print(field)  # noqa: T201
 
         if field == 'Velocity':
             plot_wind_profiles_and_spectra(case_path, prof_output_path, name)
@@ -1371,8 +1371,8 @@ if __name__ == '__main__':
         name = pln['name']
         field = pln['field']
 
-        vtk_path = os.path.join(case_path, 'postProcessing', name)
-        vtk_path_renamed = os.path.join(
+        vtk_path = os.path.join(case_path, 'postProcessing', name)  # noqa: PTH118
+        vtk_path_renamed = os.path.join(  # noqa: PTH118
             case_path, 'postProcessing', name + '_renamed'
         )
 
@@ -1381,5 +1381,5 @@ if __name__ == '__main__':
         copy_vtk_planes_and_order(vtk_path, vtk_path_renamed, field)
 
         # Check if it exists and remove files
-        if os.path.exists(vtk_path):
+        if os.path.exists(vtk_path):  # noqa: PTH110
             shutil.rmtree(vtk_path)

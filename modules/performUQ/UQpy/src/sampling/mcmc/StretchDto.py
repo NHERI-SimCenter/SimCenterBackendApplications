@@ -1,4 +1,4 @@
-from __future__ import annotations
+from __future__ import annotations  # noqa: INP001, D100
 
 from typing import Literal, Union
 
@@ -9,7 +9,7 @@ from src.sampling.mcmc.ModifiedMetropolisHastingsDto import (
 from src.UQpyDTO import UQpyDTO
 
 
-class StretchDto(UQpyDTO):
+class StretchDto(UQpyDTO):  # noqa: D101
     method: Literal['Stretch'] = 'Stretch'
     burn_length: int = Field(default=0, alias='burn-in', ge=0)
     jump: int = Field(default=1, ge=0)
@@ -18,7 +18,7 @@ class StretchDto(UQpyDTO):
     random_state: int = Field(..., alias='randomState')
     scale: float = Field(..., gt=0)
 
-    def init_to_text(self):
+    def init_to_text(self):  # noqa: D102
         from UQpy.sampling.mcmc.Stretch import Stretch
 
         c = Stretch

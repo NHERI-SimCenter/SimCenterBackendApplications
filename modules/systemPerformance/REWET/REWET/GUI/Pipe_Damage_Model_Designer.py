@@ -1,14 +1,14 @@
 """Created on Tue Nov  1 18:32:32 2022
 
 @author: snaeimi
-"""
+"""  # noqa: N999, D400
 
 from PyQt5 import QtGui, QtWidgets
 
 from .Pipe_Damage_Model_Window import Ui_Pipe_Damage_Model
 
 
-class Pipe_Damage_Model_Designer(Ui_Pipe_Damage_Model):
+class Pipe_Damage_Model_Designer(Ui_Pipe_Damage_Model):  # noqa: D101
     def __init__(self, pipe_damage_model):
         self._window = QtWidgets.QDialog()
         self.setupUi(self._window)
@@ -59,8 +59,8 @@ class Pipe_Damage_Model_Designer(Ui_Pipe_Damage_Model):
 
         self.material_list.currentItemChanged.connect(self.materialChanged)
 
-    def materialChanged(self, current_item, previous_item):
-        if previous_item != None:
+    def materialChanged(self, current_item, previous_item):  # noqa: N802, D102
+        if previous_item != None:  # noqa: E711
             previous_material = previous_item.text()
 
             alpha = self.alpha_line.text()
@@ -88,7 +88,7 @@ class Pipe_Damage_Model_Designer(Ui_Pipe_Damage_Model):
         self.a_line.setText(str(a))
         self.b_line.setText(str(b))
 
-    def okButtonPressed(self):
+    def okButtonPressed(self):  # noqa: N802, D102
         current_material = self.material_list.selectedItems()[0].text()
 
         alpha = self.alpha_line.text()

@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Pipe_Damage_Model_Window.ui'
+# Form implementation generated from reading ui file 'Pipe_Damage_Model_Window.ui'  # noqa: N999, D100
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,8 +8,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Pipe_Damage_Model:
-    def setupUi(self, Pipe_Damage_Model):
+class Ui_Pipe_Damage_Model:  # noqa: D101
+    def setupUi(self, Pipe_Damage_Model):  # noqa: N802, N803, D102
         Pipe_Damage_Model.setObjectName('Pipe_Damage_Model')
         Pipe_Damage_Model.resize(377, 372)
         self.buttonBox = QtWidgets.QDialogButtonBox(Pipe_Damage_Model)
@@ -100,7 +100,7 @@ class Ui_Pipe_Damage_Model:
         self.buttonBox.rejected.connect(Pipe_Damage_Model.reject)
         QtCore.QMetaObject.connectSlotsByName(Pipe_Damage_Model)
 
-    def retranslateUi(self, Pipe_Damage_Model):
+    def retranslateUi(self, Pipe_Damage_Model):  # noqa: N802, N803, D102
         _translate = QtCore.QCoreApplication.translate
         Pipe_Damage_Model.setWindowTitle(
             _translate('Pipe_Damage_Model', 'Pipe Damage Model')

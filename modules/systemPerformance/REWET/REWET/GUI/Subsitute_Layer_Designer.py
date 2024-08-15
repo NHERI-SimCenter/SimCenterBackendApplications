@@ -1,7 +1,7 @@
 """Created on Thu Jan  5 16:31:32 2023
 
 @author: snaeimi
-"""
+"""  # noqa: N999, D400
 
 import os
 
@@ -11,12 +11,12 @@ from GUI.Subsitute_Layer_Window import Ui_subsitite_layer_dialoge
 from PyQt5 import QtWidgets
 
 
-class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):
+class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: D101
     def __init__(
         self,
         subsitute_layer_addr,
         subsitute_layer,
-        iUse_substitute_layer,
+        iUse_substitute_layer,  # noqa: N803
         demand_node_layers,
     ):
         super().__init__()
@@ -31,7 +31,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):
         self.iUse_substitute_layer = iUse_substitute_layer
         self.demand_node_layers.to_file(r'Northridge\demand_node_layer.shp')
         self.subsitute_layer_addr_line.setText(self.subsitute_layer_addr)
-        if type(self.subsitute_layer) != type(None):
+        if type(self.subsitute_layer) != type(None):  # noqa: E721
             self.subsitute_layer_projection_name_line.setText(
                 self.subsitute_layer.crs.name
             )
@@ -52,18 +52,18 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):
             self.iUseSubstituteCheckBoxStateChanged
         )
 
-    def iUseSubstituteCheckBoxStateChanged(self, state):
+    def iUseSubstituteCheckBoxStateChanged(self, state):  # noqa: N802, D102
         if state == 0:
             self.iUse_substitute_layer = False
-        elif state == 2:
+        elif state == 2:  # noqa: PLR2004
             self.iUse_substitute_layer = True
 
-    def applyNewSubsituteLayer(self):
+    def applyNewSubsituteLayer(self):  # noqa: N802, D102
         # demand_node_layers = self.createGeopandasPointDataFrameForNodes(self, self.wn, self.demand_node_name)
-        if type(self.subsitute_layer) == type(None):
+        if type(self.subsitute_layer) == type(None):  # noqa: E721
             return
 
-    def substituteLayerBrowseButton(self):
+    def substituteLayerBrowseButton(self):  # noqa: N802, D102
         file = QtWidgets.QFileDialog.getOpenFileName(
             self._window,
             'Open file',
@@ -92,7 +92,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):
         joined_map = gpd.sjoin(self.subsitute_layer, self.demand_node_layers)
 
         number_list = pd.Series(index=self.demand_node_layers.index, data=0)
-        for ind, val in joined_map['index_right'].iteritems():
+        for ind, val in joined_map['index_right'].iteritems():  # noqa: B007
             number_list.loc[val] = number_list.loc[val] + 1
 
         number_list = number_list[number_list > 1]

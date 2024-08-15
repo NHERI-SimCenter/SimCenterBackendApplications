@@ -1,4 +1,4 @@
-# This file creates a function that is called by "main_generation.py" to perform nonlinear model generation
+# This file creates a function that is called by "main_generation.py" to perform nonlinear model generation  # noqa: INP001, D100
 
 # Modified by: Stevan Gavrilovic @ SimCenter, UC Berkeley
 # Last revision: 09/2020
@@ -9,7 +9,7 @@ import pickle
 from nonlinear_analysis import NonlinearAnalysis
 
 
-def model_generation(base_directory, pathDataFolder, workingDirectory):
+def model_generation(base_directory, pathDataFolder, workingDirectory):  # noqa: N803, D103
     ##########################################################################
     #                       Load Building Design Result                      #
     ##########################################################################
@@ -17,14 +17,14 @@ def model_generation(base_directory, pathDataFolder, workingDirectory):
     # Change the directory to the folder where the design results are stored
     os.chdir(workingDirectory + '/BuildingDesignResults/')
     # Load all design results (stored as .pkl files)
-    with open('construction_building.pkl', 'rb') as file:
-        building = pickle.load(file)
-    with open('construction_column_set.pkl', 'rb') as file:
-        column_set = pickle.load(file)
-    with open('construction_beam_set.pkl', 'rb') as file:
-        beam_set = pickle.load(file)
-    with open('construction_connection_set.pkl', 'rb') as file:
-        connection_set = pickle.load(file)
+    with open('construction_building.pkl', 'rb') as file:  # noqa: PTH123
+        building = pickle.load(file)  # noqa: S301
+    with open('construction_column_set.pkl', 'rb') as file:  # noqa: PTH123
+        column_set = pickle.load(file)  # noqa: S301
+    with open('construction_beam_set.pkl', 'rb') as file:  # noqa: PTH123
+        beam_set = pickle.load(file)  # noqa: S301
+    with open('construction_connection_set.pkl', 'rb') as file:  # noqa: PTH123
+        connection_set = pickle.load(file)  # noqa: S301
 
     ##########################################################################
     #                 Update the Building Directory                          #
@@ -58,6 +58,6 @@ def model_generation(base_directory, pathDataFolder, workingDirectory):
 
     analysis_list = ['EigenValueAnalysis', 'PushoverAnalysis', 'DynamicAnalysis']
     for analysis_type in analysis_list:
-        model = NonlinearAnalysis(
+        model = NonlinearAnalysis(  # noqa: F841
             building, column_set, beam_set, connection_set, analysis_type
         )

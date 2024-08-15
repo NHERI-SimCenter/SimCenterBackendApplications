@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2019 The Regents of the University of California
 #
 # This file is part of the RDT Application.
@@ -45,58 +45,58 @@ from glob import glob
 import pandas as pd
 
 
-def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
-    if not os.path.isdir(inputDir):
-        print(f'input dir: {inputDir} does not exist')
+def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: N802, N803, D103
+    if not os.path.isdir(inputDir):  # noqa: PTH112
+        print(f'input dir: {inputDir} does not exist')  # noqa: T201
         return 0
 
-    if not os.path.exists(outputDir):
-        os.mkdir(outputDir)
+    if not os.path.exists(outputDir):  # noqa: PTH110
+        os.mkdir(outputDir)  # noqa: PTH102
 
-    siteFiles = glob(f'{inputDir}/*BIM.json')
+    siteFiles = glob(f'{inputDir}/*BIM.json')  # noqa: PTH207, N806
 
-    GP_file = []
-    Longitude = []
-    Latitude = []
-    id = []
+    GP_file = []  # noqa: N806, F841
+    Longitude = []  # noqa: N806
+    Latitude = []  # noqa: N806
+    id = []  # noqa: A001
     sites = []
 
     for site in siteFiles:
-        with open(site) as f:
-            All_json = json.load(f)
-            generalInfo = All_json['GeneralInformation']
+        with open(site) as f:  # noqa: PTH123
+            All_json = json.load(f)  # noqa: N806
+            generalInfo = All_json['GeneralInformation']  # noqa: N806
             Longitude.append(generalInfo['Longitude'])
             Latitude.append(generalInfo['Latitude'])
-            siteID = generalInfo['BIM_id']
+            siteID = generalInfo['BIM_id']  # noqa: N806
 
             id.append(siteID)
 
-            siteFileName = f'Site_{siteID}.csv'
+            siteFileName = f'Site_{siteID}.csv'  # noqa: N806
             sites.append(siteFileName)
 
-            workdirs = glob(f'{inputDir}/{siteID}/workdir.*')
-            siteEventFiles = []
-            siteEventFactors = []
+            workdirs = glob(f'{inputDir}/{siteID}/workdir.*')  # noqa: PTH207
+            siteEventFiles = []  # noqa: N806
+            siteEventFactors = []  # noqa: N806
 
             for workdir in workdirs:
-                head, sep, sampleID = workdir.partition('workdir.')
-                print(sampleID)
+                head, sep, sampleID = workdir.partition('workdir.')  # noqa: N806
+                print(sampleID)  # noqa: T201
 
-                eventName = f'Event_{siteID}_{sampleID}.json'
-                print(eventName)
+                eventName = f'Event_{siteID}_{sampleID}.json'  # noqa: N806
+                print(eventName)  # noqa: T201
                 shutil.copy(f'{workdir}/fmkEVENT', f'{outputDir}/{eventName}')
 
                 siteEventFiles.append(eventName)
                 siteEventFactors.append(1)
 
-            siteDF = pd.DataFrame(
+            siteDF = pd.DataFrame(  # noqa: N806
                 list(zip(siteEventFiles, siteEventFactors)),
                 columns=['TH_file', 'factor'],
             )
             siteDF.to_csv(f'{outputDir}/{siteFileName}', index=False)
 
     # create the EventFile
-    gridDF = pd.DataFrame(
+    gridDF = pd.DataFrame(  # noqa: N806
         list(zip(sites, Longitude, Latitude)),
         columns=['GP_file', 'Longitude', 'Latitude'],
     )
@@ -113,7 +113,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
 if __name__ == '__main__':
     # Defining the command line arguments
 
-    workflowArgParser = argparse.ArgumentParser(
+    workflowArgParser = argparse.ArgumentParser(  # noqa: N816
         'Create ground motions for BIM.', allow_abbrev=False
     )
 
@@ -128,8 +128,8 @@ if __name__ == '__main__':
     workflowArgParser.add_argument('--removeInput', action='store_true')
 
     # Parsing the command line arguments
-    wfArgs = workflowArgParser.parse_args()
+    wfArgs = workflowArgParser.parse_args()  # noqa: N816
 
-    print(wfArgs)
+    print(wfArgs)  # noqa: T201
     # Calling the main function
     createFilesForEventGrid(wfArgs.inputDir, wfArgs.outputDir, wfArgs.removeInput)

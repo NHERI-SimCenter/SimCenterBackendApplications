@@ -51,7 +51,7 @@
 
     ...
 
-"""
+"""  # noqa: D404
 
 import argparse
 import importlib
@@ -81,23 +81,23 @@ import shapely.wkt
 pp = pprint.PrettyPrinter(indent=4)
 
 # get the absolute path of the whale directory
-whale_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+whale_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
 
 
-def str2bool(v):
+def str2bool(v):  # noqa: D103
     # courtesy of Maxim @ stackoverflow
 
     if isinstance(v, bool):
         return v
     if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):
         return True
-    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):
+    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):  # noqa: RET505
         return False
     else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
+        raise argparse.ArgumentTypeError('Boolean value expected.')  # noqa: EM101, TRY003
 
 
-class Options:
+class Options:  # noqa: D101
     def __init__(self):
         self._log_show_ms = False
         self._print_log = False
@@ -105,7 +105,7 @@ class Options:
         self.reset_log_strings()
 
     @property
-    def log_show_ms(self):
+    def log_show_ms(self):  # noqa: D102
         return self._log_show_ms
 
     @log_show_ms.setter
@@ -115,19 +115,19 @@ class Options:
         self.reset_log_strings()
 
     @property
-    def log_pref(self):
+    def log_pref(self):  # noqa: D102
         return self._log_pref
 
     @property
-    def log_div(self):
+    def log_div(self):  # noqa: D102
         return self._log_div
 
     @property
-    def log_time_format(self):
+    def log_time_format(self):  # noqa: D102
         return self._log_time_format
 
     @property
-    def log_file(self):
+    def log_file(self):  # noqa: D102
         return globals()['log_file']
 
     @log_file.setter
@@ -141,24 +141,24 @@ class Options:
             try:
                 globals()['log_file'] = str(filepath)
 
-                with open(filepath, 'w', encoding='utf-8') as f:
+                with open(filepath, 'w', encoding='utf-8') as f:  # noqa: PTH123
                     f.write('')
 
-            except:
-                raise ValueError(
-                    f'The filepath provided does not point to a '
+            except:  # noqa: E722
+                raise ValueError(  # noqa: B904, TRY003
+                    f'The filepath provided does not point to a '  # noqa: EM102
                     f'valid location: {filepath}'
                 )
 
     @property
-    def print_log(self):
+    def print_log(self):  # noqa: D102
         return self._print_log
 
     @print_log.setter
     def print_log(self, value):
         self._print_log = str2bool(value)
 
-    def reset_log_strings(self):
+    def reset_log_strings(self):  # noqa: D102
         if self._log_show_ms:
             self._log_time_format = '%H:%M:%S:%f'
             self._log_pref = (
@@ -178,7 +178,7 @@ options = Options()
 log_file = None
 
 
-def set_options(config_options):
+def set_options(config_options):  # noqa: D103
     if config_options is not None:
         for key, value in config_options.items():
             if key == 'LogShowMS':
@@ -190,20 +190,20 @@ def set_options(config_options):
 
 
 # Monkeypatch warnings to get prettier messages
-def _warning(message, category, filename, lineno, file=None, line=None):
+def _warning(message, category, filename, lineno, file=None, line=None):  # noqa: ARG001
     if '\\' in filename:
         file_path = filename.split('\\')
     elif '/' in filename:
         file_path = filename.split('/')
     python_file = '/'.join(file_path[-3:])
-    print(f'WARNING in {python_file} at line {lineno}\n{message}\n')
+    print(f'WARNING in {python_file} at line {lineno}\n{message}\n')  # noqa: T201
 
 
 warnings.showwarning = _warning
 
 
-def log_div(prepend_timestamp=False, prepend_blank_space=True):
-    """Print a divider line to the log file"""
+def log_div(prepend_timestamp=False, prepend_blank_space=True):  # noqa: FBT002
+    """Print a divider line to the log file"""  # noqa: D400
     if prepend_timestamp or prepend_blank_space:
         msg = options.log_div
 
@@ -217,7 +217,7 @@ def log_div(prepend_timestamp=False, prepend_blank_space=True):
     )
 
 
-def log_msg(msg='', prepend_timestamp=True, prepend_blank_space=True):
+def log_msg(msg='', prepend_timestamp=True, prepend_blank_space=True):  # noqa: FBT002
     """Print a message to the screen with the current time as prefix
 
     The time is in ISO-8601 format, e.g. 2018-06-16T20:24:04Z
@@ -227,13 +227,13 @@ def log_msg(msg='', prepend_timestamp=True, prepend_blank_space=True):
     msg: string
        Message to print.
 
-    """
+    """  # noqa: D400
     msg_lines = msg.split('\n')
 
     for msg_i, msg_line in enumerate(msg_lines):
         if prepend_timestamp and (msg_i == 0):
             formatted_msg = (
-                f'{datetime.now().strftime(options.log_time_format)} {msg_line}'
+                f'{datetime.now().strftime(options.log_time_format)} {msg_line}'  # noqa: DTZ005
             )
         elif prepend_timestamp or prepend_blank_space:
             formatted_msg = options.log_pref + msg_line
@@ -241,10 +241,10 @@ def log_msg(msg='', prepend_timestamp=True, prepend_blank_space=True):
             formatted_msg = msg_line
 
         if options.print_log:
-            print(formatted_msg)
+            print(formatted_msg)  # noqa: T201
 
         if globals()['log_file'] is not None:
-            with open(globals()['log_file'], 'a', encoding='utf-8') as f:
+            with open(globals()['log_file'], 'a', encoding='utf-8') as f:  # noqa: PTH123
                 f.write('\n' + formatted_msg)
 
 
@@ -256,20 +256,20 @@ def log_error(msg):
     msg: string
        Message to print.
 
-    """
+    """  # noqa: D400
     log_div()
     log_msg('' * (80 - 21 - 6) + ' ERROR')
     log_msg(msg)
     log_div()
 
 
-def print_system_info():
+def print_system_info():  # noqa: D103
     log_msg(
         'System Information:', prepend_timestamp=False, prepend_blank_space=False
     )
     log_msg(
         f'  local time zone: {datetime.utcnow().astimezone().tzinfo}\n'
-        f'  start time: {datetime.now().strftime("%Y-%m-%dT%H:%M:%S")}\n'
+        f'  start time: {datetime.now().strftime("%Y-%m-%dT%H:%M:%S")}\n'  # noqa: DTZ005
         f'  python: {sys.version}\n'
         f'  numpy: {np.__version__}\n'
         f'  pandas: {pd.__version__}\n',
@@ -288,7 +288,7 @@ def create_command(command_list, enforced_python=None):
     command_list: array of unicode strings
         Explain...
 
-    """
+    """  # noqa: D400
     if command_list[0] == 'python':
         # replace python with...
         if enforced_python is None:
@@ -323,12 +323,12 @@ def run_command(command):
     command_list: array of unicode strings
         Explain...
 
-    """
+    """  # noqa: D400
     # If it is a python script, we do not run it, but rather import the main
     # function. This ensures that the script is run using the same python
     # interpreter that this script uses and it is also faster because we do not
     # need to run multiple python interpreters simultaneously.
-    Frank_trusts_this_approach = False
+    Frank_trusts_this_approach = False  # noqa: N806
     if command[:6] == 'python' and Frank_trusts_this_approach:
         import importlib  # only import this when it's needed
 
@@ -359,12 +359,12 @@ def run_command(command):
 
         return '', ''
 
-    else:
+    else:  # noqa: RET505
         # fmk with Shell=True not working on older windows machines, new approach needed for quoted command .. turn into a list
         command = shlex.split(command)
 
         try:
-            result = subprocess.check_output(
+            result = subprocess.check_output(  # noqa: S603
                 command, stderr=subprocess.STDOUT, text=True
             )
             returncode = 0
@@ -384,16 +384,16 @@ def run_command(command):
         return result, returncode
 
 
-def show_warning(warning_msg):
-    warnings.warn(UserWarning(warning_msg))
+def show_warning(warning_msg):  # noqa: D103
+    warnings.warn(UserWarning(warning_msg))  # noqa: B028
 
 
-def resolve_path(target_path, ref_path):
+def resolve_path(target_path, ref_path):  # noqa: D103
     ref_path = Path(ref_path)
 
     target_path = str(target_path).strip()
 
-    while target_path.startswith('/') or target_path.startswith('\\'):
+    while target_path.startswith('/') or target_path.startswith('\\'):  # noqa: PIE810
         target_path = target_path[1:]
 
     if target_path == '':
@@ -410,12 +410,12 @@ def resolve_path(target_path, ref_path):
         else:
             # raise ValueError(
             #    f"{target_path} does not point to a valid location")
-            print(f'{target_path} does not point to a valid location')
+            print(f'{target_path} does not point to a valid location')  # noqa: T201
 
     return target_path
 
 
-def _parse_app_registry(registry_path, app_types, list_available_apps=False):
+def _parse_app_registry(registry_path, app_types, list_available_apps=False):  # noqa: FBT002
     """Load the information about available workflow applications.
 
     Parameters
@@ -447,12 +447,12 @@ def _parse_app_registry(registry_path, app_types, list_available_apps=False):
 
     # open the registry file
     log_msg('Loading the json file...', prepend_timestamp=False)
-    with open(registry_path, encoding='utf-8') as f:
+    with open(registry_path, encoding='utf-8') as f:  # noqa: PTH123
         app_registry_data = json.load(f)
     log_msg('  OK', prepend_timestamp=False)
 
     # initialize the app registry
-    app_registry = dict([(a, dict()) for a in app_types])
+    app_registry = dict([(a, dict()) for a in app_types])  # noqa: C404, C408
 
     log_msg('Loading default values...', prepend_timestamp=False)
 
@@ -486,7 +486,7 @@ def _parse_app_registry(registry_path, app_types, list_available_apps=False):
         log_msg('Available applications:', prepend_timestamp=False)
 
         for app_type, app_list in app_registry.items():
-            for app_name, app_object in app_list.items():
+            for app_name, app_object in app_list.items():  # noqa: B007, PERF102
                 log_msg(f'  {app_type} : {app_name}', prepend_timestamp=False)
 
     # pp.pprint(self.app_registry)
@@ -497,11 +497,11 @@ def _parse_app_registry(registry_path, app_types, list_available_apps=False):
     return app_registry, default_values
 
 
-class WorkFlowInputError(Exception):
+class WorkFlowInputError(Exception):  # noqa: D101
     def __init__(self, value):
         self.value = value
 
-    def __str__(self):
+    def __str__(self):  # noqa: D105
         return repr(self.value)
 
 
@@ -513,7 +513,7 @@ class WorkflowApplication:
     Parameters
     ----------
 
-    """
+    """  # noqa: D414
 
     def __init__(self, app_type, app_info, api_info):
         # print('APP_TYPE', app_type)
@@ -525,7 +525,7 @@ class WorkflowApplication:
         self.app_type = app_type
         self.rel_path = app_info['ExecutablePath']
 
-        if 'RunsParallel' in app_info.keys():
+        if 'RunsParallel' in app_info.keys():  # noqa: SIM118
             self.runsParallel = app_info['RunsParallel']
         else:
             self.runsParallel = False
@@ -534,7 +534,7 @@ class WorkflowApplication:
 
         self.inputs = api_info['Inputs']
         self.outputs = api_info['Outputs']
-        if 'DefaultValues' in api_info.keys():
+        if 'DefaultValues' in api_info.keys():  # noqa: SIM118
             self.defaults = api_info['DefaultValues']
         else:
             self.defaults = None
@@ -547,11 +547,11 @@ class WorkflowApplication:
         preferences: dictionary
             Explain...
 
-        """
+        """  # noqa: D400
         self.pref = preferences
 
         # parse the relative paths (if any)
-        ASI = [inp['id'] for inp in self.app_spec_inputs]
+        ASI = [inp['id'] for inp in self.app_spec_inputs]  # noqa: N806
         for preference in list(self.pref.keys()):
             if preference in ASI:
                 input_id = np.where([preference == asi for asi in ASI])[0][0]
@@ -565,7 +565,7 @@ class WorkflowApplication:
                         self.pref[preference], ref_path
                     )
 
-    def get_command_list(self, app_path, force_posix=False):
+    def get_command_list(self, app_path, force_posix=False):  # noqa: FBT002, C901
         """Short description
 
         Parameters
@@ -573,7 +573,7 @@ class WorkflowApplication:
         app_path: Path
             Explain...
 
-        """
+        """  # noqa: D400
         abs_path = Path(app_path) / self.rel_path
 
         # abs_path = posixpath.join(app_path, self.rel_path)
@@ -598,7 +598,7 @@ class WorkflowApplication:
 
                 # If the user also provided an input, let them know that their
                 # input is invalid
-                if in_arg['id'] in self.pref.keys():
+                if in_arg['id'] in self.pref.keys():  # noqa: SIM118
                     log_msg(
                         '\nWARNING: Application specific parameters cannot '
                         'overwrite default workflow\nparameters. See the '
@@ -608,7 +608,7 @@ class WorkflowApplication:
                         prepend_blank_space=False,
                     )
 
-            elif in_arg['id'] in self.pref.keys():
+            elif in_arg['id'] in self.pref.keys():  # noqa: SIM118
                 arg_value = self.pref[in_arg['id']]
 
             else:
@@ -632,7 +632,7 @@ class WorkflowApplication:
 
                     # If the user also provided an input, let them know that
                     # their input is invalid
-                    if out_arg['id'] in self.pref.keys():
+                    if out_arg['id'] in self.pref.keys():  # noqa: SIM118
                         log_msg(
                             '\nWARNING: Application specific parameters '
                             'cannot overwrite default workflow\nparameters. '
@@ -642,7 +642,7 @@ class WorkflowApplication:
                             prepend_blank_space=False,
                         )
 
-                elif out_arg['id'] in self.pref.keys():
+                elif out_arg['id'] in self.pref.keys():  # noqa: SIM118
                     arg_value = self.pref[out_arg['id']]
 
                 else:
@@ -653,7 +653,7 @@ class WorkflowApplication:
                 else:
                     arg_list.append(f'{arg_value}')
 
-        ASI_list = [inp['id'] for inp in self.app_spec_inputs]
+        ASI_list = [inp['id'] for inp in self.app_spec_inputs]  # noqa: N806
         for pref_name, pref_value in self.pref.items():
             # only pass those input arguments that are in the registry
             if pref_name in ASI_list:
@@ -684,7 +684,7 @@ class Workflow:
     app_registry: string
         Explain...
 
-    """
+    """  # noqa: D205
 
     def __init__(
         self,
@@ -695,9 +695,9 @@ class Workflow:
         reference_dir=None,
         working_dir=None,
         app_dir=None,
-        parType='seqRUN',
-        mpiExec='mpiExec',
-        numProc=8,
+        parType='seqRUN',  # noqa: N803
+        mpiExec='mpiExec',  # noqa: N803
+        numProc=8,  # noqa: N803
     ):
         log_msg('Inputs provided:')
         log_msg(f'workflow input file: {input_file}', prepend_timestamp=False)
@@ -716,7 +716,7 @@ class Workflow:
             'WaterDistributionNetwork',
             'TransportationNetwork',
         ]
-        self.asset_registry = dict([(a, dict()) for a in self.asset_type_list])
+        self.asset_registry = dict([(a, dict()) for a in self.asset_type_list])  # noqa: C404, C408
 
         self.run_type = run_type
         self.input_file = input_file
@@ -727,13 +727,13 @@ class Workflow:
         self.numProc = numProc
 
         # if parallel setup, open script file to run
-        self.inputFilePath = os.path.dirname(input_file)
-        parCommandFileName = os.path.join(self.inputFilePath, 'sc_parScript.sh')
+        self.inputFilePath = os.path.dirname(input_file)  # noqa: PTH120
+        parCommandFileName = os.path.join(self.inputFilePath, 'sc_parScript.sh')  # noqa: PTH118, N806
         if parType == 'parSETUP':
-            self.parCommandFile = open(parCommandFileName, 'w')
+            self.parCommandFile = open(parCommandFileName, 'w')  # noqa: SIM115, PTH123
             self.parCommandFile.write('#!/bin/sh' + '\n')
 
-        print(
+        print(  # noqa: T201
             'WF: parType, mpiExec, numProc: ',
             self.parType,
             self.mpiExec,
@@ -751,14 +751,14 @@ class Workflow:
                 self.comm = MPI.COMM_WORLD
                 self.numP = self.comm.Get_size()
                 self.procID = self.comm.Get_rank()
-                if self.numP < 2:
+                if self.numP < 2:  # noqa: PLR2004
                     self.doParallel = False
                     self.numP = 1
                     self.procID = 0
                 else:
                     self.doParallel = True
 
-        print(
+        print(  # noqa: T201
             'WF: parType, mpiExec, numProc, do? numP, procID: ',
             self.parType,
             self.mpiExec,
@@ -798,10 +798,10 @@ class Workflow:
         self.workflow_assets = {}
         self._parse_inputs()
 
-    def __del__(self):
+    def __del__(self):  # noqa: D105
         # if parallel setup, add command to run this script with parallel option
         if self.parType == 'parSETUP':
-            inputArgs = sys.argv
+            inputArgs = sys.argv  # noqa: N806
             length = len(inputArgs)
             i = 0
             while i < length:
@@ -820,7 +820,7 @@ class Workflow:
             )
             self.parCommandFile.close()
 
-    def _register_app_type(self, app_type, app_dict, sub_app=''):
+    def _register_app_type(self, app_type, app_dict, sub_app=''):  # noqa: C901
         """Function to register the applications provided in the input file into
         memory, i.e., the 'App registry'
 
@@ -830,18 +830,18 @@ class Workflow:
 
         app_dict - dictionary containing app data
 
-        """
+        """  # noqa: D205, D400, D401
         if type(app_dict) is not dict:
             return
-        else:
-            for itmKey, itm in app_dict.items():
+        else:  # noqa: RET505
+            for itmKey, itm in app_dict.items():  # noqa: N806
                 self._register_app_type(app_type, itm, itmKey)
 
         # The provided application
         app_in = app_dict.get('Application')
 
         # Check to ensure the applications key is provided in the input
-        if app_in == None:
+        if app_in == None:  # noqa: E711
             return
             err = "Need to provide the 'Application' key in " + app_type
             raise WorkFlowInputError(err)
@@ -849,26 +849,26 @@ class Workflow:
         # Check to see if the app type is in the application registry
         app_type_obj = self.app_registry.get(app_type)
 
-        if app_in == None:
+        if app_in == None:  # noqa: E711
             return
 
         if app_in == 'None':
             return
 
-        if app_type_obj == None:
+        if app_type_obj == None:  # noqa: E711
             err = 'The application ' + app_type + ' is not found in the app registry'
             raise WorkFlowInputError(err)
 
         # Finally check to see if the app registry contains the provided application
-        if app_type_obj.get(app_in) == None:
+        if app_type_obj.get(app_in) == None:  # noqa: E711
             err = (
                 'Could not find the provided application in the internal app registry, app name: '
                 + app_in
             )
-            print('Error', app_in)
+            print('Error', app_in)  # noqa: T201
             raise WorkFlowInputError(err)
 
-        appData = app_dict['ApplicationData']
+        appData = app_dict['ApplicationData']  # noqa: N806
         #
         #        for itmKey, itm in  appData.items() :
         #            self._register_app_type(app_type,itm,itmKey)
@@ -878,7 +878,7 @@ class Workflow:
 
         # Check if the app object was created successfully
         if app_object is None:
-            raise WorkFlowInputError(f'Application deep copy failed for {app_type}')
+            raise WorkFlowInputError(f'Application deep copy failed for {app_type}')  # noqa: EM102, TRY003
 
         # only assign the app to the workflow if it has an executable
         if app_object.rel_path is None:
@@ -916,7 +916,7 @@ class Workflow:
 
         app_dict - dictionary containing asset data
 
-        """
+        """  # noqa: D400, D401
         # Check to see if the app type is in the application registry
         asset_object = self.asset_registry.get(asset_type)
 
@@ -934,13 +934,13 @@ class Workflow:
 
         log_msg(f'Found asset: {asset_type} ', prepend_timestamp=False)
 
-    def _parse_inputs(self):
-        """Load the information about the workflow to run"""
+    def _parse_inputs(self):  # noqa: C901
+        """Load the information about the workflow to run"""  # noqa: D400
         log_msg('Parsing workflow input file')
 
         # open input file
         log_msg('Loading the json file...', prepend_timestamp=False)
-        with open(self.input_file, encoding='utf-8') as f:
+        with open(self.input_file, encoding='utf-8') as f:  # noqa: PTH123
             input_data = json.load(f)
         log_msg('  OK', prepend_timestamp=False)
 
@@ -991,7 +991,7 @@ class Workflow:
             default_values = {}
 
         # workflow input is input file
-        default_values['workflowInput'] = os.path.basename(self.input_file)
+        default_values['workflowInput'] = os.path.basename(self.input_file)  # noqa: PTH119
         if default_values is not None:
             log_msg(
                 'The following workflow defaults were overwritten:',
@@ -999,7 +999,7 @@ class Workflow:
             )
 
             for key, value in default_values.items():
-                if key in self.default_values.keys():
+                if key in self.default_values.keys():  # noqa: SIM118
                     self.default_values[key] = value
 
                 else:
@@ -1013,7 +1013,7 @@ class Workflow:
             'RegionalEvent',
         ]:
             value = input_data.get(shared_key, None)
-            if value != None:
+            if value != None:  # noqa: E711
                 self.shared_data.update({shared_key: value})
 
         # parse the location of the run_dir
@@ -1074,21 +1074,21 @@ class Workflow:
         if 'Applications' in input_data:
             requested_apps = input_data['Applications']
         else:
-            raise WorkFlowInputError('Need an Applications entry in the input file')
+            raise WorkFlowInputError('Need an Applications entry in the input file')  # noqa: EM101, TRY003
 
         # create the requested applications
 
         # Events are special because they are in an array
         if 'Events' in requested_apps:
             if len(requested_apps['Events']) > 1:
-                raise WorkFlowInputError(
-                    'Currently, WHALE only supports a single event.'
+                raise WorkFlowInputError(  # noqa: TRY003
+                    'Currently, WHALE only supports a single event.'  # noqa: EM101
                 )
             for event in requested_apps['Events'][
                 :1
             ]:  # this limitation can be relaxed in the future
                 if 'EventClassification' in event:
-                    eventClassification = event['EventClassification']
+                    eventClassification = event['EventClassification']  # noqa: N806
                     if eventClassification in [
                         'Earthquake',
                         'Wind',
@@ -1105,7 +1105,7 @@ class Workflow:
 
                         if app_object is None:
                             raise WorkFlowInputError(
-                                'Application entry missing for {}'.format('Events')
+                                'Application entry missing for {}'.format('Events')  # noqa: EM103
                             )
 
                         app_object.set_pref(
@@ -1114,26 +1114,26 @@ class Workflow:
                         self.workflow_apps['Event'] = app_object
 
                     else:
-                        raise WorkFlowInputError(
-                            'Currently, only earthquake and wind events are supported. '
+                        raise WorkFlowInputError(  # noqa: TRY003
+                            'Currently, only earthquake and wind events are supported. '  # noqa: EM102
                             f'EventClassification must be Earthquake, not {eventClassification}'
                         )
                 else:
-                    raise WorkFlowInputError('Need Event Classification')
+                    raise WorkFlowInputError('Need Event Classification')  # noqa: EM101, TRY003
 
         # Figure out what types of assets are coming into the analysis
-        assetObjs = requested_apps.get('Assets', None)
+        assetObjs = requested_apps.get('Assets', None)  # noqa: N806
 
         # Check if an asset object exists
-        if assetObjs != None:
+        if assetObjs != None:  # noqa: E711
             # raise WorkFlowInputError('Need to define the assets for analysis')
 
             # Check if asset list is not empty
             if len(assetObjs) == 0:
-                raise WorkFlowInputError('The provided asset object is empty')
+                raise WorkFlowInputError('The provided asset object is empty')  # noqa: EM101, TRY003
 
             # Iterate through the asset objects
-            for assetObj in assetObjs:
+            for assetObj in assetObjs:  # noqa: N806
                 self._register_asset(assetObj, assetObjs[assetObj])
 
         # Iterate through the app type list which is set when you instantiate the workflow
@@ -1153,7 +1153,7 @@ class Workflow:
             ):
                 self.app_type_list.remove(app_type)
 
-        def recursiveLog(app_type, app_object):
+        def recursiveLog(app_type, app_object):  # noqa: N802
             if type(app_object) is dict:
                 for sub_app_type, sub_object in app_object.items():
                     log_msg(f'   {app_type} : ', prepend_timestamp=False)
@@ -1180,32 +1180,32 @@ class Workflow:
         Parameters
         ----------
 
-        """
+        """  # noqa: D400, D414
         log_msg('Creating files for individual assets')
 
         # Open the input file - we'll need it later
-        with open(self.input_file, encoding='utf-8') as f:
-            input_data = json.load(f)
+        with open(self.input_file, encoding='utf-8') as f:  # noqa: PTH123
+            input_data = json.load(f)  # noqa: F841
 
         # Get the workflow assets
-        assetsWfapps = self.workflow_apps.get('Assets', None)
-        assetWfList = self.workflow_assets.keys()
+        assetsWfapps = self.workflow_apps.get('Assets', None)  # noqa: N806
+        assetWfList = self.workflow_assets.keys()  # noqa: N806, F841
 
-        # TODO: not elegant code, fix later
+        # TODO: not elegant code, fix later  # noqa: TD002
         os.chdir(self.run_dir)
 
-        assetFilesList = {}
+        assetFilesList = {}  # noqa: N806
 
         # Iterate through the asset workflow apps
         for asset_type, asset_app in assetsWfapps.items():
             asset_folder = posixpath.join(self.run_dir, asset_type)
 
             # Make a new directory for each asset
-            os.mkdir(asset_folder)
+            os.mkdir(asset_folder)  # noqa: PTH102
 
             asset_file = posixpath.join(asset_folder, asset_type) + '.json'
 
-            assetPrefs = asset_app.pref
+            assetPrefs = asset_app.pref  # noqa: N806, F841
 
             # filter assets (if needed)
             asset_filter = asset_app.pref.get('filter', None)
@@ -1237,8 +1237,8 @@ class Workflow:
             # The GEOJSON_TO_ASSET application is special because it can be used
             # for multiple asset types. "asset_type" needs to be added so the app
             # knows which asset_type it's processing.
-            if asset_app.name == 'GEOJSON_TO_ASSET' or asset_app.name == 'INP_FILE':
-                asset_command_list = asset_command_list + [
+            if asset_app.name == 'GEOJSON_TO_ASSET' or asset_app.name == 'INP_FILE':  # noqa: PLR1714
+                asset_command_list = asset_command_list + [  # noqa: RUF005
                     '--assetType',
                     asset_type,
                     '--inputJsonFile',
@@ -1261,7 +1261,7 @@ class Workflow:
                     '\n# Perform Asset File Creation for type: ' + asset_type + ' \n'
                 )
 
-                if asset_app.runsParallel == False:
+                if asset_app.runsParallel == False:  # noqa: E712
                     self.parCommandFile.write(command + '\n')
                 else:
                     self.parCommandFile.write(
@@ -1289,11 +1289,11 @@ class Workflow:
 
                 # Check if the command was completed successfully
                 if returncode != 0:
-                    print(result)
+                    print(result)  # noqa: T201
                     raise WorkFlowInputError(
                         'Failed to create the AIM file for ' + asset_type
                     )
-                else:
+                else:  # noqa: RET506
                     log_msg(
                         'AIM files created for ' + asset_type + '\n',
                         prepend_timestamp=False,
@@ -1318,7 +1318,7 @@ class Workflow:
 
         return assetFilesList
 
-    def augment_asset_files(self):
+    def augment_asset_files(self):  # noqa: C901
         """Short description
 
         Longer description
@@ -1326,23 +1326,23 @@ class Workflow:
         Parameters
         ----------
 
-        """
+        """  # noqa: D400, D414
         log_msg('Augmenting files for individual assets for Workflow')
 
         # print('INPUT FILE:', self.input_file)
 
         # Open the input file - we'll need it later
-        with open(self.input_file, encoding='utf-8') as f:
+        with open(self.input_file, encoding='utf-8') as f:  # noqa: PTH123
             input_data = json.load(f)
 
         # Get the workflow assets
-        assetsWfapps = self.workflow_apps.get('Assets', None)
-        assetWfList = self.workflow_assets.keys()
+        assetsWfapps = self.workflow_apps.get('Assets', None)  # noqa: N806
+        assetWfList = self.workflow_assets.keys()  # noqa: N806, F841
 
-        # TODO: not elegant code, fix later
+        # TODO: not elegant code, fix later  # noqa: TD002
         os.chdir(self.run_dir)
 
-        assetFilesList = {}
+        assetFilesList = {}  # noqa: N806
 
         # Iterate through the asset workflow apps
         for asset_type, asset_app in assetsWfapps.items():
@@ -1350,7 +1350,7 @@ class Workflow:
 
             asset_file = posixpath.join(asset_folder, asset_type) + '.json'
 
-            assetPrefs = asset_app.pref
+            assetPrefs = asset_app.pref  # noqa: N806, F841
 
             # filter assets (if needed)
             asset_filter = asset_app.pref.get('filter', None)
@@ -1380,7 +1380,7 @@ class Workflow:
             # Append workflow settings to the BIM file
             log_msg('Appending additional settings to the AIM files...\n')
 
-            with open(asset_file, encoding='utf-8') as f:
+            with open(asset_file, encoding='utf-8') as f:  # noqa: PTH123
                 asset_data = json.load(f)
 
             # extract the extra information from the input file for this asset type
@@ -1401,7 +1401,7 @@ class Workflow:
             ]
             for app_type in apps_of_interest:
                 # Start with the app data under Applications
-                if app_type in input_data['Applications'].keys():
+                if app_type in input_data['Applications'].keys():  # noqa: SIM118
                     if app_type == 'Events':
                         # Events are stored in an array, so they require special treatment
                         app_data_array = input_data['Applications'][app_type]
@@ -1428,7 +1428,7 @@ class Workflow:
                         extra_input['Applications'][app_type] = app_info
 
                 # Then, look at the app data in the root of the input json
-                if app_type in input_data.keys():
+                if app_type in input_data.keys():  # noqa: SIM118
                     if app_type == 'Events':
                         # Events are stored in an array, so they require special treatment
                         app_data_array = input_data[app_type]
@@ -1449,37 +1449,37 @@ class Workflow:
             count = 0
             for asst in asset_data:
                 if count % self.numP == self.procID:
-                    AIM_file = asst['file']
+                    AIM_file = asst['file']  # noqa: N806
 
                     # Open the AIM file and add the unit information to it
                     # print(count, self.numP, self.procID, AIM_file)
 
-                    with open(AIM_file, encoding='utf-8') as f:
-                        AIM_data = json.load(f)
+                    with open(AIM_file, encoding='utf-8') as f:  # noqa: PTH123
+                        AIM_data = json.load(f)  # noqa: N806
 
-                    if 'DefaultValues' in input_data.keys():
+                    if 'DefaultValues' in input_data.keys():  # noqa: SIM118
                         AIM_data.update(
                             {'DefaultValues': input_data['DefaultValues']}
                         )
 
-                    if 'commonFileDir' in input_data.keys():
-                        commonFileDir = input_data['commonFileDir']
+                    if 'commonFileDir' in input_data.keys():  # noqa: SIM118
+                        commonFileDir = input_data['commonFileDir']  # noqa: N806
                         if self.inputFilePath not in commonFileDir:
-                            commonFileDir = os.path.join(
+                            commonFileDir = os.path.join(  # noqa: PTH118, N806
                                 self.inputFilePath, input_data['commonFileDir']
                             )
                         AIM_data.update({'commonFileDir': commonFileDir})
 
-                    if 'remoteAppDir' in input_data.keys():
+                    if 'remoteAppDir' in input_data.keys():  # noqa: SIM118
                         AIM_data.update({'remoteAppDir': input_data['remoteAppDir']})
 
-                    if 'localAppDir' in input_data.keys():
+                    if 'localAppDir' in input_data.keys():  # noqa: SIM118
                         AIM_data.update({'localAppDir': input_data['localAppDir']})
 
-                    if self.units != None:
+                    if self.units != None:  # noqa: E711
                         AIM_data.update({'units': self.units})
 
-                    # TODO: remove this after all apps have been updated to use the
+                    # TODO: remove this after all apps have been updated to use the  # noqa: TD002
                     # above location to get units
                     AIM_data['GeneralInformation'].update({'units': self.units})
 
@@ -1493,7 +1493,7 @@ class Workflow:
 
                     AIM_data.update(extra_input)
 
-                    with open(AIM_file, 'w', encoding='utf-8') as f:
+                    with open(AIM_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
                         json.dump(AIM_data, f, indent=2)
 
                 count = count + 1
@@ -1516,8 +1516,8 @@ class Workflow:
         asset_type: string
            Asset type to run perform system assessment of
 
-        """
-        if 'SystemPerformance' in self.workflow_apps.keys():
+        """  # noqa: D400
+        if 'SystemPerformance' in self.workflow_apps.keys():  # noqa: SIM118
             performance_app = self.workflow_apps['SystemPerformance'][asset_type]
         else:
             log_msg(
@@ -1527,7 +1527,7 @@ class Workflow:
             log_div()
             return False
 
-        if performance_app.rel_path == None:
+        if performance_app.rel_path == None:  # noqa: E711
             log_msg(
                 f'No Performance application to run for asset type: {asset_type}.',
                 prepend_timestamp=False,
@@ -1622,17 +1622,17 @@ class Workflow:
         Parameters
         ----------
 
-        """
+        """  # noqa: D414
         log_msg('Simulating regional event...')
 
-        if 'RegionalEvent' in self.workflow_apps.keys():
+        if 'RegionalEvent' in self.workflow_apps.keys():  # noqa: SIM118
             reg_event_app = self.workflow_apps['RegionalEvent']
         else:
             log_msg('No Regional Event Application to run.', prepend_timestamp=False)
             log_div()
             return
 
-        if reg_event_app.rel_path == None:
+        if reg_event_app.rel_path == None:  # noqa: E711
             log_msg('No regional Event Application to run.', prepend_timestamp=False)
             log_div()
             return
@@ -1649,7 +1649,7 @@ class Workflow:
             )
             self.parCommandFile.write('\n# Perform Regional Event Simulation\n')
 
-            if reg_event_app.runsParallel == False:
+            if reg_event_app.runsParallel == False:  # noqa: E712
                 self.parCommandFile.write(command + '\n')
             else:
                 self.parCommandFile.write(
@@ -1677,7 +1677,7 @@ class Workflow:
             )
         log_div()
 
-    def perform_regional_recovery(self, asset_keys):
+    def perform_regional_recovery(self, asset_keys):  # noqa: ARG002
         """Run an application to simulate regional recovery
 
         Longer description
@@ -1685,17 +1685,17 @@ class Workflow:
         Parameters
         ----------
 
-        """
+        """  # noqa: D400, D414
         log_msg('Simulating Regional Recovery ...')
 
-        if 'Recovery' in self.workflow_apps.keys():
+        if 'Recovery' in self.workflow_apps.keys():  # noqa: SIM118
             reg_recovery_app = self.workflow_apps['Recovery']
         else:
             log_msg('No Recovery Application to run.', prepend_timestamp=False)
             log_div()
             return
 
-        if reg_recovery_app.rel_path == None:
+        if reg_recovery_app.rel_path == None:  # noqa: E711
             log_msg('No regional Event Application to run.', prepend_timestamp=False)
             log_div()
             return
@@ -1712,7 +1712,7 @@ class Workflow:
             )
             self.parCommandFile.write('\n# Perform Regional Recovery Simulation\n')
 
-            if reg_recovery_app.runsParallel == False:
+            if reg_recovery_app.runsParallel == False:  # noqa: E712
                 self.parCommandFile.write(command + '\n')
             else:
                 self.parCommandFile.write(
@@ -1740,25 +1740,26 @@ class Workflow:
             )
         log_div()
 
-    def perform_regional_mapping(self, AIM_file_path, assetType, doParallel=True):
+    def perform_regional_mapping(self, AIM_file_path, assetType, doParallel=True):  # noqa: FBT002, N803
         """Performs the regional mapping between the asset and a hazard event.
 
         Parameters
         ----------
 
-        """
+        """  # noqa: D401, D414
         log_msg('', prepend_timestamp=False, prepend_blank_space=False)
         log_msg('Creating regional mapping...')
 
         reg_mapping_app = self.workflow_apps['RegionalMapping'][assetType]
 
-        # TODO: not elegant code, fix later
+        # TODO: not elegant code, fix later  # noqa: TD002
         for input_ in reg_mapping_app.inputs:
             if input_['id'] == 'assetFile':
                 input_['default'] = str(AIM_file_path)
-                
         # Get the event file path
-        eventFilePath = self.shared_data.get('RegionalEvent', {}).get('eventFilePath', self.reference_dir)
+        eventFilePath = self.shared_data.get('RegionalEvent', {}).get(  # noqa: N806
+            'eventFilePath', self.reference_dir
+        )
 
         reg_mapping_app.inputs.append(
             {
@@ -1788,7 +1789,7 @@ class Workflow:
                 '\n# Regional Mapping for asset type: ' + assetType + ' \n'
             )
 
-            if reg_mapping_app.runsParallel == False:
+            if reg_mapping_app.runsParallel == False:  # noqa: E712
                 self.parCommandFile.write(command + '\n')
             else:
                 self.parCommandFile.write(
@@ -1831,7 +1832,7 @@ class Workflow:
 
         log_div()
 
-    def init_simdir(self, asst_id=None, AIM_file_path='AIM.json'):
+    def init_simdir(self, asst_id=None, AIM_file_path='AIM.json'):  # noqa: C901, N803
         """Initializes the simulation directory for each asset.
 
         In the current directory where the Asset Information Model (AIM) file resides, e.g., ./Buildings/2000-AIM.json, a new directory is created with the asset id, e.g., ./Buildings/2000, and within that directory a template directory is created (templatedir) ./Buildings/2000/templatedir. The AIM file is copied over to the template dir. It is within this template dir that the analysis is run for the individual asset.
@@ -1841,16 +1842,16 @@ class Workflow:
         asst_id - the asset id
         AIM_file  - file path to the existing AIM file
 
-        """
+        """  # noqa: D401
         log_msg('Initializing the simulation directory\n')
 
-        aimDir = os.path.dirname(AIM_file_path)
-        aimFileName = os.path.basename(AIM_file_path)
+        aimDir = os.path.dirname(AIM_file_path)  # noqa: PTH120, N806
+        aimFileName = os.path.basename(AIM_file_path)  # noqa: PTH119, N806
 
         # If the path is not provided, assume the AIM file is in the run dir
-        if os.path.exists(aimDir) == False:
-            aimDir = self.run_dir
-            aimFileName = AIM_file_path
+        if os.path.exists(aimDir) == False:  # noqa: PTH110, E712
+            aimDir = self.run_dir  # noqa: N806
+            aimFileName = AIM_file_path  # noqa: N806
 
         os.chdir(aimDir)
 
@@ -1860,9 +1861,9 @@ class Workflow:
                 shutil.rmtree(asst_id, ignore_errors=True)
 
             # create the asset_id dir and the template dir
-            os.mkdir(asst_id)
+            os.mkdir(asst_id)  # noqa: PTH102
             os.chdir(asst_id)
-            os.mkdir('templatedir')
+            os.mkdir('templatedir')  # noqa: PTH102
             os.chdir('templatedir')
 
             # Make a copy of the AIM file
@@ -1873,32 +1874,32 @@ class Workflow:
             try:
                 shutil.copy(src, dst)
 
-                print('Copied AIM file to: ', dst)
+                print('Copied AIM file to: ', dst)  # noqa: T201
                 # os.remove(src)
 
-            except:
-                print('Error occurred while copying file: ', dst)
+            except:  # noqa: E722
+                print('Error occurred while copying file: ', dst)  # noqa: T201
 
         else:
-            for dir_or_file in os.listdir(os.getcwd()):
+            for dir_or_file in os.listdir(os.getcwd()):  # noqa: PTH109
                 if dir_or_file not in ['log.txt', 'templatedir', 'input_data']:
-                    if os.path.isdir(dir_or_file):
+                    if os.path.isdir(dir_or_file):  # noqa: PTH112
                         shutil.rmtree(dir_or_file)
                     else:
-                        os.remove(dir_or_file)
+                        os.remove(dir_or_file)  # noqa: PTH107
 
             os.chdir(
                 'templatedir'
-            )  # TODO: we might want to add a generic id dir to be consistent with the regional workflow here
+            )  # TODO: we might want to add a generic id dir to be consistent with the regional workflow here  # noqa: TD002
 
             # Remove files with .j extensions that might be there from previous runs
-            for file in os.listdir(os.getcwd()):
+            for file in os.listdir(os.getcwd()):  # noqa: PTH109
                 if file.endswith('.j'):
-                    os.remove(file)
+                    os.remove(file)  # noqa: PTH107
 
             # Make a copy of the input file and rename it to AIM.json
             # This is a temporary fix, will be removed eventually.
-            dst = Path(os.getcwd()) / AIM_file_path
+            dst = Path(os.getcwd()) / AIM_file_path  # noqa: PTH109
             # dst = posixpath.join(os.getcwd(),AIM_file)
             if AIM_file_path != self.input_file:
                 shutil.copy(src=self.input_file, dst=dst)
@@ -1918,7 +1919,7 @@ class Workflow:
         Parameters
         ----------
 
-        """
+        """  # noqa: D400, D414
         log_msg('Cleaning up the simulation directory.')
 
         os.chdir(self.run_dir)
@@ -1926,7 +1927,7 @@ class Workflow:
         if asst_id is not None:
             os.chdir(asst_id)
 
-        workdirs = os.listdir(os.getcwd())
+        workdirs = os.listdir(os.getcwd())  # noqa: PTH109
         for workdir in workdirs:
             if 'workdir' in workdir:
                 shutil.rmtree(workdir, ignore_errors=True)
@@ -1944,17 +1945,17 @@ class Workflow:
         Parameters
         ----------
 
-        """
+        """  # noqa: D400, D414
         log_msg('Initializing the working directory.')
 
         os.chdir(self.run_dir)
 
-        for dir_or_file in os.listdir(os.getcwd()):
+        for dir_or_file in os.listdir(os.getcwd()):  # noqa: PTH109
             if dir_or_file != 'log.txt':
-                if os.path.isdir(dir_or_file):
+                if os.path.isdir(dir_or_file):  # noqa: PTH112
                     shutil.rmtree(dir_or_file)
                 else:
-                    os.remove(dir_or_file)
+                    os.remove(dir_or_file)  # noqa: PTH107
 
         log_msg(
             'Working directory successfully initialized.', prepend_timestamp=False
@@ -1969,7 +1970,7 @@ class Workflow:
         Parameters
         ----------
 
-        """
+        """  # noqa: D400, D414
         log_msg('Cleaning up the working directory.')
 
         os.chdir(self.run_dir)
@@ -1983,10 +1984,10 @@ class Workflow:
         log_msg('Working directory successfully cleaned up.')
         log_div()
 
-    def preprocess_inputs(
+    def preprocess_inputs(  # noqa: C901
         self,
         app_sequence,
-        AIM_file_path='AIM.json',
+        AIM_file_path='AIM.json',  # noqa: N803
         asst_id=None,
         asset_type=None,
     ):
@@ -1997,16 +1998,16 @@ class Workflow:
         Parameters
         ----------
 
-        """
+        """  # noqa: D400, D414
         log_msg('Running preprocessing step random variables')
 
         # Get the directory to the asset class dir, e.g., buildings
-        aimDir = os.path.dirname(AIM_file_path)
-        aimFileName = os.path.basename(AIM_file_path)
+        aimDir = os.path.dirname(AIM_file_path)  # noqa: PTH120, N806
+        aimFileName = os.path.basename(AIM_file_path)  # noqa: PTH119, N806, F841
 
         # If the path is not provided, assume the AIM file is in the run dir
-        if os.path.exists(aimDir) == False:
-            aimDir = self.run_dir
+        if os.path.exists(aimDir) == False:  # noqa: PTH110, E712
+            aimDir = self.run_dir  # noqa: N806
 
         os.chdir(aimDir)
 
@@ -2018,7 +2019,7 @@ class Workflow:
 
         for app_type in self.optional_apps:
             if (app_type in app_sequence) and (
-                app_type not in self.workflow_apps.keys()
+                app_type not in self.workflow_apps.keys()  # noqa: SIM118
             ):
                 app_sequence.remove(app_type)
 
@@ -2028,7 +2029,7 @@ class Workflow:
             if app_type != 'FEM':
                 if AIM_file_path is not None:
                     if type(workflow_app) is dict:
-                        for itemKey, item in workflow_app.items():
+                        for itemKey, item in workflow_app.items():  # noqa: N806
                             if asset_type is not None and asset_type != itemKey:
                                 continue
 
@@ -2198,16 +2199,16 @@ class Workflow:
                 )
                 log_div()
 
-    def gather_workflow_inputs(self, asst_id=None, AIM_file_path='AIM.json'):
+    def gather_workflow_inputs(self, asst_id=None, AIM_file_path='AIM.json'):  # noqa: N803, D102
         log_msg('Gathering Workflow Inputs.', prepend_timestamp=False)
 
-        if 'UQ' in self.workflow_apps.keys():
+        if 'UQ' in self.workflow_apps.keys():  # noqa: SIM118
             # Get the directory to the asset class dir, e.g., buildings
-            aimDir = os.path.dirname(AIM_file_path)
+            aimDir = os.path.dirname(AIM_file_path)  # noqa: PTH120, N806
 
             # If the path is not provided, assume the AIM file is in the run dir
-            if os.path.exists(aimDir) == False:
-                aimDir = self.run_dir
+            if os.path.exists(aimDir) == False:  # noqa: PTH110, E712
+                aimDir = self.run_dir  # noqa: N806
 
             os.chdir(aimDir)
 
@@ -2216,7 +2217,7 @@ class Workflow:
 
             os.chdir('templatedir')
 
-            relPathCreateCommon = (
+            relPathCreateCommon = (  # noqa: N806
                 'applications/performUQ/common/createStandardUQ_Input'
             )
             abs_path = Path(self.app_dir_local) / relPathCreateCommon
@@ -2226,9 +2227,9 @@ class Workflow:
             # arg_list.append(u'{}'.format(abs_path))
 
             # inputFilePath = os.path.dirname(self.input_file)
-            inputFilePath = os.getcwd()
-            inputFilename = os.path.basename(self.input_file)
-            pathToScFile = posixpath.join(inputFilePath, 'sc_' + inputFilename)
+            inputFilePath = os.getcwd()  # noqa: PTH109, N806
+            inputFilename = os.path.basename(self.input_file)  # noqa: PTH119, N806
+            pathToScFile = posixpath.join(inputFilePath, 'sc_' + inputFilename)  # noqa: N806
 
             # arg_list.append(u'{}'.format(self.input_file))
             arg_list.append(f'{AIM_file_path}')
@@ -2266,29 +2267,29 @@ class Workflow:
             log_msg('Successfully Gathered Inputs.', prepend_timestamp=False)
             log_div()
 
-    def create_driver_file(
+    def create_driver_file(  # noqa: C901
         self,
         app_sequence,
         asst_id=None,
-        AIM_file_path='AIM.json',
+        AIM_file_path='AIM.json',  # noqa: N803
     ):
         """This functipon creates a UQ driver file. This is only done if UQ is in the workflow apps
 
         Parameters
         ----------
 
-        """
-        if 'UQ' in self.workflow_apps.keys():
+        """  # noqa: D400, D401, D404, D414
+        if 'UQ' in self.workflow_apps.keys():  # noqa: SIM118
             log_msg('Creating the workflow driver file')
             # print('ASSET_ID', asst_id)
             # print('AIM_FILE_PATH', AIM_file_path)
 
-            aimDir = os.path.dirname(AIM_file_path)
-            aimFile = os.path.basename(AIM_file_path)
+            aimDir = os.path.dirname(AIM_file_path)  # noqa: PTH120, N806
+            aimFile = os.path.basename(AIM_file_path)  # noqa: PTH119, N806, F841
 
             # If the path is not provided, assume the AIM file is in the run dir
-            if os.path.exists(aimDir) == False:
-                aimDir = self.run_dir
+            if os.path.exists(aimDir) == False:  # noqa: PTH110, E712
+                aimDir = self.run_dir  # noqa: N806
 
             os.chdir(aimDir)
 
@@ -2303,7 +2304,7 @@ class Workflow:
 
             for app_type in self.optional_apps:
                 if (app_type in app_sequence) and (
-                    app_type not in self.workflow_apps.keys()
+                    app_type not in self.workflow_apps.keys()  # noqa: SIM118
                 ):
                     app_sequence.remove(app_type)
 
@@ -2313,7 +2314,7 @@ class Workflow:
                 # print('FMK runtype', self.run_type)
                 if self.run_type in ['set_up', 'runningRemote', 'parSETUP']:
                     if type(workflow_app) is dict:
-                        for itemKey, item in workflow_app.items():
+                        for itemKey, item in workflow_app.items():  # noqa: B007, N806, PERF102
                             command_list = item.get_command_list(
                                 app_path=self.app_dir_remote, force_posix=True
                             )
@@ -2334,7 +2335,7 @@ class Workflow:
                         )
 
                 elif type(workflow_app) is dict:
-                    for itemKey, item in workflow_app.items():
+                    for itemKey, item in workflow_app.items():  # noqa: B007, N806, PERF102
                         command_list = item.get_command_list(
                             app_path=self.app_dir_local
                         )
@@ -2358,13 +2359,13 @@ class Workflow:
             # log_msg('Workflow driver script:', prepend_timestamp=False)
             # log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False, prepend_blank_space=False)
 
-            driverFile = self.default_values['driverFile']
+            driverFile = self.default_values['driverFile']  # noqa: N806
 
             # KZ: for windows, to write bat
             if platform.system() == 'Windows':
-                driverFile = driverFile + '.bat'
+                driverFile = driverFile + '.bat'  # noqa: N806
             log_msg(driverFile)
-            with open(driverFile, 'w', newline='\n', encoding='utf-8') as f:
+            with open(driverFile, 'w', newline='\n', encoding='utf-8') as f:  # noqa: PTH123
                 f.write(driver_script)
 
             log_msg(
@@ -2375,7 +2376,7 @@ class Workflow:
             log_msg('No UQ requested, workflow driver is not needed.')
             log_div()
 
-    def simulate_response(self, AIM_file_path='AIM.json', asst_id=None):
+    def simulate_response(self, AIM_file_path='AIM.json', asst_id=None):  # noqa: C901, N803
         """Short description
 
         Longer description
@@ -2383,21 +2384,21 @@ class Workflow:
         Parameters
         ----------
 
-        """
+        """  # noqa: D400, D414
         # Get the directory to the asset class dir, e.g., buildings
-        aimDir = os.path.dirname(AIM_file_path)
-        aimFileName = os.path.basename(AIM_file_path)
+        aimDir = os.path.dirname(AIM_file_path)  # noqa: PTH120, N806
+        aimFileName = os.path.basename(AIM_file_path)  # noqa: PTH119, N806, F841
 
         # If the path is not provided, assume the AIM file is in the run dir
-        if os.path.exists(aimDir) == False:
-            aimDir = self.run_dir
+        if os.path.exists(aimDir) == False:  # noqa: PTH110, E712
+            aimDir = self.run_dir  # noqa: N806
 
         os.chdir(aimDir)
 
         if asst_id is not None:
             os.chdir(asst_id)
 
-        if 'UQ' in self.workflow_apps.keys():
+        if 'UQ' in self.workflow_apps.keys():  # noqa: SIM118
             log_msg('Running response simulation')
 
             os.chdir('templatedir')
@@ -2472,20 +2473,20 @@ class Workflow:
                     )
 
                     # if the DL is coupled with response estimation, we need to sort the results
-                    DL_app = self.workflow_apps.get('DL', None)
+                    DL_app = self.workflow_apps.get('DL', None)  # noqa: N806
 
                     # FMK
                     # if asst_id is not None:
                     # KZ: 10/19/2022, minor patch
                     if asst_id is not None and DL_app is not None:
-                        DL_app = DL_app['Buildings']
+                        DL_app = DL_app['Buildings']  # noqa: N806
 
                     if DL_app is not None:
                         is_coupled = DL_app.pref.get('coupled_EDP', None)
 
                         if is_coupled:
                             if 'eventID' in dakota_out.columns:
-                                events = dakota_out['eventID'].values
+                                events = dakota_out['eventID'].values  # noqa: PD011
                                 events = [int(e.split('x')[-1]) for e in events]
                                 sorter = np.argsort(events)
                                 dakota_out = dakota_out.iloc[sorter, :]
@@ -2495,7 +2496,7 @@ class Workflow:
 
                     # log_msg('Response simulation finished successfully.', prepend_timestamp=False)# sy - this message was showing up when quoFEM analysis failed
 
-                except:
+                except:  # noqa: E722
                     log_msg(
                         'dakotaTab.out not found. Response.csv not created.',
                         prepend_timestamp=False,
@@ -2517,22 +2518,22 @@ class Workflow:
 
             log_div()
 
-    def perform_asset_performance(asset_type):
-        performanceWfapps = self.workflow_apps.get('Performance', None)
+    def perform_asset_performance(asset_type):  # noqa: N805, D102
+        performanceWfapps = self.workflow_apps.get('Performance', None)  # noqa: N806, F821
         performance_app = performanceWfapps[asset_type]
         app_command_list = performance_app.get_command_list(
-            app_path=self.app_dir_local
+            app_path=self.app_dir_local  # noqa: F821
         )
         command = create_command(app_command_list)
         result, returncode = run_command(command)
 
-    def estimate_losses(
+    def estimate_losses(  # noqa: C901
         self,
-        AIM_file_path='AIM.json',
+        AIM_file_path='AIM.json',  # noqa: N803
         asst_id=None,
         asset_type=None,
         input_file=None,
-        copy_resources=False,
+        copy_resources=False,  # noqa: FBT002
     ):
         """Short description
 
@@ -2541,18 +2542,18 @@ class Workflow:
         Parameters
         ----------
 
-        """
-        if 'DL' in self.workflow_apps.keys():
+        """  # noqa: D400, D414
+        if 'DL' in self.workflow_apps.keys():  # noqa: SIM118
             log_msg('Running damage and loss assessment')
 
             # Get the directory to the asset class dir, e.g., buildings
-            aimDir = os.path.dirname(AIM_file_path)
-            aimFileName = os.path.basename(AIM_file_path)
+            aimDir = os.path.dirname(AIM_file_path)  # noqa: PTH120, N806
+            aimFileName = os.path.basename(AIM_file_path)  # noqa: PTH119, N806
 
             # If the path is not provided, assume the AIM file is in the run dir
-            if os.path.exists(aimDir) == False:
-                aimDir = self.run_dir
-                aimFileName = AIM_file_path
+            if os.path.exists(aimDir) == False:  # noqa: PTH110, E712
+                aimDir = self.run_dir  # noqa: N806
+                aimFileName = AIM_file_path  # noqa: N806
 
             os.chdir(aimDir)
 
@@ -2582,7 +2583,7 @@ class Workflow:
             workflow_app = self.workflow_apps['DL']
 
             if type(workflow_app) is dict:
-                for itemKey, item in workflow_app.items():
+                for itemKey, item in workflow_app.items():  # noqa: N806
                     if AIM_file_path is not None:
                         item.defaults['filenameDL'] = AIM_file_path
                         # for input_var in workflow_app.inputs:
@@ -2600,7 +2601,7 @@ class Workflow:
 
                     command_list.append('--dirnameOutput')
                     # Only add asset id if we are running a regional assessment
-                    if asst_id != None:
+                    if asst_id != None:  # noqa: E711
                         command_list.append(f'{aimDir}/{asst_id}')
                     else:
                         command_list.append(f'{aimDir}')
@@ -2623,7 +2624,7 @@ class Workflow:
 
                     # if multiple buildings are analyzed, copy the pelicun_log file to the root dir
                     if 'Assets' in self.app_type_list:
-                        try:
+                        try:  # noqa: SIM105
                             shutil.copy(
                                 src=aimDir / f'{asst_id}/{"pelicun_log.txt"}',
                                 dst=aimDir / f'pelicun_log_{asst_id}.txt',
@@ -2631,7 +2632,7 @@ class Workflow:
 
                             # src = posixpath.join(self.run_dir, '{}/{}'.format(asst_id, 'pelicun_log.txt')),
                             # dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(asst_id)))
-                        except:
+                        except:  # noqa: S110, E722
                             pass
 
             else:
@@ -2647,7 +2648,7 @@ class Workflow:
 
                 command_list.append('--dirnameOutput')
                 # Only add asset id if we are running a regional assessment
-                if asst_id != None:
+                if asst_id != None:  # noqa: E711
                     command_list.append(f'{aimDir}/{asst_id}')
                 else:
                     command_list.append(f'{aimDir}')
@@ -2674,20 +2675,20 @@ class Workflow:
 
                 # if multiple buildings are analyzed, copy the pelicun_log file to the root dir
                 if 'Building' in self.app_type_list:
-                    try:
+                    try:  # noqa: SIM105
                         shutil.copy(
                             src=self.run_dir / f'{asst_id}/{"pelicun_log.txt"}',
                             dst=self.run_dir / f'pelicun_log_{asst_id}.txt',
                         )
                         # src = posixpath.join(self.run_dir, '{}/{}'.format(asst_id, 'pelicun_log.txt')),
                         # dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(asst_id)))
-                    except:
+                    except:  # noqa: S110, E722
                         pass
             # Remove the copied AIM since it is not used anymore
             try:
                 dst = posixpath.join(aimDir, f'{asst_id}/{aimFileName}')
-                os.remove(dst)
-            except:
+                os.remove(dst)  # noqa: PTH107
+            except:  # noqa: S110, E722
                 pass
             log_msg(
                 'Damage and loss assessment finished successfully.',
@@ -2699,8 +2700,8 @@ class Workflow:
             log_msg('No DL requested, loss assessment step is skipped.')
 
             # Only regional simulations send in a asst id
-            if asst_id != None:
-                EDP_df = pd.read_csv('response.csv', header=0, index_col=0)
+            if asst_id != None:  # noqa: E711
+                EDP_df = pd.read_csv('response.csv', header=0, index_col=0)  # noqa: N806
 
                 col_info = []
                 for col in EDP_df.columns:
@@ -2710,18 +2711,18 @@ class Workflow:
                             col_info.append(['dummy', '1', '1'])
                             continue
                         split_col = col.split('-')
-                        if len(split_col[1]) == 3:
+                        if len(split_col[1]) == 3:  # noqa: PLR2004
                             col_info.append(split_col[1:])
-                    except:
+                    except:  # noqa: S112, E722
                         continue
 
                 col_info = np.transpose(col_info)
 
-                EDP_types = np.unique(col_info[0])
-                EDP_locs = np.unique(col_info[1])
-                EDP_dirs = np.unique(col_info[2])
+                EDP_types = np.unique(col_info[0])  # noqa: N806
+                EDP_locs = np.unique(col_info[1])  # noqa: N806
+                EDP_dirs = np.unique(col_info[2])  # noqa: N806
 
-                MI = pd.MultiIndex.from_product(
+                MI = pd.MultiIndex.from_product(  # noqa: N806
                     [EDP_types, EDP_locs, EDP_dirs, ['median', 'beta']],
                     names=['type', 'loc', 'dir', 'stat'],
                 )
@@ -2753,7 +2754,7 @@ class Workflow:
                         EDP_df[f'1-{col[0]}-{col[1]}-{col[2]}']
                     ).std()
 
-                df_res.dropna(axis=1, how='all', inplace=True)
+                df_res.dropna(axis=1, how='all', inplace=True)  # noqa: PD002
 
                 df_res = df_res.astype(float)
 
@@ -2762,15 +2763,15 @@ class Workflow:
 
             log_div()
 
-    def estimate_performance(
+    def estimate_performance(  # noqa: D102
         self,
-        AIM_file_path='AIM.json',
+        AIM_file_path='AIM.json',  # noqa: N803
         asst_id=None,
-        asset_type=None,
-        input_file=None,
-        copy_resources=False,
+        asset_type=None,  # noqa: ARG002
+        input_file=None,  # noqa: ARG002
+        copy_resources=False,  # noqa: FBT002, ARG002
     ):
-        if 'Performance' not in self.workflow_apps.keys():
+        if 'Performance' not in self.workflow_apps.keys():  # noqa: SIM118
             log_msg(
                 'No performance assessment requested, performance assessment step is skipped.'
             )
@@ -2780,13 +2781,13 @@ class Workflow:
         log_msg('Running performance assessment')
 
         # Get the directory to the asset class dir, e.g., buildings
-        aimDir = os.path.dirname(AIM_file_path)
-        aimFileName = os.path.basename(AIM_file_path)
+        aimDir = os.path.dirname(AIM_file_path)  # noqa: PTH120, N806
+        aimFileName = os.path.basename(AIM_file_path)  # noqa: PTH119, N806
 
         # If the path is not provided, assume the AIM file is in the run dir
-        if os.path.exists(aimDir) == False:
-            aimDir = self.run_dir
-            aimFileName = AIM_file_path
+        if os.path.exists(aimDir) == False:  # noqa: PTH110, E712
+            aimDir = self.run_dir  # noqa: N806
+            aimFileName = AIM_file_path  # noqa: N806, F841
 
         os.chdir(aimDir)
 
@@ -2797,7 +2798,7 @@ class Workflow:
         command_list.append('--dirnameOutput')
 
         # Only add asset id if we are running a regional assessment
-        if asst_id != None:
+        if asst_id != None:  # noqa: E711
             command_list.append(f'{aimDir}/{asst_id}')
         else:
             command_list.append(f'{aimDir}')
@@ -2818,12 +2819,12 @@ class Workflow:
         log_msg('Performance assessment finished.', prepend_timestamp=False)
         log_div()
 
-    def aggregate_results(
+    def aggregate_results(  # noqa: C901, PLR0912, PLR0915
         self,
         asst_data,
         asset_type='',
         # out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'],
-        out_types=['AIM', 'EDP', 'DMG', 'DV', 'every_realization'],
+        out_types=['AIM', 'EDP', 'DMG', 'DV', 'every_realization'],  # noqa: B006
         headers=None,
     ):
         """Short description
@@ -2833,11 +2834,11 @@ class Workflow:
         Parameters
         ----------
 
-        """
+        """  # noqa: D400, D414
         log_msg('Collecting ' + asset_type + ' damage and loss results')
 
-        R2D_res_out_types = []
-        with open(self.input_file) as f:
+        R2D_res_out_types = []  # noqa: N806
+        with open(self.input_file) as f:  # noqa: PTH123
             input_data = json.load(f)
         requested_output = input_data['outputs']
         for key, item in requested_output.items():
@@ -2859,7 +2860,7 @@ class Workflow:
         )  # max_id = int(asst_data[0]['id'])
 
         #
-        # TODO: ugly, ugly, I know.
+        # TODO: ugly, ugly, I know.  # noqa: TD002
         # Only temporary solution while we have both Pelicuns in parallel
         # FMK - bug fix adding check on DL, not in siteResponse input file
         #
@@ -2870,25 +2871,25 @@ class Workflow:
         ):
             initialize_dicts = True
             for a_i, asst in enumerate(asst_data):
-                bldg_dir = Path(os.path.dirname(asst_data[a_i]['file'])).resolve()
+                bldg_dir = Path(os.path.dirname(asst_data[a_i]['file'])).resolve()  # noqa: PTH120
                 main_dir = bldg_dir
-                assetTypeHierarchy = [bldg_dir.name]
+                assetTypeHierarchy = [bldg_dir.name]  # noqa: N806
                 while main_dir.parent.name != 'Results':
                     main_dir = bldg_dir.parent
-                    assetTypeHierarchy = [main_dir.name] + assetTypeHierarchy
+                    assetTypeHierarchy = [main_dir.name] + assetTypeHierarchy  # noqa: N806, RUF005
 
                 asset_id = asst['id']
                 asset_dir = bldg_dir / asset_id
 
                 # always get the AIM info
 
-                AIM_file = None
+                AIM_file = None  # noqa: N806
 
                 if f'{asset_id}-AIM_ap.json' in os.listdir(asset_dir):
-                    AIM_file = asset_dir / f'{asset_id}-AIM_ap.json'
+                    AIM_file = asset_dir / f'{asset_id}-AIM_ap.json'  # noqa: N806
 
                 elif f'{asset_id}-AIM.json' in os.listdir(asset_dir):
-                    AIM_file = asset_dir / f'{asset_id}-AIM.json'
+                    AIM_file = asset_dir / f'{asset_id}-AIM.json'  # noqa: N806
 
                 else:
                     # skip this asset if there is no AIM file available
@@ -2897,8 +2898,8 @@ class Workflow:
                     )
                     continue
 
-                with open(AIM_file, encoding='utf-8') as f:
-                    AIM_data_i = json.load(f)
+                with open(AIM_file, encoding='utf-8') as f:  # noqa: PTH123
+                    AIM_data_i = json.load(f)  # noqa: N806
 
                 sample_size = AIM_data_i['Applications']['DL']['ApplicationData'][
                     'Realizations'
@@ -2923,20 +2924,20 @@ class Workflow:
                 rlzn_pointer = {
                     rlz_i: realizations[rlz_i] for rlz_i in range(sample_size)
                 }
-                for assetTypeIter in assetTypeHierarchy:
-                    if assetTypeIter not in deter_pointer.keys():
+                for assetTypeIter in assetTypeHierarchy:  # noqa: N806
+                    if assetTypeIter not in deter_pointer.keys():  # noqa: SIM118
                         deter_pointer.update({assetTypeIter: {}})
                     deter_pointer = deter_pointer[assetTypeIter]
                     for rlz_i in range(sample_size):
-                        if assetTypeIter not in rlzn_pointer[rlz_i].keys():
+                        if assetTypeIter not in rlzn_pointer[rlz_i].keys():  # noqa: SIM118
                             rlzn_pointer[rlz_i].update({assetTypeIter: {}})
                         rlzn_pointer[rlz_i] = rlzn_pointer[rlz_i][assetTypeIter]
 
                 # Currently, all GI data is deterministic
-                GI_data_i_det = AIM_data_i['GeneralInformation']
+                GI_data_i_det = AIM_data_i['GeneralInformation']  # noqa: N806
 
-                # TODO: later update this to handle probabilistic GI attributes
-                GI_data_i_prob = {}
+                # TODO: later update this to handle probabilistic GI attributes  # noqa: TD002
+                GI_data_i_prob = {}  # noqa: N806
 
                 for rlz_i in range(sample_size):
                     rlzn_pointer[rlz_i].update(
@@ -2957,7 +2958,7 @@ class Workflow:
                         )
 
                     else:
-                        with open(asset_dir / edp_out_file_i, encoding='utf-8') as f:
+                        with open(asset_dir / edp_out_file_i, encoding='utf-8') as f:  # noqa: PTH123
                             edp_data_i = json.load(f)
 
                         # remove the ONE demand
@@ -3014,7 +3015,7 @@ class Workflow:
                         )
 
                     else:
-                        with open(asset_dir / dmg_out_file_i, encoding='utf-8') as f:
+                        with open(asset_dir / dmg_out_file_i, encoding='utf-8') as f:  # noqa: PTH123
                             dmg_data_i = json.load(f)
 
                         # remove damage unit info
@@ -3037,16 +3038,16 @@ class Workflow:
                             dmg_output.update({rlz_i: rlz_output})
 
                         # we assume that damage information is condensed
-                        # TODO: implement condense_ds flag in DL_calc
+                        # TODO: implement condense_ds flag in DL_calc  # noqa: TD002
                         for rlz_i in range(sample_size):
                             rlzn_pointer[rlz_i][asset_id].update(
                                 {'Damage': dmg_output[rlz_i]}
                             )
                         if 'DM' in R2D_res_out_types:
                             # use forward fill in case of multiple modes
-                            meanValues = dmg_data_i.mode().ffill().mean()
-                            stdValues = dmg_data_i.std()
-                            r2d_res_dmg = dict()
+                            meanValues = dmg_data_i.mode().ffill().mean()  # noqa: N806, F841
+                            stdValues = dmg_data_i.std()  # noqa: N806, F841
+                            r2d_res_dmg = dict()  # noqa: C408
                             # for key in dmg_data_i.columns:
                             #     meanKey = f'R2Dres_mode_{key}'
                             #     stdKey = f'R2Dres_std_{key}'
@@ -3074,7 +3075,7 @@ class Workflow:
                         )
 
                     else:
-                        with open(asset_dir / dv_out_file_i, encoding='utf-8') as f:
+                        with open(asset_dir / dv_out_file_i, encoding='utf-8') as f:  # noqa: PTH123
                             dv_data_i = json.load(f)
 
                         # extract DV unit info
@@ -3114,7 +3115,7 @@ class Workflow:
                         deter_pointer[asset_id].update({'Loss': {'Units': dv_units}})
 
                         if 'DV' in R2D_res_out_types:
-                            r2d_res_dv = dict()
+                            r2d_res_dv = dict()  # noqa: C408
                             cost_columns = [
                                 col
                                 for col in dv_data_i.columns
@@ -3124,10 +3125,10 @@ class Workflow:
                                 cost_data = dv_data_i[cost_columns].mean()
                                 cost_data_std = dv_data_i[cost_columns].std()
                                 cost_key = cost_data.idxmax()
-                                meanKey = (
+                                meanKey = (  # noqa: N806
                                     f'R2Dres_mean_RepairCost_{dv_units[cost_key]}'
                                 )
-                                stdKey = (
+                                stdKey = (  # noqa: N806
                                     f'R2Dres_std_RepairCost_{dv_units[cost_key]}'
                                 )
                                 r2d_res_dv.update(
@@ -3145,10 +3146,10 @@ class Workflow:
                                 time_data = dv_data_i[time_columns].mean()
                                 time_data_std = dv_data_i[time_columns].std()
                                 time_key = time_data.idxmax()
-                                meanKey = (
+                                meanKey = (  # noqa: N806
                                     f'R2Dres_mean_RepairTime_{dv_units[time_key]}'
                                 )
-                                stdKey = (
+                                stdKey = (  # noqa: N806
                                     f'R2Dres_std_RepairTime_{dv_units[time_key]}'
                                 )
                                 r2d_res_dv.update(
@@ -3185,12 +3186,12 @@ class Workflow:
 
             # save outputs to JSON files
             for rlz_i, rlz_data in realizations.items():
-                with open(
+                with open(  # noqa: PTH123
                     main_dir / f'{asset_type}_{rlz_i}.json', 'w', encoding='utf-8'
                 ) as f:
                     json.dump(rlz_data, f, indent=2)
 
-            with open(
+            with open(  # noqa: PTH123
                 main_dir / f'{asset_type}_det.json', 'w', encoding='utf-8'
             ) as f:
                 json.dump(deterministic, f, indent=2)
@@ -3200,7 +3201,7 @@ class Workflow:
             out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization']
 
             if headers is None:
-                headers = dict(
+                headers = dict(  # noqa: C408
                     IM=[0, 1, 2, 3],
                     AIM=[
                         0,
@@ -3215,15 +3216,15 @@ class Workflow:
                     self.output_types.get(out_type, False)
                 ):
                     if out_type == 'every_realization':
-                        realizations_EDP = None
-                        realizations_DL = None
+                        realizations_EDP = None  # noqa: N806
+                        realizations_DL = None  # noqa: N806
 
                         for asst in asst_data:
-                            print('ASSET', asst)
+                            print('ASSET', asst)  # noqa: T201
                             asst_file = asst['file']
 
                             # Get the folder containing the results
-                            aimDir = os.path.dirname(asst_file)
+                            aimDir = os.path.dirname(asst_file)  # noqa: PTH120, N806
 
                             asst_id = asst['id']
                             min_id = min(int(asst_id), min_id)
@@ -3237,8 +3238,8 @@ class Workflow:
                                 index_col=0,
                             )
 
-                            if realizations_EDP == None:
-                                realizations_EDP = dict(
+                            if realizations_EDP == None:  # noqa: E711
+                                realizations_EDP = dict(  # noqa: C404, N806
                                     [(col, []) for col in df_i.columns]
                                 )
 
@@ -3251,7 +3252,7 @@ class Workflow:
 
                             # If damage and loss assessment is part of the workflow
                             # then save the DL outputs too
-                            if 'DL' in self.workflow_apps.keys():
+                            if 'DL' in self.workflow_apps.keys():  # noqa: SIM118
                                 try:
                                     # if True:
                                     df_i = pd.read_csv(
@@ -3260,8 +3261,8 @@ class Workflow:
                                         index_col=0,
                                     )
 
-                                    if realizations_DL == None:
-                                        realizations_DL = dict(
+                                    if realizations_DL == None:  # noqa: E711
+                                        realizations_DL = dict(  # noqa: C404, N806
                                             [(col, []) for col in df_i.columns]
                                         )
 
@@ -3272,13 +3273,13 @@ class Workflow:
                                         ]
                                         realizations_DL[col].append(vals)
 
-                                except:
+                                except:  # noqa: E722
                                     log_msg(
                                         f'Error reading DL realization data for asset {asset_type} {asst_id}',
                                         prepend_timestamp=False,
                                     )
 
-                        for d_type in realizations_EDP.keys():
+                        for d_type in realizations_EDP.keys():  # noqa: SIM118
                             d_agg = pd.concat(
                                 realizations_EDP[d_type], axis=0, sort=False
                             )
@@ -3293,8 +3294,8 @@ class Workflow:
                                     format='fixed',
                                 )
 
-                        if 'DL' in self.workflow_apps.keys():
-                            for d_type in realizations_DL.keys():
+                        if 'DL' in self.workflow_apps.keys():  # noqa: SIM118
+                            for d_type in realizations_DL.keys():  # noqa: SIM118
                                 d_agg = pd.concat(
                                     realizations_DL[d_type], axis=0, sort=False
                                 )
@@ -3315,11 +3316,11 @@ class Workflow:
                         count = 0
                         for asst in asst_data:
                             if count % self.numP == self.procID:
-                                print('ASSET', self.procID, self.numP, asst['file'])
+                                print('ASSET', self.procID, self.numP, asst['file'])  # noqa: T201
                                 asst_file = asst['file']
 
                                 # Get the folder containing the results
-                                aimDir = os.path.dirname(asst_file)
+                                aimDir = os.path.dirname(asst_file)  # noqa: PTH120, N806
 
                                 asst_id = asst['id']
                                 min_id = min(int(asst_id), min_id)
@@ -3328,7 +3329,7 @@ class Workflow:
                                 try:
                                     # if True:
 
-                                    csvPath = (
+                                    csvPath = (  # noqa: N806
                                         aimDir + '/' + asst_id + f'/{out_type}.csv'
                                     )
 
@@ -3345,7 +3346,7 @@ class Workflow:
 
                                     out_list.append(df_i)
 
-                                except:
+                                except:  # noqa: E722
                                     log_msg(
                                         f'Error reading {out_type} data for asset {asset_type} {asst_id}',
                                         prepend_timestamp=False,
@@ -3356,9 +3357,9 @@ class Workflow:
 
                         # save the collected DataFrames as csv files
                         if self.procID == 0:
-                            outPath = posixpath.join(run_path, f'{out_type}.csv')
+                            outPath = posixpath.join(run_path, f'{out_type}.csv')  # noqa: N806
                         else:
-                            outPath = posixpath.join(
+                            outPath = posixpath.join(  # noqa: N806
                                 run_path, f'{out_type}_tmp_{self.procID}.csv'
                             )
 
@@ -3379,7 +3380,7 @@ class Workflow:
 
                                 # fileList = []
                                 for i in range(1, self.numP):
-                                    fileToAppend = posixpath.join(
+                                    fileToAppend = posixpath.join(  # noqa: N806
                                         run_path, f'{out_type}_tmp_{i}.csv'
                                     )
                                     # fileList.append(fileToAppend)
@@ -3405,18 +3406,18 @@ class Workflow:
         )
         log_div()
 
-    def compile_r2d_results_geojson(self, asset_files):
+    def compile_r2d_results_geojson(self, asset_files):  # noqa: D102
         run_path = self.run_dir
-        with open(self.input_file, encoding='utf-8') as f:
+        with open(self.input_file, encoding='utf-8') as f:  # noqa: PTH123
             input_data = json.load(f)
-        with open(run_path / 'Results_det.json', encoding='utf-8') as f:
+        with open(run_path / 'Results_det.json', encoding='utf-8') as f:  # noqa: PTH123
             res_det = json.load(f)
         metadata = {
             'Name': input_data['Name'],
             'Units': input_data['units'],
             'Author': input_data['Author'],
             'WorkflowType': input_data['WorkflowType'],
-            'Time': datetime.now().strftime('%m-%d-%Y %H:%M:%S'),
+            'Time': datetime.now().strftime('%m-%d-%Y %H:%M:%S'),  # noqa: DTZ005
         }
         # create the geojson for R2D visualization
         geojson_result = {
@@ -3428,12 +3429,12 @@ class Workflow:
             'metadata': metadata,
             'features': [],
         }
-        for asset_type in asset_files.keys():
-            for assetSubtype, subtypeResult in res_det[asset_type].items():
-                allAssetIds = sorted([int(x) for x in subtypeResult.keys()])
+        for asset_type in asset_files.keys():  # noqa: SIM118
+            for assetSubtype, subtypeResult in res_det[asset_type].items():  # noqa: N806
+                allAssetIds = sorted([int(x) for x in subtypeResult.keys()])  # noqa: SIM118, N806
                 for asset_id in allAssetIds:
                     ft = {'type': 'Feature'}
-                    asst_GI = subtypeResult[str(asset_id)][
+                    asst_GI = subtypeResult[str(asset_id)][  # noqa: N806
                         'GeneralInformation'
                     ].copy()
                     asst_GI.update({'assetType': asset_type})
@@ -3454,8 +3455,8 @@ class Workflow:
                                 'coordinates': [asst_lon, asst_lat],
                             }
                             asst_GI.pop('location')
-                    except:
-                        warnings.warn(
+                    except:  # noqa: E722
+                        warnings.warn(  # noqa: B028
                             UserWarning(
                                 f'Geospatial info is missing in {assetSubtype} {asset_id}'
                             )
@@ -3467,20 +3468,20 @@ class Workflow:
                     ft.update({'properties': asst_GI})
                     ft['properties'].update(subtypeResult[str(asset_id)]['R2Dres'])
                     geojson_result['features'].append(ft)
-        with open(run_path / 'R2D_results.geojson', 'w', encoding='utf-8') as f:
+        with open(run_path / 'R2D_results.geojson', 'w', encoding='utf-8') as f:  # noqa: PTH123
             json.dump(geojson_result, f, indent=2)
 
-    def combine_assets_results(self, asset_files):
+    def combine_assets_results(self, asset_files):  # noqa: D102
         asset_types = list(asset_files.keys())
         for asset_type in asset_types:
             if self.workflow_apps['DL'][asset_type].name != 'Pelicun3':
                 # isPelicun3 = False
                 asset_files.pop(asset_type)
         if asset_files:  # If any asset_type uses Pelicun3 as DL app
-            with open(self.input_file, encoding='utf-8') as f:
+            with open(self.input_file, encoding='utf-8') as f:  # noqa: PTH123
                 input_data = json.load(f)
             sample_size = []
-            for asset_type, assetIt in asset_files.items():
+            for asset_type, assetIt in asset_files.items():  # noqa: B007, N806, PERF102
                 sample_size.append(
                     input_data['Applications']['DL'][asset_type]['ApplicationData'][
                         'Realizations'
@@ -3490,23 +3491,23 @@ class Workflow:
             # Create the Results_det.json and Results_rlz_i.json for recoverary
             deterministic = {}
             realizations = {rlz_i: {} for rlz_i in range(sample_size)}
-            for asset_type in asset_files.keys():
+            for asset_type in asset_files.keys():  # noqa: SIM118
                 asset_dir = self.run_dir / asset_type
                 determine_file = asset_dir / f'{asset_type}_det.json'
-                with open(determine_file, encoding='utf-8') as f:
+                with open(determine_file, encoding='utf-8') as f:  # noqa: PTH123
                     determ_i = json.load(f)
                 deterministic.update(determ_i)
                 for rlz_i in range(sample_size):
                     rlz_i_file = asset_dir / f'{asset_type}_{rlz_i}.json'
-                    with open(rlz_i_file, encoding='utf-8') as f:
+                    with open(rlz_i_file, encoding='utf-8') as f:  # noqa: PTH123
                         rlz_i_i = json.load(f)
                     realizations[rlz_i].update(rlz_i_i)
 
             determine_file = self.run_dir / 'Results_det.json'
-            with open(determine_file, 'w', encoding='utf-8') as f:
+            with open(determine_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
                 json.dump(deterministic, f, indent=2)
             for rlz_i, rlz_data in realizations.items():
-                with open(
+                with open(  # noqa: PTH123
                     self.run_dir / f'Results_{rlz_i}.json', 'w', encoding='utf-8'
                 ) as f:
                     json.dump(rlz_data, f, indent=2)

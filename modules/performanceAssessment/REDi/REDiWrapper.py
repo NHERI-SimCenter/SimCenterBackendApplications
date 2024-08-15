@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -51,23 +51,23 @@ import numpy as np
 import pandas as pd
 from REDi.go_redi import go_redi
 
-this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
 main_dir = this_dir.parents[1]
 sys.path.insert(0, str(main_dir / 'common'))
 
-from simcenter_common import get_scale_factors
+from simcenter_common import get_scale_factors  # noqa: E402
 
 
-class NumpyEncoder(json.JSONEncoder):
+class NumpyEncoder(json.JSONEncoder):  # noqa: D101
     # Encode the numpy datatypes to json
 
-    def default(self, obj):
+    def default(self, obj):  # noqa: D102
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
 
 
-def get_stats(arr: np.array) -> dict:
+def get_stats(arr: np.array) -> dict:  # noqa: D103
     # Returns a dictionary of summary stats from the array
 
     if np.min(arr) > 0.0:
@@ -94,7 +94,7 @@ def get_stats(arr: np.array) -> dict:
     }
 
 
-def clean_up_results(res: dict, keys_to_remove: List[str]) -> dict:
+def clean_up_results(res: dict, keys_to_remove: List[str]) -> dict:  # noqa: FA100, D103
     # Remove extra keys not needed here
 
     for key in keys_to_remove:
@@ -104,7 +104,7 @@ def clean_up_results(res: dict, keys_to_remove: List[str]) -> dict:
     return res
 
 
-def clean_up_nistr(nistr: str) -> str:
+def clean_up_nistr(nistr: str) -> str:  # noqa: D103
     # helper function to convert from Pelicun tag to REDi tag
 
     indices_to_remove = [1, 4]
@@ -115,7 +115,7 @@ def clean_up_nistr(nistr: str) -> str:
     return nistr
 
 
-def get_replacement_response(replacement_time: float):
+def get_replacement_response(replacement_time: float):  # noqa: D103
     return {
         'repair_class': 'replacement',
         'damage_by_component_all_DS': None,
@@ -132,19 +132,19 @@ def get_replacement_response(replacement_time: float):
     }
 
 
-def get_first_value(val: dict, num_levels: int) -> int:
+def get_first_value(val: dict, num_levels: int) -> int:  # noqa: D103
     # Get the number of samples that pelicun returns
 
     next_val = next(iter(val.items()))[1]
 
     if num_levels > 0:
         return get_first_value(val=next_val, num_levels=num_levels - 1)
-    else:
+    else:  # noqa: RET505
         return next_val
 
 
-def main(args):
-    print('***Running REDi Seismic Downtime engine***\n')
+def main(args):  # noqa: C901, D103, PLR0915
+    print('***Running REDi Seismic Downtime engine***\n')  # noqa: T201
 
     pelicun_results_dir = Path(args.dirnameOutput)
 
@@ -160,49 +160,49 @@ def main(args):
         redi_output_dir.mkdir(parents=True)
 
     # dictionary to hold the base input parameter that do not change with every pelicun iteration
-    rediInputDict = dict()
+    rediInputDict = dict()  # noqa: C408, N806
 
     # load the risk parameters
-    pathRiskParams = Path(args.riskParametersPath)
-    with open(pathRiskParams, encoding='utf-8') as f:
+    pathRiskParams = Path(args.riskParametersPath)  # noqa: N806
+    with open(pathRiskParams, encoding='utf-8') as f:  # noqa: PTH123
         risk_param_dict = json.load(f)
 
     rediInputDict['risk_parameters'] = risk_param_dict
 
     # import SimCenter's AIM.json file
-    pathAim = pelicun_results_dir / 'AIM.json'
-    with open(pathAim, encoding='utf-8') as f:
-        AIM = json.load(f)
+    pathAim = pelicun_results_dir / 'AIM.json'  # noqa: N806
+    with open(pathAim, encoding='utf-8') as f:  # noqa: PTH123
+        AIM = json.load(f)  # noqa: N806
 
     # Get the CMP_sample json from Pelicun
-    pathComponent = pelicun_results_dir / 'CMP_sample.json'
-    with open(pathComponent, encoding='utf-8') as f:
-        CMP = json.load(f)
+    pathComponent = pelicun_results_dir / 'CMP_sample.json'  # noqa: N806
+    with open(pathComponent, encoding='utf-8') as f:  # noqa: PTH123
+        CMP = json.load(f)  # noqa: N806
 
         # remove Units information - for now
         if 'Units' in CMP:
             del CMP['Units']
 
     # Get the DMG_sample json from Pelicun
-    pathComponentDmg = pelicun_results_dir / 'DMG_sample.json'
-    with open(pathComponentDmg, encoding='utf-8') as f:
-        CMP_DMG = json.load(f)
+    pathComponentDmg = pelicun_results_dir / 'DMG_sample.json'  # noqa: N806
+    with open(pathComponentDmg, encoding='utf-8') as f:  # noqa: PTH123
+        CMP_DMG = json.load(f)  # noqa: N806
 
         # remove Units information - for now
         if 'Units' in CMP_DMG:
             del CMP_DMG['Units']
 
     # Get the DV_repair_sample json from Pelicun
-    pathComponentDV = pelicun_results_dir / 'DV_repair_sample.json'
-    with open(pathComponentDV, encoding='utf-8') as f:
-        CMP_DV = json.load(f)
+    pathComponentDV = pelicun_results_dir / 'DV_repair_sample.json'  # noqa: N806
+    with open(pathComponentDV, encoding='utf-8') as f:  # noqa: PTH123
+        CMP_DV = json.load(f)  # noqa: N806
 
         # remove Units information - for now
         if 'Units' in CMP_DV:
             del CMP_DV['Units']
 
     # Load the csv version of the decision vars
-    with zipfile.ZipFile(
+    with zipfile.ZipFile(  # noqa: SIM117
         pelicun_results_dir / 'DV_repair_sample.zip', 'r'
     ) as zip_ref:
         # Read the CSV file inside the zip file into memory
@@ -219,10 +219,10 @@ def main(args):
 
     # Define a list of keywords to search for in column names
     keywords = ['replacement-collapse', 'replacement-irreparable']
-    DVs = ['Cost', 'Time']
+    DVs = ['Cost', 'Time']  # noqa: N806
 
-    DVReplacementDict = {}
-    for DV in DVs:
+    DVReplacementDict = {}  # noqa: N806
+    for DV in DVs:  # noqa: N806
         columns_to_check = [
             col
             for col in data.columns
@@ -234,18 +234,18 @@ def main(args):
         DVReplacementDict[DV] = result_vector
 
     # Find columns containing replace or collapse keywords
-    buildingirreparableOrCollapsed = (data[columns_to_check] != 0).any(axis=1)
+    buildingirreparableOrCollapsed = (data[columns_to_check] != 0).any(axis=1)  # noqa: N806
 
     sum_collapsed_buildings = sum(buildingirreparableOrCollapsed)
 
-    print(
+    print(  # noqa: T201
         f'There are {sum_collapsed_buildings} collapsed or irreparable buildings from Pelicun'
     )
 
     # Get some general information
     gen_info = AIM['DL']['Asset']
 
-    nStories = int(gen_info['NumberOfStories'])
+    nStories = int(gen_info['NumberOfStories'])  # noqa: N806
     rediInputDict['nFloor'] = nStories
 
     # Get the plan area
@@ -272,23 +272,23 @@ def main(args):
     num_workers = max(int(total_building_area / 1000), 1)
 
     # Get the replacement cost and time
-    DL_info = AIM['DL']['Losses']['Repair']
+    DL_info = AIM['DL']['Losses']['Repair']  # noqa: N806
 
     # Note these are not the random
-    replacementCost = DL_info['ReplacementCost']['Median']
+    replacementCost = DL_info['ReplacementCost']['Median']  # noqa: N806
     rediInputDict['replacement_cost'] = (
         float(replacementCost) / 1e6
     )  # Needs to be in the millions of dollars
 
-    replacementTime = float(DL_info['ReplacementTime']['Median'])
+    replacementTime = float(DL_info['ReplacementTime']['Median'])  # noqa: N806
 
     # convert replacement time to days from worker_days
-    replacementTime = replacementTime / num_workers
+    replacementTime = replacementTime / num_workers  # noqa: N806
 
     rediInputDict['replacement_time'] = replacementTime
 
-    final_results_dict = dict()
-    log_output: List[str] = []
+    final_results_dict = dict()  # noqa: C408
+    log_output: List[str] = []  # noqa: FA100
 
     for sample in range(num_samples):
         if buildingirreparableOrCollapsed[sample]:
@@ -310,20 +310,20 @@ def main(args):
         #                   ...,
         #                  {'NISTR' : nistr_id_n,
         #                   'Qty' : [dir_1, dir_2]}]
-        components: List[List[Dict[str, Any]]] = [[] for i in range(nStories + 1)]
+        components: List[List[Dict[str, Any]]] = [[] for i in range(nStories + 1)]  # noqa: FA100
 
         # Pelicun output map ###
         #   "B1033.061b": { <- component nistr
         #     "4": {        <- floor
         #       "1": [      <- direction
-        CMP = clean_up_results(
+        CMP = clean_up_results(  # noqa: N806
             res=CMP, keys_to_remove=['collapse', 'excessiveRID', 'irreparable']
         )
         for nistr, floors in CMP.items():
-            nistr = clean_up_nistr(nistr=nistr)
+            nistr = clean_up_nistr(nistr=nistr)  # noqa: PLW2901
 
             for floor, dirs in floors.items():
-                floor = int(floor)
+                floor = int(floor)  # noqa: PLW2901
 
                 dir_1 = 0.0
                 dir_2 = 0.0
@@ -342,8 +342,8 @@ def main(args):
                         dir_2 = float(dirs['2'][sample])
 
                 else:
-                    raise ValueError(
-                        'Could not parse the directionality in the Pelicun output.'
+                    raise ValueError(  # noqa: TRY003
+                        'Could not parse the directionality in the Pelicun output.'  # noqa: EM101
                     )
 
                 cmp_dict = {'NISTR': nistr, 'Qty': [dir_1, dir_2]}
@@ -356,19 +356,19 @@ def main(args):
         # The highest level, outer list is associated with the number of damage states while the inner list corresponds to the number of floors
         # [ds_1, ds_2, ..., ds_n]
         # where ds_n = [num_dmg_units_floor_1, num_dmg_units_floor_2, ..., num_dmg_units_floor_n]
-        component_damage: Dict[str, List[List[float]]] = {}
+        component_damage: Dict[str, List[List[float]]] = {}  # noqa: FA100
 
         # Pelicun output map ###
         #   "B1033.061b": { <- component nistr
         #     "4": {        <- floor
         #       "1": {      <- direction
         #         "0": [    <- damage state  -> Note that zero.. means undamaged
-        CMP_DMG = clean_up_results(
+        CMP_DMG = clean_up_results(  # noqa: N806
             res=CMP_DMG, keys_to_remove=['collapse', 'excessiveRID', 'irreparable']
         )
         collapse_flag = False
         for nistr, floors in CMP_DMG.items():
-            nistr = clean_up_nistr(nistr=nistr)
+            nistr = clean_up_nistr(nistr=nistr)  # noqa: PLW2901
 
             # Get the number of damage states
             num_ds = len(get_first_value(val=floors, num_levels=1))
@@ -377,11 +377,11 @@ def main(args):
             ds_qtys = [floor_qtys for i in range(num_ds)]
 
             for floor, dirs in floors.items():
-                floor = int(floor)
+                floor = int(floor)  # noqa: PLW2901
 
-                for dir, dir_qty in dirs.items():
+                for dir, dir_qty in dirs.items():  # noqa: B007, A001
                     for ds, qtys in dir_qty.items():
-                        ds = int(ds)
+                        ds = int(ds)  # noqa: PLW2901
                         qty = float(qtys[sample])
 
                         if math.isnan(qty):
@@ -423,7 +423,7 @@ def main(args):
         # The second level list contains the number of stories, so a list with length 5 will be a 4-story building with a roof.
         # The third-level list is based on the number of damage states (not including Damage State 0).
 
-        total_consequences: Dict[str, List[List[float]]] = {}
+        total_consequences: Dict[str, List[List[float]]] = {}  # noqa: FA100
 
         # Pelicun output map ###
         #   "COST": {           <- cost/time key
@@ -432,7 +432,7 @@ def main(args):
         #         "1": {        <- damage state
         #           "4": {      <- floor
         #             "1": [    <- direction
-        for nistr in cost_dict.keys():
+        for nistr in cost_dict.keys():  # noqa: SIM118
             # Handle the case of the nested nistr which will be the same for FEMA P-58
             cost_res = cost_dict[nistr][nistr]
             time_res = time_dict[nistr][nistr]
@@ -445,28 +445,28 @@ def main(args):
             cost_floor_list = floor_list.copy()
             time_floor_list = floor_list.copy()
 
-            for ds in cost_res.keys():
+            for ds in cost_res.keys():  # noqa: SIM118
                 cost_floor_dict = cost_res[ds]
                 time_floor_dict = time_res[ds]
 
-                ds = int(ds)
+                ds = int(ds)  # noqa: PLW2901
 
-                for floor in cost_floor_dict.keys():
+                for floor in cost_floor_dict.keys():  # noqa: SIM118
                     cost_dirs_dict = cost_floor_dict[floor]
                     time_dirs_dict = time_floor_dict[floor]
 
-                    floor = int(floor)
+                    floor = int(floor)  # noqa: PLW2901
 
                     total_cost = 0.0
                     total_time = 0.0
-                    for dir in cost_dirs_dict.keys():
+                    for dir in cost_dirs_dict.keys():  # noqa: A001, SIM118
                         total_cost += float(cost_dirs_dict[dir][sample])
                         total_time += float(time_dirs_dict[dir][sample])
 
                     cost_floor_list[floor - 1][ds - 1] = total_cost
                     time_floor_list[floor - 1][ds - 1] = total_time
 
-            nistr = clean_up_nistr(nistr=nistr)
+            nistr = clean_up_nistr(nistr=nistr)  # noqa: PLW2901
 
             # Last two items are empty because pelicun does not return injuries and fatalities.
             total_consequences[nistr] = [
@@ -486,7 +486,7 @@ def main(args):
         rediInputDict['_id'] = f'SimCenter_{sample}'
 
         # Save the dictionary to a JSON file
-        with open(
+        with open(  # noqa: PTH123
             redi_input_dir / f'redi_{sample}.json', 'w', encoding='utf-8'
         ) as f:
             json.dump(this_it_input, f, indent=4, cls=NumpyEncoder)
@@ -511,8 +511,8 @@ def main(args):
         final_results_dict[sample] = res
 
     # Create a high-level json with detailed results
-    print(f'Saving all samples to: {redi_output_dir}/redi_results_all_samples.json')
-    with open(
+    print(f'Saving all samples to: {redi_output_dir}/redi_results_all_samples.json')  # noqa: T201
+    with open(  # noqa: PTH123
         redi_output_dir / 'redi_results_all_samples.json', 'w', encoding='utf-8'
     ) as f:
         json.dump(final_results_dict, f, cls=NumpyEncoder)
@@ -520,7 +520,7 @@ def main(args):
     # Create a smaller summary stats json for recovery time and max delay
     dt_all_samples = [[] for i in range(3)]
     max_delay_list = []
-    for sample, res in final_results_dict.items():
+    for sample, res in final_results_dict.items():  # noqa: B007
         total_downtime = res['building_total_downtime']
         # full recovery - functional recovery - immediate occupancy
         for i in range(3):
@@ -540,15 +540,15 @@ def main(args):
         'Immediate Occupancy': get_stats(immediate_occupancy_list),
     }
 
-    print(f'Saving all samples to: {redi_output_dir}/redi_summary_stats.json')
-    with open(
+    print(f'Saving all samples to: {redi_output_dir}/redi_summary_stats.json')  # noqa: T201
+    with open(  # noqa: PTH123
         redi_output_dir / 'redi_summary_stats.json', 'w', encoding='utf-8'
     ) as f:
         json.dump(summary_stats, f, indent=4, cls=NumpyEncoder)
 
     # Write the log file
-    print(f'Saving REDi log file at: {redi_output_dir}/redi_log.txt')
-    with open(redi_output_dir / 'redi_log.txt', 'w', encoding='utf-8') as file:
+    print(f'Saving REDi log file at: {redi_output_dir}/redi_log.txt')  # noqa: T201
+    with open(redi_output_dir / 'redi_log.txt', 'w', encoding='utf-8') as file:  # noqa: PTH123
         # Iterate through the list of strings and write each one to the file
         for string in log_output:
             file.write(string + '\n')
@@ -577,24 +577,24 @@ if __name__ == '__main__':
 
     # Check for the required arguments
     if not args.dirnameOutput:
-        print(
+        print(  # noqa: T201
             'Path to the working directory containing the Pelicun results is required'
         )
-        exit()
+        exit()  # noqa: PLR1722
     elif not Path(args.dirnameOutput).exists():
-        print(
+        print(  # noqa: T201
             f'Provided path to the working directory {args.dirnameOutput} does not exist'
         )
-        exit()
+        exit()  # noqa: PLR1722
 
     if not args.riskParametersPath:
-        print('Path to the risk parameters JSON file is required')
-        exit()
+        print('Path to the risk parameters JSON file is required')  # noqa: T201
+        exit()  # noqa: PLR1722
     elif not Path(args.riskParametersPath).exists():
-        print(
+        print(  # noqa: T201
             f'Provided path to the risk parameters JSON file {args.riskParametersPath} does not exist'
         )
-        exit()
+        exit()  # noqa: PLR1722
 
     start_time = time.time()
 
@@ -602,7 +602,7 @@ if __name__ == '__main__':
 
     end_time = time.time()
     elapsed_time = end_time - start_time
-    print(f'REDi finished. Elapsed time: {elapsed_time:.2f} seconds')
+    print(f'REDi finished. Elapsed time: {elapsed_time:.2f} seconds')  # noqa: T201
 
 
 '/opt/homebrew/anaconda3/envs/simcenter/bin/python' '/Users/stevan.gavrilovic/Desktop/SimCenter/SimCenterBackendApplications/applications/performanceAssessment/REDi/REDiWrapper.py' '--riskParametersPath' '/Users/stevan.gavrilovic/Desktop/SimCenter/build-PBE-Qt_6_5_1_for_macOS-Debug/PBE.app/Contents/MacOS/Examples/pbdl-0003/src/risk_params.json' '--dirnameOutput' '/Users/stevan.gavrilovic/Documents/PBE/LocalWorkDir/tmp.SimCenter'

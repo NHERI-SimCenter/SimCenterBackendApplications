@@ -1,4 +1,4 @@
-import argparse
+import argparse  # noqa: INP001, D100
 import importlib
 import json
 import os
@@ -15,15 +15,15 @@ import shapely
 
 
 # https://stackoverflow.com/questions/50916422/python-typeerror-object-of-type-int64-is-not-json-serializable
-class NpEncoder(json.JSONEncoder):
-    def default(self, obj):
+class NpEncoder(json.JSONEncoder):  # noqa: D101
+    def default(self, obj):  # noqa: D102
         if isinstance(obj, np.integer):
             return int(obj)
         if isinstance(obj, np.floating):
             return float(obj)
         if isinstance(obj, np.ndarray):
             return obj.tolist()
-        return super(NpEncoder, self).default(obj)
+        return super(NpEncoder, self).default(obj)  # noqa: UP008
 
 
 class generalAIMGenerator:
@@ -34,44 +34,44 @@ class generalAIMGenerator:
     :param `**kwargs`: The keyword arguments are used for ...
     :ivar arg: This is where we store arg
     :vartype arg: str
-    """
+    """  # noqa: D205, D400
 
     def __init__(self, output_file):
         self.output_file = output_file
         self.gdf = None
         self.filter = None
 
-    def load_asset_gdf(self, source_file):
+    def load_asset_gdf(self, source_file):  # noqa: D102
         asset_gdf = gpd.read_file(source_file)
         self.gdf = asset_gdf
 
-    def set_asset_gdf(self, asset_gdf):
+    def set_asset_gdf(self, asset_gdf):  # noqa: D102
         self.gdf = asset_gdf
 
-    def selectAssets(self, filter):
+    def selectAssets(self, filter):  # noqa: A002, N802, D102
         self.filter = filter
         # check if a filter is provided for bridges
         if self.filter is not None:
-            asset_requested = []
+            asset_requested = []  # noqa: F841
             for assets in self.filter.split(','):
                 if '-' in assets:
                     asset_low, asset_high = assets.split('-')
-                    assets_requested += list(
+                    assets_requested += list(  # noqa: F821
                         range(int(asset_low), int(asset_high) + 1)
                     )
                 else:
                     assets_requested.append(int(assets))
             assets_requested = np.array(assets_requested)
-            assets_available = self.gdf.index.values
+            assets_available = self.gdf.index.values  # noqa: PD011
             assets_to_run = assets_requested[
                 np.where(np.isin(assets_requested, assets_available))[0]
             ]
         else:
-            assets_to_run = self.gdf.index.values
+            assets_to_run = self.gdf.index.values  # noqa: PD011
         self.gdf = self.gdf.loc[assets_to_run, :]
         return assets_to_run
 
-    def createAIM(self, asset_idx, component_type=None):
+    def createAIM(self, asset_idx, component_type=None):  # noqa: ARG002, N802, D102
         # initialize the AIM file
         # if component_type is not None:
         #     asset_id = component_type+"_"+str(asset_idx)
@@ -79,9 +79,9 @@ class generalAIMGenerator:
         #     asset_id = str(asset_idx)
         asset_id = asset_idx
         asset = self.gdf.loc[asset_idx, :]
-        AIM_i = {
+        AIM_i = {  # noqa: N806
             'RandomVariables': [],
-            'GeneralInformation': dict(
+            'GeneralInformation': dict(  # noqa: C408
                 AIM_id=str(asset_id),
                 location={
                     'latitude': asset['geometry'].centroid.coords[0][1],
@@ -98,34 +98,34 @@ class generalAIMGenerator:
         #     AIM_i["GeneralInformation"].update({"assetSubtype":component_type})
         return AIM_i
 
-    def dumpAIM(self, AIM_i):
+    def dumpAIM(self, AIM_i):  # noqa: N802, N803, D102
         # assetSubtype = AIM_i['GeneralInformation'].get("assetSubtype", None)
-        componentType = AIM_i['GeneralInformation'].get('type', None)
-        outDir = os.path.dirname(self.output_file)
+        componentType = AIM_i['GeneralInformation'].get('type', None)  # noqa: N806
+        outDir = os.path.dirname(self.output_file)  # noqa: PTH120, N806
         if componentType:
-            outDir = os.path.join(outDir, componentType)
+            outDir = os.path.join(outDir, componentType)  # noqa: PTH118, N806
         asset_id = AIM_i['GeneralInformation']['AIM_id']
-        AIM_file_name = f'{asset_id}-AIM.json'
-        AIM_file_name = os.path.join(outDir, AIM_file_name)
-        with open(AIM_file_name, 'w', encoding='utf-8') as f:
+        AIM_file_name = f'{asset_id}-AIM.json'  # noqa: N806
+        AIM_file_name = os.path.join(outDir, AIM_file_name)  # noqa: PTH118, N806
+        with open(AIM_file_name, 'w', encoding='utf-8') as f:  # noqa: PTH123
             json.dump(AIM_i, f, indent=2, cls=NpEncoder)
         return AIM_file_name
 
 
-class lineAIMGenerator(generalAIMGenerator):
-    def breakDownLongLines(self, delta, tolerance=10e-3):
+class lineAIMGenerator(generalAIMGenerator):  # noqa: D101
+    def breakDownLongLines(self, delta, tolerance=10e-3):  # noqa: N802, D102
         edges = self.gdf
-        dropedEdges = []
-        newEdges = []
+        dropedEdges = []  # noqa: N806
+        newEdges = []  # noqa: N806
         crs = edges.crs
-        edgesOrig = edges.copy()
+        edgesOrig = edges.copy()  # noqa: N806
         # edgesOrig["IDbase"] = edgesOrig["OID"].apply(lambda x: x.split('_')[0])
         edgesOrig['IDbase'] = edgesOrig.index
-        num_segExistingMap = edgesOrig.groupby('IDbase').count().iloc[:, 0].to_dict()
+        num_segExistingMap = edgesOrig.groupby('IDbase').count().iloc[:, 0].to_dict()  # noqa: N806
         edges_dict = edges.reset_index().to_crs('epsg:6500')
         edges_dict = edges_dict.to_dict(orient='records')
         for row_ind in range(len(edges_dict)):
-            LS = edges_dict[row_ind]['geometry']
+            LS = edges_dict[row_ind]['geometry']  # noqa: N806
             num_seg = int(np.ceil(LS.length / delta))
             if num_seg == 1:
                 continue
@@ -134,14 +134,14 @@ class lineAIMGenerator(generalAIMGenerator):
                 [LS.interpolate(distance) for distance in distances[:-1]]
                 + [LS.coords[-1]]
             )
-            LS = shapely.ops.snap(LS, points, tolerance)
+            LS = shapely.ops.snap(LS, points, tolerance)  # noqa: N806
             with warnings.catch_warnings():  # Suppress the warning of points not on
                 # LS. Shaply will first project the point to the line and then split
                 warnings.simplefilter('ignore')
-                splittedLS = shapely.ops.split(LS, points).geoms
-            currentEdge = edges_dict[row_ind].copy()
-            num_segExisting = num_segExistingMap[currentEdge['id']]
-            for sLS_ind, sLS in enumerate(splittedLS):
+                splittedLS = shapely.ops.split(LS, points).geoms  # noqa: N806
+            currentEdge = edges_dict[row_ind].copy()  # noqa: N806
+            num_segExisting = num_segExistingMap[currentEdge['id']]  # noqa: N806, F841
+            for sLS_ind, sLS in enumerate(splittedLS):  # noqa: N806
                 # create new edge
                 # if sLS_ind ==0:
                 #     newID = currentEdge["id"]
@@ -149,9 +149,9 @@ class lineAIMGenerator(generalAIMGenerator):
                 #     newID = currentEdge["id"]+"_"+str(num_segExisting)
                 #     num_segExisting +=1
                 #     num_segExistingMap[currentEdge["id"]] += 1
-                newID = currentEdge['id']
-                newGeom = sLS
-                newEdge = currentEdge.copy()
+                newID = currentEdge['id']  # noqa: N806
+                newGeom = sLS  # noqa: N806
+                newEdge = currentEdge.copy()  # noqa: N806
                 newEdge.update({'id': newID, 'geometry': newGeom, 'segID': sLS_ind})
                 newEdges.append(newEdge)
             dropedEdges.append(edges_dict[row_ind]['id'])
@@ -159,7 +159,7 @@ class lineAIMGenerator(generalAIMGenerator):
         edges = edges.reset_index()  # Convert "id" from index into a column
         if len(newEdges) > 0:
             edges['segID'] = 0
-            newEdges = gpd.GeoDataFrame(newEdges, crs='epsg:6500').to_crs(crs)
+            newEdges = gpd.GeoDataFrame(newEdges, crs='epsg:6500').to_crs(crs)  # noqa: N806
             edges = pd.concat([edges, newEdges], ignore_index=True)
             edges = edges.sort_values(['id', 'segID'])
             edges = (
@@ -170,9 +170,9 @@ class lineAIMGenerator(generalAIMGenerator):
         # self.gdf = edges.reset_index().rename(columns={"index":"AIM_id"})
         self.gdf = edges
 
-    def defineConnectivities(
+    def defineConnectivities(  # noqa: N802, D102
         self,
-        AIM_id_prefix=None,
+        AIM_id_prefix=None,  # noqa: N803
         edges_file_name=None,
         nodes_file_name=None,
     ):
@@ -195,13 +195,13 @@ class lineAIMGenerator(generalAIMGenerator):
             # check if first and last are the same
             if start == first and end == last:
                 continue
-            elif start == last and end == first:
-                newStartID = edges.loc[ind, 'node_end']
-                newEndID = edges.loc[ind, 'node_start']
+            elif start == last and end == first:  # noqa: RET507
+                newStartID = edges.loc[ind, 'node_end']  # noqa: N806
+                newEndID = edges.loc[ind, 'node_start']  # noqa: N806
                 edges.loc[ind, 'node_start'] = newStartID
                 edges.loc[ind, 'node_end'] = newEndID
             else:
-                print(
+                print(  # noqa: T201
                     ind,
                     'th row of edges has wrong start/first, end/last pairs, likely a bug of momepy.gdf_to_nx function',
                 )
@@ -218,39 +218,39 @@ class lineAIMGenerator(generalAIMGenerator):
             edges['AIM_id'] = edges['AIM_id'].apply(
                 lambda x: AIM_id_prefix + '_' + str(x)
             )
-        outDir = os.path.dirname(self.output_file)
+        outDir = os.path.dirname(self.output_file)  # noqa: PTH120, N806
         if edges_file_name is not None:
             edges.to_file(
-                os.path.join(outDir, f'{edges_file_name}.geojson'),
+                os.path.join(outDir, f'{edges_file_name}.geojson'),  # noqa: PTH118
                 driver='GeoJSON',
             )
         if nodes_file_name is not None:
-            nodesNeeded = list(
+            nodesNeeded = list(  # noqa: N806
                 set(
-                    edges['StartNode'].values.tolist()
-                    + edges['EndNode'].values.tolist()
+                    edges['StartNode'].values.tolist()  # noqa: PD011
+                    + edges['EndNode'].values.tolist()  # noqa: PD011
                 )
             )
             nodes = nodes.loc[nodesNeeded, :]
             nodes = nodes.to_crs(datacrs)[['nodeID', 'geometry']]
             nodes.to_file(
-                os.path.join(outDir, f'{nodes_file_name}.geojson'),
+                os.path.join(outDir, f'{nodes_file_name}.geojson'),  # noqa: PTH118
                 driver='GeoJSON',
             )
         self.gdf = edges
 
 
-def split_and_select_components(input_config):
-    component_dict = dict()
+def split_and_select_components(input_config):  # noqa: C901, D103
+    component_dict = dict()  # noqa: C408
     asset_source_file = input_config['assetSourceFile']
-    with open(asset_source_file, encoding='utf-8') as f:
+    with open(asset_source_file, encoding='utf-8') as f:  # noqa: PTH123
         source_data = json.load(f)
     crs = source_data['crs']
-    featureList = source_data['features']
-    requested_dict = dict()
+    featureList = source_data['features']  # noqa: N806
+    requested_dict = dict()  # noqa: C408
     for key, value in input_config.items():
         if isinstance(value, dict):
-            filterString = value.get('filter', None)
+            filterString = value.get('filter', None)  # noqa: N806
             if filterString is None:
                 continue
             assets_requested = []
@@ -287,27 +287,27 @@ def split_and_select_components(input_config):
     return component_dict
 
 
-def init_workdir(component_dict, outDir):
+def init_workdir(component_dict, outDir):  # noqa: N803, D103
     os.chdir(outDir)
     for dir_or_file in os.listdir(outDir):
         if dir_or_file != 'log.txt':
-            if os.path.isdir(dir_or_file):
+            if os.path.isdir(dir_or_file):  # noqa: PTH112
                 shutil.rmtree(dir_or_file)
             else:
-                os.remove(dir_or_file)
-    component_dir = dict()
-    for comp in component_dict.keys():
-        compDir = posixpath.join(outDir, comp)
-        os.mkdir(compDir)
+                os.remove(dir_or_file)  # noqa: PTH107
+    component_dir = dict()  # noqa: C408
+    for comp in component_dict.keys():  # noqa: SIM118
+        compDir = posixpath.join(outDir, comp)  # noqa: N806
+        os.mkdir(compDir)  # noqa: PTH102
         component_dir.update({comp: compDir})
     return component_dir
 
 
-def create_asset_files(output_file, asset_type, input_file, doParallel):
+def create_asset_files(output_file, asset_type, input_file, doParallel):  # noqa: C901, N803, D103
     # check if running parallel
-    numP = 1
-    procID = 0
-    runParallel = False
+    numP = 1  # noqa: N806
+    procID = 0  # noqa: N806
+    runParallel = False  # noqa: N806
 
     if doParallel == 'True':
         mpi_spec = importlib.util.find_spec('mpi4py')
@@ -315,18 +315,18 @@ def create_asset_files(output_file, asset_type, input_file, doParallel):
         if found:
             from mpi4py import MPI
 
-            runParallel = True
+            runParallel = True  # noqa: N806
             comm = MPI.COMM_WORLD
-            numP = comm.Get_size()
-            procID = comm.Get_rank()
-            if numP < 2:
-                doParallel = 'False'
-                runParallel = False
-                numP = 1
-                procID = 0
-    outDir = os.path.dirname(output_file)
+            numP = comm.Get_size()  # noqa: N806
+            procID = comm.Get_rank()  # noqa: N806
+            if numP < 2:  # noqa: PLR2004
+                doParallel = 'False'  # noqa: N806
+                runParallel = False  # noqa: N806
+                numP = 1  # noqa: N806
+                procID = 0  # noqa: N806
+    outDir = os.path.dirname(output_file)  # noqa: PTH120, N806
 
-    with open(input_file, encoding='utf-8') as f:
+    with open(input_file, encoding='utf-8') as f:  # noqa: PTH123
         input_data = json.load(f)
     input_config = input_data['Applications']['Assets'][asset_type][
         'ApplicationData'
@@ -334,20 +334,20 @@ def create_asset_files(output_file, asset_type, input_file, doParallel):
     # if input_config.get("Roadway", None):
     #     roadSegLength = float(input_config['Roadway'].get('maxRoadLength_m', "100000"))
     component_dict = split_and_select_components(input_config)
-    component_dir = init_workdir(component_dict, outDir)
+    component_dir = init_workdir(component_dict, outDir)  # noqa: F841
     assets_array = []
     for component_type, component_data in component_dict.items():
-        geom_type = type(component_data['geometry'].values[0])
+        geom_type = type(component_data['geometry'].values[0])  # noqa: PD011
         if geom_type in [shapely.Point, shapely.Polygon]:
             # if component_type in ["HwyBridge", "HwyTunnel"]:
-            AIMgenerator = generalAIMGenerator(output_file)
+            AIMgenerator = generalAIMGenerator(output_file)  # noqa: N806
             AIMgenerator.set_asset_gdf(component_data)
-            selected_Asset_idxs = AIMgenerator.selectAssets(None)
+            selected_Asset_idxs = AIMgenerator.selectAssets(None)  # noqa: N806
         # elif component_type in ["Roadway"]:
         elif geom_type == shapely.LineString:
-            AIMgenerator = lineAIMGenerator(output_file)
+            AIMgenerator = lineAIMGenerator(output_file)  # noqa: N806
             AIMgenerator.set_asset_gdf(component_data)
-            selected_Asset_idxs = AIMgenerator.selectAssets(None)
+            selected_Asset_idxs = AIMgenerator.selectAssets(None)  # noqa: N806
             # AIMgenerator.breakDownLongLines(roadSegLength)
             # # AIMgenerator.defineConnectivities(None, "hwy_edges",\
             # #                                   "hwy_nodes")
@@ -356,40 +356,40 @@ def create_asset_files(output_file, asset_type, input_file, doParallel):
             # selected_Asset_idxs = AIMgenerator.selectAssets(None)
         else:
             sys.exit(
-                (f'The geometry type {geom_type} defined for the')
+                (f'The geometry type {geom_type} defined for the')  # noqa: ISC003
                 + (f'components {component_type} is not supported in ')
                 + (f'the assets {asset_type}')
             )
         # for each asset...
         count = 0
         for asset_idx in selected_Asset_idxs:
-            if runParallel == False or (count % numP) == procID:
+            if runParallel == False or (count % numP) == procID:  # noqa: E712
                 # initialize the AIM file
-                AIM_i = AIMgenerator.createAIM(asset_idx, component_type)
-                AIM_file_name = AIMgenerator.dumpAIM(AIM_i)
+                AIM_i = AIMgenerator.createAIM(asset_idx, component_type)  # noqa: N806
+                AIM_file_name = AIMgenerator.dumpAIM(AIM_i)  # noqa: N806
                 assets_array.append(
-                    dict(
+                    dict(  # noqa: C408
                         id=AIM_i['GeneralInformation']['AIM_id'], file=AIM_file_name
                     )
                 )
             count = count + 1
     if procID != 0:
         # if not P0, write data to output file with procID in name and barrier
-        output_file_p = os.path.join(outDir, f'tmp_{procID}.json')
-        with open(output_file_p, 'w', encoding='utf-8') as f:
+        output_file_p = os.path.join(outDir, f'tmp_{procID}.json')  # noqa: PTH118
+        with open(output_file_p, 'w', encoding='utf-8') as f:  # noqa: PTH123
             json.dump(assets_array, f, indent=0)
         comm.Barrier()
     else:
-        if runParallel == True:
+        if runParallel == True:  # noqa: E712
             # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append
             comm.Barrier()
             for i in range(1, numP):
-                fileToAppend = os.path.join(outDir, f'tmp_{i}.json')
-                with open(fileToAppend, encoding='utf-8') as data_file:
+                fileToAppend = os.path.join(outDir, f'tmp_{i}.json')  # noqa: PTH118, N806
+                with open(fileToAppend, encoding='utf-8') as data_file:  # noqa: PTH123
                     json_data = data_file.read()
-                assetsToAppend = json.loads(json_data)
+                assetsToAppend = json.loads(json_data)  # noqa: N806
                 assets_array += assetsToAppend
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
             json.dump(assets_array, f, indent=2, cls=NpEncoder)
     # else:
     #     print(f"The asset_type {asset_type} is not one of Buildings, TransportationNetwork or WaterNetwork, and is currently not supported")

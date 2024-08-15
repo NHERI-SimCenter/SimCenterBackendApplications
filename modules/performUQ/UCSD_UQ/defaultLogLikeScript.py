@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as np  # noqa: INP001, D100
 
 
 class CovError(Exception):
@@ -15,15 +15,15 @@ class CovError(Exception):
 
 
 def log_likelihood(
-    calibrationData,
+    calibrationData,  # noqa: N803
     prediction,
-    numExperiments,
-    covarianceMatrixList,
-    edpNamesList,
-    edpLengthsList,
-    covarianceMultiplierList,
-    scaleFactors,
-    shiftFactors,
+    numExperiments,  # noqa: N803
+    covarianceMatrixList,  # noqa: N803
+    edpNamesList,  # noqa: ARG001, N803
+    edpLengthsList,  # noqa: N803
+    covarianceMultiplierList,  # noqa: N803
+    scaleFactors,  # noqa: N803
+    shiftFactors,  # noqa: N803
 ):
     """Compute the log-likelihood
 
@@ -67,21 +67,21 @@ def log_likelihood(
     distribution and a user-supplied covariance structure. Block-diagonal covariance structures are supported. The value
     of multipliers on the covariance block corresponding to each response quantity is also calibrated.
     :rtype: float
-    """
+    """  # noqa: D400
     # Check if the correct number of covariance terms has been passed in
-    numResponses = len(edpLengthsList)
+    numResponses = len(edpLengthsList)  # noqa: N806
     if len(covarianceMatrixList) != numExperiments * numResponses:
-        print(
+        print(  # noqa: T201
             f'ERROR: The expected number of covariance matrices is {numExperiments * numResponses}, but only {len(covarianceMatrixList)} were passed '
             'in.'
         )
-        raise CovError(
-            f'ERROR: The expected number of covariance matrices is {numExperiments * numResponses}, but only {len(covarianceMatrixList)} were passed '
+        raise CovError(  # noqa: TRY003
+            f'ERROR: The expected number of covariance matrices is {numExperiments * numResponses}, but only {len(covarianceMatrixList)} were passed '  # noqa: EM102
             'in.'
         )
 
     # Shift and normalize the prediction
-    currentPosition = 0
+    currentPosition = 0  # noqa: N806
     for j in range(len(edpLengthsList)):
         prediction[:, currentPosition : currentPosition + edpLengthsList[j]] = (
             prediction[:, currentPosition : currentPosition + edpLengthsList[j]]
@@ -91,25 +91,25 @@ def log_likelihood(
             prediction[:, currentPosition : currentPosition + edpLengthsList[j]]
             / scaleFactors[j]
         )
-        currentPosition = currentPosition + edpLengthsList[j]
+        currentPosition = currentPosition + edpLengthsList[j]  # noqa: N806
 
     # Compute the normalized residuals
-    allResiduals = prediction - calibrationData
+    allResiduals = prediction - calibrationData  # noqa: N806
 
     # Loop over the normalized residuals to compute the log-likelihood
     loglike = 0
-    covListIndex = 0
+    covListIndex = 0  # noqa: N806
     for i in range(numExperiments):
-        currentPosition = 0
+        currentPosition = 0  # noqa: N806
         for j in range(numResponses):
             # Get the residuals corresponding to this response variable
             length = edpLengthsList[j]
             residuals = allResiduals[i, currentPosition : currentPosition + length]
-            currentPosition = currentPosition + length
+            currentPosition = currentPosition + length  # noqa: N806
 
             # Get the covariance matrix corresponding to this response variable
             cov = np.atleast_2d(covarianceMatrixList[covListIndex])
-            covListIndex = covListIndex + 1
+            covListIndex = covListIndex + 1  # noqa: N806
 
             # Multiply the covariance matrix by the value of the covariance multiplier
             cov = cov * covarianceMultiplierList[j]
@@ -132,11 +132,11 @@ def log_likelihood(
                 # Mahalanobis distance]
                 #                = -1/2*[t1 + t2 + t3]
                 t1 = length * np.log(2 * np.pi)
-                eigenValues, eigenVectors = np.linalg.eigh(cov)
+                eigenValues, eigenVectors = np.linalg.eigh(cov)  # noqa: N806
                 logdet = np.sum(np.log(eigenValues))
-                eigenValuesReciprocal = 1.0 / eigenValues
+                eigenValuesReciprocal = 1.0 / eigenValues  # noqa: N806
                 z = eigenVectors * np.sqrt(eigenValuesReciprocal)
-                mahalanobisDistance = np.square(np.dot(residuals, z)).sum()
+                mahalanobisDistance = np.square(np.dot(residuals, z)).sum()  # noqa: N806
                 ll = -0.5 * (t1 + logdet + mahalanobisDistance)
             if not np.isnan(ll):
                 loglike += ll

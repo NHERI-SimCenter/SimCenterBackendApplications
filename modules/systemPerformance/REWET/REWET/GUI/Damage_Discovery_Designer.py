@@ -1,7 +1,7 @@
 """Created on Tue Nov  1 23:25:30 2022
 
 @author: snaeimi
-"""
+"""  # noqa: N999, D400
 
 import pandas as pd
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -9,7 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from .Damage_Discovery_Window import Ui_damage_discovery
 
 
-class Damage_Discovery_Designer(Ui_damage_discovery):
+class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: D101
     def __init__(self, damage_discovery_model):
         self._window = QtWidgets.QDialog()
         self.setupUi(self._window)
@@ -57,13 +57,13 @@ class Damage_Discovery_Designer(Ui_damage_discovery):
         self.remove_button.clicked.connect(self.removeTimeDiscoveryRatioByButton)
         self.buttonBox.accepted.connect(self.okButtonPressed)
 
-    def discoveryRatioValidatorHelper(self, x):
+    def discoveryRatioValidatorHelper(self, x):  # noqa: ARG002, N802, D102
         discovery_ratio = float(self.discovery_ratio_line.text())
 
         if discovery_ratio > 1:
             self.discovery_ratio_line.setText(str(1.0))
 
-    def enableLeakBased(self):
+    def enableLeakBased(self):  # noqa: N802, D102
         self.leak_based_radio.setChecked(True)
 
         self.leak_anount_label.setEnabled(True)
@@ -77,7 +77,7 @@ class Damage_Discovery_Designer(Ui_damage_discovery):
         self.add_button.setEnabled(False)
         self.remove_button.setEnabled(False)
 
-    def enableTimeBased(self):
+    def enableTimeBased(self):  # noqa: N802, D102
         self.time_based_radio.setChecked(True)
 
         self.leak_anount_label.setEnabled(False)
@@ -91,11 +91,11 @@ class Damage_Discovery_Designer(Ui_damage_discovery):
         self.add_button.setEnabled(True)
         self.remove_button.setEnabled(True)
 
-    def clearTimeDiscoveryRatioTable(self):
-        for i in range(self.time_discovery_ratio_table.rowCount()):
+    def clearTimeDiscoveryRatioTable(self):  # noqa: N802, D102
+        for i in range(self.time_discovery_ratio_table.rowCount()):  # noqa: B007
             self.time_discovery_ratio_table.removeRow(0)
 
-    def okButtonPressed(self):
+    def okButtonPressed(self):  # noqa: C901, N802, D102
         if self.leak_based_radio.isChecked():
             leak_amount = self.leak_amount_line.text()
             leak_time = self.leak_time_line.text()
@@ -103,7 +103,7 @@ class Damage_Discovery_Designer(Ui_damage_discovery):
             if leak_amount == '':
                 self.errorMSG('Empty Vlaue', "Please fill the 'Leak Amont' field.")
                 return
-            elif leak_time == '':
+            elif leak_time == '':  # noqa: RET505
                 self.errorMSG('Empty Vlaue', "Please fill the 'Leak Time' field.")
                 return
 
@@ -127,7 +127,7 @@ class Damage_Discovery_Designer(Ui_damage_discovery):
                 return
 
             if (
-                self.damage_discovery_model[
+                self.damage_discovery_model[  # noqa: E712
                     'time_discovery_ratio'
                 ].is_monotonic_increasing
                 == False
@@ -153,7 +153,7 @@ class Damage_Discovery_Designer(Ui_damage_discovery):
 
         self._window.accept()
 
-    def populateTimeDiscoveryRatioTable(self, time_discovery_ratio):
+    def populateTimeDiscoveryRatioTable(self, time_discovery_ratio):  # noqa: N802, D102
         for time, discovery_ratio in time_discovery_ratio.iteritems():
             number_of_rows = self.time_discovery_ratio_table.rowCount()
             self.time_discovery_ratio_table.insertRow(number_of_rows)
@@ -171,7 +171,7 @@ class Damage_Discovery_Designer(Ui_damage_discovery):
                 number_of_rows, 1, discovery_ratio_item
             )
 
-    def addTimeDiscoveryRatioByButton(self):
+    def addTimeDiscoveryRatioByButton(self):  # noqa: N802, D102
         time = self.time_line.text()
         discovery_ratio = self.discovery_ratio_line.text()
 
@@ -201,7 +201,7 @@ class Damage_Discovery_Designer(Ui_damage_discovery):
             self.damage_discovery_model['time_discovery_ratio']
         )
 
-    def removeTimeDiscoveryRatioByButton(self):
+    def removeTimeDiscoveryRatioByButton(self):  # noqa: N802, D102
         items = self.time_discovery_ratio_table.selectedItems()
         if len(items) < 1:
             return
@@ -220,20 +220,20 @@ class Damage_Discovery_Designer(Ui_damage_discovery):
             time_discovery_ratio = time_discovery_ratio.drop(time)
         self.damage_discovery_model['time_discovery_ratio'] = time_discovery_ratio
         self.clearTimeDiscoveryRatioTable()
-        self.populateTimeDiscoveryRatioTable
+        self.populateTimeDiscoveryRatioTable  # noqa: B018
 
-    def methodRadioButtonToggled(self):
+    def methodRadioButtonToggled(self):  # noqa: N802, D102
         if self.leak_based_radio.isChecked():
             self.enableLeakBased()
         elif self.time_based_radio.isChecked():
             self.enableTimeBased()
 
-    def errorMSG(self, error_title, error_msg, error_more_msg=None):
+    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: N802, D102
         error_widget = QtWidgets.QMessageBox()
         error_widget.setIcon(QtWidgets.QMessageBox.Critical)
         error_widget.setText(error_msg)
         error_widget.setWindowTitle(error_title)
         error_widget.setStandardButtons(QtWidgets.QMessageBox.Ok)
-        if error_more_msg != None:
+        if error_more_msg != None:  # noqa: E711
             error_widget.setInformativeText(error_more_msg)
         error_widget.exec_()

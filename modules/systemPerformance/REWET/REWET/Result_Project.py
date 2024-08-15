@@ -1,7 +1,7 @@
 """Created on Sun Oct 23 15:00:31 2022
 
 @author: snaeimi
-"""
+"""  # noqa: N999, D400
 
 import copy
 import os
@@ -20,23 +20,23 @@ from Output.Raw_Data import Raw_Data
 from Output.Result_Time import Result_Time
 
 
-class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
+class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D101
     def __init__(
         self,
         project_file_addr,
         result_directory=None,
-        ignore_not_found=False,
+        ignore_not_found=False,  # noqa: FBT002
         to_neglect_file=None,
         node_col='',
         result_file_dir=None,
-        iObject=False,
+        iObject=False,  # noqa: FBT002, N803
     ):
-        if iObject == False:
+        if iObject == False:  # noqa: E712
             self.readPorjectFile(project_file_addr)
         else:
             self.project = copy.deepcopy(project_file_addr)
 
-        if result_file_dir != None:
+        if result_file_dir != None:  # noqa: E711
             self.project.project_settings.process.settings['result_directory'] = (
                 result_file_dir
             )
@@ -82,8 +82,8 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
 
         to_neglect = []
         # sina hereeeee bug dadi amedane
-        if to_neglect_file != None and False:
-            raise
+        if to_neglect_file != None and False:  # noqa: SIM223, E711
+            raise  # noqa: PLE0704
             file_data = pd.read_excel(to_neglect_file)
             to_neglect = file_data[node_col].to_list()
 
@@ -98,32 +98,32 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
         self.node_name_list = self.wn.node_name_list.copy()
         ret_val = self.checkForNotExistingFile(ignore_not_found)
         self.prepareData()
-        return ret_val
+        return ret_val  # noqa: PLE0101
 
-    def readPorjectFile(self, project_file_addr):
-        print(project_file_addr)
-        with open(project_file_addr, 'rb') as f:
-            self.project = pickle.load(f)
+    def readPorjectFile(self, project_file_addr):  # noqa: N802, D102
+        print(project_file_addr)  # noqa: T201
+        with open(project_file_addr, 'rb') as f:  # noqa: PTH123
+            self.project = pickle.load(f)  # noqa: S301
 
-    def loadPopulation(self, popuation_data, node_id_header, population_header):
+    def loadPopulation(self, popuation_data, node_id_header, population_header):  # noqa: N802, D102
         pop = popuation_data.copy()
         pop = pop.set_index(node_id_header)
         pop = pop[population_header]
         self._population_data = pop
 
-    def checkForNotExistingFile(self, ignore_not_found):
+    def checkForNotExistingFile(self, ignore_not_found):  # noqa: N802, D102
         self.scn_name_list_that_result_file_not_found = []
 
         result_directory = self.result_directory
         # print(self.project.scenario_list)
-        for scn_name, row in self.project.scenario_list.iterrows():
+        for scn_name, row in self.project.scenario_list.iterrows():  # noqa: B007
             scenario_registry_file_name = scn_name + '_registry.pkl'
             # print(result_directory)
             # print(scenario_registry_file_name)
-            registry_file_data_addr = os.path.join(
+            registry_file_data_addr = os.path.join(  # noqa: PTH118
                 result_directory, scenario_registry_file_name
             )
-            if not os.path.exists(registry_file_data_addr):
+            if not os.path.exists(registry_file_data_addr):  # noqa: PTH110
                 self.scn_name_list_that_result_file_not_found.append(scn_name)
 
         if len(self.scn_name_list_that_result_file_not_found) > 0:
@@ -140,11 +140,11 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
                     + repr(result_directory)
                 )
 
-    def prepareData(self):
+    def prepareData(self):  # noqa: N802, D102
         i = 0
         # result_directory = self.project.project_settings.process['result_directory']
         # self.project.scenario_list = self.project.scenario_list.iloc[0:20]
-        for scn_name, row in self.project.scenario_list.iterrows():
+        for scn_name, row in self.project.scenario_list.iterrows():  # noqa: B007
             self._RequiredDemandForAllNodesandtime[scn_name] = None
             # settings_file_name = scn_name+'.xlsx'
             # settings_file_addr = os.path.join(result_directory, settings_file_name)
@@ -156,7 +156,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
 
             # self.time_size[scn_name]      = len(self.data[scn_name].node['demand'].index)
             self.index_to_scen_name[i] = scn_name
-            i += 1
+            i += 1  # noqa: SIM113
 
             self.scenario_prob[scn_name] = self.project.scenario_list.loc[
                 scn_name, 'Probability'
@@ -166,26 +166,26 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
                 ATTENTION: We need probability for any prbablistic result
             """
 
-    def loadScneariodata(self, scn_name):
-        if self.data[scn_name] != None:
+    def loadScneariodata(self, scn_name):  # noqa: N802, D102
+        if self.data[scn_name] != None:  # noqa: E711
             return
-        print('loading scenario ' + str(scn_name))
+        print('loading scenario ' + str(scn_name))  # noqa: T201
         result_directory = self.result_directory
         # scenario_registry_file_name = scn_name+"_registry.pkl"
         # registry_file_data_addr = os.path.join(result_directory, scenario_registry_file_name)
         scenario_registry_file_name = scn_name + '_registry.pkl'
-        reg_addr = os.path.join(result_directory, scenario_registry_file_name)
+        reg_addr = os.path.join(result_directory, scenario_registry_file_name)  # noqa: PTH118
         try:
-            with open(reg_addr, 'rb') as f:
+            with open(reg_addr, 'rb') as f:  # noqa: PTH123
                 # print(output_addr)
-                reg_file_data = pickle.load(f)
+                reg_file_data = pickle.load(f)  # noqa: S301
             self.registry[scn_name] = reg_file_data
             res_file_data = self.registry[scn_name].result
-        except:
+        except:  # noqa: E722
             scenario_registry_file_name = scn_name + '.res'
-            res_addr = os.path.join(result_directory, scenario_registry_file_name)
-            with open(res_addr, 'rb') as f:
-                res_file_data = pickle.load(f)
+            res_addr = os.path.join(result_directory, scenario_registry_file_name)  # noqa: PTH118
+            with open(res_addr, 'rb') as f:  # noqa: PTH123
+                res_file_data = pickle.load(f)  # noqa: S301
         # scenario_registry_file_name = scn_name+".res"
         # res_addr = os.path.join(result_directory, scenario_registry_file_name)
         # with open(res_addr, 'rb') as f:
@@ -197,24 +197,24 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
         self.remove_maximum_trials(res_file_data)
         self.data[scn_name] = res_file_data
 
-    def readData(self):
+    def readData(self):  # noqa: N802, D102
         # i=0
         self.project.scenario_list = self.project.scenario_list.iloc[0:2]
         result_directory = self.result_directory
 
-        for scn_name, row in self.project.scenario_list.iterrows():
+        for scn_name, row in self.project.scenario_list.iterrows():  # noqa: B007
             self._RequiredDemandForAllNodesandtime[scn_name] = None
             scenario_registry_file_name = scn_name + '_registry.pkl'
-            registry_file_data_addr = os.path.join(
+            registry_file_data_addr = os.path.join(  # noqa: PTH118
                 result_directory, scenario_registry_file_name
             )
 
-            with open(registry_file_data_addr, 'rb') as f:
-                if not os.path.exists(registry_file_data_addr):
+            with open(registry_file_data_addr, 'rb') as f:  # noqa: PTH123
+                if not os.path.exists(registry_file_data_addr):  # noqa: PTH110
                     raise ValueError(
                         'Registry File Not Found: ' + str(registry_file_data_addr)
                     )
-                self.registry[scn_name] = pickle.load(f)
+                self.registry[scn_name] = pickle.load(f)  # noqa: S301
 
             # self.pipe_damages[scn_name] = current_scenario_registry.damage.pipe_all_damages
             # self.node_damages[scn_name] = current_scenario_registry.node_damage
@@ -248,9 +248,9 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
             """
                 ATTENTION: We need probability for any prbablistic result
             """
-            print(str(scn_name) + ' loaded')
+            print(str(scn_name) + ' loaded')  # noqa: T201
 
-    def remove_maximum_trials(self, data):
+    def remove_maximum_trials(self, data):  # noqa: D102
         all_time_list = data.maximum_trial_time
         result_time_list = data.node['demand'].index.to_list()
         result_time_max_trailed_list = [
@@ -267,7 +267,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
             if len(result_time_max_trailed_list) > 0:
                 # print(result_time_max_trailed_list)
                 att_data = data.node[att]
-                att_data.drop(result_time_max_trailed_list, inplace=True)
+                att_data.drop(result_time_max_trailed_list, inplace=True)  # noqa: PD002
                 data.node[att] = att_data
 
         for att in data.link:
@@ -277,12 +277,12 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
                 time for time in result_time_list if time in all_time_list
             ]
             att_data = data.link[att]
-            att_data.drop(result_time_max_trailed_list, inplace=True)
+            att_data.drop(result_time_max_trailed_list, inplace=True)  # noqa: PD002
             data.link[att] = att_data
 
         flow_balance = data.node['demand'].sum(axis=1)
 
-        time_to_drop = flow_balance[abs(flow_balance) >= 0.01].index
+        time_to_drop = flow_balance[abs(flow_balance) >= 0.01].index  # noqa: PLR2004
 
         # result_time_list = data.node['demand'].index.to_list()
         # = [ time for time in result_time_list if time in all_time_list]
@@ -297,7 +297,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
             if len(result_time_max_trailed_list) > 0:
                 # print(result_time_max_trailed_list)
                 att_data = data.node[att]
-                att_data.drop(result_time_max_trailed_list, inplace=True)
+                att_data.drop(result_time_max_trailed_list, inplace=True)  # noqa: PD002
                 data.node[att] = att_data
 
         for att in data.link:
@@ -309,13 +309,13 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
             result_time_max_trailed_list.sort()
             if len(result_time_max_trailed_list) > 0:
                 att_data = data.link[att]
-                att_data.drop(result_time_max_trailed_list, inplace=True)
+                att_data.drop(result_time_max_trailed_list, inplace=True)  # noqa: PD002
                 data.link[att] = att_data
 
-    def remove_maximum_trials_demand_flow(self, data):
+    def remove_maximum_trials_demand_flow(self, data):  # noqa: D102
         flow_balance = data.node['demand'].sum(axis=1)
 
-        time_to_drop = flow_balance[abs(flow_balance) >= 0.01].index
+        time_to_drop = flow_balance[abs(flow_balance) >= 0.01].index  # noqa: PLR2004
 
         # result_time_list = data.node['demand'].index.to_list()
         # = [ time for time in result_time_list if time in all_time_list]
@@ -326,9 +326,9 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
             result_time_max_trailed_list = [
                 time for time in result_time_list if time in time_to_drop
             ]
-            print(result_time_max_trailed_list)
+            print(result_time_max_trailed_list)  # noqa: T201
             att_data = data.node[att]
-            att_data.drop(result_time_max_trailed_list, inplace=True)
+            att_data.drop(result_time_max_trailed_list, inplace=True)  # noqa: PD002
             data.node[att] = att_data
 
         for att in data.link:
@@ -338,14 +338,14 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
                 time for time in result_time_list if time in time_to_drop
             ]
             att_data = data.link[att]
-            att_data.drop(result_time_max_trailed_list, inplace=True)
+            att_data.drop(result_time_max_trailed_list, inplace=True)  # noqa: PD002
             data.link[att] = att_data
 
-    def readPopulation(
+    def readPopulation(  # noqa: N802, D102
         self,
         population_xlsx_addr='demandNode-Northridge.xlsx',
         demand_node_header='NodeID',
-        population_header='#Customer',
+        population_header='#Customer',  # noqa: ARG002
     ):
         pop = pd.read_excel(population_xlsx_addr)
         pop = pop.set_index(demand_node_header)
@@ -362,7 +362,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
                 + repr(demand_node_without_population)
             )
 
-    def getRequiredDemandForAllNodesandtime(self, scn_name):
+    def getRequiredDemandForAllNodesandtime(self, scn_name):  # noqa: N802
         """**********
         ATTENTION: We Assume that all scenarios have the same time indexing
         **********
@@ -374,10 +374,10 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
         req_node_demand : Pandas DataFrame
             Demand for all nodes and in all time
 
-        """
+        """  # noqa: D205, D400
         self.loadScneariodata(scn_name)
         demand_ratio = self.demand_ratio
-        if type(self._RequiredDemandForAllNodesandtime[scn_name]) != type(None):
+        if type(self._RequiredDemandForAllNodesandtime[scn_name]) != type(None):  # noqa: E721
             return self._RequiredDemandForAllNodesandtime[scn_name]
         undamaged_wn = self.wn
         time_index = self.data[scn_name].node['demand'].index
@@ -399,9 +399,9 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
             i += 1
             node = undamaged_wn.get_node(node_name)
             pattern_list = node.demand_timeseries_list.pattern_list()
-            if pattern_list[0] != None:
+            if pattern_list[0] != None:  # noqa: E711
                 node_pattern_list[node_name] = pattern_list[0].name
-            elif pattern_list[0] == None and default_pattern != None:
+            elif pattern_list[0] == None and default_pattern != None:  # noqa: E711
                 node_pattern_list[node_name] = str(default_pattern)
             else:
                 node_pattern_list[node_name] = None
@@ -422,8 +422,8 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
             for time in iter(time_index):
                 multiplier[pattern_name].loc[time] = cur_pattern.at(time)
 
-        variable_base_demand = []
-        variable_node_name_list = []
+        variable_base_demand = []  # noqa: F841
+        variable_node_name_list = []  # noqa: F841
         for node_name, pattern_name in node_pattern_list.items():
             cur_node_req_demand = (
                 multiplier[pattern_name]
@@ -471,55 +471,55 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
         )
         return self._RequiredDemandForAllNodesandtime[scn_name]
 
-    def AS_getDLIndexPopulation(
+    def AS_getDLIndexPopulation(  # noqa: N802, D102
         self,
-        iPopulation='No',
-        ratio=False,
-        consider_leak=False,
+        iPopulation='No',  # noqa: N803
+        ratio=False,  # noqa: FBT002
+        consider_leak=False,  # noqa: FBT002
         leak_ratio=0.75,
     ):
         scenario_list = list(self.data.keys())
-        all_scenario_DL_data = {}
+        all_scenario_DL_data = {}  # noqa: N806
         for scn_name in scenario_list:
-            cur_scn_DL = self.getDLIndexPopulation_4(
+            cur_scn_DL = self.getDLIndexPopulation_4(  # noqa: N806
                 scn_name,
                 iPopulation=iPopulation,
                 ratio=ratio,
                 consider_leak=consider_leak,
                 leak_ratio=leak_ratio,
             )
-            cur_scn_DL = cur_scn_DL.to_dict()
+            cur_scn_DL = cur_scn_DL.to_dict()  # noqa: N806
             all_scenario_DL_data[scn_name] = cur_scn_DL
 
         return pd.DataFrame.from_dict(all_scenario_DL_data)
 
-    def AS_getQNIndexPopulation(
+    def AS_getQNIndexPopulation(  # noqa: N802, D102
         self,
-        iPopulation='No',
-        ratio=False,
-        consider_leak=False,
+        iPopulation='No',  # noqa: N803
+        ratio=False,  # noqa: FBT002
+        consider_leak=False,  # noqa: FBT002
         leak_ratio=0.75,
     ):
         scenario_list = list(self.data.keys())
-        all_scenario_QN_data = {}
+        all_scenario_QN_data = {}  # noqa: N806
         for scn_name in scenario_list:
             self.loadScneariodata(scn_name)
-            cur_scn_QN = self.getQNIndexPopulation_4(
+            cur_scn_QN = self.getQNIndexPopulation_4(  # noqa: N806
                 scn_name,
                 iPopulation=iPopulation,
                 ratio=ratio,
                 consider_leak=consider_leak,
                 leak_ratio=leak_ratio,
             )
-            cur_scn_QN = cur_scn_QN.to_dict()
+            cur_scn_QN = cur_scn_QN.to_dict()  # noqa: N806
             all_scenario_QN_data[scn_name] = cur_scn_QN
 
         return pd.DataFrame.from_dict(all_scenario_QN_data)
 
-    def AS_getOutage_4(
+    def AS_getOutage_4(  # noqa: N802, D102
         self,
-        LOS='DL',
-        iConsider_leak=False,
+        LOS='DL',  # noqa: N803
+        iConsider_leak=False,  # noqa: FBT002, N803
         leak_ratio=0,
         consistency_time_window=7200,
     ):
@@ -536,16 +536,16 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
             )
             cur_scn_outage = cur_scn_outage['restoration_time'].to_dict()
             all_scenario_outage_data[scn_name] = cur_scn_outage
-            i += 1
+            i += 1  # noqa: SIM113
 
         return pd.DataFrame.from_dict(all_scenario_outage_data)
 
-    def PR_getBSCPercentageExcedanceCurce(self, data_frame, restoration_percentage):
+    def PR_getBSCPercentageExcedanceCurce(self, data_frame, restoration_percentage):  # noqa: N802, D102
         max_time = data_frame.max().max()
 
         restore_time = {}
 
-        if type(self._population_data) == type(None):
+        if type(self._population_data) == type(None):  # noqa: E721
             demand_node_name_list = data_frame.index
             population = pd.Series(index=demand_node_name_list, data=1)
         else:
@@ -597,17 +597,17 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
             list(self.scenario_prob.keys()), 'restore_time'
         ]
         restore_data['prob'] = list(self.scenario_prob.values())
-        restore_data.sort_values('restore_time', ascending=False, inplace=True)
+        restore_data.sort_values('restore_time', ascending=False, inplace=True)  # noqa: PD002
         ep_mat = Helper.EPHelper(restore_data['prob'].to_numpy())
         restore_data['EP'] = ep_mat
 
         return restore_data
 
-    def PR_getCurveExcedence(
+    def PR_getCurveExcedence(  # noqa: C901, N802, D102
         self,
         data_frame,
         result_type='mean',
-        daily=False,
+        daily=False,  # noqa: FBT002
         min_time=0,
         max_time=24 * 3600 * 1000,
     ):
@@ -623,12 +623,12 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
             cur_scn_data = cur_scn_data[cur_scn_data.index >= min_time]
             cur_scn_data = cur_scn_data[cur_scn_data.index <= max_time]
 
-            if daily == True:
+            if daily == True:  # noqa: E712
                 cur_scn_data = self.getResultSeperatedDaily(cur_scn_data)
 
             if result_type == 'mean':
                 cur_mean_res = cur_scn_data.mean()
-                if type(cur_mean_res) != pd.core.series.Series:
+                if type(cur_mean_res) != pd.core.series.Series:  # noqa: E721
                     temp_res = {'mean_dmg': cur_mean_res}
                     dmg_index_list.append('mean_dmg')
                 else:
@@ -639,7 +639,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
                         dmg_index_list.append(temp_dmg_index)
             elif result_type == 'min':
                 dmg_min_res = cur_scn_data.min()
-                if type(dmg_min_res) != pd.core.series.Series:
+                if type(dmg_min_res) != pd.core.series.Series:  # noqa: E721
                     temp_res = {'min_dmg': dmg_min_res}
                     dmg_index_list.append('min_dmg')
                 else:
@@ -650,7 +650,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
                         dmg_index_list.append(temp_dmg_index)
             elif result_type == 'max':
                 dmg_max_res = cur_scn_data.min()
-                if type(dmg_max_res) != pd.core.series.Series:
+                if type(dmg_max_res) != pd.core.series.Series:  # noqa: E721
                     temp_res = {'max_dmg': dmg_max_res}
                     dmg_index_list.append('max_dmg')
                 else:
@@ -668,14 +668,14 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
 
         table = pd.DataFrame.from_dict(table_temp).set_index('index')
         res = pd.DataFrame(
-            index=[i for i in range(len(table.index))],
+            index=[i for i in range(len(table.index))],  # noqa: C416
             dtype=np.float64,
         )
         for dmg_name in dmg_index_list:
             select_columns = ['prob']
             select_columns.extend([dmg_name])
             loop_table = table[select_columns]
-            loop_table.sort_values(dmg_name, inplace=True)
+            loop_table.sort_values(dmg_name, inplace=True)  # noqa: PD002
 
             ep_mat = Helper.EPHelper(loop_table['prob'].to_numpy())
             res[dmg_name] = loop_table[dmg_name].to_numpy()
@@ -683,7 +683,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
 
         return res
 
-    def getResultSeperatedDaily(self, data, begin_time=0):
+    def getResultSeperatedDaily(self, data, begin_time=0):  # noqa: N802, D102
         data = data[data.index >= begin_time]
         data.index = (data.index - begin_time) / (24 * 3600)
 
