@@ -1,4 +1,4 @@
-"""Methos for performance simulations of transportation networks."""
+"""Methods for performance simulations of transportation networks."""
 
 # -*- coding: utf-8 -*-
 #
