@@ -23,7 +23,7 @@ class DataProcessingError(Exception):
         self.message = message
 
 
-def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):  # noqa: C901, N802, N803, D103, PLR0915
+def parseDataFunction(dakotaJsonFile, logFile):  # noqa: C901, N802, N803, D103, PLR0915
     # Read in the json object
     logFile.write('\n\tReading the json file')
     with open(dakotaJsonFile) as f:  # noqa: PTH123
@@ -61,7 +61,7 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
         maxRunTime = uqInputs['maxRunTime']  # noqa: N806
     else:
         maxRunTime = float('inf')  # noqa: N806, F841
-    logLikelihoodFile = uqInputs['logLikelihoodFile']  # noqa: N806
+    # logLikelihoodFile = uqInputs['logLikelihoodFile']
     calDataFile = uqInputs['calDataFile']  # noqa: N806
 
     parallelizeMCMC = True  # noqa: N806
