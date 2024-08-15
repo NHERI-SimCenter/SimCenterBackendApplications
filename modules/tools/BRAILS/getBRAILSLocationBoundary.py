@@ -60,7 +60,7 @@ def runBrails(latMin, latMax, longMin, longMax, locationStr, outputfile):  # noq
     if locationStr == '""':
         locationStr = ''  # noqa: N806
     # Run FootprintHandler to generate the boundary GeoJSON file for the entered location:
-    if locationStr == '':  # noqa: PLC1901
+    if locationStr == '':
         fpHandler._FootprintHandler__bbox2poly(  # noqa: SLF001
             (longMin, latMin, longMax, latMax), outfile=outputfile
         )

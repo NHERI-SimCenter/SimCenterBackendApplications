@@ -1,7 +1,7 @@
 """Created on Mon Jan  9 09:03:57 2023
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 
 class Project:  # noqa: D101

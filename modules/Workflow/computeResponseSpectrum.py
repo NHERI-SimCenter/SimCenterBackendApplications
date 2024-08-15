@@ -1,6 +1,6 @@
 """Simple Python Script to integrate a strong motion record using
 the Newmark-Beta method
-"""  # noqa: CPY001, D205, D400, INP001
+"""  # noqa: INP001, D205, D400
 
 import numpy as np
 from scipy.constants import g
@@ -43,7 +43,7 @@ def convert_accel_units(acceleration, from_, to_='cm/s/s'):  # noqa: C901
         if to_ in cm_sec_square:
             return acceleration
 
-    raise ValueError(  # noqa: DOC501, TRY003
+    raise ValueError(  # noqa: TRY003
         'Unrecognised time history units. '  # noqa: EM101
         "Should take either ''g'', ''m/s/s'' or ''cm/s/s''"
     )

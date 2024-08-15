@@ -1,4 +1,4 @@
-#!/usr/bin/env python3  # noqa: CPY001, EXE001
+#!/usr/bin/env python3  # noqa: EXE001
 
 """Plot the JONSWAP spectrum for a given sea state"""  # noqa: D400
 

@@ -71,7 +71,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
     comp_db_meta = comp_db_path[:-3] + 'json'
 
     if Path(comp_db_meta).is_file():
-        with open(comp_db_meta) as f:  # noqa: PLW1514, PTH123
+        with open(comp_db_meta) as f:  # noqa: PTH123
             frag_meta = json.load(f)
     else:
         frag_meta = None
@@ -80,7 +80,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
     # for comp_id in frag_df.index[400:420]:
     # for comp_id in frag_df.index[438:439]:
     # for comp_id in frag_df.index[695:705]:
-    for comp_id in frag_df.index:  # noqa: PLR1702
+    for comp_id in frag_df.index:
         comp_data = frag_df.loc[comp_id]
         if frag_meta != None:  # noqa: E711
             if comp_id in frag_meta.keys():  # noqa: SIM118
@@ -290,7 +290,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
             if comp_meta != None:  # noqa: E711
                 ls_meta = comp_meta['LimitStates'][f'LS{i_ls + 1}']
 
-                y_loc = y_loc - 0.123  # noqa: PLR6104
+                y_loc = y_loc - 0.123
 
                 if '<br>' in ds_desc:
                     ds_vals = ds_desc.split('<br>')
@@ -312,7 +312,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
                         else:
                             ds_repair = ''
 
-                        if ds_repair != '':  # noqa: PLC1901
+                        if ds_repair != '':
                             ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
                         else:
                             ds_text = f'<b>{ds_id}</b><br>{ds_description}'
@@ -356,7 +356,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
                     else:
                         ds_repair = ''
 
-                    if ds_repair != '':  # noqa: PLC1901
+                    if ds_repair != '':
                         ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
                     else:
                         ds_text = f'<b>{ds_id}</b><br>{ds_description}'
@@ -407,7 +407,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
             showlegend=False,
         )
 
-        with open(f'{output_path}/{comp_id}.html', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+        with open(f'{output_path}/{comp_id}.html', 'w') as f:  # noqa: PTH123
             f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
 
     # store the source database file(s) in the output directory for future reference
@@ -454,14 +454,14 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
 
     # check if the metadata is there and open it
     if Path(comp_db_meta).is_file():
-        with open(comp_db_meta) as f:  # noqa: PLW1514, PTH123
+        with open(comp_db_meta) as f:  # noqa: PTH123
             repair_meta = json.load(f)
     else:
         # otherwise, assign None to facilitate checks later
         repair_meta = None
 
     # perform the plotting for each component independently
-    for comp_id in repair_df.index.unique(level=0):  # [410:418]:  # noqa: PLR1702
+    for comp_id in repair_df.index.unique(level=0):  # [410:418]:
         # perform plotting for each repair consequence type independently
         for c_type in repair_df.loc[comp_id].index:
             # load the component-specific part of the database
@@ -829,7 +829,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
                         )
 
                     # adjust y_loc for annotations
-                    y_loc = y_loc - y_space  # noqa: PLR6104
+                    y_loc = y_loc - y_space
 
                     # add annotations for median function parameters, if needed
                     if '|' in str(mu_capacity):
@@ -874,7 +874,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
                         else:
                             ds_repair = ''
 
-                        if ds_repair != '':  # noqa: PLC1901
+                        if ds_repair != '':
                             ds_text = f'<b>{model_params[0][ds_i]}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
                         else:
                             ds_text = (
@@ -924,7 +924,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
             )
 
             quantity_unit = comp_data.loc[('Quantity', 'Unit')]
-            if quantity_unit in ['unitless', '1 EA', '1 ea']:  # noqa: PLR6201
+            if quantity_unit in ['unitless', '1 EA', '1 ea']:
                 quantity_unit = '-'
             elif quantity_unit.split()[0] == '1':
                 quantity_unit = quantity_unit.split()[1]
@@ -975,7 +975,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
             )
 
             # save figure to html
-            with open(f'{output_path}/{comp_id}-{c_type}.html', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+            with open(f'{output_path}/{comp_id}-{c_type}.html', 'w') as f:  # noqa: PTH123
                 # Minimize size by not saving javascript libraries which means
                 # internet connection is required to view the figure.
                 f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
@@ -1000,7 +1000,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
 
 def check_diff(comp_db_path, output_path):  # noqa: D103
     # if the output path already exists
-    if os.path.exists(output_path):  # noqa: PLR1702, PTH110
+    if os.path.exists(output_path):  # noqa: PTH110
         # check for both the csv and json files
         for ext in ['csv', 'json']:
             comp_db = comp_db_path[:-3] + ext
@@ -1015,7 +1015,7 @@ def check_diff(comp_db_path, output_path):  # noqa: D103
             # check if a file with the same name exists in the output dir
             if comp_db in os.listdir(output_path):
                 # open the two files and compare them
-                with open(Path(source_path) / comp_db) as f1, open(  # noqa: PLW1514, PTH123
+                with open(Path(source_path) / comp_db) as f1, open(  # noqa: PTH123
                     Path(output_path) / comp_db
                 ) as f2:
                     if ext == 'csv':
@@ -1066,7 +1066,7 @@ def main(args):  # noqa: D103
 
     args = parser.parse_args(args)
 
-    if args.viz_type in ['fragility', 'repair']:  # noqa: PLR6201
+    if args.viz_type in ['fragility', 'repair']:
         comp_db_path = args.comp_db_path
         output_path = args.output_path
 

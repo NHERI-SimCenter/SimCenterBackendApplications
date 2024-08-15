@@ -59,12 +59,12 @@ from whale.main import log_div, log_msg
 
 def main(run_type, input_file, app_registry):  # noqa: D103
     # initialize the log file
-    with open(input_file) as f:  # noqa: PLW1514, PTH123
+    with open(input_file) as f:  # noqa: PTH123
         inputs = json.load(f)
     runDir = inputs['runDir']  # noqa: N806
 
     whale.log_file = runDir + '/log.txt'
-    with open(whale.log_file, 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+    with open(whale.log_file, 'w') as f:  # noqa: PTH123
         f.write('EE-UQ workflow\n')
 
     # echo the inputs

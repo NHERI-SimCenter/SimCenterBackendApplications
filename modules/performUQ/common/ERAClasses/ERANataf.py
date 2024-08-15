@@ -1,4 +1,4 @@
-# import of modules  # noqa: CPY001, D100, INP001
+# import of modules  # noqa: INP001, D100
 import numpy as np
 from scipy import optimize, stats
 
@@ -95,7 +95,7 @@ class ERANataf:
                 np.isfinite(self.Marginals[i].mean())
                 and np.isfinite(self.Marginals[i].std())
             ):
-                raise RuntimeError(  # noqa: DOC501, TRY003
+                raise RuntimeError(  # noqa: TRY003
                     'The marginal distributions need to have '  # noqa: EM101
                     'finite mean and variance'
                 )
@@ -104,17 +104,17 @@ class ERANataf:
         try:
             np.linalg.cholesky(self.Rho_X)
         except np.linalg.LinAlgError:
-            raise RuntimeError(  # noqa: B904, DOC501, TRY003
+            raise RuntimeError(  # noqa: B904, TRY003
                 'The given correlation matrix is not positive definite'  # noqa: EM101
                 '--> Nataf transformation is not applicable.'
             )
         if not np.all(self.Rho_X - self.Rho_X.T == 0):
-            raise RuntimeError(  # noqa: DOC501, TRY003
+            raise RuntimeError(  # noqa: TRY003
                 'The given correlation matrix is not symmetric '  # noqa: EM101
                 '--> Nataf transformation is not applicable.'
             )
         if not np.all(np.diag(self.Rho_X) == 1):
-            raise RuntimeError(  # noqa: DOC501, TRY003
+            raise RuntimeError(  # noqa: TRY003
                 'Not all diagonal entries of the given correlation matrix are equal to one '  # noqa: EM101
                 '--> Nataf transformation is not applicable.'
             )
@@ -129,7 +129,7 @@ class ERANataf:
         zmin = -zmax
         points, weights = np.polynomial.legendre.leggauss(n)
         points = -(0.5 * (points + 1) * (zmax - zmin) + zmin)
-        weights = weights * (0.5 * (zmax - zmin))  # noqa: PLR6104
+        weights = weights * (0.5 * (zmax - zmin))
 
         xi = np.tile(points, [n, 1])
         xi = xi.flatten(order='F')
@@ -144,7 +144,7 @@ class ERANataf:
 
         #  check is X the identity
         self.Rho_Z = np.identity(n=n_dist)
-        if np.linalg.norm(self.Rho_X - np.identity(n=n_dist)) > 10 ** (-5):  # noqa: PLR1702
+        if np.linalg.norm(self.Rho_X - np.identity(n=n_dist)) > 10 ** (-5):
             for i in range(n_dist):
                 for j in range(i + 1, n_dist):
                     if self.Rho_X[i, j] == 0:
@@ -246,7 +246,7 @@ class ERANataf:
                                     self.Rho_Z[i, j] = sol[0]
                                     self.Rho_Z[j, i] = self.Rho_Z[i, j]
                                 else:
-                                    raise RuntimeError(  # noqa: DOC501, TRY003
+                                    raise RuntimeError(  # noqa: TRY003
                                         'brentq and fsolve coul'  # noqa: EM101
                                         'd not converge to a '
                                         'solution of the Nataf '
@@ -255,7 +255,7 @@ class ERANataf:
         try:
             self.A = np.linalg.cholesky(self.Rho_Z)
         except np.linalg.LinAlgError:
-            raise RuntimeError(  # noqa: B904, DOC501, TRY003
+            raise RuntimeError(  # noqa: B904, TRY003
                 'Transformed correlation matrix is not positive'  # noqa: EM101
                 ' definite --> Nataf transformation is not '
                 'applicable.'
@@ -285,25 +285,25 @@ class ERANataf:
 
         # check if all marginal distributions are continuous
         for i in range(n_dim):
-            if self.Marginals[i].Name in [  # noqa: PLR6201
+            if self.Marginals[i].Name in [
                 'binomial',
                 'geometric',
                 'negativebinomial',
                 'poisson',
             ]:
-                raise RuntimeError(  # noqa: DOC501, TRY003
+                raise RuntimeError(  # noqa: TRY003
                     'At least one of the marginal distributions is a discrete distribution,'  # noqa: EM101
                     'the transformation X2U is therefore not possible.'
                 )
 
         # check of the dimensions of input X
         if X.ndim > 2:  # noqa: PLR2004
-            raise RuntimeError('X must have not more than two dimensions. ')  # noqa: DOC501, EM101, TRY003
+            raise RuntimeError('X must have not more than two dimensions. ')  # noqa: EM101, TRY003
         if np.shape(X)[1] == 1 and n_dim != 1:
             # in case that only one point X is given, he can be defined either as row or column vector
             X = X.T  # noqa: N806
         if np.shape(X)[1] != n_dim:
-            raise RuntimeError(  # noqa: DOC501, TRY003
+            raise RuntimeError(  # noqa: TRY003
                 'X must be an array of size [n,d], where d is the'  # noqa: EM101
                 ' number of dimensions of the joint distribution.'
             )
@@ -337,12 +337,12 @@ class ERANataf:
 
         # check of the dimensions of input U
         if U.ndim > 2:  # noqa: PLR2004
-            raise RuntimeError('U must have not more than two dimensions. ')  # noqa: DOC501, EM101, TRY003
+            raise RuntimeError('U must have not more than two dimensions. ')  # noqa: EM101, TRY003
         if np.shape(U)[1] == 1 and n_dim != 1:
             # in case that only one point U is given, he can be defined either as row or column vector
             U = U.T  # noqa: N806
         if np.shape(U)[1] != n_dim:
-            raise RuntimeError(  # noqa: DOC501, TRY003
+            raise RuntimeError(  # noqa: TRY003
                 'U must be an array of size [n,d], where d is the'  # noqa: EM101
                 ' number of dimensions of the joint distribution.'
             )
@@ -389,25 +389,25 @@ class ERANataf:
 
         # check if all marginal distributions are continuous
         for i in range(n_dim):
-            if self.Marginals[i].Name in [  # noqa: PLR6201
+            if self.Marginals[i].Name in [
                 'binomial',
                 'geometric',
                 'negativebinomial',
                 'poisson',
             ]:
-                raise RuntimeError(  # noqa: DOC501, TRY003
+                raise RuntimeError(  # noqa: TRY003
                     'At least one of the marginal distributions is a discrete distribution,'  # noqa: EM101
                     'the transformation X2U is therefore not possible.'
                 )
 
         # check of the dimensions of input X
         if X.ndim > 2:  # noqa: PLR2004
-            raise RuntimeError('X must have not more than two dimensions.')  # noqa: DOC501, EM101, TRY003
+            raise RuntimeError('X must have not more than two dimensions.')  # noqa: EM101, TRY003
         if np.shape(X)[1] == 1 and n_dim != 1:
             # in case that only one point X is given, he can be defined either as row or column vector
             X = X.T  # noqa: N806
         if np.shape(X)[1] != n_dim:
-            raise RuntimeError(  # noqa: DOC501, TRY003
+            raise RuntimeError(  # noqa: TRY003
                 'X must be an array of size [n,d], where d is the'  # noqa: EM101
                 ' number of dimensions of the joint distribution.'
             )
@@ -456,12 +456,12 @@ class ERANataf:
 
         # check of the dimensions of input X
         if X.ndim > 2:  # noqa: PLR2004
-            raise RuntimeError('X must have not more than two dimensions. ')  # noqa: DOC501, EM101, TRY003
+            raise RuntimeError('X must have not more than two dimensions. ')  # noqa: EM101, TRY003
         if np.shape(X)[1] == 1 and n_dim != 1:
             # in case that only one point X is given, he can be defined either as row or column vector
             X = X.T  # noqa: N806
         if np.shape(X)[1] != n_dim:
-            raise RuntimeError(  # noqa: DOC501, TRY003
+            raise RuntimeError(  # noqa: TRY003
                 'X must be an array of size [n,d], where d is the'  # noqa: EM101
                 ' number of dimensions of the joint distribution.'
             )

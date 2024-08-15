@@ -1,9 +1,9 @@
-import glob  # noqa: CPY001, D100, INP001
+import glob  # noqa: INP001, D100
 import json
 import os
 import shutil
 import stat
-import subprocess  # noqa: S404
+import subprocess
 import sys
 import time
 
@@ -34,7 +34,7 @@ class UQengine:  # noqa: D101
             self.inputFile = eeJsonPath
             jsonPath = eeJsonPath  # noqa: N806
 
-        with open(jsonPath) as f:  # noqa: PLW1514, PTH123
+        with open(jsonPath) as f:  # noqa: PTH123
             dakotaJson = json.load(f)  # noqa: N806, F841
 
         # self.workflowDriver = "workflow_driver"
@@ -268,13 +268,13 @@ class UQengine:  # noqa: D101
         self,
     ):
         if self.run_type.lower() == 'runninglocal':
-            from multiprocessing import Pool  # noqa: PLC0415
+            from multiprocessing import Pool
 
             n_processor = os.cpu_count()
             pool = Pool(n_processor)
         else:
-            from mpi4py import MPI  # noqa: PLC0415
-            from mpi4py.futures import MPIPoolExecutor  # noqa: PLC0415
+            from mpi4py import MPI
+            from mpi4py.futures import MPIPoolExecutor
 
             self.world = MPI.COMM_WORLD
             n_processor = self.world.Get_size()
@@ -289,7 +289,7 @@ class UQengine:  # noqa: D101
         # self.errfile = open(os.path.join(self.work_dir, "dakota.err"), "a")
         pass
 
-    def exit(self, msg):  # noqa: D102, PLR6301
+    def exit(self, msg):  # noqa: D102
         print(msg, file=sys.stderr)  # noqa: T201
         print(msg)  # noqa: T201
         # sys.stderr.write(msg)
@@ -339,7 +339,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):  # noqa: C9
     # (2) write param.in file
     #
 
-    outF = open(current_dir_i + '/params.in', 'w')  # noqa: N806, PLW1514, PTH123, SIM115
+    outF = open(current_dir_i + '/params.in', 'w')  # noqa: SIM115, PTH123, N806
     outF.write(f'{x_dim}\n')
     for i in range(x_dim):
         outF.write(f'{rv_name[i]} {X[0, i]}\n')
@@ -379,7 +379,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):  # noqa: C9
     else:
         msg = 'Error running FEM: results.out missing at ' + current_dir_i
         if glob.glob('ops.out'):  # noqa: PTH207
-            with open('ops.out') as text_file:  # noqa: FURB101, PLW1514, PTH123
+            with open('ops.out') as text_file:  # noqa: PTH123
                 error_FEM = text_file.read()  # noqa: N806
 
             startingCharId = error_FEM.lower().find('error')  # noqa: N806
@@ -400,7 +400,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):  # noqa: C9
     if g.shape[0] == 0:
         msg = 'Error running FEM: results.out is empty'
         if glob.glob('ops.out'):  # noqa: PTH207
-            with open('ops.out') as text_file:  # noqa: FURB101, PLW1514, PTH123
+            with open('ops.out') as text_file:  # noqa: PTH123
                 error_FEM = text_file.read()  # noqa: N806
 
             startingCharId = error_FEM.lower().find('error')  # noqa: N806

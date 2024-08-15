@@ -1,4 +1,4 @@
-"""@author: Mukesh, Maitreya, Conte, Aakash"""  # noqa: CPY001, D400, INP001
+"""@author: Mukesh, Maitreya, Conte, Aakash"""  # noqa: INP001, D400
 
 import numpy as np
 from scipy import stats
@@ -287,5 +287,5 @@ class ConstantInteger:  # noqa: D101
     def generate_rns(self, N):  # noqa: N803, D102
         return np.array([self.value for _ in range(N)], dtype=int)
 
-    def log_pdf_eval(self, x):  # noqa: ARG002, D102, PLR6301
+    def log_pdf_eval(self, x):  # noqa: ARG002, D102
         return 0.0

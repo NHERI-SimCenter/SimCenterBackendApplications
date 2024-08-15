@@ -1,6 +1,6 @@
-# Import packages needed for setting up required packages:  # noqa: CPY001, D100, INP001
+# Import packages needed for setting up required packages:  # noqa: INP001, D100
 import importlib.metadata
-import subprocess  # noqa: S404
+import subprocess
 import sys
 
 # If not installed, install BRAILS, argparse, and requests:
@@ -49,9 +49,9 @@ def str2bool(v):  # noqa: D103
 
     if isinstance(v, bool):
         return v
-    if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):  # noqa: PLR6201
+    if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):
         return True
-    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):  # noqa: PLR6201, RET505
+    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):  # noqa: RET505
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')  # noqa: EM101, TRY003

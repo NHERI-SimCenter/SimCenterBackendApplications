@@ -1,4 +1,4 @@
-from __future__ import annotations  # noqa: CPY001, D100, INP001
+from __future__ import annotations  # noqa: INP001, D100
 
 from typing import Literal, Union
 
@@ -19,7 +19,7 @@ class StretchDto(UQpyDTO):  # noqa: D101
     scale: float = Field(..., gt=0)
 
     def init_to_text(self):  # noqa: D102
-        from UQpy.sampling.mcmc.Stretch import Stretch  # noqa: PLC0415
+        from UQpy.sampling.mcmc.Stretch import Stretch
 
         c = Stretch
 

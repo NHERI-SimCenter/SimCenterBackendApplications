@@ -150,7 +150,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
     lat_label, labels = get_label(
         ['Latitude', 'latitude', 'lat', 'Lat'], labels, 'latitude'
     )
-    if any([i in ['Vs30', 'vs30', 'Vs_30', 'vs_30'] for i in labels]):  # noqa: C419, PLR6201
+    if any([i in ['Vs30', 'vs30', 'Vs_30', 'vs_30'] for i in labels]):  # noqa: C419
         vs30_label, labels = get_label(
             ['Vs30', 'vs30', 'Vs_30', 'vs_30'], labels, 'vs30'
         )
@@ -158,7 +158,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
         vs30_label = 'Vs30'
     if any(
         [  # noqa: C419
-            i in ['Z2p5', 'z2p5', 'Z2pt5', 'z2pt5', 'Z25', 'z25', 'Z2.5', 'z2.5']  # noqa: PLR6201
+            i in ['Z2p5', 'z2p5', 'Z2pt5', 'z2pt5', 'Z25', 'z25', 'Z2.5', 'z2.5']
             for i in labels
         ]
     ):
@@ -171,7 +171,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
         z2p5_label = 'z2p5'
     if any(
         [  # noqa: C419
-            i in ['Z1p0', 'z1p0', 'Z1pt0', 'z1pt0', 'Z1', 'z1', 'Z1.0', 'z1.0']  # noqa: PLR6201
+            i in ['Z1p0', 'z1p0', 'Z1pt0', 'z1pt0', 'Z1', 'z1', 'Z1.0', 'z1.0']
             for i in labels
         ]
     ):
@@ -182,14 +182,14 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
         )
     else:
         z1p0_label = 'z1p0'
-    if any([i in ['zTR', 'ztr', 'ZTR', 'DepthToRock'] for i in labels]):  # noqa: C419, PLR6201
+    if any([i in ['zTR', 'ztr', 'ZTR', 'DepthToRock'] for i in labels]):  # noqa: C419
         zTR_label, labels = get_label(  # noqa: N806
             ['zTR', 'ztr', 'ZTR', 'DepthToRock'], labels, 'zTR'
         )
     else:
         zTR_label = 'DepthToRock'  # noqa: N806
     if soil_flag:
-        if any([i in ['Model', 'model', 'SoilModel', 'soilModel'] for i in labels]):  # noqa: C419, PLR6201
+        if any([i in ['Model', 'model', 'SoilModel', 'soilModel'] for i in labels]):  # noqa: C419
             soil_model_label, labels = get_label(
                 ['Model', 'model', 'SoilModel', 'soilModel'], labels, 'Model'
             )
@@ -392,7 +392,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
                     'CreateStation: no fetching is conducted for the User soil model- please ensure all needed parameters are defined.'
                 )
                 for cur_param in list(selected_stn.keys()):
-                    if cur_param not in [  # noqa: PLR6201
+                    if cur_param not in [
                         'Longitude',
                         'Latitude',
                         'Vs30',
@@ -412,7 +412,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
                 selected_stn = get_soil_model_user(selected_stn, soil_user_fun)
                 user_param_list = list(selected_stn.keys())
                 for cur_param in user_param_list:
-                    if cur_param in [  # noqa: PLR6201
+                    if cur_param in [
                         'Longitude',
                         'Latitude',
                         'Vs30',
@@ -427,7 +427,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
                         'h0',
                         'chi',
                     ]:
-                        user_param_list.pop(user_param_list.index(cur_param))  # noqa: B909
+                        user_param_list.pop(user_param_list.index(cur_param))
     ground_failure_input_keys = set()
     for ind in tqdm(range(selected_stn.shape[0]), desc='Stations'):
         stn = selected_stn.iloc[ind, :]
@@ -524,7 +524,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
                 tmp.update({cur_param: stn.get(cur_param, None)})
 
         if stn.get('vsInferred'):
-            if stn.get('vsInferred') not in [0, 1]:  # noqa: PLR6201
+            if stn.get('vsInferred') not in [0, 1]:
                 sys.exit(
                     "CreateStation: Only '0' or '1' can be assigned to the"  # noqa: ISC003
                     + " 'vsInferred' column in the Site File (.csv), where 0 stands for false and 1 stands for true."
@@ -628,7 +628,7 @@ def create_gridded_stations(
         delta_lon = np.min([delta_lon, dlon])
     if delta_lat is not None:  # noqa: F821
         delta_lat = np.min([delta_lat, dlat])  # noqa: F821
-    glon, glat = np.meshgrid(  # noqa: F841, RET503
+    glon, glat = np.meshgrid(  # noqa: RET503
         np.arange(np.min(lon_temp), np.max(lon_temp), delta_lon),
         np.arange(np.min(lat_temp), np.max(lat_temp), delta_lat),
     )
@@ -642,10 +642,10 @@ def get_vs30_global(lat, lon):
     Output:
         vs30: list of vs30
     """  # noqa: D205, D400
-    import os  # noqa: PLC0415
-    import pickle  # noqa: S403, PLC0415
+    import os
+    import pickle
 
-    from scipy import interpolate  # noqa: PLC0415
+    from scipy import interpolate
 
     # Loading global Vs30 data
     cwd = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120
@@ -668,10 +668,10 @@ def get_vs30_thompson(lat, lon):
     Output:
         vs30: list of vs30
     """  # noqa: D205, D400
-    import os  # noqa: PLC0415
-    import pickle  # noqa: S403, PLC0415
+    import os
+    import pickle
 
-    from scipy import interpolate  # noqa: PLC0415
+    from scipy import interpolate
 
     # Loading Thompson Vs30 data
     cwd = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120
@@ -723,10 +723,10 @@ def get_zTR_global(lat, lon):  # noqa: N802
     Output:
         zTR: list of zTR
     """  # noqa: D205, D400
-    import os  # noqa: PLC0415
-    import pickle  # noqa: S403, PLC0415
+    import os
+    import pickle
 
-    from scipy import interpolate  # noqa: PLC0415
+    from scipy import interpolate
 
     # Loading depth to rock data
     cwd = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120
@@ -750,8 +750,8 @@ def export_site_prop(stn_file, output_dir, filename):
     Output:
         run_tag: 0 - success, 1 - output failure
     """  # noqa: D205, D400, D401
-    import os  # noqa: PLC0415
-    from pathlib import Path  # noqa: PLC0415
+    import os
+    from pathlib import Path
 
     print(stn_file)  # noqa: T201
     station_name = ['site' + str(j) + '.csv' for j in range(len(stn_file))]
@@ -784,7 +784,7 @@ def get_zTR_ncm(lat, lon):  # noqa: N802
     Output:
         zTR: list of depth to bedrock
     """  # noqa: D205, D400
-    import requests  # noqa: PLC0415
+    import requests
 
     zTR = []  # noqa: N806
 
@@ -819,7 +819,7 @@ def get_vsp_ncm(lat, lon, depth):
     Output:
         vsp: list of shear-wave velocity profile
     """  # noqa: D205, D400
-    import requests  # noqa: PLC0415
+    import requests
 
     vsp = []
     depthMin, depthInc, depthMax = (abs(x) for x in depth)  # noqa: N806
@@ -940,16 +940,16 @@ def get_soil_model_ei(param=None):
 
 def get_soil_model_user(df_stn, model_fun):  # noqa: D103
     # check if mode_fun exists
-    import importlib  # noqa: PLC0415
-    import os  # noqa: PLC0415
-    import sys  # noqa: PLC0415
+    import importlib
+    import os
+    import sys
 
     if not os.path.isfile(model_fun):  # noqa: PTH113
         print(f'CreateStation.get_soil_model_user: {model_fun} is not found.')  # noqa: T201
         return df_stn, []
 
     # try to load the model file
-    from pathlib import Path  # noqa: PLC0415
+    from pathlib import Path
 
     try:
         path_model_fun = Path(model_fun).resolve()

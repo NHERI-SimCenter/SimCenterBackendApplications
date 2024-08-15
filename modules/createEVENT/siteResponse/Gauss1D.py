@@ -1,4 +1,4 @@
-from cmath import exp, pi, sqrt  # noqa: CPY001, D100, INP001
+from cmath import exp, pi, sqrt  # noqa: INP001, D100
 
 import numpy as np
 

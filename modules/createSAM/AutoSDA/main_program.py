@@ -1,4 +1,4 @@
-# Modified by: Stevan Gavrilovic @ SimCenter, UC Berkeley  # noqa: CPY001, D100, INP001
+# Modified by: Stevan Gavrilovic @ SimCenter, UC Berkeley  # noqa: INP001, D100
 # Last revision: 09/2020
 
 ##########################################################################
@@ -157,7 +157,7 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):  # noqa: 
     # Go back to the current directory before saving the SAM file
     os.chdir(workingDirectory)
 
-    with open(SAM_file, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(SAM_file, 'w') as f:  # noqa: PTH123
         json.dump(root_SAM, f, indent=2)
 
     # Copy over the .tcl files of the building model into the working directory

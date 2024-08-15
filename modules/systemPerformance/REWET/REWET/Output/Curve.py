@@ -1,7 +1,7 @@
 """Created on Tue Oct 25 14:30:01 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, INP001
+"""  # noqa: INP001, D400
 
 import pandas as pd
 
@@ -287,8 +287,8 @@ class Curve:  # noqa: D101
         sat_node_demands = sat_node_demands.applymap(hhelper)
 
         if iPopulation == 'Yes':
-            s4 = s4 * self._population_data  # noqa: PLR6104
-            sat_node_demands = sat_node_demands * self._population_data  # noqa: PLR6104
+            s4 = s4 * self._population_data
+            sat_node_demands = sat_node_demands * self._population_data
         elif iPopulation == 'No':
             pass
         else:
@@ -391,7 +391,7 @@ class Curve:  # noqa: D101
                     if leak_data_name.loc[time] == True:  # noqa: E712
                         s.loc[time, name] = False
 
-        s = s * pop[s.columns]  # noqa: PLR6104
+        s = s * pop[s.columns]
 
         if ratio == False:  # noqa: E712
             total_pop = 1
@@ -457,7 +457,7 @@ class Curve:  # noqa: D101
                     if leak_data_name.loc[time] == True:  # noqa: E712
                         s.loc[time, name] = False
 
-        s = s * pop[s.columns]  # noqa: PLR6104
+        s = s * pop[s.columns]
         if ratio == False:  # noqa: E712
             total_pop = 1
         else:
@@ -501,7 +501,7 @@ class Curve:  # noqa: D101
             dmg_vs_ep_list[dmg_col] = ep_col
         res = {}
 
-        for dmg_col in dmg_vs_ep_list:  # noqa: PLC0206
+        for dmg_col in dmg_vs_ep_list:
             ep_col = dmg_vs_ep_list[dmg_col]
             exceedance_curve_temp = exceedance_curve.set_index(dmg_col)
             exceedance_curve_temp = exceedance_curve_temp[ep_col]
@@ -543,7 +543,7 @@ class Curve:  # noqa: D101
             dmg_vs_ep_list[dmg_col] = ep_col
         res = {}
 
-        for dmg_col in dmg_vs_ep_list:  # noqa: PLC0206
+        for dmg_col in dmg_vs_ep_list:
             ep_col = dmg_vs_ep_list[dmg_col]
             exceedance_curve_temp = exceedance_curve.set_index(dmg_col)
             exceedance_curve_temp = exceedance_curve_temp[ep_col]

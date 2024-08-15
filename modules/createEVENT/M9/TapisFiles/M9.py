@@ -1,4 +1,4 @@
-# %%  # noqa: CPY001, D100, INP001
+# %%  # noqa: INP001, D100
 import json
 import os
 
@@ -101,7 +101,7 @@ def write_motion(site_name, directory, i, motiondict, APIFLAG):  # noqa: N803, D
         datatowrite['Data'] = 'Time history generated using M9 simulations'
         datatowrite['name'] = f'{site_name}_{i}'
 
-    with open(filename, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(filename, 'w') as f:  # noqa: PTH123
         json.dump(datatowrite, f, indent=2)
 
 
@@ -109,6 +109,6 @@ if __name__ == '__main__':
     # change the directory to the directory of the current file
     os.chdir(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
 
-    with open('information.json') as file:  # noqa: PLW1514, PTH123
+    with open('information.json') as file:  # noqa: PTH123
         information = json.load(file)
     M9(information)

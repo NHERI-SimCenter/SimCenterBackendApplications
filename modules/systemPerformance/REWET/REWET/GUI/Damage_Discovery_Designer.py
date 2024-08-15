@@ -1,7 +1,7 @@
 """Created on Tue Nov  1 23:25:30 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 import pandas as pd
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -100,10 +100,10 @@ class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: D101
             leak_amount = self.leak_amount_line.text()
             leak_time = self.leak_time_line.text()
 
-            if leak_amount == '':  # noqa: PLC1901
+            if leak_amount == '':
                 self.errorMSG('Empty Vlaue', "Please fill the 'Leak Amont' field.")
                 return
-            elif leak_time == '':  # noqa: PLC1901, RET505
+            elif leak_time == '':  # noqa: RET505
                 self.errorMSG('Empty Vlaue', "Please fill the 'Leak Time' field.")
                 return
 
@@ -175,7 +175,7 @@ class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: D101
         time = self.time_line.text()
         discovery_ratio = self.discovery_ratio_line.text()
 
-        if time == '' or discovery_ratio == '':  # noqa: PLC1901
+        if time == '' or discovery_ratio == '':
             return
         if 'time_discovery_ratio' not in self.damage_discovery_model:
             self.damage_discovery_model['time_discovery_ratio'] = pd.Series()
@@ -228,7 +228,7 @@ class Damage_Discovery_Designer(Ui_damage_discovery):  # noqa: D101
         elif self.time_based_radio.isChecked():
             self.enableTimeBased()
 
-    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: D102, N802, PLR6301
+    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: N802, D102
         error_widget = QtWidgets.QMessageBox()
         error_widget.setIcon(QtWidgets.QMessageBox.Critical)
         error_widget.setText(error_msg)
