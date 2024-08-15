@@ -242,7 +242,7 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):  # n
         comm.Barrier()
 
     # if rank 0, gather result_agg and resilience_results, write to file
-    # note that the gathered results dosen't follow the order in realization_to_run
+    # note that the gathered results doesn't follow the order in realization_to_run
     # but this order is not needed when calculating mean and std
     if doParallel:
         # gather results_agg
@@ -494,6 +494,7 @@ if __name__ == '__main__':
 
     with open(Path(wfArgs.configJsonPath).resolve(), 'r') as f:  # noqa: PTH123, UP015
         rec_config = json.load(f)
+
     with open(Path(wfArgs.inputRWHALEPath).resolve(), 'r') as f:  # noqa: PTH123, UP015
         inputRWHALE = json.load(f)  # noqa: N816
     run_pyrecodes(
@@ -503,3 +504,4 @@ if __name__ == '__main__':
         mpiExec=wfArgs.mpiexec,
         numPROC=numPROC,
     )
+
