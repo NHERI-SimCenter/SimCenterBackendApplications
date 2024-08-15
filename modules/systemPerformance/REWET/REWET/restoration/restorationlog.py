@@ -1,7 +1,7 @@
 """Created on Sun Jan 31 21:54:19 2021
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, INP001
+"""  # noqa: INP001, D400
 
 from collections import OrderedDict
 

@@ -1,7 +1,7 @@
-import glob  # noqa: CPY001, D100, INP001
+import glob  # noqa: INP001, D100
 import os
 import shutil
-import subprocess  # noqa: S404
+import subprocess
 import sys
 import traceback
 from dataclasses import dataclass
@@ -43,7 +43,7 @@ def _copytree(src, dst, symlinks=False, ignore=None):  # noqa: FBT002
 
 def _append_msg_in_out_file(msg, out_file_name: str = 'ops.out'):
     if glob.glob(out_file_name):  # noqa: PTH207
-        with open(out_file_name) as text_file:  # noqa: FURB101, PLW1514, PTH123
+        with open(out_file_name) as text_file:  # noqa: PTH123
             error_FEM = text_file.read()  # noqa: N806
 
         startingCharId = error_FEM.lower().find('error')  # noqa: N806
@@ -147,7 +147,7 @@ class SimCenterWorkflowDriver:  # noqa: D101
         for i, rv in enumerate(self.list_of_rv_names):
             list_of_strings_to_write.append(f'{rv} {sample_values[0][i]}')
         try:
-            with open(os.path.join(workdir, 'params.in'), 'w') as f:  # noqa: FURB103, PLW1514, PTH118, PTH123
+            with open(os.path.join(workdir, 'params.in'), 'w') as f:  # noqa: PTH118, PTH123
                 f.write('\n'.join(list_of_strings_to_write))
         except Exception as ex:  # noqa: BLE001
             raise ModelEvaluationError(  # noqa: B904, TRY003
@@ -166,7 +166,7 @@ class SimCenterWorkflowDriver:  # noqa: D101
             completed_process.check_returncode()
         except subprocess.CalledProcessError as ex:
             returnStringList = ['Failed to run the model.']  # noqa: N806
-            returnStringList.append(  # noqa: FURB113
+            returnStringList.append(
                 'The command to run the model was                            '
                 f'         {ex.cmd}'
             )
@@ -234,7 +234,7 @@ class ParallelRunnerMultiprocessing:  # noqa: D101
         self.num_processors = self.get_num_processors()
         self.pool = self.get_pool()
 
-    def get_num_processors(self) -> int:  # noqa: D102, PLR6301
+    def get_num_processors(self) -> int:  # noqa: D102
         num_processors = os.cpu_count()
         if num_processors is None:
             num_processors = 1
@@ -355,7 +355,7 @@ def get_list_of_pseudo_random_number_generators(entropy, num_spawn):  # noqa: D1
 
 def get_parallel_pool_instance(run_type: str):  # noqa: D103
     if run_type == 'runningRemote':
-        from parallel_runner_mpi4py import ParallelRunnerMPI4PY  # noqa: PLC0415
+        from parallel_runner_mpi4py import ParallelRunnerMPI4PY
 
         return ParallelRunnerMPI4PY(run_type)
     else:  # noqa: RET505

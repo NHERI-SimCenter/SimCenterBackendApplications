@@ -1,4 +1,4 @@
-import json  # noqa: CPY001, D100, INP001
+import json  # noqa: INP001, D100
 import os
 import time
 
@@ -17,9 +17,9 @@ except:  # noqa: E722
 from convertWindMat import *  # noqa: F403
 
 
-def main(aimName, evtName, getRV):  # noqa: C901, D103, N803, PLR0914, PLR0915
+def main(aimName, evtName, getRV):  # noqa: C901, N803, D103, PLR0915
     # THIS IS PERFORMED ONLY ONCE with open(aimName, 'r', encoding='utf-8') as f:
-    with open(aimName) as f:  # noqa: PLW1514, PTH123
+    with open(aimName) as f:  # noqa: PTH123
         aim_data = json.load(f)
 
     evt_data = aim_data['Events'][0]
@@ -194,7 +194,7 @@ def main(aimName, evtName, getRV):  # noqa: C901, D103, N803, PLR0914, PLR0915
     #
 
     if case == 'timeHistory':
-        [s_target, f_target, norm_all, comp_CFmean, Fx_full, Fy_full, Tz_full] = (  # noqa: F841, N806
+        [s_target, f_target, norm_all, comp_CFmean, Fx_full, Fy_full, Tz_full] = (  # noqa: N806
             learn_CPSD(
                 Fx,
                 Fy,
@@ -465,7 +465,7 @@ def perform_POD(s_target, f_target, ncomp, l_mo):  # noqa: N802, D103
     return V, D1, SpeN
 
 
-def learn_CPSD(  # noqa: D103, N802, PLR0913, PLR0917
+def learn_CPSD(  # noqa: N802, D103, PLR0913
     Fx,  # noqa: N803
     Fy,  # noqa: N803
     Tz,  # noqa: N803
@@ -559,7 +559,7 @@ def cpsd_matlab(Components1, Components2, wind_size, nover, nfft, fp):  # noqa: 
     return s_target, f_target
 
 
-def simulation_gaussian(  # noqa: D103, PLR0913, PLR0917
+def simulation_gaussian(  # noqa: D103, PLR0913
     ncomp,
     N_t,  # noqa: N803
     V_vH,  # noqa: N803
@@ -640,14 +640,14 @@ def simulation_gaussian(  # noqa: D103, PLR0913, PLR0917
             F_jm[j, :] = np.real(g_jm * coef2)
 
         # sum up F from different modes (zero - mean)
-        F_jzm = F_jzm + F_jm  # noqa: N806, PLR6104
+        F_jzm = F_jzm + F_jm  # noqa: N806
 
     return F_jzm
 
 
 def err_exit(msg):  # noqa: D103
     print(msg)  # noqa: T201
-    with open('../workflow.err', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+    with open('../workflow.err', 'w') as f:  # noqa: PTH123
         f.write(msg)
     exit(-1)  # noqa: PLR1722
 
@@ -668,7 +668,7 @@ if __name__ == '__main__':
             getRV = True  # noqa: N816
 
     if error_tag and getRV:
-        with open('../workflow.err', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+        with open('../workflow.err', 'w') as f:  # noqa: PTH123
             print('Failed to import module ' + moduleName)  # noqa: T201
             f.write(
                 'Failed to import module '
@@ -686,7 +686,7 @@ if __name__ == '__main__':
         import traceback
 
         if getRV:
-            with open('../workflow.err', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+            with open('../workflow.err', 'w') as f:  # noqa: PTH123
                 f.write(
                     'Failed in wind load generator preprocessor:'
                     + str(err)
@@ -701,7 +701,7 @@ if __name__ == '__main__':
                 )
             exit(-1)  # noqa: PLR1722
         else:
-            with open('../dakota.err', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+            with open('../dakota.err', 'w') as f:  # noqa: PTH123
                 f.write(
                     'Failed to generate wind load: '
                     + str(err)

@@ -1,7 +1,7 @@
 """Created on Wed May 26 16:11:36 2021
 
 @author: snaeimi
-"""  # noqa: CPY001, D400
+"""  # noqa: D400
 
 import ctypes
 import logging
@@ -52,7 +52,7 @@ class ENepanet(wntrfr.epanet.toolkit.ENepanet):  # noqa: D101
                     libnames.insert(0, 'epanet22_amd64_mod')
             for lib in libnames:
                 try:
-                    if os.name in ['nt', 'dos']:  # noqa: PLR6201
+                    if os.name in ['nt', 'dos']:
                         libepanet = resource_filename(
                             __name__,
                             'Windows/%s.dll' % lib,  # noqa: UP031
@@ -104,7 +104,7 @@ class ENepanet(wntrfr.epanet.toolkit.ENepanet):  # noqa: D101
         if self.errcode < 100:  # noqa: PLR2004
             self.fileLoaded = True
 
-    def ENSetIgnoreFlag(self, ignore_flag=0):  # noqa: D102, N802, PLR6301
+    def ENSetIgnoreFlag(self, ignore_flag=0):  # noqa: N802, D102
         if abs(ignore_flag - np.round(ignore_flag)) > 0.00001 or ignore_flag < 0:  # noqa: PLR2004
             logger.error(
                 'ignore_flag must be int value and bigger than zero'  # noqa: G003

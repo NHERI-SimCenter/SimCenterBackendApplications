@@ -1,4 +1,4 @@
-# This file is used to define the class of Building  # noqa: CPY001, D100, INP001
+# This file is used to define the class of Building  # noqa: INP001, D100
 # Developed by GUAN, XINGQUAN @ UCLA in Aug. 2018
 # Updated on Sept. 28 2018
 

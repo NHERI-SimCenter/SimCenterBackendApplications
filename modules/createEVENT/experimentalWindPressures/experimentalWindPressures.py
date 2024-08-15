@@ -1,4 +1,4 @@
-import json  # noqa: CPY001, D100, INP001
+import json  # noqa: INP001, D100
 import os
 import time
 
@@ -21,7 +21,7 @@ except:  # noqa: E722
 from convertWindMat import *  # noqa: F403
 
 errPath = './workflow.err'  # error file name  # noqa: N816
-sys.stderr = open(  # noqa: F405, PLW1514, PTH123, SIM115
+sys.stderr = open(  # noqa: SIM115, PTH123, F405
     errPath, 'w'
 )  # redirecting stderr (this way we can capture all sorts of python errors)
 
@@ -35,7 +35,7 @@ def err_exit(msg):  # noqa: D103
     exit(-1)  # exit with non-zero exit code  # noqa: PLR1722
 
 
-def main(aimName, evtName, getRV):  # noqa: C901, D103, N803, PLR0914, PLR0915
+def main(aimName, evtName, getRV):  # noqa: C901, N803, D103, PLR0915
     with open(aimName, encoding='utf-8') as f:  # noqa: PTH123
         aim_data = json.load(f)
 
@@ -100,7 +100,7 @@ def main(aimName, evtName, getRV):  # noqa: C901, D103, N803, PLR0914, PLR0915
             #
 
             if runType == 'runningLocal':
-                from multiprocessing import Pool  # noqa: PLC0415
+                from multiprocessing import Pool
 
                 n_processor = os.cpu_count()
                 print('Starting pool')  # noqa: T201
@@ -108,8 +108,8 @@ def main(aimName, evtName, getRV):  # noqa: C901, D103, N803, PLR0914, PLR0915
                 pool = Pool(n_processor)
                 print(f' - Elapsed time: {time.time() - tmp:.3f} seconds.\n')  # noqa: T201
             else:
-                from mpi4py import MPI  # noqa: PLC0415
-                from mpi4py.futures import MPIPoolExecutor  # noqa: PLC0415
+                from mpi4py import MPI
+                from mpi4py.futures import MPIPoolExecutor
 
                 world = MPI.COMM_WORLD
                 n_processor = world.Get_size()
@@ -728,7 +728,7 @@ def paretotails_icdf(pf, nl, nu, temp, my_cdf_vect, my_cdf_x):  # noqa: D103
     my_cdf_x = np.linspace(my_cdf_x[0], my_cdf_x[1], my_cdf_vect.shape[0])
     idx2 = np.where((pf >= nl) * (pf < nu))  # not to have duplicates in x
 
-    unique_val, unique_id = np.unique(my_cdf_vect, return_index=True)  # noqa: F841
+    unique_val, unique_id = np.unique(my_cdf_vect, return_index=True)
 
     kernel_icdf = interpolate.interp1d(
         my_cdf_vect[unique_id], my_cdf_x[unique_id], kind='cubic', bounds_error=False
@@ -857,7 +857,7 @@ def perform_POD(s_target, f_target, ncomp, l_mo, pool):  # noqa: N802, D103
     return V, D1, SpeN
 
 
-def simulation_gaussian(  # noqa: D103, PLR0913, PLR0917
+def simulation_gaussian(  # noqa: D103, PLR0913
     ncomp,
     N_t,  # noqa: N803
     V_vH,  # noqa: N803
@@ -943,7 +943,7 @@ def simulation_gaussian(  # noqa: D103, PLR0913, PLR0917
 
         # TODO it is hard to tell whether they are similar or not  # noqa: TD002, TD004
         # sum up F from different modes (zero - mean)
-        F_jzm = F_jzm + F_jm  # noqa: N806, PLR6104
+        F_jzm = F_jzm + F_jm  # noqa: N806
 
     return F_jzm
 

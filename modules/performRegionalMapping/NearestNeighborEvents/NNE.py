@@ -66,7 +66,7 @@ def find_neighbors(  # noqa: C901, D103
         mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
-            from mpi4py import MPI  # noqa: PLC0415
+            from mpi4py import MPI
 
             runParallel = True  # noqa: N806
             comm = MPI.COMM_WORLD
@@ -90,13 +90,13 @@ def find_neighbors(  # noqa: C901, D103
     lon_E = grid_df['Longitude']  # noqa: N806
     X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])  # noqa: N806
 
-    if filter_label == '':  # noqa: PLC1901
+    if filter_label == '':
         grid_extra_keys = list(
             grid_df.drop(['GP_file', 'Longitude', 'Latitude'], axis=1).columns
         )
 
     # prepare the tree for the nearest neighbor search
-    if filter_label != '' or len(grid_extra_keys) > 0:  # noqa: PLC1901
+    if filter_label != '' or len(grid_extra_keys) > 0:
         neighbors_to_get = min(neighbors * 10, len(lon_E))
     else:
         neighbors_to_get = neighbors
@@ -123,7 +123,7 @@ def find_neighbors(  # noqa: C901, D103
             AIM_df.iloc[count]['Longitude'] = asset_loc['longitude']
             AIM_df.iloc[count]['Latitude'] = asset_loc['latitude']
             AIM_df.iloc[count]['file'] = asset['file']
-            count = count + 1  # noqa: PLR6104
+            count = count + 1
 
     # store building locations in Y
     Y = np.array(  # noqa: N806
@@ -136,7 +136,7 @@ def find_neighbors(  # noqa: C901, D103
 
     # collect the neighbor indices and distances for every building
     distances, indices = nbrs.kneighbors(Y)
-    distances = distances + 1e-20  # noqa: PLR6104
+    distances = distances + 1e-20
 
     # initialize the random generator
     if seed is not None:
@@ -156,7 +156,7 @@ def find_neighbors(  # noqa: C901, D103
         with open(asst_file, encoding='utf-8') as f:  # noqa: PTH123
             asset_data = json.load(f)
 
-        if filter_label != '':  # noqa: PLC1901
+        if filter_label != '':
             # soil type of building
             asset_label = asset_data['GeneralInformation'][filter_label]
             # soil types of all initial neighbors

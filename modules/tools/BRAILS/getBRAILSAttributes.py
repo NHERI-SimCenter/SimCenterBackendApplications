@@ -39,7 +39,7 @@
 # 03-27-2024
 
 # Import packages needed for setting up required packages:
-import subprocess  # noqa: S404
+import subprocess
 import sys
 from importlib import metadata as importlib_metadata
 
@@ -112,7 +112,7 @@ def log_msg(msg):  # noqa: D103
 # Define a way to call BRAILS BldgAttributes and write them in a file:
 def runBrails(outputfile):  # noqa: N802, D103
     attributes = BldgAttributes()
-    with open(outputfile, 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+    with open(outputfile, 'w') as f:  # noqa: PTH123
         f.write('\n'.join(attributes))
 
 

@@ -1,11 +1,11 @@
 """Created on Sun Oct 23 15:00:31 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 import copy
 import os
-import pickle  # noqa: S403
+import pickle
 from collections import OrderedDict
 
 import numpy as np
@@ -250,7 +250,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
             """
             print(str(scn_name) + ' loaded')  # noqa: T201
 
-    def remove_maximum_trials(self, data):  # noqa: D102, PLR6301
+    def remove_maximum_trials(self, data):  # noqa: D102
         all_time_list = data.maximum_trial_time
         result_time_list = data.node['demand'].index.to_list()
         result_time_max_trailed_list = [
@@ -312,7 +312,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
                 att_data.drop(result_time_max_trailed_list, inplace=True)  # noqa: PD002
                 data.link[att] = att_data
 
-    def remove_maximum_trials_demand_flow(self, data):  # noqa: D102, PLR6301
+    def remove_maximum_trials_demand_flow(self, data):  # noqa: D102
         flow_balance = data.node['demand'].sum(axis=1)
 
         time_to_drop = flow_balance[abs(flow_balance) >= 0.01].index  # noqa: PLR2004
@@ -563,7 +563,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
 
         for t in range(0, int(max_time), 3600):
             satisfies_nodes_scnearios = data_frame <= t
-            satisfies_nodes_scnearios = (  # noqa: PLR6104
+            satisfies_nodes_scnearios = (
                 satisfies_nodes_scnearios * population_dataframe
             )
             scenario_percentages = (
@@ -683,7 +683,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: D
 
         return res
 
-    def getResultSeperatedDaily(self, data, begin_time=0):  # noqa: D102, N802, PLR6301
+    def getResultSeperatedDaily(self, data, begin_time=0):  # noqa: N802, D102
         data = data[data.index >= begin_time]
         data.index = (data.index - begin_time) / (24 * 3600)
 

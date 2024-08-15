@@ -1,7 +1,7 @@
 """Created on Thu Nov 10 18:29:50 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -108,7 +108,7 @@ class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: D101
         if time_unit == 'second':
             return raw_time_map.copy()
         elif time_unit == 'hour':  # noqa: RET505
-            data = data / 3600  # noqa: PLR6104
+            data = data / 3600
         elif time_unit == 'day':
             data = data / 3600 / 24
         else:
@@ -125,7 +125,7 @@ class Yes_No_Combo(QtWidgets.QComboBox):  # noqa: D101
         self.addItems(['No', 'Yes'])
 
 
-class Map_Designer:  # noqa: D101, PLR0904
+class Map_Designer:  # noqa: D101
     def __init__(self):
         self.current_raw_map = None
         self.current_map = None
@@ -230,7 +230,7 @@ class Map_Designer:  # noqa: D101, PLR0904
     def annotationRadiusChanegd(self):  # noqa: N802, D102
         annotation_radius = self.annotation_radius_line.text()
         self.annotation_map = self.plotted_map.copy(deep=True)
-        if annotation_radius == '':  # noqa: PLC1901
+        if annotation_radius == '':
             annotation_radius = 0
             self.annotation_radius_line.settext('0')
         annotation_radius = float(annotation_radius)
@@ -367,7 +367,7 @@ class Map_Designer:  # noqa: D101, PLR0904
         self.mpl_map.canvas.draw()
         self.mpl_map.canvas.fig.tight_layout()
 
-    def prepareForLegend(self, data, value_columns_name):  # noqa: D102, N802, PLR6301
+    def prepareForLegend(self, data, value_columns_name):  # noqa: N802, D102
         return data.copy(deep=True)
         data = data.copy(deep=True)
         min_value = data[value_columns_name].min()
@@ -635,7 +635,7 @@ class Map_Designer:  # noqa: D101, PLR0904
                 self.current_raw_map
             )
             self.plotMap('SSI', 'Time')
-        elif map_type == '':  # noqa: PLC1901
+        elif map_type == '':
             return
         else:
             raise  # noqa: PLE0704
@@ -801,7 +801,7 @@ class Map_Designer:  # noqa: D101, PLR0904
             self.project_file_addr,
             'Shapefile (*.shp)',
         )
-        if file_addr[0] == '':  # noqa: PLC1901
+        if file_addr[0] == '':
             return
 
         # self.current_map_data[1].to_excel(file_addr[0])

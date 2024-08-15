@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -50,7 +50,7 @@ class of7Others:
     """  # noqa: D205, D404
 
     #############################################################
-    def othersheader(self, fileclas, fileloc, fileobjec):  # noqa: PLR6301
+    def othersheader(self, fileclas, fileloc, fileobjec):
         """Creates the text for the header
 
         Variable
@@ -128,7 +128,7 @@ FoamFile
         )
 
         # All other data
-        gfiletext = gfiletext + 'dimensions\t[0 1 -2 0 0 0 0];\n'  # noqa: PLR6104
+        gfiletext = gfiletext + 'dimensions\t[0 1 -2 0 0 0 0];\n'
         gfiletext = (
             gfiletext
             + 'value\t('

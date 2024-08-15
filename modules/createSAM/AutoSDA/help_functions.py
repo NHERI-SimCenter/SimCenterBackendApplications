@@ -1,4 +1,4 @@
-# This file is used to define helpful functions that are used in either main program or user defined class  # noqa: CPY001, D100, INP001
+# This file is used to define helpful functions that are used in either main program or user defined class  # noqa: INP001, D100
 # Developed by GUAN, XINGQUAN @ UCLA in June 2018
 # Updated in Sept. 2018
 
@@ -449,7 +449,7 @@ def constructability_helper(  # noqa: C901
     # It is better to trace the story from top to bottom of the building.
     starting_index = total_story - 1
     ending_index = variation_story[-1]
-    while starting_index > 0:  # noqa: PLR1702
+    while starting_index > 0:
         # For stories within "identical story block"
         for indx in range(starting_index, ending_index, -1):
             # Only revise those size that are not identical

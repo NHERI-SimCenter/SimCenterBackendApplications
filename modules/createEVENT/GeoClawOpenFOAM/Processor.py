@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -111,7 +111,7 @@ def main():  # noqa: C901
     fipath = str(fipath)
 
     # Open the JSON file and load all objects
-    with open(args.b) as f:  # noqa: PLW1514, PTH123
+    with open(args.b) as f:  # noqa: PTH123
         data = json.load(f)
 
     # Create a utilities object
@@ -341,7 +341,7 @@ def main():  # noqa: C901
 
     # Write to caserun file
     caseruntext = 'echo HydroUQ complete'
-    scriptfile = open('caserun.sh', 'a')  # noqa: PLW1514, PTH123, SIM115
+    scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
     scriptfile.write(caseruntext)
     scriptfile.close()
 
