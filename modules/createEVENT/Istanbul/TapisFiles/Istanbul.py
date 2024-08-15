@@ -1,4 +1,4 @@
-# %%  # noqa: CPY001, D100, INP001
+# %%  # noqa: INP001, D100
 import os
 
 directory = './Events'
@@ -81,11 +81,11 @@ def Istanbul(information):  # noqa: N802, D103
 
 def write_motion(site_name, directory, i, motiondict):  # noqa: D103
     filename = f'{directory}/site_{site_name}_{i}.json'
-    with open(filename, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(filename, 'w') as f:  # noqa: PTH123
         json.dump(motiondict, f, indent=2)
 
 
 # get the location flag
-with open('information.json') as file:  # noqa: PLW1514, PTH123
+with open('information.json') as file:  # noqa: PTH123
     information = json.load(file)
 Istanbul(information)

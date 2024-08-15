@@ -1,7 +1,7 @@
 """Created on Mon Oct 24 18:27:03 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, INP001
+"""  # noqa: INP001, D400
 
 
 class Raw_Data:  # noqa: D101
@@ -15,7 +15,7 @@ class Raw_Data:  # noqa: D101
         file_address,
         file_type,
     ):
-        if data_type not in ['pressure', 'head', 'demand', 'quality']:  # noqa: PLR6201
+        if data_type not in ['pressure', 'head', 'demand', 'quality']:
             raise ValueError(
                 'data type is not recognized for demand nodes: ' + repr(data_type)
             )
@@ -24,7 +24,7 @@ class Raw_Data:  # noqa: D101
         self.saveDataFrame(data, file_address, file_type=file_type)
 
     def saveDetailedJunctionData(self, scn_name, data_type, file_address, file_type):  # noqa: N802, D102
-        if data_type not in ['pressure', 'head', 'demand', 'quality']:  # noqa: PLR6201
+        if data_type not in ['pressure', 'head', 'demand', 'quality']:
             raise ValueError(
                 'data type is not recognized for junctiosn: ' + repr(data_type)
             )
@@ -33,7 +33,7 @@ class Raw_Data:  # noqa: D101
         self.saveDataFrame(data, file_address, file_type=file_type)
 
     def saveDetailedTankData(self, scn_name, data_type, file_address, file_type):  # noqa: N802, D102
-        if data_type not in ['pressure', 'head', 'demand', 'quality']:  # noqa: PLR6201
+        if data_type not in ['pressure', 'head', 'demand', 'quality']:
             raise ValueError(
                 'data type is not recognized for tanks: ' + repr(data_type)
             )
@@ -48,7 +48,7 @@ class Raw_Data:  # noqa: D101
         file_address,
         file_type,
     ):
-        if data_type not in ['pressure', 'head', 'demand', 'quality']:  # noqa: PLR6201
+        if data_type not in ['pressure', 'head', 'demand', 'quality']:
             raise ValueError(
                 'data type is not recognized for demand nodes: ' + repr(data_type)
             )
@@ -57,7 +57,7 @@ class Raw_Data:  # noqa: D101
         self.saveDataFrame(data, file_address, file_type=file_type)
 
     def saveDetailedPipeData(self, scn_name, data_type, file_address, file_type):  # noqa: N802, D102
-        if data_type not in [  # noqa: PLR6201
+        if data_type not in [
             'linkquality',
             'flowrate',
             'headloss',
@@ -75,7 +75,7 @@ class Raw_Data:  # noqa: D101
         self.saveDataFrame(data, file_address, file_type=file_type)
 
     def saveDetailedPumpData(self, scn_name, data_type, file_address, file_type):  # noqa: N802, D102
-        if data_type not in [  # noqa: PLR6201
+        if data_type not in [
             'linkquality',
             'flowrate',
             'headloss',
@@ -93,7 +93,7 @@ class Raw_Data:  # noqa: D101
         self.saveDataFrame(data, file_address, file_type=file_type)
 
     def saveDetailedValveData(self, scn_name, data_type, file_address, file_type):  # noqa: N802, D102
-        if data_type not in [  # noqa: PLR6201
+        if data_type not in [
             'linkquality',
             'flowrate',
             'headloss',
@@ -112,7 +112,7 @@ class Raw_Data:  # noqa: D101
 
     def getDetailedData(self, scn_name, data_type):  # noqa: N802, D102
         cur_scn_data = None
-        if data_type in [  # noqa: PLR6201
+        if data_type in [
             'linkquality',
             'flowrate',
             'headloss',
@@ -123,7 +123,7 @@ class Raw_Data:  # noqa: D101
             'rxnrate',
         ]:
             cur_scn_data = self.data[scn_name].link[data_type]
-        elif data_type in ['pressure', 'head', 'demand', 'quality']:  # noqa: PLR6201
+        elif data_type in ['pressure', 'head', 'demand', 'quality']:
             cur_scn_data = self.data[scn_name].node[data_type]
         else:
             raise ValueError('Unknown Data Type For output')  # noqa: EM101, TRY003

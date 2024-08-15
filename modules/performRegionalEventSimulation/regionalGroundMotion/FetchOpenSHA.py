@@ -639,7 +639,7 @@ def export_to_json(  # noqa: C901, D103
         print(  # noqa: T201
             f'The collected ruptures are sorted by MeanAnnualRate and saved in {outfile}'
         )
-        with open(outfile, 'w') as f:  # noqa: PLW1514, PTH123
+        with open(outfile, 'w') as f:  # noqa: PTH123
             ujson.dump(erf_data, f, indent=2)
     # print(f"Time consumed by json dump is {(time.process_time_ns()-startTime)/1e9}s")
 

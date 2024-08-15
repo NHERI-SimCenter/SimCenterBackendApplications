@@ -1,4 +1,4 @@
-import argparse  # noqa: CPY001, D100, INP001
+import argparse  # noqa: INP001, D100
 import json
 
 
@@ -52,12 +52,12 @@ def writeEVENT(forces, eventFilePath):  # noqa: N802, N803
         addFloorForceToEvent(patternsArray, floorForces.X, 'X', floor)
         addFloorForceToEvent(patternsArray, floorForces.Y, 'Y', floor)
 
-    with open(eventFilePath, 'w') as eventsFile:  # noqa: N806, PLW1514, PTH123
+    with open(eventFilePath, 'w') as eventsFile:  # noqa: PTH123, N806
         json.dump(eventDict, eventsFile)
 
 
 def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
-    with open(BIMFilePath) as BIMFile:  # noqa: N806, PLW1514, PTH123
+    with open(BIMFilePath) as BIMFile:  # noqa: PTH123, N806
         bim = json.load(BIMFile)
 
     return int(bim['GeneralInformation']['stories'])

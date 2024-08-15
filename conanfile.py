@@ -1,4 +1,4 @@
-import os  # noqa: D100, CPY001
+import os  # noqa: D100
 
 from conans import CMake, ConanFile
 

@@ -1,4 +1,4 @@
-import os  # noqa: CPY001, D100, INP001
+import os  # noqa: INP001, D100
 import shutil
 import sys
 import time
@@ -103,7 +103,7 @@ class CovarianceMatrixPreparer:  # noqa: D101
 
         logFile.write('\n\nLooping over the experiments and EDPs')
         # First, check if the user has passed in any covariance matrix data
-        for expNum in range(1, numExperiments + 1):  # noqa: N806, PLR1702
+        for expNum in range(1, numExperiments + 1):  # noqa: N806
             logFile.write(f'\n\nExperiment number: {expNum}')
             for i, edpName in enumerate(edpNamesList):  # noqa: N806
                 logFile.write(f'\n\tEDP: {edpName}')
@@ -132,8 +132,8 @@ class CovarianceMatrixPreparer:  # noqa: D101
                     numRows = 0  # noqa: N806
                     numCols = 0  # noqa: N806
                     linenum = 0
-                    with open(tmpCovFile, 'w') as f1:  # noqa: PLW1514, PTH123, SIM117
-                        with open(covarianceFile) as f:  # noqa: PLW1514, PTH123
+                    with open(tmpCovFile, 'w') as f1:  # noqa: SIM117, PTH123
+                        with open(covarianceFile) as f:  # noqa: PTH123
                             for line in f:
                                 linenum += 1
                                 if len(line.strip()) == 0:
@@ -284,13 +284,13 @@ class CalDataPreparer:  # noqa: D101
         self.tempCalDataFile = os.path.join(  # noqa: PTH118
             self.workdirMain, 'quoFEMTempCalibrationDataFile.cal'
         )
-        f1 = open(self.tempCalDataFile, 'w')  # noqa: PLW1514, PTH123, SIM115
+        f1 = open(self.tempCalDataFile, 'w')  # noqa: SIM115, PTH123
         headings = self.createHeadings()
         f1.write(headings)
         interface = 1
         self.numExperiments = 0
         linenum = 0
-        with open(calDataFile) as f:  # noqa: PLW1514, PTH123
+        with open(calDataFile) as f:  # noqa: PTH123
             for line in f:
                 linenum += 1
                 if len(line.strip()) == 0:
@@ -350,7 +350,7 @@ def transform_data_function(  # noqa: D103
             :,
             currentPosition : currentPosition + list_of_data_segment_lengths[j],
         ]
-        slice_of_data = slice_of_data + list_of_shift_factors[j]  # noqa: PLR6104
+        slice_of_data = slice_of_data + list_of_shift_factors[j]
         data_to_transform[
             :,
             currentPosition : currentPosition + list_of_data_segment_lengths[j],
@@ -444,7 +444,7 @@ class DataTransformer:  # noqa: D101
 
 
 def createLogFile(where: str, logfile_name: str):  # noqa: N802, D103
-    logfile = open(os.path.join(where, logfile_name), 'w')  # noqa: PLW1514, PTH118, PTH123, SIM115
+    logfile = open(os.path.join(where, logfile_name), 'w')  # noqa: SIM115, PTH118, PTH123
     logfile.write(
         'Starting analysis at: {}'.format(
             time.strftime('%a, %d %b %Y %H:%M:%S', time.localtime())
@@ -686,7 +686,7 @@ class LogLikelihoodHandler:  # noqa: D101
                 residuals = allResiduals[
                     i, currentPosition : currentPosition + length
                 ]
-                currentPosition = currentPosition + length  # noqa: N806, PLR6104
+                currentPosition = currentPosition + length  # noqa: N806
                 cov = self._make_covariance(j, list_of_covariance_multipliers[j])
                 mean = self._make_mean(j)
                 ll = self.log_likelihood_function(residuals, mean, cov)

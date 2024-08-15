@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -65,7 +65,7 @@ class of7Prboundary:
         prtext = self.Prheader()
 
         # Start the outside
-        prtext = prtext + 'boundaryField\n{\n'  # noqa: PLR6104
+        prtext = prtext + 'boundaryField\n{\n'
 
         # Loop over all patches
         for patchname in patches:
@@ -81,22 +81,22 @@ class of7Prboundary:
                         data, ['Events', 'PressureType_' + patchname]
                     )
                 )
-            prtext = prtext + self.Prpatchtext(data, prtype, patchname)  # noqa: PLR6104
+            prtext = prtext + self.Prpatchtext(data, prtype, patchname)
 
         # Check for building and other building
-        prtext = prtext + '\tBuilding\n'  # noqa: PLR6104
-        prtext = prtext + self.Prpatchtext(data, '201', 'Building')  # noqa: PLR6104
-        prtext = prtext + '\tOtherBuilding\n'  # noqa: PLR6104
-        prtext = prtext + self.Prpatchtext(data, '201', 'OtherBuilding')  # noqa: PLR6104
+        prtext = prtext + '\tBuilding\n'
+        prtext = prtext + self.Prpatchtext(data, '201', 'Building')
+        prtext = prtext + '\tOtherBuilding\n'
+        prtext = prtext + self.Prpatchtext(data, '201', 'OtherBuilding')
 
         # Close the outside
-        prtext = prtext + '}\n\n'  # noqa: PLR6104
+        prtext = prtext + '}\n\n'
 
         # Return the text for velocity BC
         return prtext  # noqa: RET504
 
     #############################################################
-    def Prheader(self):  # noqa: N802, PLR6301
+    def Prheader(self):  # noqa: N802
         """Creates the text for the header for pressure file
 
         Variable
@@ -114,14 +114,14 @@ FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tvolScalarField;\n\tlocation\t"0";\n\tobject\tp_rgh;\n}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
-        header = header + 'dimensions\t[1 -1 -2 0 0 0 0];\n\n'  # noqa: PLR6104
-        header = header + 'internalField\tuniform\t0;\n\n'  # noqa: PLR6104
+        header = header + 'dimensions\t[1 -1 -2 0 0 0 0];\n\n'
+        header = header + 'internalField\tuniform\t0;\n\n'
 
         # Return the header for U file
         return header  # noqa: RET504
 
     #############################################################
-    def Prpatchtext(self, data, Prtype, patchname):  # noqa: C901, N802, N803, PLR6301
+    def Prpatchtext(self, data, Prtype, patchname):  # noqa: C901, N802, N803
         """Creates the text the pressure boundary condition
 
         Arguments:
@@ -185,27 +185,27 @@ FoamFile
                 pr = float(presvals)
             # Get the text
             Prtext = '\t{\n\t\t'  # noqa: N806
-            Prtext = Prtext + 'type\tfixedValue;\n\t\t'  # noqa: N806, PLR6104
+            Prtext = Prtext + 'type\tfixedValue;\n\t\t'  # noqa: N806
             Prtext = Prtext + 'value\t' + str(pr) + ';\n'  # noqa: N806
-            Prtext = Prtext + '\t}\n'  # noqa: N806, PLR6104
+            Prtext = Prtext + '\t}\n'  # noqa: N806
         elif int(Prtype2) == 102:  # noqa: PLR2004
             # fixedFluxPressure
             Prtext = '\t{\n\t\t'  # noqa: N806
-            Prtext = Prtext + 'type\tfixedFluxPressure;\n\t\t'  # noqa: N806, PLR6104
-            Prtext = Prtext + 'value\tuniform 0;\n\t}\n'  # noqa: N806, PLR6104
+            Prtext = Prtext + 'type\tfixedFluxPressure;\n\t\t'  # noqa: N806
+            Prtext = Prtext + 'value\tuniform 0;\n\t}\n'  # noqa: N806
         elif int(Prtype2) == 201:  # noqa: PLR2004
             # Outlet zero gradient
             Prtext = '\t{\n\t\t'  # noqa: N806
-            Prtext = Prtext + 'type\tzeroGradient;\n\t}\n'  # noqa: N806, PLR6104
+            Prtext = Prtext + 'type\tzeroGradient;\n\t}\n'  # noqa: N806
         elif int(Prtype2) == 202:  # noqa: PLR2004
             Prtext = '\t{\n\t\t'  # noqa: N806
-            Prtext = Prtext + 'type\tfixedValue;\n\t\t'  # noqa: N806, PLR6104
-            Prtext = Prtext + 'value\t0;\n'  # noqa: N806, PLR6104
-            Prtext = Prtext + '\t}\n'  # noqa: N806, PLR6104
+            Prtext = Prtext + 'type\tfixedValue;\n\t\t'  # noqa: N806
+            Prtext = Prtext + 'value\t0;\n'  # noqa: N806
+            Prtext = Prtext + '\t}\n'  # noqa: N806
         else:
             # Default: Empty
             Prtext = '\t{\n\t\t'  # noqa: N806
-            Prtext = Prtext + 'type\tempty;\n\t}\n'  # noqa: N806, PLR6104
+            Prtext = Prtext + 'type\tempty;\n\t}\n'  # noqa: N806
 
         # Return the header for U file
         return Prtext

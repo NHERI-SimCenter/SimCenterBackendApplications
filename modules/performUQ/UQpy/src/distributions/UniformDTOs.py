@@ -1,4 +1,4 @@
-from typing import Literal, Union  # noqa: CPY001, D100, INP001
+from typing import Literal, Union  # noqa: INP001, D100
 
 import numpy as np
 from pydantic import BaseModel, Field, PositiveFloat, validator
@@ -27,7 +27,7 @@ class UniformParameters(RVCommonData):  # noqa: D101
         return v
 
     def init_to_text(self):  # noqa: D102
-        from UQpy.distributions.collection.Uniform import Uniform  # noqa: PLC0415
+        from UQpy.distributions.collection.Uniform import Uniform
 
         c = Uniform
 
@@ -73,7 +73,7 @@ class UniformDataset(RVCommonData):  # noqa: D101
 
 
 def readFile(path):  # noqa: N802, D103
-    with open(path) as f:  # noqa: PLW1514, PTH123
+    with open(path) as f:  # noqa: PTH123
         return np.genfromtxt(f)
 
 

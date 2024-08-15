@@ -1,7 +1,7 @@
 """Created on Tue Jun  1 17:09:25 2021
 
 @author: snaeimi
-"""  # noqa: CPY001, D400
+"""  # noqa: D400
 
 import itertools
 import logging
@@ -14,7 +14,7 @@ import wntrfr.epanet.io
 from Report_Reading import Report_Reading
 from wntrfr.network.io import write_inpfile
 from wntrfr.network.model import LinkStatus
-from wntrfr.sim.core import _get_csr_data_index  # noqa: PLC2701
+from wntrfr.sim.core import _get_csr_data_index
 from wntrfr.sim.epanet import EpanetSimulator
 from wntrfr.sim.network_isolation import check_for_isolated_junctions, get_long_size
 from wntrfr.utils.ordered_set import OrderedSet
@@ -231,14 +231,14 @@ class EpanetSimulator(EpanetSimulator):
 
         return result_data, run_successful
 
-    def _updateResultStartTime(self, result_data, start_time):  # noqa: N802, PLR6301
+    def _updateResultStartTime(self, result_data, start_time):  # noqa: N802
         for res_type, res in result_data.link.items():  # noqa: B007, PERF102
             # result_data.link[res_type].index = res
-            res.index = res.index + start_time  # noqa: PLR6104
+            res.index = res.index + start_time
 
         for res_type, res in result_data.node.items():  # noqa: B007, PERF102
             # result_data.link[res_type].index = res
-            res.index = res.index + start_time  # noqa: PLR6104
+            res.index = res.index + start_time
 
     def _get_isolated_junctions_and_links(
         self,
@@ -317,20 +317,20 @@ class EpanetSimulator(EpanetSimulator):
                 n_links[(to_node_id, from_node_id)] = 0
             n_links[(from_node_id, to_node_id)] += 1
             n_links[(to_node_id, from_node_id)] += 1
-            rows.append(from_node_id)  # noqa: FURB113
-            cols.append(to_node_id)  # noqa: FURB113
+            rows.append(from_node_id)
+            cols.append(to_node_id)
             rows.append(to_node_id)
             cols.append(from_node_id)
             if link.initial_status == wntrfr.network.LinkStatus.closed:
-                vals.append(0)  # noqa: FURB113
+                vals.append(0)
                 vals.append(0)
                 # sina remove comment amrks
             elif link.link_type == 'Pipe':
                 if link.cv:
-                    vals.append(1)  # noqa: FURB113
+                    vals.append(1)
                     vals.append(0)
                 else:
-                    vals.append(1)  # noqa: FURB113
+                    vals.append(1)
                     vals.append(1)
             elif link.link_type == 'Valve':
                 if (
@@ -338,13 +338,13 @@ class EpanetSimulator(EpanetSimulator):
                     or link.valve_type == 'PSV'
                     or link.valve_type == 'FCV'
                 ):
-                    vals.append(1)  # noqa: FURB113
+                    vals.append(1)
                     vals.append(0)
                 else:
-                    vals.append(1)  # noqa: FURB113
+                    vals.append(1)
                     vals.append(1)
             else:
-                vals.append(1)  # noqa: FURB113
+                vals.append(1)
                 vals.append(1)
 
         rows = np.array(rows, dtype=self._int_dtype)
@@ -544,9 +544,9 @@ class EpanetSimulator(EpanetSimulator):
                         # pipe.initial_status = LinkStatus(0)
                         closed_pipes.append(pipe_name)
                 if not flag:
-                    i = i - 1  # noqa: PLR6104
-                    c = c + 1  # noqa: PLR6104
-                i = i + 1  # noqa: PLR6104
+                    i = i - 1
+                    c = c + 1
+                i = i + 1
         else:
             ifinish = True
         return closed_pipes, already_done_nodes, ifinish

@@ -1,8 +1,8 @@
-import json as json  # noqa: CPY001, D100, INP001, PLC0414
+import json as json  # noqa: INP001, D100, PLC0414
 import os
-import pickle as pickle  # noqa: PLC0414, S403
+import pickle as pickle  # noqa: PLC0414
 import shutil
-import subprocess  # noqa: S404
+import subprocess
 import sys
 import time
 
@@ -42,7 +42,7 @@ except:  # noqa: E722
 # from emukit.multi_fidelity.convert_lists_to_array import convert_x_list_to_array, convert_xy_lists_to_arrays
 
 
-def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa: C901, D103, PLR0912, PLR0914, PLR0915
+def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa: C901, D103, PLR0912, PLR0915
     global error_file  # noqa: PLW0602
 
     os_type = sys.platform.lower()
@@ -53,7 +53,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     #
 
     msg0 = os.path.basename(os.getcwd()) + ' : '  # noqa: PTH109, PTH119
-    file_object = open('surrogateLog.log', 'a')  # noqa: PLW1514, PTH123, SIM115
+    file_object = open('surrogateLog.log', 'a')  # noqa: SIM115, PTH123
 
     folderName = os.path.basename(os.getcwd())  # noqa: PTH109, PTH119, N806
     sampNum = folderName.split('.')[-1]  # noqa: N806
@@ -79,7 +79,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         msg = 'Error in surrogate prediction: File not found -' + json_dir
         error_exit(msg)
 
-    with open(json_dir) as f:  # noqa: PLW1514, PTH123
+    with open(json_dir) as f:  # noqa: PTH123
         try:
             sur = json.load(f)
         except ValueError:
@@ -94,12 +94,12 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         dakota_path = input_json
 
     try:
-        with open(dakota_path) as f:  # current input file  # noqa: PLW1514, PTH123
+        with open(dakota_path) as f:  # current input file  # noqa: PTH123
             inp_tmp = json.load(f)
     except:  # noqa: E722
         try:
             # current input file
-            with open('sc_inputRWHALE.json') as f:  # noqa: PLW1514, PTH123
+            with open('sc_inputRWHALE.json') as f:  # noqa: PTH123
                 inp_tmp = json.load(f)
         except:  # noqa: S110, E722
             pass
@@ -203,7 +203,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
         def get_stochastic_variance(X, Y, x, ny):  # noqa: N803
             # X_unique, X_idx, indices, counts = np.unique(X, axis=0, return_index=True, return_counts=True, return_inverse=True)
-            X_unique, dummy, indices, counts = np.unique(  # noqa: F841, N806
+            X_unique, dummy, indices, counts = np.unique(  # noqa: N806
                 X, axis=0, return_index=True, return_counts=True, return_inverse=True
             )
 
@@ -282,7 +282,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     (var_pred.T[0]) / Y_normFact
                 )  # if normalization was used..
 
-                log_var_pred_x, dum = m_var.predict(x)  # noqa: F841
+                log_var_pred_x, dum = m_var.predict(x)
                 nugget_var_pred_x = np.exp(log_var_pred_x.T[0]) / Y_normFact
 
             return (
@@ -308,7 +308,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     # Check how many RVs overlap
     #
 
-    with open(params_dir) as x_file:  # noqa: PLW1514, PTH123
+    with open(params_dir) as x_file:  # noqa: PTH123
         data = x_file.readlines()
         nrv = int(data[0])
         for i in range(nrv):
@@ -386,7 +386,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     # if eeuq
     first_eeuq_found = False
     if sur.get('intensityMeasureInfo') != None:  # noqa: E711
-        with open('IMinput.json', 'w') as f:  # noqa: PLW1514, PTH123
+        with open('IMinput.json', 'w') as f:  # noqa: PTH123
             mySurrogateJson = sur['intensityMeasureInfo']  # noqa: N806
             json.dump(mySurrogateJson, f)
 
@@ -470,7 +470,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     if first_eeuq_found:
         if first_rv_found:
             rv_tmp = np.hstack([rv_tmp, rv_tmp2])
-            id_vec = id_vec + id_vec2  # noqa: PLR6104
+            id_vec = id_vec + id_vec2
         else:
             rv_tmp = np.hstack([rv_tmp2])
             id_vec = id_vec2
@@ -505,7 +505,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         kr = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True)
 
     if sur['doLinear']:
-        kr = kr + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)  # noqa: PLR6104
+        kr = kr + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
 
     if did_logtransform:
         Y = np.log(Y)  # noqa: N806
@@ -517,7 +517,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     if not did_mf:
         for ny in range(ng_sur):
             if did_stochastic[ny]:
-                m_list = m_list + [  # noqa: PLR6104, RUF005
+                m_list = m_list + [  # noqa: RUF005
                     GPy.models.GPRegression(
                         X,
                         Y[:, ny][np.newaxis].transpose(),
@@ -545,7 +545,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 )
 
             else:
-                m_list = m_list + [  # noqa: PLR6104, RUF005
+                m_list = m_list + [  # noqa: RUF005
                     GPy.models.GPRegression(
                         X,
                         Y[:, ny][np.newaxis].transpose(),
@@ -749,7 +749,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
     y_pred_subset = np.zeros([nsamp, len(g_idx)])
     msg1 = []
-    for ns in range(nsamp):  # noqa: PLR1702
+    for ns in range(nsamp):
         msg0 = folderName.split('.')[0] + '.' + str(int(sampNum) + ns) + ' : '
 
         if not is_accurate_array[ns]:
@@ -798,7 +798,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     #
                     # Replace parts of AIM
                     #
-                    with open(os.path.join(current_dir_i, 'AIM.json.sc')) as f:  # noqa: PLW1514, PTH118, PTH123
+                    with open(os.path.join(current_dir_i, 'AIM.json.sc')) as f:  # noqa: PTH118, PTH123
                         try:
                             AIMsc = json.load(f)  # noqa: N806
                         except ValueError:
@@ -808,7 +808,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     AIMsc['Applications']['Events'] = inp_tmp['Applications'][
                         'Events'
                     ]
-                    with open(os.path.join(current_dir_i, 'AIM.json.sc'), 'w') as f:  # noqa: PLW1514, PTH118, PTH123
+                    with open(os.path.join(current_dir_i, 'AIM.json.sc'), 'w') as f:  # noqa: PTH118, PTH123
                         json.dump(AIMsc, f, indent=2)
 
                     #
@@ -836,10 +836,10 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     else:
                         driver_name = 'driver'
 
-                    with open(os.path.join(os.getcwd(), driver_name)) as f:  # noqa: PLW1514, PTH109, PTH118, PTH123
+                    with open(os.path.join(os.getcwd(), driver_name)) as f:  # noqa: PTH109, PTH118, PTH123
                         event_driver = f.readline()
 
-                    with open(os.path.join(current_dir_i, driver_name), 'r+') as f:  # noqa: PLW1514, PTH118, PTH123
+                    with open(os.path.join(current_dir_i, driver_name), 'r+') as f:  # noqa: PTH118, PTH123
                         # Read the original contents of the file
                         contents = f.readlines()
                         # Modify the first line
@@ -851,7 +851,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                         f.writelines(contents)
 
                 else:
-                    outF = open(current_dir_i + '/params.in', 'w')  # noqa: N806, PLW1514, PTH123, SIM115
+                    outF = open(current_dir_i + '/params.in', 'w')  # noqa: SIM115, PTH123, N806
                     outF.write(f'{nrv}\n')
                     for i in range(nrv):
                         outF.write(f'{rv_name_sur[i]} {rv_val[ns, i]}\n')
@@ -883,7 +883,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 # back to directory, copy result.out
                 # shutil.copyfile(os.path.join(sim_dir, 'results.out'), os.path.join(os.getcwd(), 'results.out'))
 
-                with open('results.out') as f:  # noqa: PLW1514, PTH123
+                with open('results.out') as f:  # noqa: PTH123
                     y_pred = np.array([np.loadtxt(f)]).flatten()
                     y_pred_subset[ns, :] = y_pred[g_idx]
 
@@ -940,13 +940,13 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     # Add dummy RVs
     #
     if first_dummy_found:
-        rv_name_sur = rv_name_sur + rv_name_dummy  # noqa: PLR6104
+        rv_name_sur = rv_name_sur + rv_name_dummy
         rv_val = np.hstack([rv_val, rv_val_dummy])
 
     g_name_subset = [g_name_sur[i] for i in g_idx]
 
     if int(sampNum) == 1:
-        with open('../surrogateTabHeader.out', 'w') as header_file:  # noqa: FURB103, PLW1514, PTH123
+        with open('../surrogateTabHeader.out', 'w') as header_file:  # noqa: PTH123
             # write header
             # if os.path.getsize('../surrogateTab.out') == 0:
             header_file.write(
@@ -972,7 +972,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             )
             # write values
 
-    with open('../surrogateTab.out', 'a') as tab_file:  # noqa: PLW1514, PTH123
+    with open('../surrogateTab.out', 'a') as tab_file:  # noqa: PTH123
         # write header
         # if os.path.getsize('../surrogateTab.out') == 0:
         #    tab_file.write("%eval_id interface "+ " ".join(rv_name_sur) + " "+ " ".join(g_name_subset) + " " + ".median ".join(g_name_subset) + ".median "+ ".q5 ".join(g_name_subset) + ".q5 "+ ".q95 ".join(g_name_subset) + ".q95 " +".var ".join(g_name_subset) + ".var " + ".q5_w_mnoise ".join(g_name_subset) + ".q5_w_mnoise "+ ".q95_w_mnoise ".join(g_name_subset) + ".q95_w_mnoise " +".var_w_mnoise ".join(g_name_subset) + ".var_w_mnoise \n")
@@ -1030,7 +1030,7 @@ def predict(m, X, did_mf):  # noqa: N803, D103
 
 
 if __name__ == '__main__':
-    error_file = open('../surrogate.err', 'w')  # noqa: PLW1514, PTH123, SIM115
+    error_file = open('../surrogate.err', 'w')  # noqa: SIM115, PTH123
     inputArgs = sys.argv  # noqa: N816
 
     if not inputArgs[2].endswith('.json'):

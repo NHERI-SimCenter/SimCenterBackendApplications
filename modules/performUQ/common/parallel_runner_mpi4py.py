@@ -1,4 +1,4 @@
-from mpi4py import MPI  # noqa: CPY001, D100, INP001
+from mpi4py import MPI  # noqa: INP001, D100
 from mpi4py.futures import MPIPoolExecutor
 
 
@@ -15,7 +15,7 @@ class ParallelRunnerMPI4PY:  # noqa: D101
             num_processors = 1
         if num_processors < 1:
             raise ValueError(  # noqa: TRY003
-                'Number of processes must be at least 1. Got {num_processors}'  # noqa: EM101, RUF027
+                'Number of processes must be at least 1. Got {num_processors}'  # noqa: EM101
             )
         return num_processors
 

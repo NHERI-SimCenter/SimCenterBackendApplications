@@ -1,4 +1,4 @@
-# written: fmk  # noqa: CPY001, D100, EXE002, INP001
+# written: fmk  # noqa: EXE002, INP001, D100
 
 import json
 import os
@@ -11,13 +11,13 @@ log_output = []
 from WorkflowUtils import *  # noqa: E402, F403
 
 
-def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, PLR0912, PLR0914, PLR0915
+def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, N803, D103, PLR0912, PLR0915
     # the whole workflow is wrapped within a 'try' block.
     # a number of exceptions (files missing, explicit application failures, etc.) are
     # handled explicitly to aid the user.
     # But unhandled exceptions case the workflow to stop with an error, handled in the
     # exception block way at the bottom of this main() function
-    try:  # noqa: PLR1702
+    try:
         workflow_log(divider)  # noqa: F405
         workflow_log('Start of run')  # noqa: F405
         workflow_log(divider)  # noqa: F405
@@ -30,7 +30,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
         # first we parse the applications registry to load all possible applications
         #  - for each application type we place in a dictionary key being name, value containing path to executable
         #
-        with open(applicationsRegistry) as data_file:  # noqa: PLW1514, PTH123
+        with open(applicationsRegistry) as data_file:  # noqa: PTH123
             registryData = json.load(data_file)  # noqa: N806
             # convert all relative paths to full paths
             relative2fullpath(registryData)  # noqa: F405
@@ -58,7 +58,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
         # open input file, and parse json into data
         #
 
-        with open(inputFile) as data_file:  # noqa: PLW1514, PTH123
+        with open(inputFile) as data_file:  # noqa: PTH123
             data = json.load(data_file)
             # convert all relative paths to full paths
             relative2fullpath(data)  # noqa: F405
@@ -311,7 +311,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
         buildingAppDataList = [buildingAppExe, buildingsFile]  # noqa: N806
 
         for key in buildingAppData.keys():  # noqa: SIM118
-            buildingAppDataList.append('-' + key.encode('ascii', 'ignore'))  # noqa: FURB113
+            buildingAppDataList.append('-' + key.encode('ascii', 'ignore'))
             buildingAppDataList.append(
                 buildingAppData.get(key).encode('ascii', 'ignore')
             )
@@ -331,7 +331,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
         #  - perform Simulation
         #  - getDL
 
-        with open(buildingsFile) as data_file:  # noqa: PLW1514, PTH123
+        with open(buildingsFile) as data_file:  # noqa: PTH123
             data = json.load(data_file)
 
         for building in data:
@@ -345,7 +345,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
             driverFile = id + '-driver'  # noqa: N806
 
             # open driver file & write building app (minus the --getRV) to it
-            driverFILE = open(driverFile, 'w')  # noqa: N806, PLW1514, PTH123, SIM115
+            driverFILE = open(driverFile, 'w')  # noqa: SIM115, PTH123, N806
             for item in buildingAppDataList:
                 driverFILE.write('%s ' % item)  # noqa: UP031
             driverFILE.write('\n')
@@ -388,7 +388,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
             ]
 
             for key in modelingAppData.keys():  # noqa: SIM118
-                modelAppDataList.append('-' + key.encode('ascii', 'ignore'))  # noqa: FURB113
+                modelAppDataList.append('-' + key.encode('ascii', 'ignore'))
                 modelAppDataList.append(
                     modelingAppData.get(key).encode('ascii', 'ignore')
                 )
@@ -415,7 +415,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
             ]
 
             for key in edpAppData.keys():  # noqa: SIM118
-                edpAppDataList.append('-' + key.encode('ascii', 'ignore'))  # noqa: FURB113
+                edpAppDataList.append('-' + key.encode('ascii', 'ignore'))
                 edpAppDataList.append(edpAppData.get(key).encode('ascii', 'ignore'))
 
             for item in edpAppDataList:
@@ -442,7 +442,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
             ]
 
             for key in simAppData.keys():  # noqa: SIM118
-                simAppDataList.append('-' + key.encode('ascii', 'ignore'))  # noqa: FURB113
+                simAppDataList.append('-' + key.encode('ascii', 'ignore'))
                 simAppDataList.append(simAppData.get(key).encode('ascii', 'ignore'))
 
             for item in simAppDataList:
@@ -465,7 +465,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
             ]
 
             for key in dlAppData.keys():  # noqa: SIM118
-                dlAppDataList.append('-' + key.encode('ascii', 'ignore'))  # noqa: FURB113
+                dlAppDataList.append('-' + key.encode('ascii', 'ignore'))
                 dlAppDataList.append(dlAppData.get(key).encode('ascii', 'ignore'))
 
             for item in dlAppDataList:
@@ -493,7 +493,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: C901, D103, N803, 
             ]
 
             for key in uqAppData.keys():  # noqa: SIM118
-                uqAppDataList.append('-' + key.encode('ascii', 'ignore'))  # noqa: FURB113
+                uqAppDataList.append('-' + key.encode('ascii', 'ignore'))
                 uqAppDataList.append(simAppData.get(key).encode('ascii', 'ignore'))
 
             if run_type == 'run':

@@ -1,4 +1,4 @@
-# Copyright (c) 2021 University of Illinois and others. All rights reserved.  # noqa: D100, INP001
+# Copyright (c) 2021 University of Illinois and others. All rights reserved.  # noqa: INP001, D100
 #
 # This program and the accompanying materials are made available under the
 # terms of the Mozilla Public License v2.0 which accompanies this distribution,

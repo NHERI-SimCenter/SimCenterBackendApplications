@@ -1,9 +1,9 @@
 """Created on Wed Nov  2 14:40:45 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
-import subprocess  # noqa: S404
+import subprocess
 import threading
 
 from PyQt5.QtCore import QObject, pyqtSignal
