@@ -1,7 +1,7 @@
 """authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, and Aakash Bangalore Satish*
 affiliation: University of California, San Diego, *SimCenter, University of California, Berkeley
 
-"""  # noqa: CPY001, D205, D400, INP001
+"""  # noqa: INP001, D205, D400
 
 import itertools
 import json
@@ -26,7 +26,7 @@ class DataProcessingError(Exception):
 def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):  # noqa: C901, N802, N803, D103, PLR0915
     # Read in the json object
     logFile.write('\n\tReading the json file')
-    with open(dakotaJsonFile) as f:  # noqa: PLW1514, PTH123
+    with open(dakotaJsonFile) as f:  # noqa: PTH123
         jsonInputs = json.load(f)  # noqa: N806
     logFile.write(' ... Done')
 
@@ -122,7 +122,7 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
             logFile.write('\n\t\t\t\tNot a multimodel application')
     nModels = 1  # noqa: N806
     for _, data in modelsDict.items():  # noqa: PERF102
-        nModels = nModels * data['nModels']  # noqa: N806, PLR6104
+        nModels = nModels * data['nModels']  # noqa: N806
     cartesianProductOfModelIndices = list(itertools.product(*modelIndicesList))  # noqa: N806
     # logFile.write("\n\t\t\tNO LONGER Getting the number of models")
     # inputFileList = []

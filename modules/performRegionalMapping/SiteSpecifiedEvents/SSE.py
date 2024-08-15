@@ -60,7 +60,7 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
         mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
-            from mpi4py import MPI  # noqa: PLC0415
+            from mpi4py import MPI
 
             runParallel = True  # noqa: N806
             comm = MPI.COMM_WORLD
@@ -103,7 +103,7 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
             AIM_df.iloc[count]['Longitude'] = asset_loc['longitude']
             AIM_df.iloc[count]['Latitude'] = asset_loc['latitude']
             AIM_df.iloc[count]['file'] = asset['file']
-            count = count + 1  # noqa: PLR6104
+            count = count + 1
 
     # store asset locations in Y
     Y = np.array(  # noqa: N806
@@ -118,7 +118,7 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
     # print(sub_grid)
 
     # Find the index of the closest point - each index corresponds to the gridpoint index
-    closest, distances = vq(Y, X)  # noqa: F841
+    closest, distances = vq(Y, X)
 
     #    print("****closest",closest)
     #    print("****distances",distances)
@@ -141,7 +141,7 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
         return 1
 
     # iterate through the assets and store the selected events in the AIM
-    for idx, AIM_id in enumerate(AIM_df.index):  # noqa: N806, PLR1702, RET503
+    for idx, AIM_id in enumerate(AIM_df.index):  # noqa: RET503, N806
         # open the AIM file
         asset_file = AIM_df.iloc[AIM_id]['file']
 

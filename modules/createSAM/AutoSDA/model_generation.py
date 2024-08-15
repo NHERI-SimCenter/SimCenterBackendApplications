@@ -1,10 +1,10 @@
-# This file creates a function that is called by "main_generation.py" to perform nonlinear model generation  # noqa: CPY001, D100, INP001
+# This file creates a function that is called by "main_generation.py" to perform nonlinear model generation  # noqa: INP001, D100
 
 # Modified by: Stevan Gavrilovic @ SimCenter, UC Berkeley
 # Last revision: 09/2020
 
 import os
-import pickle  # noqa: S403
+import pickle
 
 from nonlinear_analysis import NonlinearAnalysis
 

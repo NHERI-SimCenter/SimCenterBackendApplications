@@ -1,4 +1,4 @@
-# JGA  # noqa: CPY001, D100, N999
+# JGA  # noqa: N999, D100
 import importlib
 import os
 import sys
@@ -188,7 +188,7 @@ class PLoM:  # noqa: D101
                 msg_level=0,
             )
             return 1
-        self.num_constraints = self.num_constraints + 1  # noqa: PLR6104
+        self.num_constraints = self.num_constraints + 1
         try:
             self.constraints.update(
                 {
@@ -274,7 +274,7 @@ class PLoM:  # noqa: D101
         n = 0
 
         # check if the file exist
-        import os  # noqa: PLC0415
+        import os
 
         if not os.path.exists(filename):  # noqa: PTH110
             self.logfile.write_msg(
@@ -285,7 +285,7 @@ class PLoM:  # noqa: D101
             return X, N, n
 
         # read data
-        if os.path.splitext(filename)[-1] in ['.csv', '.dat', '.txt']:  # noqa: PLR6201, PTH122
+        if os.path.splitext(filename)[-1] in ['.csv', '.dat', '.txt']:  # noqa: PTH122
             # txt data
             col = None
             if col_header:
@@ -297,10 +297,10 @@ class PLoM:  # noqa: D101
                     self.X0.drop(columns=cur_col)
             X = self.X0.to_numpy()  # noqa: N806
 
-        elif os.path.splitext(filename)[-1] in ['.mat', '.json']:  # noqa: PLR6201, PTH122
+        elif os.path.splitext(filename)[-1] in ['.mat', '.json']:  # noqa: PTH122
             # json or mat
             if os.path.splitext(filename)[-1] == '.mat':  # noqa: PTH122
-                import scipy.io as scio  # noqa: PLC0415
+                import scipy.io as scio
 
                 matdata = scio.loadmat(filename)
                 var_names = [
@@ -321,7 +321,7 @@ class PLoM:  # noqa: D101
                     X = X[0, :, :]  # noqa: N806
                     self.X0 = pd.DataFrame(X, columns=var_names)
             else:
-                import json  # noqa: PLC0415
+                import json
 
                 with open(filename, encoding='utf-8') as f:  # noqa: PTH123
                     jsondata = json.load(f)
@@ -436,7 +436,7 @@ class PLoM:  # noqa: D101
                     # skipping the data-shape attributes
                     continue
                 if type(ATTR_MAP[cur_item]) is str:  # noqa: F405
-                    self.__setattr__(  # noqa: PLC2801
+                    self.__setattr__(
                         ATTR_MAP[cur_item],  # noqa: F405
                         self.dbserver.get_item(cur_item[1:]),
                     )
@@ -524,7 +524,7 @@ class PLoM:  # noqa: D101
         else:
             # update the X and N
             self.X = np.concatenate((self.X, new_X))
-            self.N = self.N + new_N  # noqa: PLR6104
+            self.N = self.N + new_N
             self.X0.append(pd.DataFrame(new_X.T, columns=list(self.X0.columns)))
 
         self.logfile.write_msg(
@@ -576,7 +576,7 @@ class PLoM:  # noqa: D101
     def _init_indv_tasks(self):
         """Initializing tasks"""  # noqa: D400, D401
         for cur_task in FULL_TASK_LIST:  # noqa: F405
-            self.__setattr__('task_' + cur_task, Task(task_name=cur_task))  # noqa: F405, PLC2801
+            self.__setattr__('task_' + cur_task, Task(task_name=cur_task))  # noqa: F405
 
     def ConfigTasks(self, task_list=FULL_TASK_LIST):  # noqa: C901, N802, F405
         """Creating a task list object
@@ -634,19 +634,19 @@ class PLoM:  # noqa: D101
         # initializing individual tasks and refreshing status
         self._init_indv_tasks()
         for cur_task in FULL_TASK_LIST:  # noqa: F405
-            self.__getattribute__('task_' + cur_task).full_var_list = TASK_ITEM_MAP[  # noqa: F405, PLC2801
+            self.__getattribute__('task_' + cur_task).full_var_list = TASK_ITEM_MAP[  # noqa: F405
                 cur_task
             ]
             for cur_item in TASK_ITEM_MAP[cur_task]:  # noqa: F405
                 if '/' + cur_item in self.dbserver.get_name_list():
-                    self.__getattribute__('task_' + cur_task).avail_var_list.append(  # noqa: PLC2801
+                    self.__getattribute__('task_' + cur_task).avail_var_list.append(
                         cur_item
                     )
-                self.__getattribute__('task_' + cur_task).refresh_status()  # noqa: PLC2801
+                self.__getattribute__('task_' + cur_task).refresh_status()
         # create the task list
         for cur_task in self.cur_task_list:
             self.task_list.add_task(
-                new_task=self.__getattribute__('task_' + cur_task)  # noqa: PLC2801
+                new_task=self.__getattribute__('task_' + cur_task)
             )
 
         self.task_list.refresh_status()
@@ -655,7 +655,7 @@ class PLoM:  # noqa: D101
         pre_task_list = FULL_TASK_LIST[: FULL_TASK_LIST.index(self.cur_task_list[0])]  # noqa: F405
         if len(pre_task_list):
             for cur_task in pre_task_list:
-                if not self.__getattribute__('task_' + cur_task).refresh_status():  # noqa: PLC2801
+                if not self.__getattribute__('task_' + cur_task).refresh_status():
                     config_flag = False
                     self.logfile.write_msg(
                         msg=f'PLoM.config_tasks: configuration failed with dependent task {cur_task} not completed.',
@@ -702,7 +702,7 @@ class PLoM:  # noqa: D101
         cur_task = self.task_list.head_task
         while cur_task:
             if cur_task.task_name == 'DataNormalization':
-                self.__getattribute__(  # noqa: PLC2801
+                self.__getattribute__(
                     'task_' + cur_task.task_name
                 ).avail_var_list = []
                 # data normalization
@@ -741,7 +741,7 @@ class PLoM:  # noqa: D101
                     msg_level=0,
                 )
             elif cur_task.task_name == 'RunPCA':
-                self.__getattribute__(  # noqa: PLC2801
+                self.__getattribute__(
                     'task_' + cur_task.task_name
                 ).avail_var_list = []
                 # PCA
@@ -784,7 +784,7 @@ class PLoM:  # noqa: D101
                     msg_level=0,
                 )
             elif cur_task.task_name == 'RunKDE':
-                self.__getattribute__(  # noqa: PLC2801
+                self.__getattribute__(
                     'task_' + cur_task.task_name
                 ).avail_var_list = []
                 # parameters KDE
@@ -814,7 +814,7 @@ class PLoM:  # noqa: D101
                 )
                 # diff maps
                 if runDiffMaps:
-                    self.__getattribute__(  # noqa: PLC2801
+                    self.__getattribute__(
                         'task_' + cur_task.task_name
                     ).avail_var_list = []
                     # diff maps
@@ -888,7 +888,7 @@ class PLoM:  # noqa: D101
                         msg_level=0,
                     )
             elif cur_task.task_name == 'ISDEGeneration':
-                self.__getattribute__(  # noqa: PLC2801
+                self.__getattribute__(
                     'task_' + cur_task.task_name
                 ).avail_var_list = []
                 # ISDE generation
@@ -925,7 +925,7 @@ class PLoM:  # noqa: D101
             # refresh status
             for cur_item in TASK_ITEM_MAP[cur_task.task_name]:  # noqa: F405
                 if '/' + cur_item in self.dbserver.get_name_list():
-                    self.__getattribute__(  # noqa: PLC2801
+                    self.__getattribute__(
                         'task_' + cur_task.task_name
                     ).avail_var_list.append(cur_item)
             if not cur_task.refresh_status():
@@ -953,7 +953,7 @@ class PLoM:  # noqa: D101
                 msg_level=0,
             )
 
-    def DataNormalization(self, X):  # noqa: N802, N803, PLR6301
+    def DataNormalization(self, X):  # noqa: N802, N803
         """Normalizing the X
         - X: the data matrix to be normalized
         """  # noqa: D205, D400, D401
@@ -987,7 +987,7 @@ class PLoM:  # noqa: D101
         """
         return H, mu, phi, nu, errors
 
-    def RunKDE(self, X, epsilon_kde):  # noqa: N802, N803, PLR6301
+    def RunKDE(self, X, epsilon_kde):  # noqa: N802, N803
         """Running Kernel Density Estimation
         - X: the data matrix to be reduced
         - epsilon_kde: smoothing parameter in the kernel density estimation
@@ -1117,7 +1117,7 @@ class PLoM:  # noqa: D101
                 )
                 self.inverse = plom.solve_inverse(self.hessian)
 
-                self.lambda_i = self.lambda_i - 0.3 * (self.inverse).dot(  # noqa: PLR6104
+                self.lambda_i = self.lambda_i - 0.3 * (self.inverse).dot(
                     self.gradient
                 )
 
@@ -1150,7 +1150,7 @@ class PLoM:  # noqa: D101
         else:
             nu_init = np.random.normal(size=(int(self.nu), int(self.N)))
             self.Y = nu_init.dot(self.a)
-            Hnewvalues, nu_lambda, x_, x_2 = plom.generator(  # noqa: F841, N806
+            Hnewvalues, nu_lambda, x_, x_2 = plom.generator(  # noqa: N806
                 self.Z,
                 self.Y,
                 self.a,

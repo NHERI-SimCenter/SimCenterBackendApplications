@@ -1,9 +1,9 @@
-import argparse  # noqa: CPY001, D100, INP001
+import argparse  # noqa: INP001, D100
 import os
 import platform
 import shlex
 import stat
-import subprocess  # noqa: S404
+import subprocess
 import sys
 from pathlib import Path
 
@@ -16,7 +16,7 @@ def main(args):  # noqa: D103
     parser.add_argument('--driverFile')
     parser.add_argument('--runType')
 
-    args, unknowns = parser.parse_known_args()  # noqa: F841
+    args, unknowns = parser.parse_known_args()
 
     workflowInput = args.workflowInput  # noqa: N806
     workflowOutput = args.workflowOutput  # noqa: N806, F841
@@ -26,7 +26,7 @@ def main(args):  # noqa: D103
     if runType == 'runningLocal':
         if platform.system() == 'Windows':
             pythonCommand = 'python'  # noqa: N806
-            driverFile = driverFile + '.bat'  # noqa: N806, PLR6104
+            driverFile = driverFile + '.bat'  # noqa: N806
         else:
             pythonCommand = 'python3'  # noqa: N806
 
@@ -62,7 +62,7 @@ def main(args):  # noqa: D103
             )
             result.check_returncode()
         except subprocess.CalledProcessError:
-            with open(err_file, 'a') as f:  # noqa: PLW1514, PTH123
+            with open(err_file, 'a') as f:  # noqa: PTH123
                 f.write(f'ERROR: {result.stderr}')
 
 

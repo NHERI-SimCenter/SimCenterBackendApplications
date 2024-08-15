@@ -1,7 +1,7 @@
 """authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, Aakash Bangalore Satish*
 affiliation: University of California, San Diego, *SimCenter, University of California, Berkeley
 
-"""  # noqa: CPY001, D205, D400, INP001
+"""  # noqa: INP001, D205, D400
 
 # ======================================================================================================================
 import os
@@ -67,7 +67,7 @@ class TMCMC_Data:  # noqa: D101
 
     def getMPI_size(self):  # noqa: N802, D102
         if self.runType == 'runningRemote':
-            from mpi4py import MPI  # noqa: PLC0415
+            from mpi4py import MPI
 
             self.comm = MPI.COMM_WORLD
             self.MPI_size = self.comm.Get_size()
@@ -78,11 +78,11 @@ class TMCMC_Data:  # noqa: D101
 
     def findNumProcessorsAvailable(self):  # noqa: N802, D102
         if self.runType == 'runningLocal':
-            import multiprocessing as mp  # noqa: PLC0415
+            import multiprocessing as mp
 
             self.numProcessors = mp.cpu_count()
         elif self.runType == 'runningRemote':
-            from mpi4py import MPI  # noqa: PLC0415
+            from mpi4py import MPI
 
             self.comm = MPI.COMM_WORLD
             self.numProcessors = self.comm.Get_size()
@@ -152,7 +152,7 @@ def main(input_args):  # noqa: D103
         variables_list,
         edp_names_list,
         edp_lengths_list,
-        models_dict,  # noqa: F841
+        models_dict,
         total_number_of_models_in_ensemble,
     ) = parseDataFunction(
         input_json_filename_full_path,
@@ -301,7 +301,7 @@ def main(input_args):  # noqa: D103
 
         syncLogFile(logfile)
 
-        mytrace, log_evidence = run_TMCMC(  # noqa: F841
+        mytrace, log_evidence = run_TMCMC(
             number_of_samples,
             number_of_samples,
             all_distributions_list,

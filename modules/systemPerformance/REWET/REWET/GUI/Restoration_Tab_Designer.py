@@ -1,7 +1,7 @@
 """Created on Wed Nov  2 00:24:43 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 import os
 
@@ -71,7 +71,7 @@ class Restoration_Tab_Designer:  # noqa: D101
 
         self.minimum_job_time = int(float(self.minimum_job_time_line.text()))
 
-        if self.restoraion_policy_addr == '':  # noqa: PLC1901
+        if self.restoraion_policy_addr == '':
             self.errorMSG('REWET', 'Policy Definition file is needed.')
             return False
 
@@ -165,7 +165,7 @@ class Restoration_Tab_Designer:  # noqa: D101
             self.current_policy_directory,
             file_type,
         )
-        if file[0] == '':  # noqa: PLC1901
+        if file[0] == '':
             return
         split_addr = os.path.split(file[0])
         self.current_policy_directory = split_addr[0]

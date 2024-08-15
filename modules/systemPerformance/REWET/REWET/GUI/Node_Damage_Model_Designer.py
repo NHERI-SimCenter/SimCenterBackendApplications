@@ -1,7 +1,7 @@
 """Created on Tue Nov  1 20:36:29 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 from PyQt5 import QtGui, QtWidgets
 
@@ -170,7 +170,7 @@ class Node_Damage_Model_Designer(Ui_Node_Damage_Model):  # noqa: D101
         self.buttonBox.accepted.connect(self.okButtonPressed)
         self.help_button.clicked.connect(self.showHelpByButton)
 
-    def showHelpByButton(self):  # noqa: D102, N802, PLR6301
+    def showHelpByButton(self):  # noqa: N802, D102
         help_dialog_box = Node_Damage_Model_Help_Designer()
         help_dialog_box._window.exec_()  # noqa: SLF001
 
@@ -192,46 +192,46 @@ class Node_Damage_Model_Designer(Ui_Node_Damage_Model):  # noqa: D101
 
         if_failed = False
 
-        if a == '':  # noqa: PLC1901
+        if a == '':
             self.errorMSG('Cannot Save data', 'A Field cannot be left empty')
             if_failed = True
-        elif aa == '':  # noqa: PLC1901
+        elif aa == '':
             self.errorMSG('Cannot Save data', 'AA Field cannot be left empty')
             if_failed = True
-        elif b == '':  # noqa: PLC1901
+        elif b == '':
             self.errorMSG('Cannot Save data', 'B Field cannot be left empty')
             if_failed = True
-        elif bb == '':  # noqa: PLC1901
+        elif bb == '':
             self.errorMSG('Cannot Save data', 'BB Field cannot be left empty')
             if_failed = True
-        elif c == '':  # noqa: PLC1901
+        elif c == '':
             self.errorMSG('Cannot Save data', 'C Field cannot be left empty')
             if_failed = True
-        elif cc == '':  # noqa: PLC1901
+        elif cc == '':
             self.errorMSG('Cannot Save data', 'CC Field cannot be left empty')
             if_failed = True
-        elif d == '':  # noqa: PLC1901
+        elif d == '':
             self.errorMSG('Cannot Save data', 'D Field cannot be left empty')
             if_failed = True
-        elif dd == '':  # noqa: PLC1901
+        elif dd == '':
             self.errorMSG('Cannot Save data', 'DD Field cannot be left empty')
             if_failed = True
-        elif e == '':  # noqa: PLC1901
+        elif e == '':
             self.errorMSG('Cannot Save data', 'E Field cannot be left empty')
             if_failed = True
-        elif ee1 == '':  # noqa: PLC1901
+        elif ee1 == '':
             self.errorMSG('Cannot Save data', 'EE1 Field cannot be left empty')
             if_failed = True
-        elif ee2 == '':  # noqa: PLC1901
+        elif ee2 == '':
             self.errorMSG('Cannot Save data', 'EE2 Field cannot be left empty')
             if_failed = True
-        elif f == '':  # noqa: PLC1901
+        elif f == '':
             self.errorMSG('Cannot Save data', 'F Field cannot be left empty')
             if_failed = True
-        elif ff1 == '':  # noqa: PLC1901
+        elif ff1 == '':
             self.errorMSG('Cannot Save data', 'FF1 Field cannot be left empty')
             if_failed = True
-        elif ff2 == '':  # noqa: PLC1901
+        elif ff2 == '':
             self.errorMSG('Cannot Save data', 'FF2 Field cannot be left empty')
             if_failed = True
 
@@ -260,7 +260,7 @@ class Node_Damage_Model_Designer(Ui_Node_Damage_Model):  # noqa: D101
 
         self._window.accept()
 
-    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: D102, N802, PLR6301
+    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: N802, D102
         error_widget = QtWidgets.QMessageBox()
         error_widget.setIcon(QtWidgets.QMessageBox.Critical)
         error_widget.setText(error_msg)

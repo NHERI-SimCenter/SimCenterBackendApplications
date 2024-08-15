@@ -1,4 +1,4 @@
-# written: fmk, adamzs  # noqa: CPY001, D100, INP001
+# written: fmk, adamzs  # noqa: INP001, D100
 
 # import functions for Python 2.X support
 import sys
@@ -10,7 +10,7 @@ else:
     string_types = str
 
 import os
-import subprocess  # noqa: S404
+import subprocess
 from time import gmtime, strftime
 
 

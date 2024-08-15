@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -114,7 +114,7 @@ class hydroUtils:
             return outer_arr
 
     #############################################################
-    def general_header(self):  # noqa: PLR6301
+    def general_header(self):
         """Used to create a general header for Hydro-UQ related files
 
         Variables
@@ -132,7 +132,7 @@ class hydroUtils:
         return header  # noqa: RET504
 
     ####################################################################
-    def of7header(self, OFclass, location, filename):  # noqa: N803, PLR6301
+    def of7header(self, OFclass, location, filename):  # noqa: N803
         """Method to create a header for the input dictionaries.
 
         Variables
@@ -175,17 +175,17 @@ FoamFile
         # Open a log file to write the outputs
         # Use project name for the log file
         # If no project name is specified, call it Untitled
-        if projname != '':  # noqa: PLC1901
+        if projname != '':
             fname = ''.join(projname.split()) + '.h20log'
         else:
             fname = 'Untitled.h20log'
 
         # Path to the file
         filepath = os.path.join(fipath, fname)  # noqa: PTH118
-        self.flog = open(filepath, 'w')  # noqa: PLW1514, PTH123, SIM115
+        self.flog = open(filepath, 'w')  # noqa: SIM115, PTH123
 
     #############################################################
-    def getlist(self, data):  # noqa: PLR6301
+    def getlist(self, data):
         """Used to get the float from a list of negative string
 
         Arguments:

@@ -78,7 +78,7 @@ def main(  # noqa: C901, D103
     mpi_spec = importlib.util.find_spec('mpi4py')
     found = mpi_spec is not None
     if found:
-        from mpi4py import MPI  # noqa: PLC0415
+        from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
         numP = comm.Get_size()  # noqa: N806
@@ -162,9 +162,9 @@ def main(  # noqa: C901, D103
 
     remoteAppDir = inputs.get('remoteAppDir', '')  # noqa: N806
     localAppDir = inputs.get('localAppDir', '')  # noqa: N806
-    if localAppDir == '':  # noqa: PLC1901
+    if localAppDir == '':
         localAppDir = remoteAppDir  # noqa: N806
-    if remoteAppDir == '':  # noqa: PLC1901
+    if remoteAppDir == '':
         remoteAppDir = localAppDir  # noqa: N806
 
     siteResponseInput = {  # noqa: N806
@@ -234,7 +234,7 @@ def main(  # noqa: C901, D103
     )
 
     if procID == 0:
-        with open(siteResponseInputFile, 'w') as json_file:  # noqa: FURB103, PLW1514, PTH123
+        with open(siteResponseInputFile, 'w') as json_file:  # noqa: PTH123
             json_file.write(json.dumps(siteResponseInput, indent=2))
 
     WF = whale.Workflow(  # noqa: N806
@@ -321,7 +321,7 @@ def main(  # noqa: C901, D103
                     force_cleanup=force_cleanup,
                 )
 
-            count = count + 1  # noqa: PLR6104
+            count = count + 1
 
     if doParallel == True:  # noqa: E712
         comm.Barrier()
