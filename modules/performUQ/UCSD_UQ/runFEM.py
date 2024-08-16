@@ -2,11 +2,11 @@
 and Prof. J.P. Conte
 affiliation: SimCenter*; University of California, San Diego
 
-"""  # noqa: CPY001, D205, D400, INP001
+"""  # noqa: INP001, D205, D400
 
 import os
 import shutil
-import subprocess  # noqa: S404
+import subprocess
 
 import numpy as np
 
@@ -70,7 +70,7 @@ def runFEM(  # noqa: N802
     # write input file and covariance multiplier values list
     covarianceMultiplierList = []  # noqa: N806
     parameterNames = variables['names']  # noqa: N806
-    with open('params.in', 'w') as f:  # noqa: PLW1514, PTH123
+    with open('params.in', 'w') as f:  # noqa: PTH123
         f.write(f'{len(parameterSampleValues) - len(edpNamesList)}\n')
         for i in range(len(parameterSampleValues)):
             name = str(parameterNames[i])
@@ -91,7 +91,7 @@ def runFEM(  # noqa: N802
 
     # Read in the model prediction
     if os.path.exists('results.out'):  # noqa: PTH110
-        with open('results.out') as f:  # noqa: PLW1514, PTH123
+        with open('results.out') as f:  # noqa: PTH123
             prediction = np.atleast_2d(np.genfromtxt(f)).reshape((1, -1))
         preds = prediction.copy()
         os.chdir('../')

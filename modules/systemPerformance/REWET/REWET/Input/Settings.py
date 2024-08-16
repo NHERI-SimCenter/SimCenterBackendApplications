@@ -1,5 +1,5 @@
-import json  # noqa: CPY001, D100, INP001
-import pickle  # noqa: S403
+import json  # noqa: INP001, D100
+import pickle
 import warnings
 
 import numpy as np
@@ -294,24 +294,24 @@ class Settings:  # noqa: D101
             json_file_path (path): JSON file path
 
         """  # noqa: D400
-        with open(json_file_path) as f:  # noqa: PLW1514, PTH123
+        with open(json_file_path) as f:  # noqa: PTH123
             settings_data = json.load(f)
 
         if not isinstance(settings_data, dict):
-            raise ValueError(  # noqa: DOC501, TRY003, TRY004
+            raise ValueError(  # noqa: TRY003, TRY004
                 'Wrong JSON file type for the settings. The settings JSOn file must be an OBJECT file type.'  # noqa: EM101
             )
 
         for key, val in settings_data.items():
             if key not in self:
-                raise ValueError(  # noqa: DOC501, RUF100, TRY003
+                raise ValueError(  # noqa: TRY003
                     f'REWET settinsg does not have "{key}" as a settings key'  # noqa: EM102
                 )
 
             print(key, val)  # noqa: T201
             if (
                 key
-                in [  # noqa: PLR6201
+                in [
                     'pipe_damage_discovery_model',
                     'node_damage_discovery_model',
                     'pump_damage_discovery_model',
@@ -366,7 +366,7 @@ class Settings:  # noqa: D101
                 except:  # noqa: S110, E722
                     pass
 
-                if override_value == '':  # noqa: PLC1901
+                if override_value == '':
                     warnings.warn(  # noqa: B028
                         'REWET Input ERROR in scenario: '
                         + repr(scenario_name)
@@ -431,7 +431,7 @@ class Settings:  # noqa: D101
                 except:  # noqa: S110, E722
                     pass
 
-                if override_value == '':  # noqa: PLC1901
+                if override_value == '':
                     warnings.warn(  # noqa: B028
                         'REWET Input ERROR in scenario: '
                         + repr(scenario_name)
@@ -482,7 +482,7 @@ class Settings:  # noqa: D101
                 else:
                     raise ValueError('Unknown overrise key')  # noqa: EM101, TRY003
 
-    def getOverridePointsList(self, points_list_str, scenario_name):  # noqa: D102, N802, PLR6301
+    def getOverridePointsList(self, points_list_str, scenario_name):  # noqa: N802, D102
         point_list = []
 
         points_list_str = points_list_str.strip()
@@ -554,7 +554,7 @@ class Settings:  # noqa: D101
 
         return point_list
 
-    def getOverrideCrewSpeed(self, crew_speed_str, scenario_name):  # noqa: D102, N802, PLR6301
+    def getOverrideCrewSpeed(self, crew_speed_str, scenario_name):  # noqa: N802, D102
         crew_speed_str = crew_speed_str.strip()
 
         if len(crew_speed_str.split()) > 1:

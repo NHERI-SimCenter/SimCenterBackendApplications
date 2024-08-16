@@ -1,4 +1,4 @@
-from py_linq import Enumerable  # noqa: CPY001, D100, INP001
+from py_linq import Enumerable  # noqa: INP001, D100
 from pydantic import BaseModel
 
 

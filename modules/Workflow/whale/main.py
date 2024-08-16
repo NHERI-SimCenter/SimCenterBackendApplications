@@ -62,7 +62,7 @@ import posixpath
 import pprint
 import shlex
 import shutil
-import subprocess  # noqa: S404
+import subprocess
 import sys
 import warnings
 from copy import deepcopy
@@ -89,9 +89,9 @@ def str2bool(v):  # noqa: D103
 
     if isinstance(v, bool):
         return v
-    if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):  # noqa: PLR6201
+    if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):
         return True
-    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):  # noqa: PLR6201, RET505
+    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):  # noqa: RET505
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')  # noqa: EM101, TRY003
@@ -131,7 +131,7 @@ class Options:  # noqa: D101
         return globals()['log_file']
 
     @log_file.setter
-    def log_file(self, value):  # noqa: PLR6301
+    def log_file(self, value):
         if value is None:
             globals()['log_file'] = value
 
@@ -141,7 +141,7 @@ class Options:  # noqa: D101
             try:
                 globals()['log_file'] = str(filepath)
 
-                with open(filepath, 'w', encoding='utf-8') as f:  # noqa: FURB103, PTH123
+                with open(filepath, 'w', encoding='utf-8') as f:  # noqa: PTH123
                     f.write('')
 
             except:  # noqa: E722
@@ -330,7 +330,7 @@ def run_command(command):
     # need to run multiple python interpreters simultaneously.
     Frank_trusts_this_approach = False  # noqa: N806
     if command[:6] == 'python' and Frank_trusts_this_approach:
-        import importlib  # only import this when it's needed  # noqa: PLC0415
+        import importlib  # only import this when it's needed
 
         command_list = command.split()[1:]
         # py_args = command_list[1:]
@@ -396,7 +396,7 @@ def resolve_path(target_path, ref_path):  # noqa: D103
     while target_path.startswith('/') or target_path.startswith('\\'):  # noqa: PIE810
         target_path = target_path[1:]
 
-    if target_path == '':  # noqa: PLC1901
+    if target_path == '':
         target_path = ref_path
 
     else:
@@ -671,7 +671,7 @@ class WorkflowApplication:
         return arg_list  # noqa: DOC201
 
 
-class Workflow:  # noqa: PLR0904
+class Workflow:
     """A class that collects methods common to all workflows developed by the
     SimCenter. Child-classes will be introduced later if needed.
 
@@ -730,7 +730,7 @@ class Workflow:  # noqa: PLR0904
         self.inputFilePath = os.path.dirname(input_file)  # noqa: PTH120
         parCommandFileName = os.path.join(self.inputFilePath, 'sc_parScript.sh')  # noqa: PTH118, N806
         if parType == 'parSETUP':
-            self.parCommandFile = open(parCommandFileName, 'w')  # noqa: PLW1514, PTH123, SIM115
+            self.parCommandFile = open(parCommandFileName, 'w')  # noqa: SIM115, PTH123
             self.parCommandFile.write('#!/bin/sh' + '\n')
 
         print(  # noqa: T201
@@ -746,7 +746,7 @@ class Workflow:  # noqa: PLR0904
             mpi_spec = importlib.util.find_spec('mpi4py')
             found = mpi_spec is not None
             if found:
-                from mpi4py import MPI  # noqa: PLC0415
+                from mpi4py import MPI
 
                 self.comm = MPI.COMM_WORLD
                 self.numP = self.comm.Get_size()
@@ -844,7 +844,7 @@ class Workflow:  # noqa: PLR0904
         if app_in == None:  # noqa: E711
             return
             err = "Need to provide the 'Application' key in " + app_type
-            raise WorkFlowInputError(err)  # noqa: DOC501
+            raise WorkFlowInputError(err)
 
         # Check to see if the app type is in the application registry
         app_type_obj = self.app_registry.get(app_type)
@@ -857,7 +857,7 @@ class Workflow:  # noqa: PLR0904
 
         if app_type_obj == None:  # noqa: E711
             err = 'The application ' + app_type + ' is not found in the app registry'
-            raise WorkFlowInputError(err)  # noqa: DOC501, RUF100
+            raise WorkFlowInputError(err)
 
         # Finally check to see if the app registry contains the provided application
         if app_type_obj.get(app_in) == None:  # noqa: E711
@@ -866,7 +866,7 @@ class Workflow:  # noqa: PLR0904
                 + app_in
             )
             print('Error', app_in)  # noqa: T201
-            raise WorkFlowInputError(err)  # noqa: DOC501, RUF100
+            raise WorkFlowInputError(err)
 
         appData = app_dict['ApplicationData']  # noqa: N806
         #
@@ -878,7 +878,7 @@ class Workflow:  # noqa: PLR0904
 
         # Check if the app object was created successfully
         if app_object is None:
-            raise WorkFlowInputError(f'Application deep copy failed for {app_type}')  # noqa: DOC501, EM102, RUF100, TRY003
+            raise WorkFlowInputError(f'Application deep copy failed for {app_type}')  # noqa: EM102, TRY003
 
         # only assign the app to the workflow if it has an executable
         if app_object.rel_path is None:
@@ -927,7 +927,7 @@ class Workflow:  # noqa: PLR0904
                 + ' is not found in the asset registry. Supported assets are '
                 + ' '.join(self.asset_type_list)
             )
-            raise WorkFlowInputError(err)  # noqa: DOC501
+            raise WorkFlowInputError(err)
 
         # Add the incoming asset to the workflow assets
         self.workflow_assets[asset_type] = asset_dict
@@ -1040,10 +1040,10 @@ class Workflow:  # noqa: PLR0904
                 prepend_timestamp=False,
             )
 
-        if self.app_dir_local == '' and self.app_dir_remote != '':  # noqa: PLC1901
+        if self.app_dir_local == '' and self.app_dir_remote != '':
             self.app_dir_local = self.app_dir_remote
 
-        if self.app_dir_remote == '' and self.app_dir_local != '':  # noqa: PLC1901
+        if self.app_dir_remote == '' and self.app_dir_local != '':
             self.app_dir_remote = self.app_dir_local
 
         if 'referenceDir' in input_data:
@@ -1074,14 +1074,14 @@ class Workflow:  # noqa: PLR0904
         if 'Applications' in input_data:
             requested_apps = input_data['Applications']
         else:
-            raise WorkFlowInputError('Need an Applications entry in the input file')  # noqa: DOC501, EM101, TRY003
+            raise WorkFlowInputError('Need an Applications entry in the input file')  # noqa: EM101, TRY003
 
         # create the requested applications
 
         # Events are special because they are in an array
         if 'Events' in requested_apps:
             if len(requested_apps['Events']) > 1:
-                raise WorkFlowInputError(  # noqa: DOC501, RUF100, TRY003
+                raise WorkFlowInputError(  # noqa: TRY003
                     'Currently, WHALE only supports a single event.'  # noqa: EM101
                 )
             for event in requested_apps['Events'][
@@ -1089,7 +1089,7 @@ class Workflow:  # noqa: PLR0904
             ]:  # this limitation can be relaxed in the future
                 if 'EventClassification' in event:
                     eventClassification = event['EventClassification']  # noqa: N806
-                    if eventClassification in [  # noqa: PLR6201
+                    if eventClassification in [
                         'Earthquake',
                         'Wind',
                         'Hurricane',
@@ -1104,7 +1104,7 @@ class Workflow:  # noqa: PLR0904
                         )
 
                         if app_object is None:
-                            raise WorkFlowInputError(  # noqa: DOC501, RUF100
+                            raise WorkFlowInputError(
                                 'Application entry missing for {}'.format('Events')  # noqa: EM103
                             )
 
@@ -1114,12 +1114,12 @@ class Workflow:  # noqa: PLR0904
                         self.workflow_apps['Event'] = app_object
 
                     else:
-                        raise WorkFlowInputError(  # noqa: DOC501, RUF100, TRY003
+                        raise WorkFlowInputError(  # noqa: TRY003
                             'Currently, only earthquake and wind events are supported. '  # noqa: EM102
                             f'EventClassification must be Earthquake, not {eventClassification}'
                         )
                 else:
-                    raise WorkFlowInputError('Need Event Classification')  # noqa: DOC501, EM101, RUF100, TRY003
+                    raise WorkFlowInputError('Need Event Classification')  # noqa: EM101, TRY003
 
         # Figure out what types of assets are coming into the analysis
         assetObjs = requested_apps.get('Assets', None)  # noqa: N806
@@ -1130,7 +1130,7 @@ class Workflow:  # noqa: PLR0904
 
             # Check if asset list is not empty
             if len(assetObjs) == 0:
-                raise WorkFlowInputError('The provided asset object is empty')  # noqa: DOC501, EM101, RUF100, TRY003
+                raise WorkFlowInputError('The provided asset object is empty')  # noqa: EM101, TRY003
 
             # Iterate through the asset objects
             for assetObj in assetObjs:  # noqa: N806
@@ -1209,7 +1209,7 @@ class Workflow:  # noqa: PLR0904
 
             # filter assets (if needed)
             asset_filter = asset_app.pref.get('filter', None)
-            if asset_filter == '':  # noqa: PLC1901
+            if asset_filter == '':
                 del asset_app.pref['filter']
                 asset_filter = None
 
@@ -1238,7 +1238,7 @@ class Workflow:  # noqa: PLR0904
             # for multiple asset types. "asset_type" needs to be added so the app
             # knows which asset_type it's processing.
             if asset_app.name == 'GEOJSON_TO_ASSET' or asset_app.name == 'INP_FILE':  # noqa: PLR1714
-                asset_command_list = asset_command_list + [  # noqa: PLR6104, RUF005
+                asset_command_list = asset_command_list + [  # noqa: RUF005
                     '--assetType',
                     asset_type,
                     '--inputJsonFile',
@@ -1290,7 +1290,7 @@ class Workflow:  # noqa: PLR0904
                 # Check if the command was completed successfully
                 if returncode != 0:
                     print(result)  # noqa: T201
-                    raise WorkFlowInputError(  # noqa: DOC501
+                    raise WorkFlowInputError(
                         'Failed to create the AIM file for ' + asset_type
                     )
                 else:  # noqa: RET506
@@ -1345,7 +1345,7 @@ class Workflow:  # noqa: PLR0904
         assetFilesList = {}  # noqa: N806
 
         # Iterate through the asset workflow apps
-        for asset_type, asset_app in assetsWfapps.items():  # noqa: PLR1702
+        for asset_type, asset_app in assetsWfapps.items():
             asset_folder = posixpath.join(self.run_dir, asset_type)
 
             asset_file = posixpath.join(asset_folder, asset_type) + '.json'
@@ -1354,7 +1354,7 @@ class Workflow:  # noqa: PLR0904
 
             # filter assets (if needed)
             asset_filter = asset_app.pref.get('filter', None)
-            if asset_filter == '':  # noqa: PLC1901
+            if asset_filter == '':
                 del asset_app.pref['filter']
                 asset_filter = None
 
@@ -1496,7 +1496,7 @@ class Workflow:  # noqa: PLR0904
                     with open(AIM_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
                         json.dump(AIM_data, f, indent=2)
 
-                count = count + 1  # noqa: PLR6104
+                count = count + 1
 
         log_msg(
             '\nAsset Information Model (AIM) files successfully augmented.',
@@ -1575,7 +1575,7 @@ class Workflow:  # noqa: PLR0904
             prepend_blank_space=False,
         )
 
-        result, returncode = run_command(command)  # noqa: F841
+        result, returncode = run_command(command)
         log_msg(
             f'\n{result}\n',
             prepend_timestamp=False,
@@ -1663,7 +1663,7 @@ class Workflow:  # noqa: PLR0904
                 prepend_blank_space=False,
             )
 
-            result, returncode = run_command(command)  # noqa: F841
+            result, returncode = run_command(command)
 
             log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
             log_msg(
@@ -1726,7 +1726,7 @@ class Workflow:  # noqa: PLR0904
                 prepend_blank_space=False,
             )
 
-            result, returncode = run_command(command)  # noqa: F841
+            result, returncode = run_command(command)
 
             log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
             log_msg(
@@ -1756,6 +1756,10 @@ class Workflow:  # noqa: PLR0904
         for input_ in reg_mapping_app.inputs:
             if input_['id'] == 'assetFile':
                 input_['default'] = str(AIM_file_path)
+        # Get the event file path
+        eventFilePath = self.shared_data.get('RegionalEvent', {}).get(  # noqa: N806
+            'eventFilePath', self.reference_dir
+        )
 
         reg_mapping_app.inputs.append(
             {
@@ -1763,7 +1767,7 @@ class Workflow:  # noqa: PLR0904
                 'type': 'path',
                 'default': resolve_path(
                     self.shared_data['RegionalEvent']['eventFile'],
-                    self.reference_dir,
+                    eventFilePath,
                 ),
             }
         )
@@ -1878,7 +1882,7 @@ class Workflow:  # noqa: PLR0904
 
         else:
             for dir_or_file in os.listdir(os.getcwd()):  # noqa: PTH109
-                if dir_or_file not in ['log.txt', 'templatedir', 'input_data']:  # noqa: PLR6201
+                if dir_or_file not in ['log.txt', 'templatedir', 'input_data']:
                     if os.path.isdir(dir_or_file):  # noqa: PTH112
                         shutil.rmtree(dir_or_file)
                     else:
@@ -2019,7 +2023,7 @@ class Workflow:  # noqa: PLR0904
             ):
                 app_sequence.remove(app_type)
 
-        for app_type in app_sequence:  # noqa: PLR1702
+        for app_type in app_sequence:
             workflow_app = self.workflow_apps[app_type]
 
             if app_type != 'FEM':
@@ -2119,7 +2123,7 @@ class Workflow:  # noqa: PLR0904
                 old_command_list.append('--appKey')
                 old_command_list.append('FEM')
                 if old_command_list[0] == 'python':
-                    if self.run_type in ['set_up', 'runningRemote']:  # noqa: PLR6201
+                    if self.run_type in ['set_up', 'runningRemote']:
                         old_command_list.append('--runType')
                         old_command_list.append('runningRemote')
                         old_command_list.append('--osType')
@@ -2145,7 +2149,7 @@ class Workflow:  # noqa: PLR0904
                     command_list.append(old_command_list[0])
                     command_list.append(self.input_file)
 
-                    if self.run_type in ['set_up', 'runningRemote']:  # noqa: PLR6201
+                    if self.run_type in ['set_up', 'runningRemote']:
                         command_list.append('runningRemote')
                         command_list.append('MacOS')
                     else:
@@ -2228,7 +2232,7 @@ class Workflow:  # noqa: PLR0904
             pathToScFile = posixpath.join(inputFilePath, 'sc_' + inputFilename)  # noqa: N806
 
             # arg_list.append(u'{}'.format(self.input_file))
-            arg_list.append(f'{AIM_file_path}')  # noqa: FURB113
+            arg_list.append(f'{AIM_file_path}')
             arg_list.append(f'{pathToScFile}')
             arg_list.append('{}'.format(self.default_values['driverFile']))
             arg_list.append('{}'.format('sc_' + self.default_values['driverFile']))
@@ -2251,7 +2255,7 @@ class Workflow:  # noqa: PLR0904
 
             # print('FMK- gather command:', command)
 
-            result, returncode = run_command(command)  # noqa: F841
+            result, returncode = run_command(command)
 
             log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
             log_msg(
@@ -2308,7 +2312,7 @@ class Workflow:  # noqa: PLR0904
                 workflow_app = self.workflow_apps[app_type]
 
                 # print('FMK runtype', self.run_type)
-                if self.run_type in ['set_up', 'runningRemote', 'parSETUP']:  # noqa: PLR6201
+                if self.run_type in ['set_up', 'runningRemote', 'parSETUP']:
                     if type(workflow_app) is dict:
                         for itemKey, item in workflow_app.items():  # noqa: B007, N806, PERF102
                             command_list = item.get_command_list(
@@ -2359,7 +2363,7 @@ class Workflow:  # noqa: PLR0904
 
             # KZ: for windows, to write bat
             if platform.system() == 'Windows':
-                driverFile = driverFile + '.bat'  # noqa: N806, PLR6104
+                driverFile = driverFile + '.bat'  # noqa: N806
             log_msg(driverFile)
             with open(driverFile, 'w', newline='\n', encoding='utf-8') as f:  # noqa: PTH123
                 f.write(driver_script)
@@ -2394,7 +2398,7 @@ class Workflow:  # noqa: PLR0904
         if asst_id is not None:
             os.chdir(asst_id)
 
-        if 'UQ' in self.workflow_apps.keys():  # noqa: PLR1702, SIM118
+        if 'UQ' in self.workflow_apps.keys():  # noqa: SIM118
             log_msg('Running response simulation')
 
             os.chdir('templatedir')
@@ -2444,9 +2448,9 @@ class Workflow:  # noqa: PLR0904
                 prepend_blank_space=False,
             )
 
-            result, returncode = run_command(command)  # noqa: F841
+            result, returncode = run_command(command)
 
-            if self.run_type in ['run', 'runningLocal']:  # noqa: PLR6201
+            if self.run_type in ['run', 'runningLocal']:
                 log_msg(
                     'Output: ', prepend_timestamp=False, prepend_blank_space=False
                 )
@@ -2498,7 +2502,7 @@ class Workflow:  # noqa: PLR0904
                         prepend_timestamp=False,
                     )
 
-            elif self.run_type in ['set_up', 'runningRemote']:  # noqa: PLR6201
+            elif self.run_type in ['set_up', 'runningRemote']:
                 log_msg(
                     'Response simulation set up successfully',
                     prepend_timestamp=False,
@@ -2521,7 +2525,7 @@ class Workflow:  # noqa: PLR0904
             app_path=self.app_dir_local  # noqa: F821
         )
         command = create_command(app_command_list)
-        result, returncode = run_command(command)  # noqa: F841
+        result, returncode = run_command(command)
 
     def estimate_losses(  # noqa: C901
         self,
@@ -2665,7 +2669,7 @@ class Workflow:  # noqa: PLR0904
                     prepend_blank_space=False,
                 )
 
-                result, returncode = run_command(command)  # noqa: F841
+                result, returncode = run_command(command)
 
                 log_msg(result, prepend_timestamp=False)
 
@@ -2808,14 +2812,14 @@ class Workflow:  # noqa: PLR0904
             prepend_blank_space=False,
         )
 
-        result, returncode = run_command(command)  # noqa: F841
+        result, returncode = run_command(command)
 
         log_msg(result, prepend_timestamp=False)
 
         log_msg('Performance assessment finished.', prepend_timestamp=False)
         log_div()
 
-    def aggregate_results(  # noqa: C901, PLR0912, PLR0914, PLR0915
+    def aggregate_results(  # noqa: C901, PLR0912, PLR0915
         self,
         asst_data,
         asset_type='',
@@ -2834,7 +2838,7 @@ class Workflow:  # noqa: PLR0904
         log_msg('Collecting ' + asset_type + ' damage and loss results')
 
         R2D_res_out_types = []  # noqa: N806
-        with open(self.input_file) as f:  # noqa: PLW1514, PTH123
+        with open(self.input_file) as f:  # noqa: PTH123
             input_data = json.load(f)
         requested_output = input_data['outputs']
         for key, item in requested_output.items():
@@ -2843,16 +2847,16 @@ class Workflow:  # noqa: PLR0904
 
         run_path = self.run_dir
 
-        if asset_type != '':  # noqa: PLC1901
+        if asset_type != '':
             run_path = posixpath.join(run_path, asset_type)
 
         os.chdir(run_path)
 
         min_id = min(
-            [int(x['id']) for x in asst_data]  # noqa: C419
+            [int(x['id']) for x in asst_data]
         )  # min_id = int(asst_data[0]['id'])
         max_id = max(
-            [int(x['id']) for x in asst_data]  # noqa: C419
+            [int(x['id']) for x in asst_data]
         )  # max_id = int(asst_data[0]['id'])
 
         #
@@ -2861,7 +2865,7 @@ class Workflow:  # noqa: PLR0904
         # FMK - bug fix adding check on DL, not in siteResponse input file
         #
 
-        if (  # noqa: PLR1702
+        if (
             'DL' in self.workflow_apps
             and self.workflow_apps['DL'][asset_type].name == 'Pelicun3'
         ):
@@ -3175,7 +3179,7 @@ class Workflow:  # noqa: PLR0904
                         }
                 else:
                     deterministic = {assetTypeHierarchy[0]: deterministic}
-                    for rlz_i in realizations:  # noqa: PLC0206
+                    for rlz_i in realizations:
                         realizations[rlz_i] = {
                             assetTypeHierarchy[0]: realizations[rlz_i]
                         }
@@ -3349,7 +3353,7 @@ class Workflow:  # noqa: PLR0904
                                     )
 
                             # increment counter
-                            count = count + 1  # noqa: PLR6104
+                            count = count + 1
 
                         # save the collected DataFrames as csv files
                         if self.procID == 0:

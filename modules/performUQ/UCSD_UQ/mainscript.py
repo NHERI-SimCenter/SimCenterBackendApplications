@@ -1,7 +1,7 @@
 """authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, Aakash Bangalore Satish*
 affiliation: University of California, San Diego, *SimCenter, University of California, Berkeley
 
-"""  # noqa: CPY001, D205, D400, INP001
+"""  # noqa: INP001, D205, D400
 
 # ======================================================================================================================
 import json
@@ -41,11 +41,11 @@ def main(input_args):  # noqa: D103
 
     uq_inputs = inputs['UQ']
     if uq_inputs['uqType'] == 'Metropolis Within Gibbs Sampler':
-        import mainscript_hierarchical_bayesian  # noqa: PLC0415
+        import mainscript_hierarchical_bayesian
 
         main_function = mainscript_hierarchical_bayesian.main
     else:
-        import mainscript_tmcmc  # noqa: PLC0415
+        import mainscript_tmcmc
 
         main_function = mainscript_tmcmc.main
 

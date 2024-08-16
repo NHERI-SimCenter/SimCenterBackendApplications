@@ -1,4 +1,4 @@
-# This file is used to define the class of Building  # noqa: CPY001, D100, INP001
+# This file is used to define the class of Building  # noqa: INP001, D100
 # Developed by GUAN, XINGQUAN @ UCLA in June 2018
 # Updated in Sept. 2018
 
@@ -143,7 +143,7 @@ class Building:
         (2) Open the .csv file and save all relevant information to the object itself
         """  # noqa: D205, D400, D401, D404
         os.chdir(self.directory['building data'])
-        with open('Geometry.csv') as csvfile:  # noqa: PLW1514, PTH123
+        with open('Geometry.csv') as csvfile:  # noqa: PTH123
             geometry_data = pd.read_csv(csvfile, header=0)
 
         # Each variable is a scalar
@@ -184,7 +184,7 @@ class Building:
         (2) Read the .csv files and assign save load values to object values
         """  # noqa: D205, D400, D401, D404
         os.chdir(self.directory['building data'])
-        with open('Loads.csv') as csvfile:  # noqa: PLW1514, PTH123
+        with open('Loads.csv') as csvfile:  # noqa: PTH123
             loads_data = pd.read_csv(csvfile, header=0)
 
         # for i in loads_data._iter_column_arrays():
@@ -236,7 +236,7 @@ class Building:
         (2) Calculate SMS, SM1, SDS, SD1 values and save them into the attribute
         """  # noqa: D205, D400, D401, D404
         os.chdir(self.directory['building data'])
-        with open('ELFParameters.csv') as csvfile:  # noqa: PLW1514, PTH123
+        with open('ELFParameters.csv') as csvfile:  # noqa: PTH123
             elf_parameters_data = pd.read_csv(csvfile, header=0)
 
         # Determine Fa and Fv coefficient based on site class and Ss and S1 (ASCE 7-10 Table 11.4-1 & 11.4-2)
@@ -371,7 +371,7 @@ class Building:
         """  # noqa: D205, D401, D404
         # Read the user-specified depths for interior columns, exterior columns, and beams.
         os.chdir(self.directory['building data'])
-        with open('MemberDepth.csv') as csvfile:  # noqa: PLW1514, PTH123
+        with open('MemberDepth.csv') as csvfile:  # noqa: PTH123
             depth_data = pd.read_csv(csvfile, header=0)
         # Initialize dictionary that will be used to store all possible section sizes for each member (in each story)
         interior_column_candidate = {}

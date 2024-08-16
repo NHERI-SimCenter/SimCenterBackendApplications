@@ -1,4 +1,4 @@
-import numpy as np  # noqa: CPY001, D100, INP001
+import numpy as np  # noqa: INP001, D100
 
 
 class CovError(Exception):
@@ -75,7 +75,7 @@ def log_likelihood(
             f'ERROR: The expected number of covariance matrices is {numExperiments * numResponses}, but only {len(covarianceMatrixList)} were passed '
             'in.'
         )
-        raise CovError(  # noqa: DOC501, TRY003
+        raise CovError(  # noqa: TRY003
             f'ERROR: The expected number of covariance matrices is {numExperiments * numResponses}, but only {len(covarianceMatrixList)} were passed '  # noqa: EM102
             'in.'
         )
@@ -83,15 +83,15 @@ def log_likelihood(
     # Shift and normalize the prediction
     currentPosition = 0  # noqa: N806
     for j in range(len(edpLengthsList)):
-        prediction[:, currentPosition : currentPosition + edpLengthsList[j]] = (  # noqa: PLR6104
+        prediction[:, currentPosition : currentPosition + edpLengthsList[j]] = (
             prediction[:, currentPosition : currentPosition + edpLengthsList[j]]
             + shiftFactors[j]
         )
-        prediction[:, currentPosition : currentPosition + edpLengthsList[j]] = (  # noqa: PLR6104
+        prediction[:, currentPosition : currentPosition + edpLengthsList[j]] = (
             prediction[:, currentPosition : currentPosition + edpLengthsList[j]]
             / scaleFactors[j]
         )
-        currentPosition = currentPosition + edpLengthsList[j]  # noqa: N806, PLR6104
+        currentPosition = currentPosition + edpLengthsList[j]  # noqa: N806
 
     # Compute the normalized residuals
     allResiduals = prediction - calibrationData  # noqa: N806
@@ -105,14 +105,14 @@ def log_likelihood(
             # Get the residuals corresponding to this response variable
             length = edpLengthsList[j]
             residuals = allResiduals[i, currentPosition : currentPosition + length]
-            currentPosition = currentPosition + length  # noqa: N806, PLR6104
+            currentPosition = currentPosition + length  # noqa: N806
 
             # Get the covariance matrix corresponding to this response variable
             cov = np.atleast_2d(covarianceMatrixList[covListIndex])
-            covListIndex = covListIndex + 1  # noqa: N806, PLR6104
+            covListIndex = covListIndex + 1  # noqa: N806
 
             # Multiply the covariance matrix by the value of the covariance multiplier
-            cov = cov * covarianceMultiplierList[j]  # noqa: PLR6104
+            cov = cov * covarianceMultiplierList[j]
 
             if np.shape(cov)[0] == np.shape(cov)[1] == 1:
                 # If there is a single variance value that is constant for all residual terms, then this is the case of

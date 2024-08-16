@@ -41,7 +41,7 @@ import argparse
 import importlib
 import json
 import os
-import subprocess  # noqa: S404
+import subprocess
 import sys
 import tarfile
 
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # read the hazard configuration file
-    with open(args.hazard_config) as f:  # noqa: PLW1514, PTH123
+    with open(args.hazard_config) as f:  # noqa: PTH123
         hazard_info = json.load(f)
 
     # directory (back compatibility here)
@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
     # parse job type for set up environment and constants
     try:
-        opensha_flag = hazard_info['Scenario']['EqRupture']['Type'] in [  # noqa: PLR6201
+        opensha_flag = hazard_info['Scenario']['EqRupture']['Type'] in [
             'PointSource',
             'ERF',
         ]
@@ -202,7 +202,7 @@ if __name__ == '__main__':
         if user_scenarios:
             load_earthquake_scenarios(scenario_info, stations, input_dir)
         # Creating earthquake scenarios
-        elif scenario_info['EqRupture']['Type'] in [  # noqa: PLR6201
+        elif scenario_info['EqRupture']['Type'] in [
             'PointSource',
             'ERF',
             'oqSourceXML',

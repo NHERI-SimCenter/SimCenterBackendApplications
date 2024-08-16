@@ -172,7 +172,7 @@ def load_record(  # noqa: D103
 
     # check if Event File is already in EVENT format
     isEventFile = False  # noqa: N806
-    if event_data.__contains__('Events'):  # noqa: PLC2801
+    if event_data.__contains__('Events'):
         event_dic = event_data['Events'][0]
         # event_dic['dT'] = event_data['Events'][0]['dT']
         # event_dic['numSteps'] = event_data['Events'][0]['numSteps']

@@ -1,4 +1,4 @@
-import json, os, shapely, argparse, sys, ujson, importlib  # noqa: CPY001, INP001, I001, E401, D100
+import json, os, shapely, argparse, sys, ujson, importlib  # noqa: INP001, I001, E401, D100
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -20,7 +20,6 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):  # n
     # Find the realizations to run
     damage_input = rec_config.pop('DamageInput')
     realizations_to_run = select_realizations_to_run(damage_input, inputRWHALE)
-
     # Replace SimCenterDefault with correct path
     cmp_lib = rec_config['ComponentLibrary']
     if cmp_lib.startswith('SimCenterDefault'):
@@ -44,9 +43,11 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):  # n
 
     # initialize a dict to accumulate recovery results stats
     result_det_path = os.path.join(  # noqa: PTH118
-        inputRWHALE['runDir'], 'Results', f'Results_det.json'  # noqa: F541
+        inputRWHALE['runDir'],
+        'Results',
+        'Results_det.json',
     )
-    with open(result_det_path, 'r') as f:  # noqa: PTH123, PLW1514, UP015
+    with open(result_det_path, 'r') as f:  # noqa: PTH123, UP015
         results_det = json.load(f)
     result_agg = dict()  # noqa: C408
     resilience_results = dict()  # noqa: C408
@@ -58,8 +59,8 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):  # n
     mpi_spec = importlib.util.find_spec('mpi4py')
     found = mpi_spec is not None
     if found and parallelType == 'parRUN':
-        import mpi4py  # noqa: PLC0415
-        from mpi4py import MPI  # noqa: PLC0415
+        import mpi4py
+        from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
         numP = comm.Get_size()  # noqa: N806
@@ -73,7 +74,7 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):  # n
     count = 0
     needsInitiation = True  # noqa: N806
     ind_in_rank = 0
-    for ind, rlz_ind in enumerate(realizations_to_run):  # noqa: B007, PLR1702, FURB148
+    for ind, rlz_ind in enumerate(realizations_to_run):  # noqa: B007
         # Create a realization directory
         if count % numP == procID:
             rlz_dir = os.path.join(rec_ouput_dir, str(rlz_ind))  # noqa: PTH118
@@ -94,9 +95,8 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):  # n
             system_configuration_file = os.path.join(  # noqa: PTH118
                 rlz_dir, 'SystemConfiguration.json'
             )
-            with open(system_configuration_file, 'w') as f:  # noqa: PTH123, PLW1514
+            with open(system_configuration_file, 'w') as f:  # noqa: PTH123
                 ujson.dump(system_configuration, f)
-
             # Update the main json
             main_json.update(
                 {
@@ -110,7 +110,7 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):  # n
 
             # Write the main json to a file
             main_file = os.path.join(rlz_dir, 'main.json')  # noqa: PTH118
-            with open(main_file, 'w') as f:  # noqa: PTH123, PLW1514
+            with open(main_file, 'w') as f:  # noqa: PTH123
                 ujson.dump(main_json, f)
 
             system = main.run(main_file)
@@ -127,7 +127,9 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):  # n
                 resilience_results_buffer = dict()  # noqa: C408
                 resilience_calculator_id = 0
                 resilience_results.update(
-                    {'time_steps': list(range(0, system.MAX_TIME_STEP + 1))}  # noqa: PIE808
+                    {
+                        'time_steps': list(range(0, system.MAX_TIME_STEP + 1))  # noqa: PIE808
+                    }
                 )
                 resources_to_plot = system.resilience_calculators[
                     resilience_calculator_id
@@ -169,7 +171,6 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):  # n
                         )
                     result_agg_buffer.update({asset_type: asset_type_result})
                 del results_det
-
             resilience_result_rlz_i = dict()  # noqa: C408
             for resource_name in resources_to_plot:
                 resilience_result_rlz_i.update(
@@ -208,12 +209,14 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):  # n
             resilience_result_rlz_i_file = os.path.join(  # noqa: PTH118
                 rlz_dir, 'ResilienceResult.json'
             )
-            with open(resilience_result_rlz_i_file, 'w') as f:  # noqa: PTH123, PLW1514
+            with open(resilience_result_rlz_i_file, 'w') as f:  # noqa: PTH123
                 ujson.dump(resilience_result_rlz_i, f)
             result_file_name = os.path.join(  # noqa: PTH118
-                inputRWHALE['runDir'], 'Results', f'Results_{rlz_ind}.json'
+                inputRWHALE['runDir'],
+                'Results',
+                f'Results_{rlz_ind}.json',
             )
-            with open(result_file_name, 'r') as f:  # noqa: PTH123, PLW1514, UP015
+            with open(result_file_name, 'r') as f:  # noqa: PTH123, UP015
                 results = json.load(f)
             for comp in system.components:
                 if getattr(comp, 'r2d_comp', False) is True:
@@ -228,7 +231,7 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):  # n
                     result_agg_buffer[comp.asset_type][comp.asset_subtype][
                         comp.aim_id
                     ]['RecoveryDuration'][ind_in_rank] = recovery_duration
-            with open(result_file_name, 'w') as f:  # noqa: PTH123, PLW1514
+            with open(result_file_name, 'w') as f:  # noqa: PTH123
                 ujson.dump(results, f)
 
             ind_in_rank += 1
@@ -302,7 +305,7 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):  # n
 
     if procID == 0:
         # Calculate stats of the results and add to results_det.json
-        with open(result_det_path, 'r') as f:  # noqa: PTH123, PLW1514, UP015
+        with open(result_det_path, 'r') as f:  # noqa: PTH123, UP015
             results_det = json.load(f)
         for asset_type, item in result_agg.items():
             for asset_subtype, asset_subtype_item in item.items():
@@ -324,9 +327,8 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):  # n
                             ].std(),
                         }
                     )
-        with open(result_det_path, 'w') as f:  # noqa: PTH123, PLW1514
+        with open(result_det_path, 'w') as f:  # noqa: PTH123
             ujson.dump(results_det, f)
-
         recovery_result_path = os.path.join(rec_ouput_dir, 'ResilienceResult.json')  # noqa: PTH118
         for resource_name in resources_to_plot:
             resilience_results[resource_name].update(
@@ -359,15 +361,15 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):  # n
             resilience_results[resource_name].pop('Demand')
             resilience_results[resource_name].pop('Consumption')
 
-        with open(recovery_result_path, 'w') as f:  # noqa: PTH123, PLW1514
+        with open(recovery_result_path, 'w') as f:  # noqa: PTH123
             ujson.dump(resilience_results, f)
 
     # Below are for development use
-    from pyrecodes import GeoVisualizer as gvis  # noqa: N813, PLC0415
+    from pyrecodes import GeoVisualizer as gvis  # noqa: N813
 
     geo_visualizer = gvis.R2D_GeoVisualizer(system.components)
     geo_visualizer.plot_component_localities()
-    from pyrecodes import Plotter  # noqa: PLC0415
+    from pyrecodes import Plotter
 
     plotter_object = Plotter.Plotter()
     x_axis_label = 'Time step [day]'
@@ -403,19 +405,18 @@ def create_system_configuration(rec_config):  # noqa: D103
     content_config = rec_config.pop('Content')
     system_configuration = rec_config.copy()
     if content_config['Creator'] == 'FromJsonFile':
-        with open(content_config['FilePath'], 'r') as f:  # noqa: PTH123, PLW1514, UP015
+        with open(content_config['FilePath'], 'r') as f:  # noqa: PTH123, UP015
             content = json.load(f)
         system_configuration.update({'Content': content})
     elif content_config['Creator'] == 'LocalityGeoJSON':
         # think how users can input RecoveryResourceSupplier and Resources
         pass
-
     return system_configuration
 
 
 def select_realizations_to_run(damage_input, inputRWHALE):  # noqa: N803, D103
     rlzs_num = min(
-        [  # noqa: C419
+        [
             item['ApplicationData']['Realizations']
             for _, item in inputRWHALE['Applications']['DL'].items()
         ]
@@ -491,11 +492,11 @@ if __name__ == '__main__':
     # Calling the main workflow method and passing the parsed arguments
     numPROC = int(wfArgs.numP)  # noqa: N816
 
-    with open(Path(wfArgs.configJsonPath).resolve(), 'r') as f:  # noqa: PTH123, PLW1514, UP015
+    with open(Path(wfArgs.configJsonPath).resolve(), 'r') as f:  # noqa: PTH123, UP015
         rec_config = json.load(f)
-    with open(Path(wfArgs.inputRWHALEPath).resolve(), 'r') as f:  # noqa: PTH123, PLW1514, UP015
-        inputRWHALE = json.load(f)  # noqa: N816
 
+    with open(Path(wfArgs.inputRWHALEPath).resolve(), 'r') as f:  # noqa: PTH123, UP015
+        inputRWHALE = json.load(f)  # noqa: N816
     run_pyrecodes(
         rec_config=rec_config,
         inputRWHALE=inputRWHALE,
@@ -503,3 +504,4 @@ if __name__ == '__main__':
         mpiExec=wfArgs.mpiexec,
         numPROC=numPROC,
     )
+

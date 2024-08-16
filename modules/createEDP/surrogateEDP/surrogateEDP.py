@@ -1,4 +1,4 @@
-import os  # noqa: CPY001, D100, INP001
+import os  # noqa: INP001, D100
 import sys
 
 if sys.version.startswith('2'):
@@ -24,7 +24,7 @@ def write_RV(AIM_input_path, EDP_input_path, EDP_type):  # noqa: ARG001, N802, N
         root_AIM['Applications']['Modeling']['Application']
         != 'SurrogateGPBuildingModel'
     ):
-        with open('../workflow.err', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+        with open('../workflow.err', 'w') as f:  # noqa: PTH123
             f.write(
                 'Do not select [None] in the EDP tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'
             )

@@ -113,7 +113,7 @@ def runDefault(root_AIM, aimName, samName, evtName, edpName, simName, getRV=Fals
     currentDir = os.getcwd()  # noqa: PTH109, N806
     newAimName = os.path.join(currentDir, os.path.basename(aimName))  # noqa: PTH118, PTH119, N806
 
-    with open(newAimName, 'w', encoding='utf-8') as f:  # noqa: FURB103, PTH123
+    with open(newAimName, 'w', encoding='utf-8') as f:  # noqa: PTH123
         json_object = json.dumps(root_AIM)
         f.write(json_object)
     #
@@ -214,7 +214,7 @@ def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):  # noqa: C901,
     ]
     SAMkeys_nodes = ['mass']  # noqa: N806
 
-    with open('params.in') as f:  # noqa: FURB101, PLW1514, PTH123
+    with open('params.in') as f:  # noqa: PTH123
         paramsStr = f.read()  # noqa: N806
     nAddParams = 0  # noqa: N806
 
@@ -264,7 +264,7 @@ def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):  # noqa: C901,
     stringList = set(stringList)  # remove duplicates  # noqa: N806
     stringList = [i for i in stringList if i]  # remove empty  # noqa: N806
     stringList = [str(len(stringList))] + stringList  # noqa: N806, RUF005
-    with open('params.in', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+    with open('params.in', 'w') as f:  # noqa: PTH123
         f.write('\n'.join(stringList))
 
     f.close()
@@ -321,7 +321,7 @@ def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):  # noqa: C901,
 
     currentDir = os.getcwd()  # noqa: PTH109, N806
     newAimName = os.path.join(currentDir, os.path.basename(aimName))  # noqa: PTH118, PTH119, N806
-    with open(newAimName, 'w', encoding='utf-8') as f:  # noqa: FURB103, PTH123
+    with open(newAimName, 'w', encoding='utf-8') as f:  # noqa: PTH123
         json_object = json.dumps(root_AIM)
         f.write(json_object)
 

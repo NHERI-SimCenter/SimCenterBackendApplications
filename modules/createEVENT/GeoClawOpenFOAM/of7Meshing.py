@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -54,7 +54,7 @@ class of7Meshing:
     """  # noqa: D205, D404
 
     #############################################################
-    def meshcheck(self, data, fipath):  # noqa: PLR6301
+    def meshcheck(self, data, fipath):
         """Checks for material properties for openfoam7
 
         Arguments:
@@ -103,7 +103,7 @@ class of7Meshing:
         return 0
 
     #############################################################
-    def meshheader(self, fileobjec):  # noqa: PLR6301
+    def meshheader(self, fileobjec):
         """Creates the text for the header
 
         Variable
@@ -170,10 +170,10 @@ FoamFile
         bmeshtext = self.meshheader('blockMeshDict')
 
         # Convert units
-        bmeshtext = bmeshtext + 'convertToMeters\t1;\n\n'  # noqa: PLR6104
+        bmeshtext = bmeshtext + 'convertToMeters\t1;\n\n'
 
         # Add vertices
-        bmeshtext = bmeshtext + 'vertices\n(\n\t'  # noqa: PLR6104
+        bmeshtext = bmeshtext + 'vertices\n(\n\t'
         bmeshtext = (
             bmeshtext
             + '('
@@ -256,7 +256,7 @@ FoamFile
         )
 
         # Add blocks
-        bmeshtext = bmeshtext + 'blocks\n(\n\t'  # noqa: PLR6104
+        bmeshtext = bmeshtext + 'blocks\n(\n\t'
         bmeshtext = (
             bmeshtext
             + 'hex (0 1 2 3 4 5 6 7) ('
@@ -269,20 +269,20 @@ FoamFile
         )
 
         # Add edges
-        bmeshtext = bmeshtext + 'edges\n(\n);\n\n'  # noqa: PLR6104
+        bmeshtext = bmeshtext + 'edges\n(\n);\n\n'
 
         # Add patches
-        bmeshtext = bmeshtext + 'patches\n(\n\t'  # noqa: PLR6104
-        bmeshtext = bmeshtext + 'patch maxY\n\t(\n\t\t(3 7 6 2)\n\t)\n\t'  # noqa: PLR6104
-        bmeshtext = bmeshtext + 'patch minX\n\t(\n\t\t(0 4 7 3)\n\t)\n\t'  # noqa: PLR6104
-        bmeshtext = bmeshtext + 'patch maxX\n\t(\n\t\t(2 6 5 1)\n\t)\n\t'  # noqa: PLR6104
-        bmeshtext = bmeshtext + 'patch minY\n\t(\n\t\t(1 5 4 0)\n\t)\n\t'  # noqa: PLR6104
-        bmeshtext = bmeshtext + 'patch minZ\n\t(\n\t\t(0 3 2 1)\n\t)\n\t'  # noqa: PLR6104
-        bmeshtext = bmeshtext + 'patch maxZ\n\t(\n\t\t(4 5 6 7)\n\t)\n'  # noqa: PLR6104
-        bmeshtext = bmeshtext + ');\n\n'  # noqa: PLR6104
+        bmeshtext = bmeshtext + 'patches\n(\n\t'
+        bmeshtext = bmeshtext + 'patch maxY\n\t(\n\t\t(3 7 6 2)\n\t)\n\t'
+        bmeshtext = bmeshtext + 'patch minX\n\t(\n\t\t(0 4 7 3)\n\t)\n\t'
+        bmeshtext = bmeshtext + 'patch maxX\n\t(\n\t\t(2 6 5 1)\n\t)\n\t'
+        bmeshtext = bmeshtext + 'patch minY\n\t(\n\t\t(1 5 4 0)\n\t)\n\t'
+        bmeshtext = bmeshtext + 'patch minZ\n\t(\n\t\t(0 3 2 1)\n\t)\n\t'
+        bmeshtext = bmeshtext + 'patch maxZ\n\t(\n\t\t(4 5 6 7)\n\t)\n'
+        bmeshtext = bmeshtext + ');\n\n'
 
         # Add merge patch pairs
-        bmeshtext = bmeshtext + 'mergePatchPairs\n(\n);\n'  # noqa: PLR6104
+        bmeshtext = bmeshtext + 'mergePatchPairs\n(\n);\n'
 
         return bmeshtext  # noqa: DOC201, RET504
 
@@ -303,9 +303,9 @@ FoamFile
 
         # Rest of text
         stlinfo = '{\n\textractionMethod\textractFromSurface;\n'
-        stlinfo = stlinfo + '\textractFromSurfaceCoeffs\n'  # noqa: PLR6104
-        stlinfo = stlinfo + '\t{includedAngle\t150;}\n'  # noqa: PLR6104
-        stlinfo = stlinfo + '\twriteObj\tyes;\n}'  # noqa: PLR6104
+        stlinfo = stlinfo + '\textractFromSurfaceCoeffs\n'
+        stlinfo = stlinfo + '\t{includedAngle\t150;}\n'
+        stlinfo = stlinfo + '\twriteObj\tyes;\n}'
         sfetext = sfetext + 'Entry.stl\n' + stlinfo + '\n\n'
         sfetext = sfetext + 'Exit.stl\n' + stlinfo + '\n\n'
         sfetext = sfetext + 'Top.stl\n' + stlinfo + '\n\n'
@@ -344,88 +344,88 @@ FoamFile
         shmtext = self.meshheader('snappyHexMeshDict')
 
         # Rest of text
-        shmtext = shmtext + 'castellatedMesh\ttrue;\n\n'  # noqa: PLR6104
-        shmtext = shmtext + 'snap\ttrue;\n\n'  # noqa: PLR6104
-        shmtext = shmtext + 'addLayers\tfalse;\n\n'  # noqa: PLR6104
+        shmtext = shmtext + 'castellatedMesh\ttrue;\n\n'
+        shmtext = shmtext + 'snap\ttrue;\n\n'
+        shmtext = shmtext + 'addLayers\tfalse;\n\n'
 
         # Geometry. Definition of all surfaces.
-        shmtext = shmtext + 'geometry\n{\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'Entry.stl {type triSurfaceMesh; name Entry;}\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'Exit.stl {type triSurfaceMesh; name Exit;}\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'Top.stl {type triSurfaceMesh; name Top;}\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'Bottom.stl {type triSurfaceMesh; name Bottom;}\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'Left.stl {type triSurfaceMesh; name Left;}\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'Right.stl {type triSurfaceMesh; name Right;}\n'  # noqa: PLR6104
+        shmtext = shmtext + 'geometry\n{\n\t'
+        shmtext = shmtext + 'Entry.stl {type triSurfaceMesh; name Entry;}\n\t'
+        shmtext = shmtext + 'Exit.stl {type triSurfaceMesh; name Exit;}\n\t'
+        shmtext = shmtext + 'Top.stl {type triSurfaceMesh; name Top;}\n\t'
+        shmtext = shmtext + 'Bottom.stl {type triSurfaceMesh; name Bottom;}\n\t'
+        shmtext = shmtext + 'Left.stl {type triSurfaceMesh; name Left;}\n\t'
+        shmtext = shmtext + 'Right.stl {type triSurfaceMesh; name Right;}\n'
         if int(data_geoext[6]) == 1:
-            shmtext = (  # noqa: PLR6104
+            shmtext = (
                 shmtext + '\tBuilding.stl {type triSurfaceMesh; name Building;}\n'
             )
         elif int(data_geoext[6]) == 2:  # noqa: PLR2004
-            shmtext = (  # noqa: PLR6104
+            shmtext = (
                 shmtext + '\tBuilding.stl {type triSurfaceMesh; name Building;}\n'
             )
-            shmtext = (  # noqa: PLR6104
+            shmtext = (
                 shmtext
                 + '\tOtherBuilding.stl {type triSurfaceMesh; name OtherBuilding;}\n'
             )
         elif int(data_geoext[6]) == 3:  # noqa: PLR2004
-            shmtext = (  # noqa: PLR6104
+            shmtext = (
                 shmtext
                 + '\tOtherBuilding.stl {type triSurfaceMesh; name OtherBuilding;}\n'
             )
-        shmtext = shmtext + '\tFull.stl {type triSurfaceMesh; name Full;}\n'  # noqa: PLR6104
-        shmtext = shmtext + '};\n\n'  # noqa: PLR6104
+        shmtext = shmtext + '\tFull.stl {type triSurfaceMesh; name Full;}\n'
+        shmtext = shmtext + '};\n\n'
 
         # Castellated mesh generation
         maxLocalCells = int(meshsize) * 2000000  # noqa: N806
         maxGlobalCells = int(meshsize) * 10000000  # noqa: N806
-        shmtext = shmtext + 'castellatedMeshControls\n{\n\t'  # noqa: PLR6104
+        shmtext = shmtext + 'castellatedMeshControls\n{\n\t'
         shmtext = shmtext + 'maxLocalCells\t' + str(maxLocalCells) + ';\n\t'
         shmtext = shmtext + 'maxGlobalCells\t' + str(maxGlobalCells) + ';\n\t'
-        shmtext = shmtext + 'minRefinementCells\t10;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'maxLoadUnbalance\t0.1;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'nCellsBetweenLevels\t1;\n\n'  # noqa: PLR6104
+        shmtext = shmtext + 'minRefinementCells\t10;\n\t'
+        shmtext = shmtext + 'maxLoadUnbalance\t0.1;\n\t'
+        shmtext = shmtext + 'nCellsBetweenLevels\t1;\n\n'
 
         # Explicit feature edge refinement
-        shmtext = shmtext + '\tfeatures\n\t(\n\t\t'  # noqa: PLR6104
-        shmtext = shmtext + '{file "Entry.eMesh"; level 3;}\n\t\t'  # noqa: PLR6104
-        shmtext = shmtext + '{file "Exit.eMesh"; level 3;}\n\t\t'  # noqa: PLR6104
-        shmtext = shmtext + '{file "Top.eMesh"; level 3;}\n\t\t'  # noqa: PLR6104
-        shmtext = shmtext + '{file "Bottom.eMesh"; level 3;}\n\t\t'  # noqa: PLR6104
-        shmtext = shmtext + '{file "Left.eMesh"; level 3;}\n\t\t'  # noqa: PLR6104
-        shmtext = shmtext + '{file "Right.eMesh"; level 3;}\n'  # noqa: PLR6104
+        shmtext = shmtext + '\tfeatures\n\t(\n\t\t'
+        shmtext = shmtext + '{file "Entry.eMesh"; level 3;}\n\t\t'
+        shmtext = shmtext + '{file "Exit.eMesh"; level 3;}\n\t\t'
+        shmtext = shmtext + '{file "Top.eMesh"; level 3;}\n\t\t'
+        shmtext = shmtext + '{file "Bottom.eMesh"; level 3;}\n\t\t'
+        shmtext = shmtext + '{file "Left.eMesh"; level 3;}\n\t\t'
+        shmtext = shmtext + '{file "Right.eMesh"; level 3;}\n'
         if int(data_geoext[6]) == 1:
-            shmtext = shmtext + '\t\t{file "Building.eMesh"; level 3;}\n'  # noqa: PLR6104
+            shmtext = shmtext + '\t\t{file "Building.eMesh"; level 3;}\n'
         elif int(data_geoext[6]) == 2:  # noqa: PLR2004
-            shmtext = shmtext + '\t\t{file "Building.eMesh"; level 3;}\n'  # noqa: PLR6104
-            shmtext = shmtext + '\t\t{file "OtherBuilding.eMesh"; level 3;}\n'  # noqa: PLR6104
+            shmtext = shmtext + '\t\t{file "Building.eMesh"; level 3;}\n'
+            shmtext = shmtext + '\t\t{file "OtherBuilding.eMesh"; level 3;}\n'
         elif int(data_geoext[6]) == 3:  # noqa: PLR2004
-            shmtext = shmtext + '\t\t{file "OtherBuilding.eMesh"; level 3;}\n'  # noqa: PLR6104
-        shmtext = shmtext + '\t);\n\n'  # noqa: PLR6104
+            shmtext = shmtext + '\t\t{file "OtherBuilding.eMesh"; level 3;}\n'
+        shmtext = shmtext + '\t);\n\n'
 
         # Surface based refinement
-        shmtext = shmtext + '\trefinementSurfaces\n\t{\n\t\t'  # noqa: PLR6104
-        shmtext = shmtext + 'Entry {level (0 0);}\n\t\t'  # noqa: PLR6104
-        shmtext = shmtext + 'Exit {level (0 0);}\n\t\t'  # noqa: PLR6104
-        shmtext = shmtext + 'Top {level (0 0);}\n\t\t'  # noqa: PLR6104
-        shmtext = shmtext + 'Bottom {level (2 2);}\n\t\t'  # noqa: PLR6104
-        shmtext = shmtext + 'Left {level (2 2);}\n\t\t'  # noqa: PLR6104
-        shmtext = shmtext + 'Right {level (2 2);}\n'  # noqa: PLR6104
+        shmtext = shmtext + '\trefinementSurfaces\n\t{\n\t\t'
+        shmtext = shmtext + 'Entry {level (0 0);}\n\t\t'
+        shmtext = shmtext + 'Exit {level (0 0);}\n\t\t'
+        shmtext = shmtext + 'Top {level (0 0);}\n\t\t'
+        shmtext = shmtext + 'Bottom {level (2 2);}\n\t\t'
+        shmtext = shmtext + 'Left {level (2 2);}\n\t\t'
+        shmtext = shmtext + 'Right {level (2 2);}\n'
         if int(data_geoext[6]) == 1:
-            shmtext = shmtext + '\t\tBuilding {level (2 2);}\n'  # noqa: PLR6104
+            shmtext = shmtext + '\t\tBuilding {level (2 2);}\n'
         elif int(data_geoext[6]) == 2:  # noqa: PLR2004
-            shmtext = shmtext + '\t\tBuilding {level (2 2);}\n'  # noqa: PLR6104
-            shmtext = shmtext + '\t\tOtherBuilding {level (2 2);}\n'  # noqa: PLR6104
+            shmtext = shmtext + '\t\tBuilding {level (2 2);}\n'
+            shmtext = shmtext + '\t\tOtherBuilding {level (2 2);}\n'
         elif int(data_geoext[6]) == 3:  # noqa: PLR2004
-            shmtext = shmtext + '\t\tOtherBuilding {level (2 2);}\n'  # noqa: PLR6104
-        shmtext = shmtext + '\t};\n\n'  # noqa: PLR6104
+            shmtext = shmtext + '\t\tOtherBuilding {level (2 2);}\n'
+        shmtext = shmtext + '\t};\n\n'
 
         # Resolve sharp angles
-        shmtext = shmtext + '\tresolveFeatureAngle 80;\n\n'  # noqa: PLR6104
+        shmtext = shmtext + '\tresolveFeatureAngle 80;\n\n'
 
         # Regional refinement
         # This needs to be added and corrected
-        shmtext = (  # noqa: PLR6104
+        shmtext = (
             shmtext + '\trefinementRegions\n\t{\n\t\t//Nothing here for now\n\t}\n\n'
         )
 
@@ -445,70 +445,70 @@ FoamFile
             + str(pz)
             + ');\n\n'
         )
-        shmtext = shmtext + '\tallowFreeStandingZoneFaces\tfalse;\n'  # noqa: PLR6104
-        shmtext = shmtext + '}\n\n'  # noqa: PLR6104
+        shmtext = shmtext + '\tallowFreeStandingZoneFaces\tfalse;\n'
+        shmtext = shmtext + '}\n\n'
 
         # Snapping settings
-        shmtext = shmtext + 'snapControls\n{\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'nSmoothPatch\t3;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'tolerance\t4.0;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'nSolveIter\t30;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'nRelaxIter\t5;\n'  # noqa: PLR6104
-        shmtext = shmtext + '}\n\n'  # noqa: PLR6104
+        shmtext = shmtext + 'snapControls\n{\n\t'
+        shmtext = shmtext + 'nSmoothPatch\t3;\n\t'
+        shmtext = shmtext + 'tolerance\t4.0;\n\t'
+        shmtext = shmtext + 'nSolveIter\t30;\n\t'
+        shmtext = shmtext + 'nRelaxIter\t5;\n'
+        shmtext = shmtext + '}\n\n'
 
         # Settings for layer addition
         # This is presently not being used
-        shmtext = shmtext + 'addLayersControls\n{\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'relativeSizes\ttrue;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'layers\n\t{\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'Bottom\n\t\t{nSurfaceLayers\t3;}\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'Left\n\t\t{nSurfaceLayers\t3;}\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'Right\n\t\t{nSurfaceLayers\t3;}\n\t}\n\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'expansionRatio\t1;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'finalLayerThickness\t0.3;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'minThickness\t0.1;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'nGrow\t0;\n\t'  # noqa: PLR6104
+        shmtext = shmtext + 'addLayersControls\n{\n\t'
+        shmtext = shmtext + 'relativeSizes\ttrue;\n\t'
+        shmtext = shmtext + 'layers\n\t{\n\t'
+        shmtext = shmtext + 'Bottom\n\t\t{nSurfaceLayers\t3;}\n\t'
+        shmtext = shmtext + 'Left\n\t\t{nSurfaceLayers\t3;}\n\t'
+        shmtext = shmtext + 'Right\n\t\t{nSurfaceLayers\t3;}\n\t}\n\n\t'
+        shmtext = shmtext + 'expansionRatio\t1;\n\t'
+        shmtext = shmtext + 'finalLayerThickness\t0.3;\n\t'
+        shmtext = shmtext + 'minThickness\t0.1;\n\t'
+        shmtext = shmtext + 'nGrow\t0;\n\t'
 
         # Advanced settings for layer addition
-        shmtext = shmtext + 'featureAngle\t80;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'nRelaxIter\t3;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'nSmoothSurfaceNormals\t1;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'nSmoothNormals\t3;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'nSmoothThickness\t10;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'maxFaceThicknessRatio\t0.5;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'maxThicknessToMedialRatio\t0.3;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'minMedianAxisAngle\t130;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'nBufferCellsNoExtrude\t0;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'nLayerIter\t50;\n'  # noqa: PLR6104
-        shmtext = shmtext + '}\n\n'  # noqa: PLR6104
+        shmtext = shmtext + 'featureAngle\t80;\n\t'
+        shmtext = shmtext + 'nRelaxIter\t3;\n\t'
+        shmtext = shmtext + 'nSmoothSurfaceNormals\t1;\n\t'
+        shmtext = shmtext + 'nSmoothNormals\t3;\n\t'
+        shmtext = shmtext + 'nSmoothThickness\t10;\n\t'
+        shmtext = shmtext + 'maxFaceThicknessRatio\t0.5;\n\t'
+        shmtext = shmtext + 'maxThicknessToMedialRatio\t0.3;\n\t'
+        shmtext = shmtext + 'minMedianAxisAngle\t130;\n\t'
+        shmtext = shmtext + 'nBufferCellsNoExtrude\t0;\n\t'
+        shmtext = shmtext + 'nLayerIter\t50;\n'
+        shmtext = shmtext + '}\n\n'
 
         # Mesh quality settings
-        shmtext = shmtext + 'meshQualityControls\n{\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'maxNonOrtho\t180;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'maxBoundarySkewness\t20;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'maxInternalSkewness\t4;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'maxConcave\t80;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'minFlatness\t0.5;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'minVol\t1e-13;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'minTetQuality\t1e-30;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'minArea\t-1;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'minTwist\t0.02;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'minDeterminant\t0.001;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'minFaceWeight\t0.02;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'minVolRatio\t0.01;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'minTriangleTwist\t-1;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'nSmoothScale\t4;\n\t'  # noqa: PLR6104
-        shmtext = shmtext + 'errorReduction\t0.75;\n'  # noqa: PLR6104
-        shmtext = shmtext + '}\n\n'  # noqa: PLR6104
+        shmtext = shmtext + 'meshQualityControls\n{\n\t'
+        shmtext = shmtext + 'maxNonOrtho\t180;\n\t'
+        shmtext = shmtext + 'maxBoundarySkewness\t20;\n\t'
+        shmtext = shmtext + 'maxInternalSkewness\t4;\n\t'
+        shmtext = shmtext + 'maxConcave\t80;\n\t'
+        shmtext = shmtext + 'minFlatness\t0.5;\n\t'
+        shmtext = shmtext + 'minVol\t1e-13;\n\t'
+        shmtext = shmtext + 'minTetQuality\t1e-30;\n\t'
+        shmtext = shmtext + 'minArea\t-1;\n\t'
+        shmtext = shmtext + 'minTwist\t0.02;\n\t'
+        shmtext = shmtext + 'minDeterminant\t0.001;\n\t'
+        shmtext = shmtext + 'minFaceWeight\t0.02;\n\t'
+        shmtext = shmtext + 'minVolRatio\t0.01;\n\t'
+        shmtext = shmtext + 'minTriangleTwist\t-1;\n\t'
+        shmtext = shmtext + 'nSmoothScale\t4;\n\t'
+        shmtext = shmtext + 'errorReduction\t0.75;\n'
+        shmtext = shmtext + '}\n\n'
 
         # Advanced
-        shmtext = shmtext + 'debug\t0;\n'  # noqa: PLR6104
-        shmtext = shmtext + 'mergeTolerance\t1E-6;\n'  # noqa: PLR6104
+        shmtext = shmtext + 'debug\t0;\n'
+        shmtext = shmtext + 'mergeTolerance\t1E-6;\n'
 
         return shmtext  # noqa: DOC201, RET504
 
     #############################################################
-    def scripts(self, data, path):  # noqa: C901, PLR6301
+    def scripts(self, data, path):  # noqa: C901
         """Create the scripts for caserun.sh
 
         Arguments:
@@ -528,19 +528,19 @@ FoamFile
         # For the Hydro mesher
         if int(mesher[0]) == 0:
             caseruntext = 'echo blockMesh running...\n'
-            caseruntext = caseruntext + 'blockMesh > blockMesh.log\n\n'  # noqa: PLR6104
+            caseruntext = caseruntext + 'blockMesh > blockMesh.log\n\n'
             # surfaceFeatureExtract
-            caseruntext = caseruntext + 'echo surfaceFeatureExtract running...\n'  # noqa: PLR6104
-            caseruntext = (  # noqa: PLR6104
+            caseruntext = caseruntext + 'echo surfaceFeatureExtract running...\n'
+            caseruntext = (
                 caseruntext + 'surfaceFeatureExtract -force > sFeatureExt.log\n\n'
             )
             # snappyHexMesh
-            caseruntext = caseruntext + 'echo snappyHexMesh running...\n'  # noqa: PLR6104
-            caseruntext = caseruntext + 'snappyHexMesh > snappyHexMesh.log\n'  # noqa: PLR6104
+            caseruntext = caseruntext + 'echo snappyHexMesh running...\n'
+            caseruntext = caseruntext + 'snappyHexMesh > snappyHexMesh.log\n'
             # Copy polyMesh folder
             path2c = os.path.join('2', 'polyMesh')  # noqa: PTH118
             caseruntext = caseruntext + 'cp -r ' + path2c + ' constant\n'
-            caseruntext = caseruntext + 'rm -fr 1 2\n\n'  # noqa: PLR6104
+            caseruntext = caseruntext + 'rm -fr 1 2\n\n'
 
         elif int(mesher[0]) == 1:
             # Get the mesh software
@@ -561,24 +561,24 @@ FoamFile
             )
             # Write out the appropriate commands
             if int(meshsoftware[0]) == 0:
-                caseruntext = (  # noqa: PLR6104
+                caseruntext = (
                     caseruntext
                     + 'fluentMeshToFoam $MESHFILE > fluentMeshToFoam.log\n\n'
                 )
             elif int(meshsoftware[0]) == 1:
-                caseruntext = (  # noqa: PLR6104
+                caseruntext = (
                     caseruntext + 'ideasToFoam $MESHFILE > ideasToFoam.log\n\n'
                 )
             elif int(meshsoftware[0]) == 2:  # noqa: PLR2004
-                caseruntext = (  # noqa: PLR6104
+                caseruntext = (
                     caseruntext + 'cfx4ToFoam $MESHFILE > cfx4ToFoam.log\n\n'
                 )
             elif int(meshsoftware[0]) == 3:  # noqa: PLR2004
-                caseruntext = (  # noqa: PLR6104
+                caseruntext = (
                     caseruntext + 'gambitToFoam $MESHFILE > gambitToFoam.log\n\n'
                 )
             elif int(meshsoftware[0]) == 4:  # noqa: PLR2004
-                caseruntext = (  # noqa: PLR6104
+                caseruntext = (
                     caseruntext + 'gmshToFoam $MESHFILE > gmshToFoam.log\n\n'
                 )
 
@@ -590,16 +590,16 @@ FoamFile
             if os.path.isfile(bmfile):  # noqa: PTH113
                 bmfilenew = os.path.join('system', 'blockMeshDict')  # noqa: PTH118
                 caseruntext = caseruntext + 'cp ' + bmfile + ' ' + bmfilenew + '\n'
-                caseruntext = caseruntext + 'echo blockMesh running...\n'  # noqa: PLR6104
-                caseruntext = caseruntext + 'blockMesh > blockMesh.log\n\n'  # noqa: PLR6104
+                caseruntext = caseruntext + 'echo blockMesh running...\n'
+                caseruntext = caseruntext + 'blockMesh > blockMesh.log\n\n'
 
             # surfaceFeatureExtract
             sfdfile = os.path.join(path, 'surfaceFeatureExtractDict')  # noqa: PTH118
             if os.path.isfile(sfdfile):  # noqa: PTH113
                 sfdfilenew = os.path.join('system', 'surfaceFeatureExtractDict')  # noqa: PTH118
                 caseruntext = caseruntext + 'cp ' + sfdfile + ' ' + sfdfilenew + '\n'
-                caseruntext = caseruntext + 'echo surfaceFeatureExtract running...\n'  # noqa: PLR6104
-                caseruntext = (  # noqa: PLR6104
+                caseruntext = caseruntext + 'echo surfaceFeatureExtract running...\n'
+                caseruntext = (
                     caseruntext
                     + 'surfaceFeatureExtract -force > sFeatureExt.log\n\n'
                 )
@@ -609,23 +609,23 @@ FoamFile
             if os.path.isfile(shmfile):  # noqa: PTH113
                 shmfilenew = os.path.join('system', 'snappyHexMeshDict')  # noqa: PTH118
                 caseruntext = caseruntext + 'cp ' + shmfile + ' ' + shmfilenew + '\n'
-                caseruntext = caseruntext + 'echo snappyHexMesh running...\n'  # noqa: PLR6104
-                caseruntext = caseruntext + 'snappyHexMesh > snappyHexMesh.log\n'  # noqa: PLR6104
+                caseruntext = caseruntext + 'echo snappyHexMesh running...\n'
+                caseruntext = caseruntext + 'snappyHexMesh > snappyHexMesh.log\n'
                 path2c = os.path.join('2', 'polyMesh')  # noqa: PTH118
                 caseruntext = caseruntext + 'cp -r ' + path2c + ' constant\n'
-                caseruntext = caseruntext + 'rm -fr 1 2\n'  # noqa: PLR6104
+                caseruntext = caseruntext + 'rm -fr 1 2\n'
 
         # All other items
-        caseruntext = caseruntext + 'echo Checking mesh...\n'  # noqa: PLR6104
-        caseruntext = caseruntext + 'checkMesh > Meshcheck.log\n\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'echo Checking mesh...\n'
+        caseruntext = caseruntext + 'checkMesh > Meshcheck.log\n\n'
 
         # Create 0-folder
-        caseruntext = caseruntext + 'echo Creating 0-folder...\n'  # noqa: PLR6104
-        caseruntext = caseruntext + 'rm -fr 0\n'  # noqa: PLR6104
-        caseruntext = caseruntext + 'cp -r 0.org 0\n\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'echo Creating 0-folder...\n'
+        caseruntext = caseruntext + 'rm -fr 0\n'
+        caseruntext = caseruntext + 'cp -r 0.org 0\n\n'
 
         # Copy new force-based controldict
-        caseruntext = caseruntext + 'echo Copying force-based controlDict...\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'echo Copying force-based controlDict...\n'
         caseruntext = (
             caseruntext
             + 'cp cdictforce '
@@ -634,6 +634,6 @@ FoamFile
         )
 
         # Write to caserun file
-        scriptfile = open('caserun.sh', 'a')  # noqa: PLW1514, PTH123, SIM115
+        scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
         scriptfile.write(caseruntext)
         scriptfile.close()

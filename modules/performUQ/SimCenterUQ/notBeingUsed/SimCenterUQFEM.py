@@ -1,4 +1,4 @@
-# import functions for Python 2.X support  # noqa: CPY001, D100, INP001
+# import functions for Python 2.X support  # noqa: INP001, D100
 import os
 import sys
 
@@ -14,7 +14,7 @@ import argparse
 import platform
 import shutil
 import stat
-import subprocess  # noqa: S404
+import subprocess
 
 from preprocessJSON import preProcessDakota
 
@@ -30,7 +30,7 @@ def main(args):  # noqa: D103
     parser.add_argument('--filesWithEDP', nargs='*')
     parser.add_argument('--workdir')
 
-    args, unknowns = parser.parse_known_args()  # noqa: F841
+    args, unknowns = parser.parse_known_args()
 
     inputFile = args.workflowInput  # noqa: N806, F841
     runType = args.runType  # noqa: N806, F841

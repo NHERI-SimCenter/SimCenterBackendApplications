@@ -94,7 +94,7 @@ def create_stations(input_file, output_file, min_id, max_id):
         stn_file['Stations'].append(tmp)
     # Saving data to the output file
     if output_file:
-        with open(output_file, 'w') as f:  # noqa: PLW1514, PTH123
+        with open(output_file, 'w') as f:  # noqa: PTH123
             json.dump(stn_file, f, indent=2)
     # Returning the final run state
     return stn_file

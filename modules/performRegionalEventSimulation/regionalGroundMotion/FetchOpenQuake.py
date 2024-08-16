@@ -42,7 +42,7 @@ import logging
 import os
 import shutil
 import socket
-import subprocess  # noqa: S404
+import subprocess
 import sys
 import time
 
@@ -56,7 +56,7 @@ default_oq_version = '3.17.1'
 def openquake_config(site_info, scen_info, event_info, workDir):  # noqa: C901, N803, D103, PLR0912, PLR0915
     dir_input = os.path.join(workDir, 'Input')  # noqa: PTH118
     dir_output = os.path.join(workDir, 'Output')  # noqa: PTH118
-    import configparser  # noqa: PLC0415
+    import configparser
 
     cfg = configparser.ConfigParser()
     # general section
@@ -81,7 +81,7 @@ def openquake_config(site_info, scen_info, event_info, workDir):  # noqa: C901, 
         cfg['logic_tree'] = {
             'number_of_logic_tree_samples': 0
         }  # 0 here indicates full logic tree realization
-    elif scen_info['EqRupture']['Type'] in [  # noqa: PLR6201
+    elif scen_info['EqRupture']['Type'] in [
         'OpenQuakeUserConfig',
         'OpenQuakeClassicalPSHA-User',
     ]:
@@ -102,7 +102,7 @@ def openquake_config(site_info, scen_info, event_info, workDir):  # noqa: C901, 
         )
         return 0
 
-    if scen_info['EqRupture']['Type'] in [  # noqa: PLR1702, PLR6201
+    if scen_info['EqRupture']['Type'] in [
         'OpenQuakeUserConfig',
         'OpenQuakeClassicalPSHA-User',
     ]:
@@ -355,15 +355,15 @@ def openquake_config(site_info, scen_info, event_info, workDir):  # noqa: C901, 
 
     # Write the ini
     filename_ini = os.path.join(dir_input, 'oq_job.ini')  # noqa: PTH118
-    with open(filename_ini, 'w') as configfile:  # noqa: PLW1514, PTH123
+    with open(filename_ini, 'w') as configfile:  # noqa: PTH123
         cfg.write(configfile)
 
     # openquake module
     oq_ver_loaded = None
     try:
-        from importlib_metadata import version  # noqa: PLC0415
+        from importlib_metadata import version
     except:  # noqa: E722
-        from importlib.metadata import version  # noqa: PLC0415
+        from importlib.metadata import version
     if scen_info['EqRupture'].get('OQLocal', None):
         # using user-specific local OQ
         # first to validate the path
@@ -410,7 +410,7 @@ def openquake_config(site_info, scen_info, event_info, workDir):  # noqa: C901, 
                 # os.chdir(os.path.dirname(scen_info['EqRupture'].get('OQLocal')))
                 if 'openquake' in list(sys.modules.keys()):
                     sys.modules.pop('openquake')
-                from openquake import baselib  # noqa: PLC0415
+                from openquake import baselib
 
                 oq_ver_loaded = baselib.__version__
                 # sys.modules.pop('openquake')
@@ -571,17 +571,17 @@ def oq_run_classical_psha(  # noqa: C901
             # run.main([job_ini], exports=exports)
             # invoke/modify deeper openquake commands here to make it compatible with
             # the pylauncher on stampede2 for parallel runs...
-            from openquake.baselib import (  # noqa: PLC0415
+            from openquake.baselib import (
                 datastore,
                 general,
                 performance,
             )
-            from openquake.calculators import base  # noqa: PLC0415
+            from openquake.calculators import base
             from openquake.calculators.export.hazard import (  # noqa: PLC2701, PLC0415, RUF100
                 export_realizations,
             )
-            from openquake.commonlib import logs, readinput  # noqa: PLC0415
-            from openquake.server import dbserver  # noqa: PLC0415
+            from openquake.commonlib import logs, readinput
+            from openquake.server import dbserver
 
             dbserver.ensure_on()
             global calc_path
@@ -603,7 +603,7 @@ def oq_run_classical_psha(  # noqa: C901
             # disable gzip_input
             base.BaseCalculator.gzip_inputs = lambda self: None  # noqa: ARG005
             with performance.Monitor('total runtime', measuremem=True) as monitor:
-                if os.environ.get('OQ_DISTRIBUTE') not in ('no', 'processpool'):  # noqa: PLR6201
+                if os.environ.get('OQ_DISTRIBUTE') not in ('no', 'processpool'):
                     os.environ['OQ_DISTRIBUTE'] = 'processpool'
                 oqparam = readinput.get_oqparam(job_ini, hc_id=hc_id)
                 if hc_id and hc_id < 0:  # interpret negative calculation ids
@@ -611,7 +611,7 @@ def oq_run_classical_psha(  # noqa: C901
                     try:
                         hc_id = calc_ids[hc_id]
                     except IndexError:
-                        raise SystemExit(  # noqa: B904, DOC501
+                        raise SystemExit(  # noqa: B904
                             'There are %d old calculations, cannot '
                             'retrieve the %s' % (len(calc_ids), hc_id)
                         )
@@ -638,17 +638,17 @@ def oq_run_classical_psha(  # noqa: C901
             # run.main([job_ini], exports=exports)
             # invoke/modify deeper openquake commands here to make it compatible with
             # the pylauncher on stampede2 for parallel runs...
-            from openquake.baselib import (  # noqa: PLC0415
+            from openquake.baselib import (
                 datastore,
                 general,
                 performance,
             )
-            from openquake.calculators import base  # noqa: PLC0415
-            from openquake.calculators.export.hazard import (  # noqa: PLC0415
+            from openquake.calculators import base
+            from openquake.calculators.export.hazard import (
                 export_realizations,
             )
-            from openquake.commonlib import logs, readinput  # noqa: PLC0415
-            from openquake.server import dbserver  # noqa: PLC0415
+            from openquake.commonlib import logs, readinput
+            from openquake.server import dbserver
 
             dbserver.ensure_on()
             global calc_path
@@ -669,7 +669,7 @@ def oq_run_classical_psha(  # noqa: C901
             # disable gzip_input
             base.BaseCalculator.gzip_inputs = lambda self: None  # noqa: ARG005
             with performance.Monitor('total runtime', measuremem=True) as monitor:
-                if os.environ.get('OQ_DISTRIBUTE') not in ('no', 'processpool'):  # noqa: PLR6201
+                if os.environ.get('OQ_DISTRIBUTE') not in ('no', 'processpool'):
                     os.environ['OQ_DISTRIBUTE'] = 'processpool'
                 if 'hazard_calculation_id' in params:
                     hc_id = int(params['hazard_calculation_id'])
@@ -680,7 +680,7 @@ def oq_run_classical_psha(  # noqa: C901
                     try:
                         params['hazard_calculation_id'] = str(calc_ids[hc_id])
                     except IndexError:
-                        raise SystemExit(  # noqa: B904, DOC501, RUF100
+                        raise SystemExit(  # noqa: B904
                             'There are %d old calculations, cannot '
                             'retrieve the %s' % (len(calc_ids), hc_id)
                         )
@@ -704,13 +704,13 @@ def oq_run_classical_psha(  # noqa: C901
             # run.main([job_ini], exports=exports)
             # invoke/modify deeper openquake commands here to make it compatible with
             # the pylauncher on stampede2 for parallel runs...
-            from openquake.baselib import general, performance  # noqa: PLC0415
-            from openquake.calculators import base  # noqa: PLC0415
-            from openquake.calculators.export.hazard import (  # noqa: PLC0415
+            from openquake.baselib import general, performance
+            from openquake.calculators import base
+            from openquake.calculators.export.hazard import (
                 export_realizations,
             )
-            from openquake.commonlib import datastore, logs  # noqa: PLC0415
-            from openquake.server import dbserver  # noqa: PLC0415
+            from openquake.commonlib import datastore, logs
+            from openquake.server import dbserver
 
             dbserver.ensure_on()
             global calc_path  # noqa: PLW0602
@@ -786,8 +786,8 @@ def oq_h5clear(hdf5_file):  # noqa: D103
 
 def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):
     """Collect the UHS from a classical PSHA by OpenQuake"""  # noqa: D400
-    import glob  # noqa: PLC0415
-    import random  # noqa: PLC0415
+    import glob
+    import random
 
     # number of scenario
     num_scen = scen_info['Number']
@@ -866,17 +866,17 @@ class OpenQuakeHazardCalc:  # noqa: D101
         self.vtag = int(oq_version.split('.')[1])
         self.dir_info = dir_info
 
-        from openquake.baselib import (  # noqa: PLC0415
+        from openquake.baselib import (
             config,
         )
-        from openquake.commonlib import logs, readinput  # noqa: PLC0415
+        from openquake.commonlib import logs, readinput
 
         if self.vtag >= 12:  # noqa: PLR2004
-            from openquake.commonlib import datastore  # noqa: PLC0415
+            from openquake.commonlib import datastore
         else:
-            from openquake.baselib import datastore  # noqa: PLC0415
-        from openquake.calculators import base  # noqa: PLC0415
-        from openquake.server import dbserver  # noqa: PLC0415
+            from openquake.baselib import datastore
+        from openquake.calculators import base
+        from openquake.server import dbserver
 
         user_name = getpass.getuser()  # noqa: F841
 
@@ -957,13 +957,13 @@ class OpenQuakeHazardCalc:  # noqa: D101
 
     def run_calc(self):  # noqa: C901
         """Run a calculation and return results (reinvented from openquake.calculators.base)"""  # noqa: D400
-        from openquake.baselib import config, performance, zeromq  # noqa: PLC0415
-        from openquake.calculators import base, getters  # noqa: PLC0415
+        from openquake.baselib import config, performance, zeromq
+        from openquake.calculators import base, getters
 
         if self.vtag >= 11:  # noqa: PLR2004
-            from openquake.baselib import version  # noqa: PLC0415
+            from openquake.baselib import version
         else:
-            from openquake.baselib import __version__ as version  # noqa: PLC0415
+            from openquake.baselib import __version__ as version
 
         with self.calculator._monitor:  # noqa: SLF001
             self.calculator._monitor.username = ''  # noqa: SLF001
@@ -1066,7 +1066,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
                     config.dbserver.listen,
                     config.dbserver.receiver_ports,
                 )
-                skt = zeromq.Socket(rcvr, zeromq.zmq.PULL, 'bind').__enter__()  # noqa: PLC2801
+                skt = zeromq.Socket(rcvr, zeromq.zmq.PULL, 'bind').__enter__()
                 mon.backurl = 'tcp://%s:%s' % (config.dbserver.host, skt.port)  # noqa: UP031
                 mon = mon.new(
                     operation='total ' + self.calculator.core_task.__func__.__name__,
@@ -1091,17 +1091,17 @@ class OpenQuakeHazardCalc:  # noqa: D101
         # for args_tag in range(len(self.args)-1):
         # Looping over all source models (Note: the last attribute in self.args is a monitor - so skipping it)
 
-        from openquake.baselib import general  # noqa: PLC0415
-        from openquake.calculators import getters  # noqa: PLC0415
-        from openquake.commands import dbserver as cdbs  # noqa: PLC0415
-        from openquake.hazardlib import calc, const, gsim  # noqa: PLC0415
+        from openquake.baselib import general
+        from openquake.calculators import getters
+        from openquake.commands import dbserver as cdbs
+        from openquake.hazardlib import calc, const, gsim
 
         if self.vtag >= 12:  # noqa: PLR2004
-            from openquake.hazardlib.const import StdDev  # noqa: PLC0415
+            from openquake.hazardlib.const import StdDev
         if self.vtag >= 12:  # noqa: PLR2004
-            from openquake.commonlib import datastore  # noqa: PLC0415
+            from openquake.commonlib import datastore
         else:
-            from openquake.baselib import datastore  # noqa: PLC0415
+            from openquake.baselib import datastore
 
         cur_getter = getters.GmfGetter(
             self.args[0][0],
@@ -1115,7 +1115,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
 
         # Evaluate each computer
         print('FetchOpenQuake: Evaluating ground motion models.')  # noqa: T201
-        for computer in cur_getter.gen_computers(self.mon):  # noqa: PLR1702
+        for computer in cur_getter.gen_computers(self.mon):
             # Looping over rupture(s) in the current realization
             sids = computer.sids  # noqa: F841
             # print('eval_calc: site ID sids = ')
@@ -1146,7 +1146,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
                 for imti, imt in enumerate(computer.imts):
                     # Looping over IM(s)
                     # print('eval_calc: imt = ', imt)
-                    if str(imt) in ['PGA', 'PGV', 'PGD']:  # noqa: PLR6201
+                    if str(imt) in ['PGA', 'PGV', 'PGD']:
                         cur_T = [0.0]  # noqa: N806
                         im_list.append(str(imt))
                         imTag = 'ln' + str(imt)  # noqa: N806
@@ -1167,7 +1167,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
                                 # no standard deviation is available
                                 # for truncation_level = 0 there is only mean, no stds
                                 if computer.correlation_model:
-                                    raise ValueError(  # noqa: DOC501, TRY003, TRY301
+                                    raise ValueError(  # noqa: TRY003, TRY301
                                         'truncation_level=0 requires '  # noqa: EM101
                                         'no correlation model'
                                     )
@@ -1203,7 +1203,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
                                 # By default, we evaluate stddev_inter as the stddev_total
 
                                 if self.correlation_model:
-                                    raise CorrelationButNoInterIntraStdDevs(  # noqa: DOC501, TRY301
+                                    raise CorrelationButNoInterIntraStdDevs(  # noqa: TRY301
                                         self.correlation_model, gsim
                                     )
 
@@ -1275,7 +1275,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
                             dctx = computer.dctx.roundup(cur_gs.minimum_distance)
                             if computer.distribution is None:
                                 if computer.correlation_model:
-                                    raise ValueError(  # noqa: DOC501, RUF100, TRY003, TRY301
+                                    raise ValueError(  # noqa: TRY003, TRY301
                                         'truncation_level=0 requires '  # noqa: EM101
                                         'no correlation model'
                                     )
@@ -1295,7 +1295,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
                                 # of interest.
                                 # In this case, we also assume no correlation model is used.
                                 if computer.correlation_model:
-                                    raise CorrelationButNoInterIntraStdDevs(  # noqa: DOC501, RUF100, TRY301
+                                    raise CorrelationButNoInterIntraStdDevs(  # noqa: TRY301
                                         computer.correlation_model, cur_gs
                                     )
 
@@ -1371,7 +1371,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
                             dctx = computer.dctx.roundup(cur_gs.minimum_distance)
                             if computer.truncation_level == 0:
                                 if computer.correlation_model:
-                                    raise ValueError(  # noqa: DOC501, RUF100, TRY003, TRY301
+                                    raise ValueError(  # noqa: TRY003, TRY301
                                         'truncation_level=0 requires '  # noqa: EM101
                                         'no correlation model'
                                     )
@@ -1391,7 +1391,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
                                 # of interest.
                                 # In this case, we also assume no correlation model is used.
                                 if computer.correlation_model:
-                                    raise CorrelationButNoInterIntraStdDevs(  # noqa: DOC501, RUF100, TRY301
+                                    raise CorrelationButNoInterIntraStdDevs(  # noqa: TRY301
                                         computer.correlation_model, cur_gs
                                     )
 
@@ -1610,7 +1610,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
             # NB: dic should be a dictionary, but when the calculation dies
             # for an OOM it can become None, thus giving a very confusing error
             if dic is None:
-                raise MemoryError('You ran out of memory!')  # noqa: DOC501, EM101, TRY003
+                raise MemoryError('You ran out of memory!')  # noqa: EM101, TRY003
             rup_array = dic['rup_array']
             if len(rup_array) == 0:
                 continue
@@ -1628,7 +1628,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
                 hdf5.extend(self.calculator.datastore['rupgeoms'], rup_array.geom)  # noqa: F821
 
         if len(self.calculator.datastore['ruptures']) == 0:
-            raise RuntimeError(  # noqa: DOC501, TRY003
+            raise RuntimeError(  # noqa: TRY003
                 'No ruptures were generated, perhaps the '  # noqa: EM101
                 'investigation time is too short'
             )
@@ -1671,16 +1671,16 @@ def to_imt_unit_values(vals, imt):
 
 
 def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):  # noqa: C901, N803, D103
-    import json  # noqa: PLC0415
+    import json
 
-    from openquake.commonlib import readinput  # noqa: PLC0415
-    from openquake.hazardlib import nrml, site, sourceconverter  # noqa: PLC0415
-    from openquake.hazardlib.calc.filters import (  # noqa: PLC0415
+    from openquake.commonlib import readinput
+    from openquake.hazardlib import nrml, site, sourceconverter
+    from openquake.hazardlib.calc.filters import (
         SourceFilter,
         get_distances,
     )
-    from openquake.hazardlib.geo.mesh import Mesh, surface_to_arrays  # noqa: PLC0415
-    from openquake.hazardlib.geo.surface.base import BaseSurface  # noqa: PLC0415
+    from openquake.hazardlib.geo.mesh import Mesh, surface_to_arrays
+    from openquake.hazardlib.geo.surface.base import BaseSurface
 
     in_dir = os.path.join(work_dir, 'Input')  # noqa: PTH118
     outfile = os.path.join(work_dir, 'Output', 'RupFile.geojson')  # noqa: PTH118
@@ -1886,13 +1886,13 @@ def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):  # no
         print(  # noqa: T201
             f'The collected ruptures are sorted by MeanAnnualRate and saved in {outfile}'
         )
-        with open(outfile, 'w') as f:  # noqa: PLW1514, PTH123
+        with open(outfile, 'w') as f:  # noqa: PTH123
             json.dump(erf_data, f, indent=2)
 
 
 def get_site_rup_info_oq(source_info, siteList):  # noqa: N803, D103
-    from openquake.hazardlib import site  # noqa: PLC0415
-    from openquake.hazardlib.calc.filters import get_distances  # noqa: PLC0415
+    from openquake.hazardlib import site
+    from openquake.hazardlib.calc.filters import get_distances
 
     rup = source_info['rup']
     distToRupture = []  # noqa: N806, F841

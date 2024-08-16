@@ -1,4 +1,4 @@
-import argparse  # noqa: CPY001, D100, INP001
+import argparse  # noqa: INP001, D100
 import json
 import os
 import re
@@ -47,7 +47,7 @@ def ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime):  # noqa: N80
         forces.append(FloorForces())  # noqa: PERF401
     forcePattern = re.compile(r'\([0-9.e\+\-\s]+\)')  # noqa: N806
 
-    with open(buildingForcesPath) as forcesFile:  # noqa: N806, PLW1514, PTH123
+    with open(buildingForcesPath) as forcesFile:  # noqa: PTH123, N806
         forceLines = forcesFile.readlines()  # noqa: N806
         needsDeltaT = True  # noqa: N806
         for line in forceLines:
@@ -150,7 +150,7 @@ def writeEVENT(forces, deltaT):  # noqa: N802, N803
         )
         addFloorPressure(pressureArray, floor)
 
-    with open('EVENT.json', 'w') as eventsFile:  # noqa: N806, PLW1514, PTH123
+    with open('EVENT.json', 'w') as eventsFile:  # noqa: PTH123, N806
         json.dump(eventDict, eventsFile)
 
 
@@ -176,7 +176,7 @@ def GetOpenFOAMEvent(floorsCount, startTime):  # noqa: N802, N803
 
 
 def ReadBIM(BIMFilePath):  # noqa: N802, N803, D103
-    with open(BIMFilePath) as BIMFile:  # noqa: N806, PLW1514, PTH123
+    with open(BIMFilePath) as BIMFile:  # noqa: PTH123, N806
         bim = json.load(BIMFile)
 
     return [

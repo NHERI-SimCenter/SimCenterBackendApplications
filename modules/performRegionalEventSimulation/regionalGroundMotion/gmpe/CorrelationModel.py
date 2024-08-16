@@ -103,7 +103,7 @@ def baker_jayaram_correlation_2008(im1, im2, flag_orth=False):  # noqa: FBT002, 
         rho = C4
     # rho for orthogonal components Coefficient C1
     if flag_orth:
-        rho = rho * (0.79 - 0.023 * np.log(np.sqrt(Tmin * Tmax)))  # noqa: PLR6104
+        rho = rho * (0.79 - 0.023 * np.log(np.sqrt(Tmin * Tmax)))
 
     return rho
 
@@ -437,7 +437,7 @@ def markhvida_ceferino_baker_correlation_2017(  # noqa: C901
             elif cur_im.startswith('PGA'):
                 periods.append(0.0)
             else:
-                raise ValueError(  # noqa: DOC501, TRY003, TRY301
+                raise ValueError(  # noqa: TRY003, TRY301
                     f'CorrelationModel Markhvida et al. (2017): error - cannot handle {cur_im}'  # noqa: EM102
                 )
         except ValueError:  # noqa: PERF203
@@ -469,9 +469,9 @@ def markhvida_ceferino_baker_correlation_2017(  # noqa: C901
             loc_j = np.array([stations[j]['lat'], stations[j]['lon']])
             stn_dist[i, j] = get_distance_from_lat_lon(loc_i, loc_j)
     # Scaling variance if less than 19 principal components are used
-    c0 = c0 / MCB_var.iloc[0, num_pc - 1]  # noqa: PLR6104
-    c1 = c1 / MCB_var.iloc[0, num_pc - 1]  # noqa: PLR6104
-    c2 = c2 / MCB_var.iloc[0, num_pc - 1]  # noqa: PLR6104
+    c0 = c0 / MCB_var.iloc[0, num_pc - 1]
+    c1 = c1 / MCB_var.iloc[0, num_pc - 1]
+    c2 = c2 / MCB_var.iloc[0, num_pc - 1]
     # Creating a covariance matrices for each of the principal components
     covMatrix = np.zeros((num_stations, num_stations, num_pc))  # noqa: N806
     for i in range(num_pc):
@@ -606,9 +606,9 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
             loc_j = np.array([stations[j]['lat'], stations[j]['lon']])
             stn_dist[i, j] = get_distance_from_lat_lon(loc_i, loc_j)
     # Scaling variance if less than 23 principal components are used
-    c1 = c1 / DN_var.iloc[0, num_pc - 1]  # noqa: PLR6104
-    a1 = a1 / DN_var.iloc[0, num_pc - 1]  # noqa: PLR6104
-    a2 = a2 / DN_var.iloc[0, num_pc - 1]  # noqa: PLR6104
+    c1 = c1 / DN_var.iloc[0, num_pc - 1]
+    a1 = a1 / DN_var.iloc[0, num_pc - 1]
+    a2 = a2 / DN_var.iloc[0, num_pc - 1]
     # Creating a covariance matrices for each of the principal components
     covMatrix = np.zeros((num_stations, num_stations, num_pc))  # noqa: N806
     for i in range(num_pc):

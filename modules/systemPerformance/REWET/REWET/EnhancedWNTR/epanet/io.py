@@ -7,7 +7,7 @@
     InpFile
     BinFile
 s
-"""  # noqa: A005, CPY001
+"""
 
 import datetime
 import difflib
@@ -47,7 +47,7 @@ from wntrfr.network.controls import (
     SimTimeCondition,
     TimeOfDayCondition,
     ValueCondition,
-    _ControlType,  # noqa: PLC2701
+    _ControlType,
 )
 from wntrfr.network.elements import Junction, Pipe, Pump, Tank, Valve
 from wntrfr.network.model import (
@@ -126,7 +126,7 @@ def _split_line(line):
         pass
     elif len(_vc) == 1:
         _vals = _vc[0].split()
-    elif _vc[0] == '':  # noqa: PLC1901
+    elif _vc[0] == '':
         _cmnt = _vc[1]
     else:
         _vals = _vc[0].split()
@@ -191,7 +191,7 @@ def _str_time_to_sec(s):
             if bool(time_tuple):
                 return int(time_tuple.groups()[0]) * 60 * 60
             else:  # noqa: RET505
-                raise RuntimeError('Time format in ' 'INP file not recognized. ')  # noqa: DOC501, EM101, TRY003
+                raise RuntimeError('Time format in ' 'INP file not recognized. ')  # noqa: EM101, TRY003
 
 
 def _clock_time_to_sec(s, am_pm):  # noqa: C901
@@ -217,7 +217,7 @@ def _clock_time_to_sec(s, am_pm):  # noqa: C901
     elif am_pm.upper() == 'PM':
         am = False
     else:
-        raise RuntimeError('am_pm option not recognized; options are AM or PM')  # noqa: DOC501, EM101, TRY003
+        raise RuntimeError('am_pm option not recognized; options are AM or PM')  # noqa: EM101, TRY003
 
     pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     time_tuple = pattern1.search(s)
@@ -231,7 +231,7 @@ def _clock_time_to_sec(s, am_pm):  # noqa: C901
             time_sec -= 3600 * 12
         if not am:
             if time_sec >= 3600 * 12:
-                raise RuntimeError(  # noqa: DOC501, RUF100, TRY003
+                raise RuntimeError(  # noqa: TRY003
                     'Cannot specify am/pm for times greater than 12:00:00'  # noqa: EM101
                 )
             time_sec += 3600 * 12
@@ -248,7 +248,7 @@ def _clock_time_to_sec(s, am_pm):  # noqa: C901
                 time_sec -= 3600 * 12
             if not am:
                 if time_sec >= 3600 * 12:
-                    raise RuntimeError(  # noqa: DOC501, RUF100, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'Cannot specify am/pm for times greater than 12:00:00'  # noqa: EM101
                     )
                 time_sec += 3600 * 12
@@ -262,13 +262,13 @@ def _clock_time_to_sec(s, am_pm):  # noqa: C901
                     time_sec -= 3600 * 12
                 if not am:
                     if time_sec >= 3600 * 12:
-                        raise RuntimeError(  # noqa: DOC501, RUF100, TRY003
+                        raise RuntimeError(  # noqa: TRY003
                             'Cannot specify am/pm for times greater than 12:00:00'  # noqa: EM101
                         )
                     time_sec += 3600 * 12
                 return time_sec
             else:  # noqa: RET505
-                raise RuntimeError('Time format in ' 'INP file not recognized. ')  # noqa: DOC501, EM101, RUF100, TRY003
+                raise RuntimeError('Time format in ' 'INP file not recognized. ')  # noqa: EM101, TRY003
 
 
 def _sec_to_string(sec):
@@ -327,7 +327,7 @@ class InpFile:
         self.mass_units = None
         self.flow_units = None
 
-        for filename in inp_files:  # noqa: PLR1702
+        for filename in inp_files:
             section = None
             lnum = 0
             edata = {'fname': filename}
@@ -362,7 +362,7 @@ class InpFile:
                             section = None
                             break
                         else:
-                            raise RuntimeError(  # noqa: DOC501
+                            raise RuntimeError(
                                 '%(fname)s:%(lnum)d: Invalid section "%(sec)s"'
                                 % edata
                             )
@@ -371,7 +371,7 @@ class InpFile:
                         continue
                     elif section is None:
                         logger.debug('Found confusing line: %s', repr(line))
-                        raise RuntimeError(  # noqa: DOC501, RUF100
+                        raise RuntimeError(
                             '%(fname)s:%(lnum)d: Non-comment outside of valid section!'
                             % edata
                         )
@@ -491,7 +491,7 @@ class InpFile:
 
         """
         if not isinstance(wn, WaterNetworkModel):
-            raise ValueError('Must pass a WaterNetworkModel object')  # noqa: DOC501, EM101, TRY003, TRY004
+            raise ValueError('Must pass a WaterNetworkModel object')  # noqa: EM101, TRY003, TRY004
         if units is not None and isinstance(units, str):
             units = units.upper()
             self.flow_units = FlowUnits[units]
@@ -556,7 +556,7 @@ class InpFile:
             lines.append(line)
         self.wn.title = lines
 
-    def _write_title(self, f, wn):  # noqa: PLR6301
+    def _write_title(self, f, wn):
         if wn.name is not None:
             f.write(f'; Filename: {wn.name}\n'.encode(sys_default_enc))
             f.write(
@@ -1007,7 +1007,7 @@ class InpFile:
                     'The [VALVES] section of an INP file must have 6 or 7 entries.'  # noqa: EM101
                 )
             valve_type = current[4].upper()
-            if valve_type in ['PRV', 'PSV', 'PBV']:  # noqa: PLR6201
+            if valve_type in ['PRV', 'PSV', 'PBV']:
                 valve_set = to_si(
                     self.flow_units, float(current[5]), HydParam.Pressure
                 )
@@ -1065,7 +1065,7 @@ class InpFile:
             }
             valve_type = valve.valve_type
             formatter = _VALVE_ENTRY
-            if valve_type in ['PRV', 'PSV', 'PBV']:  # noqa: PLR6201
+            if valve_type in ['PRV', 'PSV', 'PBV']:
                 valve_set = from_si(
                     self.flow_units, valve.initial_setting, HydParam.Pressure
                 )
@@ -1236,7 +1236,7 @@ class InpFile:
                 )
             self.wn.options.hydraulic.pattern = None
 
-    def _write_patterns(self, f, wn):  # noqa: PLR6301
+    def _write_patterns(self, f, wn):
         num_columns = 6
         f.write('[PATTERNS]\n'.encode(sys_default_enc))
         f.write(
@@ -1270,7 +1270,7 @@ class InpFile:
                     )
                 elif current[1].upper() == 'PATTERN':
                     self.wn.options.energy.global_pattern = current[2]
-                elif current[1].upper() in ['EFFIC', 'EFFICIENCY']:  # noqa: PLR6201
+                elif current[1].upper() in ['EFFIC', 'EFFICIENCY']:
                     self.wn.options.energy.global_efficiency = float(current[2])
                 else:
                     logger.warning('Unknown entry in ENERGY section: %s', line)
@@ -1285,7 +1285,7 @@ class InpFile:
                     )
                 elif current[2].upper() == 'PATTERN':
                     pump.energy_pattern = current[3]
-                elif current[2].upper() in ['EFFIC', 'EFFICIENCY']:  # noqa: PLR6201
+                elif current[2].upper() in ['EFFIC', 'EFFICIENCY']:
                     curve_name = current[3]
                     curve_points = []
                     for point in self.curves[curve_name]:
@@ -1375,7 +1375,7 @@ class InpFile:
                 if isinstance(link, wntrfr.network.Valve):
                     new_status = LinkStatus.Active
                     valve_type = link.valve_type
-                    if valve_type in ['PRV', 'PSV', 'PBV']:  # noqa: PLR6201
+                    if valve_type in ['PRV', 'PSV', 'PBV']:
                         setting = to_si(
                             self.flow_units, float(current[1]), HydParam.Pressure
                         )
@@ -1395,7 +1395,7 @@ class InpFile:
                 link._user_status = new_status  # noqa: SLF001
                 link.initial_status = new_status
 
-    def _write_status(self, f, wn):  # noqa: PLR6301
+    def _write_status(self, f, wn):
         f.write('[STATUS]\n'.encode(sys_default_enc))
         f.write('{:10s} {:10s}\n'.format(';ID', 'Setting').encode(sys_default_enc))
 
@@ -1512,7 +1512,7 @@ class InpFile:
             control_action = all_control._then_actions[0]  # noqa: SLF001
 
             # Sina added this
-            if control_action._target_obj._is_isolated == True:  # noqa: E712, SLF001
+            if control_action._target_obj._is_isolated == True:  # noqa: SLF001, E712
                 continue
 
             if all_control.epanet_control_type is not _ControlType.rule:
@@ -1558,7 +1558,7 @@ class InpFile:
                     }
                     if vals['setting'] is None:
                         continue
-                    if all_control._condition._relation in [  # noqa: PLR6201, SLF001
+                    if all_control._condition._relation in [  # noqa: SLF001
                         np.less,
                         np.less_equal,
                         Comparison.le,
@@ -1618,7 +1618,7 @@ class InpFile:
 
                 # Sina added this end
 
-                if all_control.name == '':  # noqa: PLC1901
+                if all_control.name == '':
                     all_control._name = text  # noqa: SLF001
                 rule = _EpanetRule('blah', self.flow_units, self.mass_units)
                 rule.from_if_then_else(all_control)
@@ -1630,14 +1630,14 @@ class InpFile:
         has_been_read = set()
         for lnum, line in self.sections['[DEMANDS]']:  # noqa: B007
             ldata = line.split(';')
-            if len(ldata) > 1 and (ldata[1] != ''):  # noqa: PLC1901
+            if len(ldata) > 1 and (ldata[1] != ''):
                 category = ldata[1]
             else:
                 category = None
             current = ldata[0].split()
             if current == []:
                 continue
-            demand_num = demand_num + 1  # noqa: PLR6104
+            demand_num = demand_num + 1
             node = self.wn.get_node(current[0])
             if len(current) == 2:  # noqa: PLR2004
                 pattern = None
@@ -1666,11 +1666,11 @@ class InpFile:
         # nodes.sort()
         for node in nodes:
             # Sina added this
-            if wn.get_node(node)._is_isolated == True:  # noqa: E712, SLF001
+            if wn.get_node(node)._is_isolated == True:  # noqa: SLF001, E712
                 continue
             demands = wn.get_node(node).demand_timeseries_list
             if len(demands) > 1:
-                for ct, demand in enumerate(demands):  # noqa: B007, FURB148
+                for ct, demand in enumerate(demands):  # noqa: B007
                     cat = str(demand.category)
                     # if cat == 'EN2 base':
                     #    cat = ''
@@ -1943,7 +1943,7 @@ class InpFile:
             if current == []:
                 continue
             #            assert(len(current) >= 3), ("Error reading sources. Check format.")
-            source_num = source_num + 1  # noqa: PLR6104
+            source_num = source_num + 1
             if current[0].upper() == 'MASS':
                 strength = to_si(
                     self.flow_units,
@@ -2041,7 +2041,7 @@ class InpFile:
             elif key == 'LIFO':
                 tank.mixing_model = MixType.LIFO
 
-    def _write_mixing(self, f, wn):  # noqa: PLR6301
+    def _write_mixing(self, f, wn):
         f.write('[MIXING]\n'.encode(sys_default_enc))
         f.write(
             '{:20s} {:5s} {}\n'.format(';Tank ID', 'Model', 'Fraction').encode(
@@ -2056,9 +2056,9 @@ class InpFile:
                 # Sina added this
                 if tank._is_isolated == True:  # noqa: SLF001, E712
                     continue
-                if tank._mixing_model in [MixType.Mixed, MixType.Mix1, 0]:  # noqa: PLR6201, SLF001
+                if tank._mixing_model in [MixType.Mixed, MixType.Mix1, 0]:  # noqa: SLF001
                     f.write(f' {tank_name:19s} MIXED\n'.encode(sys_default_enc))
-                elif tank._mixing_model in [  # noqa: PLR6201, SLF001
+                elif tank._mixing_model in [  # noqa: SLF001
                     MixType.TwoComp,
                     MixType.Mix2,
                     '2comp',
@@ -2070,9 +2070,9 @@ class InpFile:
                             sys_default_enc
                         )
                     )
-                elif tank._mixing_model in [MixType.FIFO, 2]:  # noqa: PLR6201, SLF001
+                elif tank._mixing_model in [MixType.FIFO, 2]:  # noqa: SLF001
                     f.write(f' {tank_name:19s} FIFO\n'.encode(sys_default_enc))
-                elif tank._mixing_model in [MixType.LIFO, 3]:  # noqa: PLR6201, SLF001
+                elif tank._mixing_model in [MixType.LIFO, 3]:  # noqa: SLF001
                     f.write(f' {tank_name:19s} LIFO\n'.encode(sys_default_enc))
                 elif (
                     isinstance(tank._mixing_model, str)  # noqa: SLF001
@@ -2099,10 +2099,10 @@ class InpFile:
         edata = OrderedDict()
         wn = self.wn
         opts = wn.options
-        for lnum, line in self.sections['[OPTIONS]']:  # noqa: PLR1702
+        for lnum, line in self.sections['[OPTIONS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[OPTIONS]'
-            words, comments = _split_line(line)  # noqa: F841
+            words, comments = _split_line(line)
             if words is not None and len(words) > 0:
                 if len(words) < 2:  # noqa: PLR2004
                     edata['key'] = words[0]
@@ -2120,7 +2120,7 @@ class InpFile:
                     opts.hydraulic.hydraulics_filename = words[2]
                 elif key == 'QUALITY':
                     mode = words[1].upper()
-                    if mode in ['NONE', 'AGE']:  # noqa: PLR6201
+                    if mode in ['NONE', 'AGE']:
                         opts.quality.parameter = words[1].upper()
                     elif mode == 'TRACE':
                         opts.quality.parameter = 'TRACE'
@@ -2355,11 +2355,11 @@ class InpFile:
 
         # EPANET 2.2 OPTIONS
         if version == 2.0:  # noqa: PLR2004
-            if wn.options.hydraulic.demand_model in ['PDA', 'PDD']:  # noqa: PLR6201
+            if wn.options.hydraulic.demand_model in ['PDA', 'PDD']:
                 logger.critical(
                     'You have specified a PDD analysis using EPANET 2.0. This is not supported in EPANET 2.0. The analysis will default to DD mode.'
                 )
-        elif wn.options.hydraulic.demand_model in ['PDA', 'PDD']:  # noqa: PLR6201
+        elif wn.options.hydraulic.demand_model in ['PDA', 'PDD']:
             f.write(
                 '{:20s} {}\n'.format(
                     'DEMAND MODEL', wn.options.hydraulic.demand_model
@@ -2422,7 +2422,7 @@ class InpFile:
             ).encode(sys_default_enc)
         )
 
-        if wn.options.quality.parameter.upper() in ['NONE', 'AGE']:  # noqa: PLR6201
+        if wn.options.quality.parameter.upper() in ['NONE', 'AGE']:
             f.write(
                 entry_string.format('QUALITY', wn.options.quality.parameter).encode(
                     sys_default_enc
@@ -2521,7 +2521,7 @@ class InpFile:
                     else int(_str_time_to_sec(current[2])),
                 )
 
-    def _write_times(self, f, wn):  # noqa: PLR6301
+    def _write_times(self, f, wn):
         f.write('[TIMES]\n'.encode(sys_default_enc))
         entry = '{:20s} {:10s}\n'
         time_entry = '{:20s} {:02d}:{:02d}:{:02d}\n'
@@ -2606,7 +2606,7 @@ class InpFile:
             current = line.split()
             if current == []:
                 continue
-            if current[0].upper() in ['PAGE', 'PAGESIZE']:  # noqa: PLR6201
+            if current[0].upper() in ['PAGE', 'PAGESIZE']:
                 self.wn.options.report.pagesize = int(current[1])
             elif current[0].upper() == 'FILE':
                 self.wn.options.report.file = current[1]
@@ -2658,7 +2658,7 @@ class InpFile:
                     current[1].upper()
                 ] = float(current[2])
 
-    def _write_report(self, f, wn):  # noqa: C901, PLR6301
+    def _write_report(self, f, wn):  # noqa: C901
         f.write('[REPORT]\n'.encode(sys_default_enc))
         report = wn.options.report
         if report.status.upper() != 'NO':
@@ -2722,7 +2722,7 @@ class InpFile:
             node = self.wn.get_node(current[0])
             node.coordinates = (float(current[1]), float(current[2]))
 
-    def _write_coordinates(self, f, wn):  # noqa: PLR6301
+    def _write_coordinates(self, f, wn):
         f.write('[COORDINATES]\n'.encode(sys_default_enc))
         entry = '{:10s} {:20.9f} {:20.9f}\n'
         label = '{:10s} {:10s} {:10s}\n'
@@ -2747,7 +2747,7 @@ class InpFile:
             link = self.wn.get_link(link_name)
             link._vertices.append((float(current[1]), float(current[2])))  # noqa: SLF001
 
-    def _write_vertices(self, f, wn):  # noqa: PLR6301
+    def _write_vertices(self, f, wn):
         f.write('[VERTICES]\n'.encode(sys_default_enc))
         entry = '{:10s} {:20.9f} {:20.9f}\n'
         label = '{:10s} {:10s} {:10s}\n'
@@ -2772,7 +2772,7 @@ class InpFile:
             labels.append(line)
         self.wn._labels = labels  # noqa: SLF001
 
-    def _write_labels(self, f, wn):  # noqa: PLR6301
+    def _write_labels(self, f, wn):
         f.write('[LABELS]\n'.encode(sys_default_enc))
         if wn._labels is not None:  # noqa: SLF001
             for label in wn._labels:  # noqa: SLF001
@@ -2800,7 +2800,7 @@ class InpFile:
             elif key == 'OFFSET' and len(current) > 2:  # noqa: PLR2004
                 self.wn.options.graphics.offset = [current[1], current[2]]
 
-    def _write_backdrop(self, f, wn):  # noqa: PLR6301
+    def _write_backdrop(self, f, wn):
         if wn.options.graphics is not None:
             f.write('[BACKDROP]\n'.encode(sys_default_enc))
             if wn.options.graphics.dimensions is not None:
@@ -2842,7 +2842,7 @@ class InpFile:
             else:
                 continue
 
-    def _write_tags(self, f, wn):  # noqa: PLR6301
+    def _write_tags(self, f, wn):
         f.write('[TAGS]\n'.encode(sys_default_enc))
         entry = '{:10s} {:10s} {:10s}\n'
         label = '{:10s} {:10s} {:10s}\n'
@@ -2900,7 +2900,7 @@ class InpFile:
                 )
                 create_curve(name)
 
-    def _write_end(self, f, wn):  # noqa: ARG002, PLR6301
+    def _write_end(self, f, wn):  # noqa: ARG002
         f.write('[END]\n'.encode(sys_default_enc))
 
 
@@ -2936,7 +2936,7 @@ class _EpanetRule:
             line = line.split(';')[0]  # noqa: PLW2901
             words = line.strip().split()
             for word in words:
-                if word.upper() in [  # noqa: PLR6201
+                if word.upper() in [
                     'RULE',
                     'IF',
                     'THEN',
@@ -3016,7 +3016,7 @@ class _EpanetRule:
                     self.add_action_on_false(action, '  AND')
             self.set_priority(control._priority)  # noqa: SLF001
         else:
-            raise ValueError(  # noqa: DOC501, TRY004
+            raise ValueError(  # noqa: TRY004
                 'Invalid control type for rules: %s' % control.__class__.__name__  # noqa: UP031
             )
 
@@ -3056,7 +3056,7 @@ class _EpanetRule:
             val_si = condition._repr_value(attr, condition._threshold)  # noqa: SLF001
             if attr.lower() == 'demand':
                 value = f'{from_si(self.inp_units, val_si, HydParam.Demand):.6g}'
-            elif attr.lower() in ['head', 'level']:  # noqa: PLR6201
+            elif attr.lower() in ['head', 'level']:
                 value = (
                     f'{from_si(self.inp_units, val_si, HydParam.HydraulicHead):.6g}'
                 )
@@ -3066,7 +3066,7 @@ class _EpanetRule:
                 value = f'{from_si(self.inp_units, val_si, HydParam.Pressure):.6g}'
             elif attr.lower() == 'setting':
                 if isinstance(condition._source_obj, Valve):  # noqa: SLF001
-                    if condition._source_obj.valve_type.upper() in [  # noqa: PLR6201, SLF001
+                    if condition._source_obj.valve_type.upper() in [  # noqa: SLF001
                         'PRV',
                         'PBV',
                         'PSV',
@@ -3097,7 +3097,7 @@ class _EpanetRule:
             )
             self.add_if(clause)
         else:
-            raise ValueError('Unknown ControlCondition for EPANET Rules')  # noqa: DOC501, EM101, TRY003, TRY004
+            raise ValueError('Unknown ControlCondition for EPANET Rules')  # noqa: EM101, TRY003, TRY004
 
     def add_then(self, clause):
         """Add a "then/and" clause from an INP file"""  # noqa: D400
@@ -3111,7 +3111,7 @@ class _EpanetRule:
             val_si = action._repr_value()  # noqa: SLF001
             if attr.lower() == 'demand':
                 value = f'{from_si(self.inp_units, val_si, HydParam.Demand):.6g}'
-            elif attr.lower() in ['head', 'level']:  # noqa: PLR6201
+            elif attr.lower() in ['head', 'level']:
                 value = (
                     f'{from_si(self.inp_units, val_si, HydParam.HydraulicHead):.6g}'
                 )
@@ -3121,7 +3121,7 @@ class _EpanetRule:
                 value = f'{from_si(self.inp_units, val_si, HydParam.Pressure):.6g}'
             elif attr.lower() == 'setting':
                 if isinstance(action.target()[0], Valve):
-                    if action.target()[0].valve_type.upper() in [  # noqa: PLR6201
+                    if action.target()[0].valve_type.upper() in [
                         'PRV',
                         'PBV',
                         'PSV',
@@ -3159,7 +3159,7 @@ class _EpanetRule:
             val_si = action._repr_value()  # noqa: SLF001
             if attr.lower() == 'demand':
                 value = f'{from_si(self.inp_units, val_si, HydParam.Demand):.6g}'
-            elif attr.lower() in ['head', 'level']:  # noqa: PLR6201
+            elif attr.lower() in ['head', 'level']:
                 value = (
                     f'{from_si(self.inp_units, val_si, HydParam.HydraulicHead):.6g}'
                 )
@@ -3169,7 +3169,7 @@ class _EpanetRule:
                 value = f'{from_si(self.inp_units, val_si, HydParam.Pressure):.6g}'
             elif attr.lower() == 'setting':
                 if isinstance(action.target()[0], Valve):
-                    if action.target()[0].valve_type.upper() in [  # noqa: PLR6201
+                    if action.target()[0].valve_type.upper() in [
                         'PRV',
                         'PBV',
                         'PSV',
@@ -3262,18 +3262,18 @@ class _EpanetRule:
                     if isinstance(link, wntrfr.network.Pump):
                         value = value  # noqa: PLW0127
                     elif isinstance(link, wntrfr.network.Valve):
-                        if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:  # noqa: PLR6201
+                        if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
                             value = to_si(self.inp_units, value, HydParam.Pressure)
                         elif link.valve_type.upper() == 'FCV':
                             value = to_si(self.inp_units, value, HydParam.Flow)
-                if words[1].upper() in ['NODE', 'JUNCTION', 'RESERVOIR', 'TANK']:  # noqa: PLR6201
+                if words[1].upper() in ['NODE', 'JUNCTION', 'RESERVOIR', 'TANK']:
                     condition = ValueCondition(
                         model.get_node(words[2]),
                         words[3].lower(),
                         words[4].lower(),
                         value,
                     )
-                elif words[1].upper() in ['LINK', 'PIPE', 'PUMP', 'VALVE']:  # noqa: PLR6201
+                elif words[1].upper() in ['LINK', 'PIPE', 'PUMP', 'VALVE']:
                     condition = ValueCondition(
                         model.get_link(words[2]),
                         words[3].lower(),
@@ -3311,7 +3311,7 @@ class _EpanetRule:
             value = ValueCondition._parse_value(words[5])  # noqa: SLF001
             if attr.lower() == 'demand':
                 value = to_si(self.inp_units, value, HydParam.Demand)
-            elif attr.lower() in ['head', 'level']:  # noqa: PLR6201
+            elif attr.lower() in ['head', 'level']:
                 value = to_si(self.inp_units, value, HydParam.HydraulicHead)
             elif attr.lower() == 'flow':
                 value = to_si(self.inp_units, value, HydParam.Flow)
@@ -3319,7 +3319,7 @@ class _EpanetRule:
                 value = to_si(self.inp_units, value, HydParam.Pressure)
             elif attr.lower() == 'setting':
                 if isinstance(link, Valve):
-                    if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:  # noqa: PLR6201
+                    if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
                         value = to_si(self.inp_units, value, HydParam.Pressure)
                     elif link.valve_type.upper() == 'FCV':
                         value = to_si(self.inp_units, value, HydParam.Flow)
@@ -3335,7 +3335,7 @@ class _EpanetRule:
             value = ValueCondition._parse_value(words[5])  # noqa: SLF001
             if attr.lower() == 'demand':
                 value = to_si(self.inp_units, value, HydParam.Demand)
-            elif attr.lower() in ['head', 'level']:  # noqa: PLR6201
+            elif attr.lower() in ['head', 'level']:
                 value = to_si(self.inp_units, value, HydParam.HydraulicHead)
             elif attr.lower() == 'flow':
                 value = to_si(self.inp_units, value, HydParam.Flow)
@@ -3343,7 +3343,7 @@ class _EpanetRule:
                 value = to_si(self.inp_units, value, HydParam.Pressure)
             elif attr.lower() == 'setting':
                 if isinstance(link, Valve):
-                    if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:  # noqa: PLR6201
+                    if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
                         value = to_si(self.inp_units, value, HydParam.Pressure)
                     elif link.valve_type.upper() == 'FCV':
                         value = to_si(self.inp_units, value, HydParam.Flow)
@@ -3397,7 +3397,7 @@ class BinFile:
         statistics=False,  # noqa: FBT002
         convert_status=True,  # noqa: FBT002
     ):
-        if os.name in ['nt', 'dos'] or sys.platform == 'darwin':  # noqa: PLR6201
+        if os.name in ['nt', 'dos'] or sys.platform == 'darwin':
             self.ftype = '=f4'
         else:
             self.ftype = '=f4'
@@ -3433,7 +3433,7 @@ class BinFile:
         self.keep_energy = energy
         self.keep_statistics = statistics
 
-    def _get_time(self, t):  # noqa: PLR6301
+    def _get_time(self, t):
         s = int(t)
         h = int(s / 3600)
         s -= h * 3600
@@ -3491,7 +3491,7 @@ class BinFile:
         """
 
     #    @run_lineprofile()
-    def read(  # noqa: C901, PLR0914, PLR0915
+    def read(  # noqa: C901, PLR0915
         self,
         filename,
         convergence_error=False,  # noqa: FBT002
@@ -3576,7 +3576,7 @@ class BinFile:
                 np.fromfile(fin, dtype=dt_str, count=self.idlen)[:]
             ).decode(sys_default_enc)
             mass = wqunits.split('/', 1)[0]
-            if mass in ['mg', 'ug', 'mg', 'ug']:  # noqa: PLR6201
+            if mass in ['mg', 'ug', 'mg', 'ug']:
                 massunits = MassUnits[mass]
             else:
                 massunits = MassUnits.mg
@@ -3650,7 +3650,7 @@ class BinFile:
             )
             nrptsteps = len(reporttimes)
             statsN = nrptsteps  # noqa: N806, F841
-            if statsflag in [  # noqa: PLR6201
+            if statsflag in [
                 StatisticsType.Maximum,
                 StatisticsType.Minimum,
                 StatisticsType.Range,
@@ -3743,7 +3743,7 @@ class BinFile:
                         + self._get_time(t)
                         + '.'
                     )
-                    raise RuntimeError(  # noqa: DOC501
+                    raise RuntimeError(
                         'Simulation did not converge at time '
                         + self._get_time(t)
                         + '.'
@@ -3917,7 +3917,7 @@ class _InpFileDifferHelper:  # pragma: no cover
         f: str
 
         """  # noqa: D205
-        self._f = open(f)  # noqa: PLW1514, PTH123, SIM115
+        self._f = open(f)  # noqa: SIM115, PTH123
         self._num_lines = len(self._f.readlines())
         self._end = self._f.tell()
         self._f.seek(0)
@@ -3972,7 +3972,7 @@ class _InpFileDifferHelper:  # pragma: no cover
                     in_sec = False
                     break
         if start is None:
-            raise NoSectionError('Could not find section ' + sec)  # noqa: DOC501
+            raise NoSectionError('Could not find section ' + sec)
         if end is None:
             end = self._end
         return start, end
@@ -4125,12 +4125,12 @@ def _read_control_line(line, wn, flow_units, control_name):  # noqa: C901
         elif link.valve_type == 'GPV':
             setting = current[2]
         else:
-            raise ValueError(  # noqa: DOC501, TRY003
+            raise ValueError(  # noqa: TRY003
                 f'Unrecognized valve type {link.valve_type} while parsing control {line}'  # noqa: EM102
             )
         action_obj = wntrfr.network.ControlAction(link, 'setting', setting)
     else:
-        raise RuntimeError(  # noqa: DOC501
+        raise RuntimeError(
             f'Links of type {type(link)} can only have controls that change\n'  # noqa: ISC003
             + f'the link status. Control: {line}'
         )
@@ -4147,7 +4147,7 @@ def _read_control_line(line, wn, flow_units, control_name):  # noqa: C901
             elif current[6] == 'BELOW':
                 oper = np.less
             else:
-                raise RuntimeError(  # noqa: DOC501, RUF100
+                raise RuntimeError(
                     'The following control is not recognized: ' + line
                 )
             # OKAY - we are adding in the elevation. This is A PROBLEM
@@ -4169,14 +4169,14 @@ def _read_control_line(line, wn, flow_units, control_name):  # noqa: C901
                     node, 'level', oper, threshold, action_obj, control_name
                 )
         else:
-            raise RuntimeError('The following control is not recognized: ' + line)  # noqa: DOC501, RUF100
+            raise RuntimeError('The following control is not recognized: ' + line)
     #                control_name = ''
     #                for i in range(len(current)-1):
     #                    control_name = control_name + '/' + current[i]
     #                control_name = control_name + '/' + str(round(threshold, 2))
     elif 'CLOCKTIME' not in current:  # at time
         if 'TIME' not in current:
-            raise ValueError(f'Unrecognized line in inp file: {line}')  # noqa: DOC501, EM102, RUF100, TRY003
+            raise ValueError(f'Unrecognized line in inp file: {line}')  # noqa: EM102, TRY003
 
         if ':' in current[5]:
             run_at_time = int(_str_time_to_sec(current[5]))
@@ -4311,7 +4311,7 @@ def _diff_inp_files(  # noqa: C901
                 for i in range(n):  # noqa: B007
                     different_lines_1.append('')  # noqa: PERF401
             else:
-                raise RuntimeError('Unexpected')  # noqa: DOC501, EM101
+                raise RuntimeError('Unexpected')  # noqa: EM101
             continue
 
         section_line_counter = 0
@@ -4326,7 +4326,7 @@ def _diff_inp_files(  # noqa: C901
             line2 = _clean_line(wn, section, line2)
             if not _compare_lines(line1, line2, tol=float_tol):
                 if section_line_counter < max_diff_lines_per_section:
-                    section_line_counter = section_line_counter + 1  # noqa: PLR6104
+                    section_line_counter = section_line_counter + 1
                 else:
                     break
                 different_lines_1.append(orig_line_1)
@@ -4341,7 +4341,7 @@ def _diff_inp_files(  # noqa: C901
         ).transpose()
         html_diff = differ_df.to_html()
 
-    g = open(htmldiff_file, 'w')  # noqa: PLW1514, PTH123, SIM115
+    g = open(htmldiff_file, 'w')  # noqa: SIM115, PTH123
     g.write(html_diff)
     g.close()
 

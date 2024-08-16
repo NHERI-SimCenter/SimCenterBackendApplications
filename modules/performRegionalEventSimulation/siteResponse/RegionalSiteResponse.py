@@ -40,7 +40,7 @@ import argparse
 import json
 import os
 import shutil
-import subprocess  # noqa: S404
+import subprocess
 import sys
 from pathlib import Path
 
@@ -74,7 +74,7 @@ def runHazardSimulation(inputFILE):  # noqa: N802, N803, D103
     #
 
     print(f'inputFILE: {inputFILE}')  # noqa: T201
-    with open(inputFILE) as f:  # noqa: PLW1514, PTH123
+    with open(inputFILE) as f:  # noqa: PTH123
         inputJSON = json.load(f)  # noqa: N806
 
     #
@@ -137,7 +137,7 @@ def runHazardSimulation(inputFILE):  # noqa: N802, N803, D103
 
     srt = dict(units=unitData, outputs=outputs, Applications=Applications)  # noqa: C408
 
-    with open(srtFILE, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(srtFILE, 'w') as f:  # noqa: PTH123
         json.dump(srt, f, indent=2)
 
     #
@@ -206,7 +206,7 @@ def runHazardSimulation(inputFILE):  # noqa: N802, N803, D103
     regionalMappingAppData = regionalMappingApplication['ApplicationData']  # noqa: N806
     regionalMappingAppData['filenameEVENTgrid'] = f'{outputDir}/EventGrid.csv'
 
-    with open(inputFILE, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(inputFILE, 'w') as f:  # noqa: PTH123
         json.dump(inputJSON, f, indent=2)
 
     #

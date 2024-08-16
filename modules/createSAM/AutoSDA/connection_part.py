@@ -1,4 +1,4 @@
-# This file is used to define the class of beam-column connection, which includes beam/column depth  # noqa: CPY001, D100, INP001
+# This file is used to define the class of beam-column connection, which includes beam/column depth  # noqa: INP001, D100
 # check, RBS dimensions, moment capacity at column face, strong-column-weak-beam check, and panel zone
 # thickness (doubler plate)
 
@@ -181,7 +181,7 @@ class Connection:
                 bottom_column.section['section size']
             )
             if (
-                left_beam_depth <= 36  # noqa: PLR0916, PLR2004
+                left_beam_depth <= 36  # noqa: PLR2004
                 and right_beam_depth <= 36  # noqa: PLR2004
                 and left_beam_weight <= 300  # noqa: PLR2004
                 and right_beam_weight <= 300  # noqa: PLR2004

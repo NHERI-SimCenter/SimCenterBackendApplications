@@ -56,13 +56,13 @@ class CensusUtil:
         if state is None:
             error_msg = 'State value must be provided.'
             logger.error(error_msg)
-            raise Exception(error_msg)  # noqa: DOC501, TRY002
+            raise Exception(error_msg)  # noqa: TRY002
 
         if geo_type is not None:
             if county is None:
                 error_msg = 'State and county value must be provided when geo_type is provided.'
                 logger.error(error_msg)
-                raise Exception(error_msg)  # noqa: DOC501, RUF100, TRY002
+                raise Exception(error_msg)  # noqa: TRY002
 
         # Set up url for Census API
         base_url = f'https://api.census.gov/data/{year}/{data_source}'
@@ -100,7 +100,7 @@ class CensusUtil:
         if request_json.status_code != 200:  # noqa: PLR2004
             error_msg = 'Failed to download the data from Census API. Please check your parameters.'
             # logger.error(error_msg)
-            raise Exception(error_msg)  # noqa: DOC501, TRY002
+            raise Exception(error_msg)  # noqa: TRY002
 
         # Convert the requested json into pandas dataframe
 

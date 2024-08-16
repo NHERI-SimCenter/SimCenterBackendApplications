@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -71,7 +71,7 @@ class of7Uboundary:
         utext = self.Uheader()
 
         # Start the outside
-        utext = utext + 'boundaryField\n{\n'  # noqa: PLR6104
+        utext = utext + 'boundaryField\n{\n'
 
         # Loop over all patches
         for patchname in patches:
@@ -89,26 +89,26 @@ class of7Uboundary:
                 )
                 if int(Utype) == 103 or int(Utype) == 104:  # noqa: PLR2004
                     numMovWall += 1  # noqa: N806
-            utext = utext + self.Upatchtext(  # noqa: PLR6104
+            utext = utext + self.Upatchtext(
                 data, Utype, patchname, fipath, numMovWall
             )
 
         # Check for building and other building
-        utext = utext + '\tBuilding\n'  # noqa: PLR6104
-        utext = utext + self.Upatchtext(data, '301', 'Building', fipath, numMovWall)  # noqa: PLR6104
-        utext = utext + '\tOtherBuilding\n'  # noqa: PLR6104
-        utext = utext + self.Upatchtext(  # noqa: PLR6104
+        utext = utext + '\tBuilding\n'
+        utext = utext + self.Upatchtext(data, '301', 'Building', fipath, numMovWall)
+        utext = utext + '\tOtherBuilding\n'
+        utext = utext + self.Upatchtext(
             data, '301', 'OtherBuilding', fipath, numMovWall
         )
 
         # Close the outside
-        utext = utext + '}\n\n'  # noqa: PLR6104
+        utext = utext + '}\n\n'
 
         # Return the text for velocity BC
         return utext  # noqa: DOC201, RET504
 
     #############################################################
-    def Uheader(self):  # noqa: N802, PLR6301
+    def Uheader(self):  # noqa: N802
         """Creates the text for the header
 
         Variable
@@ -126,8 +126,8 @@ FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tvolVectorField;\n\tlocation\t"0";\n\tobject\tU;\n}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
-        header = header + 'dimensions\t[0 1 -1 0 0 0 0];\n\n'  # noqa: PLR6104
-        header = header + 'internalField\tuniform (0 0 0);\n\n'  # noqa: PLR6104
+        header = header + 'dimensions\t[0 1 -1 0 0 0 0];\n\n'
+        header = header + 'internalField\tuniform (0 0 0);\n\n'
 
         # Return the header for U file
         return header  # noqa: DOC201, RET504
@@ -156,10 +156,10 @@ FoamFile
         if int(Utype) == 101:  # noqa: PLR2004
             # SW solutions (1)
             Utext = '\t{\n\t\t'  # noqa: N806
-            Utext = Utext + 'type\ttimeVaryingMappedFixedValue;\n\t\t'  # noqa: N806, PLR6104
-            Utext = Utext + 'offset\t(0 0 0);\n\t\t'  # noqa: N806, PLR6104
-            Utext = Utext + 'setAverage\toff;\n'  # noqa: N806, PLR6104
-            Utext = Utext + '\t}\n'  # noqa: N806, PLR6104
+            Utext = Utext + 'type\ttimeVaryingMappedFixedValue;\n\t\t'  # noqa: N806
+            Utext = Utext + 'offset\t(0 0 0);\n\t\t'  # noqa: N806
+            Utext = Utext + 'setAverage\toff;\n'  # noqa: N806
+            Utext = Utext + '\t}\n'  # noqa: N806
 
         elif int(Utype) == 102:  # noqa: PLR2004
             # Inlet: constant velocity
@@ -185,7 +185,7 @@ FoamFile
 
             # Get the text
             Utext = '\t{\n\t\t'  # noqa: N806
-            Utext = Utext + 'type\tfixedValue;\n\t\t'  # noqa: N806, PLR6104
+            Utext = Utext + 'type\tfixedValue;\n\t\t'  # noqa: N806
             Utext = (  # noqa: N806
                 Utext
                 + 'value\t('
@@ -200,8 +200,8 @@ FoamFile
         elif int(Utype) == 103:  # noqa: PLR2004
             # Inlet Moving wall (OSU flume)
             Utext = '\t{\n\t\t'  # noqa: N806
-            Utext = Utext + 'type\tmovingWallVelocity;\n\t\t'  # noqa: N806, PLR6104
-            Utext = Utext + 'value\tuniform (0 0 0);\n\t}\n'  # noqa: N806, PLR6104
+            Utext = Utext + 'type\tmovingWallVelocity;\n\t\t'  # noqa: N806
+            Utext = Utext + 'value\tuniform (0 0 0);\n\t}\n'  # noqa: N806
             # Create the files required
             # Moving wall file
             # Get the displacement and waterheight file name
@@ -242,8 +242,8 @@ FoamFile
         elif int(Utype) == 104:  # noqa: PLR2004
             # Inlet Moving wall (Gen flume)
             Utext = '\t{\n\t\t'  # noqa: N806
-            Utext = Utext + 'type\tmovingWallVelocity;\n\t\t'  # noqa: N806, PLR6104
-            Utext = Utext + 'value\tuniform (0 0 0);\n\t}\n'  # noqa: N806, PLR6104
+            Utext = Utext + 'type\tmovingWallVelocity;\n\t\t'  # noqa: N806
+            Utext = Utext + 'value\tuniform (0 0 0);\n\t}\n'  # noqa: N806
             # Create the files required
             # Moving wall file
             # Get the displacement and waterheight file name
@@ -285,7 +285,7 @@ FoamFile
         elif int(Utype) == 201:  # noqa: PLR2004
             # Outlet zero gradient
             Utext = '\t{\n\t\t'  # noqa: N806
-            Utext = Utext + 'type\tzeroGradient;\n\t}\n'  # noqa: N806, PLR6104
+            Utext = Utext + 'type\tzeroGradient;\n\t}\n'  # noqa: N806
 
         elif int(Utype) == 202:  # noqa: PLR2004
             # Outlet: inletOutlet
@@ -311,7 +311,7 @@ FoamFile
 
             # Get the text
             Utext = '\t{\n\t\t'  # noqa: N806
-            Utext = Utext + 'type\tinletOutlet;\n\t\t'  # noqa: N806, PLR6104
+            Utext = Utext + 'type\tinletOutlet;\n\t\t'  # noqa: N806
             Utext = (  # noqa: N806
                 Utext
                 + 'inletValue\tuniform ('
@@ -332,23 +332,23 @@ FoamFile
                 + str(vz)
                 + ');\n'
             )
-            Utext = Utext + '\t}\n'  # noqa: N806, PLR6104
+            Utext = Utext + '\t}\n'  # noqa: N806
 
         elif int(Utype) == 301:  # noqa: PLR2004
             # Wall: noSlip
             Utext = '\t{\n\t\t'  # noqa: N806
-            Utext = Utext + 'type\tnoSlip;\n\t}\n'  # noqa: N806, PLR6104
+            Utext = Utext + 'type\tnoSlip;\n\t}\n'  # noqa: N806
 
         else:
             # Default: Empty
             Utext = '\t{\n\t\t'  # noqa: N806
-            Utext = Utext + 'type\tempty;\n\t}\n'  # noqa: N806, PLR6104
+            Utext = Utext + 'type\tempty;\n\t}\n'  # noqa: N806
 
         # Return the header for U file
         return Utext  # noqa: DOC201
 
     #############################################################
-    def Uchecks(self, data, fipath, patches):  # noqa: C901, N802, PLR6301
+    def Uchecks(self, data, fipath, patches):  # noqa: C901, N802
         """Creates the data files required for the OSU moving wall
 
         Arguments:
@@ -428,7 +428,7 @@ FoamFile
         return 0
 
     #############################################################
-    def of7wavemakerdict(self, fipath):  # noqa: PLR6301
+    def of7wavemakerdict(self, fipath):
         """Creates the wavemaker dictionary for the moving wall
 
         Arguments:
@@ -441,7 +441,7 @@ FoamFile
 
         # Get the file ID
         filepath = os.path.join(fipath, 'constant', 'wavemakerMovementDict')  # noqa: PTH118
-        fileID = open(filepath, 'w')  # noqa: N806, PLW1514, PTH123, SIM115
+        fileID = open(filepath, 'w')  # noqa: SIM115, PTH123, N806
         # Header
         header = hydroutil.of7header(
             'dictionary', 'constant', 'wavemakerMovementDict'
@@ -454,7 +454,7 @@ FoamFile
         fileID.close()
 
     #############################################################
-    def of7dynamicMeshdict(self, fipath):  # noqa: N802, PLR6301
+    def of7dynamicMeshdict(self, fipath):  # noqa: N802
         """Creates the dynamic mesh dictionary for the moving wall
 
         Arguments:
@@ -467,7 +467,7 @@ FoamFile
 
         # Get the file ID
         filepath = os.path.join(fipath, 'constant', 'dynamicMeshDict')  # noqa: PTH118
-        fileID = open(filepath, 'w')  # noqa: N806, PLW1514, PTH123, SIM115
+        fileID = open(filepath, 'w')  # noqa: SIM115, PTH123, N806
         # Header
         header = hydroutil.of7header('dictionary', 'constant', 'dynamicMeshDict')
         fileID.write(header)
@@ -480,7 +480,7 @@ FoamFile
         fileID.close()
 
     #############################################################
-    def OSUwavemakerText(self, fipath, dispfilepath, heightfilepath, numMovWall):  # noqa: ARG002, C901, N802, N803, PLR6301
+    def OSUwavemakerText(self, fipath, dispfilepath, heightfilepath, numMovWall):  # noqa: ARG002, C901, N802, N803
         """Creates the wavemaker text file for the OSU moving wall
 
         Arguments:
@@ -490,7 +490,7 @@ FoamFile
         """  # noqa: D400, D401
         # Get the file ID
         filepath = os.path.join(fipath, 'constant', 'wavemakerMovement.txt')  # noqa: PTH118
-        fileID = open(filepath, 'w')  # noqa: N806, PLW1514, PTH123, SIM115
+        fileID = open(filepath, 'w')  # noqa: SIM115, PTH123, N806
 
         # Start writing the file
         fileID.write('wavemakerType\tPiston;\n')
@@ -501,7 +501,7 @@ FoamFile
         # Get the frequency of the wavemaker
         frequency = 0
         waterdepth = 0
-        filewm = open(dispfilepath)  # noqa: PLW1514, PTH123, SIM115
+        filewm = open(dispfilepath)  # noqa: SIM115, PTH123
         Lines = filewm.readlines()  # noqa: N806
         count = 0
         for line in Lines:
@@ -521,18 +521,18 @@ FoamFile
 
         # Count the number of lines
         countlines = 0
-        with open(dispfilepath) as fdisp:  # noqa: PLW1514, PTH123
+        with open(dispfilepath) as fdisp:  # noqa: PTH123
             for line2 in fdisp:
                 if line2.strip():
                     countlines += 1
-        countlines = countlines - 72  # noqa: PLR6104
+        countlines = countlines - 72
 
         # Create the timeseries
         time = 0
         fileID.write('timeSeries\t' + str(countlines) + '(\n')
         for ii in range(countlines):  # noqa: B007
             fileID.write(str(time) + '\n')
-            time = time + frequency  # noqa: PLR6104
+            time = time + frequency
         fileID.write(');\n\n')
 
         # Create the paddle position
@@ -550,7 +550,7 @@ FoamFile
         if heightfilepath != 'None':
             # Write the paddle Eta
             fileID.write('paddleEta 1(\n' + str(countlines) + '(\n')
-            filewmg = open(heightfilepath)  # noqa: PLW1514, PTH123, SIM115
+            filewmg = open(heightfilepath)  # noqa: SIM115, PTH123
             Lines2 = filewmg.readlines()  # noqa: N806
             count = 0
             for line in Lines2:
@@ -562,7 +562,7 @@ FoamFile
             fileID.write(')\n);')
 
     #############################################################
-    def GenwavemakerText(self, fipath, dispfilepath, heightfilepath, numMovWall):  # noqa: ARG002, C901, N802, N803, PLR6301
+    def GenwavemakerText(self, fipath, dispfilepath, heightfilepath, numMovWall):  # noqa: ARG002, C901, N802, N803
         """Creates the wavemaker text file for a general moving wall
 
         Arguments:
@@ -572,7 +572,7 @@ FoamFile
         """  # noqa: D400, D401
         # Get the file ID
         filepath = os.path.join(fipath, 'constant', 'wavemakerMovement.txt')  # noqa: PTH118
-        fileID = open(filepath, 'w')  # noqa: N806, PLW1514, PTH123, SIM115
+        fileID = open(filepath, 'w')  # noqa: SIM115, PTH123, N806
 
         # Start writing the file
         fileID.write('wavemakerType\tPiston;\n')
@@ -581,7 +581,7 @@ FoamFile
 
         # Create the wavemaker movement file
         # Get the frequency of the wavemaker
-        filewm = open(dispfilepath)  # noqa: PLW1514, PTH123, SIM115
+        filewm = open(dispfilepath)  # noqa: SIM115, PTH123
         Lines = filewm.readlines()  # noqa: N806
         count = 0
         for line in Lines:
@@ -592,18 +592,18 @@ FoamFile
 
         # Count the number of lines
         countlines = 0
-        with open(dispfilepath) as fdisp:  # noqa: PLW1514, PTH123
+        with open(dispfilepath) as fdisp:  # noqa: PTH123
             for line2 in fdisp:
                 if line2.strip():
                     countlines += 1
-        countlines = countlines - 1  # noqa: PLR6104
+        countlines = countlines - 1
 
         # Create the timeseries
         time = 0
         fileID.write('timeSeries\t' + str(countlines) + '(\n')
         for ii in range(countlines):  # noqa: B007
             fileID.write(str(time) + '\n')
-            time = time + frequency  # noqa: PLR6104
+            time = time + frequency
         fileID.write(');\n\n')
 
         # Create the paddle position
@@ -620,7 +620,7 @@ FoamFile
         # Get the water depth and paddle eta
         if heightfilepath != 'None':
             # Get the height
-            filewmg = open(heightfilepath)  # noqa: PLW1514, PTH123, SIM115
+            filewmg = open(heightfilepath)  # noqa: SIM115, PTH123
             Lines2 = filewmg.readlines()  # noqa: N806
             count = 0
             for line in Lines2:

@@ -1,7 +1,7 @@
-#!/usr/bin/env python3  # noqa: CPY001, D100, EXE001
+#!/usr/bin/env python3  # noqa: EXE001, D100
 
 import os
-import subprocess  # noqa: S404
+import subprocess
 import sys
 
 # from pathlib import Path

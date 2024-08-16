@@ -1,7 +1,7 @@
 """Created on Sat Dec 26 03:22:21 2020
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, INP001
+"""  # noqa: INP001, D400
 
 import logging
 from collections import OrderedDict
@@ -13,7 +13,7 @@ from restoration.restorationlog import RestorationLog
 logger = logging.getLogger(__name__)
 
 
-class Registry:  # noqa: D101, PLR0904
+class Registry:  # noqa: D101
     def __init__(self, WaterNetwork, settings, demand_node_name_list, scenario_name):  # noqa: N803
         self._registry_version = 0.15
         self.wn = WaterNetwork
@@ -144,7 +144,7 @@ class Registry:  # noqa: D101, PLR0904
             orginal_pipe_name = self._pipe_damage_table.loc[
                 damage_node_name, 'Orginal_element'
             ]
-            time = time / 3600  # noqa: PLR6104
+            time = time / 3600
             temp_row = {
                 'time': time,
                 'pipe_name': orginal_pipe_name,
@@ -529,7 +529,7 @@ class Registry:  # noqa: D101, PLR0904
         i_break_not_zero_length = len(breaking_pipe_with_pipeA_orginal_pipe) > 0
 
         if i_leak_not_zero_length and i_break_not_zero_length:
-            raise ValueError(  # noqa: DOC501, TRY003
+            raise ValueError(  # noqa: TRY003
                 'There are more than 1 damage with original pipe name in pipe A. it does not make sense'  # noqa: EM101
             )
         if i_leak_not_zero_length:
@@ -582,7 +582,7 @@ class Registry:  # noqa: D101, PLR0904
             self._pipe_break_history.loc[node_name, 'Node_B'] = data['node_B']
 
         else:
-            raise ValueError('Undefined damage type')  # noqa: DOC501, EM101, RUF100, TRY003
+            raise ValueError('Undefined damage type')  # noqa: EM101, TRY003
 
     def addGeneralNodeDamageToRegistry(self, node_name, data=None):  # noqa: ARG002, N802, D102
         self._gnode_damage_table.loc[node_name, 'damage_type'] = None

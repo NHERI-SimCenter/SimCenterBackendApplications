@@ -1,7 +1,7 @@
 """Created on Thu Oct 27 19:00:30 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 import os
 import tempfile
@@ -50,10 +50,10 @@ class Simulation_Tab_Designer:  # noqa: D101
         )
 
     def getSimulationSettings(self):  # noqa: N802, D102
-        if self.result_folder_addr == '':  # noqa: PLC1901
+        if self.result_folder_addr == '':
             self.errorMSG('REWET', 'Result folder must be provided')
             return False
-        if self.temp_folder_addr == '':  # noqa: PLC1901
+        if self.temp_folder_addr == '':
             self.errorMSG('REWET', 'Temp folder must be provided')
             return False
 
@@ -122,7 +122,7 @@ class Simulation_Tab_Designer:  # noqa: D101
         directory = QtWidgets.QFileDialog.getExistingDirectory(
             self.asli_MainWindow, 'Select Directory'
         )
-        if directory == '':  # noqa: PLC1901
+        if directory == '':
             return
         self.result_folder_addr = directory
         self.result_folder_addr_line.setText(self.result_folder_addr)
@@ -131,7 +131,7 @@ class Simulation_Tab_Designer:  # noqa: D101
         directory = QtWidgets.QFileDialog.getExistingDirectory(
             self.asli_MainWindow, 'Select Directory'
         )
-        if directory == '':  # noqa: PLC1901
+        if directory == '':
             return
         self.temp_folder_addr = directory
         self.temp_folder_addr_line.setText(self.temp_folder_addr)

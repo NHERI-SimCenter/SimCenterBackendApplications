@@ -1,4 +1,4 @@
-# import of modules  # noqa: CPY001, D100, INP001
+# import of modules  # noqa: INP001, D100
 import types
 
 import numpy as np
@@ -135,7 +135,7 @@ class ERACond:
         if opt.upper() == 'PAR' or opt.upper() == 'MOM':
             self.Opt = opt.upper()
         else:
-            raise RuntimeError(  # noqa: DOC501, TRY003
+            raise RuntimeError(  # noqa: TRY003
                 'Conditional distributions can only be defined '  # noqa: EM101
                 "by moments (opt = 'MOM') or by parameters (opt = 'PAR')."
             )
@@ -146,7 +146,7 @@ class ERACond:
         if type(param) == types.LambdaType:  # noqa: E721
             self.Param = param
         else:
-            raise RuntimeError('The input param must be a lambda function.')  # noqa: DOC501, EM101, RUF100, TRY003
+            raise RuntimeError('The input param must be a lambda function.')  # noqa: EM101, TRY003
 
         self.modParam = param
 

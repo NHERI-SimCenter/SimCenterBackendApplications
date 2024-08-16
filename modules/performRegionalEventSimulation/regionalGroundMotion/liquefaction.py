@@ -1,4 +1,4 @@
-import os  # noqa: CPY001, D100, INP001
+import os  # noqa: INP001, D100
 import sys
 import warnings
 from enum import Enum
@@ -101,7 +101,7 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ARG00
             )
     except:  # noqa: E722
         print(  # noqa: T201
-            'The input CRS ({xy_crs}) defined for liquefaction triggering models is invalid. The CRS of vector files are used'  # noqa: RUF027
+            'The input CRS ({xy_crs}) defined for liquefaction triggering models is invalid. The CRS of vector files are used'
         )
     # if vector_gdf.crs != vector_crs:
     #     sys.exit(f"The CRS of vector file {vector_file_path} is {vector_gdf.crs}, and doesn't match the input CRS ({xy_crs}) defined for liquefaction triggering models")
@@ -122,7 +122,7 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ARG00
         vertices = hull.vertices
         vertices = sites[np.append(vertices, vertices[0])]
         centroid = np.mean(vertices, axis=0)
-        vertices = vertices + 0.05 * (vertices - centroid)  # noqa: PLR6104
+        vertices = vertices + 0.05 * (vertices - centroid)
         RoI = shapely.geometry.Polygon(vertices)  # noqa: N806
     except:  # noqa: E722
         centroid = shapely.geometry.Point(np.mean(x), np.mean(y))
@@ -155,7 +155,7 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ARG00
         data['geometry'].append(new_geom)
     del vector_gdf
     gdf_roi = gpd.GeoDataFrame(data, geometry='geometry', crs=4326)
-    geometry = list(starmap(shapely.geometry.Point, zip(x, y)))
+    geometry = [shapely.geometry.Point(lon, lat) for lon, lat in zip(x, y)]
     gdf_sites = gpd.GeoDataFrame(geometry=geometry, crs=4326).reset_index()
     merged = gpd.GeoDataFrame.sjoin(
         gdf_roi, gdf_sites, how='inner', predicate='contains'
@@ -349,7 +349,7 @@ class ZhuEtal2017(Liquefaction):
                     for i, key in enumerate(output_keys):
                         im_data_scen[:, len(im_list) + i, rlz_id] = model_output[key]
                 ln_im_data[scenario_id] = im_data_scen
-            im_list = im_list + output_keys  # noqa: PLR6104
+            im_list = im_list + output_keys
             additional_output = dict()  # noqa: C408
             for key in additional_output_keys:
                 item = getattr(self, key, None)
@@ -566,7 +566,7 @@ class Hazus2020(Liquefaction):
                     for i, key in enumerate(output_keys):
                         im_data_scen[:, len(im_list) + i, rlz_id] = model_output[key]
                 ln_im_data[scenario_id] = im_data_scen
-            im_list = im_list + output_keys  # noqa: PLR6104
+            im_list = im_list + output_keys
             additional_output = dict()  # noqa: C408
             for key in additional_output_keys:
                 item = getattr(self, key, None)
@@ -589,7 +589,7 @@ class Hazus2020(Liquefaction):
         mag,  # upstream PBEE RV
         gw_depth,  # geotechnical/geologic
         liq_susc,  # fixed/toggles
-        return_inter_params=False,  # to get intermediate params  # noqa: ARG004, FBT002
+        return_inter_params=False,  # to get intermediate params  # noqa: FBT002, ARG004
     ):
         """Model"""  # noqa: D400
         # zero prob_liq
@@ -917,7 +917,7 @@ class Hazus2020Lateral(LateralSpread):
                     for i, key in enumerate(output_keys):
                         im_data_scen[:, len(im_list) + i, rlz_id] = model_output[key]
                 ln_im_data[scenario_id] = im_data_scen
-            im_list = im_list + output_keys  # noqa: PLR6104
+            im_list = im_list + output_keys
         else:
             sys.exit(
                 "At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."
@@ -971,7 +971,7 @@ class Hazus2020Lateral(LateralSpread):
 
         # susceptibility to lateral spreading only for deposits found near water body (dw < dw_cutoff)
         pgdef = k_delta * expected_pgdef * prob_liq
-        pgdef = pgdef / 100  # also convert from cm to m  # noqa: PLR6104
+        pgdef = pgdef / 100  # also convert from cm to m
         pgdef[dist_water > 25] = 1e-5  # noqa: PLR2004
 
         # keep pgdef to minimum of 1e-5 m
@@ -1045,10 +1045,10 @@ class Hazus2020Vertical(GroundSettlement):
         pgdef[liq_susc == liq_susc_enum['none'].value] = 1e-3
 
         # condition with prob_liq
-        pgdef = pgdef * prob_liq  # noqa: PLR6104
+        pgdef = pgdef * prob_liq
 
         # convert from cm to m
-        pgdef = pgdef / 100  # noqa: PLR6104
+        pgdef = pgdef / 100
 
         # limit deformations to 1e-5
         pgdef = np.maximum(pgdef, 1e-5)
@@ -1086,7 +1086,7 @@ class Hazus2020Vertical(GroundSettlement):
                     for i, key in enumerate(output_keys):
                         im_data_scen[:, len(im_list) + i, rlz_id] = model_output[key]
                 ln_im_data[scenario_id] = im_data_scen
-            im_list = im_list + output_keys  # noqa: PLR6104
+            im_list = im_list + output_keys
         else:
             sys.exit(
                 "At least one of 'liq_susc' and 'liq_prob' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."

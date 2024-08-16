@@ -1,11 +1,11 @@
-# This python script process the input and will use it to run SHA and ground motion selection  # noqa: CPY001, D100, INP001
+# This python script process the input and will use it to run SHA and ground motion selection  # noqa: INP001, D100
 # In addition to providing the event file
 
 import glob
 import json
 import os
 import re
-import subprocess  # noqa: S404
+import subprocess
 import sys
 
 
@@ -93,7 +93,7 @@ def computeScenario(gmConfig, location):  # noqa: N802, N803, D103
 def readNGAWest2File(ngaW2FilePath, scaleFactor):  # noqa: N802, N803, D103
     series = []
     dt = 0.0
-    with open(ngaW2FilePath) as recordFile:  # noqa: N806, PLW1514, PTH123
+    with open(ngaW2FilePath) as recordFile:  # noqa: PTH123, N806
         canRead = False  # We need to process the header first  # noqa: N806
         for line in recordFile:
             if canRead:
@@ -201,7 +201,7 @@ def main():  # noqa: D103
     # We need to read the building location
 
     # Now we can start processing the event
-    with open('./HazardWorkDir/Records_Selection.json') as selectionFile:  # noqa: N806, PLW1514, PTH123
+    with open('./HazardWorkDir/Records_Selection.json') as selectionFile:  # noqa: PTH123, N806
         recordSelection = json.load(selectionFile)  # noqa: N806
 
     selectedRecord = recordSelection['GroundMotions'][0]  # noqa: N806

@@ -1,4 +1,4 @@
-# %%  # noqa: CPY001, D100, INP001
+# %%  # noqa: INP001, D100
 # required libraries numpy, geoandas,pandas,plotly
 import json
 import math
@@ -173,7 +173,7 @@ def getStations(information, plot=False, show=False):  # noqa: FBT002, C901, N80
             centerlon = (min_lon + max_lon) / 2
 
     if plot:
-        import plotly.express as px  # noqa: PLC0415
+        import plotly.express as px
 
         gdf['Color'] = gdf['Color'].replace(
             {'blue': 'All sites', 'red': 'Selected sites'}
@@ -207,7 +207,7 @@ def getStations(information, plot=False, show=False):  # noqa: FBT002, C901, N80
     gdf.drop(columns=['geometry', 'Color', 'Selected Site']).to_csv(
         'TapisFiles/selectedSites.csv', index=True
     )
-    json.dump(information, open('TapisFiles/information.json', 'w'), indent=2)  # noqa: PLW1514, PTH123, SIM115
+    json.dump(information, open('TapisFiles/information.json', 'w'), indent=2)  # noqa: SIM115, PTH123
     # fig.show()
 
 

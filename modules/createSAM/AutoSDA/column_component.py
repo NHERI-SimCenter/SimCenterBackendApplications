@@ -1,4 +1,4 @@
-# This file is used to define the class of column, which includes the axial, shear, and flexural strengths of column  # noqa: CPY001, D100, INP001
+# This file is used to define the class of column, which includes the axial, shear, and flexural strengths of column  # noqa: INP001, D100
 # Developed by GUAN, XINGQUAN @ UCLA in Apr. 2018
 # Updated in Oct. 2018
 
@@ -363,7 +363,7 @@ class Column:
         )
         self.plastic_hinge['theta_p'] = min(self.plastic_hinge['theta_p'], 0.20)
         # Pre-capping rotation is further revised to exclude the elastic deformation
-        self.plastic_hinge['theta_p'] = (  # noqa: PLR6104
+        self.plastic_hinge['theta_p'] = (
             self.plastic_hinge['theta_p']
             - (McMy - 1.0) * self.plastic_hinge['My'] / self.plastic_hinge['K0']
         )

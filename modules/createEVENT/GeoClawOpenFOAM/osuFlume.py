@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -53,7 +53,7 @@ class osuFlume:
     """  # noqa: D205, D400, D404
 
     #############################################################
-    def creategeom(self, data, path):  # noqa: ARG002, PLR6301
+    def creategeom(self, data, path):  # noqa: ARG002
         """Creates the geometry for OSU flume
 
         Arguments:
@@ -89,7 +89,7 @@ class osuFlume:
         filename = 'FlumeData.txt'
         if os.path.exists(filename):  # noqa: PTH110
             os.remove(filename)  # noqa: PTH107
-        f = open(filename, 'a')  # noqa: PLW1514, PTH123, SIM115
+        f = open(filename, 'a')  # noqa: SIM115, PTH123
         for ii in range(int(numflumepoints)):
             f.write(str(nums[2 * ii]) + ',' + str(nums[2 * ii + 1]) + '\n')
         f.close()
