@@ -87,7 +87,7 @@ def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):  # noqa: C901
                 else:
                     rups_requested.append(int(rups))
             rups_requested = np.array(rups_requested)
-            rups_requested = (  # noqa: PLR6104
+            rups_requested = (
                 rups_requested - 1
             )  # The input index starts from 1, not 0
             rups_available = list(range(num_scenarios))
@@ -108,7 +108,7 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):  # noqa: N802, N803, D1
     # Getting earthquake rupture forecast data
     source_type = scenario_info['EqRupture']['Type']
     try:
-        with open(rupFilePath) as f:  # noqa: PLW1514, PTH123
+        with open(rupFilePath) as f:  # noqa: PTH123
             user_scenarios = json.load(f)
     except:  # noqa: E722
         sys.exit(f'CreateScenario: source file {rupFilePath} not found.')
@@ -172,7 +172,7 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):  # noqa: N802, N803, D1
                         }
                     }
                 )
-                rupID = rupID + 1  # noqa: N806, PLR6104
+                rupID = rupID + 1  # noqa: N806
             except:  # noqa: PERF203, E722
                 print('Please check point-source inputs.')  # noqa: T201
     # return
@@ -189,19 +189,19 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
     # Reference location
     mlat = np.mean(lat)
     mlon = np.mean(lon)
-    import json  # noqa: PLC0415
+    import json
 
-    from openquake.commonlib import readinput  # noqa: PLC0415
-    from openquake.hazardlib import nrml, site, sourceconverter  # noqa: PLC0415
-    from openquake.hazardlib.calc.filters import (  # noqa: PLC0415
+    from openquake.commonlib import readinput
+    from openquake.hazardlib import nrml, site, sourceconverter
+    from openquake.hazardlib.calc.filters import (
         SourceFilter,
         get_distances,
     )
-    from openquake.hazardlib.geo.mesh import Mesh  # noqa: PLC0415
-    from openquake.hazardlib.geo.surface.base import BaseSurface  # noqa: PLC0415
+    from openquake.hazardlib.geo.mesh import Mesh
+    from openquake.hazardlib.geo.surface.base import BaseSurface
 
     try:
-        with open(rupFile) as f:  # noqa: PLW1514, PTH123
+        with open(rupFile) as f:  # noqa: PTH123
             user_scenarios = json.load(f)
     except:  # noqa: E722
         sys.exit(f'CreateScenario: source file {rupFile} not found.')
@@ -372,7 +372,7 @@ def load_earthquake_scenarios(scenario_info, stations, dir_info):  # noqa: D103
         dir_info.get('Input'), scenario_info.get('EqRupture').get('UserScenarioFile')
     )
     try:
-        with open(user_scenario_file) as f:  # noqa: PLW1514, PTH123
+        with open(user_scenario_file) as f:  # noqa: PTH123
             user_scenarios = json.load(f)
     except:  # noqa: E722
         print(f'CreateScenario: source file {user_scenario_file} not found.')  # noqa: T201
@@ -585,10 +585,10 @@ def create_earthquake_scenarios(  # noqa: C901, D103
             pointSource_data.update({'features': feature_collection})
             if outfile is not None:
                 print(f'The collected point source ruptures are saved in {outfile}')  # noqa: T201
-                with open(outfile, 'w') as f:  # noqa: PLW1514, PTH123
+                with open(outfile, 'w') as f:  # noqa: PTH123
                     json.dump(pointSource_data, f, indent=2)
         elif source_type == 'oqSourceXML':
-            import FetchOpenQuake  # noqa: PLC0415
+            import FetchOpenQuake
 
             siteFile = os.path.join(work_dir, 'Input', openquakeSiteFile)  # noqa: PTH118, N806
             FetchOpenQuake.export_rupture_to_json(
@@ -684,7 +684,7 @@ def create_wind_scenarios(scenario_info, stations, data_dir):  # noqa: D103
         df.to_csv(data_dir + 'z0r.csv', header=False, index=False)
         # Parsing storm properties
         param = []
-        param.append(scenario_info['Storm']['Landfall']['Latitude'])  # noqa: FURB113
+        param.append(scenario_info['Storm']['Landfall']['Latitude'])
         param.append(scenario_info['Storm']['Landfall']['Longitude'])
         param.append(scenario_info['Storm']['LandingAngle'])
         param.append(scenario_info['Storm']['Pressure'])

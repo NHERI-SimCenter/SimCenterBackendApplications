@@ -52,12 +52,12 @@ def ckdnearest(gdfA, gdfB, gdfB_cols=['pgv']):  # noqa: B006, N803, D103
     B = [np.array(geom.coords) for geom in gdfB.geometry.to_list()]  # noqa: N806
     B_ix = tuple(  # noqa: N806
         itertools.chain.from_iterable(
-            list(itertools.starmap(itertools.repeat, enumerate(list(map(len, B)))))
+            [itertools.repeat(i, x) for i, x in enumerate(list(map(len, B)))]
         )
     )
     B = np.concatenate(B)  # noqa: N806
     ckd_tree = cKDTree(B)
-    dist, idx = ckd_tree.query(A, k=1)  # noqa: F841
+    dist, idx = ckd_tree.query(A, k=1)
     idx = itemgetter(*idx)(B_ix)
     gdf = pd.concat([gdfA, gdfB.loc[idx, gdfB_cols].reset_index(drop=True)], axis=1)
     return gdf  # noqa: RET504
@@ -218,7 +218,7 @@ def get_bar_ranges(space):  # noqa: D103
 
 def get_failure_groups(fail_probs, min_thre=1e-3, num_groups=10):  # noqa: D103
     valid_fails = [fail_prob for fail_prob in fail_probs if fail_prob > min_thre]
-    count, space = np.histogram(valid_fails, num_groups)  # noqa: F841
+    count, space = np.histogram(valid_fails, num_groups)
     ranges = get_bar_ranges(space)
     return ranges  # noqa: RET504
 

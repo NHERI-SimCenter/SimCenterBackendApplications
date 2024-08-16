@@ -64,7 +64,7 @@ def readJSONFile(file_addr):  # noqa: N802
     if not os.path.exists(file_addr):  # noqa: PTH110
         raise ValueError('INPUT WHALE FILE is not found.', repr(file_addr))  # noqa: EM101, TRY003
 
-    with open(file_addr) as f:  # noqa: PLW1514, PTH123
+    with open(file_addr) as f:  # noqa: PTH123
         data = json.load(f)
 
     return data  # noqa: RET504
@@ -193,7 +193,7 @@ def save_scenario_table(scenario_table, scenario_table_file_path):
     elif isinstance(scenario_table, list):
         scenario_table = pd.DataFrame(scenario_table)
     else:
-        raise ValueError('This is an unknown behavior.')  # noqa: DOC501, EM101, TRY003, TRY004
+        raise ValueError('This is an unknown behavior.')  # noqa: EM101, TRY003, TRY004
 
     scenario_table = scenario_table.set_index('Scenario Name')
 
@@ -221,7 +221,7 @@ def saveSettingsFile(REWET_input_data, save_directory, prefix):  # noqa: N802, N
     else:
         settings_file_name = prefix + '_' + 'settings.json'
     damage_save_path = save_directory / settings_file_name
-    with open(damage_save_path, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(damage_save_path, 'w') as f:  # noqa: PTH123
         json.dump(settings, f, indent=4)
 
     return damage_save_path

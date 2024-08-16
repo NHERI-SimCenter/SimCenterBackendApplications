@@ -1,10 +1,10 @@
 """Created on Thu Oct 27 18:06:01 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 import os
-import pickle  # noqa: S403
+import pickle
 import sys
 
 from Input.Settings import Settings
@@ -80,7 +80,7 @@ class Opening_Designer(  # noqa: D101
         self.asli_MainWindow.show()
         sys.exit(self.asli_app.exec_())
 
-    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: D102, N802, PLR6301
+    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: N802, D102
         error_widget = QtWidgets.QMessageBox()
         error_widget.setIcon(QtWidgets.QMessageBox.Critical)
         error_widget.setText(error_msg)
@@ -90,7 +90,7 @@ class Opening_Designer(  # noqa: D101
             error_widget.setInformativeText(error_more_msg)
         error_widget.exec_()
 
-    def questionPrompt(self, title, msg, more_msg=None):  # noqa: D102, N802, PLR6301
+    def questionPrompt(self, title, msg, more_msg=None):  # noqa: N802, D102
         prompt_widget = QtWidgets.QMessageBox()
         prompt_widget.setIcon(QtWidgets.QMessageBox.Question)
         prompt_widget.setText(msg)
@@ -111,7 +111,7 @@ class Opening_Designer(  # noqa: D101
             self.current_project_directory,
             'REWET Project File (*.prj)',
         )
-        if file[0] == '':  # noqa: PLC1901
+        if file[0] == '':
             return
         split_addr = os.path.split(file[0])
         self.current_project_directory = split_addr
@@ -149,7 +149,7 @@ class Opening_Designer(  # noqa: D101
                     self.project_file_addr,
                     'Project file (*.prj)',
                 )
-                if file_addr[0] == '':  # noqa: PLC1901
+                if file_addr[0] == '':
                     return False
                 split_addr = os.path.split(file_addr[0])
                 self.current_project_directory = split_addr[0]
@@ -173,7 +173,7 @@ class Opening_Designer(  # noqa: D101
             self.project_file_addr,
             'Project file (*.prj)',
         )
-        if file_addr[0] == '':  # noqa: PLC1901
+        if file_addr[0] == '':
             return
         split_addr = os.path.split(file_addr[0])
         self.current_project_directory = split_addr[0]
@@ -184,7 +184,7 @@ class Opening_Designer(  # noqa: D101
         with open(self.project_file_addr, 'wb') as f:  # noqa: PTH123
             pickle.dump(project, f)
 
-    def showHelpWindow(self):  # noqa: D102, N802, PLR6301
+    def showHelpWindow(self):  # noqa: N802, D102
         help_window = Main_Help_Designer()
         help_window._window.exec_()  # noqa: SLF001
 

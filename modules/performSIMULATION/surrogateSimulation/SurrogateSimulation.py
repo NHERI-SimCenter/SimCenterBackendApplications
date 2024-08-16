@@ -114,7 +114,7 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ARG001, N802, N803
         root_AIM['Applications']['Simulation']['Application']
         != 'SurrogateRegionalPy'
     ):
-        with open('../workflow.err', 'w') as f:  # noqa: FURB103, PLW1514, PTH123
+        with open('../workflow.err', 'w') as f:  # noqa: PTH123
             f.write(
                 'Do not select [None] in the FEM tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'
             )

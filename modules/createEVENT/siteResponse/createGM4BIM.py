@@ -62,7 +62,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: N802,
     sites = []
 
     for site in siteFiles:
-        with open(site) as f:  # noqa: PLW1514, PTH123
+        with open(site) as f:  # noqa: PTH123
             All_json = json.load(f)  # noqa: N806
             generalInfo = All_json['GeneralInformation']  # noqa: N806
             Longitude.append(generalInfo['Longitude'])
@@ -79,7 +79,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: N802,
             siteEventFactors = []  # noqa: N806
 
             for workdir in workdirs:
-                head, sep, sampleID = workdir.partition('workdir.')  # noqa: F841, N806
+                head, sep, sampleID = workdir.partition('workdir.')  # noqa: N806
                 print(sampleID)  # noqa: T201
 
                 eventName = f'Event_{siteID}_{sampleID}.json'  # noqa: N806

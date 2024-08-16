@@ -1,4 +1,4 @@
-# JGA  # noqa: CPY001, D100, N999
+# JGA  # noqa: N999, D100
 # from matplotlib import pyplot as plt
 import os
 import platform
@@ -119,10 +119,10 @@ def K(eta, epsilon):  # noqa: N802
         for j in range(N):
             if j != i:
                 K[i, j] = kernel((eta[:, i]), (eta[:, j]), epsilon)
-                row_sum = row_sum + K[i, j]  # noqa: PLR6104
+                row_sum = row_sum + K[i, j]
             else:
                 K[i, j] = 1
-                row_sum = row_sum + 1  # noqa: PLR6104
+                row_sum = row_sum + 1
         b[i, i] = row_sum
     return K, b
 
@@ -154,7 +154,7 @@ def m(eigenvalues, tol=0.1):
     while i < len(eigenvalues) and m == 0:
         if eigenvalues[i] <= eigenvalues[1] * tol:
             return i + 1
-        i = i + 1  # noqa: PLR6104
+        i = i + 1
     if m == 0:
         return max(round(len(eigenvalues) / 10), 3)
     return m
@@ -184,7 +184,7 @@ def covariance(x):
     C = np.zeros((dim, dim))  # noqa: N806
     x_mean = mean(x)
     for i in range(N):
-        C = C + (np.resize(x[:, i], x_mean.shape) - x_mean).dot(  # noqa: N806, PLR6104
+        C = C + (np.resize(x[:, i], x_mean.shape) - x_mean).dot(  # noqa: N806
             np.transpose(np.resize(x[:, i], x_mean.shape) - x_mean)
         )
     return C / (N - 1)
@@ -197,8 +197,8 @@ def PCA(x, tol):  # noqa: N802
            [ 8.94427191e-01]]))
     """  # noqa: D205, D400
     x_mean = mean(x)
-    (phi, mu, v) = np.linalg.svd(x - x_mean)  # noqa: F841
-    mu = mu / sqrt(len(x[0]) - 1)  # noqa: PLR6104
+    (phi, mu, v) = np.linalg.svd(x - x_mean)
+    mu = mu / sqrt(len(x[0]) - 1)
     # plt.figure()
     # plt.plot(np.arange(len(mu)), mu)
     # plt.xlabel('# eigenvalue of X covariance')
@@ -207,13 +207,13 @@ def PCA(x, tol):  # noqa: N802
     i = 0
     errors = [1]
     while error > tol and i < len(mu):
-        error = error - (mu[i] ** 2) / sum(mu**2)  # noqa: PLR6104
-        i = i + 1  # noqa: PLR6104
+        error = error - (mu[i] ** 2) / sum(mu**2)
+        i = i + 1
         nu = i
         errors.append(error)
     while i < len(mu):
-        error = error - (mu[i] ** 2) / sum(mu**2)  # noqa: PLR6104
-        i = i + 1  # noqa: PLR6104
+        error = error - (mu[i] ** 2) / sum(mu**2)
+        i = i + 1
         errors.append(error)
     # plt.figure()
     # plt.semilogy(np.arange(len(mu)+1), errors)
@@ -283,7 +283,7 @@ def PCA2(C_h_hat_eta, beta, tol):  # noqa: N802, N803
     while i < len(lambda_c) and not (
         lambda_c[i - 1] > tol * lambda_c[0] and lambda_c[i] <= tol * lambda_c[0]
     ):
-        i = i + 1  # noqa: PLR6104
+        i = i + 1
         nu_c = i
     lambda_c = lambda_c[0:nu_c]
     psi = psi[:, 0:nu_c]
@@ -322,7 +322,7 @@ def solve_inverse(matrix):  # noqa: D103
         return inverse
 
 
-def generator(  # noqa: D103, PLR0913, PLR0917
+def generator(  # noqa: D103, PLR0913
     z_init,
     y_init,
     a,
@@ -433,7 +433,7 @@ def generator(  # noqa: D103, PLR0913, PLR0917
 
 
 def ac(sig):  # noqa: D103
-    sig = sig - np.mean(sig)  # noqa: PLR6104
+    sig = sig - np.mean(sig)
     sft = np.fft.rfft(np.concatenate((sig, 0 * sig)))
     return np.fft.irfft(np.conj(sft) * sft)
 
@@ -459,7 +459,7 @@ def L(  # noqa: N802, D103
         rho_ = rhoctypes(
             yl, np.resize(np.transpose(eta), (nu * N, 1)), nu, N, s_v, hat_s_v
         )
-        rho_ = 1e250 * rho_  # noqa: PLR6104
+        rho_ = 1e250 * rho_
         # compute the D_x_g_c if D_x_g_c is not 0 (KZ)
         if D_x_g_c:
             grad_g_c = D_x_g_c(
@@ -552,7 +552,7 @@ def gaussian_bell(x, y):  # noqa: D103
 
 
 def inv_c_0(lambda_i, eta, s_v, hat_s_v, g_c, phi, mu, psi, x_mean):  # noqa: D103
-    c, error = integrate.dblquad(  # noqa: F841
+    c, error = integrate.dblquad(
         func,
         -3,
         3,

@@ -1,7 +1,7 @@
 """Created on Thu Nov 10 18:29:50 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 import pandas as pd
 from PyQt5 import QtGui, QtWidgets
@@ -95,7 +95,7 @@ class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: D101
         if time_unit == 'second':
             pass
         elif time_unit == 'hour':
-            data.index = data.index / 3600  # noqa: PLR6104
+            data.index = data.index / 3600
         elif time_unit == 'day':
             data.index = data.index / 3600 / 24
         else:
@@ -495,7 +495,7 @@ class Result_Designer:  # noqa: D101
             self.project_file_addr,
             'Excel Workbook (*.xlsx)',
         )
-        if file_addr[0] == '':  # noqa: PLC1901
+        if file_addr[0] == '':
             return
 
         # self.current_curve_data[1].to_excel(file_addr[0])

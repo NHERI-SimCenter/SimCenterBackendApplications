@@ -1,7 +1,7 @@
 """Created on Sat Dec 26 02:00:40 2020
 
 @author: snaeimi
-"""  # noqa: CPY001, D400
+"""  # noqa: D400
 
 import logging
 

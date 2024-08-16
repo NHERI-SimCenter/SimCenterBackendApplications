@@ -1,4 +1,4 @@
-#!/usr/bin/env python  # noqa: CPY001, D100, EXE001
+#!/usr/bin/env python  # noqa: EXE001, D100
 import argparse
 import json
 import os
@@ -81,7 +81,7 @@ def AddBuildingsForces(floorsCount, patches):  # noqa: N802, N803
 
     # controlDictPath = os.path.join(caseDir, "system/controlDict")
     controlDictPath = 'system/controlDict'  # noqa: N806
-    with open(controlDictPath) as controlDict:  # noqa: N806, PLW1514, PTH123
+    with open(controlDictPath) as controlDict:  # noqa: PTH123, N806
         controlDictLines = controlDict.readlines()  # noqa: N806
 
     [isFound, lineIndex] = findFunctionsDictionary(controlDictLines)  # noqa: N806
@@ -96,12 +96,12 @@ def AddBuildingsForces(floorsCount, patches):  # noqa: N802, N803
     writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches)
 
     # Writing updated controlDict
-    with open(controlDictPath, 'w') as controlDict:  # noqa: N806, PLW1514, PTH123
+    with open(controlDictPath, 'w') as controlDict:  # noqa: PTH123, N806
         controlDict.writelines(controlDictLines)
 
 
 def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
-    with open(BIMFilePath) as BIMFile:  # noqa: N806, PLW1514, PTH123
+    with open(BIMFilePath) as BIMFile:  # noqa: PTH123, N806
         bim = json.load(BIMFile)
 
     return int(bim['GeneralInformation']['stories'])

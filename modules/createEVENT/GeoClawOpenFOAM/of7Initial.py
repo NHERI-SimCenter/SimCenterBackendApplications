@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -74,7 +74,7 @@ class of7Initial:
         if int(simtype) == 1:
             fname = 'SWAlpha.txt'
             swalphafile = os.path.join(fipath, fname)  # noqa: PTH118
-            with open(swalphafile) as f:  # noqa: PLW1514, PTH123
+            with open(swalphafile) as f:  # noqa: PTH123
                 gloalpha, localalpha, x1, y1, z1, x2, y2, z2 = (
                     float(x) for x in next(f).split(',')
                 )
@@ -86,8 +86,8 @@ class of7Initial:
                 + '\n);\n\n'
             )
 
-            alphatext = alphatext + 'regions\n(\n'  # noqa: PLR6104
-            alphatext = alphatext + '\tboxToCell\n\t{\n\t\t'  # noqa: PLR6104
+            alphatext = alphatext + 'regions\n(\n'
+            alphatext = alphatext + '\tboxToCell\n\t{\n\t\t'
             alphatext = (
                 alphatext
                 + 'box\t('
@@ -131,7 +131,7 @@ class of7Initial:
                 + '\n);\n\n'
             )
 
-            alphatext = alphatext + 'regions\n(\n'  # noqa: PLR6104
+            alphatext = alphatext + 'regions\n(\n'
 
             # Check for each alpha region
             for ii in range(int(numregs)):
@@ -147,7 +147,7 @@ class of7Initial:
                 # Convert the regions to list of floats
                 nums = [float(n) for n in regsegs.split()]
 
-                alphatext = alphatext + '\tboxToCell\n\t{\n\t\t'  # noqa: PLR6104
+                alphatext = alphatext + '\tboxToCell\n\t{\n\t\t'
                 alphatext = (
                     alphatext
                     + 'box\t('
@@ -171,12 +171,12 @@ class of7Initial:
                     + '\n\t\t);\n\t}\n\n'
                 )
 
-        alphatext = alphatext + '\n);'  # noqa: PLR6104
+        alphatext = alphatext + '\n);'
 
         return alphatext  # noqa: RET504
 
     #############################################################
-    def alphaheader(self):  # noqa: PLR6301
+    def alphaheader(self):
         """Creates the text for the header
 
         Variable
@@ -198,7 +198,7 @@ FoamFile
         return header  # noqa: RET504
 
     #############################################################
-    def alphacheck(self, data, fipath):  # noqa: PLR6301
+    def alphacheck(self, data, fipath):
         """Checks for initial conditions for openfoam7
 
         Arguments:
@@ -273,7 +273,7 @@ FoamFile
         return 0
 
     #############################################################
-    def scripts(self, data, path):  # noqa: ARG002, PLR6301
+    def scripts(self, data, path):  # noqa: ARG002
         """Create the scripts for caserun.sh
 
         Arguments:
@@ -284,9 +284,9 @@ FoamFile
         """  # noqa: D400
         # Setfields
         caseruntext = 'echo Setting fields...\n'
-        caseruntext = caseruntext + 'setFields > setFields.log\n\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'setFields > setFields.log\n\n'
 
         # Write to caserun file
-        scriptfile = open('caserun.sh', 'a')  # noqa: PLW1514, PTH123, SIM115
+        scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
         scriptfile.write(caseruntext)
         scriptfile.close()

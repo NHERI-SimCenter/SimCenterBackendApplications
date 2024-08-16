@@ -1,4 +1,4 @@
-import sys  # noqa: CPY001, D100, INP001
+import sys  # noqa: INP001, D100
 
 if sys.version.startswith('2'):
     range = xrange  # noqa: A001, F821
@@ -53,7 +53,7 @@ def write_RV(AIM_input_path, EDP_input_path, EDP_type):  # noqa: N802, N803, D10
         ],
     }
 
-    with open(EDP_input_path, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(EDP_input_path, 'w') as f:  # noqa: PTH123
         json.dump(EDP_json, f, indent=2)
 
 

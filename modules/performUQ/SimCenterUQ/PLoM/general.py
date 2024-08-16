@@ -1,4 +1,4 @@
-# Constants, variables, and methods that are commonly used  # noqa: CPY001, D100
+# Constants, variables, and methods that are commonly used  # noqa: D100
 
 import os
 from collections import Counter

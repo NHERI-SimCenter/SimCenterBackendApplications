@@ -1,7 +1,7 @@
 """Created on Tue Nov  1 18:32:32 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 from PyQt5 import QtGui, QtWidgets
 

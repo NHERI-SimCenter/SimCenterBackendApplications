@@ -1,7 +1,7 @@
 """This script writes BC and initial condition, and setups the OpenFoam case
 directory.
 
-"""  # noqa: CPY001, D205, D404, INP001
+"""  # noqa: INP001, D205, D404
 
 import json
 import os
@@ -66,11 +66,11 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):  # no
     length_unit = json_data['lengthUnit']
 
     if normalization_type == 'Relative':
-        Lx = Lx * H  # noqa: N806, PLR6104
-        Ly = Ly * H  # noqa: N806, PLR6104
-        Lz = Lz * H  # noqa: N806, PLR6104
-        Lf = Lf * H  # noqa: N806, PLR6104
-        origin = origin * H  # noqa: PLR6104
+        Lx = Lx * H  # noqa: N806
+        Ly = Ly * H  # noqa: N806
+        Lz = Lz * H  # noqa: N806
+        Lf = Lf * H  # noqa: N806
+        origin = origin * H
 
     x_min = -Lf - origin[0]
     y_min = -Ly / 2.0 - origin[1]
@@ -81,7 +81,7 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):  # no
     z_max = z_min + Lz
 
     # Open the template blockMeshDict (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/blockMeshDictTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/blockMeshDictTemplate')  # noqa: SIM115, PTH123
 
     # Export to OpenFOAM probe format
     dict_lines = dict_file.readlines()
@@ -129,7 +129,7 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):  # no
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
     for line in dict_lines:
         output_file.write(line)
 
@@ -177,7 +177,7 @@ def write_building_stl_file(input_json_path, case_path):  # noqa: C901, D103
     wind_dxn = geom_data['windDirection']
 
     if normalization_type == 'Relative':
-        origin = origin * H  # noqa: PLR6104
+        origin = origin * H
 
     wind_dxn_rad = np.deg2rad(wind_dxn)
     epsilon = 1.0e-5
@@ -200,7 +200,7 @@ def write_building_stl_file(input_json_path, case_path):  # noqa: C901, D103
 
     # The default coordinate system is building center.
     # Transform the preferred origin
-    vertices = vertices - origin  # noqa: PLR6104
+    vertices = vertices - origin
 
     # Transform transform the vertices to account the wind direction.
     trans_vertices = np.zeros((n_vertices, 3))
@@ -290,7 +290,7 @@ def import_building_stl_file(input_json_path, case_path):  # noqa: D103
     json_object = json.dumps(stl_summary, indent=4)
 
     # Writing to sample.json
-    with open(  # noqa: FURB103, PTH123
+    with open(  # noqa: PTH123
         input_json_path + '/stlGeometrySummary.json', 'w', encoding='utf-8'
     ) as outfile:
         outfile.write(json_object)
@@ -334,7 +334,7 @@ def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_pat
     building_stl_name = domain_data['buildingSTLName']
 
     # Open the template blockMeshDict (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/surfaceFeaturesDictTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/surfaceFeaturesDictTemplate')  # noqa: SIM115, PTH123
 
     # Export to OpenFOAM probe format
     dict_lines = dict_file.readlines()
@@ -350,7 +350,7 @@ def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_pat
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
     for line in dict_lines:
         output_file.write(line)
 
@@ -404,17 +404,17 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
     prism_layer_relative_size = 'on'
 
     if normalization_type == 'Relative':
-        Lx = Lx * H  # noqa: N806, PLR6104
-        Ly = Ly * H  # noqa: N806, PLR6104
-        Lz = Lz * H  # noqa: N806, PLR6104
-        Lf = Lf * H  # noqa: N806, PLR6104
-        origin = origin * H  # noqa: PLR6104
+        Lx = Lx * H  # noqa: N806
+        Ly = Ly * H  # noqa: N806
+        Lz = Lz * H  # noqa: N806
+        Lf = Lf * H  # noqa: N806
+        origin = origin * H
 
         for i in range(len(refinement_boxes)):
             for j in range(2, 8, 1):
-                refinement_boxes[i][j] = refinement_boxes[i][j] * H  # noqa: PLR6104
+                refinement_boxes[i][j] = refinement_boxes[i][j] * H
 
-        surface_refinement_distance = surface_refinement_distance * H  # noqa: PLR6104
+        surface_refinement_distance = surface_refinement_distance * H
 
     x_min = -Lf - origin[0]
     y_min = -Ly / 2.0 - origin[1]
@@ -427,7 +427,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
     inside_point = [x_min + Lf / 2.0, (y_min + y_max) / 2.0, H]
 
     # Open the template blockMeshDict (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/snappyHexMeshDictTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/snappyHexMeshDictTemplate')  # noqa: SIM115, PTH123
 
     # Export to OpenFOAM probe format
     dict_lines = dict_file.readlines()
@@ -573,7 +573,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
     for line in dict_lines:
         output_file.write(line)
 
@@ -601,7 +601,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: N802,
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/UFileTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/UFileTemplate')  # noqa: SIM115, PTH123
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -724,7 +724,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):  # noqa: D103
     top_BC_type = boundary_data['topBoundaryCondition']  # noqa: N806
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/pFileTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/pFileTemplate')  # noqa: SIM115, PTH123
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -799,7 +799,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):  # noqa: D103
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
     for line in dict_lines:
         output_file.write(line)
 
@@ -827,7 +827,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: D10
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/nutFileTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/nutFileTemplate')  # noqa: SIM115, PTH123
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -931,7 +931,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: D10
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
@@ -958,7 +958,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):  # noqa:
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/epsilonFileTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/epsilonFileTemplate')  # noqa: SIM115, PTH123
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1078,7 +1078,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):  # noqa:
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
 
     for line in dict_lines:
         output_file.write(line)
@@ -1107,7 +1107,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: D103
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/kFileTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/kFileTemplate')  # noqa: SIM115, PTH123
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1219,7 +1219,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: D103
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
     for line in dict_lines:
         output_file.write(line)
 
@@ -1256,7 +1256,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
     purge_write = 3
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/controlDictTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/controlDictTemplate')  # noqa: SIM115, PTH123
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1331,7 +1331,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
     for line in dict_lines:
         output_file.write(line)
 
@@ -1355,7 +1355,7 @@ def write_fvSolution_file(input_json_path, template_dict_path, case_path):  # no
     num_outer_correctors = ns_data['numOuterCorrectors']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/fvSolutionTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/fvSolutionTemplate')  # noqa: SIM115, PTH123
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1393,7 +1393,7 @@ def write_fvSolution_file(input_json_path, template_dict_path, case_path):  # no
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
     for line in dict_lines:
         output_file.write(line)
 
@@ -1424,7 +1424,7 @@ def write_generated_pressure_probes_file(  # noqa: D103
         pressure_write_interval = rm_data['pressureWriteInterval']
 
         # Open the template file (OpenFOAM file) for manipulation
-        dict_file = open(template_dict_path + '/probeTemplate')  # noqa: PLW1514, PTH123, SIM115
+        dict_file = open(template_dict_path + '/probeTemplate')  # noqa: SIM115, PTH123
 
         dict_lines = dict_file.readlines()
         dict_file.close()
@@ -1466,7 +1466,7 @@ def write_generated_pressure_probes_file(  # noqa: D103
         if os.path.exists(write_file_name):  # noqa: PTH110
             os.remove(write_file_name)  # noqa: PTH107
 
-        output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+        output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
         for line in dict_lines:
             output_file.write(line)
 
@@ -1479,7 +1479,7 @@ def write_imported_pressure_probes_file(  # noqa: D103
     case_path,
 ):
     # Read JSON data
-    with open(input_json_path + '/IsolatedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
+    with open(input_json_path + '/IsolatedBuildingCFD.json') as json_file:  # noqa: PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1495,7 +1495,7 @@ def write_imported_pressure_probes_file(  # noqa: D103
         pressure_write_interval = rm_data['pressureWriteInterval']
 
         # Open the template file (OpenFOAM file) for manipulation
-        dict_file = open(template_dict_path + '/probeTemplate')  # noqa: PLW1514, PTH123, SIM115
+        dict_file = open(template_dict_path + '/probeTemplate')  # noqa: SIM115, PTH123
 
         dict_lines = dict_file.readlines()
         dict_file.close()
@@ -1541,7 +1541,7 @@ def write_imported_pressure_probes_file(  # noqa: D103
         if os.path.exists(write_file_name):  # noqa: PTH110
             os.remove(write_file_name)  # noqa: PTH107
 
-        output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+        output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
         for line in dict_lines:
             output_file.write(line)
 
@@ -1567,7 +1567,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):  # n
     monitor_base_load = rm_data['monitorBaseLoad']  # noqa: F841
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/baseForcesTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/baseForcesTemplate')  # noqa: SIM115, PTH123
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1596,7 +1596,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):  # n
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
 
     for line in dict_lines:
         output_file.write(line)
@@ -1623,7 +1623,7 @@ def write_story_forces_file(input_json_path, template_dict_path, case_path):  # 
     monitor_base_load = rm_data['monitorBaseLoad']  # noqa: F841
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/storyForcesTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/storyForcesTemplate')  # noqa: SIM115, PTH123
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1660,7 +1660,7 @@ def write_story_forces_file(input_json_path, template_dict_path, case_path):  # 
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
 
     for line in dict_lines:
         output_file.write(line)
@@ -1684,7 +1684,7 @@ def write_momentumTransport_file(input_json_path, template_dict_path, case_path)
     DES_type = turb_data['DESModelType']  # noqa: N806
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/momentumTransportTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/momentumTransportTemplate')  # noqa: SIM115, PTH123
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1719,7 +1719,7 @@ def write_momentumTransport_file(input_json_path, template_dict_path, case_path)
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
     for line in dict_lines:
         output_file.write(line)
 
@@ -1739,7 +1739,7 @@ def write_physicalProperties_file(input_json_path, template_dict_path, case_path
     kinematic_viscosity = wc_data['kinematicViscosity']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/physicalPropertiesTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/physicalPropertiesTemplate')  # noqa: SIM115, PTH123
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1754,7 +1754,7 @@ def write_physicalProperties_file(input_json_path, template_dict_path, case_path
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
@@ -1773,7 +1773,7 @@ def write_transportProperties_file(input_json_path, template_dict_path, case_pat
     kinematic_viscosity = wc_data['kinematicViscosity']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/transportPropertiesTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/transportPropertiesTemplate')  # noqa: SIM115, PTH123
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1788,7 +1788,7 @@ def write_transportProperties_file(input_json_path, template_dict_path, case_pat
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
     for line in dict_lines:
         output_file.write(line)
 
@@ -1808,7 +1808,7 @@ def write_fvSchemes_file(input_json_path, template_dict_path, case_path):  # noq
     simulation_type = turb_data['simulationType']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + f'/fvSchemesTemplate{simulation_type}')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + f'/fvSchemesTemplate{simulation_type}')  # noqa: SIM115, PTH123
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1819,7 +1819,7 @@ def write_fvSchemes_file(input_json_path, template_dict_path, case_path):  # noq
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
     for line in dict_lines:
         output_file.write(line)
 
@@ -1828,7 +1828,7 @@ def write_fvSchemes_file(input_json_path, template_dict_path, case_path):  # noq
 
 def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):  # noqa: N802, D103
     # Read JSON data
-    with open(input_json_path + '/IsolatedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
+    with open(input_json_path + '/IsolatedBuildingCFD.json') as json_file:  # noqa: PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1837,7 +1837,7 @@ def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):
     num_processors = ns_data['numProcessors']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/decomposeParDictTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/decomposeParDictTemplate')  # noqa: SIM115, PTH123
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1860,7 +1860,7 @@ def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
     for line in dict_lines:
         output_file.write(line)
 
@@ -1869,7 +1869,7 @@ def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):
 
 def write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path):  # noqa: N802, D103
     # Read JSON data
-    with open(input_json_path + '/IsolatedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
+    with open(input_json_path + '/IsolatedBuildingCFD.json') as json_file:  # noqa: PTH123
         json_data = json.load(json_file)
 
     fMax = 200.0  # noqa: N806
@@ -1882,10 +1882,10 @@ def write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path):  # 
     duration = ns_data['duration']
 
     # Generate a little longer duration to be safe
-    duration = duration * 1.010  # noqa: PLR6104
+    duration = duration * 1.010
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/DFSRTurbDictTemplate')  # noqa: PLW1514, PTH123, SIM115
+    dict_file = open(template_dict_path + '/DFSRTurbDictTemplate')  # noqa: SIM115, PTH123
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1916,7 +1916,7 @@ def write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path):  # 
     if os.path.exists(write_file_name):  # noqa: PTH110
         os.remove(write_file_name)  # noqa: PTH107
 
-    output_file = open(write_file_name, 'w+')  # noqa: PLW1514, PTH123, SIM115
+    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
     for line in dict_lines:
         output_file.write(line)
 
@@ -1928,7 +1928,7 @@ def write_boundary_data_files(input_json_path, case_path):
     if TInf options are used for the simulation.
     """  # noqa: D205, D401, D404
     # Read JSON data
-    with open(input_json_path + '/IsolatedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
+    with open(input_json_path + '/IsolatedBuildingCFD.json') as json_file:  # noqa: PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1989,7 +1989,7 @@ if __name__ == '__main__':
     case_path = sys.argv[3]
 
     # Read JSON data
-    with open(input_json_path + '/IsolatedBuildingCFD.json') as json_file:  # noqa: PLW1514, PTH123
+    with open(input_json_path + '/IsolatedBuildingCFD.json') as json_file:  # noqa: PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary

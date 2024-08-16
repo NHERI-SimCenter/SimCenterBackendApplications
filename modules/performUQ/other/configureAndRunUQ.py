@@ -1,4 +1,4 @@
-# written: Michael Gardner @ UNR, Aakash Bangalore Satish @ UCB  # noqa: CPY001, D100, INP001
+# written: Michael Gardner @ UNR, Aakash Bangalore Satish @ UCB  # noqa: INP001, D100
 
 # Use the UQpy driver as a starting point if you want to add other UQ capabilities
 
@@ -36,7 +36,7 @@ def configureAndRunUQ(  # noqa: N802
             uqDriver = val['value']  # noqa: N806
 
     if uqDriver not in uqDriverOptions:
-        raise ValueError(  # noqa: DOC501
+        raise ValueError(
             'ERROR: configureAndRunUQ.py: UQ driver not recognized.'  # noqa: ISC003
             + ' Either input incorrectly or class to run UQ driver not'
             + ' implemented: ',

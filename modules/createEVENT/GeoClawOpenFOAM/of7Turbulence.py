@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -70,24 +70,24 @@ class of7Turbulence:
         )
 
         if int(turbmodel) == 0:
-            turbtext = turbtext + '\nsimulationType\tlaminar;\n'  # noqa: PLR6104
+            turbtext = turbtext + '\nsimulationType\tlaminar;\n'
         elif int(turbmodel) == 1:
-            turbtext = turbtext + 'simulationType\tRAS;\n\n'  # noqa: PLR6104
-            turbtext = turbtext + 'RAS\n{\n'  # noqa: PLR6104
-            turbtext = turbtext + '\tRASModel\tkEpsilon;\n'  # noqa: PLR6104
-            turbtext = turbtext + '\tturbulence\ton;\n'  # noqa: PLR6104
-            turbtext = turbtext + '\tprintCoeffs\ton;\n}\n'  # noqa: PLR6104
+            turbtext = turbtext + 'simulationType\tRAS;\n\n'
+            turbtext = turbtext + 'RAS\n{\n'
+            turbtext = turbtext + '\tRASModel\tkEpsilon;\n'
+            turbtext = turbtext + '\tturbulence\ton;\n'
+            turbtext = turbtext + '\tprintCoeffs\ton;\n}\n'
         elif int(turbmodel) == 2:  # noqa: PLR2004
-            turbtext = turbtext + 'simulationType\tRAS;\n\n'  # noqa: PLR6104
-            turbtext = turbtext + 'RAS\n{\n'  # noqa: PLR6104
-            turbtext = turbtext + '\tRASModel\tkOmegaSST;\n'  # noqa: PLR6104
-            turbtext = turbtext + '\tturbulence\ton;\n'  # noqa: PLR6104
-            turbtext = turbtext + '\tprintCoeffs\ton;\n}\n'  # noqa: PLR6104
+            turbtext = turbtext + 'simulationType\tRAS;\n\n'
+            turbtext = turbtext + 'RAS\n{\n'
+            turbtext = turbtext + '\tRASModel\tkOmegaSST;\n'
+            turbtext = turbtext + '\tturbulence\ton;\n'
+            turbtext = turbtext + '\tprintCoeffs\ton;\n}\n'
 
         return turbtext
 
     #############################################################
-    def turbheader(self):  # noqa: PLR6301
+    def turbheader(self):
         """Creates the text for the header
 
         Variable

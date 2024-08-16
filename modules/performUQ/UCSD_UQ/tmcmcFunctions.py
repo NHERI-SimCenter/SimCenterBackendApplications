@@ -1,7 +1,7 @@
 """authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, and Prof. J.P. Conte
 affiliation: University of California, San Diego
 
-"""  # noqa: CPY001, D205, D400, INP001
+"""  # noqa: INP001, D205, D400
 
 import numpy as np
 from runFEM import runFEM
@@ -18,7 +18,7 @@ def initial_population(N, p):  # noqa: N803, D103
 def log_prior(s, p):  # noqa: D103
     logP = 0  # noqa: N806
     for i in range(len(s)):
-        logP = logP + p[i].log_pdf_eval(s[i])  # noqa: N806, PLR6104
+        logP = logP + p[i].log_pdf_eval(s[i])  # noqa: N806
     return logP
 
 
@@ -117,7 +117,7 @@ def compute_beta_evidence_old(  # noqa: D103
 
 
 # MCMC
-def MCMC_MH_old(  # noqa: D103, N802, PLR0913, PLR0917
+def MCMC_MH_old(  # noqa: N802, D103, PLR0913
     ParticleNum,  # noqa: N803
     Em,  # noqa: N803
     Nm_steps,  # noqa: N803
@@ -204,7 +204,7 @@ def MCMC_MH_old(  # noqa: D103, N802, PLR0913, PLR0917
 
 
 # MCMC
-def MCMC_MH(  # noqa: D103, N802, PLR0913, PLR0917
+def MCMC_MH(  # noqa: N802, D103, PLR0913
     ParticleNum,  # noqa: N803
     Em,  # noqa: N803
     Nm_steps,  # noqa: N803
@@ -349,7 +349,7 @@ def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):  # noq
     weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
 
     while cov_weights > (threshold) or (std_weights == 0):
-        dBeta = dBeta * 0.99  # noqa: N806, PLR6104
+        dBeta = dBeta * 0.99  # noqa: N806
 
         # while (cov_weights > (threshold+0.00000005) or (std_weights == 0)):
         #     if ((cov_weights > (threshold+1.0)) or  (std_weights == 0)):
@@ -377,7 +377,7 @@ def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):  # noq
             break
         weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
 
-    beta = beta + dBeta  # noqa: PLR6104
+    beta = beta + dBeta
     if beta > 0.95:  # noqa: PLR2004
         beta = 1
     log_evidence = logsumexp(dBeta * log_likelihoods) - np.log(len(log_likelihoods))

@@ -1,4 +1,4 @@
-# import functions for Python 2.X support  # noqa: CPY001, D100, INP001
+# import functions for Python 2.X support  # noqa: INP001, D100
 import os
 import sys
 
@@ -14,7 +14,7 @@ import argparse
 import platform
 import shutil
 import stat
-import subprocess  # noqa: S404
+import subprocess
 
 import numpy as np
 from preprocessJSON import preProcessDakota
@@ -27,11 +27,11 @@ def main(args):  # noqa: D103
     if os.getenv('PEGASUS_WF_UUID') is not None:
         print('Pegasus job detected - Pegasus will set up the env')  # noqa: T201
     elif platform.system() == 'Darwin':
-        env['PATH'] = env['PATH'] + f':{home}/bin'  # noqa: PLR6104
-        env['PATH'] = env['PATH'] + f':{home}/dakota/bin'  # noqa: PLR6104
+        env['PATH'] = env['PATH'] + f':{home}/bin'
+        env['PATH'] = env['PATH'] + f':{home}/dakota/bin'
     elif platform.system() == 'Linux':
-        env['PATH'] = env['PATH'] + f':{home}/bin'  # noqa: PLR6104
-        env['PATH'] = env['PATH'] + f':{home}/dakota/dakota-6.5/bin'  # noqa: PLR6104
+        env['PATH'] = env['PATH'] + f':{home}/bin'
+        env['PATH'] = env['PATH'] + f':{home}/dakota/dakota-6.5/bin'
     elif platform.system() == 'Windows':
         pass
     else:
@@ -65,7 +65,7 @@ def main(args):  # noqa: D103
     parser.add_argument('--keepSamples', default='True')
     parser.add_argument('--runType')
 
-    args, unknowns = parser.parse_known_args()  # noqa: F841
+    args, unknowns = parser.parse_known_args()
 
     # Reading input arguments
     aimName = args.filenameBIM  # noqa: N806
@@ -89,7 +89,7 @@ def main(args):  # noqa: D103
         trainingMethod=args.trainingMethod,
         concurrency=args.concurrency,
         keepSamples=args.keepSamples
-        not in ['False', 'False', 'false', 'false', False],  # noqa: PLR6201
+        not in ['False', 'False', 'false', 'false', False],
     )
 
     runDakota = args.runType  # noqa: N806
