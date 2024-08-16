@@ -1,4 +1,4 @@
-#!/usr/bin/python  # noqa: CPY001, D100, EXE001
+#!/usr/bin/python  # noqa: EXE001, D100
 
 # written: fmk, adamzs 01/18
 
@@ -19,7 +19,7 @@ def process_results(inputArgs):  # noqa: N803, D103
     # process output file "node.out" for nodal displacements
     #
 
-    with open('node.out') as inFile:  # noqa: N806, PLW1514, PTH123
+    with open('node.out') as inFile:  # noqa: PTH123, N806
         line = inFile.readline()
         line = inFile.readline()
         line = inFile.readline()
@@ -30,7 +30,7 @@ def process_results(inputArgs):  # noqa: N803, D103
 
     # now process the input args and write the results file
 
-    outFile = open('results.out', 'w')  # noqa: N806, PLW1514, PTH123, SIM115
+    outFile = open('results.out', 'w')  # noqa: SIM115, PTH123, N806
 
     # note for now assuming no ERROR in user data
     for i in inputArgs:

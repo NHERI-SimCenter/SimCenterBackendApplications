@@ -12,7 +12,7 @@ model.
     NodeRegistry
     LinkRegistry
 
-"""  # noqa: CPY001, D205
+"""  # noqa: D205
 
 import logging
 import math
@@ -214,7 +214,7 @@ class WaterNetworkModel(WaterNetworkModel):
                 )
 
                 cd = node.leak_area * (2) ** 0.5  # (m^3ps/(KPa^0.5))
-                cd = cd / (0.145038**0.5)  # (gpm/(Psi^0.5))  # noqa: PLR6104
+                cd = cd / (0.145038**0.5)  # (gpm/(Psi^0.5))
                 # When writing to emitter, function from_si changes m^3ps to GPM
 
                 new_node._emitter_coefficient = cd  # noqa: SLF001
@@ -300,7 +300,7 @@ class WaterNetworkModel(WaterNetworkModel):
         for damage_node, row in broken_pipe_damage_table.iterrows():  # noqa: B007
             if registry.getPipeDamageAttribute('repair', damage_node) == True:  # noqa: E712
                 continue
-            pipe_A, pipe_B, orginal_pipe, node_A, node_B = registry.getBreakData(  # noqa: F841, N806
+            pipe_A, pipe_B, orginal_pipe, node_A, node_B = registry.getBreakData(  # noqa: N806
                 damage_node
             )
 

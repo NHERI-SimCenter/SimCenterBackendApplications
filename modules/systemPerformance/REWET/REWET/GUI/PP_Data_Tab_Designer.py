@@ -1,7 +1,7 @@
 """Created on Thu Dec 29 15:41:03 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 import os
 
@@ -93,7 +93,7 @@ class PP_Data_Tab:  # noqa: D101
             self.current_population_directory,
             'Excel file (*.xlsx);;CSV File (*.csv)',
         )
-        if file[0] == '':  # noqa: PLC1901
+        if file[0] == '':
             return
         split_addr = os.path.split(file[0])
         self.current_population_directory = split_addr[0]
@@ -130,7 +130,7 @@ class PP_Data_Tab:  # noqa: D101
             )
             return
 
-        if node_id_header == '' or population_header == '':  # noqa: PLC1901
+        if node_id_header == '' or population_header == '':
             self.errorMSG(
                 'Error',
                 'Node ID Header or/and Population Header is not selected. Maybe an empty population file?',
@@ -147,7 +147,7 @@ class PP_Data_Tab:  # noqa: D101
             self.population_data, node_id_header, population_header
         )
 
-    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: D102, N802, PLR6301
+    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: N802, D102
         error_widget = QtWidgets.QMessageBox()
         error_widget.setIcon(QtWidgets.QMessageBox.Critical)
         error_widget.setText(error_msg)

@@ -1,4 +1,4 @@
-import argparse  # noqa: CPY001, D100, INP001
+import argparse  # noqa: INP001, D100
 import json
 import sys
 

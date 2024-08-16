@@ -44,7 +44,7 @@
 import copy
 import json
 import os
-import pickle  # noqa: S403
+import pickle
 import random
 import sys
 import time
@@ -79,7 +79,7 @@ except:  # noqa: E722
     print('Failed to import module:' + moduleName)  # noqa: T201
 
 errFileName = 'dakota.err'  # noqa: N816
-sys.stderr = open(errFileName, 'w')  # noqa: PLW1514, PTH123, SIM115
+sys.stderr = open(errFileName, 'w')  # noqa: SIM115, PTH123
 
 
 #
@@ -112,7 +112,7 @@ if error_tag == False:  # noqa: E712
             if p is not None
         ]
         unfixlist = np.ones((self.size,), dtype=bool)
-        from paramz.transformations import __fixed__  # noqa: PLC0415
+        from paramz.transformations import __fixed__
 
         unfixlist[self.constraints[__fixed__]] = False
         self.param_array.flat[unfixlist] = x.view(np.ndarray).ravel()[unfixlist]
@@ -492,8 +492,8 @@ class surrogate(UQengine):  # noqa: D101
         self.rvDiscIdx = []
         for nx in range(x_dim):
             rvInfo = dakotaJson['randomVariables'][nx]  # noqa: N806
-            self.rvName = self.rvName + [rvInfo['name']]  # noqa: PLR6104, RUF005
-            self.rvDist = self.rvDist + [rvInfo['distribution']]  # noqa: PLR6104, RUF005
+            self.rvName = self.rvName + [rvInfo['name']]  # noqa: RUF005
+            self.rvDist = self.rvDist + [rvInfo['distribution']]  # noqa: RUF005
             if self.modelInfoHF.is_model:
                 if rvInfo['distribution'] == 'Uniform':
                     self.rvVal += [(rvInfo['upperbound'] + rvInfo['lowerbound']) / 2]
@@ -504,7 +504,7 @@ class surrogate(UQengine):  # noqa: D101
                     self.rvDiscIdx = [nx]
 
             elif self.modelInfoHF.is_data:
-                self.rvVal = self.rvVal + [  # noqa: PLR6104, RUF005
+                self.rvVal = self.rvVal + [  # noqa: RUF005
                     np.mean(self.modelInfoHF.X_existing[:, nx])
                 ]
             else:
@@ -551,7 +551,7 @@ class surrogate(UQengine):  # noqa: D101
             self.exit(msg)
 
         if self.do_linear:
-            kr = kr + GPy.kern.Linear(input_dim=x_dim, ARD=True)  # noqa: PLR6104
+            kr = kr + GPy.kern.Linear(input_dim=x_dim, ARD=True)
 
         if self.do_mf:
             kr = emf.kernels.LinearMultiFidelityKernel([kr.copy(), kr.copy()])  # noqa: F821
@@ -704,7 +704,7 @@ class surrogate(UQengine):  # noqa: D101
             #     m_tmp.optimize()
             #     self.var_str[ny] = np.ones((m_tmp.Y.shape[0], 1))
 
-            X_new, X_idx, indices, counts = np.unique(  # noqa: F841, N806
+            X_new, X_idx, indices, counts = np.unique(  # noqa: N806
                 X_hf,
                 axis=0,
                 return_index=True,
@@ -867,7 +867,7 @@ class surrogate(UQengine):  # noqa: D101
         )
         print(m_var)  # noqa: T201
 
-        log_var_pred, dum = m_var.predict(X_new)  # noqa: F841
+        log_var_pred, dum = m_var.predict(X_new)
         var_pred = np.exp(log_var_pred)
 
         # norm_var_str = (var_pred.T[0]/counts) / max(var_pred.T[0]/counts)
@@ -889,7 +889,7 @@ class surrogate(UQengine):  # noqa: D101
         kernel_mean = GPy.kern.Matern52(input_dim=my_x_dim, ARD=True)
         # kernel_mean = GPy.kern.Matern52(input_dim=my_x_dim, ARD=True) + GPy.kern.Linear(input_dim=my_x_dim, ARD=True)
         if self.do_linear and not self.isEEUQ:
-            kernel_mean = kernel_mean + GPy.kern.Linear(input_dim=my_x_dim, ARD=True)  # noqa: PLR6104
+            kernel_mean = kernel_mean + GPy.kern.Linear(input_dim=my_x_dim, ARD=True)
 
         m_mean = GPy.models.GPRegression(
             X, Y, kernel_mean, normalizer=True, Y_metadata=None
@@ -979,7 +979,7 @@ class surrogate(UQengine):  # noqa: D101
             result_objs = list(self.pool.starmap(calibrating, iterables))
             for m_tmp, msg, ny in result_objs:
                 self.m_list[ny] = m_tmp
-                if msg != '':  # noqa: PLC1901
+                if msg != '':
                     self.exit(msg)
 
             # TODO: terminate it gracefully....  # noqa: TD002
@@ -998,7 +998,7 @@ class surrogate(UQengine):  # noqa: D101
                     ny,
                     self.n_processor,
                 )
-                if msg != '':  # noqa: PLC1901
+                if msg != '':
                     self.exit(msg)
         ####
 
@@ -1223,14 +1223,14 @@ class surrogate(UQengine):  # noqa: D101
                 else:
                     tmp_doeIdx = 'HFHF'  # HF in multifideility  # noqa: N806
 
-                [x_new_hf, y_idx_hf, score_hf] = self.run_design_of_experiments(  # noqa: F841
+                [x_new_hf, y_idx_hf, score_hf] = self.run_design_of_experiments(
                     nc1, nq, e2, tmp_doeIdx
                 )
             else:
                 score_hf = 0
 
             if self.id_sim_lf < model_lf.thr_count:
-                [x_new_lf, y_idx_lf, score_lf] = self.run_design_of_experiments(  # noqa: F841
+                [x_new_lf, y_idx_lf, score_lf] = self.run_design_of_experiments(
                     nc1, nq, e2, 'LF'
                 )
             else:
@@ -1562,7 +1562,7 @@ class surrogate(UQengine):  # noqa: D101
                     y_pred_mean[ns, ny] = y_preds
 
                 # dummy, y_base_var[ny] = self.predict(m_tmp, Xerr[ns, :][np.newaxis]*10000)
-                dummy, y_base_var[ny] = self.predict(  # noqa: F841
+                dummy, y_base_var[ny] = self.predict(
                     m_tmp, Xerr[ns, :][np.newaxis] * 10000
                 )
 
@@ -1956,7 +1956,7 @@ class surrogate(UQengine):  # noqa: D101
             rvs['name'] = self.rvName[nx]
             rvs['distribution'] = self.rvDist[nx]
             rvs['value'] = self.rvVal[nx]
-            rv_list = rv_list + [rvs]  # noqa: PLR6104, RUF005
+            rv_list = rv_list + [rvs]  # noqa: RUF005
         results['randomVariables'] = rv_list
 
         # Used for surrogate
@@ -2002,7 +2002,7 @@ class surrogate(UQengine):  # noqa: D101
         with open(self.work_dir + '/dakota.out', 'w', encoding='utf-8') as fp:  # noqa: PTH123
             json.dump(results, fp, indent=1)
 
-        with open(self.work_dir + '/GPresults.out', 'w') as file:  # noqa: PLR1702, PLW1514, PTH123
+        with open(self.work_dir + '/GPresults.out', 'w') as file:  # noqa: PTH123
             file.write('* Problem setting\n')
             file.write(f'  - dimension of x : {self.x_dim}\n')
             file.write(f'  - dimension of y : {self.y_dim}\n')
@@ -2090,7 +2090,7 @@ class surrogate(UQengine):  # noqa: D101
         print('Results Saved', flush=True)  # noqa: T201
         return 0
 
-    def run_design_of_experiments(self, nc1, nq, e2, doeIdx='HF'):  # noqa: C901, D102, N803, PLR0912, PLR0914, PLR0915
+    def run_design_of_experiments(self, nc1, nq, e2, doeIdx='HF'):  # noqa: C901, N803, D102, PLR0912, PLR0915
         if doeIdx == 'LF':
             lfset = set([tuple(x) for x in self.X_lf.tolist()])  # noqa: C403
             hfset = set([tuple(x) for x in self.X_hf.tolist()])  # noqa: C403
@@ -2135,7 +2135,7 @@ class surrogate(UQengine):  # noqa: D101
 
         r = 1
 
-        if self.doe_method == 'none':  # noqa: PLR1702
+        if self.doe_method == 'none':
             update_point = sampling(self.cal_interval)
             score = 0
 
@@ -2204,7 +2204,7 @@ class surrogate(UQengine):  # noqa: D101
                 # When number of pareto is smaller than cal_interval
                 prob = np.ones((nc1,))
                 prob[list(rankid == 1)] = 0
-                prob = prob / sum(prob)  # noqa: PLR6104
+                prob = prob / sum(prob)
                 idx_pareto = idx_1rank + list(
                     np.random.choice(nc1, self.cal_interval - num_1rank, p=prob)
                 )
@@ -2242,7 +2242,7 @@ class surrogate(UQengine):  # noqa: D101
 
                     best_local = np.argsort(-np.squeeze(score_tmp))[0]
                     best_global = idx_pareto_candi[best_local]
-                    idx_pareto_new = idx_pareto_new + [best_global]  # noqa: PLR6104, RUF005
+                    idx_pareto_new = idx_pareto_new + [best_global]  # noqa: RUF005
                     del idx_pareto_candi[best_local]
                 idx_pareto = idx_pareto_new
 
@@ -2411,7 +2411,7 @@ class surrogate(UQengine):  # noqa: D101
                 else:
                     IMSEc1 = np.zeros(nc1)  # noqa: N806
                     for i in range(nc1):
-                        IMSEc1[i], dummy = imse(  # noqa: F841
+                        IMSEc1[i], dummy = imse(
                             copy.deepcopy(m_stack),
                             xc1[i, :][np.newaxis],
                             xq,
@@ -2563,7 +2563,7 @@ class surrogate(UQengine):  # noqa: D101
 
         return update_point, y_idx, score
 
-    def normalized_mean_sq_error(self, yp, ye):  # noqa: D102, PLR6301
+    def normalized_mean_sq_error(self, yp, ye):  # noqa: D102
         n = yp.shape[0]
         data_bound = np.max(ye, axis=0) - np.min(ye, axis=0)
         RMSE = np.sqrt(1 / n * np.sum(pow(yp - ye, 2), axis=0))  # noqa: N806
@@ -2759,7 +2759,7 @@ def imse(m_tmp, xcandi, xq, phiqr, i, y_idx, doeIdx='HF'):  # noqa: ARG001, N803
         )
         m_tmp.set_data(X=X_list_tmp, Y=Y_list_tmp)
         xq_list = convert_x_list_to_array([xq, np.zeros((0, xq.shape[1]))])  # noqa: F821
-        dummy, Yq_var = m_tmp.predict(xq_list)  # noqa: F841, N806
+        dummy, Yq_var = m_tmp.predict(xq_list)  # noqa: N806
     else:
         print(f'doe method <{doeIdx}> is not supported', flush=True)  # noqa: T201
 
@@ -2986,7 +2986,7 @@ class model_info:  # noqa: D101
 
         return X_samples
 
-    def resampling(self, X, n):  # noqa: D102, N803, PLR6301
+    def resampling(self, X, n):  # noqa: N803, D102
         # n is "total" samples
         # cube bounds obtained from data
         dim = X.shape[1]
@@ -3132,7 +3132,7 @@ def calibrating(  # noqa: C901, D103
                 0, warning=False
             )
 
-    if msg == '':  # noqa: PLC1901
+    if msg == '':
         m_tmp.optimize()
         # n=0;
         if not do_mf:
@@ -3176,20 +3176,20 @@ def read_txt(text_dir, exit_fun):  # noqa: D103
     if not os.path.exists(text_dir):  # noqa: PTH110
         msg = 'Error: file does not exist: ' + text_dir
         exit_fun(msg)
-    with open(text_dir) as f:  # noqa: PLW1514, PTH123
+    with open(text_dir) as f:  # noqa: PTH123
         # Iterate through the file until the table starts
         header_count = 0
         for line in f:
             if line.replace(' ', '').startswith('%'):
-                header_count = header_count + 1  # noqa: PLR6104
+                header_count = header_count + 1
             else:
                 break
                 # print(line)
         try:
-            with open(text_dir) as f:  # noqa: PLW1514, PLW2901, PTH123
+            with open(text_dir) as f:  # noqa: PTH123, PLW2901
                 X = np.loadtxt(f, skiprows=header_count)  # noqa: N806
         except ValueError:
-            with open(text_dir) as f:  # noqa: PLW1514, PLW2901, PTH123
+            with open(text_dir) as f:  # noqa: PTH123, PLW2901
                 try:
                     X = np.genfromtxt(f, skip_header=header_count, delimiter=',')  # noqa: N806
                     X = np.atleast_2d(X)  # noqa: N806

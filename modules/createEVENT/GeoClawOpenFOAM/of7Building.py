@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -55,7 +55,7 @@ class of7Building:
     """  # noqa: D205, D404
 
     #############################################################
-    def buildcheck(self, data, path):  # noqa: C901, PLR0911, PLR6301
+    def buildcheck(self, data, path):  # noqa: C901, PLR0911
         """Checks if all files required for creating the building exists
 
         Arguments:
@@ -77,7 +77,7 @@ class of7Building:
         buildeftype = ', '.join(
             hydroutil.extract_element_from_json(data, ['Events', 'BuildData'])
         )
-        if buildeftype == 'Manual':  # noqa: PLR1702
+        if buildeftype == 'Manual':
             # Find number of buildings
             numbuild = ', '.join(
                 hydroutil.extract_element_from_json(data, ['Events', 'NumBuild'])
@@ -284,7 +284,7 @@ class of7Building:
         self.buildflagadd(numresbuild, numotherbuild)
 
     #############################################################
-    def buildpara(self, data, path):  # noqa: ARG002, PLR6301
+    def buildpara(self, data, path):  # noqa: ARG002
         """Creates the STL files for the buildings using parametrized data
 
         Arguments:
@@ -297,7 +297,7 @@ class of7Building:
         hydroutil = hydroUtils()  # noqa: F841
 
     #############################################################
-    def buildcubeGI(self, data, path):  # noqa: ARG002, N802, PLR6301
+    def buildcubeGI(self, data, path):  # noqa: ARG002, N802
         """Creates the STL files for the buildings using parametrized data
 
         Arguments:
@@ -342,40 +342,40 @@ class of7Building:
             ]
         )
         # Scaling
-        npa = 0.5 * npa  # noqa: PLR6104
-        npa[:, 2] = 0.5 + npa[:, 2]  # noqa: PLR6104
+        npa = 0.5 * npa
+        npa[:, 2] = 0.5 + npa[:, 2]
         # Temporary
-        npa[:, 0] = npa[:, 0] * 3  # noqa: PLR6104
-        npa[:, 2] = npa[:, 2] * 1.2474  # noqa: PLR6104
-        npa[:, 0] = npa[:, 0] + 47  # noqa: PLR6104
-        npa[:, 2] = npa[:, 2] + 1.7526  # noqa: PLR6104
+        npa[:, 0] = npa[:, 0] * 3
+        npa[:, 2] = npa[:, 2] * 1.2474
+        npa[:, 0] = npa[:, 0] + 47
+        npa[:, 2] = npa[:, 2] + 1.7526
 
         # Create the STL file
         cells = [('triangle', npt)]
         meshio.write_points_cells(filename, npa, cells)
         # Modify first and last line
-        with open(filename) as f:  # noqa: PLW1514, PTH123
+        with open(filename) as f:  # noqa: PTH123
             lines = f.readlines()
             lines[0] = 'solid ' + base_filename + '\n'
             lines[len(lines) - 1] = 'endsolid ' + base_filename + '\n'
         # Write the updated file
-        with open(filename, 'w') as f:  # noqa: PLW1514, PTH123
+        with open(filename, 'w') as f:  # noqa: PTH123
             f.writelines(lines)
 
         # Create the translation script
         if os.path.exists('translate.sh'):  # noqa: PTH110
-            with open('translate.sh', 'a') as f:  # noqa: PLW1514, PTH123
+            with open('translate.sh', 'a') as f:  # noqa: PTH123
                 buildpath = os.path.join('constant', 'triSurface', 'Building.stl')  # noqa: PTH118
                 lines = 'cp Building.stl ' + buildpath + '\n'
                 f.writelines(lines)
         else:
-            with open('translate.sh', 'w') as f:  # noqa: PLW1514, PTH123
+            with open('translate.sh', 'w') as f:  # noqa: PTH123
                 buildpath = os.path.join('constant', 'triSurface', 'Building.stl')  # noqa: PTH118
                 lines = 'cp Building.stl ' + buildpath + '\n'
                 f.writelines(lines)
 
     #############################################################
-    def readResSTL(self, data, path, ztrans):  # noqa: N802, PLR6301
+    def readResSTL(self, data, path, ztrans):  # noqa: N802
         """Creates the STL files for the buildings using parametrized data
 
         Arguments:
@@ -398,9 +398,9 @@ class of7Building:
         print(stlfilepath)  # noqa: T201
         mesh = meshio.read(stlfilepath, file_format='stl')
 
-        mesh.points[:, 0] = mesh.points[:, 0] / (max(abs(mesh.points[:, 0])))  # noqa: PLR6104
-        mesh.points[:, 1] = mesh.points[:, 1] / (max(abs(mesh.points[:, 1])))  # noqa: PLR6104
-        mesh.points[:, 2] = mesh.points[:, 2] / (max(abs(mesh.points[:, 2])))  # noqa: PLR6104
+        mesh.points[:, 0] = mesh.points[:, 0] / (max(abs(mesh.points[:, 0])))
+        mesh.points[:, 1] = mesh.points[:, 1] / (max(abs(mesh.points[:, 1])))
+        mesh.points[:, 2] = mesh.points[:, 2] / (max(abs(mesh.points[:, 2])))
 
         # Get GI
         geninfo = hydroutil.extract_element_from_json(data, ['GeneralInformation'])
@@ -428,21 +428,21 @@ class of7Building:
         height = float(height[0])
 
         # Scale the STL model
-        mesh.points[:, 0] = mesh.points[:, 0] * depth  # noqa: PLR6104
-        mesh.points[:, 1] = mesh.points[:, 1] * width  # noqa: PLR6104
-        mesh.points[:, 2] = mesh.points[:, 2] * height  # noqa: PLR6104
+        mesh.points[:, 0] = mesh.points[:, 0] * depth
+        mesh.points[:, 1] = mesh.points[:, 1] * width
+        mesh.points[:, 2] = mesh.points[:, 2] * height
 
         # Write meshfile
         meshio.write_points_cells('Building.stl', mesh.points, mesh.cells)
 
         # Modify first and last line
-        with open('Building.stl') as f:  # noqa: PLW1514, PTH123
+        with open('Building.stl') as f:  # noqa: PTH123
             lines = f.readlines()
             lines[0] = 'solid ' + 'Building' + '\n'
             lines[len(lines) - 1] = 'endsolid ' + 'Building' + '\n'
 
         # Write the updated file
-        with open('Building.stl', 'w') as f:  # noqa: PLW1514, PTH123
+        with open('Building.stl', 'w') as f:  # noqa: PTH123
             f.writelines(lines)
 
         # Move the file to constant/triSurface folder
@@ -451,7 +451,7 @@ class of7Building:
 
         # Create the translation script
         if os.path.exists('translate.sh'):  # noqa: PTH110
-            with open('translate.sh', 'a') as f:  # noqa: PLW1514, PTH123
+            with open('translate.sh', 'a') as f:  # noqa: PTH123
                 buildpath = os.path.join('constant', 'triSurface', 'Building.stl')  # noqa: PTH118
                 lines = 'export FILE="' + buildpath + '"\n'
                 lines = (
@@ -466,7 +466,7 @@ class of7Building:
                 )
                 f.writelines(lines)
         else:
-            with open('translate.sh', 'w') as f:  # noqa: PLW1514, PTH123
+            with open('translate.sh', 'w') as f:  # noqa: PTH123
                 buildpath = os.path.join('constant', 'triSurface', 'Building.stl')  # noqa: PTH118
                 lines = 'export FILE="' + buildpath + '"\n'
                 lines = (
@@ -482,7 +482,7 @@ class of7Building:
                 f.writelines(lines)
 
     #############################################################
-    def buildflagadd(self, numresbuild, numotherbuild):  # noqa: PLR6301
+    def buildflagadd(self, numresbuild, numotherbuild):
         """Add building flag to temp_geometry.txt
 
         Arguments:
@@ -502,5 +502,5 @@ class of7Building:
             flag = 3
 
         # Add building flag to temp file
-        with open('temp_geometry.txt', 'a') as f:  # noqa: PLW1514, PTH123
+        with open('temp_geometry.txt', 'a') as f:  # noqa: PTH123
             f.writelines(str(flag) + '\n')

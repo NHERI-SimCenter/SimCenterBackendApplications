@@ -1,4 +1,4 @@
-# written: UQ team @ SimCenter  # noqa: CPY001, D100, INP001
+# written: UQ team @ SimCenter  # noqa: INP001, D100
 
 # import functions for Python 2.X support
 # from __future__ import division, print_function
@@ -15,7 +15,7 @@ import os
 import platform
 import shutil
 import stat
-import subprocess  # noqa: S404
+import subprocess
 import sys
 
 
@@ -27,7 +27,7 @@ def main(args):  # noqa: C901, D103
     parser.add_argument('--driverFile')
     parser.add_argument('--runType')
 
-    args, unknowns = parser.parse_known_args()  # noqa: F841
+    args, unknowns = parser.parse_known_args()
 
     inputFile = args.workflowInput  # noqa: N806
     runType = args.runType  # noqa: N806
@@ -57,7 +57,7 @@ def main(args):  # noqa: C901, D103
             osType = 'Linux'  # noqa: N806
         else:
             Dakota = 'dakota'  # noqa: N806
-            workflow_driver = workflow_driver + '.bat'  # noqa: PLR6104
+            workflow_driver = workflow_driver + '.bat'
             workflow_driver1 = 'workflow_driver1.bat'
             osType = 'Windows'  # noqa: N806
 
@@ -97,7 +97,7 @@ def main(args):  # noqa: C901, D103
 
     # If calibration data files exist, copy to the main working directory
     if os.path.isfile('calibrationDataFilesToMove.cal'):  # noqa: PTH113
-        calDataFileList = open('calibrationDataFilesToMove.cal')  # noqa: N806, PLW1514, PTH123, SIM115
+        calDataFileList = open('calibrationDataFilesToMove.cal')  # noqa: SIM115, PTH123, N806
         datFileList = calDataFileList.readlines()  # noqa: N806
         for line in datFileList:
             datFile = line.strip()  # noqa: N806
@@ -145,7 +145,7 @@ def main(args):  # noqa: C901, D103
         checkOutFile = os.path.exists(dakotaOutFile)  # noqa: PTH110, N806
 
         if checkOutFile == False and checkErrFile == 0:  # noqa: E712
-            with open(dakotaErrFile, 'a') as file:  # noqa: PLW1514, PTH123
+            with open(dakotaErrFile, 'a') as file:  # noqa: PTH123
                 file.write(result.decode('utf-8'))
         else:
             pass

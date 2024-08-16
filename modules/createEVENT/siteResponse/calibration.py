@@ -1,4 +1,4 @@
-import json  # noqa: CPY001, D100, INP001
+import json  # noqa: INP001, D100
 import sys
 
 import numpy as np
@@ -329,7 +329,7 @@ def createMaterial(data):  # noqa: N802, D103
     numElems = 0  # noqa: N806
     totalHeight = 0  # noqa: N806
     randomMaterialList = ['PM4Sand_Random', 'PDMY03_Random', 'Elastic_Random']  # noqa: N806
-    fn = open('material.tcl', 'w')  # noqa: PLW1514, PTH123, SIM115
+    fn = open('material.tcl', 'w')  # noqa: SIM115, PTH123
 
     for layer in reversed(data['soilProfile']['soilLayers']):
         if layer['eSize'] != 0:
@@ -365,7 +365,7 @@ if __name__ == '__main__':
 
     # data obtained from user input
     # define the random field
-    with open(srtName) as json_file:  # noqa: PLW1514, PTH123
+    with open(srtName) as json_file:  # noqa: PTH123
         data = json.load(json_file)
 
     eventData = data['Events'][0]  # noqa: N816

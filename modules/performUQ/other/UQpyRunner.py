@@ -1,4 +1,4 @@
-# written: Michael Gardner @ UNR  # noqa: CPY001, D100, INP001
+# written: Michael Gardner @ UNR  # noqa: INP001, D100
 # updated Aakash Bangalore Satish, June 11 2024
 
 import os
@@ -18,7 +18,7 @@ from uqRunner import UqRunner
 
 
 class UQpyRunner(UqRunner):  # noqa: D101
-    def runUQ(  # noqa: C901, N802, PLR6301
+    def runUQ(  # noqa: C901, N802
         self,
         uqData,  # noqa: N803
         simulationData,  # noqa: ARG002, N803
@@ -98,7 +98,7 @@ class UQpyRunner(UqRunner):  # noqa: D101
                 variableNames.append(val['name'])
                 distributionParams.append([val['lowerbound'], val['upperbound']])
             else:
-                raise OSError(  # noqa: DOC501
+                raise OSError(
                     "ERROR: You'll need to update UQpyRunner.py to run your"  # noqa: ISC003
                     + ' specified RV distribution!'
                 )
@@ -139,7 +139,7 @@ class UQpyRunner(UqRunner):  # noqa: D101
                 distributionObjects, nsamples=numberOfSamples, random_state=seed
             )
         else:
-            raise OSError(  # noqa: DOC501
+            raise OSError(
                 "ERROR: You'll need to update UQpyRunner.py to run your specified"  # noqa: ISC003
                 + ' sampling method!'
             )
@@ -168,7 +168,7 @@ class UQpyRunner(UqRunner):  # noqa: D101
         runTime = time.time() - startTime  # noqa: N806
         print('\nTotal time for all experiments: ', runTime)  # noqa: T201
 
-        with open(os.path.join(workingDir, '..', 'tabularResults.out'), 'w') as f:  # noqa: PLW1514, PTH118, PTH123
+        with open(os.path.join(workingDir, '..', 'tabularResults.out'), 'w') as f:  # noqa: PTH118, PTH123
             f.write('%eval_id\t interface\t')
 
             for val in variableNames:
@@ -191,5 +191,5 @@ class UQpyRunner(UqRunner):  # noqa: D101
 
     # Factory for creating UQpy runner
     class Factory:  # noqa: D106
-        def create(self):  # noqa: D102, PLR6301
+        def create(self):  # noqa: D102
             return UQpyRunner()

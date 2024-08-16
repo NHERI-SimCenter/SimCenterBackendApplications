@@ -13,7 +13,7 @@ Class:
 }
 
 @author: snaeimi
-"""  # noqa: CPY001, D205, INP001
+"""  # noqa: INP001, D205
 
 import warnings
 
@@ -31,14 +31,14 @@ class Map:  # noqa: D101
         pass
 
     # def loadShapeFile(shapeFileAddr='Northridge\GIS\Demand\demand_polygons.shp'):
-    def loadShapeFile(  # noqa: D102, N802, PLR6301
+    def loadShapeFile(  # noqa: N802, D102
         self,
         shapeFileAddr=r'Northridge\GIS\Demand\demand_polygons.shp',  # noqa: N803
     ):
         shape_file = gpd.read_file(shapeFileAddr)
         return shape_file  # noqa: RET504
 
-    def joinTwoShapeFiles(self, first, second):  # noqa: D102, N802, PLR6301
+    def joinTwoShapeFiles(self, first, second):  # noqa: N802, D102
         second = second.set_crs(crs=first.crs)
         joined_map = gpd.sjoin(first, second)
 
@@ -422,7 +422,7 @@ class Map:  # noqa: D101
             )
             map_res.loc[never_reported_nodes] = end_time
 
-        map_res = map_res / (3600 * 24)  # noqa: PLR6104
+        map_res = map_res / (3600 * 24)
         return map_res  # noqa: RET504
 
         s = gpd.GeoDataFrame(index=self.demand_node_name_list)
@@ -601,6 +601,6 @@ class Map:  # noqa: D101
             )
             map_res.loc[never_reported_nodes] = end_time
 
-        map_res = map_res / (3600 * 24)  # noqa: PLR6104
+        map_res = map_res / (3600 * 24)
         percent = (map_res.loc[non_incident] > 0).sum() / number_of_good_nodes * 100
         return np.round(percent_init, 2), np.round(percent, 2)

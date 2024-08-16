@@ -44,7 +44,7 @@
 import json
 import os
 import shutil
-import subprocess  # noqa: S404
+import subprocess
 import sys
 
 import numpy as np
@@ -152,7 +152,7 @@ class runPLoM:
         output:
             None
         """  # noqa: D205, D400
-        import platform  # noqa: PLC0415
+        import platform
 
         job_config = self.job_config
 
@@ -248,7 +248,7 @@ class runPLoM:
         # remove the new dakota.json
         # os.remove('sc_dakota_plom.json')
 
-        if runType in ['run', 'runningLocal']:  # noqa: PLR6201
+        if runType in ['run', 'runningLocal']:
             # create the response.csv file from the dakotaTab.out file
             os.chdir(run_dir)
             if bldg_id is not None:
@@ -271,7 +271,7 @@ class runPLoM:
                     )
             self.job_config = job_config
 
-        elif self.run_type in ['set_up', 'runningRemote']:  # noqa: PLR6201
+        elif self.run_type in ['set_up', 'runningRemote']:
             pass
 
     def _prepare_training_data(self, run_dir):  # noqa: C901
@@ -359,7 +359,7 @@ class runPLoM:
 
         return inpData, outData
 
-    def _compute_IM(self, run_dir, pythonEXE):  # noqa: N802, N803, PLR6301
+    def _compute_IM(self, run_dir, pythonEXE):  # noqa: N802, N803
         # find workdirs
         workdir_list = [x for x in os.listdir(run_dir) if x.startswith('workdir')]
 
@@ -432,18 +432,18 @@ class runPLoM:
 
         # read X and Y variable names
         for rv in job_config['randomVariables']:
-            rv_name = rv_name + [rv['name']]  # noqa: PLR6104, RUF005
+            rv_name = rv_name + [rv['name']]  # noqa: RUF005
             x_dim += 1
         if x_dim == 0:
             msg = 'Error reading json: RV is empty'
             self.errlog.exit(msg)
         for g in job_config['EDP']:
             if g['length'] == 1:  # scalar
-                g_name = g_name + [g['name']]  # noqa: PLR6104, RUF005
+                g_name = g_name + [g['name']]  # noqa: RUF005
                 y_dim += 1
             else:  # vector
                 for nl in range(g['length']):
-                    g_name = g_name + ['{}_{}'.format(g['name'], nl + 1)]  # noqa: PLR6104, RUF005
+                    g_name = g_name + ['{}_{}'.format(g['name'], nl + 1)]  # noqa: RUF005
                     y_dim += 1
         if y_dim == 0:
             msg = 'Error reading json: EDP(QoI) is empty'
@@ -575,12 +575,12 @@ class runPLoM:
         try:
             if self.run_type.lower() == 'runninglocal':
                 self.n_processor = os.cpu_count()
-                from multiprocessing import Pool  # noqa: PLC0415
+                from multiprocessing import Pool
 
                 self.pool = Pool(self.n_processor)
             else:
-                from mpi4py import MPI  # noqa: PLC0415
-                from mpi4py.futures import MPIPoolExecutor  # noqa: PLC0415
+                from mpi4py import MPI
+                from mpi4py.futures import MPIPoolExecutor
 
                 self.world = MPI.COMM_WORLD
                 self.pool = MPIPoolExecutor()
@@ -651,14 +651,14 @@ class runPLoM:
             try:
                 for nx in range(self.x_dim):
                     rvInfo = job_config['randomVariables'][nx]  # noqa: N806
-                    self.rvName = self.rvName + [rvInfo['name']]  # noqa: PLR6104, RUF005
-                    self.rvDist = self.rvDist + [rvInfo['distribution']]  # noqa: PLR6104, RUF005
+                    self.rvName = self.rvName + [rvInfo['name']]  # noqa: RUF005
+                    self.rvDist = self.rvDist + [rvInfo['distribution']]  # noqa: RUF005
                     if do_sampling:
-                        self.rvVal = self.rvVal + [  # noqa: PLR6104, RUF005
+                        self.rvVal = self.rvVal + [  # noqa: RUF005
                             (rvInfo['upperbound'] + rvInfo['lowerbound']) / 2
                         ]
                     else:
-                        self.rvVal = self.rvVal + [np.mean(self.X[:, nx])]  # noqa: PLR6104, RUF005
+                        self.rvVal = self.rvVal + [np.mean(self.X[:, nx])]  # noqa: RUF005
             except:  # noqa: E722
                 msg = 'Warning: randomVariables attributes in configuration file are not consistent with x_dim'
                 print(msg)  # noqa: T201
@@ -830,7 +830,7 @@ class runPLoM:
                 rvs['name'] = self.rvName[nx]
                 rvs['distribution'] = self.rvDist[nx]
                 rvs['value'] = self.rvVal[nx]
-                rv_list = rv_list + [rvs]  # noqa: PLR6104, RUF005
+                rv_list = rv_list + [rvs]  # noqa: RUF005
             results['randomVariables'] = rv_list
         except:  # noqa: E722
             msg = 'Warning: randomVariables attributes in configuration file are not consistent with x_dim'
@@ -919,19 +919,19 @@ def read_txt(text_dir, errlog):  # noqa: D103
         errlog.exit(msg)
 
     header_line = []
-    with open(text_dir) as f:  # noqa: PLW1514, PTH123
+    with open(text_dir) as f:  # noqa: PTH123
         # Iterate through the file until the table starts
         header_count = 0
         for line in f:
             if line.startswith('%'):
-                header_count = header_count + 1  # noqa: PLR6104
+                header_count = header_count + 1
                 header_line = line[1:]  # remove '%'
         try:
-            with open(text_dir) as f:  # noqa: PLW1514, PLW2901, PTH123
+            with open(text_dir) as f:  # noqa: PTH123, PLW2901
                 X = np.loadtxt(f, skiprows=header_count)  # noqa: N806
         except ValueError:
             try:
-                with open(text_dir) as f:  # noqa: PLW1514, PLW2901, PTH123
+                with open(text_dir) as f:  # noqa: PTH123, PLW2901
                     X = np.genfromtxt(f, skip_header=header_count, delimiter=',')  # noqa: N806
                 # if there are extra delimiter, remove nan
                 if np.isnan(X[-1, -1]):
@@ -958,7 +958,7 @@ def read_txt(text_dir, errlog):  # noqa: D103
 
 class errorLog:  # noqa: D101
     def __init__(self, work_dir):
-        self.file = open(f'{work_dir}/dakota.err', 'w')  # noqa: PLW1514, PTH123, SIM115
+        self.file = open(f'{work_dir}/dakota.err', 'w')  # noqa: SIM115, PTH123
 
     def exit(self, msg):  # noqa: D102
         print(msg)  # noqa: T201
@@ -978,7 +978,7 @@ def build_surrogate(work_dir, os_type, run_type, input_file, workflow_driver):
     # default filename
     filename = 'PLoM_Model'  # noqa: F841
     # read the configuration file
-    f = open(work_dir + '/templatedir/' + input_file)  # noqa: PLW1514, PTH123, SIM115
+    f = open(work_dir + '/templatedir/' + input_file)  # noqa: SIM115, PTH123
     try:
         job_config = json.load(f)
     except ValueError:

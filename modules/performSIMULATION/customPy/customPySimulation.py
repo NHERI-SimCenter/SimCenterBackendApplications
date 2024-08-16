@@ -78,7 +78,7 @@ def write_RV():  # noqa: N802, D103
 def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_path):  # noqa: C901, N803, D103
     # these imports are here to save time when the app is called without
     # the -getRV flag
-    import sys  # noqa: PLC0415
+    import sys
 
     log_msg('Startring simulation script...')  # noqa: F405
 
@@ -143,7 +143,7 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_p
 
     EDP_list = EDP_in['EngineeringDemandParameters'][0]['responses']  # noqa: N806
     # KZ: rewriting the parsing step of EDP_res to EDP_list
-    for response in EDP_list:  # noqa: PLR1702
+    for response in EDP_list:
         print('response = ', response)  # noqa: T201
         response['scalar_data'] = []
         try:
@@ -199,7 +199,7 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_p
     with open(EDP_input_path, 'w', encoding='utf-8') as f:  # noqa: PTH123
         json.dump(EDP_in, f, indent=2)
 
-    with open('results.out', 'w', encoding='utf-8') as f:  # noqa: FURB103, PTH123
+    with open('results.out', 'w', encoding='utf-8') as f:  # noqa: PTH123
         f.write(results_txt)
 
     """

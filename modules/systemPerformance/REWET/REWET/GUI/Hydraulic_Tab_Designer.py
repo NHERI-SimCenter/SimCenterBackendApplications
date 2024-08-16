@@ -1,7 +1,7 @@
 """Created on Thu Oct 27 19:19:02 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 import os
 
@@ -44,7 +44,7 @@ class Hydraulic_Tab_Designer:  # noqa: D101
         self.current_inp_directory = os.getcwd()  # noqa: PTH109
 
     def getHydraulicSettings(self):  # noqa: N802, D102
-        if self.wn_inp == '':  # noqa: PLC1901
+        if self.wn_inp == '':
             self.errorMSG(
                 'REWET', 'Water distribution network File must be provided'
             )
@@ -113,7 +113,7 @@ class Hydraulic_Tab_Designer:  # noqa: D101
             self.current_inp_directory,
             'inp file (*.inp)',
         )
-        if file[0] == '':  # noqa: PLC1901
+        if file[0] == '':
             return
         split_addr = os.path.split(file[0])
         self.current_inp_directory = split_addr[0]

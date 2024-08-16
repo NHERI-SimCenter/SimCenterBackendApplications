@@ -52,10 +52,10 @@ def main(node_info, pipe_info):  # noqa: D103
 
     print('Loading the node json file...')  # noqa: T201
 
-    with open(node_info) as f:  # noqa: PLW1514, PTH123
+    with open(node_info) as f:  # noqa: PTH123
         node_data = json.load(f)  # noqa: F841
 
-    with open(pipe_info) as f:  # noqa: PLW1514, PTH123
+    with open(pipe_info) as f:  # noqa: PTH123
         pipe_data = json.load(f)
 
     min_id = int(pipe_data[0]['id'])
@@ -72,7 +72,7 @@ def main(node_info, pipe_info):  # noqa: D103
         max_id = max(int(asst_id), max_id)
 
         # Open the AIM file
-        with open(AIM_file) as f:  # noqa: PLW1514, PTH123
+        with open(AIM_file) as f:  # noqa: PTH123
             pipe = AIM_data = json.load(f)  # noqa: N806, F841, PLW2901
 
         allPipes.append(pipe)
@@ -81,7 +81,7 @@ def main(node_info, pipe_info):  # noqa: D103
     #    pgv_csv_files = glob('../data/rupture/rupture62_im/*.csv')
 
     # Mapping & Saving
-    import multiprocessing as mp  # noqa: PLC0415
+    import multiprocessing as mp
 
     pool = mp.Pool(mp.cpu_count() - 1)
     results = pool.map(add_failrate2pipe, [pipe for pipe in allPipes])  # noqa: C416, F405

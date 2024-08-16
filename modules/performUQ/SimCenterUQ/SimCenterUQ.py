@@ -1,4 +1,4 @@
-# written: UQ team @ SimCenter  # noqa: CPY001, D100, INP001
+# written: UQ team @ SimCenter  # noqa: INP001, D100
 
 # import functions for Python 2.X support
 import sys
@@ -13,7 +13,7 @@ import argparse
 import json
 import os
 import stat
-import subprocess  # noqa: S404
+import subprocess
 import sys
 from pathlib import Path
 
@@ -26,7 +26,7 @@ def main(args):  # noqa: D103
     parser.add_argument('--driverFile')
     parser.add_argument('--runType')
 
-    args, unknowns = parser.parse_known_args()  # noqa: F841
+    args, unknowns = parser.parse_known_args()
 
     inputFile = args.workflowInput  # noqa: N806
     runType = args.runType  # noqa: N806
@@ -56,7 +56,7 @@ def main(args):  # noqa: D103
             plom = 'runPLoM.py'  # KZ: main script of PLoM
             # natafExe = os.path.join('nataf_gsa','nataf_gsa.exe')
             natafExe = 'nataf_gsa.exe'  # noqa: N806
-            workflowDriver = workflowDriver + '.bat'  # noqa: N806, PLR6104
+            workflowDriver = workflowDriver + '.bat'  # noqa: N806
             workflowDriver1 = 'workflowDriver1.bat'  # noqa: N806, F841
             osType = 'Windows'  # noqa: N806
             python = 'python'

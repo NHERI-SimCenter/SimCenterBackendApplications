@@ -73,10 +73,10 @@ def write_RV():  # noqa: N802, D103
 def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path, EDP_input_path):  # noqa: C901, N802, N803, D103
     # these imports are here to save time when the app is called without
     # the -getRV flag
-    import sys  # noqa: PLC0415
+    import sys
 
-    import numpy as np  # noqa: PLC0415
-    import openseespy.opensees as ops  # noqa: PLC0415
+    import numpy as np
+    import openseespy.opensees as ops
 
     log_msg('Startring simulation script...')  # noqa: F405
 
