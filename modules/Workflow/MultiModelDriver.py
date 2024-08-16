@@ -165,11 +165,13 @@ def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType): 
     elif runType == 'runningRemote':
         with open(driverFile, 'wb') as f:  # noqa: PTH123
             f.write(
-                appDir
-                + '/applications/Workflow/'
-                + exeFileName
-                + f' {paramsFileName} {driverFile} {multiModelString}',
-                'UTF-8',
+                bytes(
+                    appDir
+                    + '/applications/Workflow/'
+                    + exeFileName
+                    + f' {paramsFileName} {driverFile} {multiModelString}',
+                    'UTF-8',
+                )
             )
     else:
         with open(driverFile, 'wb') as f:  # noqa: FURB103, PTH123
