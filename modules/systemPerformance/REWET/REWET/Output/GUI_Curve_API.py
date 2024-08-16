@@ -72,7 +72,7 @@ def QNExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: N8
             raise ValueError('Uknown time_type: ' + repr(time_type))
 
         res[percentage] = temp_res
-    return res  # noqa: DOC201
+    return res  # noqa: DOC201, RUF100
 
 
 def DLExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: N802
@@ -123,4 +123,4 @@ def DLExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: N8
             raise ValueError('Uknown time_type: ' + repr(time_type))
 
         res[percentage] = temp_res
-    return res  # noqa: DOC201
+    return res  # noqa: DOC201, RUF100

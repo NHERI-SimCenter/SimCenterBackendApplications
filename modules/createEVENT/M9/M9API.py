@@ -332,4 +332,4 @@ def haversine(lat1, lon1, lat2, lon2):
     r = 6371  # Radius of the Earth in kilometers
     distance = r * c
 
-    return distance  # noqa: DOC201, RET504
+    return distance  # noqa: DOC201, RET504, RUF100

@@ -187,7 +187,7 @@ def save_scenario_table(scenario_table, scenario_table_file_path):
     -------
     None.
 
-    """  # noqa: D205, D400, D401, DOC202
+    """  # noqa: D205, D400, D401, DOC202, RUF100
     if isinstance(scenario_table, pd.core.frame.DataFrame):
         pass
     elif isinstance(scenario_table, list):

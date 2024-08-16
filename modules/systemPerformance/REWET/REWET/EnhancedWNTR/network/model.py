@@ -75,7 +75,7 @@ class WaterNetworkModel(WaterNetworkModel):
         -------
         None.
 
-        """  # noqa: D205, D401, DOC202
+        """  # noqa: D205, D401, DOC202, RUF100
         max_time = result.node['head'].index.max()
         if latest_simulation_time == None:  # noqa: E711
             latest_simulation_time = max_time

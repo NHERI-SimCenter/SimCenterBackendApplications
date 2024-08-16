@@ -44,7 +44,7 @@ class RestorationIO:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, DOC202
+        """  # noqa: D400, DOC202, RUF100
         # some of the following lines have been adopted from WNTR
         self.rm = restoration_model
         self.crew_data = {}
@@ -1180,7 +1180,7 @@ class RestorationIO:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D205, D400, D401, DOC202
+        """  # noqa: D205, D400, D401, DOC202, RUF100
         edata = OrderedDict()
         self._crew_file_name = []
         self._crew_file_type = []

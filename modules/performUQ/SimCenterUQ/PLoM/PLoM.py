@@ -374,7 +374,7 @@ class PLoM:  # noqa: D101
                 if cur_var in self.dbserver.get_item_adds() and ATTR_MAP[cur_var]:  # noqa: F405
                     # read in
                     cur_data = store[cur_var]
-                    cur_dshape = tuple(  # noqa: C409
+                    cur_dshape = tuple(  # noqa: C409, RUF100
                         [x[0] for x in store['/DS_' + cur_var[1:]].values.tolist()]  # noqa: PD011
                     )
                     if cur_dshape == (1,):
@@ -416,7 +416,7 @@ class PLoM:  # noqa: D101
                 item_name='X0', col_name=list(self.X0.columns), item=self.X0
             )
 
-            return self.X0.to_numpy()  # noqa: DOC201
+            return self.X0.to_numpy()  # noqa: DOC201, RUF100
         except:  # noqa: E722
             return None
 
@@ -491,7 +491,7 @@ class PLoM:  # noqa: D101
             )
             if '/X0' in self.dbserver.get_name_list():
                 self.X0 = self.dbserver.get_item('X0', table_like=True)
-                return self.X0.to_numpy()  # noqa: DOC201
+                return self.X0.to_numpy()  # noqa: DOC201, RUF100
             else:  # noqa: RET505
                 self.logfile.write_msg(
                     msg='PLoM.load_h5: the original X0 data not found in the loaded data.',
@@ -598,7 +598,7 @@ class PLoM:  # noqa: D101
                 msg_type='WARNING',
                 msg_level=0,
             )
-            return False  # noqa: DOC201
+            return False  # noqa: DOC201, RUF100
         map_order = [FULL_TASK_LIST.index(x) for x in self.cur_task_list]  # noqa: F405
         if map_order != sorted(map_order):
             self.logfile.write_msg(
@@ -961,7 +961,7 @@ class PLoM:  # noqa: D101
         X_scaled, alpha, x_min = plom.scaling(X)  # noqa: N806
         x_mean = plom.mean(X_scaled)
 
-        return X_scaled, alpha, x_min, x_mean  # noqa: DOC201
+        return X_scaled, alpha, x_min, x_mean  # noqa: DOC201, RUF100
 
     def RunPCA(self, X_origin, epsilon_pca):  # noqa: N802, N803, D102
         # ...PCA...
@@ -995,7 +995,7 @@ class PLoM:  # noqa: D101
         (s_v, c_v, hat_s_v) = plom.parameters_kde(X)
         K, b = plom.K(X, epsilon_kde)  # noqa: N806
 
-        return s_v, c_v, hat_s_v, K, b  # noqa: DOC201
+        return s_v, c_v, hat_s_v, K, b  # noqa: DOC201, RUF100
 
     def DiffMaps(self, H, K, b, tol=0.1):  # noqa: N802, N803, D102
         # ..diff maps basis...

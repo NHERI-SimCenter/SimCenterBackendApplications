@@ -75,7 +75,7 @@ class Damage:  # noqa: D101
         Returns
         -------
 
-        """  # noqa: D205, D400, D401, D404, D414, DOC202
+        """  # noqa: D205, D400, D401, D404, D414, DOC202, RUF100
         with open(pickle_file_name, 'rb') as pckf:  # noqa: PTH123
             w = pickle.load(pckf)  # noqa: S301
 
@@ -313,7 +313,7 @@ class Damage:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, DOC202
+        """  # noqa: D400, DOC202, RUF100
         if self.node_damage.empty:
             print('no node damage at all')  # noqa: T201
             return
@@ -1078,7 +1078,7 @@ class Damage:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D401, D404, DOC202
+        """  # noqa: D400, D401, D404, DOC202, RUF100
         self._earthquake.sort_index()
         self.is_timely_sorted = True
 
@@ -1097,7 +1097,7 @@ class Damage:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D401, D404, DOC202
+        """  # noqa: D401, D404, DOC202, RUF100
         if iClear:
             self.pipe_leak = pd.Series()
             self.pipe_break = pd.Series()

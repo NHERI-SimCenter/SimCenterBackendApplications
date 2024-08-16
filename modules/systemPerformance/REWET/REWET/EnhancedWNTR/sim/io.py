@@ -131,7 +131,7 @@ def _is_number(s):
     """  # noqa: D400, D401
     try:
         float(s)
-        return True  # noqa: DOC201, TRY300
+        return True  # noqa: DOC201, RUF100, TRY300
     except ValueError:
         return False
 

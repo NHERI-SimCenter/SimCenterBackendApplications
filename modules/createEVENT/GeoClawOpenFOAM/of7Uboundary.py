@@ -105,7 +105,7 @@ class of7Uboundary:
         utext = utext + '}\n\n'
 
         # Return the text for velocity BC
-        return utext  # noqa: DOC201, RET504
+        return utext  # noqa: DOC201, RET504, RUF100
 
     #############################################################
     def Uheader(self):  # noqa: N802
@@ -130,7 +130,7 @@ FoamFile
         header = header + 'internalField\tuniform (0 0 0);\n\n'
 
         # Return the header for U file
-        return header  # noqa: DOC201, RET504
+        return header  # noqa: DOC201, RET504, RUF100
 
     #############################################################
     def Upatchtext(self, data, Utype, patchname, fipath, numMovWall):  # noqa: C901, N802, N803
@@ -345,7 +345,7 @@ FoamFile
             Utext = Utext + 'type\tempty;\n\t}\n'  # noqa: N806
 
         # Return the header for U file
-        return Utext  # noqa: DOC201
+        return Utext  # noqa: DOC201, RUF100
 
     #############################################################
     def Uchecks(self, data, fipath, patches):  # noqa: C901, N802
@@ -384,7 +384,7 @@ FoamFile
                 # Checking for multiple moving walls
                 numMovWall += 1  # noqa: N806
                 if numMovWall > 1:
-                    return -1  # noqa: DOC201
+                    return -1  # noqa: DOC201, RUF100
 
                 # Check for existing moving wall files
                 dispfilename = hydroutil.extract_element_from_json(

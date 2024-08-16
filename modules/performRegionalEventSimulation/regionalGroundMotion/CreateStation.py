@@ -114,7 +114,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
         stn_df = pd.read_csv(input_file, header=0, index_col=0)
     except:  # noqa: E722
         run_tag = 0
-        return run_tag  # noqa: DOC201, RET504
+        return run_tag  # noqa: DOC201, RET504, RUF100
     # Max and Min IDs
     if len(filterIDs) > 0:
         stns_requested = []
@@ -609,7 +609,7 @@ def create_gridded_stations(
         gstn_df = pd.read_csv(input_file, header=0, index_col=0)
     except:  # noqa: E722
         run_tag = 1
-        return run_tag  # noqa: DOC201, RET504
+        return run_tag  # noqa: DOC201, RET504, RUF100
     if np.max(gstn_df.index.values) != 2:  # noqa: PLR2004
         run_tag = 1
         return run_tag  # noqa: RET504
@@ -662,7 +662,7 @@ def get_vs30_global(lat, lon):
     )
     vs30 = [float(interpFunc(x, y)) for x, y in zip(lon, lat)]
     # return
-    return vs30  # noqa: DOC201, RET504
+    return vs30  # noqa: DOC201, RET504, RUF100
 
 
 def get_vs30_thompson(lat, lon):
@@ -694,21 +694,21 @@ def get_vs30_thompson(lat, lon):
     vs30 = [float(interpFunc(x, y)) for x, y in zip(lon, lat)]
 
     # return
-    return vs30  # noqa: DOC201, RET504
+    return vs30  # noqa: DOC201, RET504, RUF100
 
 
 def get_z1(vs30):
     """Compute z1 based on the prediction equation by Chiou and Youngs (2013) (unit of vs30 is meter/second and z1 is meter)"""  # noqa: D400
     z1 = np.exp(-7.15 / 4.0 * np.log((vs30**4 + 571.0**4) / (1360.0**4 + 571.0**4)))
     # return
-    return z1  # noqa: DOC201, RET504
+    return z1  # noqa: DOC201, RET504, RUF100
 
 
 def get_z25(z1):
     """Compute z25 based on the prediction equation by Campbell and Bozorgnia (2013)"""  # noqa: D400
     z25 = 0.748 + 2.218 * z1
     # return
-    return z25  # noqa: DOC201, RET504
+    return z25  # noqa: DOC201, RET504, RUF100
 
 
 def get_z25fromVs(vs):  # noqa: N802
@@ -717,7 +717,7 @@ def get_z25fromVs(vs):  # noqa: N802
     """  # noqa: D205, D400
     z25 = (7.089 - 1.144 * np.log(vs)) * 1000
     # return
-    return z25  # noqa: DOC201, RET504
+    return z25  # noqa: DOC201, RET504, RUF100
 
 
 def get_zTR_global(lat, lon):  # noqa: N802
@@ -743,7 +743,7 @@ def get_zTR_global(lat, lon):  # noqa: N802
     )
     zTR = [float(interpFunc(x, y)) for x, y in zip(lon, lat)]  # noqa: N806
     # return
-    return zTR  # noqa: DOC201, RET504
+    return zTR  # noqa: DOC201, RET504, RUF100
 
 
 def export_site_prop(stn_file, output_dir, filename):
@@ -811,7 +811,7 @@ def get_zTR_ncm(lat, lon):  # noqa: N802
             # get the top bedrock data
             zTR.append(abs(cur_res['response']['results'][0]['profiles'][0]['top']))
     # return
-    return zTR  # noqa: DOC201
+    return zTR  # noqa: DOC201, RUF100
 
 
 def get_vsp_ncm(lat, lon, depth):
@@ -850,7 +850,7 @@ def get_vsp_ncm(lat, lon, depth):
     if len(vsp) == 1:
         vsp = vsp[0]
     # return
-    return vsp  # noqa: DOC201
+    return vsp  # noqa: DOC201, RUF100
 
 
 def compute_vs30_from_vsp(depthp, vsp):
@@ -868,7 +868,7 @@ def compute_vs30_from_vsp(depthp, vsp):
     # Computing the Vs30
     vs30p = 30.0 / np.sum(delta_t)
     # return
-    return vs30p  # noqa: DOC201, RET504
+    return vs30p  # noqa: DOC201, RET504, RUF100
 
 
 def get_vs30_ncm(lat, lon):
@@ -895,7 +895,7 @@ def get_vs30_ncm(lat, lon):
             )
             vs30.append(760.0)
     # return
-    return vs30  # noqa: DOC201
+    return vs30  # noqa: DOC201, RUF100
 
 
 def get_soil_model_ba(param=None):
@@ -925,7 +925,7 @@ def get_soil_model_ba(param=None):
     else:
         res = None
 
-    return res  # noqa: DOC201
+    return res  # noqa: DOC201, RUF100
 
 
 def get_soil_model_ei(param=None):
@@ -940,7 +940,7 @@ def get_soil_model_ei(param=None):
     else:
         res = None
 
-    return res  # noqa: DOC201
+    return res  # noqa: DOC201, RUF100
 
 
 def get_soil_model_user(df_stn, model_fun):  # noqa: D103

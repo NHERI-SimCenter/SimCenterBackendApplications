@@ -80,4 +80,4 @@ class GeoClaw:
         # Points of interest
         bottompts = self.getbathy(maxvalues, minvalues, data)  # noqa: F841
 
-        return 0  # noqa: DOC201
+        return 0  # noqa: DOC201, RUF100

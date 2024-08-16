@@ -61,4 +61,4 @@ class GeoClawBathy:
         # Create a utilities object
         hydroutil = hydroUtils()  # noqa: F841
 
-        return 0  # noqa: DOC201
+        return 0  # noqa: DOC201, RUF100

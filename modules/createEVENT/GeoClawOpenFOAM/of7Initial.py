@@ -173,7 +173,7 @@ class of7Initial:
 
         alphatext = alphatext + '\n);'
 
-        return alphatext  # noqa: DOC201, RET504
+        return alphatext  # noqa: DOC201, RET504, RUF100
 
     #############################################################
     def alphaheader(self):
@@ -195,7 +195,7 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
         # Return the header for U file
-        return header  # noqa: DOC201, RET504
+        return header  # noqa: DOC201, RET504, RUF100
 
     #############################################################
     def alphacheck(self, data, fipath):
@@ -220,7 +220,7 @@ FoamFile
             fname = 'SWAlpha.txt'
             swalphafile = os.path.join(fipath, fname)  # noqa: PTH118
             if not os.path.exists(swalphafile):  # noqa: PTH110
-                return -1  # noqa: DOC201
+                return -1  # noqa: DOC201, RUF100
 
         # For all types other than the shallow water
         else:

@@ -78,7 +78,7 @@ FoamFile
         )
 
         # Return the header for U file
-        return header  # noqa: DOC201, RET504
+        return header  # noqa: DOC201, RET504, RUF100
 
     #############################################################
     def gfiletext(self, data):
@@ -140,4 +140,4 @@ FoamFile
             + ');\n'
         )
 
-        return gfiletext  # noqa: DOC201, RET504
+        return gfiletext  # noqa: DOC201, RET504, RUF100

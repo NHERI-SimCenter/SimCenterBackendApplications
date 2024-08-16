@@ -328,7 +328,7 @@ def tune(scale, acc_rate):
     >0.95         x 10
     """  # noqa: D205, D400
     if acc_rate < 0.01:  # noqa: PLR2004
-        return scale * 0.01  # noqa: DOC201
+        return scale * 0.01  # noqa: DOC201, RUF100
     elif acc_rate < 0.05:  # noqa: RET505, PLR2004
         return scale * 0.1
     elif acc_rate < 0.2:  # noqa: PLR2004

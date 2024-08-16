@@ -120,7 +120,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
 
             scale_factors.update({input_name: f_scale})
 
-    return scale_factors  # noqa: DOC201
+    return scale_factors  # noqa: DOC201, RUF100
 
 
 def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: C901, N802, N803, D103, PLR0915
@@ -410,28 +410,28 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: C901,
                 m_pgd_y = 0.0
                 s_pgd_y = 0.0
             # add to dictionary
-            dict_im[('type', 'loc', 'dir', 'stat')].append(int(siteID))  # noqa: RUF031
+            dict_im[('type', 'loc', 'dir', 'stat')].append(int(siteID))  # noqa: RUF031, RUF100
             # pga
-            dict_im[('PGA', 0, 1, 'median')].append(m_pga_x)  # noqa: RUF031
-            dict_im[('PGA', 0, 1, 'beta')].append(s_pga_x)  # noqa: RUF031
-            dict_im[('PGA', 0, 2, 'median')].append(m_pga_y)  # noqa: RUF031
-            dict_im[('PGA', 0, 2, 'beta')].append(s_pga_y)  # noqa: RUF031
+            dict_im[('PGA', 0, 1, 'median')].append(m_pga_x)  # noqa: RUF031, RUF100
+            dict_im[('PGA', 0, 1, 'beta')].append(s_pga_x)  # noqa: RUF031, RUF100
+            dict_im[('PGA', 0, 2, 'median')].append(m_pga_y)  # noqa: RUF031, RUF100
+            dict_im[('PGA', 0, 2, 'beta')].append(s_pga_y)  # noqa: RUF031, RUF100
             # pgv
-            dict_im[('PGV', 0, 1, 'median')].append(m_pgv_x)  # noqa: RUF031
-            dict_im[('PGV', 0, 1, 'beta')].append(s_pgv_x)  # noqa: RUF031
-            dict_im[('PGV', 0, 2, 'median')].append(m_pgv_y)  # noqa: RUF031
-            dict_im[('PGV', 0, 2, 'beta')].append(s_pgv_y)  # noqa: RUF031
+            dict_im[('PGV', 0, 1, 'median')].append(m_pgv_x)  # noqa: RUF031, RUF100
+            dict_im[('PGV', 0, 1, 'beta')].append(s_pgv_x)  # noqa: RUF031, RUF100
+            dict_im[('PGV', 0, 2, 'median')].append(m_pgv_y)  # noqa: RUF031, RUF100
+            dict_im[('PGV', 0, 2, 'beta')].append(s_pgv_y)  # noqa: RUF031, RUF100
             # pgd
-            dict_im[('PGD', 0, 1, 'median')].append(m_pgd_x)  # noqa: RUF031
-            dict_im[('PGD', 0, 1, 'beta')].append(s_pgd_x)  # noqa: RUF031
-            dict_im[('PGD', 0, 2, 'median')].append(m_pgd_y)  # noqa: RUF031
-            dict_im[('PGD', 0, 2, 'beta')].append(s_pgd_y)  # noqa: RUF031
+            dict_im[('PGD', 0, 1, 'median')].append(m_pgd_x)  # noqa: RUF031, RUF100
+            dict_im[('PGD', 0, 1, 'beta')].append(s_pgd_x)  # noqa: RUF031, RUF100
+            dict_im[('PGD', 0, 2, 'median')].append(m_pgd_y)  # noqa: RUF031, RUF100
+            dict_im[('PGD', 0, 2, 'beta')].append(s_pgd_y)  # noqa: RUF031, RUF100
             for jj, Ti in enumerate(periods):  # noqa: N806
                 cur_sa = f'SA({Ti}s)'
-                dict_im[(cur_sa, 0, 1, 'median')].append(m_psa_x[jj])  # noqa: RUF031
-                dict_im[(cur_sa, 0, 1, 'beta')].append(s_psa_x[jj])  # noqa: RUF031
-                dict_im[(cur_sa, 0, 2, 'median')].append(m_psa_y[jj])  # noqa: RUF031
-                dict_im[(cur_sa, 0, 2, 'beta')].append(s_psa_y[jj])  # noqa: RUF031
+                dict_im[(cur_sa, 0, 1, 'median')].append(m_psa_x[jj])  # noqa: RUF031, RUF100
+                dict_im[(cur_sa, 0, 1, 'beta')].append(s_psa_x[jj])  # noqa: RUF031, RUF100
+                dict_im[(cur_sa, 0, 2, 'median')].append(m_psa_y[jj])  # noqa: RUF031, RUF100
+                dict_im[(cur_sa, 0, 2, 'beta')].append(s_psa_y[jj])  # noqa: RUF031, RUF100
 
             # aggregate
             for cur_key, cur_value in dict_im.items():

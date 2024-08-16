@@ -471,7 +471,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
                 )
                 gf_im_list += settlement_info['Output']
         if 'Landslide' in ground_failure_info.keys():  # noqa: SIM118
-            import landslide  # noqa: PLC0415
+            import landslide  # noqa: PLC0415, RUF100
 
             if 'Landslide' in ground_failure_info['Landslide'].keys():  # noqa: SIM118
                 lsld_info = ground_failure_info['Landslide']['Landslide']

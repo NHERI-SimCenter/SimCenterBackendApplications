@@ -630,7 +630,7 @@ def oq_run_classical_psha(  # noqa: C901
             export_realizations('realizations', dstore)
         except:  # noqa: E722
             print('FetchOpenQuake: Classical PSHA failed.')  # noqa: T201
-            return 1  # noqa: DOC201
+            return 1  # noqa: DOC201, RUF100
     elif vtag == 11:  # noqa: PLR2004
         try:
             print(f'FetchOpenQuake: running Version {oq_version}.')  # noqa: T201
@@ -845,7 +845,7 @@ def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):
         mag_maf.append([0.0, float(list_IMs[0].split('~')[0]), 0.0])
 
     # return
-    return ln_psa_mr, mag_maf, im_list  # noqa: DOC201
+    return ln_psa_mr, mag_maf, im_list  # noqa: DOC201, RUF100
 
 
 class OpenQuakeHazardCalc:  # noqa: D101
@@ -991,7 +991,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
                         oq.ground_motion_fields is False
                         and oq.hazard_curves_from_gmfs is False
                     ):
-                        return {}  # noqa: DOC201
+                        return {}  # noqa: DOC201, RUF100
                 elif 'rupture_model' not in oq.inputs:
                     logging.warning(
                         'There is no rupture_model, the calculator will just '
@@ -1550,7 +1550,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
         }
 
         # return
-        return res  # noqa: DOC201, RET504
+        return res  # noqa: DOC201, RET504, RUF100
 
     def calculator_build_events_from_sources(self):  # noqa: C901
         """Prefilter the composite source model and store the source_info"""  # noqa: D400
@@ -1666,7 +1666,7 @@ class CorrelationButNoInterIntraStdDevs(Exception):  # noqa: N818, D101
 def to_imt_unit_values(vals, imt):
     """Exponentiate the values unless the IMT is MMI"""  # noqa: D400
     if str(imt) == 'MMI':
-        return vals  # noqa: DOC201
+        return vals  # noqa: DOC201, RUF100
     return np.exp(vals)
 
 

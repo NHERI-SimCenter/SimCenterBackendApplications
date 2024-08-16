@@ -65,7 +65,7 @@ def baker_jayaram_correlation_2008(im1, im2, flag_orth=False):  # noqa: FBT002, 
     elif im1.startswith('PGA'):
         T1 = 0.0  # noqa: N806
     else:
-        return 0.0  # noqa: DOC201
+        return 0.0  # noqa: DOC201, RUF100
     if im2.startswith('SA'):
         T2 = float(im2[3:-1])  # noqa: N806
     elif im2.startswith('PGA'):
@@ -126,7 +126,7 @@ def bradley_correlation_2011(IM, T=None, flag_Ds=True):  # noqa: FBT002, C901, N
     # PGA
     if IM == 'PGA':  # noqa: RET503
         if flag_Ds:
-            return -0.442  # noqa: DOC201
+            return -0.442  # noqa: DOC201, RUF100
         else:  # noqa: RET505
             return -0.305
     elif IM == 'PGV':
@@ -252,7 +252,7 @@ def jayaram_baker_correlation_2009(im, h, flag_clustering=False):  # noqa: FBT00
     else:
         b = 40.7 - 15.0 * T
     rho = np.exp(-3.0 * h / b)
-    return rho  # noqa: DOC201, RET504
+    return rho  # noqa: DOC201, RET504, RUF100
 
 
 def load_loth_baker_correlation_2013(datapath):
@@ -270,7 +270,7 @@ def load_loth_baker_correlation_2013(datapath):
     B2 = pd.read_csv(datapath + 'loth_baker_correlation_2013_B2.csv', header=0)  # noqa: N806
     B1 = pd.read_csv(datapath + 'loth_baker_correlation_2013_B1.csv', header=0)  # noqa: N806
     B3 = pd.read_csv(datapath + 'loth_baker_correlation_2013_B3.csv', header=0)  # noqa: N806
-    return B1, B2, B3  # noqa: DOC201
+    return B1, B2, B3  # noqa: DOC201, RUF100
 
 
 def compute_rho_loth_baker_correlation_2013(T1, T2, h, B1, B2, B3):  # noqa: N803
@@ -303,7 +303,7 @@ def compute_rho_loth_baker_correlation_2013(T1, T2, h, B1, B2, B3):  # noqa: N80
     Ch = b1 * np.exp(-3.0 * h / 20.0) + b2 * np.exp(-3.0 * h / 70.0) + b3 * (h == 0)  # noqa: N806
     # Correlation coefficient
     rho = Ch
-    return rho  # noqa: DOC201, RET504
+    return rho  # noqa: DOC201, RET504, RUF100
 
 
 def loth_baker_correlation_2013(stations, im_name_list, num_simu):  # noqa: C901
@@ -373,7 +373,7 @@ def loth_baker_correlation_2013(stations, im_name_list, num_simu):  # noqa: C901
         .swapaxes(1, 2)
     )
     # return
-    return residuals  # noqa: DOC201, RET504
+    return residuals  # noqa: DOC201, RET504, RUF100
 
 
 def load_markhvida_ceferino_baker_correlation_2017(datapath):
@@ -404,7 +404,7 @@ def load_markhvida_ceferino_baker_correlation_2017(datapath):
         index_col=None,
         header=0,
     )
-    return MCB_model, MCB_pca, MCB_var  # noqa: DOC201
+    return MCB_model, MCB_pca, MCB_var  # noqa: DOC201, RUF100
 
 
 def markhvida_ceferino_baker_correlation_2017(  # noqa: C901
@@ -521,7 +521,7 @@ def markhvida_ceferino_baker_correlation_2017(  # noqa: C901
             if tmp_periods > model_Tmax:
                 residuals = np.concatenate((residuals, Tmax_residuals), axis=1)
     # return
-    return residuals  # noqa: DOC201
+    return residuals  # noqa: DOC201, RUF100
 
 
 def load_du_ning_correlation_2021(datapath):
@@ -548,7 +548,7 @@ def load_du_ning_correlation_2021(datapath):
     DN_var = pd.read_csv(  # noqa: N806
         datapath + 'du_ning_correlation_2021_var_scale.csv', index_col=None, header=0
     )
-    return DN_model, DN_pca, DN_var  # noqa: DOC201
+    return DN_model, DN_pca, DN_var  # noqa: DOC201, RUF100
 
 
 def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
@@ -657,7 +657,7 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
         )
 
     # return
-    return residuals  # noqa: DOC201
+    return residuals  # noqa: DOC201, RUF100
 
 
 def baker_bradley_correlation_2017(im1=None, im2=None):  # noqa: C901
@@ -686,7 +686,7 @@ def baker_bradley_correlation_2017(im1=None, im2=None):  # noqa: C901
             print(  # noqa: T201
                 f'CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for unknown {im1}'
             )
-            return 0.0  # noqa: DOC201
+            return 0.0  # noqa: DOC201, RUF100
         im_list.append(tmp_tag)
         period_list.append(None)
     if im2.startswith('SA'):

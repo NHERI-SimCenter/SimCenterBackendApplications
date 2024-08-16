@@ -654,7 +654,7 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: D101
             print(  # noqa: T201
                 'OccurrenceModel_ManzourDavidson2016._input_check: no return period is defined.'
             )
-            return False  # noqa: DOC201
+            return False  # noqa: DOC201, RUF100
         # shape of exceedance probability
         if len(self.im_exceedance_probs.shape) != 3:  # noqa: PLR2004
             print(  # noqa: T201
@@ -730,8 +730,8 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: D101
             itertools.product(range(self.num_sites), range(self.num_return_periods))
         )
         self.prob += pulp.lpSum(
-            self.return_periods[j] * self.e_plus[(i, j)]  # noqa: RUF031
-            + self.return_periods[j] * self.e_minus[(i, j)]  # noqa: RUF031
+            self.return_periods[j] * self.e_plus[(i, j)]  # noqa: RUF031, RUF100
+            + self.return_periods[j] * self.e_minus[(i, j)]  # noqa: RUF031, RUF100
             for (i, j) in comb_sites_rps
         )
 
@@ -757,7 +757,7 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: D101
                 <= self.num_scenarios
             )
 
-        return True  # noqa: DOC201
+        return True  # noqa: DOC201, RUF100
 
     def solve_opt(self):
         """target_function: compute the target function to be minimized
@@ -853,7 +853,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: D101
             print(  # noqa: T201
                 'OccurrenceModel_Wangetal2023._input_check: no return period is defined.'
             )
-            return False  # noqa: DOC201
+            return False  # noqa: DOC201, RUF100
         # shape of exceedance probability
         if len(self.im_exceedance_probs.shape) != 3:  # noqa: PLR2004
             print(  # noqa: T201
@@ -916,7 +916,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: D101
         self.X_weighted = np.dot(self.W, self.X)
         self.y_weighted = np.dot(self.W, self.y)
 
-        return True  # noqa: DOC201
+        return True  # noqa: DOC201, RUF100
 
     def solve_opt(self):
         """LASSO regression"""  # noqa: D400

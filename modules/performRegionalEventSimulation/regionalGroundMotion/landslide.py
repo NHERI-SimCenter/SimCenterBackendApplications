@@ -1,4 +1,4 @@
-import numpy as np  # noqa: CPY001, INP001, I001, D100
+import numpy as np  # noqa: CPY001, D100, I001, INP001, RUF100
 import rasterio as rio
 from scipy.interpolate import interp2d
 import sys, warnings, shapely, pandas, os  # noqa: ICN001, E401
@@ -10,7 +10,7 @@ from scipy.spatial import ConvexHull
 import pandas as pd
 
 
-## Helper functions  # noqa: E266
+## Helper functions  # noqa: E266, RUF100
 def sampleRaster(  # noqa: N802
     raster_file_path, raster_crs, x, y, interp_scheme='nearest', dtype=None
 ):
@@ -73,10 +73,10 @@ def sampleRaster(  # noqa: N802
         sample = sample.astype(dtype)
     # clean up invalid values (returned as 1e38 by NumPy)
     sample[abs(sample) > 1e10] = invalid_value  # noqa: PLR2004
-    return sample  # noqa: DOC201
+    return sample  # noqa: DOC201, RUF100
 
 
-## Helper functions  # noqa: E266
+## Helper functions  # noqa: E266, RUF100
 def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ARG001, N802
     """performs spatial join of vector_file with xy'"""  # noqa: D400, D401, D403
     print(f'Sampling from the Vector File: {os.path.basename(vector_file_path)}...')  # noqa: T201, PTH119
@@ -103,7 +103,7 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ARG00
         vertices = hull.vertices
         vertices = sites[np.append(vertices, vertices[0])]
         centroid = np.mean(vertices, axis=0)
-        vertices = vertices + 0.05 * (vertices - centroid)  # noqa: PLR6104
+        vertices = vertices + 0.05 * (vertices - centroid)  # noqa: PLR6104, RUF100
         RoI = shapely.geometry.Polygon(vertices)  # noqa: N806
     except:  # noqa: E722
         centroid = shapely.geometry.Point(np.mean(x), np.mean(y))
@@ -136,7 +136,7 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ARG00
         data['geometry'].append(new_geom)
     del vector_gdf
     gdf_roi = gpd.GeoDataFrame(data, geometry='geometry', crs=4326)
-    geometry = [shapely.geometry.Point(lon, lat) for lon, lat in zip(x, y)]  # noqa: FURB140
+    geometry = [shapely.geometry.Point(lon, lat) for lon, lat in zip(x, y)]  # noqa: FURB140, RUF100
     gdf_sites = gpd.GeoDataFrame(geometry=geometry, crs=4326).reset_index()
     merged = gpd.GeoDataFrame.sjoin(
         gdf_roi, gdf_sites, how='inner', predicate='contains'
@@ -144,7 +144,7 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ARG00
     merged = merged.set_index('index_right').sort_index().drop(columns=['geometry'])
     gdf_sites = pandas.merge(gdf_sites, merged, on='index', how='left')
     gdf_sites.drop(columns=['geometry', 'index'], inplace=True)  # noqa: PD002
-    return gdf_sites  # noqa: DOC201
+    return gdf_sites  # noqa: DOC201, RUF100
 
 
 def find_additional_output_req(liq_info, current_step):  # noqa: D103
@@ -213,7 +213,7 @@ def erf2(x):
     # A & S 7.1.26
     t = 1.0 / (1.0 + p * x)
     y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * np.exp(-(x**2))
-    return signs * y  # noqa: DOC201
+    return signs * y  # noqa: DOC201, RUF100
 
 
 def norm2_cdf(x, loc, scale):
@@ -222,7 +222,7 @@ def norm2_cdf(x, loc, scale):
     https://github.com/HDembinski/numba-stats/blob/main/src/numba_stats/norm.py
     """  # noqa: D205, D400, D401
     inter = (x - loc) / scale
-    return 0.5 * (1 + erf2(inter * np.sqrt(0.5)))  # noqa: DOC201
+    return 0.5 * (1 + erf2(inter * np.sqrt(0.5)))  # noqa: DOC201, RUF100
 
 
 def erf2_2d(x):
@@ -240,7 +240,7 @@ def erf2_2d(x):
     # A & S 7.1.26
     t = 1.0 / (1.0 + p * x)
     y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * np.exp(-(x**2))
-    return signs * y  # noqa: DOC201
+    return signs * y  # noqa: DOC201, RUF100
 
 
 def norm2_cdf_2d(x, loc, scale):
@@ -249,7 +249,7 @@ def norm2_cdf_2d(x, loc, scale):
     https://github.com/HDembinski/numba-stats/blob/main/src/numba_stats/norm.py
     """  # noqa: D205, D400, D401
     inter = (x - loc) / scale
-    return 0.5 * (1 + erf2_2d(inter * np.sqrt(0.5)))  # noqa: DOC201
+    return 0.5 * (1 + erf2_2d(inter * np.sqrt(0.5)))  # noqa: DOC201, RUF100
 
 
 def nb_round(x, decimals):  # noqa: D103
@@ -263,7 +263,7 @@ def erfinv_coeff(order=20):  # noqa: D103
     # starting value
     c[0] = 1
     for i in range(1, order + 1):
-        c[i] = sum([c[j] * c[i - 1 - j] / (j + 1) / (2 * j + 1) for j in range(i)])  # noqa: C419
+        c[i] = sum([c[j] * c[i - 1 - j] / (j + 1) / (2 * j + 1) for j in range(i)])  # noqa: C419, RUF100
     # return
     return c
 
@@ -278,7 +278,7 @@ def erfinv(x, order=20):
     for i in range(order):
         y += c[i] / (2 * i + 1) * (root_pi_over_2 * x) ** (2 * i + 1)
     # return
-    return y  # noqa: DOC201
+    return y  # noqa: DOC201, RUF100
 
 
 def norm2_ppf(p, loc, scale):
@@ -287,7 +287,7 @@ def norm2_ppf(p, loc, scale):
     https://github.com/HDembinski/numba-stats/blob/main/src/numba_stats/norm.py
     """  # noqa: D205, D400, D401
     inter = np.sqrt(2) * erfinv(2 * p - 1, order=20)
-    return scale * inter + loc  # noqa: DOC201
+    return scale * inter + loc  # noqa: DOC201, RUF100
 
 
 def erfinv_2d(x, order=20):
@@ -300,7 +300,7 @@ def erfinv_2d(x, order=20):
     for i in range(order):
         y += c[i] / (2 * i + 1) * (root_pi_over_2 * x) ** (2 * i + 1)
     # return
-    return y  # noqa: DOC201
+    return y  # noqa: DOC201, RUF100
 
 
 def norm2_ppf_2d(p, loc, scale):
@@ -309,7 +309,7 @@ def norm2_ppf_2d(p, loc, scale):
     https://github.com/HDembinski/numba-stats/blob/main/src/numba_stats/norm.py
     """  # noqa: D205, D400, D401
     inter = np.sqrt(2) * erfinv_2d(2 * p - 1, order=20)
-    return scale * inter + loc  # noqa: DOC201
+    return scale * inter + loc  # noqa: DOC201, RUF100
 
 
 class Landslide:  # noqa: D101
@@ -518,7 +518,7 @@ class BrayMacedo2019(Landslide):
                     for i, key in enumerate(output_keys):
                         im_data_scen[:, len(im_list) + i, rlz_id] = model_output[key]
                 ln_im_data[scenario_id] = im_data_scen
-            im_list = im_list + output_keys  # noqa: PLR6104
+            im_list = im_list + output_keys  # noqa: PLR6104, RUF100
         else:
             sys.exit(
                 f"'PGA' is missing in the selected intensity measures and the landslide model 'BrayMacedo2019' can not be computed."  # noqa: F541
@@ -533,7 +533,7 @@ class BrayMacedo2019(Landslide):
             im_list,
         )
 
-    def model(  # noqa: PLR6301
+    def model(  # noqa: PLR6301, RUF100
         self,
         pga,
         mag,  # upstream PBEE RV
@@ -635,4 +635,4 @@ class BrayMacedo2019(Landslide):
         pgdef = np.exp(nonzero_ln_pgdef) / 100  # also convert from cm to m
         pgdef = np.maximum(pgdef, 1e-5)  # limit to
         output = {'lsd_PGD_h': pgdef}
-        return output  # noqa: RET504, DOC201
+        return output  # noqa: DOC201, RET504, RUF100

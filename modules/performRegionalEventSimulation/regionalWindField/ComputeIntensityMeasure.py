@@ -448,7 +448,7 @@ def interp_wind_by_height(pws_ip, height_simu, height_ref):
         )
 
     # return
-    return pws_op  # noqa: DOC201
+    return pws_op  # noqa: DOC201, RUF100
 
 
 def gust_factor_ESDU(gd_c, gd_t):  # noqa: N802
@@ -475,7 +475,7 @@ def gust_factor_ESDU(gd_c, gd_t):  # noqa: N802
         gd_c, gd, gf, left=gf[0], right=gf[-1]
     )
     # return
-    return gf_t  # noqa: DOC201, RET504
+    return gf_t  # noqa: DOC201, RET504, RUF100
 
 
 def export_pws(stations, pws, output_dir, filename='EventGrid.csv'):  # noqa: D103

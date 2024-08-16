@@ -235,7 +235,7 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):  # n
                 ujson.dump(results, f)
 
             ind_in_rank += 1
-        count = count + 1  # noqa: PLR6104
+        count = count + 1  # noqa: PLR6104, RUF100
 
     # wait for all to finish
     if doParallel:
@@ -504,4 +504,3 @@ if __name__ == '__main__':
         mpiExec=wfArgs.mpiexec,
         numPROC=numPROC,
     )
-
