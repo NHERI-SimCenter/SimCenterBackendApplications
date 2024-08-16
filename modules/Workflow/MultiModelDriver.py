@@ -162,7 +162,7 @@ def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType): 
                     'UTF-8',
                 )
             )
-    elif osType == 'Windows' and runType == 'runningRemote':
+    elif runType == 'runningRemote':
         with open(driverFile, 'wb') as f:  # noqa: PTH123
             f.write(
                 appDir
