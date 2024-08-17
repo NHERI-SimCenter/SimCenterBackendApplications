@@ -504,4 +504,3 @@ if __name__ == '__main__':
         mpiExec=wfArgs.mpiexec,
         numPROC=numPROC,
     )
-
