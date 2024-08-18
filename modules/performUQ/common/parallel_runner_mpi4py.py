@@ -1,8 +1,6 @@
 from mpi4py import MPI  # noqa: INP001, D100
 from mpi4py.futures import MPIPoolExecutor
 
-# aceleration should be acceleration
-
 class ParallelRunnerMPI4PY:  # noqa: D101
     def __init__(self, run_type: str = 'runningRemote') -> None:
         self.run_type = run_type
