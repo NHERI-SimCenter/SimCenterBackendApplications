@@ -1,5 +1,5 @@
-import os  # noqa: CPY001, D100, N999
-import pickle  # noqa: S403
+import os  # noqa: N999, D100
+import pickle
 
 import pandas as pd
 

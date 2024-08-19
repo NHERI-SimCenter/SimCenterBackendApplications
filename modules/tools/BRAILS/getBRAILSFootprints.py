@@ -74,13 +74,13 @@ def runBrails(  # noqa: N802, D103
     if 'geojson' in fpSrc.lower() or 'csv' in fpSrc.lower():
         location = fpSrc
         fpSrc = 'osm'  # noqa: N806
-    elif locationStr == '':  # noqa: PLC1901
+    elif locationStr == '':
         location = (longMin, latMin, longMax, latMax)
     else:
         location = locationStr
 
     # Run FootprintHandler to get GeoJSON file for the footprints of the entered location:
-    if fpSourceAttrMap == '':  # noqa: PLC1901
+    if fpSourceAttrMap == '':
         fpHandler.fetch_footprint_data(
             location, fpSource=fpSrc, lengthUnit=lengthunit, outputFile=outputfile
         )

@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Pipe_Damage_Discovery_Window.ui'  # noqa: CPY001, D100, N999
+# Form implementation generated from reading ui file 'Pipe_Damage_Discovery_Window.ui'  # noqa: N999, D100
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #

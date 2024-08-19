@@ -1,7 +1,7 @@
 """Created on Thu Oct 27 15:45:10 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, INP001
+"""  # noqa: INP001, D400
 
 import pandas as pd
 

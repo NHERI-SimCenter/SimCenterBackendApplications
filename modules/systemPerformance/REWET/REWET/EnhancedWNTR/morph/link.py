@@ -1,4 +1,4 @@
-"""The wntrfr.morph.link module contains functions to split/break pipes."""  # noqa: CPY001, INP001
+"""The wntrfr.morph.link module contains functions to split/break pipes."""  # noqa: INP001
 
 import copy
 import logging

@@ -1,4 +1,4 @@
-# written: Aakash Bangalore Satish @ NHERI SimCenter, UC Berkeley  # noqa: CPY001, D100, INP001
+# written: Aakash Bangalore Satish @ NHERI SimCenter, UC Berkeley  # noqa: INP001, D100
 
 import importlib
 import json
@@ -118,7 +118,7 @@ class HeirBayesRunner(UqRunner):  # noqa: D101
         cwd = os.getcwd()  # noqa: PTH109
         save_file_dir = os.path.dirname(cwd)  # noqa: PTH120
         save_file_full_path = os.path.join(save_file_dir, save_file_name)  # noqa: PTH118
-        with open(save_file_full_path, 'w') as f:  # noqa: PLW1514, PTH123
+        with open(save_file_full_path, 'w') as f:  # noqa: PTH123
             f.write(self.headingRow)
             f.write('\n')
             for sample_num, sample in enumerate(self.trace):
@@ -200,7 +200,7 @@ class testRunUQ:  # noqa: D101
         self.runTest()
 
     def getUQData(self):  # noqa: N802, D102
-        with open(os.path.abspath(self.json_file_path_string)) as f:  # noqa: PLW1514, PTH100, PTH123
+        with open(os.path.abspath(self.json_file_path_string)) as f:  # noqa: PTH100, PTH123
             input_data = json.load(f)
 
         self.ApplicationData = input_data['Applications']

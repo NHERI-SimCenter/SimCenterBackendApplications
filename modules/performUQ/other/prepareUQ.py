@@ -1,4 +1,4 @@
-# written: Michael Gardner @ UNR  # noqa: CPY001, D100, INP001
+# written: Michael Gardner @ UNR  # noqa: INP001, D100
 
 # import sys
 
@@ -27,7 +27,7 @@ def prepareUQ(paramsFile, inputFile, outputFile, rvSpecifier):  # noqa: C901, N8
     rvSettings = []  # noqa: N806
 
     try:
-        with open(paramsFile) as params:  # noqa: PLW1514, PTH123
+        with open(paramsFile) as params:  # noqa: PTH123
             for line in params:
                 if lineCount == 0:
                     rvNames = [i.strip() for i in line.split(',')]  # noqa: N806
@@ -39,7 +39,7 @@ def prepareUQ(paramsFile, inputFile, outputFile, rvSpecifier):  # noqa: C901, N8
                 else:
                     rvSettings = [i.strip() for i in line.split(',')]  # noqa: N806
 
-                lineCount = lineCount + 1  # noqa: N806, PLR6104
+                lineCount = lineCount + 1  # noqa: N806
 
     except OSError:
         print('ERROR: preProcessUQ.py could not open parameters file: ' + paramsFile)  # noqa: T201
@@ -48,14 +48,14 @@ def prepareUQ(paramsFile, inputFile, outputFile, rvSpecifier):  # noqa: C901, N8
     inputTemplate = 'inputTemplate'  # noqa: N806
     realizationOutput = 'outputFile'  # noqa: N806
     try:
-        inputTemplate = open(inputFile)  # noqa: N806, PLW1514, PTH123, SIM115
+        inputTemplate = open(inputFile)  # noqa: SIM115, PTH123, N806
     except OSError:
         print(  # noqa: T201
             'ERROR: preProcessUQ.py could not open input template file: ' + inputFile
         )
 
     try:
-        realizationOutput = open(outputFile, 'w')  # noqa: N806, PLW1514, PTH123, SIM115
+        realizationOutput = open(outputFile, 'w')  # noqa: SIM115, PTH123, N806
     except OSError:
         print('ERROR: preProcessUQ.py could not open output file: ' + outputFile)  # noqa: T201
 

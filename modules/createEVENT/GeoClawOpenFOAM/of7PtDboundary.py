@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -81,7 +81,7 @@ class of7PtDboundary:
     # 			print(patchname)
 
     #############################################################
-    def PtDcheck(self, data, patches):  # noqa: N802, PLR6301
+    def PtDcheck(self, data, patches):  # noqa: N802
         """Checks if a point displacement for openfoam7 is required
 
         Arguments:
@@ -139,7 +139,7 @@ class of7PtDboundary:
         ptdtext = self.PtDheader()
 
         # Start the outside
-        ptdtext = ptdtext + 'boundaryField\n{\n'  # noqa: PLR6104
+        ptdtext = ptdtext + 'boundaryField\n{\n'
 
         # Loop over all patch
         for patchname in patches:
@@ -157,22 +157,22 @@ class of7PtDboundary:
                     )
                 )
 
-            ptdtext = ptdtext + self.PtDpatchtext(data, Utype, patchname, fipath)  # noqa: PLR6104
+            ptdtext = ptdtext + self.PtDpatchtext(data, Utype, patchname, fipath)
 
         # Check for building and other building
-        ptdtext = ptdtext + '\tBuilding\n'  # noqa: PLR6104
-        ptdtext = ptdtext + self.PtDpatchtext(data, '301', 'Building', fipath)  # noqa: PLR6104
-        ptdtext = ptdtext + '\tOtherBuilding\n'  # noqa: PLR6104
-        ptdtext = ptdtext + self.PtDpatchtext(data, '301', 'OtherBuilding', fipath)  # noqa: PLR6104
+        ptdtext = ptdtext + '\tBuilding\n'
+        ptdtext = ptdtext + self.PtDpatchtext(data, '301', 'Building', fipath)
+        ptdtext = ptdtext + '\tOtherBuilding\n'
+        ptdtext = ptdtext + self.PtDpatchtext(data, '301', 'OtherBuilding', fipath)
 
         # Close the outside
-        ptdtext = ptdtext + '}\n\n'  # noqa: PLR6104
+        ptdtext = ptdtext + '}\n\n'
 
         # Return the text for pointDisplacement
         return ptdtext  # noqa: RET504
 
     #############################################################
-    def PtDheader(self):  # noqa: N802, PLR6301
+    def PtDheader(self):  # noqa: N802
         """Creates the text for the header
 
         Variable
@@ -190,8 +190,8 @@ FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tpointVectorField;\n\tlocation\t"0.01";\n\tobject\tpointDisplacement;\n}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
-        header = header + 'dimensions\t[0 1 0 0 0 0 0];\n\n'  # noqa: PLR6104
-        header = header + 'internalField\tuniform (0 0 0);\n\n'  # noqa: PLR6104
+        header = header + 'dimensions\t[0 1 0 0 0 0 0];\n\n'
+        header = header + 'internalField\tuniform (0 0 0);\n\n'
 
         # Return the header for U file
         return header  # noqa: RET504
@@ -219,34 +219,34 @@ FoamFile
         # Moving walls
         if (int(Utype) == 103) or (int(Utype) == 104):  # noqa: PLR2004
             PtDtext = '\t{\n\t\t'  # noqa: N806
-            PtDtext = PtDtext + 'type\twavemakerMovement;\n\t\t'  # noqa: N806, PLR6104
-            PtDtext = PtDtext + 'wavemakerDictName\twavemakerMovementDict;\n\t\t'  # noqa: N806, PLR6104
-            PtDtext = PtDtext + 'value\tuniform (0 0 0);\n'  # noqa: N806, PLR6104
-            PtDtext = PtDtext + '\t}\n'  # noqa: N806, PLR6104
+            PtDtext = PtDtext + 'type\twavemakerMovement;\n\t\t'  # noqa: N806
+            PtDtext = PtDtext + 'wavemakerDictName\twavemakerMovementDict;\n\t\t'  # noqa: N806
+            PtDtext = PtDtext + 'value\tuniform (0 0 0);\n'  # noqa: N806
+            PtDtext = PtDtext + '\t}\n'  # noqa: N806
 
         elif int(Utype) > 300:  # noqa: PLR2004
             PtDtext = '\t{\n\t\t'  # noqa: N806
-            PtDtext = PtDtext + 'type\tfixedNormalSlip;\n\t\t'  # noqa: N806, PLR6104
+            PtDtext = PtDtext + 'type\tfixedNormalSlip;\n\t\t'  # noqa: N806
             PtDtext = PtDtext + 'n\t(' + normal + ');\n\t\t'  # noqa: N806
-            PtDtext = PtDtext + 'value\tuniform (0 0 0);\n'  # noqa: N806, PLR6104
-            PtDtext = PtDtext + '\t}\n'  # noqa: N806, PLR6104
+            PtDtext = PtDtext + 'value\tuniform (0 0 0);\n'  # noqa: N806
+            PtDtext = PtDtext + '\t}\n'  # noqa: N806
 
         elif (int(Utype) > 200) and (int(Utype) < 300):  # noqa: PLR2004
             PtDtext = '\t{\n\t\t'  # noqa: N806
-            PtDtext = PtDtext + 'type\tfixedValue;\n\t\t'  # noqa: N806, PLR6104
-            PtDtext = PtDtext + 'value\tuniform (0 0 0);\n'  # noqa: N806, PLR6104
-            PtDtext = PtDtext + '\t}\n'  # noqa: N806, PLR6104
+            PtDtext = PtDtext + 'type\tfixedValue;\n\t\t'  # noqa: N806
+            PtDtext = PtDtext + 'value\tuniform (0 0 0);\n'  # noqa: N806
+            PtDtext = PtDtext + '\t}\n'  # noqa: N806
 
         else:
             PtDtext = '\t{\n\t\t'  # noqa: N806
-            PtDtext = PtDtext + 'type\tfixedValue;\n\t\t'  # noqa: N806, PLR6104
-            PtDtext = PtDtext + 'value\tuniform (0 0 0);\n'  # noqa: N806, PLR6104
-            PtDtext = PtDtext + '\t}\n'  # noqa: N806, PLR6104
+            PtDtext = PtDtext + 'type\tfixedValue;\n\t\t'  # noqa: N806
+            PtDtext = PtDtext + 'value\tuniform (0 0 0);\n'  # noqa: N806
+            PtDtext = PtDtext + '\t}\n'  # noqa: N806
 
         return PtDtext
 
     #############################################################
-    def getNormal(self, patchname):  # noqa: N802, PLR6301
+    def getNormal(self, patchname):  # noqa: N802
         """Get the normal to the patch
 
         Arguments:

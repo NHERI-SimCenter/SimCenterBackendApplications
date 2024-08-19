@@ -309,7 +309,7 @@ class IntensityMeasureComputer:  # noqa: D101
             if to_ in self.mile_sec_square:
                 return acceleration
 
-        raise ValueError(f'Unrecognized unit {from_}')  # noqa: DOC501, EM102, TRY003
+        raise ValueError(f'Unrecognized unit {from_}')  # noqa: EM102, TRY003
 
     def compute_response_spectrum(self, periods=[], damping=0.05, im_units=dict()):  # noqa: B006, C408, D102
         if len(im_units) == 0:
@@ -507,7 +507,7 @@ class IntensityMeasureComputer:  # noqa: D101
             self.ds575.update({cur_hist_name: ds575 * unit_factor_ds575})
             self.ds595.update({cur_hist_name: ds595 * unit_factor_ds595})
 
-    def _compute_significant_duration(self, I_A, dt):  # noqa: N803, PLR6301
+    def _compute_significant_duration(self, I_A, dt):  # noqa: N803
         # note this function return duration in sec
         ds575 = 0.0
         ds595 = 0.0
@@ -753,7 +753,7 @@ def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):  # noqa
     for cur_type in im_types:
         if cur_type not in IM_TYPES:
             # pop the non-supported IMs
-            im_types.pop(cur_type)  # noqa: B909
+            im_types.pop(cur_type)
 
     # load records
     dict_time_series = load_records(event_file, ampScaled)
@@ -787,9 +787,9 @@ def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):  # noqa
     csv_dict = dict()  # noqa: C408
     colname = []
     for cur_im in im_types:
-        colname = colname + IM_MAP.get(cur_im, [])  # noqa: PLR6104
+        colname = colname + IM_MAP.get(cur_im, [])
     im_dict = im_computer.intensity_measures
-    for cur_hist_name, cur_hist in dict_time_series.items():  # noqa: PLR1702
+    for cur_hist_name, cur_hist in dict_time_series.items():
         cur_colname = []  # noqa: F841
         cur_dof = cur_hist[0]
         cur_periods = im_dict['Periods'].get(cur_hist_name)

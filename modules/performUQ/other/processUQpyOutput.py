@@ -1,4 +1,4 @@
-from pathlib import Path  # noqa: CPY001, D100, INP001
+from pathlib import Path  # noqa: INP001, D100
 
 import numpy as np
 

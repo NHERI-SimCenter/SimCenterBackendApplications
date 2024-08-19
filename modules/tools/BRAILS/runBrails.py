@@ -54,7 +54,7 @@ def log_msg(msg):  # noqa: D103
 
 
 # Define a way to call BRAILS InventoryGenerator:
-def runBrails(  # noqa: D103, N802, PLR0913, PLR0917
+def runBrails(  # noqa: N802, D103, PLR0913
     latMin,  # noqa: N803
     latMax,  # noqa: N803
     longMin,  # noqa: N803
@@ -78,7 +78,7 @@ def runBrails(  # noqa: D103, N802, PLR0913, PLR0917
     if 'geojson' in fpSource.lower():
         locationInp = fpSource  # noqa: N806
         fpSource = 'osm'  # noqa: N806
-    elif locationStr == '':  # noqa: PLC1901
+    elif locationStr == '':
         locationInp = (longMin, latMin, longMax, latMax)  # noqa: N806
     else:
         locationInp = locationStr  # noqa: N806
@@ -104,7 +104,7 @@ def runBrails(  # noqa: D103, N802, PLR0913, PLR0917
     if getAllBuildings:
         numBuildings = 'all'  # noqa: N806
 
-    if attrRequested not in ['all', 'hazuseq']:  # noqa: PLR6201
+    if attrRequested not in ['all', 'hazuseq']:
         attrRequested = attrRequested.split(',')  # noqa: N806
 
     # Initialize InventoryGenerator:

@@ -1,7 +1,7 @@
 """Created on Thu Nov 10 18:26:02 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 # Imports
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as Canvas

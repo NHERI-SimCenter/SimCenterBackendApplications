@@ -87,7 +87,7 @@ def breakDownLongEdges(edges, delta, tolerance=10e-3):  # noqa: N802, D103
                     currentEdge['ID'].split('_')[0] + '_' + str(num_segExisting + 1)
                 )
                 num_segExisting += 1  # noqa: N806
-                num_segExistingMap[currentEdge['ID'].split('_')[0]] = (  # noqa: PLR6104
+                num_segExistingMap[currentEdge['ID'].split('_')[0]] = (
                     num_segExistingMap[currentEdge['ID'].split('_')[0]] + 1
                 )
             newGeom = sLS  # noqa: N806
@@ -134,7 +134,7 @@ def create_asset_files(  # noqa: C901, D103, PLR0915
         mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
-            from mpi4py import MPI  # noqa: PLC0415
+            from mpi4py import MPI
 
             runParallel = True  # noqa: N806
             comm = MPI.COMM_WORLD
@@ -234,7 +234,7 @@ def create_asset_files(  # noqa: C901, D103, PLR0915
         graph = momepy.gdf_to_nx(edges.to_crs('epsg:6500'), approach='primal')
         with warnings.catch_warnings():  # Suppress the warning of disconnected components in the graph
             warnings.simplefilter('ignore')
-            nodes, edges, sw = momepy.nx_to_gdf(  # noqa: F841
+            nodes, edges, sw = momepy.nx_to_gdf(
                 graph, points=True, lines=True, spatial_weights=True
             )
         # Some edges has start_node as the last point in the geometry and end_node as the first point, check and reorder
@@ -320,7 +320,7 @@ def create_asset_files(  # noqa: C901, D103, PLR0915
 
             assets_array.append(dict(id=str(asset_id), file=AIM_file_name))  # noqa: C408
 
-        count = count + 1  # noqa: PLR6104
+        count = count + 1
 
     ind = 0
     for ind, asset in selected_tunnels.iterrows():
@@ -353,7 +353,7 @@ def create_asset_files(  # noqa: C901, D103, PLR0915
 
             assets_array.append(dict(id=str(asset_id), file=AIM_file_name))  # noqa: C408
 
-        count = count + 1  # noqa: PLR6104
+        count = count + 1
 
     ind = 0
     for row_ind in edges.index:
@@ -394,7 +394,7 @@ def create_asset_files(  # noqa: C901, D103, PLR0915
 
             assets_array.append(dict(id=str(asset_id), file=AIM_file_name))  # noqa: C408
 
-        count = count + 1  # noqa: PLR6104
+        count = count + 1
 
     if procID != 0:
         # if not P0, write data to output file with procID in name and barrier
@@ -413,7 +413,7 @@ def create_asset_files(  # noqa: C901, D103, PLR0915
 
             for i in range(1, numP):
                 fileToAppend = os.path.join(outDir, f'tmp_{i}.json')  # noqa: PTH118, N806
-                with open(fileToAppend, encoding='utf-8') as data_file:  # noqa: FURB101, PTH123
+                with open(fileToAppend, encoding='utf-8') as data_file:  # noqa: PTH123
                     json_data = data_file.read()
                 assetsToAppend = json.loads(json_data)  # noqa: N806
                 assets_array += assetsToAppend
