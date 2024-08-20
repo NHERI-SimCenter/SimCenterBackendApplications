@@ -725,12 +725,15 @@ def compute_im(  # noqa: C901, D103
         saveInJson = False  # noqa: N806
     filename = os.path.join(output_dir, filename)  # noqa: PTH118
     im_list = []
-    if 'PGA' in im_info.keys():  # noqa: SIM118
+    if 'PGA' in im_info.keys() or im_info.get('Type', None) == 'PGA':  # noqa: SIM118
         im_list.append('PGA')
     if 'SA' in im_info.keys():  # noqa: SIM118
         for cur_period in im_info['SA']['Periods']:
             im_list.append(f'SA({cur_period!s})')  # noqa: PERF401
-    if 'PGV' in im_info.keys():  # noqa: SIM118
+    if im_info.get('Type', None) == 'SA':
+        for cur_period in im_info['Periods']:
+            im_list.append(f'SA({cur_period!s})')  # noqa: PERF401
+    if 'PGV' in im_info.keys() or im_info.get('Type', None) == 'PGV':  # noqa: SIM118
         im_list.append('PGV')
     # Stations
     station_list = [
