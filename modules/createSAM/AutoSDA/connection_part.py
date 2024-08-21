@@ -740,4 +740,4 @@ class Connection:
         for key in self.is_feasible.keys():  # noqa: SIM118
             if self.is_feasible[key] == False:  # noqa: E712
                 self.flag = False
-        return self.flag
+        return self.flag  # noqa: DOC201, RUF100

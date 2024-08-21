@@ -3985,7 +3985,7 @@ class _InpFileDifferHelper:  # pragma: no cover
         """  # noqa: D205
         try:
             self.get_section(sec)
-            return True  # noqa: TRY300
+            return True  # noqa: DOC201, RUF100, TRY300
         except NoSectionError:
             return False
 
@@ -4345,4 +4345,4 @@ def _diff_inp_files(  # noqa: C901
     g.write(html_diff)
     g.close()
 
-    return n
+    return n  # noqa: DOC201, RUF100

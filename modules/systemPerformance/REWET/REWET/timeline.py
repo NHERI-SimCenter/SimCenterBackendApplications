@@ -143,7 +143,7 @@ class Timeline:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D205, D401, D404
+        """  # noqa: D205, D401, D404, DOC202, RUF100
         if type(event_distinct_time) != pd.core.series.Series:  # noqa: E721
             if (
                 type(event_distinct_time) == numpy.float64  # noqa: E721
@@ -218,7 +218,7 @@ class Timeline:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D205, D401
+        """  # noqa: D205, D401, DOC202, RUF100
         first_length = len(self._event_time_register.index)
         self._event_time_register = self._event_time_register[
             self._event_time_register.index <= self._simulation_end_time

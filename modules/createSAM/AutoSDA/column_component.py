@@ -264,7 +264,7 @@ class Column:
         for key in self.is_feasible.keys():  # noqa: SIM118
             if self.is_feasible[key] == False:  # noqa: E712
                 self.flag = False
-        return self.flag
+        return self.flag  # noqa: DOC201, RUF100
 
     def compute_demand_capacity_ratio(self):
         """This method is used to calculate the demand to capacity ratios for column components

@@ -67,7 +67,7 @@ class RestorationIO:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400
+        """  # noqa: D400, DOC202, RUF100
         # some of the following lines have been adopted from WNTR
         self.rm = restoration_data()
 
@@ -230,7 +230,7 @@ class RestorationIO:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D205, D401
+        """  # noqa: D205, D401, DOC202, RUF100
         # Entities is kept for legacy compatibility with the first version
         damage_group_data = self.sections.get(
             '[ENTITIES]', self.sections.get('[Damage Group]')
