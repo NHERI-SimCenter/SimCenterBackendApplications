@@ -232,7 +232,7 @@ class Agents:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D401
+        """  # noqa: D400, D401, DOC202, RUF100
         # number_of_agents = int(definition['Number'])
         agent_speed = self.registry.settings['crew_travel_speed']
         temp_agent_data = AgentData(
@@ -270,7 +270,7 @@ class Agents:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400
+        """  # noqa: D400, DOC202, RUF100
         for active_agent_ID in active_agent_ID_list:  # noqa: N806
             self._agents['active'].loc[active_agent_ID] = True
 
@@ -600,7 +600,7 @@ class Shifting:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D401
+        """  # noqa: D400, D401, DOC202, RUF100
         if name in self._shift_data:
             raise ValueError('Shift name already registered')  # noqa: EM101, TRY003
         if type(beginning) != int and type(beginning) != float:  # noqa: E721
@@ -673,7 +673,7 @@ class Shifting:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D401
+        """  # noqa: D400, D401, DOC202, RUF100
         if agent_ID in self._all_agent_shift_data:
             raise ValueError('The agent ID currently in Agent ALl Shifts')  # noqa: EM101, TRY003
         if shift_name not in self._shift_data:

@@ -149,13 +149,13 @@ class DBServer:  # noqa: D101
         dir_export = os.path.join(self.db_dir, 'DataOut')  # noqa: PTH118
         try:
             os.makedirs(dir_export, exist_ok=True)  # noqa: PTH103
-            return dir_export  # noqa: TRY300
+            return dir_export  # noqa: DOC201, RUF100, TRY300
         except:  # noqa: E722
             return None
 
     def get_item_adds(self):
         """Returning the full list of data items"""  # noqa: D400, D401
-        return self._item_adds
+        return self._item_adds  # noqa: DOC201, RUF100
 
     def add_item(
         self,
@@ -190,7 +190,7 @@ class DBServer:  # noqa: D101
             store.close()  # noqa: RET503
         else:
             # Not supported data_type
-            return False
+            return False  # noqa: DOC201, RUF100
 
     def get_item(self, item_name=None, table_like=False, data_type='Data'):  # noqa: FBT002
         """Getting a specific data item"""  # noqa: D400, D401
@@ -199,7 +199,7 @@ class DBServer:  # noqa: D101
                 store = pd.HDFStore(self.db_path, 'r')
                 try:
                     item = store.get(item_name)
-                    item_shape = tuple(
+                    item_shape = tuple(  # noqa: C409, RUF100
                         [
                             x[0]
                             for x in self.get_item_shape(  # noqa: PD011
@@ -214,7 +214,7 @@ class DBServer:  # noqa: D101
                 finally:
                     store.close()
 
-                return item
+                return item  # noqa: DOC201, RUF100
         elif data_type == 'ConstraintsFile':
             store = pd.HDFStore(self.db_path, 'r')
             try:
@@ -247,7 +247,7 @@ class DBServer:  # noqa: D101
                 item_shape = None
             store.close()
 
-            return item_shape
+            return item_shape  # noqa: DOC201, RUF100
 
     def get_name_list(self):
         """Returning the keys of the database"""  # noqa: D400, D401
@@ -257,7 +257,7 @@ class DBServer:  # noqa: D101
         except:  # noqa: E722
             name_list = []
         store.close()
-        return name_list
+        return name_list  # noqa: DOC201, RUF100
 
     def export(self, data_name=None, filename=None, file_format='csv'):
         """Exporting the specific data item
@@ -266,7 +266,7 @@ class DBServer:  # noqa: D101
         """  # noqa: D205, D400, D401
         d = self.get_item(item_name=data_name[1:], table_like=True)
         if d is None:
-            return 1
+            return 1  # noqa: DOC201, RUF100
         if filename is None:
             filename = os.path.join(  # noqa: PTH118
                 self.dir_export, str(data_name).replace('/', '') + '.' + file_format
@@ -311,7 +311,7 @@ class Task:
                 # previous task not completed -> this task also needs to rerun
                 self.status = False
 
-                return self.status
+                return self.status  # noqa: DOC201, RUF100
 
         # self-check
         if Counter(self.avail_var_list) == Counter(self.full_var_list) and len(
@@ -355,7 +355,7 @@ class TaskList:
             if not cur_task.status:
                 self.status = False
 
-                return self.status
+                return self.status  # noqa: DOC201, RUF100
             while cur_task.next_task:
                 cur_task = cur_task.next_task
                 if not cur_task.status:
