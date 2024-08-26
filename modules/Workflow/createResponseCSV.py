@@ -7,17 +7,17 @@
 # Written fmk, important code copied from whale/main.py
 # date: 08/24
 
-
-
-
 import argparse
 import json
+import os
 
 import numpy as np
 import pandas as pd
 
-
 def main(input_file, dakota_tab_file): # noqa: D103
+
+    directory_inputs = os.path.dirname(input_file) # noqa: PTH120
+    os.chdir(directory_inputs)
 
     try:
         # Attempt to open the file
@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     # Add arguments with default values
     parser.add_argument(
-        '--input', type=str, default='AIM.json', help='Path to the input file)'
+        '--inputFile', type=str, default='AIM.json', help='Path to the input file)'
     )
     parser.add_argument(
         '--dakotaTab',
@@ -86,4 +86,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Use the arguments
-    main(args.input, args.dakotaTab)
+    main(args.inputFile, args.dakotaTab)
