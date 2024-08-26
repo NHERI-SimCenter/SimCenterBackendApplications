@@ -310,7 +310,7 @@ def create_command(command_list, enforced_python=None):
         for command_arg in command_list[1:]:
             command += f'"{command_arg}" '
 
-    return command
+    return command  # noqa: DOC201, RUF100
 
 
 def run_command(command):
@@ -357,7 +357,7 @@ def run_command(command):
 
         py_script.main(arg_list)
 
-        return '', ''
+        return '', ''  # noqa: DOC201, RUF100
 
     else:  # noqa: RET505
         # fmk with Shell=True not working on older windows machines, new approach needed for quoted command .. turn into a list
@@ -668,7 +668,7 @@ class WorkflowApplication:
 
         # pp.pprint(arg_list)
 
-        return arg_list
+        return arg_list  # noqa: DOC201, RUF100
 
 
 class Workflow:
@@ -1316,7 +1316,7 @@ class Workflow:
 
         log_div()
 
-        return assetFilesList
+        return assetFilesList  # noqa: DOC201, RUF100
 
     def augment_asset_files(self):  # noqa: C901
         """Short description
@@ -1504,7 +1504,7 @@ class Workflow:
         )
         log_div()
 
-        return assetFilesList
+        return assetFilesList  # noqa: DOC201, RUF100
 
     def perform_system_performance_assessment(self, asset_type):
         """For an asset type run the system level performance assessment application
@@ -1525,7 +1525,7 @@ class Workflow:
                 prepend_timestamp=False,
             )
             log_div()
-            return False
+            return False  # noqa: DOC201, RUF100
 
         if performance_app.rel_path == None:  # noqa: E711
             log_msg(
@@ -1909,7 +1909,7 @@ class Workflow:
             prepend_timestamp=False,
         )
         log_div()
-        return dst
+        return dst  # noqa: DOC201, RUF100
 
     def cleanup_simdir(self, asst_id):
         """Short description
@@ -2734,7 +2734,7 @@ class Workflow:
                     ],
                 )
                 if ('PID', '0') in df_res.columns:
-                    del df_res[('PID', '0')]
+                    del df_res[('PID', '0')]  # noqa: RUF031, RUF100
 
                 # store the EDP statistics in the output DF
                 for col in np.transpose(col_info):

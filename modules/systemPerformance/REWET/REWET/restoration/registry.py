@@ -515,7 +515,7 @@ class Registry:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D401
+        """  # noqa: D400, D401, DOC202, RUF100
         # self._pipe_node_damage_status[name] = data
 
         leaking_pipe_with_pipeA_orginal_pipe = self._pipe_leak_history[  # noqa: N806
@@ -1280,7 +1280,7 @@ class Registry:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400
+        """  # noqa: D400, DOC202, RUF100
         if occupier_name in self._occupancy:
             # if not iNodeCoupled(node_name):
             raise ValueError(  # noqa: TRY003
@@ -1307,7 +1307,7 @@ class Registry:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D401
+        """  # noqa: D401, DOC202, RUF100
         temp = self._occupancy[self._occupancy == occupier_name]
 
         if len(temp) == 0:
@@ -1350,7 +1350,7 @@ class Registry:  # noqa: D101
         str or series
             node(s) ID.
 
-        """  # noqa: D400, D401
+        """  # noqa: D400, D401, DOC202, RUF100
         temp = self._occupancy[self._occupancy == occupier_name]
         if len(temp) == 0:
             raise ValueError('there is no occupancy with this name')  # noqa: EM101, TRY003
@@ -1387,7 +1387,7 @@ class Registry:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D205
+        """  # noqa: D205, DOC202, RUF100
         self._pipe_break_node_coupling[break_point_1_name] = break_point_2_name
         self._pipe_break_node_coupling[break_point_2_name] = break_point_1_name
         self._break_point_attached_to_mainPipe.append(break_point_1_name)

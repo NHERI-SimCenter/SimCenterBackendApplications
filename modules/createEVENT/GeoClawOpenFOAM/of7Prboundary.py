@@ -93,7 +93,7 @@ class of7Prboundary:
         prtext = prtext + '}\n\n'
 
         # Return the text for velocity BC
-        return prtext  # noqa: RET504
+        return prtext  # noqa: DOC201, RET504, RUF100
 
     #############################################################
     def Prheader(self):  # noqa: N802
@@ -118,7 +118,7 @@ FoamFile
         header = header + 'internalField\tuniform\t0;\n\n'
 
         # Return the header for U file
-        return header  # noqa: RET504
+        return header  # noqa: DOC201, RET504, RUF100
 
     #############################################################
     def Prpatchtext(self, data, Prtype, patchname):  # noqa: C901, N802, N803
@@ -208,4 +208,4 @@ FoamFile
             Prtext = Prtext + 'type\tempty;\n\t}\n'  # noqa: N806
 
         # Return the header for U file
-        return Prtext
+        return Prtext  # noqa: DOC201, RUF100

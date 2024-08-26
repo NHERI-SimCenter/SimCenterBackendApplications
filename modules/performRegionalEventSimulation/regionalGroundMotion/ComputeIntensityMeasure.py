@@ -725,12 +725,15 @@ def compute_im(  # noqa: C901, D103
         saveInJson = False  # noqa: N806
     filename = os.path.join(output_dir, filename)  # noqa: PTH118
     im_list = []
-    if 'PGA' in im_info.keys():  # noqa: SIM118
+    if 'PGA' in im_info.keys() or im_info.get('Type', None) == 'PGA':  # noqa: SIM118
         im_list.append('PGA')
     if 'SA' in im_info.keys():  # noqa: SIM118
         for cur_period in im_info['SA']['Periods']:
             im_list.append(f'SA({cur_period!s})')  # noqa: PERF401
-    if 'PGV' in im_info.keys():  # noqa: SIM118
+    if im_info.get('Type', None) == 'SA':
+        for cur_period in im_info['Periods']:
+            im_list.append(f'SA({cur_period!s})')  # noqa: PERF401
+    if 'PGV' in im_info.keys() or im_info.get('Type', None) == 'PGV':  # noqa: SIM118
         im_list.append('PGV')
     # Stations
     station_list = [
@@ -1110,27 +1113,27 @@ def export_im(  # noqa: C901, D103, PLR0912
                 # Combine PGD from liquefaction, landslide and fault
                 if (
                     'liq_PGD_h' in df.columns
-                    or 'ls_PGD_h' in df.columns
+                    or 'lsd_PGD_h' in df.columns
                     or 'fd_PGD_h' in df.columns
                 ):
                     PGD_h = np.zeros(df.shape[0])  # noqa: N806
                     if 'liq_PGD_h' in df.columns:
                         PGD_h += df['liq_PGD_h'].to_numpy()  # noqa: N806
-                    if 'ls_PGD_h' in df.columns:
-                        PGD_h += df['ls_PGD_h'].to_numpy()  # noqa: N806
+                    if 'lsd_PGD_h' in df.columns:
+                        PGD_h += df['lsd_PGD_h'].to_numpy()  # noqa: N806
                     if 'fd_PGD_h' in df.columns:
                         PGD_h += df['fd_PGD_h'].to_numpy()  # noqa: N806
                     df['PGD_h'] = PGD_h
                 if (
                     'liq_PGD_v' in df.columns
-                    or 'ls_PGD_v' in df.columns
+                    or 'lsd_PGD_v' in df.columns
                     or 'fd_PGD_v' in df.columns
                 ):
                     PGD_v = np.zeros(df.shape[0])  # noqa: N806
                     if 'liq_PGD_v' in df.columns:
                         PGD_v += df['liq_PGD_v'].to_numpy()  # noqa: N806
-                    if 'ls_PGD_v' in df.columns:
-                        PGD_v += df['ls_PGD_v'].to_numpy()  # noqa: N806
+                    if 'lsd_PGD_v' in df.columns:
+                        PGD_v += df['lsd_PGD_v'].to_numpy()  # noqa: N806
                     if 'fd_PGD_v' in df.columns:
                         PGD_v += df['fd_PGD_v'].to_numpy()  # noqa: N806
                     df['PGD_v'] = PGD_v
@@ -1173,27 +1176,27 @@ def export_im(  # noqa: C901, D103, PLR0912
                 # Combine PGD from liquefaction, landslide and fault
                 if (
                     'liq_PGD_h' in df.columns
-                    or 'ls_PGD_h' in df.columns
+                    or 'lsd_PGD_h' in df.columns
                     or 'fd_PGD_h' in df.columns
                 ):
                     PGD_h = np.zeros(df.shape[0])  # noqa: N806
                     if 'liq_PGD_h' in df.columns:
                         PGD_h += df['liq_PGD_h'].to_numpy()  # noqa: N806
-                    if 'ls_PGD_h' in df.columns:
-                        PGD_h += df['ls_PGD_h'].to_numpy()  # noqa: N806
+                    if 'lsd_PGD_h' in df.columns:
+                        PGD_h += df['lsd_PGD_h'].to_numpy()  # noqa: N806
                     if 'fd_PGD_h' in df.columns:
                         PGD_h += df['fd_PGD_h'].to_numpy()  # noqa: N806
                     df['PGD_h'] = PGD_h
                 if (
                     'liq_PGD_v' in df.columns
-                    or 'ls_PGD_v' in df.columns
+                    or 'lsd_PGD_v' in df.columns
                     or 'fd_PGD_v' in df.columns
                 ):
                     PGD_v = np.zeros(df.shape[0])  # noqa: N806
                     if 'liq_PGD_v' in df.columns:
                         PGD_v += df['liq_PGD_v'].to_numpy()  # noqa: N806
-                    if 'ls_PGD_v' in df.columns:
-                        PGD_v += df['ls_PGD_v'].to_numpy()  # noqa: N806
+                    if 'lsd_PGD_v' in df.columns:
+                        PGD_v += df['lsd_PGD_v'].to_numpy()  # noqa: N806
                     if 'fd_PGD_v' in df.columns:
                         PGD_v += df['fd_PGD_v'].to_numpy()  # noqa: N806
                     df['PGD_v'] = PGD_v

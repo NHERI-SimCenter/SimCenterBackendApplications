@@ -16,7 +16,7 @@ from zipfile import ZipFile
 import geopandas as gpd
 import pandas as pd
 import requests
-from pyincore_data import globals
+from pyincore_data import globals  # noqa: A004, RUF100
 
 logger = globals.LOGGER
 
@@ -107,7 +107,7 @@ class CensusUtil:
         api_json = request_json.json()
         api_df = pd.DataFrame(columns=api_json[0], data=api_json[1:])
 
-        return api_df  # noqa: RET504
+        return api_df  # noqa: DOC201, RET504, RUF100
 
     @staticmethod
     def get_blockdata_for_demographics(  # noqa: C901
@@ -191,7 +191,7 @@ class CensusUtil:
 
         else:
             print('Only 2000, 2010, and 2020 decennial census supported')  # noqa: T201
-            return None
+            return None  # noqa: DOC201, RUF100
 
         # Make directory to save output
         if not os.path.exists(output_dir):  # noqa: PTH110
@@ -860,7 +860,7 @@ B19001_016E,B19001_017E,B19013_001E'
 
         print('Done creating household income shapefile')  # noqa: T201
 
-        return cen_blockgroup[save_columns]
+        return cen_blockgroup[save_columns]  # noqa: DOC201, RUF100
 
     @staticmethod
     def convert_dislocation_gpd_to_shapefile(in_gpd, programname, savefile):
