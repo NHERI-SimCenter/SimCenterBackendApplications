@@ -74,7 +74,12 @@ class chiou_youngs_2013:  # noqa: D101
 
     def setIMT(self, imt):  # noqa: N802, D102
         if imt not in self.supportedImt:
-            sys.exit(f'The imt {imt} is not supported by Chiou and Young (2014)')
+            # supported_imt  = []
+            # for i in self.supportedImt:
+            #     if i is float:
+            #         supported_imt.append(i)
+            supported_imt = [f'SA{x}s' if isinstance(x, float) else x for x in self.supportedImt]
+            sys.exit(f'The IM type {imt} is not supported by Chiou and Young (2014). \n The supported IM types are {supported_imt}')
             return False
         self.c1 = self.coeff['c1'][imt]
         self.c1a = self.coeff['c1a'][imt]
@@ -337,8 +342,9 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
 
     def setIMT(self, imt):  # noqa: N802, D102
         if imt not in self.supportedImt:
+            supported_imt = [f'SA{x}s' if isinstance(x, float) else x for x in self.supportedImt]
             sys.exit(
-                f'The imt {imt} is not supported by Abrahamson, Silva, and Kamai (2014)'
+                f'The IM type {imt} is not supported by Abrahamson, Silva, and Kamai (2014). \n The supported IM types are {supported_imt}'
             )
             return
         self.imt = imt
@@ -636,8 +642,9 @@ class boore_etal_2014:  # noqa: D101
 
     def setIMT(self, imt):  # noqa: N802, D102
         if imt not in self.supportedImt:
+            supported_imt = [f'SA{x}s' if isinstance(x, float) else x for x in self.supportedImt]
             sys.exit(
-                f'The imt {imt} is not supported by Boore, Stewart, Seyhan & Atkinson (2014)'
+                f'The IM type {imt} is not supported by Boore, Stewart, Seyhan & Atkinson (2014). \n The supported IM types are {supported_imt}'
             )
             return
         self.imt = imt
@@ -863,8 +870,9 @@ class campbell_bozorgnia_2014:  # noqa: D101
 
     def setIMT(self, imt):  # noqa: N802, D102
         if imt not in self.supportedImt:
+            supported_imt = [f'SA{x}s' if isinstance(x, float) else x for x in self.supportedImt]
             sys.exit(
-                f'The imt {imt} is not supported by Campbell & Bozorgnia (2014)'
+                f'The IM type {imt} is not supported by Campbell & Bozorgnia (2014). \n The supported IM types are {supported_imt}'
             )
             return
         self.imt = imt
