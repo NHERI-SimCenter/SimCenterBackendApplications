@@ -907,7 +907,7 @@ class Restoration:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D401
+        """  # noqa: D400, D401, DOC202, RUF100
         if type(time) != int and type(time) != float:  # noqa: E721
             raise ValueError('Time must be integer not ' + str(type(time)))
         time = int(time)

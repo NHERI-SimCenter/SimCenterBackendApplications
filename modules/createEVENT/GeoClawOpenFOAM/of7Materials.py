@@ -120,7 +120,7 @@ class of7Materials:
 
         mattext = mattext + 'sigma\t[1 0 -2 0 0 0 0]\t' + sigma + ';\n'
 
-        return mattext  # noqa: RET504
+        return mattext  # noqa: DOC201, RET504, RUF100
 
     #############################################################
     def matheader(self):
@@ -142,7 +142,7 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
         # Return the header for U file
-        return header  # noqa: RET504
+        return header  # noqa: DOC201, RET504, RUF100
 
     #############################################################
     def matcheck(self, data):
@@ -162,7 +162,7 @@ FoamFile
             data, ['Events', 'WaterViscosity']
         )
         if nuwater == [None]:
-            return -1
+            return -1  # noqa: DOC201, RUF100
         # Exponent
         nuwaterexp = hydroutil.extract_element_from_json(
             data, ['Events', 'WaterViscosityExp']

@@ -101,4 +101,4 @@ def runFEM(  # noqa: N802
         preds = np.atleast_2d([-np.inf] * sum(edpLengthsList)).reshape((1, -1))
         ll = -np.inf
 
-    return (ll, preds)
+    return (ll, preds)  # noqa: DOC201, RUF100
