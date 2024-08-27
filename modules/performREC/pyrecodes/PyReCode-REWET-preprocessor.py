@@ -35,6 +35,8 @@
 # Contributors:
 # Sina Naeimi
 
+"""Provide Interface between REWET and PYReCoDes."""
+
 import random
 import json
 import copy
@@ -51,6 +53,8 @@ INPUT_FILE_DIR = "./"
 
 
 class REWETPyReCoDes:
+    """Provdie the wrapper for REWET API."""
+
     def __init__(self):
         self.wn = None
         self._clean_wn = None
@@ -71,7 +75,7 @@ class REWETPyReCoDes:
 
     def system_state(self, state, damage, inp_file, damage_time=0):
         """
-        Sets the WDN system for PyReCoDes Interface.
+        Set the WDN system for PyReCoDes Interface.
 
         Parameters
         ----------
@@ -90,7 +94,6 @@ class REWETPyReCoDes:
         None.
 
         """
-
         # read the inp file
         self.read_inp_file(inp_file)
 
@@ -104,7 +107,7 @@ class REWETPyReCoDes:
 
     def system_performance(self, state, damage, current_time, next_time):
         """
-        Assesses the system functionality.
+        Assess the system functionality.
 
         Parameters
         ----------
@@ -123,7 +126,6 @@ class REWETPyReCoDes:
             The ratio of satiesfied water for each building.
 
         """
-
         self.wn = copy.deepcopy(self._clean_wn)
         # sets the damage state based on the current (change of the network)
         # and saves the current time
@@ -157,7 +159,7 @@ class REWETPyReCoDes:
 
     def read_inp_file(self, inp_file):
         """
-        Reads the inp file
+        Read the inp file.
 
         Parameters
         ----------
@@ -169,7 +171,6 @@ class REWETPyReCoDes:
         None.
 
         """
-
         self.inp_file_path = Path(inp_file)
         self.inp_file_path = self.inp_file_path.resolve()
 
@@ -195,6 +196,24 @@ class REWETPyReCoDes:
                 self.nodes[node_name]["coordinates"] = node.coordinates
 
     def set_asset_data(self, state):
+        """
+        Set the asset information from state file.
+
+        Parameters
+        ----------
+        state : dict
+            _det file.
+
+        Raises
+        ------
+        ValueError
+            Unexpecyed values exists in state file.
+
+        Returns
+        -------
+        None.
+
+        """
         wdn_state = state["WaterDistributionNetwork"]
         wdn_state = wdn_state.get("Pipe", [])
 
@@ -212,7 +231,7 @@ class REWETPyReCoDes:
                     asset_id = element_data["GeneralInformation"]["AIM_id"]
                     if asset_id != element_key:
                         raise ValueError(
-                            "The rationality behidn the workdflow"
+                            "The rationality behidd the workdflow"
                             "is that oth aim-id and keys be the"
                             "same"
                         )
@@ -241,6 +260,28 @@ class REWETPyReCoDes:
             self.buildings[building_id] = cur_building
 
     def update_state_with_damages(self, damage, damage_time, state):
+        """
+        Update the state dic with damages.
+
+        Parameters
+        ----------
+        damage : dict
+            _i file in dict form..
+        damage_time : int
+            Damaeg time.
+        state : dict
+            _det file.
+
+        Raises
+        ------
+        ValueError
+            Unexpetced damage state in damage data.
+
+        Returns
+        -------
+        None.
+
+        """
         damage = damage["WaterDistributionNetwork"]
         pipe_damage = damage.get("Pipe", [])
 
@@ -271,7 +312,7 @@ class REWETPyReCoDes:
                         damage_type = "break"
                     else:
                         raise ValueError(
-                            "The damage type must be eother " "1 or 2"
+                            "The damage type must be either 1 or 2"
                         )
                 else:
                     continue
@@ -298,6 +339,26 @@ class REWETPyReCoDes:
             ] = cur_pipe_damage_location_type
 
     def set_rewet_damage_from_state(self, state, damage_time):
+        """
+        Set REWET damafe data from state at each tiem step.
+
+        Parameters
+        ----------
+        state : dict
+            _det file in dict format.
+        damage_time : int
+            Current damage time.
+
+        Raises
+        ------
+        ValueError
+            Unexpected or abnormal data in state.
+
+        Returns
+        -------
+        None.
+
+        """
         state = state["WaterDistributionNetwork"]
         pipe_damage = state.get("Pipe", [])
 
@@ -313,9 +374,6 @@ class REWETPyReCoDes:
                 )
 
             segment_sizes = len(damage_location_list)
-
-            # if segment_sizes == 0:
-            # continue
 
             pipe_id = self.asset_information["WaterDistributionNetwork"][
                 "Pipe"
@@ -366,7 +424,6 @@ class REWETPyReCoDes:
         None.
 
         """
-
         building_state = state["Buildings"]["Building"]
 
         building_id_list = []
@@ -462,7 +519,7 @@ class REWETPyReCoDes:
 
     def save_damage(self, state, current_time):
         """
-        Convert and save the dmaages that are set before
+        Convert and save the dmaages that are set before.
 
         Parameters
         ----------
@@ -533,7 +590,7 @@ class REWETPyReCoDes:
 
     def run_performance(self, current_time, next_time):
         """
-        Runs the performance model using a hydraic solver (REWET)
+        Run the performance model using a hydraic solver (REWET).
 
         Parameters
         ----------
@@ -554,7 +611,6 @@ class REWETPyReCoDes:
             building.
 
         """
-
         if current_time > next_time:
             raise ValueError(
                 "Current tiime cannot be bigger than the next" "time"
@@ -579,6 +635,26 @@ class REWETPyReCoDes:
         return dict
 
     def make_rewet_inputs(self, current_time, next_time):
+        """
+        Create setting input for REWET.
+
+        Parameters
+        ----------
+        current_time : int
+            Current time in seconds.
+        next_time : TYPE
+            Next stop time in seconds.
+
+        Raises
+        ------
+        ValueError
+            Path are not available.
+
+        Returns
+        -------
+        None.
+
+        """
         settings = get_rewet_hydraulic_basic_setting()
         run_time = next_time - current_time
         list_file_path = Path(self.list_path)
@@ -614,7 +690,25 @@ class REWETPyReCoDes:
         self.input_file_path = str(input_file_path)
 
     def get_building_data_satisfaction(self, method):
+        """
+        Get building water satiesfaction data.
 
+        Parameters
+        ----------
+        method : str
+            MEAB, MAX, or MIN.
+
+        Raises
+        ------
+        ValueError
+            Unrecognizable method is given.
+
+        Returns
+        -------
+        building_demand_satisfaction_ratio : dict
+            Building satiesfied ratio.
+
+        """
         demand_sat = self.rewet.get_satisfied_demand_ratio()
 
         if method.upper() == "MEAN":
@@ -642,7 +736,19 @@ class REWETPyReCoDes:
         return building_demand_satisfaction_ratio
 
     def set_new_demand(self, state):
+        """
+        Set new demand from state.
 
+        Parameters
+        ----------
+        state : dict
+            _det file in dict format.
+
+        Returns
+        -------
+        None.
+
+        """
         for node_name in self.demand_node_to_building:
 
             # cur_node = self.nodes[node_name]
@@ -683,15 +789,22 @@ class REWETPyReCoDes:
 
 
 def get_rewet_hydraulic_basic_setting():
+    """
+    Create basic settings for rewet's input.
+
+    Returns
+    -------
+    settings_dict : dict
+        REWET input.
+
+    """
     settings = rewet.Input.Settings.Settings()
     settings_dict = settings.process.settings
-    # settings_dict.update(settings.scenario.settings)
 
     return settings_dict
 
 
 if __name__ == "__main__":
-    # raise RuntimeError("This file should not be run")
     with open("Results_det.json", "rt") as f:
         state = json.load(f)
 
@@ -703,8 +816,3 @@ if __name__ == "__main__":
     interface = REWETPyReCoDes()
     interface.system_state(state, damage, inp_file)
     result = interface.system_performance(state, damage, 0, 24 * 3600)
-
-    # = interface.system_performance(state,
-    # damage,
-    # 1*24*3600,
-    # 2*24*3600)
