@@ -53,7 +53,7 @@ INPUT_FILE_DIR = "./"
 
 
 class REWETPyReCoDes:
-    """Provdie the wrapper for REWET API."""
+    """Provide the wrapper for REWET API."""
 
     def __init__(self):
         self.wn = None
@@ -80,7 +80,7 @@ class REWETPyReCoDes:
         Parameters
         ----------
         state : dict
-            The State of system which is defiend in the R2DTool's system_det
+            The State of system which is defined in the R2DTool's system_det
             style.
         damage : dict
             The damage state in 2DTool's system_i style.
@@ -179,7 +179,7 @@ class REWETPyReCoDes:
 
         self.inp_file_path = str(self.inp_file_path)
 
-        # read the inp file and create the WDN obejct file
+        # Read the inp file and create the WDN object file
         self.wn = wntrfr.network.model.WaterNetworkModel(self.inp_file_path)
         self._clean_wn = copy.deepcopy(self.wn)
 
@@ -275,7 +275,7 @@ class REWETPyReCoDes:
         Raises
         ------
         ValueError
-            Unexpetced damage state in damage data.
+            Unexpected damage state in damage data.
 
         Returns
         -------
@@ -340,7 +340,7 @@ class REWETPyReCoDes:
 
     def set_rewet_damage_from_state(self, state, damage_time):
         """
-        Set REWET damafe data from state at each tiem step.
+        Set REWET damafe data from state at each time step.
 
         Parameters
         ----------
@@ -492,9 +492,9 @@ class REWETPyReCoDes:
                     f" is ignored."
                 )
 
-            # We assume that population in State does not change in teh course
-            # of recovery. Thus, the population is intiial population. For more
-            # clarity, we name the variable "initial_population".
+            # We assume that population in the State does not change in the
+            # course of recovery. Thus, the population is initial population.
+            #  For more clarity, we name the variable "initial_population".
             # It does not mean that there will be ffdifferent population in
             # the course of recovery
             self.nodes[node_name][

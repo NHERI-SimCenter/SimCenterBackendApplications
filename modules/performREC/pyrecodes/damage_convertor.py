@@ -35,6 +35,8 @@
 # Contributors:
 # Sina Naeimi
 
+"""Converts damages from Pelicun to REWET format."""
+
 import os
 from pathlib import Path
 import pandas as pd
@@ -47,14 +49,18 @@ def createPipeDamageInputForREWET(
     pipe_damage_data, run_dir, event_time, sc_geojson
 ):
     """
-    Creates REWET-style piep damage file.
+    Create REWET-style piep damage file.
 
     Parameters
     ----------
     pipe_damage_data : dict
         Pipe damage data from PELICUN.
-    REWET_input_data : dict
-        REWET input data.
+    run_dir : path
+        Run dierctory.
+    event_time : int
+        Damage time.
+    sc_geojson : dict
+        Backend sc_geojson.
 
     Raises
     ------
@@ -144,14 +150,16 @@ def createPipeDamageInputForREWET(
 
 def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):
     """
-    Creates REWET-style node damage file.
+    Create REWET-style node damage file.
 
     Parameters
     ----------
     node_damage_data : dict
         Node damage data from PELICUN.
-    REWET_input_data : dict
-        REWET input data.
+    run_dir : path
+        Run dierctory.
+    event_time : int
+        Damage time.
 
     Returns
     -------
@@ -206,7 +214,7 @@ def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):
 
 def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):
     """
-     Creates REWET-style pump damage file.
+     Create REWET-style pump damage file.
 
     Parameters
     ----------
@@ -259,7 +267,7 @@ def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):
 
 def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):
     """
-    Creates REWET-style Tank damage file.
+    Create REWET-style Tank damage file.
 
     Parameters
     ----------
@@ -287,16 +295,6 @@ def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):
         if cur_damage == 0:
             continue  # cur_damage_state = 0 meeans undamged tank
 
-        # =============================================================================
-        #         # We are getting his data from REWET
-        #
-        #         aim_data = findAndReadAIMFile(tank_id, os.path.join(
-        #             "Results", "WaterDistributionNetwork", "Tank"),
-        #                                            REWET_input_data["run_dir"])
-        #         tank_type = aim_data["GeneralInformation"].get("Type", None)
-        #         restore_time = getTankRetsoreTime(tank_type, cur_damage)
-        # =============================================================================
-
         damage_list.append(
             {
                 "tank_id": tank_id,
@@ -314,7 +312,7 @@ def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):
 
 def findAndReadAIMFile(asset_id, asset_type, run_dir):
     """
-    Finds and read the AIM file for an asset.
+    Find and read the AIM file for an asset.
 
     Parameters
     ----------
@@ -331,7 +329,6 @@ def findAndReadAIMFile(asset_id, asset_type, run_dir):
         AIM file data as a dict.
 
     """
-
     file_path = Path(
         run_dir,
         asset_type,
@@ -343,11 +340,12 @@ def findAndReadAIMFile(asset_id, asset_type, run_dir):
     return aim_file_data
 
 
+# Not UsedWE WILL GET IT FROM PELICUN
 def getPumpRetsoreTime(damage_state):
     """
-    NOT USED! WE WILL GET IT FROM PELICUN
+    Provide the restore time.
 
-    Provides the restore time based on HAZUS repair time or any other
+    Based on HAZUS repair time or any other
     approach available in the future. If damage state is slight, the restore
     time is 3 days (in seconds). If damage state is 2, the restore time is 7
     days (in seconds). If damage state is 3 or 4, the restore time is
@@ -365,7 +363,6 @@ def getPumpRetsoreTime(damage_state):
 
 
     """
-
     if damage_state == 1:
         restore_time = int(3 * 24 * 3600)
     elif damage_state == 2:
@@ -376,11 +373,12 @@ def getPumpRetsoreTime(damage_state):
     return restore_time
 
 
+# NOT USED! WE WILL GET IT FROM PELICUN
 def getTankRetsoreTime(tank_type, damage_state):
     """
-    NOT USED! WE WILL GET IT FROM PELICUN
+    Provide the restore time.
 
-    Provides the restore time based on HAZUS repair time or any other
+    Based on HAZUS repair time or any other
     approach available in the future. if damage state is slight, the restore
     time is 3 days (in seconds). If damage state is 2, the restore time is 7
     days (in seconds). If damage state is 3 or 4, the restore time is
@@ -389,7 +387,7 @@ def getTankRetsoreTime(tank_type, damage_state):
     Parameters
     ----------
     tank_type : STR
-        Tank type based on the data schema. The parametr is not used for now.
+        Tank type based on the data schema. The parameter is not used for now.
     damage_state : Int
         Specifies the damage state (1 for slightly damages, 2 for moderate,
         3 etensive, and 4 complete.
@@ -400,7 +398,6 @@ def getTankRetsoreTime(tank_type, damage_state):
 
 
     """
-
     if damage_state == 1:
         restore_time = int(3 * 24 * 3600)
     elif damage_state == 2:
@@ -413,7 +410,9 @@ def getTankRetsoreTime(tank_type, damage_state):
 
 def readDamagefile(file_addr, run_dir, event_time, sc_geojson):
     """
-    Reads PELICUN damage files and create REWET-Style damage for all
+    Read PELICUN damage files. and create REWET-Style damage.
+
+    Reads PELICUN damage files. and create REWET-Style damage for all
     WaterDistributionNetwork elements
 
     Parameters
@@ -421,7 +420,7 @@ def readDamagefile(file_addr, run_dir, event_time, sc_geojson):
     file_addr : path
         PELICUN damage file in JSON format.
     REWET_input_data : dict
-        REWET input data, whcih is updated in the function.
+        REWET input data, which is updated in the function.
     scn_number : dict
         JSON FILE.
 
@@ -431,7 +430,7 @@ def readDamagefile(file_addr, run_dir, event_time, sc_geojson):
         Damage data in PELICUN dict format.
 
     """
-    # TODO: Make reading once for each scneario
+    # TODO(Sina): Make reading once for each scenario
 
     # wn = wntrfr.network.WaterNetworkModel(REWET_input_data["inp_file"] )
 
