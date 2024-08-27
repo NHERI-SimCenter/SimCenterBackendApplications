@@ -1,4 +1,4 @@
-# Copyright (c) 2024 The Regents of the University of California
+# Copyright (c) 2024 The Regents of the University of California  # noqa: INP001
 # Copyright (c) 2024 Leland Stanford Junior University
 #
 # This file is part of whale.
@@ -39,15 +39,14 @@
 
 import os
 from pathlib import Path
+
 import pandas as pd
 import preprocessorIO
 
 CBIG_int = int(1e9)
 
 
-def createPipeDamageInputForREWET(
-    pipe_damage_data, run_dir, event_time, sc_geojson
-):
+def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geojson):  # noqa: N802
     """
     Create REWET-style piep damage file.
 
@@ -73,42 +72,40 @@ def createPipeDamageInputForREWET(
         REWET-style pipe damage file.
 
     """
-    pipe_id_list = [key for key in pipe_damage_data]
+    pipe_id_list = [key for key in pipe_damage_data]  # noqa: C416
 
     damage_list = []
     damage_time = event_time
     sc_geojson_file = preprocessorIO.readJSONFile(sc_geojson)
     pipe_data = [
         ss
-        for ss in sc_geojson_file["features"]
-        if ss["properties"]["type"] == "Pipe"
+        for ss in sc_geojson_file['features']
+        if ss['properties']['type'] == 'Pipe'
     ]
-    pipe_index = [str(ss["id"]) for ss in pipe_data]
-    pipe_id = [ss["properties"]["InpID"] for ss in pipe_data]
+    pipe_index = [str(ss['id']) for ss in pipe_data]
+    pipe_id = [ss['properties']['InpID'] for ss in pipe_data]
     pipe_index_to_id = dict(zip(pipe_index, pipe_id))
 
     for pipe_id in pipe_id_list:
         cur_data = pipe_damage_data[pipe_id]
 
-        cur_damage = cur_data["Damage"]
+        cur_damage = cur_data['Damage']
         # cur_demand = cur_data["Demand"]
 
         aim_data = findAndReadAIMFile(
             pipe_id,
-            os.path.join("Results", "WaterDistributionNetwork", "Pipe"),
+            os.path.join('Results', 'WaterDistributionNetwork', 'Pipe'),  # noqa: PTH118
             run_dir,
         )
 
-        material = aim_data["GeneralInformation"].get("Material", None)
+        material = aim_data['GeneralInformation'].get('Material', None)
 
         if material is None:
             # raise ValueError("Material is none")
-            material = "CI"
+            material = 'CI'
 
         aggregates_list = [
-            cur_agg
-            for cur_agg in list(cur_damage.keys())
-            if "aggregate" in cur_agg
+            cur_agg for cur_agg in list(cur_damage.keys()) if 'aggregate' in cur_agg
         ]
         segment_sizes = len(aggregates_list)
         segment_step = 1 / segment_sizes
@@ -118,11 +115,11 @@ def createPipeDamageInputForREWET(
             damage_val = cur_damage[cur_agg]
             if damage_val > 0:
                 if damage_val == 1:
-                    damage_type = "leak"
-                elif damage_val == 2:
-                    damage_type = "break"
+                    damage_type = 'leak'
+                elif damage_val == 2:  # noqa: PLR2004
+                    damage_type = 'break'
                 else:
-                    raise ValueError("The damage type must be eother 1 or 2")
+                    raise ValueError('The damage type must be eother 1 or 2')  # noqa: EM101, TRY003
             else:
                 continue
 
@@ -131,24 +128,24 @@ def createPipeDamageInputForREWET(
             c += 1
             damage_list.append(
                 {
-                    "pipe_id": pipe_index_to_id[pipe_id],
-                    "damage_loc": cur_loc,
-                    "type": damage_type,
-                    "Material": material,
+                    'pipe_id': pipe_index_to_id[pipe_id],
+                    'damage_loc': cur_loc,
+                    'type': damage_type,
+                    'Material': material,
                 }
             )
     damage_list.reverse()
     pipe_damage_list = pd.Series(
-        data=damage_list, index=[damage_time for val in damage_list], dtype="O"
+        data=damage_list, index=[damage_time for val in damage_list], dtype='O'
     )
 
     # REWET_input_data["Pipe_damage_list"] =  pipe_damage_list
     # REWET_input_data["AIM"] =  aim_data
 
-    return pipe_damage_list
+    return pipe_damage_list  # noqa: RET504
 
 
-def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):
+def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):  # noqa: N802
     """
     Create REWET-style node damage file.
 
@@ -167,7 +164,7 @@ def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):
         REWET-style node damage file.
 
     """
-    node_id_list = [key for key in node_damage_data]
+    node_id_list = [key for key in node_damage_data]  # noqa: C416
 
     damage_list = []
     damage_time = event_time
@@ -175,9 +172,7 @@ def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):
     for node_id in node_id_list:
         cur_damage = node_damage_data[node_id]
         aggregates_list = [
-            cur_agg
-            for cur_agg in list(cur_damage.keys())
-            if "aggregate" in cur_agg
+            cur_agg for cur_agg in list(cur_damage.keys()) if 'aggregate' in cur_agg
         ]
 
         if len(aggregates_list) == 0:
@@ -185,34 +180,34 @@ def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):
 
         cur_data = node_damage_data[node_id]
 
-        cur_damage = cur_data["Damage"]
+        cur_damage = cur_data['Damage']
         # cur_demand = cur_data["Demand"]
 
         aim_data = findAndReadAIMFile(
             node_id,
-            os.path.join("Results", "WaterDistributionNetwork", "Node"),
+            os.path.join('Results', 'WaterDistributionNetwork', 'Node'),  # noqa: PTH118
             run_dir,
         )
 
-        total_length = aim_data["GeneralInformation"].get("Total_length", None)
-        total_number_of_damages = cur_damage["aggregate"]
+        total_length = aim_data['GeneralInformation'].get('Total_length', None)
+        total_number_of_damages = cur_damage['aggregate']
 
         damage_list.append(
             {
-                "node_name": node_id,
-                "number_of_damages": total_number_of_damages,
-                "node_Pipe_Length": total_length,
+                'node_name': node_id,
+                'number_of_damages': total_number_of_damages,
+                'node_Pipe_Length': total_length,
             }
         )
 
     node_damage_list = pd.Series(
-        data=damage_list, index=[damage_time for val in damage_list], dtype="O"
+        data=damage_list, index=[damage_time for val in damage_list], dtype='O'
     )
 
-    return node_damage_list
+    return node_damage_list  # noqa: RET504
 
 
-def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):
+def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):  # noqa: N802, N803
     """
      Create REWET-style pump damage file.
 
@@ -229,16 +224,16 @@ def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):
         REWET-style pump damage file.
 
     """
-    pump_id_list = [key for key in pump_damage_data]
+    pump_id_list = [key for key in pump_damage_data]  # noqa: C416
 
     damage_list = []
-    damage_time = REWET_input_data["event_time"]
+    damage_time = REWET_input_data['event_time']
 
     for pump_id in pump_id_list:
         cur_data = pump_damage_data[pump_id]
 
-        cur_damage = cur_data["Damage"]
-        cur_repair_time = cur_data["Repair"]
+        cur_damage = cur_data['Damage']
+        cur_repair_time = cur_data['Repair']
 
         if cur_damage == 0:
             continue  # cur_damage_state = 0 means undamaged pump
@@ -253,19 +248,19 @@ def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):
         # restore_time = getPumpRetsoreTime(cur_damage)
         damage_list.append(
             {
-                "pump_id": pump_id,
-                "time": damage_time,
-                "Restore_time": cur_repair_time,
+                'pump_id': pump_id,
+                'time': damage_time,
+                'Restore_time': cur_repair_time,
             }
         )
     pump_damage_list = pd.Series(
         index=[damage_time for val in damage_list], data=damage_list
     )
 
-    return pump_damage_list
+    return pump_damage_list  # noqa: RET504
 
 
-def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):
+def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):  # noqa: N802, N803
     """
     Create REWET-style Tank damage file.
 
@@ -281,25 +276,25 @@ def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):
     tank_damage_list : Pandas Series
         REWET-style tank damage file.
     """
-    tank_id_list = [key for key in tank_damage_data]
+    tank_id_list = [key for key in tank_damage_data]  # noqa: C416
 
     damage_list = []
-    damage_time = REWET_input_data["event_time"]
+    damage_time = REWET_input_data['event_time']
 
     for tank_id in tank_id_list:
         cur_data = tank_damage_data[tank_id]
 
-        cur_damage = cur_data["Damage"]
-        cur_repair_time = cur_data["Repair"]
+        cur_damage = cur_data['Damage']
+        cur_repair_time = cur_data['Repair']
 
         if cur_damage == 0:
             continue  # cur_damage_state = 0 meeans undamged tank
 
         damage_list.append(
             {
-                "tank_id": tank_id,
-                "time": damage_time,
-                "Restore_time": cur_repair_time,
+                'tank_id': tank_id,
+                'time': damage_time,
+                'Restore_time': cur_repair_time,
             }
         )
 
@@ -307,10 +302,10 @@ def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):
         index=[damage_time for val in damage_list], data=damage_list
     )
 
-    return tank_damage_list
+    return tank_damage_list  # noqa: RET504
 
 
-def findAndReadAIMFile(asset_id, asset_type, run_dir):
+def findAndReadAIMFile(asset_id, asset_type, run_dir):  # noqa: N802
     """
     Find and read the AIM file for an asset.
 
@@ -333,15 +328,15 @@ def findAndReadAIMFile(asset_id, asset_type, run_dir):
         run_dir,
         asset_type,
         str(asset_id),
-        "templatedir",
-        f"{asset_id}-AIM.json",
+        'templatedir',
+        f'{asset_id}-AIM.json',
     )
     aim_file_data = preprocessorIO.readJSONFile(str(file_path))
-    return aim_file_data
+    return aim_file_data  # noqa: RET504
 
 
 # Not UsedWE WILL GET IT FROM PELICUN
-def getPumpRetsoreTime(damage_state):
+def getPumpRetsoreTime(damage_state):  # noqa: N802
     """
     Provide the restore time.
 
@@ -365,7 +360,7 @@ def getPumpRetsoreTime(damage_state):
     """
     if damage_state == 1:
         restore_time = int(3 * 24 * 3600)
-    elif damage_state == 2:
+    elif damage_state == 2:  # noqa: PLR2004
         restore_time = int(7 * 24 * 3600)
     else:
         restore_time = CBIG_int
@@ -374,7 +369,7 @@ def getPumpRetsoreTime(damage_state):
 
 
 # NOT USED! WE WILL GET IT FROM PELICUN
-def getTankRetsoreTime(tank_type, damage_state):
+def getTankRetsoreTime(tank_type, damage_state):  # noqa: ARG001, N802
     """
     Provide the restore time.
 
@@ -400,7 +395,7 @@ def getTankRetsoreTime(tank_type, damage_state):
     """
     if damage_state == 1:
         restore_time = int(3 * 24 * 3600)
-    elif damage_state == 2:
+    elif damage_state == 2:  # noqa: PLR2004
         restore_time = int(7 * 24 * 3600)
     else:
         restore_time = CBIG_int
@@ -408,7 +403,7 @@ def getTankRetsoreTime(tank_type, damage_state):
     return restore_time
 
 
-def readDamagefile(file_addr, run_dir, event_time, sc_geojson):
+def readDamagefile(file_addr, run_dir, event_time, sc_geojson):  # noqa: N802
     """
     Read PELICUN damage files. and create REWET-Style damage.
 
@@ -436,40 +431,40 @@ def readDamagefile(file_addr, run_dir, event_time, sc_geojson):
 
     damage_data = preprocessorIO.readJSONFile(file_addr)
 
-    wn_damage_data = damage_data["WaterDistributionNetwork"]
+    wn_damage_data = damage_data['WaterDistributionNetwork']
 
-    if "Pipe" in wn_damage_data:
+    if 'Pipe' in wn_damage_data:
         pipe_damage_data = createPipeDamageInputForREWET(
-            wn_damage_data["Pipe"], run_dir, event_time, sc_geojson
+            wn_damage_data['Pipe'], run_dir, event_time, sc_geojson
         )
     else:
-        pipe_damage_data = pd.Series(dtype="O")
+        pipe_damage_data = pd.Series(dtype='O')
 
-    if "Tank" in wn_damage_data:
+    if 'Tank' in wn_damage_data:
         tank_damage_data = createTankDamageInputForREWET(
-            wn_damage_data["Tank"], run_dir, event_time
+            wn_damage_data['Tank'], run_dir, event_time
         )
     else:
-        tank_damage_data = pd.Series(dtype="O")
+        tank_damage_data = pd.Series(dtype='O')
 
-    if "Pump" in wn_damage_data:
+    if 'Pump' in wn_damage_data:
         pump_damage_data = createPumpDamageInputForREWET(
-            wn_damage_data["Pump"], run_dir, event_time
+            wn_damage_data['Pump'], run_dir, event_time
         )
     else:
-        pump_damage_data = pd.Series(dtype="O")
+        pump_damage_data = pd.Series(dtype='O')
 
-    if "Junction" in wn_damage_data:
+    if 'Junction' in wn_damage_data:
         node_damage_data = createNodeDamageInputForREWET(
-            wn_damage_data["Junction"], run_dir, event_time
+            wn_damage_data['Junction'], run_dir, event_time
         )
     else:
-        node_damage_data = pd.Series(dtype="O")
+        node_damage_data = pd.Series(dtype='O')
 
     damage_data = {}
-    damage_data["Pipe"] = pipe_damage_data
-    damage_data["Tank"] = tank_damage_data
-    damage_data["Pump"] = pump_damage_data
-    damage_data["Node"] = node_damage_data
+    damage_data['Pipe'] = pipe_damage_data
+    damage_data['Tank'] = tank_damage_data
+    damage_data['Pump'] = pump_damage_data
+    damage_data['Node'] = node_damage_data
 
     return damage_data

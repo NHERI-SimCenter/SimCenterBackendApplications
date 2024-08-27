@@ -1,4 +1,4 @@
-# Copyright (c) 2024 The Regents of the University of California
+# Copyright (c) 2024 The Regents of the University of California  # noqa: INP001
 # Copyright (c) 2024 Leland Stanford Junior University
 #
 # This file is part of whale.
@@ -37,19 +37,20 @@
 
 """Provide Interface between REWET and PYReCoDes."""
 
-import random
-import json
 import copy
-import rewet
+import json
+import random
 from pathlib import Path
-import wntrfr
-import pandas as pd
-from sklearn.cluster import KMeans
-from rewet.api import API
 
-TEMP_DIR = "./"
-RESULT_DIR = "./rewet_result"
-INPUT_FILE_DIR = "./"
+import pandas as pd
+import rewet
+import wntrfr
+from rewet.api import API
+from sklearn.cluster import KMeans
+
+TEMP_DIR = './'
+RESULT_DIR = './rewet_result'
+INPUT_FILE_DIR = './'
 
 
 class REWETPyReCoDes:
@@ -105,7 +106,7 @@ class REWETPyReCoDes:
         # couple building to the demand nodes
         self.couple_buildings_to_demand_nodes(state)
 
-    def system_performance(self, state, damage, current_time, next_time):
+    def system_performance(self, state, current_time, next_time):
         """
         Assess the system functionality.
 
@@ -150,9 +151,7 @@ class REWETPyReCoDes:
         self.rewet.save_result()
 
         # Get result
-        building_satisfaction = self.get_building_data_satisfaction(
-            method="mean"
-        )
+        building_satisfaction = self.get_building_data_satisfaction(method='mean')
         self.building_satisfaction = building_satisfaction
 
         return building_satisfaction
@@ -175,7 +174,7 @@ class REWETPyReCoDes:
         self.inp_file_path = self.inp_file_path.resolve()
 
         if not self.inp_file_path.exists():
-            raise ValueError(f"There inp file does not exists: {inp_file}")
+            raise ValueError(f'There inp file does not exists: {inp_file}')  # noqa: EM102, TRY003
 
         self.inp_file_path = str(self.inp_file_path)
 
@@ -189,11 +188,9 @@ class REWETPyReCoDes:
                 if node_name not in self.nodes:
                     self.nodes[node_name] = {}
 
-                self.nodes[node_name][
-                    "initial_demand"
-                ] = node_demand_base_value
+                self.nodes[node_name]['initial_demand'] = node_demand_base_value
 
-                self.nodes[node_name]["coordinates"] = node.coordinates
+                self.nodes[node_name]['coordinates'] = node.coordinates
 
     def set_asset_data(self, state):
         """
@@ -214,8 +211,8 @@ class REWETPyReCoDes:
         None.
 
         """
-        wdn_state = state["WaterDistributionNetwork"]
-        wdn_state = wdn_state.get("Pipe", [])
+        wdn_state = state['WaterDistributionNetwork']
+        wdn_state = wdn_state.get('Pipe', [])
 
         for asset_type, asset_type_data in state.items():
             if asset_type not in self.asset_information:
@@ -228,23 +225,23 @@ class REWETPyReCoDes:
                     self.asset_information[asset_type][sub_asset_type] = {}
 
                 for element_key, element_data in sub_asset_type_data.items():
-                    asset_id = element_data["GeneralInformation"]["AIM_id"]
+                    asset_id = element_data['GeneralInformation']['AIM_id']
                     if asset_id != element_key:
-                        raise ValueError(
-                            "The rationality behidd the workdflow"
-                            "is that oth aim-id and keys be the"
-                            "same"
+                        raise ValueError(  # noqa: TRY003
+                            'The rationality behidd the workdflow'  # noqa: EM101
+                            'is that oth aim-id and keys be the'
+                            'same'
                         )
 
-                    self.asset_information[asset_type][sub_asset_type][
-                        asset_id
-                    ] = element_data["GeneralInformation"]
+                    self.asset_information[asset_type][sub_asset_type][asset_id] = (
+                        element_data['GeneralInformation']
+                    )
 
-        building_state = state["Buildings"]["Building"]
+        building_state = state['Buildings']['Building']
 
         for building_id, each_building in building_state.items():
-            population = each_building["GeneralInformation"]["Population"]
-            population_ratio = each_building.get("Population_Ratio", None)
+            population = each_building['GeneralInformation']['Population']
+            population_ratio = each_building.get('Population_Ratio', None)
 
             if population_ratio is not None:
                 ratio = population_ratio
@@ -252,14 +249,14 @@ class REWETPyReCoDes:
                 ratio = 1
 
             cur_building = {}
-            cur_building["initial_population_ratio"] = ratio
-            cur_building["population_ratio"] = ratio
-            cur_building["initial_population"] = population
-            cur_building["population"] = population
+            cur_building['initial_population_ratio'] = ratio
+            cur_building['population_ratio'] = ratio
+            cur_building['initial_population'] = population
+            cur_building['population'] = population
 
             self.buildings[building_id] = cur_building
 
-    def update_state_with_damages(self, damage, damage_time, state):
+    def update_state_with_damages(self, damage, damage_time, state):  # noqa: ARG002
         """
         Update the state dic with damages.
 
@@ -282,21 +279,19 @@ class REWETPyReCoDes:
         None.
 
         """
-        damage = damage["WaterDistributionNetwork"]
-        pipe_damage = damage.get("Pipe", [])
+        damage = damage['WaterDistributionNetwork']
+        pipe_damage = damage.get('Pipe', [])
 
         for asset_id, damage_location in pipe_damage.items():
-            damage_location_info = damage_location["Damage"]
+            damage_location_info = damage_location['Damage']
 
             aggregate_keys = [
-                key for key in damage_location_info if "aggregate-" in key
+                key for key in damage_location_info if 'aggregate-' in key
             ]
 
             aggregate_keys.sort()
 
-            aggregate_results = [
-                damage_location_info[key] for key in aggregate_keys
-            ]
+            aggregate_results = [damage_location_info[key] for key in aggregate_keys]
 
             segment_sizes = len(aggregate_results)
             segment_step = 1 / segment_sizes
@@ -307,13 +302,11 @@ class REWETPyReCoDes:
             for damage_val in aggregate_results:
                 if damage_val > 0:
                     if damage_val == 1:
-                        damage_type = "leak"
-                    elif damage_val == 2:
-                        damage_type = "break"
+                        damage_type = 'leak'
+                    elif damage_val == 2:  # noqa: PLR2004
+                        damage_type = 'break'
                     else:
-                        raise ValueError(
-                            "The damage type must be either 1 or 2"
-                        )
+                        raise ValueError('The damage type must be either 1 or 2')  # noqa: EM101, TRY003
                 else:
                     continue
 
@@ -321,22 +314,18 @@ class REWETPyReCoDes:
                 cur_pipe_damage_location_list.append(cur_loc)
                 cur_pipe_damage_location_type.append(damage_type)
 
-            wdn_state = state["WaterDistributionNetwork"]
-            pipe_state = wdn_state.get("Pipe")
+            wdn_state = state['WaterDistributionNetwork']
+            pipe_state = wdn_state.get('Pipe')
 
-            if "Damage" in pipe_state[asset_id]:
-                raise ValueError(
-                    f"Damage is already exist for Pipe " f"{asset_id}"
-                )
+            if 'Damage' in pipe_state[asset_id]:
+                raise ValueError(f'Damage is already exist for Pipe ' f'{asset_id}')  # noqa: EM102, TRY003
 
-            pipe_state[asset_id]["Damage"] = dict()
-            pipe_state[asset_id]["Damage"][
-                "Location"
-            ] = cur_pipe_damage_location_list
+            pipe_state[asset_id]['Damage'] = dict()  # noqa: C408
+            pipe_state[asset_id]['Damage']['Location'] = (
+                cur_pipe_damage_location_list
+            )
 
-            pipe_state[asset_id]["Damage"][
-                "Type"
-            ] = cur_pipe_damage_location_type
+            pipe_state[asset_id]['Damage']['Type'] = cur_pipe_damage_location_type
 
     def set_rewet_damage_from_state(self, state, damage_time):
         """
@@ -359,25 +348,23 @@ class REWETPyReCoDes:
         None.
 
         """
-        state = state["WaterDistributionNetwork"]
-        pipe_damage = state.get("Pipe", [])
+        state = state['WaterDistributionNetwork']
+        pipe_damage = state.get('Pipe', [])
 
         damage_list = []
         for asset_id, pipe_info in pipe_damage.items():
-            damage_location_info = pipe_info["Damage"]
-            damage_location_list = damage_location_info["Location"]
-            damage_type_list = damage_location_info["Type"]
+            damage_location_info = pipe_info['Damage']
+            damage_location_list = damage_location_info['Location']
+            damage_type_list = damage_location_info['Type']
 
             if len(damage_location_list) != len(damage_type_list):
-                raise ValueError(
-                    "The size of types and locationis not the" " same."
-                )
+                raise ValueError('The size of types and locationis not the same.')  # noqa: EM101, TRY003
 
             segment_sizes = len(damage_location_list)
 
-            pipe_id = self.asset_information["WaterDistributionNetwork"][
-                "Pipe"
-            ][asset_id]["InpID"]
+            pipe_id = self.asset_information['WaterDistributionNetwork']['Pipe'][
+                asset_id
+            ]['InpID']
 
             for c in range(segment_sizes):
                 cur_loc = damage_location_list[c]
@@ -385,10 +372,10 @@ class REWETPyReCoDes:
 
                 damage_list.append(
                     {
-                        "pipe_id": pipe_id,
-                        "damage_loc": cur_loc,
-                        "type": damage_type,
-                        "Material": "CI",
+                        'pipe_id': pipe_id,
+                        'damage_loc': cur_loc,
+                        'type': damage_type,
+                        'Material': 'CI',
                     }
                 )
 
@@ -396,21 +383,19 @@ class REWETPyReCoDes:
         self.pipe_damage = pd.Series(
             data=damage_list,
             index=[damage_time for val in damage_list],
-            dtype="O",
+            dtype='O',
         )
 
-        self.node_damage = pd.Series(dtype="O")
+        self.node_damage = pd.Series(dtype='O')
 
-        self.pump_damage = pd.Series(dtype="O")
+        self.pump_damage = pd.Series(dtype='O')
 
-        self.tank_damage = pd.Series(dtype="O")
+        self.tank_damage = pd.Series(dtype='O')
 
         if damage_time in self.damage_state:
-            raise ValueError(
-                f"Time {damage_time} still exists in" f" damage state."
-            )
+            raise ValueError(f'Time {damage_time} still exists in damage state.')  # noqa: EM102, TRY003
 
-    def couple_buildings_to_demand_nodes(self, state):
+    def couple_buildings_to_demand_nodes(self, state):  # noqa: C901
         """
         Couple building to the demand nodes based on their coordinates.
 
@@ -424,18 +409,18 @@ class REWETPyReCoDes:
         None.
 
         """
-        building_state = state["Buildings"]["Building"]
+        building_state = state['Buildings']['Building']
 
         building_id_list = []
         for building_id, each_building in building_state.items():
-            location = each_building["GeneralInformation"]["location"]
-            coordinate = (location["latitude"], location["longitude"])
+            location = each_building['GeneralInformation']['location']
+            coordinate = (location['latitude'], location['longitude'])
             building_id_list.append(building_id)
 
             self.building_coordinates.append(coordinate)
 
         demand_node_coordinate_list = [
-            val["coordinates"] for key, val in self.nodes.items()
+            val['coordinates'] for key, val in self.nodes.items()
         ]
 
         demand_node_name_list = [key for key, val in self.nodes.items()]
@@ -466,17 +451,17 @@ class REWETPyReCoDes:
         for node_name in self.demand_node_to_building:
             building_name_list = self.demand_node_to_building[node_name]
             population_list = [
-                self.buildings[bldg_id]["initial_population"]
+                self.buildings[bldg_id]['initial_population']
                 for bldg_id in building_name_list
             ]
 
             total_initial_population = sum(population_list)
 
             cur_node = self.nodes[node_name]
-            initial_node_demand = cur_node["initial_demand"]
+            initial_node_demand = cur_node['initial_demand']
 
             if initial_node_demand == 0 and total_initial_population > 0:
-                Warning(
+                Warning(  # noqa: PLW0133
                     f"Initial demand for node {node_name} is 0."
                     f" Thus, the demand ratio in buildidng(s)"
                     f" {repr(building_name_list).strip('[').strip(']')}"
@@ -485,7 +470,7 @@ class REWETPyReCoDes:
                 )
 
             if total_initial_population == 0:
-                Warning(
+                Warning(  # noqa: PLW0133
                     f"The population assigned to {node_name} is 0."
                     f" Thus, the demand ratio in buildidng(s)"
                     f" {repr(building_name_list).strip('[').strip(']')}"
@@ -497,14 +482,12 @@ class REWETPyReCoDes:
             #  For more clarity, we name the variable "initial_population".
             # It does not mean that there will be ffdifferent population in
             # the course of recovery
-            self.nodes[node_name][
-                "initial_population"
-            ] = total_initial_population
+            self.nodes[node_name]['initial_population'] = total_initial_population
 
-            self.nodes[node_name]["initial_node_demand"] = initial_node_demand
+            self.nodes[node_name]['initial_node_demand'] = initial_node_demand
 
             for bldg_id in building_name_list:
-                pop = self.buildings[bldg_id]["initial_population"]
+                pop = self.buildings[bldg_id]['initial_population']
 
                 if total_initial_population != 0:
                     cur_bldg_initial_demand = (
@@ -513,9 +496,7 @@ class REWETPyReCoDes:
                 else:
                     cur_bldg_initial_demand = None
 
-                self.buildings[bldg_id][
-                    "initial_demand"
-                ] = cur_bldg_initial_demand
+                self.buildings[bldg_id]['initial_demand'] = cur_bldg_initial_demand
 
     def save_damage(self, state, current_time):
         """
@@ -533,16 +514,16 @@ class REWETPyReCoDes:
         None.
 
         """
-        pipe_damage_file_name = "temp_pipe_damage_file.pkl"
-        node_damage_file_name = "node_pipe_damage_file.pkl"
-        tank_damage_file_name = "tank_pipe_damage_file.pkl"
-        pump_damage_file_name = "pump_pipe_damage_file.pkl"
+        pipe_damage_file_name = 'temp_pipe_damage_file.pkl'
+        node_damage_file_name = 'node_pipe_damage_file.pkl'
+        tank_damage_file_name = 'tank_pipe_damage_file.pkl'
+        pump_damage_file_name = 'pump_pipe_damage_file.pkl'
 
         pipe_path = Path(TEMP_DIR) / pipe_damage_file_name
         node_path = Path(TEMP_DIR) / node_damage_file_name
         tank_path = Path(TEMP_DIR) / tank_damage_file_name
         pump_path = Path(TEMP_DIR) / pump_damage_file_name
-        list_path = Path(TEMP_DIR) / "list.xlsx"
+        list_path = Path(TEMP_DIR) / 'list.xlsx'
 
         pipe_path = str(pipe_path)
         node_path = str(node_path)
@@ -553,15 +534,15 @@ class REWETPyReCoDes:
         self.set_rewet_damage_from_state(state, current_time)
 
         if current_time in self.damage_state:
-            raise ValueError(
-                f"The time {current_time} is already in " f" damage state."
+            raise ValueError(  # noqa: TRY003
+                f'The time {current_time} is already in ' f' damage state.'  # noqa: EM102
             )
 
         self.damage_state[current_time] = {
-            "Pipe": self.pipe_damage,
-            "Node": self.node_damage,
-            "Pump": self.pump_damage,
-            "Tank": self.tank_damage,
+            'Pipe': self.pipe_damage,
+            'Node': self.node_damage,
+            'Pump': self.pump_damage,
+            'Tank': self.tank_damage,
         }
 
         self.pipe_damage.to_pickle(pipe_path)
@@ -570,19 +551,19 @@ class REWETPyReCoDes:
         self.tank_damage.to_pickle(tank_path)
 
         scn_postfix_list = random.choices(
-            ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "L", "M"], k=0
+            ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'L', 'M'], k=0
         )
 
-        scn_postfix = ""
+        scn_postfix = ''
         for p in scn_postfix_list:
             scn_postfix += p
 
-        self.damage_file_list["Scenario Name"] = "SCN_" + scn_postfix
-        self.damage_file_list["Pipe Damage"] = pipe_damage_file_name
-        self.damage_file_list["Nodal Damage"] = node_damage_file_name
-        self.damage_file_list["Pump Damage"] = tank_damage_file_name
-        self.damage_file_list["Tank Damage"] = pump_damage_file_name
-        self.damage_file_list["Probability"] = 1
+        self.damage_file_list['Scenario Name'] = 'SCN_' + scn_postfix
+        self.damage_file_list['Pipe Damage'] = pipe_damage_file_name
+        self.damage_file_list['Nodal Damage'] = node_damage_file_name
+        self.damage_file_list['Pump Damage'] = tank_damage_file_name
+        self.damage_file_list['Tank Damage'] = pump_damage_file_name
+        self.damage_file_list['Probability'] = 1
 
         damage_file_list = pd.DataFrame.from_dict([self.damage_file_list])
         damage_file_list.to_excel(list_path)
@@ -612,25 +593,23 @@ class REWETPyReCoDes:
 
         """
         if current_time > next_time:
-            raise ValueError(
-                "Current tiime cannot be bigger than the next" "time"
-            )
+            raise ValueError('Current tiime cannot be bigger than the next' 'time')  # noqa: EM101, TRY003
         if abs(next_time - current_time) % self.hydraulic_time_step != 0:
-            raise ValueError(
-                "next_time - current_time must be a factor of "
-                "the hydraulci time step."
+            raise ValueError(  # noqa: TRY003
+                'next_time - current_time must be a factor of '  # noqa: EM101
+                'the hydraulci time step.'
             )
 
         status = self.rewet.initiate(current_time=current_time, debug=True)
         if status != 0:
-            raise ValueError(f"There is an error: {status}")
+            raise ValueError(f'There is an error: {status}')  # noqa: EM102, TRY003
 
         self.rewet.apply_damage(current_time, 0.001)
 
         time_step = next_time - current_time
         status = self.rewet.run_hydraulic_simulation(time_step)
         if status != 0:
-            raise ValueError(f"There is an error: {status}")
+            raise ValueError(f'There is an error: {status}')  # noqa: EM102, TRY003
 
         return dict
 
@@ -660,31 +639,29 @@ class REWETPyReCoDes:
         list_file_path = Path(self.list_path)
         list_file_path = list_file_path.resolve()
         if not list_file_path.exists():
-            raise ValueError(
-                f"The list file does not exists: " f"{str(list_file_path)}"
+            raise ValueError(  # noqa: TRY003
+                f'The list file does not exists: ' f'{list_file_path!s}'  # noqa: EM102
             )
         list_file_path = str(list_file_path)
 
         temp_dir = Path(TEMP_DIR).resolve()
         if not temp_dir.exists():
-            raise ValueError(
-                f"The temp directory does not exists: " f"{str(temp_dir)}"
-            )
+            raise ValueError(f'The temp directory does not exists: ' f'{temp_dir!s}')  # noqa: EM102, TRY003
         temp_dir = str(temp_dir)
 
-        settings["RUN_TIME"] = run_time
-        settings["minimum_simulation_time"] = run_time
-        settings["result_directory"] = RESULT_DIR
-        settings["temp_directory"] = temp_dir
-        settings["WN_INP"] = self.inp_file_path
-        settings["pipe_damage_file_list"] = list_file_path
-        settings["pipe_damage_file_directory"] = temp_dir
-        settings["Restoration_on"] = False
-        settings["Pipe_damage_input_method"] = "pickle"
+        settings['RUN_TIME'] = run_time
+        settings['minimum_simulation_time'] = run_time
+        settings['result_directory'] = RESULT_DIR
+        settings['temp_directory'] = temp_dir
+        settings['WN_INP'] = self.inp_file_path
+        settings['pipe_damage_file_list'] = list_file_path
+        settings['pipe_damage_file_directory'] = temp_dir
+        settings['Restoration_on'] = False
+        settings['Pipe_damage_input_method'] = 'pickle'
 
-        input_file_path = Path(INPUT_FILE_DIR) / "rewet_input.json"
+        input_file_path = Path(INPUT_FILE_DIR) / 'rewet_input.json'
         input_file_path = input_file_path.resolve()
-        with open(input_file_path, "wt") as f:
+        with open(input_file_path, 'w') as f:  # noqa: PTH123
             json.dump(settings, f, indent=4)
 
         self.input_file_path = str(input_file_path)
@@ -711,14 +688,14 @@ class REWETPyReCoDes:
         """
         demand_sat = self.rewet.get_satisfied_demand_ratio()
 
-        if method.upper() == "MEAN":
+        if method.upper() == 'MEAN':
             demand_sat = demand_sat.mean()
-        elif method.upper() == "MAX":
+        elif method.upper() == 'MAX':
             demand_sat = demand_sat.max()
-        elif method.upper() == "MIN":
+        elif method.upper() == 'MIN':
             demand_sat = demand_sat.min()
         else:
-            raise ValueError(f"The method is not recognizable: {method}")
+            raise ValueError(f'The method is not recognizable: {method}')  # noqa: EM102, TRY003
 
         building_demand_satisfaction_ratio = {}
 
@@ -729,9 +706,7 @@ class REWETPyReCoDes:
                 zip(building_names, [node_demand_ratio] * len(building_names))
             )
 
-            building_demand_satisfaction_ratio.update(
-                cur_satisified_demand_building
-            )
+            building_demand_satisfaction_ratio.update(cur_satisified_demand_building)
 
         return building_demand_satisfaction_ratio
 
@@ -750,40 +725,32 @@ class REWETPyReCoDes:
 
         """
         for node_name in self.demand_node_to_building:
-
             # cur_node = self.nodes[node_name]
-            total_initial_population = self.nodes[node_name][
-                "initial_population"
-            ]
+            total_initial_population = self.nodes[node_name]['initial_population']
 
             if not total_initial_population > 0:
                 continue
 
             building_name_list = self.demand_node_to_building[node_name]
 
-            building = state["Buildings"]["Building"]
+            building = state['Buildings']['Building']
 
             node_new_demand = 0
 
             for bldg_id in building_name_list:
+                cur_bldg_initial_demand = self.buildings[bldg_id]['initial_demand']
 
-                cur_bldg_initial_demand = self.buildings[bldg_id][
-                    "initial_demand"
+                cur_bldg_deamnd_ratio = building[bldg_id]['GeneralInformation'][
+                    'Population_Ratio'
                 ]
 
-                cur_bldg_deamnd_ratio = building[bldg_id][
-                    "GeneralInformation"
-                ]["Population_Ratio"]
+                cur_bldg_new_deamnd = cur_bldg_deamnd_ratio * cur_bldg_initial_demand
 
-                cur_bldg_new_deamnd = (
-                    cur_bldg_deamnd_ratio * cur_bldg_initial_demand
-                )
-
-                self.buildings[bldg_id]["current_demand"] = cur_bldg_new_deamnd
+                self.buildings[bldg_id]['current_demand'] = cur_bldg_new_deamnd
 
                 node_new_demand += cur_bldg_new_deamnd
 
-            self.nodes[node_name]["current_demand"] = node_new_demand
+            self.nodes[node_name]['current_demand'] = node_new_demand
             node = self.wn.get_node(node_name)
             node.demand_timeseries_list[0].base_value = node_new_demand
 
@@ -801,17 +768,17 @@ def get_rewet_hydraulic_basic_setting():
     settings = rewet.Input.Settings.Settings()
     settings_dict = settings.process.settings
 
-    return settings_dict
+    return settings_dict  # noqa: RET504
 
 
-if __name__ == "__main__":
-    with open("Results_det.json", "rt") as f:
+if __name__ == '__main__':
+    with open('Results_det.json') as f:  # noqa: PTH123
         state = json.load(f)
 
-    with open("Results_0.json", "rt") as f:
+    with open('Results_0.json') as f:  # noqa: PTH123
         damage = json.load(f)
 
-    inp_file = "waterNetwork.inp"
+    inp_file = 'waterNetwork.inp'
 
     interface = REWETPyReCoDes()
     interface.system_state(state, damage, inp_file)
