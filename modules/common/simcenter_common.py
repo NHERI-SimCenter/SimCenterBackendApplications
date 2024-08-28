@@ -283,7 +283,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
 
             scale_factors.update({input_name: f_scale})
 
-    return scale_factors
+    return scale_factors  # noqa: DOC201, RUF100
 
 
 def get_unit_bases(input_units):
@@ -306,4 +306,4 @@ def get_unit_bases(input_units):
                 input_unit_bases = cur_unit_bases
                 break
 
-    return input_unit_bases
+    return input_unit_bases  # noqa: DOC201, RUF100

@@ -46,7 +46,7 @@ class Starter:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D205, D401
+        """  # noqa: D205, D401, DOC202, RUF100
         settings = Settings()
         if project_file is not None:
             project_file = str(project_file)

@@ -110,7 +110,7 @@ class flume:
         )  # Write bottom STL file
 
         # Return extreme values
-        return extremeval
+        return extremeval  # noqa: DOC201, RUF100
 
     #############################################################
     def flumedata(self, IpPTFile):  # noqa: N803
@@ -178,7 +178,7 @@ class flume:
         self.npt = np.delete(self.npt, noindexes, axis=0)
 
         # Return extreme values
-        return extremeval
+        return extremeval  # noqa: DOC201, RUF100
 
     ####################################################################
     def right(self):
@@ -431,4 +431,4 @@ class flume:
         )
         tempfileID.close  # noqa: B018
 
-        return 0
+        return 0  # noqa: DOC201, RUF100

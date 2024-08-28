@@ -9,7 +9,7 @@ def validateCaseDirectoryStructure(caseDir):  # noqa: N802, N803
     It also checks that system directory contains the controlDict
     """  # noqa: D205, D400, D401, D404
     if not os.path.isdir(caseDir):  # noqa: PTH112
-        return False
+        return False  # noqa: DOC201, RUF100
 
     caseDirList = os.listdir(caseDir)  # noqa: N806
     necessaryDirs = ['0', 'constant', 'system']  # noqa: N806
@@ -27,7 +27,7 @@ def findFunctionsDictionary(controlDictLines):  # noqa: N802, N803
     """This method will find functions dictionary in the controlDict"""  # noqa: D400, D401, D404
     for line in controlDictLines:
         if line.startswith('functions'):
-            return (True, controlDictLines.index(line) + 2)
+            return (True, controlDictLines.index(line) + 2)  # noqa: DOC201, RUF100
 
     return [False, len(controlDictLines)]
 

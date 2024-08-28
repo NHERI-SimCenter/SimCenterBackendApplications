@@ -388,7 +388,7 @@ class ERACond:
         for i in range(len(Par)):
             Par[i] = np.squeeze(Par[i])
 
-        return Par
+        return Par  # noqa: DOC201, RUF100
 
     # %%
     def condCDF(self, x, cond):  # noqa: C901, N802
@@ -442,7 +442,7 @@ class ERACond:
         elif self.Name == 'weibull':
             CDF = stats.weibull_min.cdf(x, c=par[1], scale=par[0])  # noqa: N806
 
-        return CDF
+        return CDF  # noqa: DOC201, RUF100
 
     # %%
     def condiCDF(self, y, cond):  # noqa: C901, N802
@@ -496,7 +496,7 @@ class ERACond:
         elif self.Name == 'weibull':
             iCDF = stats.weibull_min.ppf(y, c=par[1], scale=par[0])  # noqa: N806
 
-        return iCDF
+        return iCDF  # noqa: DOC201, RUF100
 
     # %%
     def condPDF(self, x, cond):  # noqa: C901, N802
@@ -550,7 +550,7 @@ class ERACond:
         elif self.Name == 'weibull':
             PDF = stats.weibull_min.pdf(x, c=par[1], scale=par[0])  # noqa: N806
 
-        return PDF
+        return PDF  # noqa: DOC201, RUF100
 
     # %%
     def condRandom(self, cond):  # noqa: C901, N802
@@ -602,4 +602,4 @@ class ERACond:
         elif self.Name == 'weibull':
             Random = stats.weibull_min.rvs(c=par[1], scale=par[0])  # noqa: N806
 
-        return Random
+        return Random  # noqa: DOC201, RUF100

@@ -229,7 +229,7 @@ class EpanetSimulator(EpanetSimulator):
             if run_successful:
                 break
 
-        return result_data, run_successful
+        return result_data, run_successful  # noqa: DOC201, RUF100
 
     def _updateResultStartTime(self, result_data, start_time):  # noqa: N802
         for res_type, res in result_data.link.items():  # noqa: B007, PERF102
@@ -379,7 +379,7 @@ class EpanetSimulator(EpanetSimulator):
 
         self._node_pairs_with_multiple_links = OrderedDict()
         for from_node_id, to_node_id in n_links.keys():  # noqa: SIM118
-            if n_links[(from_node_id, to_node_id)] > 1:
+            if n_links[(from_node_id, to_node_id)] > 1:  # noqa: RUF031, RUF100
                 if (
                     to_node_id,
                     from_node_id,
@@ -390,7 +390,7 @@ class EpanetSimulator(EpanetSimulator):
                 from_node_name = self._node_id_to_name[from_node_id]
                 to_node_name = self._node_id_to_name[to_node_id]
                 tmp_list = self._node_pairs_with_multiple_links[
-                    (from_node_id, to_node_id)
+                    (from_node_id, to_node_id)  # noqa: RUF031, RUF100
                 ] = []
                 for link_name in self._wn.get_links_for_node(from_node_name):
                     link = self._wn.get_link(link_name)
