@@ -56,7 +56,7 @@ INPUT_FILE_DIR = './'
 class REWETPyReCoDes:
     """Provide the wrapper for REWET API."""
 
-    def __init__(self):
+    def __init__(self, inp_file):
         self.wn = None
         self._clean_wn = None
         self.inp_file_path = None
@@ -73,8 +73,9 @@ class REWETPyReCoDes:
         self.damage_file_list = {}
         self.damage_state = {}
         self.hydraulic_time_step = 3600
+        self.inp_file_path = inp_file
 
-    def system_state(self, state, damage, inp_file, damage_time=0):
+    def system_state(self, state, damage, damage_time=0):
         """
         Set the WDN system for PyReCoDes Interface.
 
@@ -85,8 +86,6 @@ class REWETPyReCoDes:
             style.
         damage : dict
             The damage state in 2DTool's system_i style.
-        inp_file : path(str)
-            the path to the inp file.
         Damage_time : int
             When initil damages happen in seconds.
 
@@ -96,7 +95,7 @@ class REWETPyReCoDes:
 
         """
         # read the inp file
-        self.read_inp_file(inp_file)
+        self.read_inp_file(self.inp_file_path)
 
         self.set_asset_data(state)
 
@@ -114,8 +113,6 @@ class REWETPyReCoDes:
         ----------
         state : dict.
             The _det file content.
-        damage : dict
-            _i (realization) file content.
         current_time : int
             Current time in seconds.
         next_time : int
@@ -780,6 +777,6 @@ if __name__ == '__main__':
 
     inp_file = 'waterNetwork.inp'
 
-    interface = REWETPyReCoDes()
-    interface.system_state(state, damage, inp_file)
-    result = interface.system_performance(state, damage, 0, 24 * 3600)
+    interface = REWETPyReCoDes(inp_file)
+    interface.system_state(state, damage)
+    result = interface.system_performance(state, 0, 24 * 3600)
