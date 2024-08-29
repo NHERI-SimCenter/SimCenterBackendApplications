@@ -384,18 +384,16 @@ def run_command(command):
         # sy - error checking trial 2 : only for windows and python & additional try statement
 
         try:
-            if (platform.system() == 'Windows') and ("python.exe" in str(command)): 
+            if (platform.system() == 'Windows') and ('python.exe' in str(command)):
                 if returncode != 0:
-                    raise WorkFlowInputError("Analysis Failed")
-                else:
-                    return str(result), returncode
-            else:
-                return str(result), returncode
+                    raise WorkFlowInputError('Analysis Failed')
+
+            return str(result), returncode
 
         except WorkFlowInputError as e:
             print(str(e).replace('\'',''))
             print(str(result))
-            exit(-20)
+            sys.exit(-20)
 
         except:
             # if for whatever reason the above failes, move on
@@ -1776,9 +1774,11 @@ class Workflow:  # noqa: PLR0904
         for input_ in reg_mapping_app.inputs:
             if input_['id'] == 'assetFile':
                 input_['default'] = str(AIM_file_path)
-                
+
         # Get the event file path
-        eventFilePath = self.shared_data.get('RegionalEvent', {}).get('eventFilePath', self.reference_dir)
+        eventFilePath = self.shared_data.get('RegionalEvent', {}).get(
+            'eventFilePath', self.reference_dir
+        )
 
         reg_mapping_app.inputs.append(
             {
@@ -2206,11 +2206,12 @@ class Workflow:  # noqa: PLR0904
                 #      This time, (1) we do it only for python; (2) added try statement
 
                 try:
-                    if command.startswith("python"):
+                    if command.startswith('python'):
                         if platform.system() == 'Windows':
-                           driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                            driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
                         else:
-                           pass
+                            pass
+
                 except:
                     pass
 
@@ -2369,18 +2370,25 @@ class Workflow:  # noqa: PLR0904
 
                     driver_script += create_command(command_list) + '\n'
 
-
                 # sy - error checking trial 2
                 #      This time, (1) we do it only for python; (2) added try statement
 
-                try:
-                    if command.startswith("python"):
-                        if platform.system() == 'Windows':
-                           driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
-                        else:
-                           pass
-                except:
-                    pass
+                # try:
+                if 'python' in command_list[0].lower():
+                    if platform.system() == 'Windows':
+                        driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                    else:
+                        pass
+                elif (
+                    'stochasticgm' in command_list[0].lower()
+                ):  # This function follows our standard
+                    if platform.system() == 'Windows':
+                        driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                    else:
+                        pass
+
+                # except:
+                #    pass
 
             # log_msg('Workflow driver script:', prepend_timestamp=False)
             # log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False, prepend_blank_space=False)
