@@ -82,7 +82,7 @@ class of7Geometry:
                 data, ['Events', 'NumBathymetryFiles']
             )
             if numbathy == [None]:
-                return -1
+                return -1  # noqa: DOC201, RUF100
             else:  # noqa: RET505
                 numbathy = ', '.join(
                     hydroutil.extract_element_from_json(
@@ -250,7 +250,7 @@ class of7Geometry:
             # Create geometry (i.e. STL files) and extreme file
             ecode = finalgeom.creategeom(data, path)
             if ecode < 0:
-                return -1
+                return -1  # noqa: DOC201, RUF100
 
         # Bathymetry only
         elif int(simtype) == 2:  # noqa: PLR2004
