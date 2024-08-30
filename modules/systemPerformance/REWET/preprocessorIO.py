@@ -62,7 +62,7 @@ def readJSONFile(file_addr):  # noqa: N802
 
     """  # noqa: D401
     if not os.path.exists(file_addr):  # noqa: PTH110
-        raise ValueError('INPUT WHALE FILE is not found.', repr(file_addr))  # noqa: EM101, TRY003
+        raise ValueError('INPUT WHALE FILE is not found.', file_addr)  # noqa: EM101, TRY003
 
     with open(file_addr) as f:  # noqa: PTH123
         data = json.load(f)

@@ -88,7 +88,7 @@ def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geoj
 
         aim_data = findAndReadAIMFile(
             pipe_id,
-            os.path.join('Results', 'WaterDistributionNetwork', 'Pipe'),  # noqa: PTH118
+            os.path.join('WaterDistributionNetwork', 'Pipe'),  # noqa: PTH118
             run_dir,
         )
 
@@ -176,7 +176,7 @@ def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):  # noq
 
         aim_data = findAndReadAIMFile(
             node_id,
-            os.path.join('Results', 'WaterDistributionNetwork', 'Node'),  # noqa: PTH118
+            os.path.join('WaterDistributionNetwork', 'Node'),  # noqa: PTH118
             run_dir,
         )
 

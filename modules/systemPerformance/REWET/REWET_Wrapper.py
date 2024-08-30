@@ -60,10 +60,8 @@ from initial import Starter  # noqa: E402
 from Result_Project import Project_Result  # noqa: E402
 
 
-def createScnearioList(run_directory, scn_number):  # noqa: N802, D103
-    damage_input_dir = os.path.join(  # noqa: PTH118
-        run_directory, 'Results', 'WaterDistributionNetwork', 'damage_input'
-    )
+def createScnearioList(run_dir, scn_number):  # noqa: N802, D103
+    damage_input_dir = run_dir / 'WaterDistributionNetwork' / 'damage_input'
 
     if not os.path.exists(damage_input_dir):  # noqa: PTH110
         os.makedirs(damage_input_dir)  # noqa: PTH103
@@ -127,27 +125,6 @@ def chooseARandomPreefix(damage_input_dir):  # noqa: N802
 
     return random_prefix
 
-    # def setSettingsData(rwhale_data, REWET_input_data):
-    """
-    Sets the settings (future project file) for REWET. REWET input data
-    dictionary is both used as a source and destination for settinsg data. The
-    data is stored in REWET_input_data object with key='settings'. The value
-    for 'settinsg' is an object of REWET's 'Settings' class.
-
-    Parameters
-    ----------
-    rwhale_data : json dict
-        rwhale input file.
-    REWET_input_data : dict
-        REWET input data.
-
-    Returns
-    -------
-    None.
-
-    """  # noqa: RET503, W291
-
-
 def getDLFileName(run_dir, dl_file_path, scn_number):  # noqa: N802
     """If dl_file_path is not given, the path is acquired from rwhale input data.
 
@@ -167,9 +144,8 @@ def getDLFileName(run_dir, dl_file_path, scn_number):  # noqa: N802
     """
     if dl_file_path == None:  # noqa: E711
         file_name = f'WaterDistributionNetwork_{scn_number}.json'
-        run_dir = run_dir  # noqa: PLW0127
-        file_dir = os.path.join(run_dir, 'Results', 'WaterDistributionNetwork')  # noqa: PTH118
-        file_path = os.path.join(file_dir, file_name)  # noqa: PTH118
+        file_dir = run_dir / 'WaterDistributionNetwork'
+        file_path = file_dir / file_name
     else:
         file_path = dl_file_path
         file_dir = Path(dl_file_path).parent
@@ -443,6 +419,9 @@ if __name__ == '__main__':
             )
         else:
             do_parallel = True
+    # get the current dicrectory, assumming the current directory
+    # is the run directory (Result Directory)
+    cur_dir = Path.cwd()
 
     # Setting up run settings
     REWET_input_data = {}
@@ -465,24 +444,21 @@ if __name__ == '__main__':
         'WaterDistributionNetwork'
     ]['ApplicationData']['assetSourceFile']
 
-    run_directory = rwhale_input_data['runDir']
+    run_dir = cur_dir
     number_of_realization = rwhale_input_data['Applications']['DL'][
         'WaterDistributionNetwork'
     ]['ApplicationData']['Realizations']
 
-    REWET_input_data['settings']['result_directory'] = os.path.join(  # noqa: PTH118
-        run_directory, 'Results', 'WaterDistributionNetwork', 'REWET_Result'
-    )
+    rewet_res_dir = run_dir / 'WaterDistributionNetwork' / 'REWET_Result'
+    REWET_input_data['settings']['result_directory'] = str(rewet_res_dir)
 
-    REWET_input_data['settings']['temp_directory'] = os.path.join(  # noqa: PTH118
-        run_directory, 'Results', 'WaterDistributionNetwork', 'REWET_RunFiles'
-    )
+    temp_dir = run_dir / 'WaterDistributionNetwork' / 'REWET_RunFiles'
+    REWET_input_data['settings']['temp_directory'] = str(temp_dir)
 
-    REWET_input_data['settings']['WN_INP'] = inp_file_addr
+    REWET_input_data['settings']['WN_INP'] = str(inp_file_addr)
 
-    damage_save_path = (
-        Path(run_directory) / 'Results' / 'WaterDistributionNetwork' / 'damage_input'
-    )
+    damage_save_path = run_dir / 'WaterDistributionNetwork' / 'damage_input'
+
     damage_save_path_hir = damage_save_path
     create_path(damage_save_path_hir)
 
@@ -520,11 +496,11 @@ if __name__ == '__main__':
 
         for scn_number in Damage_file_name:
             dl_file_path, dl_file_dir = getDLFileName(
-                run_directory, parser_data.dir, scn_number
+                run_dir, parser_data.dir, scn_number
             )
 
             damage_data = damage_convertor.readDamagefile(
-                dl_file_path, run_directory, event_time, sc_geojson
+                dl_file_path, run_dir, event_time, sc_geojson
             )
 
             cur_damage_file_name_list = preprocessorIO.save_damage_data(
@@ -559,12 +535,7 @@ if __name__ == '__main__':
     create_path(REWET_input_data['settings']['result_directory'])
     create_path(REWET_input_data['settings']['temp_directory'])
 
-    rewet_log_path = (
-        Path(run_directory)
-        / 'Results'
-        / 'WaterDistributionNetwork'
-        / 'rewet_log.txt'
-    )
+    rewet_log_path = run_dir / 'WaterDistributionNetwork' / 'rewet_log.txt'
 
     system_std_out = sys.stdout
     with open(rewet_log_path, 'w') as log_file:  # noqa: PTH123
@@ -671,10 +642,7 @@ if __name__ == '__main__':
                 f'WaterDistributionNetwork_{realization_number}.json'
             )
             cur_json_file_path = (
-                Path(run_directory)
-                / 'Results'
-                / 'WaterDistributionNetwork'
-                / cur_json_file_name
+                run_dir / 'WaterDistributionNetwork' / cur_json_file_name
             )
 
             with open(cur_json_file_path) as f:  # noqa: PTH123
@@ -721,11 +689,9 @@ if __name__ == '__main__':
 
     # Append junction and reservior general information to WaterDistributionNetwork_det
     det_json_path = cur_json_file_path = (
-        Path(run_directory)
-        / 'Results'
-        / 'WaterDistributionNetwork'
-        / 'WaterDistributionNetwork_det.json'
+        run_dir / 'WaterDistributionNetwork' / 'WaterDistributionNetwork_det.json'
     )
+
     det_json = preprocessorIO.readJSONFile(det_json_path)
     inp_json = preprocessorIO.readJSONFile(sc_geojson)
     inp_json = inp_json['features']
@@ -776,11 +742,9 @@ if __name__ == '__main__':
         json.dump(det_json, f, indent=2)
 
     ts_result_json_path = cur_json_file_path = (
-        Path(run_directory)
-        / 'Results'
-        / 'WaterDistributionNetwork'
-        / 'WaterDistributionNetwork_timeseries.json'
+        run_dir / 'WaterDistributionNetwork' / 'WaterDistributionNetwork_timeseries.json'
     )
+
     time_series_result_struc = {
         'Type': 'TimeSeries',
         'Asset': 'WaterDistributionNetwork',
