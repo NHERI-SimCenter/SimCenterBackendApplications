@@ -105,7 +105,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
             periods = [float(i) for i in periods]
             im_info['SA']['Periods'] = periods
         if im_info['Type'] == 'SA':
-            periods = [im_info['Period']]
+            periods = [im_info['Periods']]
             periods = [float(i) for i in periods]
             im_info['SA']['Periods'] = periods
         if im_info['Type'] == 'Vector' and 'PGV' in im_info.keys():  # noqa: SIM118
