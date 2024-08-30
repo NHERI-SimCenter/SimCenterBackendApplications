@@ -88,52 +88,52 @@ int main(int argc, char **argv)
 
       if (strcmp(eventType,"ExistingPEER_Events") != 0) {
 
-	json_array_append(newEventArray, value); // copy event for next event app to parse
+	      json_array_append(newEventArray, value); // copy event for next event app to parse
 
       } else {
 
-	json_t *eventObj = json_object();
-	json_object_set(eventObj,"type", json_string("Seismic"));
-	json_object_set(eventObj,"subtype", json_string("MultiplePEER_Event"));
-	
-	json_t *existingEventsArray = json_object_get(value,"Events");
-	int numExisting = json_array_size(existingEventsArray);      
+        json_t *eventObj = json_object();
+        json_object_set(eventObj,"type", json_string("Seismic"));
+        json_object_set(eventObj,"subtype", json_string("MultiplePEER_Event"));
+        
+        json_t *existingEventsArray = json_object_get(value,"Events");
+        int numExisting = json_array_size(existingEventsArray);      
 
-	if (numExisting > 1) {
+        if (numExisting > 1) {
 
-	  json_t *randomVar = json_object();
-	  json_object_set(randomVar, "distribution",json_string("discrete_design_set_string"));
-	  json_object_set(randomVar, "name",json_string("MultipleEvent"));
-	  json_object_set(randomVar, "value",json_string("RV.MultipleEvent"));
-	  json_t *theMultipleEvents = json_array();
-	  
-	  json_t *existingEvent = 0;
-	  json_array_foreach(existingEventsArray, index, existingEvent) { 
-	    createSimCenterEvent(existingEvent);
-	    json_array_append(theMultipleEvents, json_object_get(existingEvent,"name"));
-	  }
+          json_t *randomVar = json_object();
+          json_object_set(randomVar, "distribution",json_string("discrete_design_set_string"));
+          json_object_set(randomVar, "name",json_string("MultipleEvent"));
+          json_object_set(randomVar, "value",json_string("RV.MultipleEvent"));
+          json_t *theMultipleEvents = json_array();
+          
+          json_t *existingEvent = 0;
+          json_array_foreach(existingEventsArray, index, existingEvent) { 
+            createSimCenterEvent(existingEvent);
+            json_array_append(theMultipleEvents, json_object_get(existingEvent,"name"));
+          }
 
-	  json_object_set(randomVar, "elements", theMultipleEvents);
-	  json_array_append(rvArray, randomVar);
-	  json_object_set(eventObj, "index", json_string("RV.MultipleEvent"));
-	
-	} else {
+          json_object_set(randomVar, "elements", theMultipleEvents);
+          json_array_append(rvArray, randomVar);
+          json_object_set(eventObj, "index", json_string("RV.MultipleEvent"));
+        
+        } else {
 
-	  json_t *existingEvent = json_array_get(existingEventsArray,0);
-	  createSimCenterEvent(existingEvent);	  
-	  json_object_set(eventObj, "index", json_integer(0));
+          json_t *existingEvent = json_array_get(existingEventsArray,0);
+          createSimCenterEvent(existingEvent);	  
+          json_object_set(eventObj, "index", json_integer(0));
 
-	}
+        }
 
-	//add first event to event
-	json_t *firstEvent = json_array_get(existingEventsArray, 0);
-	json_t *fileValue = json_object_get(firstEvent, "name");
-	if (fileValue != NULL) {
-	  const char *fileName = json_string_value(fileValue);
-	  addEvent(fileName, eventObj);
-	}
+        //add first event to event
+        json_t *firstEvent = json_array_get(existingEventsArray, 0);
+        json_t *fileValue = json_object_get(firstEvent, "name");
+        if (fileValue != NULL) {
+          const char *fileName = json_string_value(fileValue);
+          addEvent(fileName, eventObj);
+        }
 
-	json_array_append(newEventArray, eventObj);
+        json_array_append(newEventArray, eventObj);
       }
     }
 
