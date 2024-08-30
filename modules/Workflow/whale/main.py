@@ -2874,7 +2874,7 @@ class Workflow:
                 bldg_dir = Path(os.path.dirname(asst_data[a_i]['file'])).resolve()  # noqa: PTH120
                 main_dir = bldg_dir
                 assetTypeHierarchy = [bldg_dir.name]  # noqa: N806
-                while main_dir.parent.name != 'Results':
+                while main_dir.parent.name != self.run_dir.name:
                     main_dir = bldg_dir.parent
                     assetTypeHierarchy = [main_dir.name] + assetTypeHierarchy  # noqa: N806, RUF005
 
