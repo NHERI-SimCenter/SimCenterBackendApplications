@@ -51,16 +51,10 @@ import pandas as pd
 import preprocessorIO
 from shapely import geometry
 
-# try:
-# import REWET
-# print("Imported")
-# except:
-# This is only for now
-# print("HERE")
+# TODO (SINA): please resolve this one later
 this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
-# main_dir = this_dir.parent
 
-
+# TODO (SINA): Import REWET intead and check these
 sys.path.insert(0, str(this_dir / 'REWET'))
 from initial import Starter  # noqa: E402
 from Result_Project import Project_Result  # noqa: E402
@@ -93,11 +87,7 @@ def createScnearioList(run_directory, scn_number):  # noqa: N802, D103
         'Probability': 1,
     }
 
-    scenario_list = scenario  # pd.DataFrame([scenario]).set_index("Scenario Name")
-
-    # REWET_input_data["scenario_list"] = scenario_list
-
-    return scenario_list, prefix
+    return scenario, prefix
 
 
 def chooseARandomPreefix(damage_input_dir):  # noqa: N802
@@ -142,7 +132,7 @@ def chooseARandomPreefix(damage_input_dir):  # noqa: N802
     Sets the settings (future project file) for REWET. REWET input data
     dictionary is both used as a source and destination for settinsg data. The
     data is stored in REWET_input_data object with key='settings'. The value
-    for 'settinsg' is an object of REWET's 'Settings' class. 
+    for 'settinsg' is an object of REWET's 'Settings' class.
 
     Parameters
     ----------
@@ -188,50 +178,50 @@ def getDLFileName(run_dir, dl_file_path, scn_number):  # noqa: N802
 
 
 def setSettingsData(input_json, REWET_input_data):  # noqa: ARG001, N802, N803, D103
-    policy_file_name = rwhale_input_Data['SystemPerformance'][
+    policy_file_name = rwhale_input_data['SystemPerformance'][
         'WaterDistributionNetwork'
     ]['Policy Definition']
-    policy_file_path = rwhale_input_Data['SystemPerformance'][
+    policy_file_path = rwhale_input_data['SystemPerformance'][
         'WaterDistributionNetwork'
     ]['Policy DefinitionPath']
 
     policy_config_file = os.path.join(Path(policy_file_path), Path(policy_file_name))  # noqa: PTH118
 
-    REWET_input_data['settings']['RUN_TIME'] = rwhale_input_Data[
+    REWET_input_data['settings']['RUN_TIME'] = rwhale_input_data[
         'SystemPerformance'
     ]['WaterDistributionNetwork']['simulationTime']
-    REWET_input_data['settings']['simulation_time_step'] = rwhale_input_Data[
+    REWET_input_data['settings']['simulation_time_step'] = rwhale_input_data[
         'SystemPerformance'
     ]['WaterDistributionNetwork']['simulationTimeStep']
 
-    REWET_input_data['settings']['last_sequence_termination'] = rwhale_input_Data[
+    REWET_input_data['settings']['last_sequence_termination'] = rwhale_input_data[
         'SystemPerformance'
     ]['WaterDistributionNetwork']['last_sequence_termination']
-    REWET_input_data['settings']['node_demand_temination'] = rwhale_input_Data[
+    REWET_input_data['settings']['node_demand_temination'] = rwhale_input_data[
         'SystemPerformance'
     ]['WaterDistributionNetwork']['node_demand_temination']
-    REWET_input_data['settings']['node_demand_termination_time'] = rwhale_input_Data[
+    REWET_input_data['settings']['node_demand_termination_time'] = rwhale_input_data[
         'SystemPerformance'
     ]['WaterDistributionNetwork']['node_demand_termination_time']
     REWET_input_data['settings']['node_demand_termination_ratio'] = (
-        rwhale_input_Data[
+        rwhale_input_data[
             'SystemPerformance'
         ]['WaterDistributionNetwork']['node_demand_termination_ratio']
     )
-    REWET_input_data['settings']['solver'] = rwhale_input_Data['SystemPerformance'][
+    REWET_input_data['settings']['solver'] = rwhale_input_data['SystemPerformance'][
         'WaterDistributionNetwork'
     ]['Solver']
-    REWET_input_data['settings']['Restoration_on'] = rwhale_input_Data[
+    REWET_input_data['settings']['Restoration_on'] = rwhale_input_data[
         'SystemPerformance'
     ]['WaterDistributionNetwork']['Restoration_on']
-    REWET_input_data['settings']['minimum_job_time'] = rwhale_input_Data[
+    REWET_input_data['settings']['minimum_job_time'] = rwhale_input_data[
         'SystemPerformance'
     ]['WaterDistributionNetwork']['minimum_job_time']
     REWET_input_data['settings']['Restortion_config_file'] = (
         policy_config_file  # TODO: SINA unmark it  # noqa: TD002
     )
 
-    p = rwhale_input_Data['SystemPerformance']['WaterDistributionNetwork'][
+    p = rwhale_input_data['SystemPerformance']['WaterDistributionNetwork'][
         'pipe_damage_model'
     ]
     REWET_input_data['settings']['pipe_damage_model'] = {}
@@ -244,7 +234,7 @@ def setSettingsData(input_json, REWET_input_data):  # noqa: ARG001, N802, N803, 
             'b': mat_data[5],
         }
 
-    n = rwhale_input_Data['SystemPerformance']['WaterDistributionNetwork'][
+    n = rwhale_input_data['SystemPerformance']['WaterDistributionNetwork'][
         'node_damage_model'
     ]
     n = n[0]
@@ -267,13 +257,13 @@ def setSettingsData(input_json, REWET_input_data):  # noqa: ARG001, N802, N803, 
         'damage_node_model': 'equal_diameter_emitter',
     }
 
-    if rwhale_input_Data['SystemPerformance']['WaterDistributionNetwork'][
+    if rwhale_input_data['SystemPerformance']['WaterDistributionNetwork'][
         'Pipe_Leak_Based'
     ]:
-        pipe_leak_amount = rwhale_input_Data['SystemPerformance'][
+        pipe_leak_amount = rwhale_input_data['SystemPerformance'][
             'WaterDistributionNetwork'
         ]['pipe_leak_amount']
-        pipe_leak_time = rwhale_input_Data['SystemPerformance'][
+        pipe_leak_time = rwhale_input_data['SystemPerformance'][
             'WaterDistributionNetwork'
         ]['pipe_leak_time']
         pipe_damage_discovery_mode = {
@@ -282,7 +272,7 @@ def setSettingsData(input_json, REWET_input_data):  # noqa: ARG001, N802, N803, 
             'leak_time': pipe_leak_time,
         }
     else:
-        pipe_time_discovery_ratio = rwhale_input_Data['SystemPerformance'][
+        pipe_time_discovery_ratio = rwhale_input_data['SystemPerformance'][
             'WaterDistributionNetwork'
         ]['pipe_time_discovery_ratio']
         pipe_damage_discovery_mode = {
@@ -290,13 +280,13 @@ def setSettingsData(input_json, REWET_input_data):  # noqa: ARG001, N802, N803, 
             'time_discovery_ratio': pipe_time_discovery_ratio,
         }  # pd.Series([line[0] for line in pipe_time_discovery_ratio], index = [line[1] for line in pipe_time_discovery_ratio])}
 
-    if rwhale_input_Data['SystemPerformance']['WaterDistributionNetwork'][
+    if rwhale_input_data['SystemPerformance']['WaterDistributionNetwork'][
         'Node_Leak_Based'
     ]:
-        node_leak_amount = rwhale_input_Data['SystemPerformance'][
+        node_leak_amount = rwhale_input_data['SystemPerformance'][
             'WaterDistributionNetwork'
         ]['node_leak_amount']
-        node_leak_time = rwhale_input_Data['SystemPerformance'][
+        node_leak_time = rwhale_input_data['SystemPerformance'][
             'WaterDistributionNetwork'
         ]['node_leak_time']
         node_damage_discovery_mode = {
@@ -305,7 +295,7 @@ def setSettingsData(input_json, REWET_input_data):  # noqa: ARG001, N802, N803, 
             'leak_time': node_leak_time,
         }
     else:
-        node_time_discovery_ratio = rwhale_input_Data['SystemPerformance'][
+        node_time_discovery_ratio = rwhale_input_data['SystemPerformance'][
             'WaterDistributionNetwork'
         ]['node_time_discovery_ratio']
         node_damage_discovery_mode = {
@@ -313,10 +303,10 @@ def setSettingsData(input_json, REWET_input_data):  # noqa: ARG001, N802, N803, 
             'time_discovery_ratio': node_time_discovery_ratio,
         }  # pd.Series([line[0] for line in node_time_discovery_ratio], index = [line[1] for line in node_time_discovery_ratio])}
 
-    pump_time_discovery_ratio = rwhale_input_Data['SystemPerformance'][
+    pump_time_discovery_ratio = rwhale_input_data['SystemPerformance'][
         'WaterDistributionNetwork'
     ]['pump_time_discovery_ratio']
-    tank_time_discovery_ratio = rwhale_input_Data['SystemPerformance'][
+    tank_time_discovery_ratio = rwhale_input_data['SystemPerformance'][
         'WaterDistributionNetwork'
     ]['tank_time_discovery_ratio']
     pump_damage_discovery_model = {
@@ -340,10 +330,10 @@ def setSettingsData(input_json, REWET_input_data):  # noqa: ARG001, N802, N803, 
     REWET_input_data['settings']['tank_damage_discovery_model'] = (
         tank_damage_discovery_model
     )
-    REWET_input_data['settings']['minimum_pressure'] = rwhale_input_Data[
+    REWET_input_data['settings']['minimum_pressure'] = rwhale_input_data[
         'SystemPerformance'
     ]['WaterDistributionNetwork']['minimum_pressure']
-    REWET_input_data['settings']['required_pressure'] = rwhale_input_Data[
+    REWET_input_data['settings']['required_pressure'] = rwhale_input_data[
         'SystemPerformance'
     ]['WaterDistributionNetwork']['required_pressure']
 
@@ -402,29 +392,25 @@ def create_path(path):  # noqa: D103
 
 if __name__ == '__main__':
     # Setting arg parser
-    argParser = argparse.ArgumentParser('Preprocess rwhale workflow to REWET input.')  # noqa: N816
+    arg_parser = argparse.ArgumentParser('Preprocess rwhale workflow to REWET input.')
 
-    argParser.add_argument(
+    arg_parser.add_argument(
         '--input',
         '-i',
         default='inputRWHALE.json',
         help='rwhale input file json file',
     )
 
-    # argParser.add_argument("--damage", "-d",
-    # default="water_damage_input_structure.json",
-    # help="water damage input json file. If provided, number of realization is ignored if prvided and number of realization is set to 1.")
+    arg_parser.add_argument('--dir', '-d', help='WDN damage result directory')
 
-    argParser.add_argument('--dir', '-d', help='WDN damage result directory')
-
-    argParser.add_argument(
+    arg_parser.add_argument(
         '--number',
         '-n',
         default=None,
         help='If specified, indicates realization number, otherwise, all scenarios are run on all CPUS.',
     )
 
-    argParser.add_argument(
+    arg_parser.add_argument(
         '--par',
         '-p',
         default=False,
@@ -432,57 +418,55 @@ if __name__ == '__main__':
         help='if specified, uses all CPUS. 2 or more CPUs are not available, it will revert back to serial run.',
     )
 
-    parser_data = argParser.parse_args()
+    parser_data = arg_parser.parse_args()
 
-    # learning about parallel or serial settings
+    # Setting parallel or serial settings
 
-    numP = 1  # noqa: N816
-    procID = 0  # noqa: N816
-    doParallel = False  # noqa: N816
+    proc_size = 1
+    proc_ID = 0
+    do_parallel = False
 
     mpi_spec = importlib.util.find_spec('mpi4py')
     found = mpi_spec is not None
-    if found and argParser.par:
+    if found and arg_parser.par:
         from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
-        numP = comm.Get_size()  # noqa: N816
-        procID = comm.Get_rank()  # noqa: N816
-        if numP < 2:  # noqa: PLR2004
-            doParallel = False  # noqa: N816
-            numP = 1  # noqa: N816
-            procID = 0  # noqa: N816
-            print(  # noqa: T201
+        proc_size = comm.Get_size()
+        proc_ID = comm.Get_rank()
+        if proc_size < 2:
+            do_parallel = False
+            proc_size = 1
+            proc_ID = 0
+            print(
                 'Parallel running is not possible. Number of CPUS are are not enough.'
             )
         else:
-            doParallel = True  # noqa: N816
+            do_parallel = True
 
     # Setting up run settings
-
     REWET_input_data = {}
     REWET_input_data['settings'] = {}
 
-    # print(parser_data.input)
-    rwhale_input_Data = preprocessorIO.readJSONFile(parser_data.input)  # noqa: N816
-    setSettingsData(rwhale_input_Data, REWET_input_data)
-    event_time = rwhale_input_Data['SystemPerformance']['WaterDistributionNetwork'][
+    rwhale_input_data = preprocessorIO.readJSONFile(parser_data.input)  # noqa: N816
+    setSettingsData(rwhale_input_data, REWET_input_data)
+    event_time = rwhale_input_data['SystemPerformance']['WaterDistributionNetwork'][
         'eventTime'
     ]
 
     # Set R2D environment and parameters
-    water_asset_data = rwhale_input_Data['Applications']['Assets'][
+    water_asset_data = rwhale_input_data['Applications']['Assets'][
         'WaterDistributionNetwork'
     ]
     inp_file_addr = water_asset_data['ApplicationData']['inpFile']
     if '{Current_Dir}' in inp_file_addr:
         inp_file_addr = inp_file_addr.replace('{Current_Dir}', '.')
-    sc_geojson = rwhale_input_Data['Applications']['Assets'][
+    sc_geojson = rwhale_input_data['Applications']['Assets'][
         'WaterDistributionNetwork'
     ]['ApplicationData']['assetSourceFile']
 
-    run_directory = rwhale_input_Data['runDir']
-    number_of_realization = rwhale_input_Data['Applications']['DL'][
+    run_directory = rwhale_input_data['runDir']
+    number_of_realization = rwhale_input_data['Applications']['DL'][
         'WaterDistributionNetwork'
     ]['ApplicationData']['Realizations']
 
@@ -502,7 +486,7 @@ if __name__ == '__main__':
     damage_save_path_hir = damage_save_path
     create_path(damage_save_path_hir)
 
-    if parser_data.number == None:  # noqa: E711
+    if parser_data.number is None:
         scneario_list_path = damage_save_path / 'scenario_table.xlsx'
     else:
         scneario_list_path = (
@@ -517,7 +501,7 @@ if __name__ == '__main__':
     # Add Single Scenario or multiple scenario
     Damage_file_name = []
 
-    if doParallel and procID > 0:
+    if do_parallel and proc_ID > 0:
         pass
     else:
         settings_json_file_path = preprocessorIO.saveSettingsFile(
@@ -526,7 +510,7 @@ if __name__ == '__main__':
 
         scenario_table = preprocessorIO.create_scneario_table()
 
-        if parser_data.number == None:  # noqa: E711
+        if parser_data.number is None:
             Damage_file_name = list(range(number_of_realization))
 
         else:
@@ -542,7 +526,6 @@ if __name__ == '__main__':
             damage_data = damage_convertor.readDamagefile(
                 dl_file_path, run_directory, event_time, sc_geojson
             )
-            # damage_save_path = Path(run_directory) / "Results" / "WaterDistributionNetwork" / "damage_input"
 
             cur_damage_file_name_list = preprocessorIO.save_damage_data(
                 damage_save_path, damage_data, scn_number
@@ -557,10 +540,10 @@ if __name__ == '__main__':
         )
 
     command = (
-        'python '  # noqa: ISC003
-        + 'C:\\Users\\naeim\\Desktop\\REWET\\main.py -j '
-        + str(settings_json_file_path)
+        'python '
+        f'C:\\Users\\naeim\\Desktop\\REWET\\main.py -j {settings_json_file_path}'
     )
+
     # try:
     # result = subprocess.check_output(command, shell=True, text=True)
     # returncode = 0
@@ -638,10 +621,9 @@ if __name__ == '__main__':
         for scn_name, row in p.project.scenario_list.iterrows():  # noqa: B007
             realization_number = int(scn_name.strip('SCN_'))
             for single_requested_result in requested_result:
-                if (
-                    single_requested_result == 'DL'  # noqa: PLR1714
-                    or single_requested_result == 'QN'
-                ):
+
+                if single_requested_result in {'DL', 'QN'}:
+
                     # Running Output module's method to get DL time series status
                     time_series_result[single_requested_result][
                         realization_number
@@ -658,11 +640,11 @@ if __name__ == '__main__':
                     ].index = (
                         time_series_result[single_requested_result][
                             realization_number
-                        ].index
-                        / 3600
+                        ].index / 3600
                     )
 
-                    # Running Output module's method to get BSC data for each junction (sum of outage)
+                    # Run Output module's method to get BSC data for
+                    # each junction (sum of outage)
                     res[single_requested_result] = p.getOutageTimeGeoPandas_5(
                         scn_name,
                         bsc=single_requested_result,
@@ -675,12 +657,12 @@ if __name__ == '__main__':
                         res_agg[single_requested_result] = res[
                             single_requested_result
                         ].to_dict()
-                        for key in res_agg[single_requested_result].keys():  # noqa: SIM118
+                        for key in res_agg[single_requested_result]:
                             res_agg[single_requested_result][key] = [
                                 res_agg[single_requested_result][key]
                             ]
                     else:
-                        for key in res_agg[single_requested_result].keys():  # noqa: SIM118
+                        for key in res_agg[single_requested_result]:
                             res_agg[single_requested_result][key].append(
                                 res[single_requested_result][key]
                             )

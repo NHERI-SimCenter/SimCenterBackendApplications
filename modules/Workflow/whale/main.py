@@ -1516,8 +1516,10 @@ class Workflow:
         asset_type: string
            Asset type to run perform system assessment of
 
-        """  # noqa: D400
-        if 'SystemPerformance' in self.workflow_apps.keys():  # noqa: SIM118
+        """
+
+        # Check if system performance is requested
+        if 'SystemPerformance' in self.workflow_apps:
             performance_app = self.workflow_apps['SystemPerformance'][asset_type]
         else:
             log_msg(
