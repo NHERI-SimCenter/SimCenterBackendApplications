@@ -37,13 +37,13 @@
 # Sina Naeimi
 
 import json
-import os
+from pathlib import Path
 
 import pandas as pd
 
 
-def readJSONFile(file_addr):  # noqa: N802
-    """Reads a json file.
+def read_json_file(file_addr):
+    """Read a JSON file.
 
     Parameters
     ----------
@@ -60,33 +60,34 @@ def readJSONFile(file_addr):  # noqa: N802
     data : dict
         JSON File data as a dict.
 
-    """  # noqa: D401
-    if not os.path.exists(file_addr):  # noqa: PTH110
+    """
+    file_addr = Path(file_addr).resolve()
+    if not file_addr.exists():
         raise ValueError('INPUT WHALE FILE is not found.', file_addr)  # noqa: EM101, TRY003
 
-    with open(file_addr) as f:  # noqa: PTH123
+    with file_addr.open('rt') as f:
         data = json.load(f)
 
     return data  # noqa: RET504
 
 
 # =============================================================================
-# def readRWHALEFileForREWET(file_addr, REWET_input_data):
+# def readRWHALEFileForREWET(file_addr, rewet_input_data):
 #     """
-#     Reads rwhile input file and returns the data as a dict and updates REWET
+#     Reads rWhale input file and returns the data as a dict and updates REWET
 #     input file.
 #
 #     Parameters
 #     ----------
 #     file_addr : Path
-#         rwhale input file path.
-#     REWET_input_data : dict
+#         rWhale input file path.
+#     rewet_input_data : dict
 #         REWET input data.
 #
 #     Returns
 #     -------
 #     rwhale_data : dict
-#         rwhale inoput data as a dict.
+#         rWhale input data as a dict.
 #
 #     """
 #
@@ -98,15 +99,33 @@ def readJSONFile(file_addr):  # noqa: N802
 #     number_of_realization = rwhale_data["Applications"]\
 #         ["DL"]["WaterDistributionNetwork"]["ApplicationData"]["Realizations"]
 #
-#     REWET_input_data["inp_file" ] = inp_file_addr
-#     REWET_input_data["run_dir"] = run_directory
-#     REWET_input_data["number_of_realizations"] = number_of_realization
+#     rewet_input_data["inp_file" ] = inp_file_addr
+#     rewet_input_data["run_dir"] = run_directory
+#     rewet_input_data["number_of_realizations"] = number_of_realization
 #
 #     return rwhale_data
 # =============================================================================
 
 
-def save_damage_data(damage_save_path, damage_data, scn_number):  # noqa: D103
+def save_damage_data(damage_save_path, damage_data, scn_number):
+    """
+    Save REWET-style damage data.
+
+    Parameters
+    ----------
+    damage_save_path : path
+        path to the damage directory.
+    damage_data : dict
+        REWET-style damage data.
+    scn_number : int
+        Scenario name.
+
+    Returns
+    -------
+    dict
+        Names of damaged files saved.
+
+    """
     pipe_damage_data = damage_data['Pipe']
     node_damage_data = damage_data['Node']
     pump_damage_data = damage_data['Pump']
@@ -117,10 +136,10 @@ def save_damage_data(damage_save_path, damage_data, scn_number):  # noqa: D103
     pump_damage_file_name = f'pump_damage_{scn_number}'
     tank_damage_file_name = f'tank_damage_{scn_number}'
 
-    pipe_damage_file_path = os.path.join(damage_save_path, pipe_damage_file_name)  # noqa: PTH118
-    node_damage_file_path = os.path.join(damage_save_path, node_damage_file_name)  # noqa: PTH118
-    pump_damage_file_path = os.path.join(damage_save_path, pump_damage_file_name)  # noqa: PTH118
-    tank_damage_file_path = os.path.join(damage_save_path, tank_damage_file_name)  # noqa: PTH118
+    pipe_damage_file_path = damage_save_path / pipe_damage_file_name
+    node_damage_file_path = damage_save_path / node_damage_file_name
+    pump_damage_file_path = damage_save_path / pump_damage_file_name
+    tank_damage_file_path = damage_save_path / tank_damage_file_name
 
     pipe_damage_data.to_pickle(pipe_damage_file_path)
     node_damage_data.to_pickle(node_damage_file_path)
@@ -137,7 +156,16 @@ def save_damage_data(damage_save_path, damage_data, scn_number):  # noqa: D103
     return damage_file_name_list  # noqa: RET504
 
 
-def create_scneario_table():  # noqa: D103
+def create_scneario_table():
+    """
+    Create a REWET-style scenario table.
+
+    Returns
+    -------
+    Pandas DataFrame
+        Scenario table.
+
+    """
     scenario_table = pd.DataFrame(
         dtype='O',
         columns=[
@@ -149,16 +177,40 @@ def create_scneario_table():  # noqa: D103
             'Probability',
         ],
     )
+
     return scenario_table  # noqa: RET504
 
 
-def update_scenario_table(scenario_table, cur_damage_file_name_list, scn_number):  # noqa: D103
+def update_scenario_table(scenario_table, cur_damage_file_name_list, scn_number):
+    """
+    Update the scenario table.
+
+    Parameters
+    ----------
+    scenario_table : Pandas DataFrame
+        Scenario table.
+    cur_damage_file_name_list : Dict
+        Damage file name.
+    scn_number : int
+        Scenario number.
+
+    Raises
+    ------
+    ValueError
+        Unknown type.
+
+    Returns
+    -------
+    scenario_table : List
+        Scenario table in the records format.
+
+    """
     if isinstance(scenario_table, pd.core.frame.DataFrame):
         scenario_table = scenario_table.to_dict('records')
     elif isinstance(scenario_table, list):
         pass
     else:
-        raise ValueError('This is an unknown behavior.')  # noqa: EM101, TRY003, TRY004
+        raise TypeError('unknown scenario table value.')  # noqa: EM101, TRY003
 
     new_row = {
         'Scenario Name': f'SCN_{scn_number}',
@@ -175,53 +227,54 @@ def update_scenario_table(scenario_table, cur_damage_file_name_list, scn_number)
 
 
 def save_scenario_table(scenario_table, scenario_table_file_path):
-    """Saves the scenario data including scenario table and damage data according
-    to the table data
+    """Save the scenario data.
+
+    Save the scenario data including scenario table and damage data according
+    to the table data.
 
     Parameters
     ----------
-    REWET_input_data : Dict
+    rewet_input_data : Dict
         REWET input data.
 
     Returns
     -------
     None.
 
-    """  # noqa: D205, D400, D401, DOC202, RUF100
+    """
     if isinstance(scenario_table, pd.core.frame.DataFrame):
         pass
     elif isinstance(scenario_table, list):
         scenario_table = pd.DataFrame(scenario_table)
     else:
-        raise ValueError('This is an unknown behavior.')  # noqa: EM101, TRY003, TRY004
+        raise TypeError('Unknown scenario table type.')  # noqa: EM101, TRY003
 
     scenario_table = scenario_table.set_index('Scenario Name')
-
-    # scenario_list_file_path = os.path.join(damage_save_path, scenario_list_file_name)
 
     scenario_table.to_excel(scenario_table_file_path)
 
 
-def saveSettingsFile(REWET_input_data, save_directory, prefix):  # noqa: N802, N803
-    """Saves settings data that REWET NEEDs.
+def save_settings_file(rewet_input_data, save_directory, prefix):
+    """Save settings data that REWET needs.
 
     Parameters
     ----------
-    REWET_input_data : Dict
+    rewet_input_data : Dict
         REWET input data.
 
     Returns
     -------
-    None.
+    setting_save_path : path
+        Path to the settings-file location.
 
-    """  # noqa: D401
-    settings = REWET_input_data['settings']
-    if prefix == None:  # noqa: E711
+    """
+    settings = rewet_input_data['settings']
+    if prefix is None:
         settings_file_name = 'settings.json'
     else:
         settings_file_name = prefix + '_' + 'settings.json'
-    damage_save_path = save_directory / settings_file_name
-    with open(damage_save_path, 'w') as f:  # noqa: PTH123
+    setting_save_path = save_directory / settings_file_name
+    with setting_save_path.open('wt') as f:
         json.dump(settings, f, indent=4)
 
-    return damage_save_path
+    return setting_save_path
