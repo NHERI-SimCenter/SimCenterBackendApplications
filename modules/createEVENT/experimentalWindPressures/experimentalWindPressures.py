@@ -29,7 +29,7 @@ sys.stderr = open(  # noqa: SIM115, PTH123
 
 def err_exit(msg):  # noqa: D103
     print('Failed in wind load generator: ' + msg)  # display in stdout  # noqa: T201
-    print(
+    print(  # noqa: T201
         'Failed in wind load generator: ' + msg,
         file=sys.stderr,
     )  # display in stderr
