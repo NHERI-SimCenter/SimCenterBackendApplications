@@ -1,5 +1,6 @@
 import json  # noqa: INP001, D100
 import os
+import sys
 import time
 
 try:
@@ -656,14 +657,14 @@ if __name__ == '__main__':
     # parseWindMatFile("Forces_ANG000_phase1.mat", "Forces_ANG000_phase1.json")
     # parseWindMatFile("TargetSpectra_ANG000_phase1.mat", "TargetSpectra_ANG000_phase1.json")
 
-    inputArgs = sys.argv  # noqa: N816, F405
+    inputArgs = sys.argv  # noqa: N816
 
     # set filenames
-    aimName = sys.argv[2]  # noqa: N816, F405
-    evtName = sys.argv[4]  # noqa: N816, F405
+    aimName = sys.argv[2]  # noqa: N816
+    evtName = sys.argv[4]  # noqa: N816
 
     getRV = False  # noqa: N816
-    for myarg in sys.argv:  # noqa: F405
+    for myarg in sys.argv:
         if myarg == '--getRV':
             getRV = True  # noqa: N816
 
