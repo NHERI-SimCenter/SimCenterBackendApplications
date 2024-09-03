@@ -75,7 +75,7 @@ class of7Decomp:
 
         decomptext = decomptext + 'method\tscotch;\n\n'
 
-        return decomptext  # noqa: RET504
+        return decomptext  # noqa: DOC201, RET504, RUF100
 
     #############################################################
     def decompheader(self):
@@ -97,7 +97,7 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
         # Return the header for U file
-        return header  # noqa: RET504
+        return header  # noqa: DOC201, RET504, RUF100
 
     #############################################################
     def scripts(self, data, path):  # noqa: ARG002

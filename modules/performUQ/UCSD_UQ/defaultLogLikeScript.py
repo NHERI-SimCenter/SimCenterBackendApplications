@@ -142,4 +142,4 @@ def log_likelihood(
                 loglike += ll
             else:
                 loglike += -np.inf
-    return loglike
+    return loglike  # noqa: DOC201, RUF100
