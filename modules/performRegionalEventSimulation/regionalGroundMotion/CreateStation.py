@@ -474,7 +474,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
         z25_tag = z25Config['z25_tag']
         if z25_tag == 2:  # noqa: PLR2004
             num_cores = multiprocessing.cpu_count()
-            with tqdm_joblib(tqdm(desc="Get z1pt0 from openSHA", total=selected_stn.shape[0])) as progress_bar:
+            with tqdm_joblib(tqdm(desc="Get z2pt5 from openSHA", total=selected_stn.shape[0])) as progress_bar:
                 z2pt5_results = Parallel(n_jobs=num_cores)(delayed(get_site_z2pt5_from_opensha)(
                     lat, lon
                 ) for lat, lon  in zip(
@@ -761,36 +761,28 @@ def get_vs30_thompson(lat, lon):
 
 
 def get_z1(vs30):
-    """Compute z1 based on the prediction equation by Chiou and Youngs (2013) (unit of vs30 is meter/second and z1 is meter)"""  # noqa: D400
-    z1 = np.exp(-7.15 / 4.0 * np.log((vs30**4 + 571.0**4) / (1360.0**4 + 571.0**4)))
-    # return
-    return z1  # noqa: DOC201, RET504, RUF100
-
+    """Compute z1 based on the prediction equation by Chiou and Youngs (2013) (unit of vs30 is meter/second and z1 is meter)."""
+    return np.exp(-7.15 / 4.0 * np.log((vs30**4 + 571.0**4) / (1360.0**4 + 571.0**4)))
 
 def get_z25(z1):
-    """Compute z25 based on the prediction equation by Campbell and Bozorgnia (2013)"""  # noqa: D400
-    z25 = 0.748 + 2.218 * z1
-    # return
-    return z25  # noqa: DOC201, RET504, RUF100
+    """Compute z25 based on the prediction equation by Campbell and Bozorgnia (2013)."""
+    return 0.748 + 2.218 * z1
 
 
 def get_z25fromVs(vs):  # noqa: N802
-    """Compute z25 (m) based on the prediction equation 33 by Campbell and Bozorgnia (2014)
-    Vs is m/s
-    """  # noqa: D205, D400
-    z25 = (7.089 - 1.144 * np.log(vs)) * 1000
-    # return
-    return z25  # noqa: DOC201, RET504, RUF100
+    """Compute z25 (m) based on the prediction equation 33 by Campbell and Bozorgnia (2014) Vs is m/s."""
+    return (7.089 - 1.144 * np.log(vs)) * 1000
 
 
 def get_zTR_global(lat, lon):  # noqa: N802
-    """Interpolate depth to rock at given latitude and longitude
+    """Interpolate depth to rock at given latitude and longitude.
+
     Input:
         lat: list of latitude
         lon: list of longitude
     Output:
         zTR: list of zTR
-    """  # noqa: D205, D400
+    """
     import os
     import pickle
 
