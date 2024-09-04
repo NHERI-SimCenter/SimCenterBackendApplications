@@ -96,18 +96,21 @@ if __name__ == '__main__':
     import socket
 
     if 'stampede2' not in socket.gethostname():
-        if importlib.util.find_spec('jpype') is None:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])  # noqa: S603
-        import jpype
+        import GlobalVariable
+        if GlobalVariable.JVM_started is False:
+            GlobalVariable.JVM_started = True
+            if importlib.util.find_spec('jpype') is None:
+                subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])  # noqa: S603
+            import jpype
 
-        # from jpype import imports
-        import jpype.imports
-        from jpype.types import *  # noqa: F403
+            # from jpype import imports
+            import jpype.imports
+            from jpype.types import *  # noqa: F403
 
-        memory_total = psutil.virtual_memory().total / (1024.0**3)
-        memory_request = int(memory_total * 0.75)
-        jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
-        jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
+            memory_total = psutil.virtual_memory().total / (1024.0**3)
+            memory_request = int(memory_total * 0.75)
+            jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
+            jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
     from CreateScenario import (
         create_earthquake_scenarios,
         create_wind_scenarios,
