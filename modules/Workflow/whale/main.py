@@ -1732,10 +1732,6 @@ class Workflow:
         for input_ in reg_mapping_app.inputs:
             if input_['id'] == 'assetFile':
                 input_['default'] = str(AIM_file_path)
-        # Get the event file path
-        eventFilePath = self.shared_data.get('RegionalEvent', {}).get(  # noqa: N806
-            'eventFilePath', self.reference_dir
-        )
 
         reg_mapping_app.inputs.append(
             {
@@ -1743,7 +1739,7 @@ class Workflow:
                 'type': 'path',
                 'default': resolve_path(
                     self.shared_data['RegionalEvent']['eventFile'],
-                    eventFilePath,
+                    self.reference_dir,
                 ),
             }
         )
