@@ -475,7 +475,8 @@ if __name__ == '__main__':
             proc_id = 0
             warnings.warn(
                 'Parallel running is not possible. Number '
-                'of CPUS are are not enough.', stacklevel=2
+                'of CPUS are are not enough.',
+                stacklevel=2,
             )
         else:
             do_parallel = True
