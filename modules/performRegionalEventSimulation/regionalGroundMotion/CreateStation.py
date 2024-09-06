@@ -236,6 +236,11 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
                 selected_stn[soil_model_label] = [
                     soil_model_tag for x in range(len(selected_stn.index))
                 ]
+    # Check if any duplicated points
+    if selected_stn.duplicated(subset=[lon_label, lat_label]).any():
+        sys.exit('Error: Duplicated lat and lon in the Site File (.csv), '
+                 f'please check site \n{selected_stn[selected_stn.duplicated(subset=[lon_label, lat_label], keep = False)].index.tolist()}')
+
     STN = []  # noqa: N806
     stn_file = {'Stations': []}
     # Get Vs30
@@ -462,26 +467,45 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
     if z1Config['Type'] == 'OpenSHA default model':
         z1_tag = z1Config['z1_tag']
         if z1_tag == 2:  # noqa: PLR2004
-            num_cores = multiprocessing.cpu_count()
-            with tqdm_joblib(tqdm(desc="Get z1pt0 from openSHA", total=selected_stn.shape[0])) as progress_bar:
-                z1pt0_results = Parallel(n_jobs=num_cores)(delayed(get_site_z1pt0_from_opensha)(
-                    lat, lon
-                ) for lat, lon  in zip(
-                    selected_stn['Latitude'].tolist(),
-                    selected_stn['Longitude'].tolist(),
-                ))
+            # num_cores = z1Config.get('num_cores', multiprocessing.cpu_count())
+            num_cores = z1Config.get('num_cores', 1)
+            if num_cores == 1:
+                z1pt0_results = [
+                    get_site_z1pt0_from_opensha(lat, lon)
+                    for lat, lon in zip(
+                        selected_stn['Latitude'].tolist(),
+                        selected_stn['Longitude'].tolist(),
+                    )
+                ]
+            else:
+                with tqdm_joblib(tqdm(desc="Get z1pt0 from openSHA", total=selected_stn.shape[0])) as progress_bar:
+                    z1pt0_results = Parallel(n_jobs=num_cores)(delayed(get_site_z1pt0_from_opensha)(
+                        lat, lon
+                    ) for lat, lon  in zip(
+                        selected_stn['Latitude'].tolist(),
+                        selected_stn['Longitude'].tolist(),
+                    ))
     if z25Config['Type'] == 'OpenSHA default model':
         z25_tag = z25Config['z25_tag']
         if z25_tag == 2:  # noqa: PLR2004
-            num_cores = multiprocessing.cpu_count()
-            with tqdm_joblib(tqdm(desc="Get z2pt5 from openSHA", total=selected_stn.shape[0])) as progress_bar:
-                z2pt5_results = Parallel(n_jobs=num_cores)(delayed(get_site_z2pt5_from_opensha)(
-                    lat, lon
-                ) for lat, lon  in zip(
-                    selected_stn['Latitude'].tolist(),
-                    selected_stn['Longitude'].tolist(),
-                ))
-
+            # num_cores = z25Config.get('num_cores', multiprocessing.cpu_count())
+            num_cores = z25Config.get('num_cores', 1)
+            if num_cores == 1:
+                z2pt5_results = [
+                    get_site_z2pt5_from_opensha(lat, lon)
+                    for lat, lon in zip(
+                        selected_stn['Latitude'].tolist(),
+                        selected_stn['Longitude'].tolist(),
+                    )
+                ]
+            else:
+                with tqdm_joblib(tqdm(desc="Get z2pt5 from openSHA", total=selected_stn.shape[0])) as progress_bar:
+                    z2pt5_results = Parallel(n_jobs=num_cores)(delayed(get_site_z2pt5_from_opensha)(
+                        lat, lon
+                    ) for lat, lon  in zip(
+                        selected_stn['Latitude'].tolist(),
+                        selected_stn['Longitude'].tolist(),
+                    ))
 
     ground_failure_input_keys = set()
     for ind in tqdm(range(selected_stn.shape[0]), desc='Stations'):

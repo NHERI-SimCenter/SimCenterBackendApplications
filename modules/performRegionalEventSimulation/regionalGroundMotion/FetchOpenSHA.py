@@ -506,6 +506,7 @@ def export_to_json(  # noqa: C901, D103
     minMag=0.0,  # noqa: N803
     maxMag=10.0,  # noqa: N803
     maxDistance=1000.0,  # noqa: N803
+    use_hdf5=False,  # noqa: N803
 ):
     # Initializing
     erf_data = {'type': 'FeatureCollection'}
@@ -515,156 +516,148 @@ def export_to_json(  # noqa: C901, D103
     num_sources = erf.getNumSources()
     source_tag = []
     source_dist = []
-    for i in range(num_sources):
-        rupSource = erf.getSource(i)  # noqa: N806
-        distanceToSource = rupSource.getMinDistance(site)  # noqa: N806
+    for i in tqdm(range(num_sources), desc=f'Find sources with in {maxDistance} km'):
+        rup_source = erf.getSource(i)
+        distance_to_source = rup_source.getMinDistance(site)
         # sourceSurface = rupSource.getSourceSurface()
         # distanceToSource = sourceSurface.getDistanceRup(site_loc)
         source_tag.append(i)
-        source_dist.append(distanceToSource)
+        source_dist.append(distance_to_source)
     df = pd.DataFrame.from_dict({'sourceID': source_tag, 'sourceDist': source_dist})  # noqa: PD901
     # Sorting sources
     source_collection = df.sort_values(['sourceDist'], ascending=(True))
     source_collection = source_collection[
         source_collection['sourceDist'] < maxDistance
     ]
-    # Collecting source features
-    feature_collection = []
-    for i in tqdm(range(source_collection.shape[0]), desc='Sources'):
-        source_index = source_collection.iloc[i, 0]
-        distanceToSource = source_collection.iloc[i, 1]  # noqa: N806
-        # Getting rupture distances
-        rupSource = erf.getSource(source_index)  # noqa: N806
-        try:
-            rupList = rupSource.getRuptureList()  # noqa: N806
-        except:  # noqa: E722
-            numOfRup = rupSource.getNumRuptures()  # noqa: N806
-            rupList = []  # noqa: N806
-            for n in range(numOfRup):
-                rupList.append(rupSource.getRupture(n))
-            rupList = ArrayList(rupList)  # noqa: N806, F405
-        rup_tag = []
-        rup_dist = []
-        for j in range(rupList.size()):
-            ruptureSurface = rupList.get(j).getRuptureSurface()  # noqa: N806
-            # If pointsource rupture distance correction
-            if isinstance(ruptureSurface, PointSurface):  # noqa: F405
-                # or 'FIELD' or 'NSHMP08'
-                distCorrType = PtSrcDistCorr.Type.NONE  # noqa: N806
-                (PointSurface @ ruptureSurface).setDistCorrMagAndType(  # noqa: F405
-                    rupList.get(j).getMag(), distCorrType
-                )
-            cur_dist = ruptureSurface.getDistanceRup(site_loc)
-            rup_tag.append(j)
-            if cur_dist < maxDistance:
-                rup_dist.append(cur_dist)
-            else:
-                # exceeding the maxDistance requirement
-                rup_dist.append(-1.0)
-        df = pd.DataFrame.from_dict({'rupID': rup_tag, 'rupDist': rup_dist})  # noqa: PD901
-        # Sorting
-        rup_collection = df.sort_values(['rupDist'], ascending=(True))
-        # Preparing the dict of ruptures
-        for j in range(rupList.size()):
-            cur_dict = dict()  # noqa: C408
-            cur_dict.update({'type': 'Feature'})
-            rup_index = rup_collection.iloc[j, 0]
-            cur_dist = rup_collection.iloc[j, 1]
-            if cur_dist <= 0.0:
-                # skipping ruptures with distance exceeding the maxDistance
-                continue
-            rupture = rupList.get(rup_index)
-            maf = rupture.getMeanAnnualRate(erf.getTimeSpan().getDuration())
-            if maf <= 0.0:
-                continue
-            ruptureSurface = rupture.getRuptureSurface()  # noqa: N806
-            # Properties
-            cur_dict['properties'] = dict()  # noqa: C408
-            name = str(rupSource.getName())
-            if EqName is not None:
-                if EqName not in name:
-                    continue
-            cur_dict['properties'].update({'Name': name})
-            Mag = float(rupture.getMag())  # noqa: N806
-            if (Mag < minMag) or (Mag > maxMag):
-                continue
-            cur_dict['properties'].update({'Magnitude': Mag})
-            cur_dict['properties'].update({'Rupture': int(rup_index)})
-            cur_dict['properties'].update({'Source': int(source_index)})
-            if outfile is not None:
-                # these calls are time-consuming, so only run them if one needs
-                # detailed outputs of the sources
-                cur_dict['properties'].update({'Distance': float(cur_dist)})
-                distanceRup = rupture.getRuptureSurface().getDistanceRup(site_loc)  # noqa: N806
-                cur_dict['properties'].update({'DistanceRup': float(distanceRup)})
-                distanceSeis = rupture.getRuptureSurface().getDistanceSeis(site_loc)  # noqa: N806
-                cur_dict['properties'].update({'DistanceSeis': float(distanceSeis)})
-                distanceJB = rupture.getRuptureSurface().getDistanceJB(site_loc)  # noqa: N806
-                cur_dict['properties'].update({'DistanceJB': float(distanceJB)})
-                distanceX = rupture.getRuptureSurface().getDistanceX(site_loc)  # noqa: N806
-                cur_dict['properties'].update({'DistanceX': float(distanceX)})
-                Prob = rupture.getProbability()  # noqa: N806
-                cur_dict['properties'].update({'Probability': float(Prob)})
-                maf = rupture.getMeanAnnualRate(erf.getTimeSpan().getDuration())
-                cur_dict['properties'].update({'MeanAnnualRate': abs(float(maf))})
-                # Geometry
-                cur_dict['geometry'] = dict()  # noqa: C408
-                if ruptureSurface.isPointSurface():
-                    # Point source
-                    pointSurface = ruptureSurface  # noqa: N806
-                    location = pointSurface.getLocation()
-                    cur_dict['geometry'].update({'type': 'Point'})
-                    cur_dict['geometry'].update(
-                        {
-                            'coordinates': [
-                                float(location.getLongitude()),
-                                float(location.getLatitude()),
-                            ]
-                        }
+    #Collecting source features
+    if not use_hdf5:
+        feature_collection = []
+        for i in tqdm(range(source_collection.shape[0]), desc=f'Find ruptures with in {maxDistance} km'):
+            source_index = source_collection.iloc[i, 0]
+            # Getting rupture distances
+            rupSource = erf.getSource(source_index)  # noqa: N806
+            try:
+                rupList = rupSource.getRuptureList()  # noqa: N806
+            except:  # noqa: E722
+                numOfRup = rupSource.getNumRuptures()  # noqa: N806
+                rupList = []  # noqa: N806
+                for n in range(numOfRup):
+                    rupList.append(rupSource.getRupture(n))
+                rupList = ArrayList(rupList)  # noqa: N806, F405
+            rup_tag = []
+            rup_dist = []
+            for j in range(rupList.size()):
+                ruptureSurface = rupList.get(j).getRuptureSurface()  # noqa: N806
+                # If pointsource rupture distance correction
+                if isinstance(ruptureSurface, PointSurface):  # noqa: F405
+                    # or 'FIELD' or 'NSHMP08'
+                    distCorrType = PtSrcDistCorr.Type.NONE  # noqa: N806
+                    (PointSurface @ ruptureSurface).setDistCorrMagAndType(  # noqa: F405
+                        rupList.get(j).getMag(), distCorrType
                     )
+                cur_dist = ruptureSurface.getDistanceRup(site_loc)
+                rup_tag.append(j)
+                if cur_dist < maxDistance:
+                    rup_dist.append(cur_dist)
                 else:
-                    # Line source
-                    try:
-                        trace = ruptureSurface.getUpperEdge()
-                    except:  # noqa: E722
-                        trace = ruptureSurface.getEvenlyDiscritizedUpperEdge()
-                    coordinates = []
-                    for k in trace:
-                        coordinates.append(  # noqa: PERF401
-                            [float(k.getLongitude()), float(k.getLatitude())]
+                    # exceeding the maxDistance requirement
+                    rup_dist.append(-1.0)
+            df = pd.DataFrame.from_dict({'rupID': rup_tag, 'rupDist': rup_dist})  # noqa: PD901
+            # Sorting
+            rup_collection = df.sort_values(['rupDist'], ascending=(True))
+            # Preparing the dict of ruptures
+            for j in range(rupList.size()):
+                cur_dict = dict()  # noqa: C408
+                cur_dict.update({'type': 'Feature'})
+                rup_index = rup_collection.iloc[j, 0]
+                cur_dist = rup_collection.iloc[j, 1]
+                if cur_dist <= 0.0:
+                    # skipping ruptures with distance exceeding the maxDistance
+                    continue
+                rupture = rupList.get(rup_index)
+                maf = rupture.getMeanAnnualRate(erf.getTimeSpan().getDuration())
+                if maf <= 0.0:
+                    continue
+                ruptureSurface = rupture.getRuptureSurface()  # noqa: N806
+                # Properties
+                cur_dict['properties'] = dict()  # noqa: C408
+                name = str(rupSource.getName())
+                if EqName is not None:
+                    if EqName not in name:
+                        continue
+                cur_dict['properties'].update({'Name': name})
+                Mag = float(rupture.getMag())  # noqa: N806
+                if (Mag < minMag) or (Mag > maxMag):
+                    continue
+                cur_dict['properties'].update({'Magnitude': Mag})
+                cur_dict['properties'].update({'Rupture': int(rup_index)})
+                cur_dict['properties'].update({'Source': int(source_index)})
+                if outfile is not None:
+                    # these calls are time-consuming, so only run them if one needs
+                    # detailed outputs of the sources
+                    cur_dict['properties'].update({'Distance': float(cur_dist)})
+                    distanceRup = rupture.getRuptureSurface().getDistanceRup(site_loc)  # noqa: N806
+                    cur_dict['properties'].update({'DistanceRup': float(distanceRup)})
+                    distanceSeis = rupture.getRuptureSurface().getDistanceSeis(site_loc)  # noqa: N806
+                    cur_dict['properties'].update({'DistanceSeis': float(distanceSeis)})
+                    distanceJB = rupture.getRuptureSurface().getDistanceJB(site_loc)  # noqa: N806
+                    cur_dict['properties'].update({'DistanceJB': float(distanceJB)})
+                    distanceX = rupture.getRuptureSurface().getDistanceX(site_loc)  # noqa: N806
+                    cur_dict['properties'].update({'DistanceX': float(distanceX)})
+                    Prob = rupture.getProbability()  # noqa: N806
+                    cur_dict['properties'].update({'Probability': float(Prob)})
+                    maf = rupture.getMeanAnnualRate(erf.getTimeSpan().getDuration())
+                    cur_dict['properties'].update({'MeanAnnualRate': abs(float(maf))})
+                    # Geometry
+                    cur_dict['geometry'] = dict()  # noqa: C408
+                    if ruptureSurface.isPointSurface():
+                        # Point source
+                        pointSurface = ruptureSurface  # noqa: N806
+                        location = pointSurface.getLocation()
+                        cur_dict['geometry'].update({'type': 'Point'})
+                        cur_dict['geometry'].update(
+                            {
+                                'coordinates': [
+                                    float(location.getLongitude()),
+                                    float(location.getLatitude()),
+                                ]
+                            }
                         )
-                    cur_dict['geometry'].update({'type': 'LineString'})
-                    cur_dict['geometry'].update({'coordinates': coordinates})
-            # Appending
-            feature_collection.append(cur_dict)
-        # end for j
-    # end for i
-    # sort the list
-    maf_list_n = [-x['properties']['MeanAnnualRate'] for x in feature_collection]
-    sort_ids = np.argsort(maf_list_n)
-    feature_collection_sorted = [feature_collection[i] for i in sort_ids]
-    del feature_collection
-    erf_data.update({'features': feature_collection_sorted})
-    print(  # noqa: T201
-        f'FetchOpenSHA: total {len(feature_collection_sorted)} ruptures are collected.'
-    )
-    # num_preview = 1000
-    # if len(feature_collection_sorted) > num_preview:
-    #     preview_erf_data={'features': feature_collection_sorted[0:num_preview]}
-    # else:
-    #     preview_erf_data = erf_data
-    # Output
-    # import time
-    # startTime = time.process_time_ns()
-    if outfile is not None:
+                    else:
+                        # Line source
+                        try:
+                            trace = ruptureSurface.getUpperEdge()
+                        except:  # noqa: E722
+                            trace = ruptureSurface.getEvenlyDiscritizedUpperEdge()
+                        coordinates = []
+                        for k in trace:
+                            coordinates.append(  # noqa: PERF401
+                                [float(k.getLongitude()), float(k.getLatitude())]
+                            )
+                        cur_dict['geometry'].update({'type': 'LineString'})
+                        cur_dict['geometry'].update({'coordinates': coordinates})
+                # Appending
+                feature_collection.append(cur_dict)
+        # sort the list
+        maf_list_n = [-x['properties']['MeanAnnualRate'] for x in feature_collection]
+        sort_ids = np.argsort(maf_list_n)
+        feature_collection_sorted = [feature_collection[i] for i in sort_ids]
+        del feature_collection
+        erf_data.update({'features': feature_collection_sorted})
         print(  # noqa: T201
-            f'The collected ruptures are sorted by MeanAnnualRate and saved in {outfile}'
+            f'FetchOpenSHA: total {len(feature_collection_sorted)} ruptures are collected.'
         )
-        with open(outfile, 'w') as f:  # noqa: PTH123
-            ujson.dump(erf_data, f, indent=2)
-    # print(f"Time consumed by json dump is {(time.process_time_ns()-startTime)/1e9}s")
-
-    # del preview_erf_data
+        if outfile is not None:
+            print(  # noqa: T201
+                f'The collected ruptures are sorted by MeanAnnualRate and saved in {outfile}'
+            )
+            with open(outfile, 'w') as f:  # noqa: PTH123
+                ujson.dump(erf_data, f, indent=2)
+    else:
+        import h5py
+        with h5py.File(outfile, 'w') as h5file:
+            # Store the geometry as a string array
+            h5file.create_dataset('geometry', data=gdf.geometry.astype(str).values.astype('S'))
     # return
     return erf_data
 
