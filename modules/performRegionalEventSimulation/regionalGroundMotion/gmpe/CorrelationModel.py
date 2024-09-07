@@ -341,18 +341,23 @@ def loth_baker_correlation_2013(stations, im_name_list, stn_dist, num_simu):  # 
     num_stations = len(stations)
     # Creating a covariance matrices for each of the principal components
     num_periods = len(periods)
-    covMatrix = np.zeros((num_stations * num_periods, num_stations * num_periods))  # noqa: N806
+    cov_matrix = np.zeros((num_stations * num_periods, num_stations * num_periods))
     for i in range(num_periods):
         for j in range(num_periods):
-            covMatrix[
+            cov_matrix[
                 num_stations * i : num_stations * (i + 1),
                 num_stations * j : num_stations * (j + 1),
             ] = compute_rho_loth_baker_correlation_2013(
                 periods[i], periods[j], stn_dist, B1, B2, B3
             )
 
-    mu = np.zeros(num_stations * num_periods)
-    residuals_raw = np.random.multivariate_normal(mu, covMatrix, num_simu)
+    # mu = np.zeros(num_stations * num_periods)
+    # residuals_raw = np.random.multivariate_normal(mu, covMatrix, num_simu)
+    # Replace np multivariate_normal with cholesky and standard normal
+    standard_normal =np.random.standard_normal((num_simu, num_stations))
+    chole_lower = scipy.linalg.cholesky(cov_matrix, lower=True)
+    corr_samples = chole_lower @ standard_normal.T
+    residuals_raw = corr_samples.T
     # reorder residual_raw [[period1],[period2],...,[]]-->[[site1],[site2],...,[]]
     residuals_reorder = []
     for i in range(num_simu):
@@ -462,26 +467,29 @@ def markhvida_ceferino_baker_correlation_2017(  # noqa: C901
     c0 = c0 / MCB_var.iloc[0, num_pc - 1]
     c1 = c1 / MCB_var.iloc[0, num_pc - 1]
     c2 = c2 / MCB_var.iloc[0, num_pc - 1]
-    # Creating a covariance matrices for each of the principal components
-    covMatrix = np.zeros((num_stations, num_stations, num_pc))  # noqa: N806
+    # Simulating residuals
+    residuals_pca = np.zeros((num_stations, num_simu, num_pc))
     for i in range(num_pc):
+        # Creating a covariance matrices for each of the principal components
         if c1.iloc[0, i] == 0:
             # nug
-            covMatrix[:, :, i] = np.eye(num_stations) * c0.iloc[0, i]
+            cov_matrix= np.eye(num_stations) * c0.iloc[0, i]
         else:
             # iso nest
-            covMatrix[:, :, i] = (
+            cov_matrix = (
                 c0.iloc[0, i] * (stn_dist == 0)
                 + c1.iloc[0, i] * np.exp(-3.0 * stn_dist / a1.iloc[0, i])
                 + c2.iloc[0, i] * np.exp(-3.0 * stn_dist / a2.iloc[0, i])
             )
-    # Simulating residuals
-    residuals_pca = np.zeros((num_stations, num_simu, num_pc))
-    mu = np.zeros(num_stations)
-    for i in range(num_pc):
-        residuals_pca[:, :, i] = np.random.multivariate_normal(
-            mu, covMatrix[:, :, i], num_simu
-        ).T
+        # residuals_pca[:, :, i] = np.random.multivariate_normal(
+        #     mu, cov_matrix, num_simu
+        # ).T
+        # Replace np multivariate_normal with cholesky and standard normal
+        standard_normal =np.random.standard_normal((num_simu, num_stations))
+        chole_lower = scipy.linalg.cholesky(cov_matrix, lower=True)
+        corr_samples = chole_lower @ standard_normal.T
+        residuals_pca[:, :, i] = corr_samples
+
     # Interpolating model_coef by periods
     interp_fun = interp1d(model_periods, model_coef, axis=0)
     model_Tmax = 5.0  # noqa: N806
