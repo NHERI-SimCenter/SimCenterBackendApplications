@@ -797,7 +797,7 @@ if __name__ == '__main__':
                 json_to_attach.update(
                     {
                         asset_id: {
-                            'general_information': general_info,
+                            'GeneralInformation': general_info,
                             'R2Dres': R2Dres,
                         }
                     }
