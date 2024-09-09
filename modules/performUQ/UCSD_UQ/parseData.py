@@ -35,7 +35,7 @@ def parseDataFunction(dakotaJsonFile, logFile):  # noqa: C901, N802, N803, D103,
     applications = jsonInputs['Applications']
     edpInputs = jsonInputs['EDP']  # noqa: N806
     uqInputs = jsonInputs['UQ']  # noqa: N806
-    femInputs = jsonInputs['FEM']  # noqa: N806, F841
+    # femInputs = jsonInputs['FEM']
     rvInputs = jsonInputs['randomVariables']  # noqa: N806
     # localAppDirInputs = jsonInputs['localAppDir']
     # pythonInputs = jsonInputs['python']
@@ -50,23 +50,23 @@ def parseDataFunction(dakotaJsonFile, logFile):  # noqa: C901, N802, N803, D103,
     #        numCol = spreadsheet['numCol']
     #        numRow = spreadsheet['numRow']
     #        summary = uqResultsInputs['summary']
-    workingDir = jsonInputs['workingDir']  # noqa: N806, F841
+    # workingDir = jsonInputs['workingDir']
 
     # Processing UQ inputs
     logFile.write('\n\t\tProcessing UQ inputs')
     seedValue = uqInputs['seed']  # noqa: N806
     nSamples = uqInputs['numParticles']  # noqa: N806
     # maxRunTime = uqInputs["maxRunTime"]
-    if 'maxRunTime' in uqInputs.keys():  # noqa: SIM118
-        maxRunTime = uqInputs['maxRunTime']  # noqa: N806
-    else:
-        maxRunTime = float('inf')  # noqa: N806, F841
+    # if 'maxRunTime' in uqInputs.keys():
+    #     maxRunTime = uqInputs['maxRunTime']
+    # else:
+    #     maxRunTime = float('inf')
     # logLikelihoodFile = uqInputs['logLikelihoodFile']
     calDataFile = uqInputs['calDataFile']  # noqa: N806
 
-    parallelizeMCMC = True  # noqa: N806
-    if 'parallelExecution' in uqInputs:
-        parallelizeMCMC = uqInputs['parallelExecution']  # noqa: N806, F841
+    # parallelizeMCMC = True
+    # if 'parallelExecution' in uqInputs:
+    #     parallelizeMCMC = uqInputs['parallelExecution']
 
     # Processing EDP inputs
     logFile.write('\n\n\t\tProcessing EDP inputs')
@@ -90,7 +90,7 @@ def parseDataFunction(dakotaJsonFile, logFile):  # noqa: C901, N802, N803, D103,
     logFile.write('\n\n\t\tProcessing application inputs')
     # Processing number of models
     # Check if this is a multi-model analysis
-    runMultiModel = False  # noqa: N806, F841
+    # runMultiModel = False
     modelsDict = {}  # noqa: N806
     modelIndicesList = []  # noqa: N806
     modelRVNamesList = []  # noqa: N806
