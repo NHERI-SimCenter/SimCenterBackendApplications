@@ -1,4 +1,4 @@
-# noqa: D100
+# noqa: D100, INP001
 
 #
 # Code to write response.csv file given input and dakotaTab.out files
@@ -14,9 +14,9 @@ import os
 import numpy as np
 import pandas as pd
 
-def main(input_file, dakota_tab_file): # noqa: D103
 
-    directory_inputs = os.path.dirname(input_file) # noqa: PTH120
+def main(input_file, dakota_tab_file):  # noqa: D103
+    directory_inputs = os.path.dirname(input_file)  # noqa: PTH120
     os.chdir(directory_inputs)
 
     try:
@@ -26,11 +26,11 @@ def main(input_file, dakota_tab_file): # noqa: D103
 
     except FileNotFoundError:
         # Handle the error if the file is not found
-        print(f"Error createResponseCSV.py: The file '{input_file}' was not found.") # noqa: T201
+        print(f"Error createResponseCSV.py: The file '{input_file}' was not found.")  # noqa: T201
         return
     except OSError:
         # Handle other I/O errors
-        print(f"Error createResponseCSV.py: Error reading the file '{input_file}'.") # noqa: T201
+        print(f"Error createResponseCSV.py: Error reading the file '{input_file}'.")  # noqa: T201
         return
 
     app_data = data.get('Applications', None)
@@ -59,12 +59,12 @@ def main(input_file, dakota_tab_file): # noqa: D103
 
     except FileNotFoundError:
         # Handle the error if the file is not found
-        print(f"Error createResponseCSV.py: The file '{dakota_tab_file}' not found.") # noqa: T201
+        print(f"Error createResponseCSV.py: The file '{dakota_tab_file}' not found.")  # noqa: T201
         return
 
     except OSError:
         # Handle other I/O errors
-        print(f"Error createResponseCSV.py: Error reading '{dakota_tab_file}'.") # noqa: T201
+        print(f"Error createResponseCSV.py: Error reading '{dakota_tab_file}'.")  # noqa: T201
         return
 
 
