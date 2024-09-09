@@ -35,38 +35,13 @@ def parseDataFunction(dakotaJsonFile, logFile):  # noqa: C901, N802, N803, D103,
     applications = jsonInputs['Applications']
     edpInputs = jsonInputs['EDP']  # noqa: N806
     uqInputs = jsonInputs['UQ']  # noqa: N806
-    # femInputs = jsonInputs['FEM']
     rvInputs = jsonInputs['randomVariables']  # noqa: N806
-    # localAppDirInputs = jsonInputs['localAppDir']
-    # pythonInputs = jsonInputs['python']
-    # remoteAppDirInputs = jsonInputs['remoteAppDir']
-    # uqResultsInputs = jsonInputs['uqResults']
-    # if uqResultsInputs:
-    #    resultType = uqResultsInputs['resultType']
-    #    if resultType == 'UCSD_Results':
-    #        spreadsheet = uqResultsInputs['spreadsheet']
-    #        dataValues = spreadsheet['data']
-    #        headings = spreadsheet['headings']
-    #        numCol = spreadsheet['numCol']
-    #        numRow = spreadsheet['numRow']
-    #        summary = uqResultsInputs['summary']
-    # workingDir = jsonInputs['workingDir']
 
     # Processing UQ inputs
     logFile.write('\n\t\tProcessing UQ inputs')
     seedValue = uqInputs['seed']  # noqa: N806
     nSamples = uqInputs['numParticles']  # noqa: N806
-    # maxRunTime = uqInputs["maxRunTime"]
-    # if 'maxRunTime' in uqInputs.keys():
-    #     maxRunTime = uqInputs['maxRunTime']
-    # else:
-    #     maxRunTime = float('inf')
-    # logLikelihoodFile = uqInputs['logLikelihoodFile']
     calDataFile = uqInputs['calDataFile']  # noqa: N806
-
-    # parallelizeMCMC = True
-    # if 'parallelExecution' in uqInputs:
-    #     parallelizeMCMC = uqInputs['parallelExecution']
 
     # Processing EDP inputs
     logFile.write('\n\n\t\tProcessing EDP inputs')
@@ -89,8 +64,6 @@ def parseDataFunction(dakotaJsonFile, logFile):  # noqa: C901, N802, N803, D103,
     # Processing model inputs
     logFile.write('\n\n\t\tProcessing application inputs')
     # Processing number of models
-    # Check if this is a multi-model analysis
-    # runMultiModel = False
     modelsDict = {}  # noqa: N806
     modelIndicesList = []  # noqa: N806
     modelRVNamesList = []  # noqa: N806
@@ -124,18 +97,6 @@ def parseDataFunction(dakotaJsonFile, logFile):  # noqa: C901, N802, N803, D103,
     for _, data in modelsDict.items():  # noqa: PERF102
         nModels = nModels * data['nModels']  # noqa: N806
     cartesianProductOfModelIndices = list(itertools.product(*modelIndicesList))  # noqa: N806
-    # logFile.write("\n\t\t\tNO LONGER Getting the number of models")
-    # inputFileList = []
-    # nModels = femInputs['numInputs']
-    # nModels = 1
-    # if nModels > 1:
-    #    fileInfo = femInputs['fileInfo']
-    #    for m in range(nModels):
-    #        inputFileList.append(fileInfo[m]['inputFile'])
-    # else:
-    #    inputFileList.append(femInputs['inputFile'])
-    # logFile.write('\n\t\t\t\tThe number of models is: {}'.format(nModels))
-    # writeFEMOutputs = True
 
     # Variables
     variablesList = []  # noqa: N806
@@ -287,8 +248,6 @@ def parseDataFunction(dakotaJsonFile, logFile):  # noqa: C901, N802, N803, D103,
                     i, rv['name'], rv['distribution'], paramString
                 )
             )
-        # if runMultiModel:
-        #     variablesList[ind][]
 
         # Adding one prior distribution per EDP for the error covariance multiplier term
         logFile.write(
