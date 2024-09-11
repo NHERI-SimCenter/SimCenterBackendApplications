@@ -1,0 +1,2 @@
+simcenter_add_python_script(SCRIPT GISSpecifiedEvent.py)
+simcenter_add_python_script(SCRIPT RasterEvent.py)
