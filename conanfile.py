@@ -24,7 +24,7 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
     requires = [  # noqa: RUF012
         'jansson/2.13.1',
         'zlib/1.2.11',
-        'libcurl/8.6.0',
+        'libcurl/8.1.1',
         'eigen/3.3.7',
         'clara/1.1.5',
         'jsonformoderncpp/3.7.0',
