@@ -54,7 +54,7 @@ if 'stampede2' not in socket.gethostname():
         GlobalVariable.JVM_started = True
         if importlib.util.find_spec('jpype') is None:
             subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])  # noqa: S603
-        import jpype  # noqa: I001
+        import jpype  # noqa: I001, RUF100
 
         # from jpype import imports
         import jpype.imports
@@ -602,15 +602,15 @@ def export_to_json(  # noqa: C901, D103
                     # these calls are time-consuming, so only run them if one needs
                     # detailed outputs of the sources
                     cur_dict['properties'].update({'Distance': float(cur_dist)})
-                    distanceRup = rupture.getRuptureSurface().getDistanceRup(
+                    distanceRup = rupture.getRuptureSurface().getDistanceRup(  # noqa: N806
                         site_loc
-                    )  # noqa: N806
+                    )  # noqa: N806, RUF100
                     cur_dict['properties'].update(
                         {'DistanceRup': float(distanceRup)}
                     )
-                    distanceSeis = rupture.getRuptureSurface().getDistanceSeis(
+                    distanceSeis = rupture.getRuptureSurface().getDistanceSeis(  # noqa: N806
                         site_loc
-                    )  # noqa: N806
+                    )  # noqa: N806, RUF100
                     cur_dict['properties'].update(
                         {'DistanceSeis': float(distanceSeis)}
                     )
@@ -675,8 +675,9 @@ def export_to_json(  # noqa: C901, D103
         with h5py.File(outfile, 'w') as h5file:
             # Store the geometry as a string array
             h5file.create_dataset(
-                'geometry', data=gdf.geometry.astype(str).values.astype('S')
-            )  # noqa: PD011, F405
+                'geometry',
+                data=gdf.geometry.astype(str).values.astype('S'),  # noqa: PD011, F405
+            )  # noqa: F405, PD011, RUF100
     # return
     return erf_data
 

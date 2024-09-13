@@ -116,7 +116,7 @@ class VlachosEtAl : public StochasticModel {
    * @param[in, out] time_histories Location where time histories should be
    *                                stored
    * @param[in] parameters Set of model parameters to use for calculating power
-   *                       specturm and time histories
+   *                       spectrum and time histories
    * @return Returns true if successful, false otherwise
    */
   bool time_history_family(std::vector<std::vector<double>>& time_histories,
@@ -263,7 +263,7 @@ class VlachosEtAl : public StochasticModel {
   Eigen::VectorXd means_; /**< Mean values of model parameters */
   Eigen::MatrixXd covariance_; /**< Covariance matrix for model parameters */
   std::vector<std::shared_ptr<stochastic::Distribution>>
-      model_parameters_; /**< Distrubutions for 18-parameter model */
+      model_parameters_; /**< Distributions for 18-parameter model */
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>
       parameter_realizations_; /**< Random realizations of normal model parameters */
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>

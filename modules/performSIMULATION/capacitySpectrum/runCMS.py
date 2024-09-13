@@ -137,7 +137,7 @@ def find_unit_scale_factor(aim):
         for base_unit_type, unit_set in simcenter_common.unit_types.items():
             if unit in unit_set:
                 unit_type = base_unit_type
-        # If the input event unit is acceleration, conver to g
+        # If the input event unit is acceleration, convert to g
         if unit_type == 'acceleration':
             f_in = f_length_in / f_time_in**2.0
             f_out = 1 / simcenter_common.g

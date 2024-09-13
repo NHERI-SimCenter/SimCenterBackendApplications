@@ -139,8 +139,8 @@ class damping_model_hazus(damping_model_base):
             'MH': 9.25,
         }
         self.kappa_data = pd.read_csv(
-            os.path.join(
-                os.path.dirname(__file__),  # noqa: PTH118, PTH120
+            os.path.join(  # noqa: PTH118
+                os.path.dirname(__file__),  # noqa: PTH118, PTH120, RUF100
                 'hazus_kappa_data.csv',
             ),
             index_col=0,

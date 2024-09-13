@@ -721,7 +721,7 @@ Eigen::VectorXd stochastic::VlachosEtAl::identify_parameters(
     energy[i] = energy[i - 1] + 0.05;
   }
 
-  // Initialze mode 1 parameters and frequencies
+  // Initialize mode 1 parameters and frequencies
   std::vector<double> mode_1_params = {initial_params(2),
 				       initial_params(3),
 				       initial_params(4)};

@@ -243,11 +243,11 @@ class HAZUS(demand_model_base):
         for _i in range(max_iter):
             beta = x_prev
             ra = 2.12 / (3.21 - 0.68 * np.log(beta))
-            Tavb = (
+            Tavb = (  # noqa: N806
                 self.Tav
                 * (2.12 / (3.21 - 0.68 * np.log(beta)))
                 / (1.65 / (2.31 - 0.41 * np.log(beta)))
-            )  # noqa: N806
+            )  # noqa: N806, RUF100
             sa = self.get_sa(Tavb) / ra
             sd = self.get_sd_from_sa(sa, Tavb)
             beta_eff = damping_model.get_beta(sd, sa)
@@ -329,9 +329,9 @@ class HAZUS(demand_model_base):
         RA = 2.12 / (3.21 - 0.68 * np.log(beta_eff))  # noqa: N806
         Rv = 1.65 / (2.31 - 0.41 * np.log(beta_eff))  # noqa: N806
         if self.beta_tvd < 0:
-            RD = 1.39 / (
+            RD = 1.39 / (  # noqa: N806
                 1.82 - 0.27 * np.log(beta_eff)
-            )  # EQ A9 in Cao and Peterson 2006  # noqa: N806
+            )  # EQ A9 in Cao and Peterson 2006  # noqa: N806, RUF100
         else:
             RD = 1.65 / (2.31 - 0.41 * np.log(self.beta_tvd))  # noqa: N806
         dem_sa = np.zeros_like(np.array(self.T))

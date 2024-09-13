@@ -291,43 +291,43 @@ class HAZUS_cao_peterson_2006(capacity_model_base):
         # HAZUS capacity data: Table 5-7 to Tabl 5-10 in HAZUS 5.1
         self.capacity_data = dict()  # noqa: C408
         self.capacity_data['HC'] = pd.read_csv(
-            os.path.join(
-                os.path.dirname(__file__),  # noqa: PTH118, PTH120
+            os.path.join(  # noqa: PTH118
+                os.path.dirname(__file__),  # noqa: PTH118, PTH120, RUF100
                 'HC_capacity_data.csv',
             ),
             index_col=0,
         ).to_dict(orient='index')
         self.capacity_data['MC'] = pd.read_csv(
-            os.path.join(
-                os.path.dirname(__file__),  # noqa: PTH118, PTH120
+            os.path.join(  # noqa: PTH118
+                os.path.dirname(__file__),  # noqa: PTH118, PTH120, RUF100
                 'MC_capacity_data.csv',
             ),
             index_col=0,
         ).to_dict(orient='index')
         self.capacity_data['LC'] = pd.read_csv(
-            os.path.join(
-                os.path.dirname(__file__),  # noqa: PTH118, PTH120
+            os.path.join(  # noqa: PTH118
+                os.path.dirname(__file__),  # noqa: PTH118, PTH120, RUF100
                 'LC_capacity_data.csv',
             ),
             index_col=0,
         ).to_dict(orient='index')
         self.capacity_data['PC'] = pd.read_csv(
-            os.path.join(
-                os.path.dirname(__file__),  # noqa: PTH118, PTH120
+            os.path.join(  # noqa: PTH118
+                os.path.dirname(__file__),  # noqa: PTH118, PTH120, RUF100
                 'PC_capacity_data.csv',
             ),
             index_col=0,
         ).to_dict(orient='index')
         self.capacity_data['alpha2'] = pd.read_csv(
-            os.path.join(
-                os.path.dirname(__file__),  # noqa: PTH118, PTH120
+            os.path.join(  # noqa: PTH118
+                os.path.dirname(__file__),  # noqa: PTH118, PTH120, RUF100
                 'hazus_capacity_alpha2.csv',
             ),
             index_col=0,
         ).to_dict(orient='index')
         self.capacity_data['roof_height'] = pd.read_csv(
-            os.path.join(
-                os.path.dirname(__file__),  # noqa: PTH118, PTH120
+            os.path.join(  # noqa: PTH118
+                os.path.dirname(__file__),  # noqa: PTH118, PTH120, RUF100
                 'hazus_typical_roof_height.csv',
             ),
             index_col=0,
