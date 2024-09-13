@@ -324,7 +324,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 not name_values[1]
                 .replace('.', '', 1)
                 .replace('e', '', 1)
-                .replace('-', '', 1)
+                .replace('-', '', 2)
                 .replace('+', '', 1)
                 .isdigit()
             ):
