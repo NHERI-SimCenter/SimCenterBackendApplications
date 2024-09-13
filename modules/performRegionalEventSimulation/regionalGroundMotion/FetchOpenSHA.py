@@ -49,14 +49,17 @@ import GlobalVariable
 
 if 'stampede2' not in socket.gethostname():
     import GlobalVariable
+
     if GlobalVariable.JVM_started is False:
         GlobalVariable.JVM_started = True
         if importlib.util.find_spec('jpype') is None:
             subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])  # noqa: S603
         import jpype  # noqa: I001
+
         # from jpype import imports
         import jpype.imports
         from jpype.types import *  # noqa: F403
+
         memory_total = psutil.virtual_memory().total / (1024.0**3)
         memory_request = int(memory_total * 0.75)
         jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
@@ -529,10 +532,13 @@ def export_to_json(  # noqa: C901, D103
     source_collection = source_collection[
         source_collection['sourceDist'] < maxDistance
     ]
-    #Collecting source features
+    # Collecting source features
     if not use_hdf5:
         feature_collection = []
-        for i in tqdm(range(source_collection.shape[0]), desc=f'Find ruptures with in {maxDistance} km'):
+        for i in tqdm(
+            range(source_collection.shape[0]),
+            desc=f'Find ruptures with in {maxDistance} km',
+        ):
             source_index = source_collection.iloc[i, 0]
             # Getting rupture distances
             rupSource = erf.getSource(source_index)  # noqa: N806
@@ -596,10 +602,18 @@ def export_to_json(  # noqa: C901, D103
                     # these calls are time-consuming, so only run them if one needs
                     # detailed outputs of the sources
                     cur_dict['properties'].update({'Distance': float(cur_dist)})
-                    distanceRup = rupture.getRuptureSurface().getDistanceRup(site_loc)  # noqa: N806
-                    cur_dict['properties'].update({'DistanceRup': float(distanceRup)})
-                    distanceSeis = rupture.getRuptureSurface().getDistanceSeis(site_loc)  # noqa: N806
-                    cur_dict['properties'].update({'DistanceSeis': float(distanceSeis)})
+                    distanceRup = rupture.getRuptureSurface().getDistanceRup(
+                        site_loc
+                    )  # noqa: N806
+                    cur_dict['properties'].update(
+                        {'DistanceRup': float(distanceRup)}
+                    )
+                    distanceSeis = rupture.getRuptureSurface().getDistanceSeis(
+                        site_loc
+                    )  # noqa: N806
+                    cur_dict['properties'].update(
+                        {'DistanceSeis': float(distanceSeis)}
+                    )
                     distanceJB = rupture.getRuptureSurface().getDistanceJB(site_loc)  # noqa: N806
                     cur_dict['properties'].update({'DistanceJB': float(distanceJB)})
                     distanceX = rupture.getRuptureSurface().getDistanceX(site_loc)  # noqa: N806
@@ -607,7 +621,9 @@ def export_to_json(  # noqa: C901, D103
                     Prob = rupture.getProbability()  # noqa: N806
                     cur_dict['properties'].update({'Probability': float(Prob)})
                     maf = rupture.getMeanAnnualRate(erf.getTimeSpan().getDuration())
-                    cur_dict['properties'].update({'MeanAnnualRate': abs(float(maf))})
+                    cur_dict['properties'].update(
+                        {'MeanAnnualRate': abs(float(maf))}
+                    )
                     # Geometry
                     cur_dict['geometry'] = dict()  # noqa: C408
                     if ruptureSurface.isPointSurface():
@@ -655,9 +671,12 @@ def export_to_json(  # noqa: C901, D103
                 ujson.dump(erf_data, f, indent=2)
     else:
         import h5py
+
         with h5py.File(outfile, 'w') as h5file:
             # Store the geometry as a string array
-            h5file.create_dataset('geometry', data=gdf.geometry.astype(str).values.astype('S'))  # noqa: PD011, F405
+            h5file.create_dataset(
+                'geometry', data=gdf.geometry.astype(str).values.astype('S')
+            )  # noqa: PD011, F405
     # return
     return erf_data
 

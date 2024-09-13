@@ -48,7 +48,6 @@
 # Earthquake Model Technical Manual, Federal Emergency Management Agency, Washington D.C.
 
 
-
 import os
 import sys
 import time
@@ -73,9 +72,10 @@ class demand_model_base:
     """
 
     def __init__(self, T, dem_sd_05, dem_sa_05):  # noqa: N803
-        self.T         = T
+        self.T = T
         self.dem_sd_05 = dem_sd_05
         self.dem_sa_05 = dem_sa_05
+
 
 class HAZUS(demand_model_base):
     """
@@ -99,10 +99,31 @@ class HAZUS(demand_model_base):
     -------
     """  # noqa: D414
 
-    def __init__(self, Mw = 7.0):  # noqa: N803
-        self.Tvd = np.power(10, (Mw - 5)/2)
-        self.T  = [0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2,
-                                   0.25, 0.3, 0.4, 0.5, 0.75, 1, 1.5, 2, 3, 4, 5, 7.5, 10]
+    def __init__(self, Mw=7.0):  # noqa: N803
+        self.Tvd = np.power(10, (Mw - 5) / 2)
+        self.T = [
+            0.01,
+            0.02,
+            0.03,
+            0.05,
+            0.075,
+            0.1,
+            0.15,
+            0.2,
+            0.25,
+            0.3,
+            0.4,
+            0.5,
+            0.75,
+            1,
+            1.5,
+            2,
+            3,
+            4,
+            5,
+            7.5,
+            10,
+        ]
         self.Mw = Mw
 
     def set_IMs(self, sa_03, sa_10):  # noqa: N802
@@ -118,7 +139,7 @@ class HAZUS(demand_model_base):
         """
         self.sa_03 = sa_03
         self.sa_10 = sa_10
-        self.Tav = sa_10/sa_03
+        self.Tav = sa_10 / sa_03
         self.g = 386
         # insert tvd and tav in self.T
         self.T.append(self.Tvd)
@@ -130,13 +151,19 @@ class HAZUS(demand_model_base):
         for i, t in enumerate(self.T):
             if t <= self.Tav:
                 self.dem_sa_05[i] = sa_03
-                self.dem_sd_05[i] = self.g/(4 * np.pi**2) * t**2 * self.dem_sa_05[i] # Eq. A2
+                self.dem_sd_05[i] = (
+                    self.g / (4 * np.pi**2) * t**2 * self.dem_sa_05[i]
+                )  # Eq. A2
             elif t <= self.Tvd:
-                self.dem_sa_05[i] = sa_10/t
-                self.dem_sd_05[i] = self.g/(4 * np.pi**2) * t**2 * self.dem_sa_05[i] # Eq. A2
+                self.dem_sa_05[i] = sa_10 / t
+                self.dem_sd_05[i] = (
+                    self.g / (4 * np.pi**2) * t**2 * self.dem_sa_05[i]
+                )  # Eq. A2
             else:
-                self.dem_sa_05[i] = sa_10 * self.Tvd / t**2 # Ea. A1a
-                self.dem_sd_05[i] = self.g/(4 * np.pi**2) * t**2 * self.dem_sa_05[i]
+                self.dem_sa_05[i] = sa_10 * self.Tvd / t**2  # Ea. A1a
+                self.dem_sd_05[i] = (
+                    self.g / (4 * np.pi**2) * t**2 * self.dem_sa_05[i]
+                )
 
     def get_sa(self, T):  # noqa: N803
         """
@@ -156,7 +183,7 @@ class HAZUS(demand_model_base):
         if self.Tav >= T:
             return self.sa_03
         if self.Tvd >= T:
-            return self.sa_10/T
+            return self.sa_10 / T
         return self.sa_10 * self.Tvd / T**2
 
     def get_sd(self, T):  # noqa: N803
@@ -178,7 +205,7 @@ class HAZUS(demand_model_base):
         if self.Tav >= T:
             return self.get_sd_from_sa(self.sa_03, T)
         if self.Tvd >= T:
-            return self.get_sd_from_sa(self.sa_10/T, T)
+            return self.get_sd_from_sa(self.sa_10 / T, T)
         return self.get_sd_from_sa(self.sa_10 * self.Tvd / T**2, T)
 
     def get_sd_from_sa(self, sa, T):  # noqa: N803
@@ -197,9 +224,9 @@ class HAZUS(demand_model_base):
         float
             The spectrum displacement.
         """
-        return self.g/(4 * np.pi**2) * T**2 * sa
+        return self.g / (4 * np.pi**2) * T**2 * sa
 
-    def set_Tavb(self, damping_model, tol = 0.05, max_iter = 100):  # noqa: N802
+    def set_Tavb(self, damping_model, tol=0.05, max_iter=100):  # noqa: N802
         """
         Set the Tavb attribute of the HAZUS demand model.
 
@@ -212,27 +239,37 @@ class HAZUS(demand_model_base):
         max_iter : int, optional
             The maximum number of iterations, by default 100.
         """
-        x_prev = 5 # Start with 5% damping
+        x_prev = 5  # Start with 5% damping
         for _i in range(max_iter):
             beta = x_prev
-            ra = 2.12/(3.21-0.68*np.log(beta))
-            Tavb = self.Tav * (2.12/(3.21-0.68*np.log(beta)))/(1.65/(2.31-0.41*np.log(beta)))  # noqa: N806
+            ra = 2.12 / (3.21 - 0.68 * np.log(beta))
+            Tavb = (
+                self.Tav
+                * (2.12 / (3.21 - 0.68 * np.log(beta)))
+                / (1.65 / (2.31 - 0.41 * np.log(beta)))
+            )  # noqa: N806
             sa = self.get_sa(Tavb) / ra
             sd = self.get_sd_from_sa(sa, Tavb)
             beta_eff = damping_model.get_beta(sd, sa)
             x_next = beta_eff
             if np.abs(x_next - x_prev) < tol:
-                self.Tavb = self.Tav * (2.12/(3.21-0.68*np.log(beta_eff)))/(1.65/(2.31-0.41*np.log(beta_eff)))
+                self.Tavb = (
+                    self.Tav
+                    * (2.12 / (3.21 - 0.68 * np.log(beta_eff)))
+                    / (1.65 / (2.31 - 0.41 * np.log(beta_eff)))
+                )
                 break
             x_prev = x_next
-        if (getattr(self, 'Tavb', None) is None or (3.21-0.68*np.log(beta_eff)) < 0
-            or 2.12/(3.21-0.68*np.log(beta)) < 1):
+        if (
+            getattr(self, 'Tavb', None) is None
+            or (3.21 - 0.68 * np.log(beta_eff)) < 0
+            or 2.12 / (3.21 - 0.68 * np.log(beta)) < 1
+        ):
             # raise a warning
             # print('WARNING: in HAZUS demand model, the Tavb is not converged.')
             self.Tavb = self.Tav
 
-
-    def set_beta_tvd(self, damping_model, tol = 0.05, max_iter = 100):
+    def set_beta_tvd(self, damping_model, tol=0.05, max_iter=100):
         """
         Set the beta_tvd attribute of the HAZUS demand model.
 
@@ -245,14 +282,14 @@ class HAZUS(demand_model_base):
         max_iter : int, optional
             The maximum number of iterations, by default 100.
         """
-        x_prev = 5 # Start with 5% damping
+        x_prev = 5  # Start with 5% damping
         max_iter = 100
         tol = 0.05
         for _i in range(max_iter):
             beta = x_prev
             Tvd = self.Tvd  # noqa: N806
-            rd = 1.65/(2.31-0.41*np.log(beta))
-            sa = self.get_sa(Tvd)/rd
+            rd = 1.65 / (2.31 - 0.41 * np.log(beta))
+            sa = self.get_sa(Tvd) / rd
             sd = self.get_sd_from_sa(sa, Tvd)
             beta_eff = damping_model.get_beta(sd, sa)
             x_next = beta_eff
@@ -260,12 +297,14 @@ class HAZUS(demand_model_base):
                 self.beta_tvd = x_next
                 break
             x_prev = x_next
-        if (getattr(self, 'beta_tvd', None) is None or (2.31-0.41*np.log(self.beta_tvd)) < 0
-            or 1.65/(2.31-0.41*np.log(self.beta_tvd)) < 1):
+        if (
+            getattr(self, 'beta_tvd', None) is None
+            or (2.31 - 0.41 * np.log(self.beta_tvd)) < 0
+            or 1.65 / (2.31 - 0.41 * np.log(self.beta_tvd)) < 1
+        ):
             # raise a warning
             # print('WARNING: in HAZUS demand model, the beta_tvd is not converged.')
-            self.beta_tvd = -1 # This will be overwritten in get_reduced_demand.
-
+            self.beta_tvd = -1  # This will be overwritten in get_reduced_demand.
 
     def get_reduced_demand(self, beta_eff):
         """
@@ -287,12 +326,14 @@ class HAZUS(demand_model_base):
         if getattr(self, 'beta_tvd', None) is None:
             msg = 'The beta_tvd is not set yet.'
             raise ValueError(msg)
-        RA = 2.12/(3.21-0.68*np.log(beta_eff))  # noqa: N806
-        Rv = 1.65/(2.31-0.41*np.log(beta_eff))  # noqa: N806
+        RA = 2.12 / (3.21 - 0.68 * np.log(beta_eff))  # noqa: N806
+        Rv = 1.65 / (2.31 - 0.41 * np.log(beta_eff))  # noqa: N806
         if self.beta_tvd < 0:
-            RD = 1.39/(1.82 - 0.27 * np.log(beta_eff)) # EQ A9 in Cao and Peterson 2006  # noqa: N806
+            RD = 1.39 / (
+                1.82 - 0.27 * np.log(beta_eff)
+            )  # EQ A9 in Cao and Peterson 2006  # noqa: N806
         else:
-            RD = (1.65/(2.31-0.41*np.log(self.beta_tvd)))  # noqa: N806
+            RD = 1.65 / (2.31 - 0.41 * np.log(self.beta_tvd))  # noqa: N806
         dem_sa = np.zeros_like(np.array(self.T))
         dem_sd = np.zeros_like(np.array(self.T))
         for i, t in enumerate(self.T):
@@ -307,7 +348,6 @@ class HAZUS(demand_model_base):
                 dem_sd[i] = self.get_sd_from_sa(dem_sa[i], t)
         return dem_sd, dem_sa
 
-
     def set_ruduction_factor(self, beta_eff):
         """
         Set the reduction factor for a given effective damping ratio.
@@ -320,9 +360,9 @@ class HAZUS(demand_model_base):
         if getattr(self, 'Tavb', None) is None:
             msg = 'The Tavb is not set yet.'
             raise ValueError(msg)
-        self.RA = 2.12/(3.21-0.68*np.log(beta_eff))
-        self.Rv = 1.65/(2.31-0.41*np.log(beta_eff))
-        self.RD = (1.65/(2.31-0.41*np.log(beta_eff)))
+        self.RA = 2.12 / (3.21 - 0.68 * np.log(beta_eff))
+        self.Rv = 1.65 / (2.31 - 0.41 * np.log(beta_eff))
+        self.RD = 1.65 / (2.31 - 0.41 * np.log(beta_eff))
 
     # def __init__(self, sa_03, sa_10, Mw = 7.0):
     #     self.Tvd = np.power(10, (Mw - 5)/2)
@@ -383,22 +423,22 @@ class HAZUS(demand_model_base):
             msg = 'The IM header of should contain SA_1.0'
             raise ValueError(msg)
 
-class HAZUS_lin_chang_2003(HAZUS):
 
+class HAZUS_lin_chang_2003(HAZUS):
     """
     A class to represent the design spectrum from HAZUS V5 (2022), and the
     damping deduction relationship from Lin and Chang 2003.
     """  # noqa: D205
 
-    def __init__(self, Mw = 7.0):  # noqa: N803
+    def __init__(self, Mw=7.0):  # noqa: N803
         super().__init__(Mw)
 
     def name(self):  # noqa: D102
-        return "HAZUS_lin_chang_2003"
+        return 'HAZUS_lin_chang_2003'
 
     def get_dmf(self, beta_eff, T):  # noqa: D102, N803
-        alpha = 1.303+0.436*np.log(beta_eff)
-        return 1-alpha*T**0.3/(T+1)**0.65
+        alpha = 1.303 + 0.436 * np.log(beta_eff)
+        return 1 - alpha * T**0.3 / (T + 1) ** 0.65
 
     def get_reduced_demand(self, beta_eff):  # noqa: D102
         if getattr(self, 'Tavb', None) is None:
@@ -418,6 +458,7 @@ class HAZUS_lin_chang_2003(HAZUS):
             dem_sd[i] = self.get_sd_from_sa(dem_sa[i], t)
 
         return dem_sd, dem_sa
+
 
 class ASCE_7_10(demand_model_base):
     """
@@ -441,7 +482,6 @@ class ASCE_7_10(demand_model_base):
     """  # noqa: D414
 
     def __init__(self, T, dem_sd_05, dem_sa_05):  # noqa: N803
-        self.T         = T
+        self.T = T
         self.dem_sd_05 = dem_sd_05
         self.dem_sa_05 = dem_sa_05
-

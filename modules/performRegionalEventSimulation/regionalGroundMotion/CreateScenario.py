@@ -519,7 +519,7 @@ def create_earthquake_scenarios(  # noqa: C901, D103
                     minMag=min_M,
                     maxMag=max_M,
                     maxDistance=max_R,
-                    use_hdf5=use_hdf5
+                    use_hdf5=use_hdf5,
                 )
                 # Parsing data
                 # feat = erf_data['features']

@@ -57,48 +57,53 @@ sys.path.insert(0, str(main_dir / 'common'))
 import simcenter_common  # noqa: E402
 
 
-def find_performance_point(cap_x,cap_y,dem_x,dem_y,dd=0.001):
-  """Interpolate to have matching discretization for cap/demand curves.
+def find_performance_point(cap_x, cap_y, dem_x, dem_y, dd=0.001):
+    """Interpolate to have matching discretization for cap/demand curves.
 
-  Created by: Tamika Bassman.
-  """
-  # Interpolate to have matching discretization for cap/demand curves
-  x_interp     = np.arange(0,min(cap_x[-1],dem_x[-1])+dd,dd)
-  dem_y_interp = np.interp(x_interp,dem_x,dem_y)
-  cap_y_interp = np.interp(x_interp,cap_x,cap_y)
+    Created by: Tamika Bassman.
+    """
+    # Interpolate to have matching discretization for cap/demand curves
+    x_interp = np.arange(0, min(cap_x[-1], dem_x[-1]) + dd, dd)
+    dem_y_interp = np.interp(x_interp, dem_x, dem_y)
+    cap_y_interp = np.interp(x_interp, cap_x, cap_y)
 
-  # # Enforce capacity curve to have same final length as spectrum
-  # cap_y = cap_y[:min(len(cap_x),len(spec_x))]
+    # # Enforce capacity curve to have same final length as spectrum
+    # cap_y = cap_y[:min(len(cap_x),len(spec_x))]
 
-  # Find sign changes in the difference between the two curves - these are
-  # effectively intersections between the two curves
-  curves_diff  = dem_y_interp - cap_y_interp
-  # adapted from https://stackoverflow.com/questions/4111412/how-do-i-get-a-list-of-indices-of-non-zero-elements-in-a-list
-  id_sign_changes = [n for n,(i,j) in enumerate(zip(curves_diff[:-1],curves_diff[1:])) if i*j <= 0]
+    # Find sign changes in the difference between the two curves - these are
+    # effectively intersections between the two curves
+    curves_diff = dem_y_interp - cap_y_interp
+    # adapted from https://stackoverflow.com/questions/4111412/how-do-i-get-a-list-of-indices-of-non-zero-elements-in-a-list
+    id_sign_changes = [
+        n
+        for n, (i, j) in enumerate(zip(curves_diff[:-1], curves_diff[1:]))
+        if i * j <= 0
+    ]
 
-  # id_sign_changes = []
-  # for i,sign in enumerate(curves_diff[:-1]):
-  #   if curves_diff[i]*curves_diff[i+1]<=0:
-  #     # print(i)
-  #     id_sign_changes += [i]
+    # id_sign_changes = []
+    # for i,sign in enumerate(curves_diff[:-1]):
+    #   if curves_diff[i]*curves_diff[i+1]<=0:
+    #     # print(i)
+    #     id_sign_changes += [i]
 
-  # If sign changes detected, return the first (smallest abscissa) as the PP
-  if len(id_sign_changes) > 0:
-    ix = id_sign_changes[0]
-    perf_x = x_interp[ix]
-    perf_y = np.average([cap_y_interp[ix],dem_y_interp[ix]])
-  elif dem_y_interp[0] > cap_y_interp[0]:
-    perf_x = x_interp[-1]
-    perf_y = cap_y_interp[-1]
-  elif dem_y_interp[0] < cap_y_interp[0]:
-    perf_x = 0.001 # x_interp[0]
-    perf_y = 0.001 # cap_y_interp[0]
-  # except IndexError as err:
-  #   print('No performance point found; curves do not intersect.')
-  #   print('IndexError: ')
-  #   print(err)
+    # If sign changes detected, return the first (smallest abscissa) as the PP
+    if len(id_sign_changes) > 0:
+        ix = id_sign_changes[0]
+        perf_x = x_interp[ix]
+        perf_y = np.average([cap_y_interp[ix], dem_y_interp[ix]])
+    elif dem_y_interp[0] > cap_y_interp[0]:
+        perf_x = x_interp[-1]
+        perf_y = cap_y_interp[-1]
+    elif dem_y_interp[0] < cap_y_interp[0]:
+        perf_x = 0.001  # x_interp[0]
+        perf_y = 0.001  # cap_y_interp[0]
+    # except IndexError as err:
+    #   print('No performance point found; curves do not intersect.')
+    #   print('IndexError: ')
+    #   print(err)
 
-  return perf_x,perf_y
+    return perf_x, perf_y
+
 
 def find_unit_scale_factor(aim):
     """Find the unit scale factor based on the AIM file.
@@ -141,7 +146,8 @@ def find_unit_scale_factor(aim):
             f_scale_im_user_to_cms[name] = 1
     f_scale_edp_cms_to_user = {}
     f_scale_edp_cms_to_user['1-SA-1-1'] = simcenter_common.g / (
-        f_length_in / f_time_in**2.0)
+        f_length_in / f_time_in**2.0
+    )
     f_scale_edp_cms_to_user['1-PRD-1-1'] = simcenter_common.inch / f_length_in
 
     return f_scale_im_user_to_cms, f_scale_edp_cms_to_user
@@ -169,9 +175,9 @@ def run_csm(demand_model, capacity_model, damping_model, tol, max_iter, im_i):
     beta_eff = damping_model.get_beta_elastic()
     beta_d = beta_eff
 
-      # Track convergence
-    iter_sd   = []   # intermediate predictions of Sd @ PP
-    iter_sa   = []   # intermediate predictions of Sa @ PP
+    # Track convergence
+    iter_sd = []  # intermediate predictions of Sd @ PP
+    iter_sa = []  # intermediate predictions of Sa @ PP
     # Iterate to find converged PP
     for i in range(max_iter):
         # Calc demand spectrum
@@ -179,12 +185,12 @@ def run_csm(demand_model, capacity_model, damping_model, tol, max_iter, im_i):
         # create capacity curve
         cap_sd, cap_sa = capacity_model.get_capacity_curve(dem_sd[-1])
         # Calc intersection (PP)
-        perf_sd, perf_sa = find_performance_point(cap_sd,cap_sa,dem_sd,dem_sa)
+        perf_sd, perf_sa = find_performance_point(cap_sd, cap_sa, dem_sd, dem_sa)
         iter_sd.append(perf_sd)
         iter_sa.append(perf_sa)
 
         # Calc effective damping at this point on the capacity curve
-        beta_eff = damping_model.get_beta(perf_sd,perf_sa)
+        beta_eff = damping_model.get_beta(perf_sd, perf_sa)
 
         # Check if tolerance met on damping ratios of capacity, demand cueves at this point
         if abs(beta_d - beta_eff) <= tol:
@@ -205,13 +211,14 @@ def run_csm(demand_model, capacity_model, damping_model, tol, max_iter, im_i):
         dem_sd, dem_sa = demand_model.get_reduced_demand(beta_eff)
         beta_d = beta_eff
         if i == max_iter - 1:
-            logging.warning(f'The capacity spectrum method did not converge for the {im_i}th IM realization.')
+            logging.warning(
+                f'The capacity spectrum method did not converge for the {im_i}th IM realization.'
+            )
 
     return perf_sd, perf_sa
 
 
 def write_RV(AIM_input_path, EVENT_input_path):  # noqa: C901, N802, N803, D103
-
     # open the AIM file
     with open(AIM_input_path, encoding='utf-8') as f:  # noqa: PTH123
         AIM_in = json.load(f)  # noqa: N806
@@ -219,19 +226,18 @@ def write_RV(AIM_input_path, EVENT_input_path):  # noqa: C901, N802, N803, D103
     UQ_app = applications['UQ']['Application']  # noqa: N806
 
     # Raise an error if the UQ application is not None
-    if UQ_app != "None":
-        msg = "This app is only used when UQ is None, similar to IMasEDP"
+    if UQ_app != 'None':
+        msg = 'This app is only used when UQ is None, similar to IMasEDP'
         raise ValueError(msg)
 
     # get the simulation application
     SIM_input = applications['Simulation']  # noqa: N806
     if SIM_input['Application'] != 'CapacitySpectrumMethod':
-        msg = "Wrong simulation application is called"
+        msg = 'Wrong simulation application is called'
         raise ValueError(msg)
     SIM_input_data = SIM_input['ApplicationData']  # noqa: N806
     tol = SIM_input_data.get('tolerance', 0.05)
     max_iter = SIM_input_data.get('max_iter', 100)
-
 
     # open the event file and get the list of events
     with open(EVENT_input_path, encoding='utf-8') as f:  # noqa: PTH123
@@ -302,7 +308,9 @@ def write_RV(AIM_input_path, EVENT_input_path):  # noqa: C901, N802, N803, D103
     IM_samples = IM_samples.T  # noqa: N806
     for c_i, col in enumerate(header):
         f_i = f_scale.get(col.strip(), f_scale.get('ALL', None))
-        f_i_to_cms = f_scale_im_user_to_cms.get(col.strip(), f_scale_im_user_to_cms.get('ALL', None))
+        f_i_to_cms = f_scale_im_user_to_cms.get(
+            col.strip(), f_scale_im_user_to_cms.get('ALL', None)
+        )
         if f_i is None:
             raise ValueError(f'No units defined for {col}')  # noqa: EM102, TRY003
 
@@ -334,12 +342,15 @@ def write_RV(AIM_input_path, EVENT_input_path):  # noqa: C901, N802, N803, D103
     capacity_model_name = SIM_input_data['CapacityModel']['Name']
     if capacity_model_name == 'HAZUS_cao_peterson_2006':
         capacity_model = CapacityModels.HAZUS_cao_peterson_2006(
-            general_info=AIM_in['GeneralInformation'])
+            general_info=AIM_in['GeneralInformation']
+        )
 
     # damping model
     damping_model_name = SIM_input_data['DampingModel']['Name']
     if damping_model_name == 'HAZUS_cao_peterson_2006':
-        damping_model = DampingModels.HAZUS_cao_peterson_2006(demand_model, capacity_model)
+        damping_model = DampingModels.HAZUS_cao_peterson_2006(
+            demand_model, capacity_model
+        )
 
     # Loop through each IM sample
     for ind in range(IM_samples.shape[0]):
@@ -360,7 +371,9 @@ def write_RV(AIM_input_path, EVENT_input_path):  # noqa: C901, N802, N803, D103
         #     damping_model.set_HAZUS_bldg_type(capacity_model.get_hazus_bldg_type())
 
         # iterate to get sd and sa
-        perf_sd, perf_sa = run_csm(demand_model, capacity_model, damping_model, tol, max_iter, ind)
+        perf_sd, perf_sa = run_csm(
+            demand_model, capacity_model, damping_model, tol, max_iter, ind
+        )
         EDP_output[ind, 0] = perf_sa
 
         # Table 5-1 in Hazus, convert to inches
@@ -368,7 +381,7 @@ def write_RV(AIM_input_path, EVENT_input_path):  # noqa: C901, N802, N803, D103
         if general_info.get('RoofHeight', None) is not None:
             roof_height = general_info['RoofHeight']
         else:
-            roof_height = capacity_model.get_hazus_roof_height()*12
+            roof_height = capacity_model.get_hazus_roof_height() * 12
         drift_ratio = perf_sd / capacity_model.get_hazus_alpha2() / roof_height
         EDP_output[ind, 1] = drift_ratio
 

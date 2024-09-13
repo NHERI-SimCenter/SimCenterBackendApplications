@@ -50,7 +50,6 @@
 # Earthquake Model Technical Manual, Federal Emergency Management Agency, Washington D.C.
 
 
-
 import os
 import sys
 import time
@@ -73,8 +72,10 @@ class damping_model_base:
 
     def __init__(self):
         pass
+
     def name(self):  # noqa: D102
         return 'damping_model_base'
+
 
 class damping_model_hazus(damping_model_base):
     """
@@ -135,15 +136,21 @@ class damping_model_hazus(damping_model_base):
             'RM2H': 7,
             'URML': 8.5,
             'URMM': 8.5,
-            'MH': 9.25
+            'MH': 9.25,
         }
-        self.kappa_data = pd.read_csv(os.path.join(os.path.dirname(__file__),  # noqa: PTH118, PTH120
-                                                   'hazus_kappa_data.csv'),
-                                                   index_col=0, header=None)
-        self.kappa_col_map = {'HC':{'S':1, 'M':2, 'L':3},
-                              'MC':{'S':4, 'M':5, 'L':6},
-                              'LC':{'S':7, 'M':8, 'L':9},
-                              'PC':{'S':10, 'M':11, 'L':12},
+        self.kappa_data = pd.read_csv(
+            os.path.join(
+                os.path.dirname(__file__),  # noqa: PTH118, PTH120
+                'hazus_kappa_data.csv',
+            ),
+            index_col=0,
+            header=None,
+        )
+        self.kappa_col_map = {
+            'HC': {'S': 1, 'M': 2, 'L': 3},
+            'MC': {'S': 4, 'M': 5, 'L': 6},
+            'LC': {'S': 7, 'M': 8, 'L': 9},
+            'PC': {'S': 10, 'M': 11, 'L': 12},
         }
 
     def get_beta_elastic(self, HAZUS_bldg_type):  # noqa: N803
@@ -161,8 +168,9 @@ class damping_model_hazus(damping_model_base):
             The elastic damping ratio beta.
         """
         if HAZUS_bldg_type not in self.beta_elastic_map:
-            sys.exit(f'The building type {HAZUS_bldg_type} is not in the damping'
-                     'model.')
+            sys.exit(
+                f'The building type {HAZUS_bldg_type} is not in the damping' 'model.'
+            )
         return self.beta_elastic_map[HAZUS_bldg_type]
 
     def get_kappa(self, HAZUS_bldg_type, design_level, Mw):  # noqa: N803
@@ -180,8 +188,9 @@ class damping_model_hazus(damping_model_base):
             The kappa in Table 5-33 of FEMA HAZUS 2022.
         """
         if HAZUS_bldg_type not in self.beta_elastic_map:
-            sys.exit(f'The building type {HAZUS_bldg_type} is not in the damping'
-                     'model.')
+            sys.exit(
+                f'The building type {HAZUS_bldg_type} is not in the damping' 'model.'
+            )
         # Infer duration according to HAZUS 2022 below Table 5-33
         if Mw <= 5.5:  # noqa: PLR2004
             duration = 'S'
@@ -195,6 +204,7 @@ class damping_model_hazus(damping_model_base):
     def get_name(self):  # noqa: D102
         return 'damping_model_hazus'
 
+
 class HAZUS_cao_peterson_2006(damping_model_base):
     """
     A class to represent the damping model in Cao and Peterson 2006.
@@ -206,21 +216,24 @@ class HAZUS_cao_peterson_2006(damping_model_base):
     -------
     """  # noqa: D414
 
-    def __init__(self, demand, capacity, base_model = damping_model_hazus()):  # noqa: B008
+    def __init__(self, demand, capacity, base_model=damping_model_hazus()):  # noqa: B008
         self.supported_capacity_model = ['HAZUS_cao_peterson_2006']
         self.supported_demand_model = ['HAZUS', 'HAZUS_lin_chang_2003']
         self.base_model = base_model
         if capacity.name() not in self.supported_capacity_model:
-            sys.exit(f'The capacity model {capacity.name()} is not compatible'
-                     'with the damping model: cao_peterson_2006.')
+            sys.exit(
+                f'The capacity model {capacity.name()} is not compatible'
+                'with the damping model: cao_peterson_2006.'
+            )
         if demand.name() not in self.supported_demand_model:
-            sys.exit(f'The demand model {demand.name()} is not compatible'
-                     'with the damping model: cao_peterson_2006.')
+            sys.exit(
+                f'The demand model {demand.name()} is not compatible'
+                'with the damping model: cao_peterson_2006.'
+            )
         self.capacity = capacity
         self.HAZUS_type = capacity.HAZUS_type
         self.design_level = capacity.design_level
         self.Mw = demand.Mw
-
 
     def get_beta(self, Dp, Ap):  # noqa: N803
         """
@@ -229,26 +242,31 @@ class HAZUS_cao_peterson_2006(damping_model_base):
         """  # noqa: D205
         try:
             beta_elastic = self.base_model.get_beta_elastic(self.HAZUS_type)
-        except: # noqa: E722
-            sys.exit(f'The base model {self.base_model} does not have a useful'
-                     'get_beta_elastic method.')
+        except:  # noqa: E722
+            sys.exit(
+                f'The base model {self.base_model} does not have a useful'
+                'get_beta_elastic method.'
+            )
         try:
-            kappa = self.base_model.get_kappa(self.HAZUS_type, self.design_level, self.Mw)
-        except: # noqa: E722
-            sys.exit(f'The base model {self.base_model} does not have a useful'
-                     'get_kappa method.')
+            kappa = self.base_model.get_kappa(
+                self.HAZUS_type, self.design_level, self.Mw
+            )
+        except:  # noqa: E722
+            sys.exit(
+                f'The base model {self.base_model} does not have a useful'
+                'get_kappa method.'
+            )
         Du = self.capacity.Du  # noqa: N806
         Ax = self.capacity.Ax  # noqa: N806
         B = self.capacity.B  # noqa: N806
         C = self.capacity.C  # noqa: N806
-        Kt = (Du-Dp)/(Ap-Ax)*(B/C)**2 # Eq B.46  # noqa: N806
-        Ke = self.capacity.Ay/self.capacity.Dy # Eq B.47  # noqa: N806
-        area_h = max(0,4*(Ap-Dp*Ke)*(Dp*Kt-Ap)/(Ke-Kt)) # Eq. B.45
+        Kt = (Du - Dp) / (Ap - Ax) * (B / C) ** 2  # Eq B.46  # noqa: N806
+        Ke = self.capacity.Ay / self.capacity.Dy  # Eq B.47  # noqa: N806
+        area_h = max(0, 4 * (Ap - Dp * Ke) * (Dp * Kt - Ap) / (Ke - Kt))  # Eq. B.45
         # beta is in the unit of percentage
         # beta_h = kappa*area_h/(2*3.1416*Dp*Ap) * 100# Eq. B.44
-        beta_h = kappa*area_h/(2*3.1416*Dp*Ap)# Eq. B.44
+        beta_h = kappa * area_h / (2 * 3.1416 * Dp * Ap)  # Eq. B.44
         return beta_elastic + beta_h
 
     def get_beta_elastic(self):  # noqa: D102
         return self.base_model.get_beta_elastic(self.HAZUS_type)
-

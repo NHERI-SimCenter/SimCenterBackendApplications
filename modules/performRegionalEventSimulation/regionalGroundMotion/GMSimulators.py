@@ -202,15 +202,21 @@ class GM_Simulator:  # noqa: D101
         #         # Computing station-wise distances
         #         tmp[i, j] = CorrelationModel.get_distance_from_lat_lon(loc_i, loc_j)
         # self.stn_dist = tmp
-        loc_i = np.array([[self.sites[i]['lat'], self.sites[i]['lon']] for i in range(self.num_sites)])
+        loc_i = np.array(
+            [
+                [self.sites[i]['lat'], self.sites[i]['lon']]
+                for i in range(self.num_sites)
+            ]
+        )
         loc_i_gdf = gpd.GeoDataFrame(
-            {'geometry': gpd.points_from_xy(loc_i[:, 1], loc_i[:, 0])}, crs='EPSG:4326'
+            {'geometry': gpd.points_from_xy(loc_i[:, 1], loc_i[:, 0])},
+            crs='EPSG:4326',
         ).to_crs('EPSG:6500')
         lat = loc_i_gdf.geometry.y
         lon = loc_i_gdf.geometry.x
         loc_i = np.array([[lon[i], lat[i]] for i in range(self.num_sites)])
         loc_j = np.array([[lon[i], lat[i]] for i in range(self.num_sites)])
-        distances = cdist(loc_i, loc_j, 'euclidean')/1000 # in km
+        distances = cdist(loc_i, loc_j, 'euclidean') / 1000  # in km
         self.stn_dist = distances
 
     def set_num_simu(self, num_simu):  # noqa: D102
@@ -476,7 +482,7 @@ class GM_Simulator:  # noqa: D101
         elif cm == 'Markhvida et al. (2017)':
             num_pc = 19
             residuals = CorrelationModel.markhvida_ceferino_baker_correlation_2017(
-                self.sites, im_name_list, num_simu,  self.stn_dist, num_pc
+                self.sites, im_name_list, num_simu, self.stn_dist, num_pc
             )
         elif cm == 'Du & Ning (2021)':
             num_pc = 23

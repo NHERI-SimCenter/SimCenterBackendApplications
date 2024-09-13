@@ -58,9 +58,11 @@ import contextlib
 from joblib import Parallel, delayed
 import multiprocessing
 
+
 @contextlib.contextmanager
 def tqdm_joblib(tqdm_object):
     """Context manager to patch joblib to report into tqdm progress bar given as argument."""
+
     class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):
         def __call__(self, *args, **kwargs):
             tqdm_object.update(n=self.batch_size)
@@ -73,6 +75,7 @@ def tqdm_joblib(tqdm_object):
     finally:
         joblib.parallel.BatchCompletionCallBack = old_batch_callback
         tqdm_object.close()
+
 
 if 'stampede2' not in socket.gethostname():
     from FetchOpenSHA import (
@@ -238,8 +241,10 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
                 ]
     # Check if any duplicated points
     if selected_stn.duplicated(subset=[lon_label, lat_label]).any():
-        sys.exit('Error: Duplicated lat and lon in the Site File (.csv), '
-                 f'please check site \n{selected_stn[selected_stn.duplicated(subset=[lon_label, lat_label], keep = False)].index.tolist()}')
+        sys.exit(
+            'Error: Duplicated lat and lon in the Site File (.csv), '
+            f'please check site \n{selected_stn[selected_stn.duplicated(subset=[lon_label, lat_label], keep = False)].index.tolist()}'
+        )
 
     STN = []  # noqa: N806
     stn_file = {'Stations': []}
@@ -478,13 +483,16 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
                     )
                 ]
             else:
-                with tqdm_joblib(tqdm(desc="Get z1pt0 from openSHA", total=selected_stn.shape[0])) as progress_bar:
-                    z1pt0_results = Parallel(n_jobs=num_cores)(delayed(get_site_z1pt0_from_opensha)(
-                        lat, lon
-                    ) for lat, lon  in zip(
-                        selected_stn['Latitude'].tolist(),
-                        selected_stn['Longitude'].tolist(),
-                    ))
+                with tqdm_joblib(
+                    tqdm(desc='Get z1pt0 from openSHA', total=selected_stn.shape[0])
+                ) as progress_bar:
+                    z1pt0_results = Parallel(n_jobs=num_cores)(
+                        delayed(get_site_z1pt0_from_opensha)(lat, lon)
+                        for lat, lon in zip(
+                            selected_stn['Latitude'].tolist(),
+                            selected_stn['Longitude'].tolist(),
+                        )
+                    )
     if z25Config['Type'] == 'OpenSHA default model':
         z25_tag = z25Config['z25_tag']
         if z25_tag == 2:  # noqa: PLR2004
@@ -499,13 +507,16 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
                     )
                 ]
             else:
-                with tqdm_joblib(tqdm(desc="Get z2pt5 from openSHA", total=selected_stn.shape[0])) as progress_bar:  # noqa: F841
-                    z2pt5_results = Parallel(n_jobs=num_cores)(delayed(get_site_z2pt5_from_opensha)(
-                        lat, lon
-                    ) for lat, lon  in zip(
-                        selected_stn['Latitude'].tolist(),
-                        selected_stn['Longitude'].tolist(),
-                    ))
+                with tqdm_joblib(
+                    tqdm(desc='Get z2pt5 from openSHA', total=selected_stn.shape[0])
+                ) as progress_bar:  # noqa: F841
+                    z2pt5_results = Parallel(n_jobs=num_cores)(
+                        delayed(get_site_z2pt5_from_opensha)(lat, lon)
+                        for lat, lon in zip(
+                            selected_stn['Latitude'].tolist(),
+                            selected_stn['Longitude'].tolist(),
+                        )
+                    )
 
     ground_failure_input_keys = set()
     for ind in tqdm(range(selected_stn.shape[0]), desc='Stations'):
@@ -739,6 +750,7 @@ def get_vs30_global(lat, lon):
     # return
     return vs30  # noqa: DOC201, RET504, RUF100
 
+
 def parallel_interpolation(func, lat, lon):
     """Interpolate data in parallel
     Input:
@@ -749,6 +761,7 @@ def parallel_interpolation(func, lat, lon):
         data: list of interpolated data
     """  # noqa: D205, D400
     return func(lat, lon)
+
 
 def get_vs30_thompson(lat, lon):
     """Interpolate global Vs30 at given latitude and longitude
@@ -786,7 +799,10 @@ def get_vs30_thompson(lat, lon):
 
 def get_z1(vs30):
     """Compute z1 based on the prediction equation by Chiou and Youngs (2013) (unit of vs30 is meter/second and z1 is meter)."""
-    return np.exp(-7.15 / 4.0 * np.log((vs30**4 + 571.0**4) / (1360.0**4 + 571.0**4)))
+    return np.exp(
+        -7.15 / 4.0 * np.log((vs30**4 + 571.0**4) / (1360.0**4 + 571.0**4))
+    )
+
 
 def get_z25(z1):
     """Compute z25 based on the prediction equation by Campbell and Bozorgnia (2013)."""

@@ -48,7 +48,6 @@
 # Earthquake Model Technical Manual, Federal Emergency Management Agency, Washington D.C.
 
 
-
 import os
 import sys
 import time
@@ -66,6 +65,7 @@ ap_DesignLevel_W1 = {0: 'LC', 1975: 'MC', 2100: 'HC'}  # noqa: N816
 # original:
 # ap_DesignLevel_W1 = {0: 'PC', 0: 'LC', 1975: 'MC', 2100: 'HC'}
 # same thing applies
+
 
 def convert_story_rise(structureType, stories):  # noqa: N803
     """
@@ -103,17 +103,17 @@ def convert_story_rise(structureType, stories):  # noqa: N803
 
         if structureType == 'RM1':
             if stories <= 3:  # noqa: PLR2004
-                rise = "L"
+                rise = 'L'
 
             else:
-                rise = "M"
+                rise = 'M'
 
         elif structureType == 'URM':
             if stories <= 2:  # noqa: PLR2004
-                rise = "L"
+                rise = 'L'
 
             else:
-                rise = "M"
+                rise = 'M'
 
         elif structureType in [
             'S1',
@@ -127,15 +127,16 @@ def convert_story_rise(structureType, stories):  # noqa: N803
             'RM2',
         ]:
             if stories <= 3:  # noqa: PLR2004
-                rise = "L"
+                rise = 'L'
 
             elif stories <= 7:  # noqa: PLR2004
-                rise = "M"
+                rise = 'M'
 
             else:
-                rise = "H"
+                rise = 'H'
 
     return rise
+
 
 def auto_populate_hazus(GI):  # noqa: N803
     """
@@ -200,8 +201,10 @@ class capacity_model_base:
 
     def __init__(self):
         pass
+
     def name(self):  # noqa: D102
         return 'capacity_model_base'
+
 
 class cao_peterson_2006(capacity_model_base):
     """
@@ -228,26 +231,26 @@ class cao_peterson_2006(capacity_model_base):
     -------
     """  # noqa: D414
 
-    def __init__(self, Dy, Ay, Du, Au, dD = 0.001):  # noqa: N803
+    def __init__(self, Dy, Ay, Du, Au, dD=0.001):  # noqa: N803
         # region between elastic and perfectly plastic
-        sd_elpl = np.arange(Dy,Du,dD)
+        sd_elpl = np.arange(Dy, Du, dD)
         # Eq. B3 in Steelman & Hajjar 2008
-        Ax = (Au**2*Dy - Ay**2*Du)/(2*Au*Dy - Ay*Dy - Ay*Du)  # noqa: N806
+        Ax = (Au**2 * Dy - Ay**2 * Du) / (2 * Au * Dy - Ay * Dy - Ay * Du)  # noqa: N806
         # Eq. B4 in Steelman & Hajjar 2008
-        B  = Au - Ax  # noqa: N806
+        B = Au - Ax  # noqa: N806
         # Eq. B5 in Steelman & Hajjar 2008
-        C  = (Dy*B**2*(Du-Dy)/(Ay*(Ay-Ax)))**0.5  # noqa: N806
+        C = (Dy * B**2 * (Du - Dy) / (Ay * (Ay - Ax))) ** 0.5  # noqa: N806
         # Eq. B1 in Steelman & Hajjar 2008
-        sa_elpl = Ax + B*(1 - ((sd_elpl-Du)/C)**2)**0.5
+        sa_elpl = Ax + B * (1 - ((sd_elpl - Du) / C) ** 2) ** 0.5
         # elastic and perfectly plastic regions
-        sd_el = np.arange(0,Dy,dD)
-        sd_pl = np.arange(Du,4*Du,dD)
+        sd_el = np.arange(0, Dy, dD)
+        sd_pl = np.arange(Du, 4 * Du, dD)
 
-        sa_el = sd_el*Ay/Dy
-        sa_pl = Au*np.ones(len(sd_pl))
+        sa_el = sd_el * Ay / Dy
+        sa_pl = Au * np.ones(len(sd_pl))
 
-        self.sd = np.concatenate((sd_el,sd_elpl,sd_pl))
-        self.sa = np.concatenate((sa_el,sa_elpl,sa_pl))
+        self.sd = np.concatenate((sd_el, sd_elpl, sd_pl))
+        self.sa = np.concatenate((sa_el, sa_elpl, sa_pl))
         self.Ax = Ax
         self.B = B
         self.C = C
@@ -257,6 +260,7 @@ class cao_peterson_2006(capacity_model_base):
 
     def name(self):  # noqa: D102
         return 'cao_peterson_2006'
+
 
 class HAZUS_cao_peterson_2006(capacity_model_base):
     """
@@ -283,27 +287,51 @@ class HAZUS_cao_peterson_2006(capacity_model_base):
     -------
     """  # noqa: D414
 
-    def __init__(self, general_info, dD = 0.001):  # noqa: N803
+    def __init__(self, general_info, dD=0.001):  # noqa: N803
         # HAZUS capacity data: Table 5-7 to Tabl 5-10 in HAZUS 5.1
         self.capacity_data = dict()  # noqa: C408
-        self.capacity_data['HC'] = pd.read_csv(os.path.join(os.path.dirname(__file__),  # noqa: PTH118, PTH120
-                                                   'HC_capacity_data.csv'),
-                                                   index_col=0).to_dict(orient='index')
-        self.capacity_data['MC'] = pd.read_csv(os.path.join(os.path.dirname(__file__),  # noqa: PTH118, PTH120
-                                                   'MC_capacity_data.csv'),
-                                                   index_col=0).to_dict(orient='index')
-        self.capacity_data['LC'] = pd.read_csv(os.path.join(os.path.dirname(__file__),  # noqa: PTH118, PTH120
-                                                   'LC_capacity_data.csv'),
-                                                   index_col=0).to_dict(orient='index')
-        self.capacity_data['PC'] = pd.read_csv(os.path.join(os.path.dirname(__file__),  # noqa: PTH118, PTH120
-                                                   'PC_capacity_data.csv'),
-                                                   index_col=0).to_dict(orient='index')
-        self.capacity_data['alpha2'] = pd.read_csv(os.path.join(os.path.dirname(__file__),  # noqa: PTH118, PTH120
-                                                   'hazus_capacity_alpha2.csv'),
-                                                   index_col=0).to_dict(orient='index')
-        self.capacity_data['roof_height'] = pd.read_csv(os.path.join(os.path.dirname(__file__),  # noqa: PTH118, PTH120
-                                                    'hazus_typical_roof_height.csv'),
-                                                    index_col=0).to_dict(orient='index')
+        self.capacity_data['HC'] = pd.read_csv(
+            os.path.join(
+                os.path.dirname(__file__),  # noqa: PTH118, PTH120
+                'HC_capacity_data.csv',
+            ),
+            index_col=0,
+        ).to_dict(orient='index')
+        self.capacity_data['MC'] = pd.read_csv(
+            os.path.join(
+                os.path.dirname(__file__),  # noqa: PTH118, PTH120
+                'MC_capacity_data.csv',
+            ),
+            index_col=0,
+        ).to_dict(orient='index')
+        self.capacity_data['LC'] = pd.read_csv(
+            os.path.join(
+                os.path.dirname(__file__),  # noqa: PTH118, PTH120
+                'LC_capacity_data.csv',
+            ),
+            index_col=0,
+        ).to_dict(orient='index')
+        self.capacity_data['PC'] = pd.read_csv(
+            os.path.join(
+                os.path.dirname(__file__),  # noqa: PTH118, PTH120
+                'PC_capacity_data.csv',
+            ),
+            index_col=0,
+        ).to_dict(orient='index')
+        self.capacity_data['alpha2'] = pd.read_csv(
+            os.path.join(
+                os.path.dirname(__file__),  # noqa: PTH118, PTH120
+                'hazus_capacity_alpha2.csv',
+            ),
+            index_col=0,
+        ).to_dict(orient='index')
+        self.capacity_data['roof_height'] = pd.read_csv(
+            os.path.join(
+                os.path.dirname(__file__),  # noqa: PTH118, PTH120
+                'hazus_typical_roof_height.csv',
+            ),
+            index_col=0,
+        ).to_dict(orient='index')
         # auto populate to get the parameters
         self.HAZUS_type, self.design_level = auto_populate_hazus(general_info)
         try:
@@ -314,7 +342,9 @@ class HAZUS_cao_peterson_2006(capacity_model_base):
         except KeyError:
             msg = f'No capacity data for {self.HAZUS_type} and {self.design_level}'
             raise KeyError(msg)  # noqa: B904
-        self.cao_peterson_2006 = cao_peterson_2006(self.Dy, self.Ay, self.Du, self.Au, dD)
+        self.cao_peterson_2006 = cao_peterson_2006(
+            self.Dy, self.Ay, self.Du, self.Au, dD
+        )
         self.Ax = self.cao_peterson_2006.Ax
         self.B = self.cao_peterson_2006.B
         self.C = self.cao_peterson_2006.C
@@ -323,10 +353,13 @@ class HAZUS_cao_peterson_2006(capacity_model_base):
         sd = self.cao_peterson_2006.sd
         sa = self.cao_peterson_2006.sa
         if sd_max > sd[-1]:
-            num_points = min(500, int((sd_max - self.cao_peterson_2006.sd[-1])/0.001))
-            sd = np.concatenate((sd,np.linspace(
-                self.cao_peterson_2006.sd[-1], sd_max, num_points)))
-            sa = np.concatenate((sa, sa[-1]*np.ones(num_points)))
+            num_points = min(
+                500, int((sd_max - self.cao_peterson_2006.sd[-1]) / 0.001)
+            )
+            sd = np.concatenate(
+                (sd, np.linspace(self.cao_peterson_2006.sd[-1], sd_max, num_points))
+            )
+            sa = np.concatenate((sa, sa[-1] * np.ones(num_points)))
         return sd, sa
 
     # def get_capacity_curve(self):

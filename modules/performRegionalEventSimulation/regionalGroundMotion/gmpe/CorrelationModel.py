@@ -354,7 +354,7 @@ def loth_baker_correlation_2013(stations, im_name_list, stn_dist, num_simu):
     # mu = np.zeros(num_stations * num_periods)
     # residuals_raw = np.random.multivariate_normal(mu, covMatrix, num_simu)
     # Replace np multivariate_normal with cholesky and standard normal
-    standard_normal =np.random.standard_normal((num_simu, num_stations))
+    standard_normal = np.random.standard_normal((num_simu, num_stations))
     chole_lower = scipy.linalg.cholesky(cov_matrix, lower=True)
     corr_samples = chole_lower @ standard_normal.T
     residuals_raw = corr_samples.T
@@ -473,7 +473,7 @@ def markhvida_ceferino_baker_correlation_2017(  # noqa: C901
         # Creating a covariance matrices for each of the principal components
         if c1.iloc[0, i] == 0:
             # nug
-            cov_matrix= np.eye(num_stations) * c0.iloc[0, i]
+            cov_matrix = np.eye(num_stations) * c0.iloc[0, i]
         else:
             # iso nest
             cov_matrix = (
@@ -485,7 +485,7 @@ def markhvida_ceferino_baker_correlation_2017(  # noqa: C901
         #     mu, cov_matrix, num_simu
         # ).T
         # Replace np multivariate_normal with cholesky and standard normal
-        standard_normal =np.random.standard_normal((num_simu, num_stations))
+        standard_normal = np.random.standard_normal((num_simu, num_stations))
         chole_lower = scipy.linalg.cholesky(cov_matrix, lower=True)
         corr_samples = chole_lower @ standard_normal.T
         residuals_pca[:, :, i] = corr_samples
@@ -606,8 +606,8 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, stn_dist, num_pc=
     num_pc = num_pc - 1
     residuals_pca = np.zeros((num_stations, num_simu, num_pc))
     for i in range(num_pc):
-    # from tqdm import tqdm
-    # for i in tqdm(range(num_pc)):
+        # from tqdm import tqdm
+        # for i in tqdm(range(num_pc)):
         if a1.iloc[0, i] == 0:
             # nug
             cov_matrix = np.eye(num_stations) * c1.iloc[0, i]
@@ -622,7 +622,7 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, stn_dist, num_pc=
         #     mu, cov_matrix, num_simu
         # ).T
         # Replace np multivariate_normal with cholesky and standard normal
-        standard_normal =np.random.standard_normal((num_simu, num_stations))
+        standard_normal = np.random.standard_normal((num_simu, num_stations))
         chole_lower = scipy.linalg.cholesky(cov_matrix, lower=True)
         corr_samples = chole_lower @ standard_normal.T
         residuals_pca[:, :, i] = corr_samples
@@ -651,7 +651,8 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, stn_dist, num_pc=
     residuals = np.empty([num_stations, num_periods, num_simu])
     for i in range(num_simu):
         residuals[:, :, i] = np.reshape(
-            np.matmul(residuals_pca[:, i, :], simu_coef[:,:-1].T), residuals[:, :, i].shape
+            np.matmul(residuals_pca[:, i, :], simu_coef[:, :-1].T),
+            residuals[:, :, i].shape,
         )
 
     # return
