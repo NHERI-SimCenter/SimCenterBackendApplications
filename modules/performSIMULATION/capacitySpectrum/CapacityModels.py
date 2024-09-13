@@ -283,25 +283,25 @@ class HAZUS_cao_peterson_2006(capacity_model_base):
     -------
     """  # noqa: D414
 
-    def __init__(self, general_info, dD = 0.001):
+    def __init__(self, general_info, dD = 0.001):  # noqa: N803
         # HAZUS capacity data: Table 5-7 to Tabl 5-10 in HAZUS 5.1
-        self.capacity_data = dict()
-        self.capacity_data['HC'] = pd.read_csv(os.path.join(os.path.dirname(__file__), 
+        self.capacity_data = dict()  # noqa: C408
+        self.capacity_data['HC'] = pd.read_csv(os.path.join(os.path.dirname(__file__),  # noqa: PTH118, PTH120
                                                    'HC_capacity_data.csv'),
                                                    index_col=0).to_dict(orient='index')
-        self.capacity_data['MC'] = pd.read_csv(os.path.join(os.path.dirname(__file__), 
+        self.capacity_data['MC'] = pd.read_csv(os.path.join(os.path.dirname(__file__),  # noqa: PTH118, PTH120
                                                    'MC_capacity_data.csv'),
                                                    index_col=0).to_dict(orient='index')
-        self.capacity_data['LC'] = pd.read_csv(os.path.join(os.path.dirname(__file__), 
+        self.capacity_data['LC'] = pd.read_csv(os.path.join(os.path.dirname(__file__),  # noqa: PTH118, PTH120
                                                    'LC_capacity_data.csv'),
                                                    index_col=0).to_dict(orient='index')
-        self.capacity_data['PC'] = pd.read_csv(os.path.join(os.path.dirname(__file__), 
+        self.capacity_data['PC'] = pd.read_csv(os.path.join(os.path.dirname(__file__),  # noqa: PTH118, PTH120
                                                    'PC_capacity_data.csv'),
                                                    index_col=0).to_dict(orient='index')
-        self.capacity_data['alpha2'] = pd.read_csv(os.path.join(os.path.dirname(__file__), 
+        self.capacity_data['alpha2'] = pd.read_csv(os.path.join(os.path.dirname(__file__),  # noqa: PTH118, PTH120
                                                    'hazus_capacity_alpha2.csv'),
                                                    index_col=0).to_dict(orient='index')
-        self.capacity_data['roof_height'] = pd.read_csv(os.path.join(os.path.dirname(__file__),
+        self.capacity_data['roof_height'] = pd.read_csv(os.path.join(os.path.dirname(__file__),  # noqa: PTH118, PTH120
                                                     'hazus_typical_roof_height.csv'),
                                                     index_col=0).to_dict(orient='index')
         # auto populate to get the parameters
@@ -319,7 +319,7 @@ class HAZUS_cao_peterson_2006(capacity_model_base):
         self.B = self.cao_peterson_2006.B
         self.C = self.cao_peterson_2006.C
 
-    def get_capacity_curve(self, sd_max):
+    def get_capacity_curve(self, sd_max):  # noqa: D102
         sd = self.cao_peterson_2006.sd
         sa = self.cao_peterson_2006.sa
         if sd_max > sd[-1]:
@@ -332,11 +332,11 @@ class HAZUS_cao_peterson_2006(capacity_model_base):
     # def get_capacity_curve(self):
     #     return self.cao_peterson_2006.sd, self.cao_peterson_2006.sa
 
-    def get_hazus_alpha2(self):
+    def get_hazus_alpha2(self):  # noqa: D102
         return self.capacity_data['alpha2'][self.HAZUS_type]['alpha2']
 
-    def get_hazus_roof_height(self):
+    def get_hazus_roof_height(self):  # noqa: D102
         return self.capacity_data['roof_height'][self.HAZUS_type]['roof_height_ft']
 
-    def name(self):
+    def name(self):  # noqa: D102
         return 'HAZUS_cao_peterson_2006'

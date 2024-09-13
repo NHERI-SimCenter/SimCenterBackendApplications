@@ -37,7 +37,7 @@
 # Kuanshi Zhong
 #
 
-import socket
+import socket  # noqa: I001
 import sys
 
 import numpy as np
@@ -53,7 +53,7 @@ if importlib.util.find_spec('joblib') is None:
 if importlib.util.find_spec('contextlib') is None:
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'contextlib'])  # noqa: S603
 
-import joblib
+import joblib  # noqa: I001
 import contextlib
 from joblib import Parallel, delayed
 import multiprocessing
@@ -499,7 +499,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
                     )
                 ]
             else:
-                with tqdm_joblib(tqdm(desc="Get z2pt5 from openSHA", total=selected_stn.shape[0])) as progress_bar:
+                with tqdm_joblib(tqdm(desc="Get z2pt5 from openSHA", total=selected_stn.shape[0])) as progress_bar:  # noqa: F841
                     z2pt5_results = Parallel(n_jobs=num_cores)(delayed(get_site_z2pt5_from_opensha)(
                         lat, lon
                     ) for lat, lon  in zip(
@@ -747,7 +747,7 @@ def parallel_interpolation(func, lat, lon):
         lon: list of longitude
     Output:
         data: list of interpolated data
-    """  
+    """  # noqa: D205, D400
     return func(lat, lon)
 
 def get_vs30_thompson(lat, lon):

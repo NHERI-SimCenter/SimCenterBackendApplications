@@ -41,7 +41,7 @@
 # Anne Husley
 # Kuanshi Zhong
 # Jinyan Zhao
-import sys
+import sys  # noqa: I001
 import time
 import warnings
 

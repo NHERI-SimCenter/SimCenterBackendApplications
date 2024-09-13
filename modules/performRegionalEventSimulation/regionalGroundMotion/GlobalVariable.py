@@ -1,1 +1,1 @@
-JVM_started = False
+JVM_started = False  # noqa: INP001, D100

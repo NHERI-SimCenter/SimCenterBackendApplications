@@ -37,7 +37,7 @@
 # Kuanshi Zhong
 #
 
-import numpy as np
+import numpy as np  # noqa: I001
 import pandas as pd
 import ujson
 import socket
@@ -53,7 +53,7 @@ if 'stampede2' not in socket.gethostname():
         GlobalVariable.JVM_started = True
         if importlib.util.find_spec('jpype') is None:
             subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])  # noqa: S603
-        import jpype
+        import jpype  # noqa: I001
         # from jpype import imports
         import jpype.imports
         from jpype.types import *  # noqa: F403
@@ -99,7 +99,7 @@ from tqdm import tqdm
 try:
     from scratch.UCERF3.erf.mean import MeanUCERF3
 except ModuleNotFoundError:
-    MeanUCERF3 = jpype.JClass('scratch.UCERF3.erf.mean.MeanUCERF3')  # noqa: F405
+    MeanUCERF3 = jpype.JClass('scratch.UCERF3.erf.mean.MeanUCERF3')  # noqa: F405, RUF100
 
 from org.opensha.sha.gcim.calc import *  # noqa: F403
 from org.opensha.sha.gcim.imr.attenRelImpl import *  # noqa: F403
@@ -657,7 +657,7 @@ def export_to_json(  # noqa: C901, D103
         import h5py
         with h5py.File(outfile, 'w') as h5file:
             # Store the geometry as a string array
-            h5file.create_dataset('geometry', data=gdf.geometry.astype(str).values.astype('S'))
+            h5file.create_dataset('geometry', data=gdf.geometry.astype(str).values.astype('S'))  # noqa: PD011, F405
     # return
     return erf_data
 
