@@ -288,7 +288,7 @@ class HAZUS_cao_peterson_2006(capacity_model_base):
     """  # noqa: D414
 
     def __init__(self, general_info, dD=0.001):  # noqa: N803
-        # HAZUS capacity data: Table 5-7 to Tabl 5-10 in HAZUS 5.1
+        # HAZUS capacity data: Table 5-7 to Table 5-10 in HAZUS 5.1
         self.capacity_data = dict()  # noqa: C408
         self.capacity_data['HC'] = pd.read_csv(
             os.path.join(  # noqa: PTH118
