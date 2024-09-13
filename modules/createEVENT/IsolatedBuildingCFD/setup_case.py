@@ -1199,6 +1199,9 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     
     monitor_base_load = rm_data['monitorBaseLoad']
     monitor_surface_pressure = rm_data['monitorSurfacePressure']
+
+    monitor_vtk_planes = rm_data['monitorVTKPlane']
+    vtk_planes = rm_data['vtkPlanes']
     
     # Need to change this for      
     max_delta_t = 10*time_step
@@ -1276,6 +1279,15 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
         added_part  = "    #includeFunc  generatedPressureSamplingPoints\n"
         added_part += "    #includeFunc  importedPressureSamplingPoints\n"
         dict_lines.insert(start_index, added_part)
+
+    #Write VTK sampling sampling points 
+    if monitor_vtk_planes:
+        added_part = ""
+        for pln in vtk_planes:
+            added_part += "    #includeFunc  {}\n".format(pln["name"])
+        dict_lines.insert(start_index, added_part)
+    
+
 
     #Write edited dict to file
     write_file_name = case_path + "/system/controlDict"
@@ -1894,6 +1906,104 @@ def write_boundary_data_files(input_json_path, case_path):
         #Write length scale file (8 columns -> it's a tensor field)
         foam.write_foam_field(wind_profiles[:, 8:17], bd_path + "L")
 
+
+def write_vtk_plane_file(input_json_path, template_dict_path, case_path):
+
+    #Read JSON data
+    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+        json_data =  json.load(json_file)
+
+    # Returns JSON object as a dictionary
+    rm_data = json_data["resultMonitoring"]   
+    ns_data = json_data["numericalSetup"]
+    solver_type = ns_data['solverType']
+    time_step = ns_data['timeStep']
+
+
+    vtk_planes = rm_data['vtkPlanes']
+    write_interval = rm_data['vtkWriteInterval']
+
+    if rm_data['monitorVTKPlane'] == False:
+        return 
+    
+    if len(vtk_planes)==0: 
+        return
+
+    #Write dict files for wind profiles
+    for pln in vtk_planes:
+        #Open the template file (OpenFOAM file) for manipulation
+        dict_file = open(template_dict_path + "/vtkPlaneTemplate", "r")
+
+        dict_lines = dict_file.readlines()
+        dict_file.close()
+        
+        #Write writeControl 
+        start_index = foam.find_keyword_line(dict_lines, "writeControl") 
+        if solver_type=="pimpleFoam":
+            dict_lines[start_index] = "    writeControl \t{};\n".format("adjustableRunTime")
+        else:
+            dict_lines[start_index] = "    writeControl \t{};\n".format("timeStep")  
+
+        #Write writeInterval
+        start_index = foam.find_keyword_line(dict_lines, "writeInterval")     
+        if solver_type=="pimpleFoam":
+            dict_lines[start_index] = "    writeInterval \t{:.6f};\n".format(write_interval*time_step)
+        else:
+            dict_lines[start_index] = "    writeInterval \t{};\n".format(write_interval)
+
+        #Write start and end time for the section  
+        start_time = pln['startTime']
+        end_time = pln['endTime']
+        start_index = foam.find_keyword_line(dict_lines, "timeStart") 
+        dict_lines[start_index] = "    timeStart \t\t{:.6f};\n".format(start_time)   
+
+        start_index = foam.find_keyword_line(dict_lines, "timeEnd") 
+        dict_lines[start_index] = "    timeEnd \t\t{:.6f};\n".format(end_time)   
+
+        #Write name of the profile 
+        name = pln["name"]
+        start_index = foam.find_keyword_line(dict_lines, "planeName") 
+        dict_lines[start_index] = "{}\n".format(name) 
+
+        #Write field type 
+        field_type = pln["field"]
+        start_index = foam.find_keyword_line(dict_lines, "fields") 
+
+        if field_type=="Velocity":
+            dict_lines[start_index] = "    fields \t\t({});\n".format("U")
+        if field_type=="Pressure":
+            dict_lines[start_index] = "    fields \t\t({});\n".format("p")
+
+        #Write normal and point coordinates
+        point_x = pln["pointX"]
+        point_y = pln["pointY"]
+        point_z = pln["pointZ"]
+
+        normal_axis = pln["normalAxis"]
+
+        start_index = foam.find_keyword_line(dict_lines, "point")    
+        dict_lines[start_index] = "\t    point\t\t({:.6f} {:.6f} {:.6f});\n".format(point_x, point_y, point_z)
+
+        start_index = foam.find_keyword_line(dict_lines, "normal")  
+        if normal_axis=="X":  
+            dict_lines[start_index] = "\t    normal\t\t({} {} {});\n".format(1, 0, 0)
+        if normal_axis=="Y":  
+            dict_lines[start_index] = "\t    normal\t\t({} {} {});\n".format(0, 1, 0)
+        if normal_axis=="Z":  
+            dict_lines[start_index] = "\t    normal\t\t({} {} {});\n".format(0, 0, 1)
+
+        #Write edited dict to file
+        write_file_name = case_path + "/system/" + name
+        
+        if os.path.exists(write_file_name):
+            os.remove(write_file_name)
+        
+        output_file = open(write_file_name, "w+")
+        for line in dict_lines:
+            output_file.write(line)
+        output_file.close()
+
+
 if __name__ == '__main__':    
     
     input_args = sys.argv
@@ -1944,6 +2054,7 @@ if __name__ == '__main__':
     write_story_forces_file(input_json_path, template_dict_path, case_path)
     write_generated_pressure_probes_file(input_json_path, template_dict_path, case_path)
     write_imported_pressure_probes_file(input_json_path, template_dict_path, case_path)
+    write_vtk_plane_file(input_json_path, template_dict_path, case_path)
 
     #Write fvSolution dict
     write_fvSolution_file(input_json_path, template_dict_path, case_path)
@@ -1968,4 +2079,6 @@ if __name__ == '__main__':
 
     #Write TInf files 
     write_boundary_data_files(input_json_path, case_path)
+
+
     
