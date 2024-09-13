@@ -571,13 +571,13 @@ if __name__ == '__main__':
         os.makedirs(f"{os.environ.get('OQ_DATADIR')}")  # noqa: PTH103
 
     # import modules
-    # from ComputeIntensityMeasure import *  # noqa: F403
-    # from CreateScenario import *  # noqa: F403
-    # from CreateStation import *  # noqa: F403
+    # from ComputeIntensityMeasure import *
+    # from CreateScenario import *
+    # from CreateStation import *
 
     # # KZ-08/23/22: adding hazard occurrence model
-    # from HazardOccurrence import *  # noqa: F403
-    # from SelectGroundMotion import *  # noqa: F403
+    # from HazardOccurrence import *
+    # from SelectGroundMotion import *
 
     if oq_flag:
         # import FetchOpenQuake

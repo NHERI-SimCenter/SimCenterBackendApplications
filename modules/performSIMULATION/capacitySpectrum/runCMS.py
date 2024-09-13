@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+#  # noqa: D100, INP001
 # Copyright (c) 2023 Leland Stanford Junior University
 # Copyright (c) 2023 The Regents of the University of California
 #
@@ -356,7 +355,7 @@ def write_RV(AIM_input_path, EVENT_input_path):  # noqa: C901, N802, N803, D103
             demand_model.set_IMs(sa_03, sa_10)
             demand_model.set_Tavb(damping_model)
             demand_model.set_beta_tvd(damping_model)
-        # if (damping_model_name == 'HAZUS_cao_peterson_2006' 
+        # if (damping_model_name == 'HAZUS_cao_peterson_2006'
         #     and capacity_model_name == 'HAZUS_cao_peterson_2006'):
         #     damping_model.set_HAZUS_bldg_type(capacity_model.get_hazus_bldg_type())
 

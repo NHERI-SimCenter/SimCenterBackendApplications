@@ -506,12 +506,12 @@ def export_to_json(  # noqa: C901, D103
     minMag=0.0,  # noqa: N803
     maxMag=10.0,  # noqa: N803
     maxDistance=1000.0,  # noqa: N803
-    use_hdf5=False,  # noqa: N803
+    use_hdf5=False,  # noqa: FBT002
 ):
     # Initializing
     erf_data = {'type': 'FeatureCollection'}
-    site_loc = Location(site_loc[0], site_loc[1])  # noqa: F405
-    site = Site(site_loc)  # noqa: F405
+    site_loc = Location(site_loc[0], site_loc[1])  # type: ignore # noqa: F405
+    site = Site(site_loc)  # type: ignore # noqa: F405
     # Total source number
     num_sources = erf.getNumSources()
     source_tag = []

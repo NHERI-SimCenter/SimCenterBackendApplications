@@ -307,7 +307,7 @@ def compute_rho_loth_baker_correlation_2013(T1, T2, h, B1, B2, B3):  # noqa: N80
     return rho  # noqa: DOC201, RET504, RUF100
 
 
-def loth_baker_correlation_2013(stations, im_name_list, stn_dist, num_simu):  # noqa: C901
+def loth_baker_correlation_2013(stations, im_name_list, stn_dist, num_simu):
     """Simulating intra-event residuals
     Reference:
         Loth and Baker (2013) A spatial cross-correlation model of spectral

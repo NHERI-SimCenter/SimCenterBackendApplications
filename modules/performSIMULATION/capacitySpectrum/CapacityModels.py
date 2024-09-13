@@ -1,4 +1,4 @@
-#  # noqa: N999, D100
+#  # noqa: D100, INP001
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -35,16 +35,16 @@
 #
 # Contributors:
 # Jinyan Zhao
-# 
+#
 # References:
-# 1. Cao, T., & Petersen, M. D. (2006). Uncertainty of earthquake losses due to 
-# model uncertainty of input ground motions in the Los Angeles area. Bulletin of 
+# 1. Cao, T., & Petersen, M. D. (2006). Uncertainty of earthquake losses due to
+# model uncertainty of input ground motions in the Los Angeles area. Bulletin of
 # the Seismological Society of America, 96(2), 365-376.
 # 2. Steelman, J., & Hajjar, J. F. (2008). Systemic validation of consequence-based
 # risk management for seismic regional losses.
-# 3. Newmark, N. M., & Hall, W. J. (1982). Earthquake spectra and design. 
+# 3. Newmark, N. M., & Hall, W. J. (1982). Earthquake spectra and design.
 # Engineering monographs on earthquake criteria.
-# 4. FEMA (2022), HAZUS – Multi-hazard Loss Estimation Methodology 5.0, 
+# 4. FEMA (2022), HAZUS - Multi-hazard Loss Estimation Methodology 5.0,
 # Earthquake Model Technical Manual, Federal Emergency Management Agency, Washington D.C.
 
 
@@ -56,18 +56,33 @@ import time
 import numpy as np
 import pandas as pd
 
-ap_DesignLevel = {1940: 'LC', 1975: 'MC', 2100: 'HC'}
+ap_DesignLevel = {1940: 'LC', 1975: 'MC', 2100: 'HC'}  # noqa: N816
 # original:
 # ap_DesignLevel = {1940: 'PC', 1940: 'LC', 1975: 'MC', 2100: 'HC'}
 # Note that the duplicated key is ignored, and Python keeps the last
 # entry.
 
-ap_DesignLevel_W1 = {0: 'LC', 1975: 'MC', 2100: 'HC'}
+ap_DesignLevel_W1 = {0: 'LC', 1975: 'MC', 2100: 'HC'}  # noqa: N816
 # original:
 # ap_DesignLevel_W1 = {0: 'PC', 0: 'LC', 1975: 'MC', 2100: 'HC'}
 # same thing applies
 
-def convert_story_rise(structureType, stories):
+def convert_story_rise(structureType, stories):  # noqa: N803
+    """
+    Convert the story type and number of stories to rise attribute of archetype.
+
+    Parameters
+    ----------
+    structureType : str
+        The type of the structure.
+    stories : int
+        The number of stories.
+
+    Returns
+    -------
+    rise : str or None
+        The rise attribute of the archetype.
+    """
     if structureType in ['W1', 'W2', 'S3', 'PC1', 'MH']:
         # These archetypes have no rise information in their IDs
         rise = None
@@ -78,20 +93,23 @@ def convert_story_rise(structureType, stories):
             stories = int(stories)
 
         except (ValueError, TypeError):
-            raise ValueError(
+            msg = (
                 'Missing "NumberOfStories" information, '
                 'cannot infer `rise` attribute of archetype'
             )
+            raise ValueError(  # noqa: B904
+                msg
+            )
 
         if structureType == 'RM1':
-            if stories <= 3:
+            if stories <= 3:  # noqa: PLR2004
                 rise = "L"
 
             else:
                 rise = "M"
 
         elif structureType == 'URM':
-            if stories <= 2:
+            if stories <= 2:  # noqa: PLR2004
                 rise = "L"
 
             else:
@@ -108,10 +126,10 @@ def convert_story_rise(structureType, stories):
             'PC2',
             'RM2',
         ]:
-            if stories <= 3:
+            if stories <= 3:  # noqa: PLR2004
                 rise = "L"
 
-            elif stories <= 7:
+            elif stories <= 7:  # noqa: PLR2004
                 rise = "M"
 
             else:
@@ -119,11 +137,26 @@ def convert_story_rise(structureType, stories):
 
     return rise
 
-def auto_populate_hazus(GI):
+def auto_populate_hazus(GI):  # noqa: N803
+    """
+    Auto-populate the HAZUS parameters based on the given building information.
+
+    Parameters
+    ----------
+    GI : dict
+        The building information.
+
+    Returns
+    -------
+    LF : str
+        The load factor.
+    dl : str
+        The design level.
+    """
     # get the building parameters
     bt = GI['StructureType']  # building type
 
-        # get the design level
+    # get the design level
     dl = GI.get('DesignLevel', None)
     if dl is None:
         # If there is no DesignLevel provided, we assume that the YearBuilt is
@@ -131,10 +164,10 @@ def auto_populate_hazus(GI):
         year_built = GI['YearBuilt']
 
         if 'W1' in bt:
-            DesignL = ap_DesignLevel_W1
+            DesignL = ap_DesignLevel_W1  # noqa: N806
         else:
-            DesignL = ap_DesignLevel
-        
+            DesignL = ap_DesignLevel  # noqa: N806
+
         for year in sorted(DesignL.keys()):
             if year_built <= year:
                 dl = DesignL[year]
@@ -148,32 +181,33 @@ def auto_populate_hazus(GI):
     rise = convert_story_rise(bt, stories)
 
     if rise is not None:
-        LF = f'{bt}{rise}'    
+        LF = f'{bt}{rise}'  # noqa: N806
     else:
-        LF = f'{bt}'
+        LF = f'{bt}'  # noqa: N806
     return LF, dl
 
 
 class capacity_model_base:
     """
     A class to represent the base of capacity models.
-    
-    Attributes:
+
+    Attributes
     ----------
-    
-    Methods:
+
+    Methods
     -------
-    """
+    """  # noqa: D414
+
     def __init__(self):
         pass
-    def name(self):
+    def name(self):  # noqa: D102
         return 'capacity_model_base'
 
 class cao_peterson_2006(capacity_model_base):
     """
     A class to represent the capacity model in Cao and Peterson 2006.
-    
-    Attributes:
+
+    Attributes
     ----------
     Dy : float
         Yield displacement. In the unit of (inch)
@@ -189,19 +223,20 @@ class cao_peterson_2006(capacity_model_base):
         Parameter in Eq. A5 of Cao and Peterson 2006. In the unit of (g)
     C : float
         Parameter in Eq. A5 of Cao and Peterson 2006. In the unit of (inch)
-    
-    Methods:
+
+    Methods
     -------
-    """
-    def __init__(self, Dy, Ay, Du, Au, dD = 0.001):
+    """  # noqa: D414
+
+    def __init__(self, Dy, Ay, Du, Au, dD = 0.001):  # noqa: N803
         # region between elastic and perfectly plastic
         sd_elpl = np.arange(Dy,Du,dD)
         # Eq. B3 in Steelman & Hajjar 2008
-        Ax = (Au**2*Dy - Ay**2*Du)/(2*Au*Dy - Ay*Dy - Ay*Du)
+        Ax = (Au**2*Dy - Ay**2*Du)/(2*Au*Dy - Ay*Dy - Ay*Du)  # noqa: N806
         # Eq. B4 in Steelman & Hajjar 2008
-        B  = Au - Ax
+        B  = Au - Ax  # noqa: N806
         # Eq. B5 in Steelman & Hajjar 2008
-        C  = (Dy*B**2*(Du-Dy)/(Ay*(Ay-Ax)))**0.5
+        C  = (Dy*B**2*(Du-Dy)/(Ay*(Ay-Ax)))**0.5  # noqa: N806
         # Eq. B1 in Steelman & Hajjar 2008
         sa_elpl = Ax + B*(1 - ((sd_elpl-Du)/C)**2)**0.5
         # elastic and perfectly plastic regions
@@ -219,15 +254,15 @@ class cao_peterson_2006(capacity_model_base):
         self.Du = Du
         self.Ay = Ay
         self.Dy = Dy
-    
-    def name(self):
+
+    def name(self):  # noqa: D102
         return 'cao_peterson_2006'
-    
+
 class HAZUS_cao_peterson_2006(capacity_model_base):
     """
     A class to represent the capacity model in Cao and Peterson 2006.
-    
-    Attributes:
+
+    Attributes
     ----------
     Dy : float
         Yield displacement. In the unit of (inch)
@@ -243,10 +278,11 @@ class HAZUS_cao_peterson_2006(capacity_model_base):
         Parameter in Eq. A5 of Cao and Peterson 2006. In the unit of (g)
     C : float
         Parameter in Eq. A5 of Cao and Peterson 2006. In the unit of (inch)
-    
-    Methods:
+
+    Methods
     -------
-    """
+    """  # noqa: D414
+
     def __init__(self, general_info, dD = 0.001):
         # HAZUS capacity data: Table 5-7 to Tabl 5-10 in HAZUS 5.1
         self.capacity_data = dict()
@@ -276,12 +312,13 @@ class HAZUS_cao_peterson_2006(capacity_model_base):
             self.Dy = self.capacity_data[self.design_level][self.HAZUS_type]['Dy']
             self.Ay = self.capacity_data[self.design_level][self.HAZUS_type]['Ay']
         except KeyError:
-            raise KeyError(f'No capacity data for {self.HAZUS_type} and {self.design_level}')
+            msg = f'No capacity data for {self.HAZUS_type} and {self.design_level}'
+            raise KeyError(msg)  # noqa: B904
         self.cao_peterson_2006 = cao_peterson_2006(self.Dy, self.Ay, self.Du, self.Au, dD)
         self.Ax = self.cao_peterson_2006.Ax
         self.B = self.cao_peterson_2006.B
         self.C = self.cao_peterson_2006.C
-    
+
     def get_capacity_curve(self, sd_max):
         sd = self.cao_peterson_2006.sd
         sa = self.cao_peterson_2006.sa
@@ -294,13 +331,12 @@ class HAZUS_cao_peterson_2006(capacity_model_base):
 
     # def get_capacity_curve(self):
     #     return self.cao_peterson_2006.sd, self.cao_peterson_2006.sa
-    
+
     def get_hazus_alpha2(self):
         return self.capacity_data['alpha2'][self.HAZUS_type]['alpha2']
-    
+
     def get_hazus_roof_height(self):
         return self.capacity_data['roof_height'][self.HAZUS_type]['roof_height_ft']
 
     def name(self):
         return 'HAZUS_cao_peterson_2006'
-         
