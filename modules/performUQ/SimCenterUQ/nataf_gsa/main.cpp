@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
 #endif
 
     if ((argc != 6) && (procno == 0)) {
-        std::string errMsg = "Number of the additional commend line arguments is " + std::to_string(argc - 1) +
+        std::string errMsg = "Number of the additional command line arguments is " + std::to_string(argc - 1) +
                              ", but 5 is required. The arguments should always include the working directory / input file name / workflow driver name / os type / run type";
         std::cerr << errMsg << std::endl;
         theErrorFile.abort();

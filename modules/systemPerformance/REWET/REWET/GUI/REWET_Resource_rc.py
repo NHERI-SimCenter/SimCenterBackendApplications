@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-
-# Resource object code
+# Resource object code  # noqa: N999, D100
 #
 # Created by: The Resource Compiler for PyQt5 (Qt v5.12.9)
 #
@@ -8,7 +6,7 @@
 
 from PyQt5 import QtCore
 
-qt_resource_data = b"\
+qt_resource_data = b'\
 \x00\x00\x02\xd7\
 \x89\
 \x50\x4e\x47\x0d\x0a\x1a\x0a\x00\x00\x00\x0d\x49\x48\x44\x52\x00\
@@ -6838,9 +6836,9 @@ qt_resource_data = b"\
 \x75\x63\x93\xd8\xba\xb1\x49\x6c\xbd\x70\x9c\x77\x69\xcd\x78\xc7\
 \x7f\xf6\xa6\x43\x00\x00\x00\x00\x49\x45\x4e\x44\xae\x42\x60\x82\
 \
-"
+'
 
-qt_resource_name = b"\
+qt_resource_name = b'\
 \x00\x09\
 \x0a\x6c\x78\x43\
 \x00\x72\
@@ -6891,9 +6889,9 @@ qt_resource_name = b"\
 \x0b\x3b\xfc\x07\
 \x00\x6e\
 \x00\x6f\x00\x64\x00\x65\x00\x5f\x00\x42\x00\x2e\x00\x70\x00\x6e\x00\x67\
-"
+'
 
-qt_resource_struct_v1 = b"\
+qt_resource_struct_v1 = b'\
 \x00\x00\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x01\
 \x00\x00\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x02\
 \x00\x00\x00\x00\x00\x02\x00\x00\x00\x0b\x00\x00\x00\x03\
@@ -6908,9 +6906,9 @@ qt_resource_struct_v1 = b"\
 \x00\x00\x01\x0c\x00\x00\x00\x00\x00\x01\x00\x01\x41\x84\
 \x00\x00\x00\x18\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\
 \x00\x00\x00\x4c\x00\x00\x00\x00\x00\x01\x00\x00\x05\x96\
-"
+'
 
-qt_resource_struct_v2 = b"\
+qt_resource_struct_v2 = b'\
 \x00\x00\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x01\
 \x00\x00\x00\x00\x00\x00\x00\x00\
 \x00\x00\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x02\
@@ -6939,7 +6937,7 @@ qt_resource_struct_v2 = b"\
 \x00\x00\x01\x84\x35\xa0\xb2\x82\
 \x00\x00\x00\x4c\x00\x00\x00\x00\x00\x01\x00\x00\x05\x96\
 \x00\x00\x01\x84\x35\xae\x2b\x19\
-"
+'
 
 qt_version = [int(v) for v in QtCore.qVersion().split('.')]
 if qt_version < [5, 8, 0]:
@@ -6949,10 +6947,17 @@ else:
     rcc_version = 2
     qt_resource_struct = qt_resource_struct_v2
 
-def qInitResources():
-    QtCore.qRegisterResourceData(rcc_version, qt_resource_struct, qt_resource_name, qt_resource_data)
 
-def qCleanupResources():
-    QtCore.qUnregisterResourceData(rcc_version, qt_resource_struct, qt_resource_name, qt_resource_data)
+def qInitResources():  # noqa: N802, D103
+    QtCore.qRegisterResourceData(
+        rcc_version, qt_resource_struct, qt_resource_name, qt_resource_data
+    )
+
+
+def qCleanupResources():  # noqa: N802, D103
+    QtCore.qUnregisterResourceData(
+        rcc_version, qt_resource_struct, qt_resource_name, qt_resource_data
+    )
+
 
 qInitResources()

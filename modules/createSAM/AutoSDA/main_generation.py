@@ -1,4 +1,4 @@
-# This file is the main file that calls functions to generate the nonlinear
+# This file is the main file that calls functions to generate the nonlinear  # noqa: INP001, D100
 # OpenSees models
 # Users need to specify the system argument in this file.
 # Users also need to specify the variables in "global_variables.py"
@@ -16,15 +16,8 @@
 #                       Load Necessary Packages                          #
 ##########################################################################
 
-import os
-import pickle
-import time
-
 
 from global_variables import baseDirectory
-from global_variables import SECTION_DATABASE
-from global_variables import COLUMN_DATABASE
-from global_variables import BEAM_DATABASE
 from model_generation import model_generation
 
 ##########################################################################
@@ -32,9 +25,9 @@ from model_generation import model_generation
 ##########################################################################
 
 IDs = [11]
-for id in IDs:
+for id in IDs:  # noqa: A001
     building_id = 'Test' + str(id)
-    print(building_id)
+    print(building_id)  # noqa: T201
     model_generation(building_id, baseDirectory)
 
 ##########################################################################

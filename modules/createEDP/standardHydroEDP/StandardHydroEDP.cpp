@@ -114,7 +114,7 @@ int main(int argc, char **argv)
 
       //
       // create a json_array of ints indicating what dof the event patterns apply to
-      //  -- neeeded in EPD
+      //  -- needed in EPD
 
       int numDOF = 0;
       json_t *theDOFs = json_array();

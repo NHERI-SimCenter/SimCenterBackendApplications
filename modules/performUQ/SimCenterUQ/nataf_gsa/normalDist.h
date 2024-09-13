@@ -41,7 +41,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *  @author  Sang-ri Yi
  *  @date    8/2021
  *  @section DESCRIPTION
- *  Noraml distribution class
+ *  Normal distribution class
  */
 
 #include "RVDist.h"

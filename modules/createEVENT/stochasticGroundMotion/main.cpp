@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
 
         //
         // Sang-ri - checking if key seed exists in AIM.json. We are not anymore getting the seed
-        //           from the commend line.
+        //           from the command line.
         //
 
 
@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
               //    it->at("ruptureDist"), it->at("vs30"), inputs.get_seed());
               eq_generator = std::make_shared<EQGenerator>(
                   inputs.get_model_name(), it->at("momentMagnitude"),
-                  it->at("ruptureDist"), it->at("vs30"), mySeed); // May need to update smelt not to cut of seed nubmers
+                  it->at("ruptureDist"), it->at("vs30"), mySeed); // May need to update smelt not to cut of seed numbers
             } else if (model_name == "DabaghiDerKiureghianNFGM") {
               //eq_generator = std::make_shared<EQGenerator>(
               //    inputs.get_model_name(), it->at("faultType"),
@@ -281,7 +281,8 @@ void throwError(std::string msg){
   std::string filePathString = cwd.string();
   std::size_t loc_dot = filePathString.find_last_of(".");
   int id =  std::stoi(filePathString.substr(loc_dot+1)) ;
-  std::string errFile = "../workflow.err." + std::to_string(id); // e.g. workflow.err.1
+  //std::string errFile = "../workflow.err." + std::to_string(id); // e.g. workflow.err.1
+  std::string errFile = "./workflow.err"; // e.g. workflow.err
 
   //
   // Write msg to the file

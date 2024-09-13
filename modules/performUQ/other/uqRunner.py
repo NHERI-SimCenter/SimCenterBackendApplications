@@ -1,21 +1,20 @@
-# written: Michael Gardner
+# written: Michael Gardner  # noqa: INP001, D100
 
 # DO NOT CHANGE THE FACTORY, JUST IMPORT IT INTO ADDITIONAL DERIVED CLASSES
 # Polymorhophic factory for running UQ apps
-class UqRunnerFactory:
-    factories = {}
-    def addFactory(id, runnerFactory):
+class UqRunnerFactory:  # noqa: D101
+    factories = {}  # noqa: RUF012
+
+    def addFactory(id, runnerFactory):  # noqa: A002, N802, N803, N805, D102
         UqRunnerFactory.factories.put[id] = runnerFactory
-    addFactory = staticmethod(addFactory)
+
     # A Template Method:
-    def createRunner(id):
+    def createRunner(id):  # noqa: A002, N802, N805, D102
         if id not in UqRunnerFactory.factories:
-            UqRunnerFactory.factories[id] = \
-              eval(id + '.Factory()')
+            UqRunnerFactory.factories[id] = eval(id + '.Factory()')  # noqa: S307
         return UqRunnerFactory.factories[id].create()
-    
-    createRunner = staticmethod(createRunner)
+
 
 # Abstract base class
-class UqRunner(object):
+class UqRunner:  # noqa: D101
     pass

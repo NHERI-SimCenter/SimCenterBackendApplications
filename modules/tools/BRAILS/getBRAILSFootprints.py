@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2024 The Regents of the University of California
 #
 # This file is a part of SimCenter backend applications.
@@ -37,46 +36,66 @@
 # Barbaros Cetiner
 #
 # Last updated:
-# 03-27-2024 
- 
+# 03-27-2024
+
 # Import packages required for running the latest version of BRAILS:
-import sys
 import argparse
 import os
+import sys
 from time import gmtime, strftime
-from brails.workflow.FootprintHandler import FootprintHandler    
+
+from brails.workflow.FootprintHandler import FootprintHandler
+
 
 # Define a standard way of printing program outputs:
-def log_msg(msg):
+def log_msg(msg):  # noqa: D103
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
-    print(formatted_msg)
+    print(formatted_msg)  # noqa: T201
+
 
 # Define a way to call BRAILS FootprintHandler:
-def runBrails(latMin, latMax, longMin, longMax, locationStr, fpSrc, fpSourceAttrMap, 
-              outputfile, lengthunit):      
+def runBrails(  # noqa: N802, D103
+    latMin,  # noqa: N803
+    latMax,  # noqa: N803
+    longMin,  # noqa: N803
+    longMax,  # noqa: N803
+    locationStr,  # noqa: N803
+    fpSrc,  # noqa: N803
+    fpSourceAttrMap,  # noqa: N803
+    outputfile,
+    lengthunit,
+):
     # Initialize FootprintHandler:
-    fpHandler = FootprintHandler()
-    if locationStr == "\"\"":
-        locationStr = ""
+    fpHandler = FootprintHandler()  # noqa: N806
+    if locationStr == '""':
+        locationStr = ''  # noqa: N806
 
     # Format location input based on the GUI input:
     if 'geojson' in fpSrc.lower() or 'csv' in fpSrc.lower():
         location = fpSrc
-        fpSrc = 'osm'
-    elif locationStr=="":
-        location = (longMin,latMin,longMax,latMax)
+        fpSrc = 'osm'  # noqa: N806
+    elif locationStr == '':
+        location = (longMin, latMin, longMax, latMax)
     else:
         location = locationStr
 
     # Run FootprintHandler to get GeoJSON file for the footprints of the entered location:
-    if fpSourceAttrMap=='':
-        fpHandler.fetch_footprint_data(location, fpSource=fpSrc, lengthUnit=lengthunit, outputFile=outputfile)
-    else: 
-        fpHandler.fetch_footprint_data(location, fpSource=fpSrc, attrmap = fpSourceAttrMap,
-                                       lengthUnit=lengthunit, outputFile = outputfile)
+    if fpSourceAttrMap == '':
+        fpHandler.fetch_footprint_data(
+            location, fpSource=fpSrc, lengthUnit=lengthunit, outputFile=outputfile
+        )
+    else:
+        fpHandler.fetch_footprint_data(
+            location,
+            fpSource=fpSrc,
+            attrmap=fpSourceAttrMap,
+            lengthUnit=lengthunit,
+            outputFile=outputfile,
+        )
+
 
 # Define a way to collect GUI input:
-def main(args):
+def main(args):  # noqa: D103
     parser = argparse.ArgumentParser()
     parser.add_argument('--latMin', default=None, type=float)
     parser.add_argument('--latMax', default=None, type=float)
@@ -84,23 +103,34 @@ def main(args):
     parser.add_argument('--longMax', default=None, type=float)
     parser.add_argument('--location', default=None, type=str)
     parser.add_argument('--fpSource', default=None, type=str)
-    parser.add_argument('--fpSourceAttrMap', default=None, type=str)    
+    parser.add_argument('--fpSourceAttrMap', default=None, type=str)
     parser.add_argument('--outputFile', default=None)
-    parser.add_argument('--lengthUnit', default="m", type=str)     
-    
+    parser.add_argument('--lengthUnit', default='m', type=str)
+
     args = parser.parse_args(args)
 
     # Create the folder for the user-defined output directory, if it does not exist:
-    outdir = os.path.abspath(args.outputFile).replace(os.path.split(args.outputFile)[-1],'')
-    os.makedirs(outdir, exist_ok=True)
+    outdir = os.path.abspath(args.outputFile).replace(  # noqa: PTH100
+        os.path.split(args.outputFile)[-1], ''
+    )
+    os.makedirs(outdir, exist_ok=True)  # noqa: PTH103
 
     # Run BRAILS FootprintHandler with the user-defined arguments:
     runBrails(
-        args.latMin, args.latMax, args.longMin, args.longMax, args.location, 
-        args.fpSource, args.fpSourceAttrMap, args.outputFile, args.lengthUnit)
+        args.latMin,
+        args.latMax,
+        args.longMin,
+        args.longMax,
+        args.location,
+        args.fpSource,
+        args.fpSourceAttrMap,
+        args.outputFile,
+        args.lengthUnit,
+    )
 
     log_msg('BRAILS successfully obtained the footprints for the entered location')
-    
+
+
 # Run main:
 if __name__ == '__main__':
     main(sys.argv[1:])

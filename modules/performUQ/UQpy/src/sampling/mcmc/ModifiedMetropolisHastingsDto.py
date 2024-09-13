@@ -1,9 +1,11 @@
-from src.UQpyDTO import UQpyDTO
-from typing import Literal, Annotated, Union
-from pydantic import Field
+from typing import Literal  # noqa: INP001, D100
 
-class ModifiedMetropolisHastingsDto(UQpyDTO):
-    method: Literal["Modified Metropolis Hastings"] = "Modified Metropolis Hastings"
+from pydantic import Field
+from src.UQpyDTO import UQpyDTO
+
+
+class ModifiedMetropolisHastingsDto(UQpyDTO):  # noqa: D101
+    method: Literal['Modified Metropolis Hastings'] = 'Modified Metropolis Hastings'
     burn_length: int = Field(default=0, alias='burn-in', ge=0)
     jump: int = Field(default=1, ge=0)
     # dimension: int = Field(..., gt=0)
@@ -13,25 +15,29 @@ class ModifiedMetropolisHastingsDto(UQpyDTO):
     concatenate_chains = True
     proposal_is_symmetric = False
 
-    def init_to_text(self):
-        from UQpy.sampling.mcmc.ModifiedMetropolisHastings import ModifiedMetropolisHastings
-        c= ModifiedMetropolisHastings
+    def init_to_text(self):  # noqa: D102
+        from UQpy.sampling.mcmc.ModifiedMetropolisHastings import (
+            ModifiedMetropolisHastings,
+        )
 
-        class_name = c.__module__.split(".")[-1]
-        import_statement = "from " + c.__module__ + " import " + class_name + "\n"
+        c = ModifiedMetropolisHastings
+
+        class_name = c.__module__.split('.')[-1]
+        import_statement = 'from ' + c.__module__ + ' import ' + class_name + '\n'
 
         stretch_parameters = self.dict()
-        stretch_parameters.pop("method")
-        stretch_parameters["log_pdf_target"] = f"marginals.log_pdf"
-        stretch_parameters["seed"] = f"list(marginals.rvs(numRV,))"
+        stretch_parameters.pop('method')
+        stretch_parameters['log_pdf_target'] = 'marginals.log_pdf'
+        stretch_parameters['seed'] = 'list(marginals.rvs(numRV,))'
         # stretch_parameters["seed"] = f"list(marginals.rvs({self.n_chains},))"
-        str_parameters = str()
+        str_parameters = ''
         for key in stretch_parameters:
-            if stretch_parameters[key] is None: continue
-            str_parameters += key + "=" + str(stretch_parameters[key]) + ", "
+            if stretch_parameters[key] is None:
+                continue
+            str_parameters += key + '=' + str(stretch_parameters[key]) + ', '
 
         prerequisite_str = import_statement
-        prerequisite_str += "sampling = " + class_name + "(" + str_parameters + ")"
-        sampling_str = "sampling"
+        prerequisite_str += 'sampling = ' + class_name + '(' + str_parameters + ')'
+        sampling_str = 'sampling'
 
         return (prerequisite_str, sampling_str)

@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2019 The Regents of the University of California
 #
 # This file is part of the RDT Application.
@@ -37,100 +36,100 @@
 # Chaofeng Wang
 # fmk
 
-import numpy as np
+import argparse
 import json
 import os
 import shutil
 from glob import glob
-import argparse
+
 import pandas as pd
 
-def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
 
-    if not os.path.isdir(inputDir):
-        print(f"input dir: {inputDir} does not exist")
+def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: N802, N803, D103
+    if not os.path.isdir(inputDir):  # noqa: PTH112
+        print(f'input dir: {inputDir} does not exist')  # noqa: T201
         return 0
 
-    
-    if not os.path.exists(outputDir):
-        os.mkdir(outputDir)
-    
-    siteFiles = glob(f"{inputDir}/*BIM.json")
+    if not os.path.exists(outputDir):  # noqa: PTH110
+        os.mkdir(outputDir)  # noqa: PTH102
 
-    GP_file	= []
-    Longitude = []
-    Latitude = []
-    id = []
+    siteFiles = glob(f'{inputDir}/*BIM.json')  # noqa: PTH207, N806
+
+    GP_file = []  # noqa: N806, F841
+    Longitude = []  # noqa: N806
+    Latitude = []  # noqa: N806
+    id = []  # noqa: A001
     sites = []
 
     for site in siteFiles:
-
-        with open(site, 'r') as f:
-
-            All_json = json.load(f)
-            generalInfo = All_json['GeneralInformation']
+        with open(site) as f:  # noqa: PTH123
+            All_json = json.load(f)  # noqa: N806
+            generalInfo = All_json['GeneralInformation']  # noqa: N806
             Longitude.append(generalInfo['Longitude'])
             Latitude.append(generalInfo['Latitude'])
-            siteID = generalInfo['BIM_id']
+            siteID = generalInfo['BIM_id']  # noqa: N806
 
             id.append(siteID)
-            
-            siteFileName = f"Site_{siteID}.csv"
+
+            siteFileName = f'Site_{siteID}.csv'  # noqa: N806
             sites.append(siteFileName)
-            
-            workdirs = glob(f"{inputDir}/{siteID}/workdir.*")
-            siteEventFiles = []
-            siteEventFactors = []
-                        
+
+            workdirs = glob(f'{inputDir}/{siteID}/workdir.*')  # noqa: PTH207
+            siteEventFiles = []  # noqa: N806
+            siteEventFactors = []  # noqa: N806
+
             for workdir in workdirs:
+                head, sep, sampleID = workdir.partition('workdir.')  # noqa: N806
+                print(sampleID)  # noqa: T201
 
-                head, sep, sampleID = workdir.partition('workdir.')
-                print(sampleID)
-
-                eventName = f"Event_{siteID}_{sampleID}.json"
-                print(eventName)
-                shutil.copy(f"{workdir}/fmkEVENT", f"{outputDir}/{eventName}")
+                eventName = f'Event_{siteID}_{sampleID}.json'  # noqa: N806
+                print(eventName)  # noqa: T201
+                shutil.copy(f'{workdir}/fmkEVENT', f'{outputDir}/{eventName}')
 
                 siteEventFiles.append(eventName)
                 siteEventFactors.append(1)
 
-            siteDF = pd.DataFrame(list(zip(siteEventFiles, siteEventFactors)), columns =['TH_file', 'factor'])
-            siteDF.to_csv(f"{outputDir}/{siteFileName}", index=False)
-
+            siteDF = pd.DataFrame(  # noqa: N806
+                list(zip(siteEventFiles, siteEventFactors)),
+                columns=['TH_file', 'factor'],
+            )
+            siteDF.to_csv(f'{outputDir}/{siteFileName}', index=False)
 
     # create the EventFile
-    gridDF = pd.DataFrame(list(zip(sites, Longitude, Latitude)), columns =['GP_file', 'Longitude', 'Latitude'])
+    gridDF = pd.DataFrame(  # noqa: N806
+        list(zip(sites, Longitude, Latitude)),
+        columns=['GP_file', 'Longitude', 'Latitude'],
+    )
 
-    gridDF.to_csv(f"{outputDir}/EventGrid.csv", index=False)
-    
+    gridDF.to_csv(f'{outputDir}/EventGrid.csv', index=False)
 
     # remove original files
-    if removeInputDir:         
+    if removeInputDir:
         shutil.rmtree(inputDir)
-    
+
     return 0
 
 
-if __name__ == "__main__":
-    #Defining the command line arguments
+if __name__ == '__main__':
+    # Defining the command line arguments
 
-    workflowArgParser = argparse.ArgumentParser(
-        "Create ground motions for BIM.",
-        allow_abbrev=False)
+    workflowArgParser = argparse.ArgumentParser(  # noqa: N816
+        'Create ground motions for BIM.', allow_abbrev=False
+    )
 
-    workflowArgParser.add_argument("-i", "--inputDir",
-                                   help="Dir containing results of siteResponseWhale.")
+    workflowArgParser.add_argument(
+        '-i', '--inputDir', help='Dir containing results of siteResponseWhale.'
+    )
 
-    workflowArgParser.add_argument("-o", "--outputDir",
-                                   help="Dir where results to be stored.")
+    workflowArgParser.add_argument(
+        '-o', '--outputDir', help='Dir where results to be stored.'
+    )
 
-    workflowArgParser.add_argument("--removeInput", action='store_true')
+    workflowArgParser.add_argument('--removeInput', action='store_true')
 
-    #Parsing the command line arguments
-    wfArgs = workflowArgParser.parse_args()
+    # Parsing the command line arguments
+    wfArgs = workflowArgParser.parse_args()  # noqa: N816
 
-    print(wfArgs)
-    #Calling the main function
+    print(wfArgs)  # noqa: T201
+    # Calling the main function
     createFilesForEventGrid(wfArgs.inputDir, wfArgs.outputDir, wfArgs.removeInput)
-    
-
