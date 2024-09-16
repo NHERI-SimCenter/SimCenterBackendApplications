@@ -147,7 +147,7 @@ class TransportationPerformance(ABC):
         self.capacity_map = capacity_map
         self.no_identifier = no_identifier
 
-    @abstractmethod
+    # @abstractmethod
     def system_state(self,
                      initial_state: str,
                      csv_file_dir: str) -> dict:  # updated_state
@@ -215,7 +215,7 @@ class TransportationPerformance(ABC):
         # Read damage states for det file and determine element capacity ratios
         # 1 denotes fully open and 0 denotes fully closed:
         capacity_dict = {}
-        with Path.open(initial_state, encoding="utf-8") as file:
+        with Path.open(Path(initial_state), encoding="utf-8") as file:
             temp = json.load(file)
             data = temp['TransportationNetwork']
             for asset_type in self.assets:
@@ -235,7 +235,7 @@ class TransportationPerformance(ABC):
         temp = initial_state.split('.')
         detfile_updated = temp[0] + '_updated.' + temp[1]
 
-        with Path.open(detfile_updated, 'w', encoding="utf-8") as file:
+        with Path.open(Path(detfile_updated), 'w', encoding="utf-8") as file:
             json.dump(data, file, indent=2)
 
         # Create link closures for network simulations:
@@ -265,7 +265,7 @@ class TransportationPerformance(ABC):
             for item in closed_edges:
                 file.write(item + '\n')
 
-    @abstractmethod
+    # @abstractmethod
     def system_performance(self, state) -> None:  # Move the CSV creation here
         def substep_assignment(nodes_df=None,
                                weighted_edges_df=None,
@@ -801,7 +801,7 @@ class TransportationPerformance(ABC):
                    closure_hours=closure_hours,
                    closed_links=closed_links)
 
-    @abstractmethod
+    # @abstractmethod
     def update_od_file(self,
                        old_nodes: str,
                        old_det: str,
