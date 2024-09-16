@@ -45,6 +45,7 @@
 from __future__ import annotations
 
 import gc
+import os
 import json
 import logging
 import time
@@ -232,7 +233,7 @@ class TransportationPerformance(ABC):
                         capacity_ratio
 
         # Update det file with closure information:
-        temp = initial_state.split('.')
+        temp = os.path.basename(initial_state).split('.')
         detfile_updated = temp[0] + '_updated.' + temp[1]
 
         with Path.open(Path(detfile_updated), 'w', encoding="utf-8") as file:
