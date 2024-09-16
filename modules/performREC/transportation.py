@@ -233,20 +233,21 @@ class TransportationPerformance(ABC):
                         capacity_ratio
 
         # Update det file with closure information:
-        temp = os.path.basename(initial_state).split('.')
+        temp = os.path.basename(initial_state).split('.')  # noqa: PTH119
         detfile_updated = temp[0] + '_updated.' + temp[1]
+        detfile_updated = os.path.join(csv_file_dir, detfile_updated)  # noqa: PTH118
 
         with Path.open(Path(detfile_updated), 'w', encoding="utf-8") as file:
             json.dump(data, file, indent=2)
 
         # Create link closures for network simulations:
-        fexists = files_exist(self.csv_files['network_edges'])
+        fexists = files_exist(csv_file_dir, [self.csv_files['network_edges']])
 
         if fexists:
-            graph_edge_file = csv_file_dir + '/' + self.csv_files[0]
+            graph_edge_file = os.path.join(csv_file_dir, self.csv_files['network_edges'])
         else:
             element_handler = TransportationElementHandler(self.assets)
-            element_handler.get_graph_network(initial_state, csv_file_dir)
+            element_handler.get_graph_network([initial_state], csv_file_dir)
             graph_edge_file = element_handler['output_files'][
                 'graph_network'][0]
 
