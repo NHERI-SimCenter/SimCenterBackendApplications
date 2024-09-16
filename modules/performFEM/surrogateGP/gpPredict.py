@@ -221,9 +221,10 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 if (np.max(Y_var) / np.var(Y_mean) < 1.0e-10) and len(idx_repl) > 0:  # noqa: PLR2004
                     return np.ones((X.shape[0], 1))
 
-                kernel_var = GPy.kern.Matern52(
-                    input_dim=nrv_sur, ARD=True
-                ) + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
+                #kernel_var = GPy.kern.Matern52(
+                #    input_dim=nrv_sur, ARD=True
+                #) + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
+                kernel_var = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True)
                 log_vars = np.log(Y_var[idx_repl])
                 m_var = GPy.models.GPRegression(
                     X_unique[idx_repl, :],
@@ -256,9 +257,12 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 Y_mean = Y  # noqa: N806
                 indices = range(Y.shape[0])
 
+                #kernel_var = GPy.kern.Matern52(
+                #    input_dim=nrv_sur, ARD=True
+                #) + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
                 kernel_var = GPy.kern.Matern52(
                     input_dim=nrv_sur, ARD=True
-                ) + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
+                )
                 log_vars = np.atleast_2d(
                     sur['modelInfo'][g_name_sur[ny] + '_Var']['TrainingSamplesY']
                 ).T
