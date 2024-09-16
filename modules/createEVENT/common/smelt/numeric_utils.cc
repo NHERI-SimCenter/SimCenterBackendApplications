@@ -55,7 +55,7 @@ bool convolve_1d(const std::vector<double>& input_x,
   // conv_status = vsldConvExec1D(conv_task, input_x.data(), 1, input_y.data(), 1,
   //                              response.data(), 1);
 
-  // // Check if convolution exectution was successful
+  // // Check if convolution execution was successful
   // if (conv_status != VSL_STATUS_OK) {
   //   throw std::runtime_error(
   //       "\nERROR: in numeric_utils::convolve_1d: Error in convolution "
@@ -159,7 +159,7 @@ bool inverse_fft(std::vector<std::complex<double>> input_vector,
   // }
 
   // // Set the backward scale factor to be 1 divided by the size of the input vector
-  // // to make the backward tranform the inverse of the forward transform
+  // // to make the backward transform the inverse of the forward transform
   // fft_status = DftiSetValue(fft_descriptor, DFTI_BACKWARD_SCALE,
   //                           static_cast<double>(1.0 / input_vector.size()));
   // if (fft_status != DFTI_NO_ERROR) {

@@ -457,17 +457,17 @@ def create_earthquake_scenarios(  # noqa: C901, D103
         t_start = time.time()
         if source_type == 'ERF':
             if (
-                'SourceIndex' in scenario_info['EqRupture'].keys()  # noqa: SIM118
-                and 'RuptureIndex' in scenario_info['EqRupture'].keys()  # noqa: SIM118
+                'SourceIndex' in scenario_info['EqRupture']
+                and 'RuptureIndex' in scenario_info['EqRupture']
             ):
                 source_model = scenario_info['EqRupture']['Model']
                 eq_source = getERF(scenario_info)  # noqa: F405
                 # check source index list and rupture index list
-                if type(scenario_info['EqRupture']['SourceIndex']) == int:  # noqa: E721
+                if isinstance(scenario_info['EqRupture']['SourceIndex'], int):
                     source_index_list = [scenario_info['EqRupture']['SourceIndex']]
                 else:
                     source_index_list = scenario_info['EqRupture']['SourceIndex']
-                if type(scenario_info['EqRupture']['RuptureIndex']) == int:  # noqa: E721
+                if isinstance(scenario_info['EqRupture']['RuptureIndex'], int):
                     rup_index_list = [scenario_info['EqRupture']['RuptureIndex']]
                 else:
                     rup_index_list = scenario_info['EqRupture']['RuptureIndex']
@@ -510,7 +510,8 @@ def create_earthquake_scenarios(  # noqa: C901, D103
                 max_M = scenario_info['EqRupture'].get('max_Mag', 9.0)  # noqa: N806
                 max_R = scenario_info['EqRupture'].get('max_Dist', 1000.0)  # noqa: N806
                 eq_source = getERF(scenario_info)  # noqa: F405
-                erf_data = export_to_json(  # noqa: F405, F841
+                use_hdf5 = scenario_info['EqRupture'].get('use_hdf5', False)
+                export_to_json(  # noqa: F405
                     eq_source,
                     ref_station,
                     outfile=os.path.join(out_dir, 'RupFile.geojson'),  # noqa: PTH118
@@ -518,6 +519,7 @@ def create_earthquake_scenarios(  # noqa: C901, D103
                     minMag=min_M,
                     maxMag=max_M,
                     maxDistance=max_R,
+                    use_hdf5=use_hdf5,
                 )
                 # Parsing data
                 # feat = erf_data['features']

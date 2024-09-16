@@ -101,7 +101,7 @@ class JsonObject {
 
   /**
    * Get underlying JSON library object
-   * @return Copy of interal JSON implementation
+   * @return Copy of internal JSON implementation
    */
   json get_library_json() const {
     return json_object_;
