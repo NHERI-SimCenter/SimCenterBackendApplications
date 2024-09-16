@@ -50,6 +50,7 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Union
 
 import geopandas as gpd
 import numpy as np
@@ -110,10 +111,10 @@ class TransportationPerformance(ABC):
     """
 
     def __init__(self,
-                 assets: list[str] | None = None,
-                 capacity_map: dict[int, float] | None = None,
-                 csv_files: dict[str, str] | None = None,
-                 no_identifier: dict[str, str] | None = None):
+                 assets: Union[list[str], None] = None,  # noqa: UP007
+                 capacity_map: Union[dict[int, float], None] = None,  # noqa: UP007
+                 csv_files: Union[dict[str, str], None] = None,  # noqa: UP007
+                 no_identifier: Union[dict[str, str], None] = None):  # noqa: UP007
         """
         Initialize the TransportationPerformance class with essential data.
 
@@ -149,7 +150,7 @@ class TransportationPerformance(ABC):
     @abstractmethod
     def system_state(self,
                      initial_state: str,
-                     damage_states: str) -> dict:  # updated_state
+                     csv_file_dir: str) -> dict:  # updated_state
         """
         Process given det and damage results file to get updated system state.
 
