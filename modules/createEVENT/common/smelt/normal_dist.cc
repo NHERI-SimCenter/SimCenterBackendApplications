@@ -4,9 +4,9 @@
 
 stochastic::NormalDistribution::NormalDistribution(double mean, double std_dev)
   : Distribution(),
-    mean_{mean},
-    std_dev_{std_dev},
-    distribution_{mean, std_dev_}
+    mean_(mean),
+    std_dev_(std_dev),
+    distribution_(mean, std_dev)
 {}
 
 std::vector<double> stochastic::NormalDistribution::cumulative_dist_func(

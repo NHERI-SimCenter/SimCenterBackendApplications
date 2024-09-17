@@ -89,8 +89,11 @@ bool convolve_1d(const std::vector<double>& input_x,
     }
 
     // Prepare complex input arrays for FFT
-    std::vector<kiss_fft_cpx> input_x_fft(n_fft, {0, 0});
-    std::vector<kiss_fft_cpx> input_y_fft(n_fft, {0, 0});
+    kiss_fft_cpx zero_value;
+    zero_value.r = 0;
+    zero_value.i = 0;
+    std::vector<kiss_fft_cpx> input_x_fft(n_fft, zero_value);
+    std::vector<kiss_fft_cpx> input_y_fft(n_fft, zero_value);
 
     // Copy real inputs to complex arrays (imaginary part is 0)
     for (int i = 0; i < n_x; ++i) {
@@ -132,7 +135,7 @@ bool convolve_1d(const std::vector<double>& input_x,
   return true;
 }
 
-bool inverse_fft(std::vector<std::complex<double>> input_vector,
+bool inverse_fft(std::vector<std::complex<double> > input_vector,
                  std::vector<double>& output_vector) {
 
   //output_vector.resize(input_vector.size());
@@ -235,7 +238,7 @@ bool inverse_fft(std::vector<std::complex<double>> input_vector,
 bool inverse_fft(const Eigen::VectorXcd& input_vector,
                  Eigen::VectorXd& output_vector) {
   // Convert input Eigen vector to std vector
-  std::vector<std::complex<double>> input_vals(input_vector.size());
+  std::vector<std::complex<double> > input_vals(input_vector.size());
   std::vector<double> outputs(input_vals.size());
   Eigen::VectorXcd::Map(&input_vals[0], input_vector.size()) = input_vector;
  
@@ -255,7 +258,7 @@ bool inverse_fft(const Eigen::VectorXcd& input_vector,
 bool inverse_fft(const Eigen::VectorXcd& input_vector,
                  std::vector<double>& output_vector) {
   // Convert input Eigen vector to std vector
-  std::vector<std::complex<double>> input_vals(input_vector.size());
+  std::vector<std::complex<double> > input_vals(input_vector.size());
   Eigen::VectorXcd::Map(&input_vals[0], input_vector.size()) = input_vector;
   output_vector.resize(input_vector.size());  
  
@@ -270,10 +273,10 @@ bool inverse_fft(const Eigen::VectorXcd& input_vector,
 }
 
 bool fft(std::vector<double> input_vector,
-         std::vector<std::complex<double>>& output_vector) {
+         std::vector<std::complex<double> >& output_vector) {
   // Convert input vector to complex values
 
-  // std::vector<std::complex<double>> input_complex(input_vector.size());
+  // std::vector<std::complex<double> > input_complex(input_vector.size());
   // std::copy(input_vector.begin(), input_vector.end(), input_complex.begin());
   
   // output_vector.resize(input_vector.size());
@@ -363,7 +366,7 @@ bool fft(const Eigen::VectorXd& input_vector, Eigen::VectorXcd& output_vector) {
 
   // Convert input Eigen vector to std vector
   std::vector<double> input_vals(input_vector.size());
-  std::vector<std::complex<double>> outputs(input_vals.size());
+  std::vector<std::complex<double> > outputs(input_vals.size());
   Eigen::VectorXd::Map(&input_vals[0], input_vector.size()) = input_vector;
  
   try {
@@ -380,7 +383,7 @@ bool fft(const Eigen::VectorXd& input_vector, Eigen::VectorXcd& output_vector) {
 }
 
 bool fft(const Eigen::VectorXd& input_vector,
-                 std::vector<std::complex<double>>& output_vector) {
+                 std::vector<std::complex<double> >& output_vector) {
   // Convert input Eigen vector to std vector
   std::vector<double> input_vals(input_vector.size());
   Eigen::VectorXd::Map(&input_vals[0], input_vector.size()) = input_vector;

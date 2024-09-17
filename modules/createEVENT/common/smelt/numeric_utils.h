@@ -39,7 +39,7 @@ bool convolve_1d(const std::vector<double>& input_x,
  * @param[in, out] output_vector Vector to write output to
  * @return Returns true if computations were successful, false otherwise
  */
-bool inverse_fft(std::vector<std::complex<double>> input_vector,
+bool inverse_fft(std::vector<std::complex<double> > input_vector,
                  std::vector<double>& output_vector);
 
 /**
@@ -70,7 +70,7 @@ bool inverse_fft(const Eigen::VectorXcd& input_vector,
  * @return Returns true if computations were successful, false otherwise
  */
 bool fft(std::vector<double> input_vector,
-         std::vector<std::complex<double>>& output_vector);
+         std::vector<std::complex<double> >& output_vector);
 
 /**
  * Computes the real portion of the 1-dimensional Fast Fourier Transform
@@ -89,7 +89,7 @@ bool fft(const Eigen::VectorXd& input_vector, Eigen::VectorXcd& output_vector);
  * @return Returns true if computations were successful, false otherwise
  */
 bool fft(const Eigen::VectorXd& input_vector,
-         std::vector<std::complex<double>>& output_vector);
+         std::vector<std::complex<double> >& output_vector);
 
 /**
  * Calculate the integral of the input vector with uniform spacing
