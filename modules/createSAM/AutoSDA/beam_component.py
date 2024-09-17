@@ -1,4 +1,4 @@
-# This file is used to define the class of beam, which includes the axial, shear, and flexural strengths of column  # noqa: CPY001, D100, INP001
+# This file is used to define the class of beam, which includes the axial, shear, and flexural strengths of column  # noqa: INP001, D100
 # Developed by GUAN, XINGQUAN @ UCLA in Apr. 2018
 # Updated in Oct. 2018
 
@@ -181,7 +181,7 @@ class Beam:
         for key in self.is_feasible.keys():  # noqa: SIM118
             if self.is_feasible[key] == False:  # noqa: E712
                 self.flag = False
-        return self.flag
+        return self.flag  # noqa: DOC201, RUF100
 
     def compute_demand_capacity_ratio(self):
         """This method is used to compute demand to capacity ratios.
@@ -244,7 +244,7 @@ class Beam:
             * (c2 * steel.Fy / 355) ** (-0.070)
         )
         # Pre-capping rotation is further revised to exclude the elastic deformation
-        self.plastic_hinge['theta_p'] = (  # noqa: PLR6104
+        self.plastic_hinge['theta_p'] = (
             self.plastic_hinge['theta_p']
             - (McMy - 1.0) * self.plastic_hinge['My'] / self.plastic_hinge['K0']
         )

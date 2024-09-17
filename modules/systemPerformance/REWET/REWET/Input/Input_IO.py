@@ -1,6 +1,6 @@
-import json  # noqa: CPY001, D100, INP001
+import json  # noqa: INP001, D100
 import os
-import pickle  # noqa: S403
+import pickle
 
 import pandas as pd
 
@@ -29,11 +29,11 @@ def read_pipe_damage_seperate_json_file(directory, pipe_file_name):
 
     file_dest = os.path.join(directory, pipe_file_name)  # noqa: PTH118
 
-    with open(file_dest) as f:  # noqa: PLW1514, PTH123
+    with open(file_dest) as f:  # noqa: PTH123
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
-        raise ValueError('Wrong input in PIPE damage file')  # noqa: DOC501, EM101, TRY003, TRY004
+        raise ValueError('Wrong input in PIPE damage file')  # noqa: EM101, TRY003, TRY004
 
     for each_damage in read_file:
         pipe_time.append(each_damage.get('time'))
@@ -73,11 +73,11 @@ def read_node_damage_seperate_json_file(directory, node_file_name):
 
     file_dest = os.path.join(directory, node_file_name)  # noqa: PTH118
 
-    with open(file_dest) as f:  # noqa: PLW1514, PTH123
+    with open(file_dest) as f:  # noqa: PTH123
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
-        raise ValueError('Wrong input in NODE damage file')  # noqa: DOC501, EM101, TRY003, TRY004
+        raise ValueError('Wrong input in NODE damage file')  # noqa: EM101, TRY003, TRY004
 
     for each_damage in read_file:
         node_time.append(each_damage.get('time'))
@@ -116,11 +116,11 @@ def read_tank_damage_seperate_json_file(directory, tank_file_name):
 
     file_dest = os.path.join(directory, tank_file_name)  # noqa: PTH118
 
-    with open(file_dest) as f:  # noqa: PLW1514, PTH123
+    with open(file_dest) as f:  # noqa: PTH123
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
-        raise ValueError('Wrong input in TANK damage file')  # noqa: DOC501, EM101, TRY003, TRY004
+        raise ValueError('Wrong input in TANK damage file')  # noqa: EM101, TRY003, TRY004
 
     for each_damage in read_file:
         tank_time.append(each_damage.get('time'))
@@ -158,11 +158,11 @@ def read_pump_damage_seperate_json_file(directory, pump_file_name):
 
     file_dest = os.path.join(directory, pump_file_name)  # noqa: PTH118
 
-    with open(file_dest) as f:  # noqa: PLW1514, PTH123
+    with open(file_dest) as f:  # noqa: PTH123
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
-        raise ValueError('Wrong input in PUMP damage file')  # noqa: DOC501, EM101, TRY003, TRY004
+        raise ValueError('Wrong input in PUMP damage file')  # noqa: EM101, TRY003, TRY004
 
     for each_damage in read_file:
         pump_time.append(each_damage.get('time'))

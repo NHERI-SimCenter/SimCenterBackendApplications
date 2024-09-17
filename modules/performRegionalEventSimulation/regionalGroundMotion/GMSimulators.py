@@ -41,13 +41,15 @@
 # Anne Husley
 # Kuanshi Zhong
 # Jinyan Zhao
-import sys
+import sys  # noqa: I001
 import time
 import warnings
 
 import h5py
 import numpy as np
 import ujson
+import geopandas as gpd
+from scipy.spatial.distance import cdist
 from gmpe import CorrelationModel
 from tqdm import tqdm
 
@@ -82,7 +84,7 @@ def simulate_ground_motion(  # noqa: D103
     t_start = time.time()
     im_sampled = dict()  # noqa: C408
     if im_raw_path.endswith('.json'):
-        with open(im_raw_path) as f:  # noqa: PLW1514, PTH123
+        with open(im_raw_path) as f:  # noqa: PTH123
             im_raw = ujson.load(f)
         for i in eq_ids:
             im_sampled.update({i: im_raw[str(i)]})
@@ -192,14 +194,30 @@ class GM_Simulator:  # noqa: D101
             self.stn_dist = None
             return
         # compute the distance matrix
-        tmp = np.zeros((self.num_sites, self.num_sites))
-        for i in range(self.num_sites):
-            loc_i = np.array([self.sites[i]['lat'], self.sites[i]['lon']])
-            for j in range(self.num_sites):
-                loc_j = np.array([self.sites[j]['lat'], self.sites[j]['lon']])
-                # Computing station-wise distances
-                tmp[i, j] = CorrelationModel.get_distance_from_lat_lon(loc_i, loc_j)
-        self.stn_dist = tmp
+        # tmp = np.zeros((self.num_sites, self.num_sites))
+        # # for i in tqdm(range(self.num_sites)):
+        #     loc_i = np.array([self.sites[i]['lat'], self.sites[i]['lon']])
+        #     for j in range(self.num_sites):
+        #         loc_j = np.array([self.sites[j]['lat'], self.sites[j]['lon']])
+        #         # Computing station-wise distances
+        #         tmp[i, j] = CorrelationModel.get_distance_from_lat_lon(loc_i, loc_j)
+        # self.stn_dist = tmp
+        loc_i = np.array(
+            [
+                [self.sites[i]['lat'], self.sites[i]['lon']]
+                for i in range(self.num_sites)
+            ]
+        )
+        loc_i_gdf = gpd.GeoDataFrame(
+            {'geometry': gpd.points_from_xy(loc_i[:, 1], loc_i[:, 0])},
+            crs='EPSG:4326',
+        ).to_crs('EPSG:6500')
+        lat = loc_i_gdf.geometry.y
+        lon = loc_i_gdf.geometry.x
+        loc_i = np.array([[lon[i], lat[i]] for i in range(self.num_sites)])
+        loc_j = np.array([[lon[i], lat[i]] for i in range(self.num_sites)])
+        distances = cdist(loc_i, loc_j, 'euclidean') / 1000  # in km
+        self.stn_dist = distances
 
     def set_num_simu(self, num_simu):  # noqa: D102
         # set simulation number
@@ -222,7 +240,7 @@ class GM_Simulator:  # noqa: D101
         for i in range(self.num_sites):
             tmp_im_data = []
             for cur_im_type in self.im_type_list:
-                tmp_im_data = (  # noqa: PLR6104
+                tmp_im_data = (
                     tmp_im_data + self.im_data[i][f'ln{cur_im_type}']['Mean']
                 )
             ln_im.append(tmp_im_data)
@@ -233,7 +251,7 @@ class GM_Simulator:  # noqa: D101
         for i in range(self.num_sites):
             tmp_im_data = []
             for cur_im_type in self.im_type_list:
-                tmp_im_data = (  # noqa: PLR6104
+                tmp_im_data = (
                     tmp_im_data
                     + self.im_data[i][f'ln{cur_im_type}']['InterEvStdDev']
                 )
@@ -245,7 +263,7 @@ class GM_Simulator:  # noqa: D101
         for i in range(self.num_sites):
             tmp_im_data = []
             for cur_im_type in self.im_type_list:
-                tmp_im_data = (  # noqa: PLR6104
+                tmp_im_data = (
                     tmp_im_data
                     + self.im_data[i][f'ln{cur_im_type}']['IntraEvStdDev']
                 )
@@ -347,7 +365,7 @@ class GM_Simulator:  # noqa: D101
                         self.im_cm_intra_flag = False
                         continue
 
-    def compute_inter_event_residual_ij(self, cm, im_name_list_1, im_name_list_2):  # noqa: D102, PLR6301
+    def compute_inter_event_residual_ij(self, cm, im_name_list_1, im_name_list_2):  # noqa: D102
         if cm == 'Baker & Jayaram (2008)':
             rho = np.array(
                 [
@@ -371,7 +389,7 @@ class GM_Simulator:  # noqa: D101
             )
         return rho
 
-    def replace_submatrix(self, mat, ind1, ind2, mat_replace):  # noqa: D102, PLR6301
+    def replace_submatrix(self, mat, ind1, ind2, mat_replace):  # noqa: D102
         for i, index in enumerate(ind1):
             mat[index, ind2] = mat_replace[i, :]
         return mat
@@ -459,17 +477,17 @@ class GM_Simulator:  # noqa: D101
                 ).T
         elif cm == 'Loth & Baker (2013)':
             residuals = CorrelationModel.loth_baker_correlation_2013(
-                self.sites, im_name_list, num_simu
+                self.sites, im_name_list, num_simu, self.stn_dist
             )
         elif cm == 'Markhvida et al. (2017)':
             num_pc = 19
             residuals = CorrelationModel.markhvida_ceferino_baker_correlation_2017(
-                self.sites, im_name_list, num_simu, num_pc
+                self.sites, im_name_list, num_simu, self.stn_dist, num_pc
             )
         elif cm == 'Du & Ning (2021)':
             num_pc = 23
             residuals = CorrelationModel.du_ning_correlation_2021(
-                self.sites, im_name_list, num_simu, num_pc
+                self.sites, im_name_list, num_simu, self.stn_dist, num_pc
             )
         else:
             # TODO: extending this to more inter-event correlation models  # noqa: TD002

@@ -1,7 +1,7 @@
 """Created on Fri Dec 25 04:00:43 2020
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, INP001
+"""  # noqa: INP001, D400
 
 import copy
 import logging
@@ -18,7 +18,7 @@ def get_node_name(node_name, table):  # noqa: D103
     if 'virtual_of' in table.columns:
         real_node_name = table.loc[node_name, 'virtual_of']
         if (
-            real_node_name == None or real_node_name == np.nan  # noqa: E711, PLR1714, PLW0177
+            real_node_name == None or real_node_name == np.nan  # noqa: E711, PLR1714
         ):  # SINA: probably NP.NAN does not work here. Correct it.
             real_node_name = node_name
         return real_node_name
@@ -122,16 +122,16 @@ class AgentData:  # noqa: D101
         (time_start, time_finish) = self._shifting.getShiftTimes(shift_name)
 
         if type(time) != int and type(time) != float:  # noqa: E721
-            raise ValueError('time must be integer ' + type(time))  # noqa: DOC501
+            raise ValueError('time must be integer ' + type(time))
 
         time = int(time)
-        time = time % (24 * 3600)  # noqa: PLR6104
+        time = time % (24 * 3600)
 
         if time_start > time_finish:
             new_time_finish = time_finish + 24 * 3600
             time_finish = new_time_finish
             if time < time_start:
-                time = time + 24 * 3600  # noqa: PLR6104
+                time = time + 24 * 3600
 
         if time >= time_start and time < time_finish:  # noqa: SIM103
             return True
@@ -232,7 +232,7 @@ class Agents:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D401
+        """  # noqa: D400, D401, DOC202, RUF100
         # number_of_agents = int(definition['Number'])
         agent_speed = self.registry.settings['crew_travel_speed']
         temp_agent_data = AgentData(
@@ -270,7 +270,7 @@ class Agents:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400
+        """  # noqa: D400, DOC202, RUF100
         for active_agent_ID in active_agent_ID_list:  # noqa: N806
             self._agents['active'].loc[active_agent_ID] = True
 
@@ -345,7 +345,7 @@ class Agents:  # noqa: D101
 
         return temp
 
-    def getAvailabilityRatio(self, agent_type, time):  # noqa: D102, N802, PLR6301
+    def getAvailabilityRatio(self, agent_type, time):  # noqa: N802, D102
         if agent_type == 'WQOperator' or agent_type == 'WQWorker':  # noqa: PLR1714
             av_data = pd.Series(data=[0, 0.5, 1], index=[0, 4, 24])
         elif agent_type == 'CONT':
@@ -353,7 +353,7 @@ class Agents:  # noqa: D101
         else:
             av_data = pd.Series(data=[1, 0.5, 1], index=[0, 4, 48])
         temp = av_data
-        time = time / 3600  # noqa: PLR6104
+        time = time / 3600
         if time in temp:
             return temp[time]
         if time > temp.index.max():
@@ -600,7 +600,7 @@ class Shifting:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D401
+        """  # noqa: D400, D401, DOC202, RUF100
         if name in self._shift_data:
             raise ValueError('Shift name already registered')  # noqa: EM101, TRY003
         if type(beginning) != int and type(beginning) != float:  # noqa: E721
@@ -673,7 +673,7 @@ class Shifting:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400, D401
+        """  # noqa: D400, D401, DOC202, RUF100
         if agent_ID in self._all_agent_shift_data:
             raise ValueError('The agent ID currently in Agent ALl Shifts')  # noqa: EM101, TRY003
         if shift_name not in self._shift_data:
@@ -1140,7 +1140,7 @@ class Priority:  # noqa: D101
             min_dist_entity_table = dist_only_entity_table.min(axis=1)
             entity_data.loc[:, name_sugest] = min_dist_entity_table
             entity_data.sort_values(by=name_sugest, ascending=True, inplace=True)  # noqa: PD002
-            columns_to_drop.append(name_sugest)  # noqa: FURB113
+            columns_to_drop.append(name_sugest)
             columns_to_drop.append('X_COORD')
             columns_to_drop.append('Y_COORD')
             entity_data.drop(columns=columns_to_drop, inplace=True)  # noqa: PD002
@@ -1573,7 +1573,7 @@ class Jobs:  # noqa: D101
                 pass
         return returned_method
 
-    def _getProbability(self, method, iCondition, element_type):  # noqa: ARG002, N802, N803, PLR6301
+    def _getProbability(self, method, iCondition, element_type):  # noqa: ARG002, N802, N803
         if iCondition == True:  # noqa: E712
             if 'METHOD_PROBABILITY' in method:  # noqa: SIM401
                 probability = method['METHOD_PROBABILITY']
@@ -1582,7 +1582,7 @@ class Jobs:  # noqa: D101
         # else:
         # if 'METHOD_PROBABILITY' in method:
 
-    def _iConditionHolds(self, val1, con, val2):  # noqa: C901, N802, PLR6301
+    def _iConditionHolds(self, val1, con, val2):  # noqa: C901, N802
         if con == 'BG':
             if val1 > val2:  # noqa: SIM103
                 return True
@@ -1737,7 +1737,7 @@ class Jobs:  # noqa: D101
             return True
         return False
 
-    def _check_probability(self, _prob):  # noqa: PLR6301
+    def _check_probability(self, _prob):
         mes = None  # noqa: F841
         _prob = float(_prob)
         if _prob < 0:

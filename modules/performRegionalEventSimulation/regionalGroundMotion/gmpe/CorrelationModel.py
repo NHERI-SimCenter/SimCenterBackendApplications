@@ -41,6 +41,7 @@ import os
 
 import numpy as np
 import pandas as pd
+import scipy
 from scipy.interpolate import interp1d, interp2d
 
 
@@ -65,7 +66,7 @@ def baker_jayaram_correlation_2008(im1, im2, flag_orth=False):  # noqa: FBT002, 
     elif im1.startswith('PGA'):
         T1 = 0.0  # noqa: N806
     else:
-        return 0.0
+        return 0.0  # noqa: DOC201, RUF100
     if im2.startswith('SA'):
         T2 = float(im2[3:-1])  # noqa: N806
     elif im2.startswith('PGA'):
@@ -103,7 +104,7 @@ def baker_jayaram_correlation_2008(im1, im2, flag_orth=False):  # noqa: FBT002, 
         rho = C4
     # rho for orthogonal components Coefficient C1
     if flag_orth:
-        rho = rho * (0.79 - 0.023 * np.log(np.sqrt(Tmin * Tmax)))  # noqa: PLR6104
+        rho = rho * (0.79 - 0.023 * np.log(np.sqrt(Tmin * Tmax)))
 
     return rho
 
@@ -126,7 +127,7 @@ def bradley_correlation_2011(IM, T=None, flag_Ds=True):  # noqa: FBT002, C901, N
     # PGA
     if IM == 'PGA':  # noqa: RET503
         if flag_Ds:
-            return -0.442
+            return -0.442  # noqa: DOC201, RUF100
         else:  # noqa: RET505
             return -0.305
     elif IM == 'PGV':
@@ -252,7 +253,7 @@ def jayaram_baker_correlation_2009(im, h, flag_clustering=False):  # noqa: FBT00
     else:
         b = 40.7 - 15.0 * T
     rho = np.exp(-3.0 * h / b)
-    return rho  # noqa: RET504
+    return rho  # noqa: DOC201, RET504, RUF100
 
 
 def load_loth_baker_correlation_2013(datapath):
@@ -270,7 +271,7 @@ def load_loth_baker_correlation_2013(datapath):
     B2 = pd.read_csv(datapath + 'loth_baker_correlation_2013_B2.csv', header=0)  # noqa: N806
     B1 = pd.read_csv(datapath + 'loth_baker_correlation_2013_B1.csv', header=0)  # noqa: N806
     B3 = pd.read_csv(datapath + 'loth_baker_correlation_2013_B3.csv', header=0)  # noqa: N806
-    return B1, B2, B3
+    return B1, B2, B3  # noqa: DOC201, RUF100
 
 
 def compute_rho_loth_baker_correlation_2013(T1, T2, h, B1, B2, B3):  # noqa: N803
@@ -303,10 +304,10 @@ def compute_rho_loth_baker_correlation_2013(T1, T2, h, B1, B2, B3):  # noqa: N80
     Ch = b1 * np.exp(-3.0 * h / 20.0) + b2 * np.exp(-3.0 * h / 70.0) + b3 * (h == 0)  # noqa: N806
     # Correlation coefficient
     rho = Ch
-    return rho  # noqa: RET504
+    return rho  # noqa: DOC201, RET504, RUF100
 
 
-def loth_baker_correlation_2013(stations, im_name_list, num_simu):  # noqa: C901
+def loth_baker_correlation_2013(stations, im_name_list, stn_dist, num_simu):
     """Simulating intra-event residuals
     Reference:
         Loth and Baker (2013) A spatial cross-correlation model of spectral
@@ -338,26 +339,25 @@ def loth_baker_correlation_2013(stations, im_name_list, num_simu):  # noqa: C901
     )
     # Computing distance matrix
     num_stations = len(stations)
-    stn_dist = np.zeros((num_stations, num_stations))
-    for i in range(num_stations):
-        loc_i = np.array([stations[i]['Latitude'], stations[i]['Longitude']])
-        for j in range(num_stations):
-            loc_j = np.array([stations[j]['Latitude'], stations[j]['Longitude']])
-            stn_dist[i, j] = get_distance_from_lat_lon(loc_i, loc_j)
     # Creating a covariance matrices for each of the principal components
     num_periods = len(periods)
-    covMatrix = np.zeros((num_stations * num_periods, num_stations * num_periods))  # noqa: N806
+    cov_matrix = np.zeros((num_stations * num_periods, num_stations * num_periods))
     for i in range(num_periods):
         for j in range(num_periods):
-            covMatrix[
+            cov_matrix[
                 num_stations * i : num_stations * (i + 1),
                 num_stations * j : num_stations * (j + 1),
             ] = compute_rho_loth_baker_correlation_2013(
                 periods[i], periods[j], stn_dist, B1, B2, B3
             )
 
-    mu = np.zeros(num_stations * num_periods)
-    residuals_raw = np.random.multivariate_normal(mu, covMatrix, num_simu)
+    # mu = np.zeros(num_stations * num_periods)
+    # residuals_raw = np.random.multivariate_normal(mu, covMatrix, num_simu)
+    # Replace np multivariate_normal with cholesky and standard normal
+    standard_normal = np.random.standard_normal((num_simu, num_stations))
+    chole_lower = scipy.linalg.cholesky(cov_matrix, lower=True)
+    corr_samples = chole_lower @ standard_normal.T
+    residuals_raw = corr_samples.T
     # reorder residual_raw [[period1],[period2],...,[]]-->[[site1],[site2],...,[]]
     residuals_reorder = []
     for i in range(num_simu):
@@ -373,7 +373,7 @@ def loth_baker_correlation_2013(stations, im_name_list, num_simu):  # noqa: C901
         .swapaxes(1, 2)
     )
     # return
-    return residuals  # noqa: RET504
+    return residuals  # noqa: DOC201, RET504, RUF100
 
 
 def load_markhvida_ceferino_baker_correlation_2017(datapath):
@@ -404,13 +404,14 @@ def load_markhvida_ceferino_baker_correlation_2017(datapath):
         index_col=None,
         header=0,
     )
-    return MCB_model, MCB_pca, MCB_var
+    return MCB_model, MCB_pca, MCB_var  # noqa: DOC201, RUF100
 
 
 def markhvida_ceferino_baker_correlation_2017(  # noqa: C901
     stations,
     im_name_list,
     num_simu,
+    stn_dist,
     num_pc=19,
 ):
     """Simulating intra-event residuals
@@ -437,7 +438,7 @@ def markhvida_ceferino_baker_correlation_2017(  # noqa: C901
             elif cur_im.startswith('PGA'):
                 periods.append(0.0)
             else:
-                raise ValueError(  # noqa: DOC501, TRY003, TRY301
+                raise ValueError(  # noqa: TRY003, TRY301
                     f'CorrelationModel Markhvida et al. (2017): error - cannot handle {cur_im}'  # noqa: EM102
                 )
         except ValueError:  # noqa: PERF203
@@ -462,36 +463,33 @@ def markhvida_ceferino_baker_correlation_2017(  # noqa: C901
     model_coef = MCB_pca.iloc[:, 1 : num_pc + 1]
     # Computing distance matrix
     num_stations = len(stations)
-    stn_dist = np.zeros((num_stations, num_stations))
-    for i in range(num_stations):
-        loc_i = np.array([stations[i]['lat'], stations[i]['lon']])
-        for j in range(num_stations):
-            loc_j = np.array([stations[j]['lat'], stations[j]['lon']])
-            stn_dist[i, j] = get_distance_from_lat_lon(loc_i, loc_j)
     # Scaling variance if less than 19 principal components are used
-    c0 = c0 / MCB_var.iloc[0, num_pc - 1]  # noqa: PLR6104
-    c1 = c1 / MCB_var.iloc[0, num_pc - 1]  # noqa: PLR6104
-    c2 = c2 / MCB_var.iloc[0, num_pc - 1]  # noqa: PLR6104
-    # Creating a covariance matrices for each of the principal components
-    covMatrix = np.zeros((num_stations, num_stations, num_pc))  # noqa: N806
+    c0 = c0 / MCB_var.iloc[0, num_pc - 1]
+    c1 = c1 / MCB_var.iloc[0, num_pc - 1]
+    c2 = c2 / MCB_var.iloc[0, num_pc - 1]
+    # Simulating residuals
+    residuals_pca = np.zeros((num_stations, num_simu, num_pc))
     for i in range(num_pc):
+        # Creating a covariance matrices for each of the principal components
         if c1.iloc[0, i] == 0:
             # nug
-            covMatrix[:, :, i] = np.eye(num_stations) * c0.iloc[0, i]
+            cov_matrix = np.eye(num_stations) * c0.iloc[0, i]
         else:
             # iso nest
-            covMatrix[:, :, i] = (
+            cov_matrix = (
                 c0.iloc[0, i] * (stn_dist == 0)
                 + c1.iloc[0, i] * np.exp(-3.0 * stn_dist / a1.iloc[0, i])
                 + c2.iloc[0, i] * np.exp(-3.0 * stn_dist / a2.iloc[0, i])
             )
-    # Simulating residuals
-    residuals_pca = np.zeros((num_stations, num_simu, num_pc))
-    mu = np.zeros(num_stations)
-    for i in range(num_pc):
-        residuals_pca[:, :, i] = np.random.multivariate_normal(
-            mu, covMatrix[:, :, i], num_simu
-        ).T
+        # residuals_pca[:, :, i] = np.random.multivariate_normal(
+        #     mu, cov_matrix, num_simu
+        # ).T
+        # Replace np multivariate_normal with cholesky and standard normal
+        standard_normal = np.random.standard_normal((num_simu, num_stations))
+        chole_lower = scipy.linalg.cholesky(cov_matrix, lower=True)
+        corr_samples = chole_lower @ standard_normal.T
+        residuals_pca[:, :, i] = corr_samples
+
     # Interpolating model_coef by periods
     interp_fun = interp1d(model_periods, model_coef, axis=0)
     model_Tmax = 5.0  # noqa: N806
@@ -521,7 +519,7 @@ def markhvida_ceferino_baker_correlation_2017(  # noqa: C901
             if tmp_periods > model_Tmax:
                 residuals = np.concatenate((residuals, Tmax_residuals), axis=1)
     # return
-    return residuals
+    return residuals  # noqa: DOC201, RUF100
 
 
 def load_du_ning_correlation_2021(datapath):
@@ -548,10 +546,10 @@ def load_du_ning_correlation_2021(datapath):
     DN_var = pd.read_csv(  # noqa: N806
         datapath + 'du_ning_correlation_2021_var_scale.csv', index_col=None, header=0
     )
-    return DN_model, DN_pca, DN_var
+    return DN_model, DN_pca, DN_var  # noqa: DOC201, RUF100
 
 
-def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
+def du_ning_correlation_2021(stations, im_name_list, num_simu, stn_dist, num_pc=23):
     """Simulating intra-event residuals
     Reference:
         Du and Ning (2021) Modeling spatial cross-correlation of multiple
@@ -599,36 +597,36 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
     model_coef = DN_pca.iloc[:, 1 : num_pc + 1]
     # Computing distance matrix
     num_stations = len(stations)
-    stn_dist = np.zeros((num_stations, num_stations))
-    for i in range(num_stations):
-        loc_i = np.array([stations[i]['lat'], stations[i]['lon']])
-        for j in range(num_stations):
-            loc_j = np.array([stations[j]['lat'], stations[j]['lon']])
-            stn_dist[i, j] = get_distance_from_lat_lon(loc_i, loc_j)
     # Scaling variance if less than 23 principal components are used
-    c1 = c1 / DN_var.iloc[0, num_pc - 1]  # noqa: PLR6104
-    a1 = a1 / DN_var.iloc[0, num_pc - 1]  # noqa: PLR6104
-    a2 = a2 / DN_var.iloc[0, num_pc - 1]  # noqa: PLR6104
-    # Creating a covariance matrices for each of the principal components
-    covMatrix = np.zeros((num_stations, num_stations, num_pc))  # noqa: N806
+    c1 = c1 / DN_var.iloc[0, num_pc - 1]
+    a1 = a1 / DN_var.iloc[0, num_pc - 1]
+    a2 = a2 / DN_var.iloc[0, num_pc - 1]
+    ## The last principal component is nugget effect with c1 = 0 (see Eq 20 and
+    # table 4. This leads to zero covariance matrix and hence no need to simulate)
+    num_pc = num_pc - 1
+    residuals_pca = np.zeros((num_stations, num_simu, num_pc))
     for i in range(num_pc):
+        # from tqdm import tqdm
+        # for i in tqdm(range(num_pc)):
         if a1.iloc[0, i] == 0:
             # nug
-            covMatrix[:, :, i] = np.eye(num_stations) * c1.iloc[0, i]
+            cov_matrix = np.eye(num_stations) * c1.iloc[0, i]
         else:
             # iso nest
-            covMatrix[:, :, i] = (
+            cov_matrix = (
                 c1.iloc[0, i] * (stn_dist == 0)
                 + a1.iloc[0, i] * np.exp(-3.0 * stn_dist / b1.iloc[0, i])
                 + a2.iloc[0, i] * np.exp(-3.0 * stn_dist / b2.iloc[0, i])
             )
-    # Simulating residuals
-    residuals_pca = np.zeros((num_stations, num_simu, num_pc))
-    mu = np.zeros(num_stations)
-    for i in range(num_pc):
-        residuals_pca[:, :, i] = np.random.multivariate_normal(
-            mu, covMatrix[:, :, i], num_simu
-        ).T
+        # residuals_pca[:, :, i] = np.random.multivariate_normal(
+        #     mu, cov_matrix, num_simu
+        # ).T
+        # Replace np multivariate_normal with cholesky and standard normal
+        standard_normal = np.random.standard_normal((num_simu, num_stations))
+        chole_lower = scipy.linalg.cholesky(cov_matrix, lower=True)
+        corr_samples = chole_lower @ standard_normal.T
+        residuals_pca[:, :, i] = corr_samples
+
     # Interpolating model_coef by periods
     pseudo_periods = [x for x in model_periods if type(x) == float] + [  # noqa: E721
         ims_map[x]
@@ -653,11 +651,12 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
     residuals = np.empty([num_stations, num_periods, num_simu])
     for i in range(num_simu):
         residuals[:, :, i] = np.reshape(
-            np.matmul(residuals_pca[:, i, :], simu_coef.T), residuals[:, :, i].shape
+            np.matmul(residuals_pca[:, i, :], simu_coef[:, :-1].T),
+            residuals[:, :, i].shape,
         )
 
     # return
-    return residuals
+    return residuals  # noqa: DOC201, RUF100
 
 
 def baker_bradley_correlation_2017(im1=None, im2=None):  # noqa: C901
@@ -686,7 +685,7 @@ def baker_bradley_correlation_2017(im1=None, im2=None):  # noqa: C901
             print(  # noqa: T201
                 f'CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for unknown {im1}'
             )
-            return 0.0
+            return 0.0  # noqa: DOC201, RUF100
         im_list.append(tmp_tag)
         period_list.append(None)
     if im2.startswith('SA'):

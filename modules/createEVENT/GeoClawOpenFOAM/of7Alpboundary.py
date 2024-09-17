@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -65,7 +65,7 @@ class of7Alpboundary:
         Alptext = self.Alpheader()  # noqa: N806
 
         # Start the outside
-        Alptext = Alptext + 'boundaryField\n{\n'  # noqa: N806, PLR6104
+        Alptext = Alptext + 'boundaryField\n{\n'  # noqa: N806
 
         # Loop over all patches
         for patchname in patches:
@@ -77,22 +77,22 @@ class of7Alpboundary:
                 Alptype = -1  # noqa: N806
             else:
                 Alptype = 0  # noqa: N806
-            Alptext = Alptext + self.Alppatchtext(Alptype, patchname)  # noqa: N806, PLR6104
+            Alptext = Alptext + self.Alppatchtext(Alptype, patchname)  # noqa: N806
 
         # Check for building and other building
-        Alptext = Alptext + '\tBuilding\n'  # noqa: N806, PLR6104
-        Alptext = Alptext + self.Alppatchtext(0, 'Building')  # noqa: N806, PLR6104
-        Alptext = Alptext + '\tOtherBuilding\n'  # noqa: N806, PLR6104
-        Alptext = Alptext + self.Alppatchtext(0, 'OtherBuilding')  # noqa: N806, PLR6104
+        Alptext = Alptext + '\tBuilding\n'  # noqa: N806
+        Alptext = Alptext + self.Alppatchtext(0, 'Building')  # noqa: N806
+        Alptext = Alptext + '\tOtherBuilding\n'  # noqa: N806
+        Alptext = Alptext + self.Alppatchtext(0, 'OtherBuilding')  # noqa: N806
 
         # Close the outside
-        Alptext = Alptext + '}\n\n'  # noqa: N806, PLR6104
+        Alptext = Alptext + '}\n\n'  # noqa: N806
 
         # Return the text for velocity BC
-        return Alptext  # noqa: RET504
+        return Alptext  # noqa: DOC201, RET504, RUF100
 
     #############################################################
-    def Alpheader(self):  # noqa: N802, PLR6301
+    def Alpheader(self):  # noqa: N802
         """Creates the text for the header for pressure file
 
         Variable
@@ -110,14 +110,14 @@ FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tvolScalarField;\n\tlocation\t"0";\n\tobject\talpha.water;\n}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
-        header = header + 'dimensions\t[0 0 0 0 0 0 0];\n\n'  # noqa: PLR6104
-        header = header + 'internalField\tuniform\t0;\n\n'  # noqa: PLR6104
+        header = header + 'dimensions\t[0 0 0 0 0 0 0];\n\n'
+        header = header + 'internalField\tuniform\t0;\n\n'
 
         # Return the header for U file
-        return header  # noqa: RET504
+        return header  # noqa: DOC201, RET504, RUF100
 
     #############################################################
-    def Alppatchtext(self, Alptype, patchname):  # noqa: ARG002, N802, N803, PLR6301
+    def Alppatchtext(self, Alptype, patchname):  # noqa: ARG002, N802, N803
         """Creates the text the pressure boundary condition
 
         Arguments:
@@ -131,13 +131,13 @@ FoamFile
         """  # noqa: D400, D401
         if patchname == 'Top':
             Alptext = '\t{\n\t\t'  # noqa: N806
-            Alptext = Alptext + 'type\tinletOutlet;\n\t\t'  # noqa: N806, PLR6104
-            Alptext = Alptext + 'inletValue\tuniform 0;\n\t\t'  # noqa: N806, PLR6104
-            Alptext = Alptext + 'value\tuniform 0;\n\t}\n'  # noqa: N806, PLR6104
+            Alptext = Alptext + 'type\tinletOutlet;\n\t\t'  # noqa: N806
+            Alptext = Alptext + 'inletValue\tuniform 0;\n\t\t'  # noqa: N806
+            Alptext = Alptext + 'value\tuniform 0;\n\t}\n'  # noqa: N806
 
         else:
             Alptext = '\t{\n\t\t'  # noqa: N806
-            Alptext = Alptext + 'type\tzeroGradient;\n\t}\n'  # noqa: N806, PLR6104
+            Alptext = Alptext + 'type\tzeroGradient;\n\t}\n'  # noqa: N806
 
         # Return the header for U file
-        return Alptext
+        return Alptext  # noqa: DOC201, RUF100

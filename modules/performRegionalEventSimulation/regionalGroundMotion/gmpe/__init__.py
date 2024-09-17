@@ -37,4 +37,4 @@
 # Kuanshi Zhong
 #
 
-__all__ = ['CorrelationModel', 'SignificantDurationModel']  # noqa: F822
+__all__ = ['CorrelationModel', 'SignificantDurationModel']

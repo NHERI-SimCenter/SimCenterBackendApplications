@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -73,12 +73,12 @@ class of7Decomp:
 
         decomptext = decomptext + 'numberOfSubdomains\t' + subdomains + ';\n\n'
 
-        decomptext = decomptext + 'method\tscotch;\n\n'  # noqa: PLR6104
+        decomptext = decomptext + 'method\tscotch;\n\n'
 
-        return decomptext  # noqa: RET504
+        return decomptext  # noqa: DOC201, RET504, RUF100
 
     #############################################################
-    def decompheader(self):  # noqa: PLR6301
+    def decompheader(self):
         """Creates the text for the header
 
         Variable
@@ -97,10 +97,10 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
         # Return the header for U file
-        return header  # noqa: RET504
+        return header  # noqa: DOC201, RET504, RUF100
 
     #############################################################
-    def scripts(self, data, path):  # noqa: ARG002, PLR6301
+    def scripts(self, data, path):  # noqa: ARG002
         """Create the scripts for caserun.sh
 
         Arguments:
@@ -128,10 +128,10 @@ FoamFile
         if int(totalprocs) > 1:
             # Decompose the domain
             caseruntext = 'echo Decomposing domain...\n'
-            caseruntext = caseruntext + 'decomposePar > decomposePar.log\n\n'  # noqa: PLR6104
+            caseruntext = caseruntext + 'decomposePar > decomposePar.log\n\n'
 
             # Start the CFD simulation
-            caseruntext = (  # noqa: PLR6104
+            caseruntext = (
                 caseruntext + 'echo Starting CFD simulation in parallel...\n'
             )
             if int(simtype) == 4:  # noqa: PLR2004
@@ -152,11 +152,11 @@ FoamFile
         else:
             caseruntext = 'echo Starting CFD simulation in serial...\n'
             if int(simtype) == 4:  # noqa: PLR2004
-                caseruntext = caseruntext + 'olaDyMFlow > olaDyMFlow.log\n\n'  # noqa: PLR6104
+                caseruntext = caseruntext + 'olaDyMFlow > olaDyMFlow.log\n\n'
             else:
-                caseruntext = caseruntext + 'olaFlow > olaFlow.log\n\n'  # noqa: PLR6104
+                caseruntext = caseruntext + 'olaFlow > olaFlow.log\n\n'
 
         # Write to caserun file
-        scriptfile = open('caserun.sh', 'a')  # noqa: PLW1514, PTH123, SIM115
+        scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
         scriptfile.write(caseruntext)
         scriptfile.close()

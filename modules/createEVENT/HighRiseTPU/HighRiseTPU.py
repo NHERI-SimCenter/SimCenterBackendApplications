@@ -1,4 +1,4 @@
-# python code to open the TPU .mat file  # noqa: CPY001, D100, INP001
+# python code to open the TPU .mat file  # noqa: INP001, D100
 # and put data into a SimCenter JSON file for
 # wind tunnel data
 

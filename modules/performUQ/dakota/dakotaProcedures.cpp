@@ -638,7 +638,7 @@ writeDakotaInputFile(std::ostream &dakotaFile,
       dakotaFile << "method, \n sampling \n sample_type = random \n samples = " << numSamples << " \n seed = " << seed << "\n\n";
 
       if (sensitivityAnalysis == true)
-	dakotaFile << "variance_based_decomp \n\n";
+	    dakotaFile << "variance_based_decomp \n\n";
 
       const char * calFileName = new char[1];
       std::string emptyString;

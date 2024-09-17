@@ -1,9 +1,9 @@
 """Created on Thu Nov 10 19:12:46 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, INP001
+"""  # noqa: INP001, D400
 
-import pickle  # noqa: S403
+import pickle
 
 
 def getDummyDataForQNExeedanceCurve():  # noqa: N802, D103
@@ -46,17 +46,17 @@ def QNExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: N8
     data = getDummyDataForQNExeedanceCurve()
 
     if len(percentage_list) > 1:
-        raise ValueError(  # noqa: DOC501, TRY003
+        raise ValueError(  # noqa: TRY003
             'the current version only accept one percentage in the percentage list'  # noqa: EM101
         )
 
     if type(time_shift) != int:  # noqa: E721
-        raise ValueError(  # noqa: DOC501
+        raise ValueError(
             'Time shift must be integer type: ' + repr(type(time_shift)) + '.'
         )
 
     if time_shift < 0:
-        raise ValueError('Time shift ust be bigger than or equal to zero.')  # noqa: DOC501, EM101, TRY003
+        raise ValueError('Time shift ust be bigger than or equal to zero.')  # noqa: EM101, TRY003
 
     res = {}
     for percentage in percentage_list:
@@ -69,10 +69,10 @@ def QNExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: N8
         elif time_type.lower() == 'day':
             pr.convertTimeSecondToDay(temp_res, 'restore_time', time_shift)
         else:
-            raise ValueError('Uknown time_type: ' + repr(time_type))  # noqa: DOC501
+            raise ValueError('Uknown time_type: ' + repr(time_type))
 
         res[percentage] = temp_res
-    return res
+    return res  # noqa: DOC201, RUF100
 
 
 def DLExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: N802
@@ -97,17 +97,17 @@ def DLExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: N8
     data = getDummyDataForQNExeedanceCurve()
 
     if len(percentage_list) > 1:
-        raise ValueError(  # noqa: DOC501, TRY003
+        raise ValueError(  # noqa: TRY003
             'the current version only accept one percentage in the percentage list'  # noqa: EM101
         )
 
     if type(time_shift) != int:  # noqa: E721
-        raise ValueError(  # noqa: DOC501
+        raise ValueError(
             'Time shift must be integer type: ' + repr(type(time_shift)) + '.'
         )
 
     if time_shift < 0:
-        raise ValueError('Time shift ust be bigger than or equal to zero.')  # noqa: DOC501, EM101, TRY003
+        raise ValueError('Time shift ust be bigger than or equal to zero.')  # noqa: EM101, TRY003
 
     res = {}
     for percentage in percentage_list:
@@ -120,7 +120,7 @@ def DLExceedanceCurve(pr, percentage_list, time_type, time_shift=0):  # noqa: N8
         elif time_type.lower() == 'day':
             pr.convertTimeSecondToDay(temp_res, 'restore_time', time_shift)
         else:
-            raise ValueError('Uknown time_type: ' + repr(time_type))  # noqa: DOC501
+            raise ValueError('Uknown time_type: ' + repr(time_type))
 
         res[percentage] = temp_res
-    return res
+    return res  # noqa: DOC201, RUF100

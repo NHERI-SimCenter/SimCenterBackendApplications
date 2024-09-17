@@ -1,4 +1,4 @@
-import argparse  # noqa: CPY001, D100, INP001
+import argparse  # noqa: INP001, D100
 import json
 
 
@@ -13,7 +13,7 @@ def directionToDof(direction):  # noqa: N802
     """Converts direction to degree of freedom"""  # noqa: D400, D401
     directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
 
-    return directioMap[direction]
+    return directioMap[direction]  # noqa: DOC201, RUF100
 
 
 def addFloorForceToEvent(patternsArray, force, direction, floor):  # noqa: ARG001, N802, N803
@@ -57,7 +57,7 @@ def writeEVENT(forces, eventFilePath):  # noqa: N802, N803
 
 
 def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
-    with open(BIMFilePath) as BIMFile:  # noqa: N806, PLW1514, PTH123
+    with open(BIMFilePath) as BIMFile:  # noqa: PTH123, N806
         bim = json.load(BIMFile)
 
     return int(bim['GeneralInformation']['stories'])

@@ -1,11 +1,11 @@
-import glob  # noqa: CPY001, D100, INP001
+import glob  # noqa: INP001, D100
 import json
 import math
 import os
-import pickle  # noqa: S403
+import pickle
 import random
 import shutil
-import subprocess  # noqa: S404
+import subprocess
 import sys
 import time
 import warnings
@@ -23,7 +23,7 @@ from scipy.stats import lognorm, norm
 
 
 class GpFromModel:  # noqa: D101
-    def __init__(  # noqa: C901, PLR0912, PLR0914, PLR0915
+    def __init__(  # noqa: C901, PLR0912, PLR0915
         self,
         work_dir,
         inputFile,  # noqa: N803
@@ -50,7 +50,7 @@ class GpFromModel:  # noqa: D101
         x_dim = 0
         y_dim = 0
         for rv in inp['randomVariables']:
-            rv_name = rv_name + [rv['name']]  # noqa: PLR6104, RUF005
+            rv_name = rv_name + [rv['name']]  # noqa: RUF005
             x_dim += 1
 
         if x_dim == 0:
@@ -59,11 +59,11 @@ class GpFromModel:  # noqa: D101
 
         for g in inp['EDP']:
             if g['length'] == 1:  # scalar
-                self.g_name = self.g_name + [g['name']]  # noqa: PLR6104, RUF005
+                self.g_name = self.g_name + [g['name']]  # noqa: RUF005
                 y_dim += 1
             else:  # vector
                 for nl in range(g['length']):
-                    self.g_name = self.g_name + ['{}_{}'.format(g['name'], nl + 1)]  # noqa: PLR6104, RUF005
+                    self.g_name = self.g_name + ['{}_{}'.format(g['name'], nl + 1)]  # noqa: RUF005
                     y_dim += 1
 
         if y_dim == 0:
@@ -89,13 +89,13 @@ class GpFromModel:  # noqa: D101
         if self.do_parallel:
             if self.run_type.lower() == 'runninglocal':
                 self.n_processor = os.cpu_count()
-                from multiprocessing import Pool  # noqa: PLC0415
+                from multiprocessing import Pool
 
                 self.pool = Pool(2)
             else:
                 # Always
-                from mpi4py import MPI  # noqa: PLC0415
-                from mpi4py.futures import MPIPoolExecutor  # noqa: PLC0415
+                from mpi4py import MPI
+                from mpi4py.futures import MPIPoolExecutor
 
                 self.world = MPI.COMM_WORLD
                 self.pool = MPIPoolExecutor()
@@ -407,7 +407,7 @@ class GpFromModel:  # noqa: D101
                 # Y_test, self.id_sim = FEM_batch(X_tmp[0, :][np.newaxis], self.id_sim)
                 # TODO : Fix this  # noqa: TD002
                 print(X_tmp[0, :][np.newaxis].shape)  # noqa: T201
-                X_test, Y_test, self.id_sim = FEM_batch(  # noqa: F841, N806
+                X_test, Y_test, self.id_sim = FEM_batch(  # noqa: N806
                     X_tmp[0, :][np.newaxis], self.id_sim
                 )
                 if (
@@ -513,7 +513,7 @@ class GpFromModel:  # noqa: D101
                         os.chmod(file, mode)  # noqa: PTH101
 
                 while is_left:
-                    idx = idx + 1  # noqa: PLR6104
+                    idx = idx + 1
                     try:
                         if os.path.exists(  # noqa: PTH110
                             f'{work_dir}/workdir.{idx}/{workflowDriver}'
@@ -624,13 +624,13 @@ class GpFromModel:  # noqa: D101
             kr = GPy.kern.Matern52(input_dim=x_dim, ARD=True)
 
         if do_linear:
-            kr = kr + GPy.kern.Linear(input_dim=x_dim, ARD=True)  # noqa: PLR6104
+            kr = kr + GPy.kern.Linear(input_dim=x_dim, ARD=True)
 
         if not self.do_mf:
             kg = kr
             self.m_list = list()  # noqa: C408
             for i in range(y_dim):
-                self.m_list = self.m_list + [  # noqa: PLR6104, RUF005
+                self.m_list = self.m_list + [  # noqa: RUF005
                     GPy.models.GPRegression(
                         X,
                         Y[:, i][np.newaxis].transpose(),
@@ -670,7 +670,7 @@ class GpFromModel:  # noqa: D101
 
             self.m_list = list()  # noqa: C408
             for i in range(y_dim):  # noqa: B007
-                self.m_list = self.m_list + [  # noqa: PLR6104, RUF005
+                self.m_list = self.m_list + [  # noqa: RUF005
                     GPyMultiOutputWrapper(
                         emf.models.GPyLinearMultiFidelityModel(
                             X_list, Y_list, kernel=kgs.copy(), n_fidelities=2
@@ -716,7 +716,7 @@ class GpFromModel:  # noqa: D101
                 do_cal = False
 
             t_tmp = time.time()
-            [x_new, self.m_list, err, idx, Y_cv, Y_cv_var] = (  # noqa: F841, N806
+            [x_new, self.m_list, err, idx, Y_cv, Y_cv_var] = (  # noqa: N806
                 self.__design_of_experiments(
                     X,
                     Y,
@@ -754,7 +754,7 @@ class GpFromModel:  # noqa: D101
             if self.do_predictive:
                 Yt_pred = np.zeros((n_pred, y_dim))  # noqa: N806
                 for ny in range(y_dim):
-                    y_pred_tmp, dummy = self.__predict(self.m_list[ny], Xt)  # noqa: F841
+                    y_pred_tmp, dummy = self.__predict(self.m_list[ny], Xt)
                     Yt_pred[:, ny] = y_pred_tmp.transpose()
                 if self.do_logtransform:
                     Yt_pred = np.exp(Yt_pred)  # noqa: N806
@@ -997,14 +997,14 @@ class GpFromModel:  # noqa: D101
         self.rvVal = []
         for nx in range(x_dim):
             rvInfo = inp['randomVariables'][nx]  # noqa: N806
-            self.rvName = self.rvName + [rvInfo['name']]  # noqa: PLR6104, RUF005
-            self.rvDist = self.rvDist + [rvInfo['distribution']]  # noqa: PLR6104, RUF005
+            self.rvName = self.rvName + [rvInfo['name']]  # noqa: RUF005
+            self.rvDist = self.rvDist + [rvInfo['distribution']]  # noqa: RUF005
             if do_sampling:
-                self.rvVal = self.rvVal + [  # noqa: PLR6104, RUF005
+                self.rvVal = self.rvVal + [  # noqa: RUF005
                     (rvInfo['upperbound'] + rvInfo['lowerbound']) / 2
                 ]
             else:
-                self.rvVal = self.rvVal + [np.mean(X[:, nx])]  # noqa: PLR6104, RUF005
+                self.rvVal = self.rvVal + [np.mean(X[:, nx])]  # noqa: RUF005
 
     def __parameter_calibration(self, m_tmp_list, x_dim, nugget_opt):  # noqa: ARG002, C901
         warnings.filterwarnings('ignore')
@@ -1012,7 +1012,7 @@ class GpFromModel:  # noqa: D101
         t_opt = time.time()
         m_list = list()  # noqa: C408
 
-        for ny in range(self.y_dim):  # noqa: PLR1702
+        for ny in range(self.y_dim):
             print(f'y dimension {ny}:')  # noqa: T201
             nopt = 10
 
@@ -1155,7 +1155,7 @@ class GpFromModel:  # noqa: D101
                         msg = f'Error GP optimization failed for QoI #{ny + 1}'
                         self.errlog.exit(msg)
 
-                m_list = m_list + [m]  # noqa: PLR6104, RUF005
+                m_list = m_list + [m]  # noqa: RUF005
                 print(m)  # noqa: T201
             else:
                 if nugget_opt_tmp == 'Optimize':
@@ -1207,7 +1207,7 @@ class GpFromModel:  # noqa: D101
 
         return m_tmp_list
 
-    def __design_of_experiments(  # noqa: C901, PLR0914, PLR0915
+    def __design_of_experiments(  # noqa: C901, PLR0915
         self,
         X,  # noqa: N803
         Y,  # noqa: N803
@@ -1401,7 +1401,7 @@ class GpFromModel:  # noqa: D101
             if num_1rank < self.cal_interval:
                 prob = np.ones((nc1,))
                 prob[list(rankid == 1)] = 0
-                prob = prob / sum(prob)  # noqa: PLR6104
+                prob = prob / sum(prob)
                 idx_pareto = idx_1rank + list(
                     np.random.choice(nc1, self.cal_interval - num_1rank, p=prob)
                 )
@@ -1434,7 +1434,7 @@ class GpFromModel:  # noqa: D101
 
                     best_local = np.argsort(-np.squeeze(score_tmp))[0]
                     best_global = idx_pareto_candi[best_local]
-                    idx_pareto_new = idx_pareto_new + [best_global]  # noqa: PLR6104, RUF005
+                    idx_pareto_new = idx_pareto_new + [best_global]  # noqa: RUF005
                     del idx_pareto_candi[best_local]
 
                     # score_tmp = Yq_var * cri2[idx_pareto_left]/Y_pred_var[closest_node(xc1[i, :], X, self.m_list, self.xrange)]
@@ -1525,7 +1525,7 @@ class GpFromModel:  # noqa: D101
                     phiqr = pow(phiq[:, y_idx], r)
                     IMSEc1 = np.zeros(nc1)  # noqa: N806
                     for i in range(nc1):
-                        IMSEc1[i], dummy = imse(  # noqa: F841
+                        IMSEc1[i], dummy = imse(
                             m_stack.copy(), xc1[i, :][np.newaxis], xq, phiqr, i
                         )
                     print(  # noqa: T201
@@ -1692,7 +1692,7 @@ class GpFromModel:  # noqa: D101
 
         return update_point, m_list, update_IMSE, y_idx, Y_pred, Y_pred_var
 
-    def __normalized_mean_sq_error(self, yp, ye):  # noqa: PLR6301
+    def __normalized_mean_sq_error(self, yp, ye):
         nt = yp.shape[0]
         data_bound = np.max(ye, axis=0) - np.min(ye, axis=0)
         RMSE = np.sqrt(1 / nt * np.sum(pow(yp - ye, 2), axis=0))  # noqa: N806
@@ -1714,14 +1714,14 @@ class GpFromModel:  # noqa: D101
         dist_2 = np.einsum('ij,ij->i', deltas_norm, deltas_norm)
         return np.argmin(dist_2)
 
-    def __from_XY_into_list(self, X, Y):  # noqa: N802, N803, PLR6301
+    def __from_XY_into_list(self, X, Y):  # noqa: N802, N803
         x_list = list()  # noqa: C408
         y_list = list()  # noqa: C408
         for i in range(Y.shape[1]):
-            x_list = x_list + [  # noqa: PLR6104, RUF005
+            x_list = x_list + [  # noqa: RUF005
                 X,
             ]
-            y_list = y_list + [  # noqa: PLR6104, RUF005
+            y_list = y_list + [  # noqa: RUF005
                 Y[
                     :,
                     [
@@ -1832,7 +1832,7 @@ class GpFromModel:  # noqa: D101
                 self.world.Abort(0)  # to prevent deadlock
 
     def save_model(self, filename):  # noqa: C901, D102, PLR0915
-        import json  # noqa: PLC0415
+        import json
 
         with open(self.work_dir + '/' + filename + '.pkl', 'wb') as file:  # noqa: PTH123
             pickle.dump(self.m_list, file)
@@ -2053,7 +2053,7 @@ class GpFromModel:  # noqa: D101
             rvs['name'] = self.rvName[nx]
             rvs['distribution'] = self.rvDist[nx]
             rvs['value'] = self.rvVal[nx]
-            rv_list = rv_list + [rvs]  # noqa: PLR6104, RUF005
+            rv_list = rv_list + [rvs]  # noqa: RUF005
         results['randomVariables'] = rv_list
 
         # Used for surrogate
@@ -2067,10 +2067,10 @@ class GpFromModel:  # noqa: D101
                         eval('self.m_list[ny].' + parname)  # noqa: S307
                     )
 
-        with open(self.work_dir + '/dakota.out', 'w') as fp:  # noqa: PLW1514, PTH123
+        with open(self.work_dir + '/dakota.out', 'w') as fp:  # noqa: PTH123
             json.dump(results, fp, indent=1)
 
-        with open(self.work_dir + '/GPresults.out', 'w') as file:  # noqa: PLR1702, PLW1514, PTH123
+        with open(self.work_dir + '/GPresults.out', 'w') as file:  # noqa: PTH123
             file.write('* Problem setting\n')
             file.write(f'  - dimension of x : {self.x_dim}\n')
             file.write(f'  - dimension of y : {self.y_dim}\n')
@@ -2136,7 +2136,7 @@ class GpFromModel:  # noqa: D101
         print('Results Saved')  # noqa: T201
         return 0
 
-    def weights_node2(self, node, nodes, ls):  # noqa: D102, PLR6301
+    def weights_node2(self, node, nodes, ls):  # noqa: D102
         nodes = np.asarray(nodes)
         deltas = nodes - node
 
@@ -2174,7 +2174,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver):  # noqa: N802, N803, 
         errlog.exit(msg)
 
     # (2) write param.in file
-    outF = open(current_dir_i + '/params.in', 'w')  # noqa: N806, PLW1514, PTH123, SIM115
+    outF = open(current_dir_i + '/params.in', 'w')  # noqa: SIM115, PTH123, N806
 
     outF.write(f'{x_dim}\n')
     for i in range(x_dim):
@@ -2283,20 +2283,20 @@ def read_txt(text_dir, errlog):  # noqa: D103
         msg = 'Error: file does not exist: ' + text_dir
         errlog.exit(msg)
 
-    with open(text_dir) as f:  # noqa: PLW1514, PTH123
+    with open(text_dir) as f:  # noqa: PTH123
         # Iterate through the file until the table starts
         header_count = 0
         for line in f:
             if line.startswith('%'):
-                header_count = header_count + 1  # noqa: PLR6104
+                header_count = header_count + 1
                 print(line)  # noqa: T201
 
         # X = np.loadtxt(f, skiprows=header_count, delimiter=',')
         try:
-            with open(text_dir) as f:  # noqa: PLW1514, PLW2901, PTH123
+            with open(text_dir) as f:  # noqa: PTH123, PLW2901
                 X = np.loadtxt(f, skiprows=header_count)  # noqa: N806
         except ValueError:
-            with open(text_dir) as f:  # noqa: PLW1514, PLW2901, PTH123
+            with open(text_dir) as f:  # noqa: PTH123, PLW2901
                 try:
                     X = np.genfromtxt(f, skip_header=header_count, delimiter=',')  # noqa: N806
                     # if there are extra delimiter, remove nan
@@ -2330,7 +2330,7 @@ def imse(m_tmp, xcandi, xq, phiqr, i):  # noqa: D103
     X_tmp = np.vstack([X, xcandi])  # noqa: N806
     Y_tmp = np.zeros((Y.shape[0] + 1, Y.shape[1]))  # any variables  # noqa: N806
     m_tmp.set_XY(X=X_tmp, Y=Y_tmp)
-    dummy, Yq_var = m_tmp.predict(xq)  # noqa: F841, N806
+    dummy, Yq_var = m_tmp.predict(xq)  # noqa: N806
     IMSEc1 = 1 / xq.shape[0] * sum(phiqr.flatten() * Yq_var.flatten())  # noqa: N806
 
     return IMSEc1, i
@@ -2341,7 +2341,7 @@ def imse(m_tmp, xcandi, xq, phiqr, i):  # noqa: D103
 
 class errorLog_in_pool:  # noqa: D101
     def __init__(self, work_dir):
-        self.file = open(f'{work_dir}/dakota.err', 'w')  # noqa: PLW1514, PTH123, SIM115
+        self.file = open(f'{work_dir}/dakota.err', 'w')  # noqa: SIM115, PTH123
 
     def write(self, msg):  # noqa: D102
         print(msg)  # noqa: T201
@@ -2359,7 +2359,7 @@ def build_surrogate(work_dir, inputFile, workflowDriver, os_type, run_type):  # 
     filename = 'SimGpModel'
 
     print('FILE: ' + work_dir + '/templatedir/' + inputFile)  # noqa: T201
-    f = open(work_dir + '/templatedir/' + inputFile)  # noqa: PLW1514, PTH123, SIM115
+    f = open(work_dir + '/templatedir/' + inputFile)  # noqa: SIM115, PTH123
     try:
         inp = json.load(f)
     except ValueError:

@@ -80,7 +80,7 @@ def runBrails(  # noqa: N802, D103
             location = fpSrc
             fpSrc = 'osm'  # noqa: N806
             fpUserSpecified = True  # noqa: N806
-        elif locationStr == '':  # noqa: PLC1901
+        elif locationStr == '':
             location = (longMin, latMin, longMax, latMax)
             fpUserSpecified = False  # noqa: N806
         else:
@@ -91,7 +91,7 @@ def runBrails(  # noqa: N802, D103
         if outputDataType == 'raw':
             if not fpUserSpecified:
                 # Run FootprintHandler to generate the boundary polygon for the entered location:
-                if locationStr == '':  # noqa: PLC1901
+                if locationStr == '':
                     (
                         bpoly,
                         _,

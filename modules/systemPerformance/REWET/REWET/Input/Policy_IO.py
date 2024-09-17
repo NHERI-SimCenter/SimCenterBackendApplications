@@ -3,7 +3,7 @@
 This is the Restoration Policy Reader/Writtter Module.
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, INP001
+"""  # noqa: INP001, D400
 
 import logging
 from collections import OrderedDict
@@ -24,7 +24,7 @@ def _split_line(line):
         pass
     elif len(_vc) == 1:
         _vals = _vc[0].split()
-    elif _vc[0] == '':  # noqa: PLC1901
+    elif _vc[0] == '':
         _cmnt = _vc[1]
     else:
         _vals = _vc[0].split()
@@ -67,7 +67,7 @@ class RestorationIO:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D400
+        """  # noqa: D400, DOC202, RUF100
         # some of the following lines have been adopted from WNTR
         self.rm = restoration_data()
 
@@ -115,14 +115,14 @@ class RestorationIO:  # noqa: D101
                         section = sec
                         continue
                     else:  # noqa: RET507
-                        raise RuntimeError(  # noqa: DOC501
+                        raise RuntimeError(
                             '%(fname)s:%(lnum)d: Invalid section "%(sec)s"' % edata
                         )
                 elif section is None and line.startswith(';'):
                     self.config_file_comment.append(line[1:])
                     continue
                 elif section is None:
-                    raise RuntimeError(  # noqa: DOC501
+                    raise RuntimeError(
                         '%(fname)s:%(lnum)d: Non-comment outside of valid section!'
                         % edata
                     )
@@ -148,7 +148,7 @@ class RestorationIO:  # noqa: D101
         self._file_handle_address = {}
         for lnum, line in self.sections['[FILES]']:
             edata['lnum'] = lnum
-            words, comments = _split_line(line)  # noqa: F841
+            words, comments = _split_line(line)
             if words is not None and len(words) > 0:
                 if len(words) != 2:  # noqa: PLR2004
                     edata['key'] = words[0]
@@ -169,7 +169,7 @@ class RestorationIO:  # noqa: D101
         lnum = 0
         iTitle = True  # noqa: N806
         data_temp = None
-        if method == 0:  # noqa: PLR1702
+        if method == 0:
             try:
                 raise  # noqa: PLE0704
                 with open(file_address, encoding='utf-8') as f:  # noqa: PTH123
@@ -201,7 +201,7 @@ class RestorationIO:  # noqa: D101
     def _read_shifts(self):
         for lnum, line in self.sections['[SHIFTS]']:  # noqa: B007
             # edata['lnum'] = lnum
-            words, comments = _split_line(line)  # noqa: F841
+            words, comments = _split_line(line)
             if words is not None and len(words) > 0:
                 if len(words) != 3:  # noqa: PLR2004
                     raise RuntimeError(  # noqa: TRY003
@@ -230,7 +230,7 @@ class RestorationIO:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D205, D401
+        """  # noqa: D205, D401, DOC202, RUF100
         # Entities is kept for legacy compatibility with the first version
         damage_group_data = self.sections.get(
             '[ENTITIES]', self.sections.get('[Damage Group]')
@@ -239,7 +239,7 @@ class RestorationIO:  # noqa: D101
         for lnum, line in damage_group_data:
             arg1 = None
             arg2 = None
-            words, comments = _split_line(line)  # noqa: F841
+            words, comments = _split_line(line)
             if words is not None and len(words) > 0:
                 if len(words) != 2 and len(words) != 4:  # noqa: PLR2004
                     raise RuntimeError(  # noqa: TRY003
@@ -297,11 +297,11 @@ class RestorationIO:  # noqa: D101
                                     + repr(lnum)
                                 )
                             )
-                        if split_arg[0] == '':  # noqa: PLC1901
+                        if split_arg[0] == '':
                             raise ValueError(
                                 'The first part is Empty in line ' + repr(lnum)
                             )
-                        if split_arg[1] == '':  # noqa: PLC1901
+                        if split_arg[1] == '':
                             raise ValueError(
                                 'The second part is Empty in line ' + repr(lnum)
                             )
@@ -337,7 +337,7 @@ class RestorationIO:  # noqa: D101
     def _read_sequences(self):
         # sina: there is a part that you need to add in restroation init
         for lnum, line in self.sections['[SEQUENCES]']:  # noqa: B007
-            words, comments = _split_line(line)  # noqa: F841
+            words, comments = _split_line(line)
             if words is not None and len(words) > 0:
                 # if len(words) != 2 or len(words)!=4:
                 # raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
@@ -363,7 +363,7 @@ class RestorationIO:  # noqa: D101
         crews_data = self.sections.get('[AGENTS]', self.sections.get('CREWS'))
         for lnum, line in crews_data:  # noqa: B007
             # edata['lnum'] = lnum
-            words, comments = _split_line(line)  # noqa: F841
+            words, comments = _split_line(line)
             if words is not None and len(words) > 0:
                 _group_name = None
                 _group_column = None
@@ -427,7 +427,7 @@ class RestorationIO:  # noqa: D101
 
     def _read_groups(self):
         for lnum, line in self.sections['[GROUPS]']:
-            words, comments = _split_line(line)  # noqa: F841
+            words, comments = _split_line(line)
 
             if words is not None and len(words) > 0:
                 if not len(words) >= 6:  # noqa: PLR2004
@@ -483,7 +483,7 @@ class RestorationIO:  # noqa: D101
 
     def _read_priorities(self):  # noqa: C901
         for lnum, line in self.sections['[PRIORITIES]']:
-            words, comments = _split_line(line)  # noqa: F841
+            words, comments = _split_line(line)
 
             if words is not None and len(words) > 0:
                 if not len(words) >= 3:  # noqa: PLR2004
@@ -527,14 +527,14 @@ class RestorationIO:  # noqa: D101
                             )
                     else:
                         arg.append(word)
-                        if word not in ['EPICENTERDIST', 'WaterSource']:  # noqa: PLR6201
+                        if word not in ['EPICENTERDIST', 'WaterSource']:
                             raise ValueError('Unnown value in line: ' + str(lnum))
 
                 self.rm.priority.append((agent_type, priority, arg))
 
     def _read_jobs(self):
         for lnum, line in self.sections['[JOBS]']:
-            words, comments = _split_line(line)  # noqa: F841
+            words, comments = _split_line(line)
 
             if words is not None and len(words) > 0:
                 if not len(words) >= 3:  # noqa: PLR2004
@@ -581,8 +581,8 @@ class RestorationIO:  # noqa: D101
         job = {}  # noqa: F841
 
         effect_data = self.sections.get('[DEFINE]', self.sections.get('[EFFECTS]'))
-        for lnum, line in effect_data:  # noqa: PLR1702
-            words, comments = _split_line(line)  # noqa: F841
+        for lnum, line in effect_data:
+            words, comments = _split_line(line)
             if words is not None and len(words) > 0:
                 # if not len(words) >= 3:
                 # raise ValueError('Not enough arguments. error in line: ' + str(lnum))

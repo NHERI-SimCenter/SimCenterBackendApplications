@@ -87,14 +87,14 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
         # Reading Terrain info (if provided)
         terrain_file = scenario_info.get('Terrain', None)
         if terrain_file:
-            with open(os.path.join(data_dir, terrain_file)) as f:  # noqa: PLW1514, PTH118, PTH123
+            with open(os.path.join(data_dir, terrain_file)) as f:  # noqa: PTH118, PTH123
                 terrain_data = json.load(f)
         else:
             terrain_data = []
         # Parsing storm properties
         param = []
         try:
-            param.append(scenario_info['Storm']['Landfall']['Latitude'])  # noqa: FURB113
+            param.append(scenario_info['Storm']['Landfall']['Latitude'])
             param.append(scenario_info['Storm']['Landfall']['Longitude'])
             param.append(scenario_info['Storm']['Landfall']['LandingAngle'])
             param.append(scenario_info['Storm']['Landfall']['Pressure'])
@@ -156,8 +156,8 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
             print('CreateScenario: error - no storm name or year is provided.')  # noqa: T201
         # Searching the storm
         try:
-            df_chs = df_hs[df_hs[('NAME', ' ')] == storm_name]
-            df_chs = df_chs[df_chs[('SEASON', 'Year')] == storm_year]
+            df_chs = df_hs[df_hs[('NAME', ' ')] == storm_name]  # noqa: RUF031, RUF100
+            df_chs = df_chs[df_chs[('SEASON', 'Year')] == storm_year]  # noqa: RUF031, RUF100
         except:  # noqa: E722
             print('CreateScenario: error - the storm is not found.')  # noqa: T201
         if len(df_chs.values) == 0:
@@ -166,10 +166,10 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
         # Collecting storm properties
         track_lat = []
         track_lon = []
-        for x in df_chs[('USA_LAT', 'degrees_north')].values.tolist():  # noqa: PD011
+        for x in df_chs[('USA_LAT', 'degrees_north')].values.tolist():  # noqa: PD011, RUF031, RUF100
             if x != ' ':
                 track_lat.append(float(x))  # noqa: PERF401
-        for x in df_chs[('USA_LON', 'degrees_east')].values.tolist():  # noqa: PD011
+        for x in df_chs[('USA_LON', 'degrees_east')].values.tolist():  # noqa: PD011, RUF031, RUF100
             if x != ' ':
                 track_lon.append(float(x))  # noqa: PERF401
         # If the default option (USA_LAT and USA_LON) is not available, switching to LAT and LON
@@ -177,10 +177,10 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
             print(  # noqa: T201
                 'CreateScenario: warning - the USA_LAT and USA_LON are not available, switching to LAT and LON.'
             )
-            for x in df_chs[('LAT', 'degrees_north')].values.tolist():  # noqa: PD011
+            for x in df_chs[('LAT', 'degrees_north')].values.tolist():  # noqa: PD011, RUF031, RUF100
                 if x != ' ':
                     track_lat.append(float(x))  # noqa: PERF401
-            for x in df_chs[('LON', 'degrees_east')].values.tolist():  # noqa: PD011
+            for x in df_chs[('LON', 'degrees_east')].values.tolist():  # noqa: PD011, RUF031, RUF100
                 if x != ' ':
                     track_lon.append(float(x))  # noqa: PERF401
         if len(track_lat) == 0:
@@ -191,13 +191,13 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
         # Reading Terrain info (if provided)
         terrain_file = scenario_info.get('Terrain', None)
         if terrain_file:
-            with open(os.path.join(data_dir, terrain_file)) as f:  # noqa: PLW1514, PTH118, PTH123
+            with open(os.path.join(data_dir, terrain_file)) as f:  # noqa: PTH118, PTH123
                 terrain_data = json.load(f)
         else:
             terrain_data = []
         # Storm characteristics at the landfall
         dist2land = []
-        for x in df_chs[('DIST2LAND', 'km')]:
+        for x in df_chs[('DIST2LAND', 'km')]:  # noqa: RUF031, RUF100
             if x != ' ':
                 dist2land.append(x)  # noqa: PERF401
         if len(track_lat) == 0:
@@ -237,24 +237,24 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
             track_simu = track_lat
         # Reading data
         try:
-            landfall_lat = float(df_chs[('USA_LAT', 'degrees_north')].iloc[tmploc])
-            landfall_lon = float(df_chs[('USA_LON', 'degrees_east')].iloc[tmploc])
+            landfall_lat = float(df_chs[('USA_LAT', 'degrees_north')].iloc[tmploc])  # noqa: RUF031, RUF100
+            landfall_lon = float(df_chs[('USA_LON', 'degrees_east')].iloc[tmploc])  # noqa: RUF031, RUF100
         except:  # noqa: E722
             # If the default option (USA_LAT and USA_LON) is not available, switching to LAT and LON
-            landfall_lat = float(df_chs[('LAT', 'degrees_north')].iloc[tmploc])
-            landfall_lon = float(df_chs[('LON', 'degrees_east')].iloc[tmploc])
+            landfall_lat = float(df_chs[('LAT', 'degrees_north')].iloc[tmploc])  # noqa: RUF031, RUF100
+            landfall_lon = float(df_chs[('LON', 'degrees_east')].iloc[tmploc])  # noqa: RUF031, RUF100
         try:
-            landfall_ang = float(df_chs[('STORM_DIR', 'degrees')].iloc[tmploc])
+            landfall_ang = float(df_chs[('STORM_DIR', 'degrees')].iloc[tmploc])  # noqa: RUF031, RUF100
         except:  # noqa: E722
             print('CreateScenario: error - no landing angle is found.')  # noqa: T201
         if landfall_ang > 180.0:  # noqa: PLR2004
-            landfall_ang = landfall_ang - 360.0  # noqa: PLR6104
+            landfall_ang = landfall_ang - 360.0
         landfall_prs = (
             1013.0
             - np.min(
                 [
                     float(x)
-                    for x in df_chs[('USA_PRES', 'mb')]  # noqa: PD011
+                    for x in df_chs[('USA_PRES', 'mb')]  # noqa: PD011, RUF031, RUF100
                     .iloc[tmploc - 5 :]
                     .values.tolist()
                     if x != ' '
@@ -262,11 +262,11 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
             )
         )
         landfall_spd = (
-            float(df_chs[('STORM_SPEED', 'kts')].iloc[tmploc]) * 0.51444
+            float(df_chs[('STORM_SPEED', 'kts')].iloc[tmploc]) * 0.51444  # noqa: RUF031, RUF100
         )  # convert knots/s to km/s
         try:
             landfall_rad = (
-                float(df_chs[('USA_RMW', 'nmile')].iloc[tmploc]) * 1.60934
+                float(df_chs[('USA_RMW', 'nmile')].iloc[tmploc]) * 1.60934  # noqa: RUF031, RUF100
             )  # convert nmile to km
         except:  # noqa: E722
             # No available radius of maximum wind is found
@@ -274,7 +274,7 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
             try:
                 # If the default option (USA_RMW) is not available, switching to REUNION_RMW
                 landfall_rad = (
-                    float(df_chs[('REUNION_RMW', 'nmile')].iloc[tmploc]) * 1.60934
+                    float(df_chs[('REUNION_RMW', 'nmile')].iloc[tmploc]) * 1.60934  # noqa: RUF031, RUF100
                 )  # convert nmile to km
             except:  # noqa: E722
                 # No available radius of maximum wind is found

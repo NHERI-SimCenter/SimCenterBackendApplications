@@ -168,7 +168,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
             if not z0:
                 z0 = 0.01
         # return
-        return z0
+        return z0  # noqa: DOC201, RUF100
 
     def add_reference_terrain(self, terrain_info):
         """add_reference_terrainL specifying reference z0 values for a set of polygons
@@ -308,7 +308,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
         # fixing the last value
         self.beta_c[-1] = self.beta_c[-2]
 
-    def compute_wind_field(self):  # noqa: PLR0914
+    def compute_wind_field(self):
         """compute_wind_field: computing the peak wind speed (10-min gust duraiton)"""  # noqa: D400
         print('WindFieldSimulation: running linear analytical model.')  # noqa: T201
         # checking if all parameters are defined
@@ -424,14 +424,14 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
                 )
                 GAMMA = 1.0 / (2.0 * self.EDDY_VISCOCITY) * vg1[j, :] / self.r  # noqa: N806
                 ALPHA = np.array(  # noqa: N806
-                    list(starmap(complex, zip(np.real(ALPHA), np.imag(ALPHA))))
+                    [complex(x, y) for x, y in zip(np.real(ALPHA), np.imag(ALPHA))]
                 )
                 BETA = np.array(  # noqa: N806
-                    list(starmap(complex, zip(np.real(BETA), np.imag(BETA))))
+                    [complex(x, y) for x, y in zip(np.real(BETA), np.imag(BETA))]
                 )
                 XXX = -((ALPHA * BETA) ** 0.25)  # noqa: N806
                 YYY = -((ALPHA * BETA) ** 0.25)  # noqa: N806
-                PP_zero = np.array(list(starmap(complex, zip(XXX, YYY))))  # noqa: N806
+                PP_zero = np.array([complex(x, y) for x, y in zip(XXX, YYY)])  # noqa: N806
                 PP_one = -complex(1, 1) * (  # noqa: N806
                     (GAMMA + np.sqrt(ALPHA * BETA) - BB) ** 0.5
                 )
@@ -552,7 +552,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
             # wind speed components
             v1 = v
             for m in range(v.shape[2]):
-                v1[:, :, m] = v1[:, :, m] + vg1  # noqa: PLR6104
+                v1[:, :, m] = v1[:, :, m] + vg1
             U = (v1**2.0 + u**2.0) ** 0.5  # noqa: N806
 
             # mapping to staitons
@@ -583,9 +583,9 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
             for ii in range(len(self.zp)):
                 tmp = U[:, :, ii].tolist()
                 wind_speed = [tmp[jtag][ktag] for jtag, ktag in zip(jj, kk)]
-                station_umax[:, ii] = list(
-                    starmap(max, zip(wind_speed, station_umax[:, ii]))
-                )
+                station_umax[:, ii] = [
+                    max(x, y) for x, y in zip(wind_speed, station_umax[:, ii])
+                ]
 
         # copying results
         self.station['PWS']['height'] = self.zp
@@ -595,4 +595,4 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
     def get_station_data(self):
         """get_station_data: returning station data"""  # noqa: D400
         # return station dictionary
-        return self.station
+        return self.station  # noqa: DOC201, RUF100

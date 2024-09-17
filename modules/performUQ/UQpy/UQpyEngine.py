@@ -1,4 +1,4 @@
-# written: UQ team @ SimCenter  # noqa: CPY001, D100, INP001
+# written: UQ team @ SimCenter  # noqa: INP001, D100
 
 # import functions for Python 2.X support
 import sys
@@ -12,7 +12,7 @@ else:
 import os
 import platform
 import stat
-import subprocess  # noqa: S404
+import subprocess
 import sys
 
 import click
@@ -50,7 +50,7 @@ def main(workflowinput, workflowoutput, driverfile, runtype):  # noqa: ARG001, D
         ):
             osType = 'Linux'  # noqa: N806
         else:
-            driverfile = driverfile + '.bat'  # noqa: PLR6104
+            driverfile = driverfile + '.bat'
             osType = 'Windows'  # noqa: N806
     elif runtype == 'runningRemote':
         osType = 'Linux'  # noqa: N806

@@ -42,7 +42,7 @@ import importlib
 import json
 import os
 import shutil
-import subprocess  # noqa: S404
+import subprocess
 import sys
 import time
 
@@ -53,9 +53,9 @@ import psutil
 R2D = True
 
 
-def hazard_job(hazard_info):  # noqa: C901, D103, PLR0914, PLR0915
-    from CreateScenario import load_ruptures_openquake  # noqa: PLC0415
-    from GMSimulators import simulate_ground_motion  # noqa: PLC0415
+def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
+    from CreateScenario import load_ruptures_openquake
+    from GMSimulators import simulate_ground_motion
 
     try:
         # oq_flag = hazard_info['Scenario']['EqRupture']['Type'] in ['oqSourceXML']
@@ -99,6 +99,15 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0914, PLR0915
         event_info = hazard_info['Event']
         # When vector IM is used. The PGA/SA needs to be computed before PGV
         im_info = event_info['IntensityMeasure']
+        # To make the SA format consistent with R2D requirement
+        if im_info['Type'] == 'Vector' and 'SA' in im_info.keys():  # noqa: SIM118
+            periods = im_info['SA']['Periods']
+            periods = [float(i) for i in periods]
+            im_info['SA']['Periods'] = periods
+        if im_info['Type'] == 'SA':
+            periods = im_info['Periods']
+            periods = [float(i) for i in periods]
+            im_info['Periods'] = periods
         if im_info['Type'] == 'Vector' and 'PGV' in im_info.keys():  # noqa: SIM118
             PGV_info = im_info.pop('PGV')  # noqa: N806
             im_info.update({'PGV': PGV_info})
@@ -133,7 +142,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0914, PLR0915
                 sys.exit(
                     'HazardSimulation: errors in preparing the OpenQuake configuration file.'
                 )
-            if scenario_info['EqRupture']['Type'] in [  # noqa: PLR6201
+            if scenario_info['EqRupture']['Type'] in [
                 'OpenQuakeClassicalPSHA',
                 'OpenQuakeUserConfig',
                 'OpenQuakeClassicalPSHA-User',
@@ -149,7 +158,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0914, PLR0915
                 if oq_run_flag:
                     err_msg = 'HazardSimulation: OpenQuake Classical PSHA failed.'
                     if not new_db_sqlite3:
-                        err_msg = (  # noqa: PLR6104
+                        err_msg = (
                             err_msg
                             + ' Please see if there is leaked python threads in background still occupying {}.'.format(
                                 os.path.expanduser('~/oqdata/db.sqlite3')  # noqa: PTH111
@@ -265,7 +274,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0914, PLR0915
         else:
             num_gm_per_site = event_info['NumberPerSite']
         print('num_gm_per_site = ', num_gm_per_site)  # noqa: T201
-        if scenario_info['EqRupture']['Type'] not in [  # noqa: PLR6201
+        if scenario_info['EqRupture']['Type'] not in [
             'OpenQuakeClassicalPSHA',
             'OpenQuakeUserConfig',
             'OpenQuakeClassicalPSHA-User',
@@ -424,7 +433,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0914, PLR0915
     if 'GroundFailure' in hazard_info['Event'].keys():  # noqa: SIM118
         ground_failure_info = hazard_info['Event']['GroundFailure']
         if 'Liquefaction' in ground_failure_info.keys():  # noqa: SIM118
-            import liquefaction  # noqa: PLC0415
+            import liquefaction
 
             trigging_info = ground_failure_info['Liquefaction']['Triggering']
             trigging_model = getattr(liquefaction, trigging_info['Model'])(
@@ -470,6 +479,18 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0914, PLR0915
                     ln_im_mr, mag_maf, im_list
                 )
                 gf_im_list += settlement_info['Output']
+        if 'Landslide' in ground_failure_info.keys():  # noqa: SIM118
+            import landslide  # noqa: PLC0415, RUF100
+
+            if 'Landslide' in ground_failure_info['Landslide'].keys():  # noqa: SIM118
+                lsld_info = ground_failure_info['Landslide']['Landslide']
+                lsld_model = getattr(landslide, lsld_info['Model'])(
+                    lsld_info['Parameters'], stations
+                )
+                ln_im_mr, mag_maf, im_list = lsld_model.run(
+                    ln_im_mr, mag_maf, im_list
+                )
+                gf_im_list += lsld_info['Output']
 
     if event_info['SaveIM'] and ln_im_mr:
         print('HazardSimulation: saving simulated intensity measures.')  # noqa: T201
@@ -498,7 +519,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # read the hazard configuration file
-    with open(args.hazard_config) as f:  # noqa: PLW1514, PTH123
+    with open(args.hazard_config) as f:  # noqa: PTH123
         hazard_info = json.load(f)
 
     # directory (back compatibility here)
@@ -512,7 +533,7 @@ if __name__ == '__main__':
 
     # parse job type for set up environment and constants
     try:
-        opensha_flag = hazard_info['Scenario']['EqRupture']['Type'] in [  # noqa: PLR6201
+        opensha_flag = hazard_info['Scenario']['EqRupture']['Type'] in [
             'PointSource',
             'ERF',
         ]
@@ -536,20 +557,24 @@ if __name__ == '__main__':
     import socket
 
     if 'stampede2' not in socket.gethostname():
-        if importlib.util.find_spec('jpype') is None:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])  # noqa: S603
-        import jpype
-        from jpype.types import *  # noqa: F403
+        import GlobalVariable
 
-        memory_total = psutil.virtual_memory().total / (1024.0**3)
-        memory_request = int(memory_total * 0.75)
-        jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
-        try:
+        if GlobalVariable.JVM_started is False:
+            GlobalVariable.JVM_started = True
+            if importlib.util.find_spec('jpype') is None:
+                subprocess.check_call(  # noqa: S603
+                    [sys.executable, '-m', 'pip', 'install', 'JPype1']
+                )  # noqa: RUF100, S603
+            import jpype
+
+            # from jpype import imports
+            import jpype.imports
+            from jpype.types import *  # noqa: F403
+
+            memory_total = psutil.virtual_memory().total / (1024.0**3)
+            memory_request = int(memory_total * 0.75)
+            jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
             jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
-        except:  # noqa: E722
-            print(  # noqa: T201
-                f'StartJVM of ./lib/OpenSHA-1.5.2.jar with {memory_request} GB Memory fails. Try again after releasing some memory'
-            )
     if oq_flag:
         # clear up old db.sqlite3 if any
         if os.path.isfile(os.path.expanduser('~/oqdata/db.sqlite3')):  # noqa: PTH111, PTH113

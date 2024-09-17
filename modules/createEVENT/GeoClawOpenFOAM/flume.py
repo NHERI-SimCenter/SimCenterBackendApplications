@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -110,7 +110,7 @@ class flume:
         )  # Write bottom STL file
 
         # Return extreme values
-        return extremeval
+        return extremeval  # noqa: DOC201, RUF100
 
     #############################################################
     def flumedata(self, IpPTFile):  # noqa: N803
@@ -178,7 +178,7 @@ class flume:
         self.npt = np.delete(self.npt, noindexes, axis=0)
 
         # Return extreme values
-        return extremeval
+        return extremeval  # noqa: DOC201, RUF100
 
     ####################################################################
     def right(self):
@@ -352,7 +352,7 @@ class flume:
 
             # Get the triangles
             npt_temp = np.array([[0, 1, 2], [1, 3, 2]])
-            npt_temp = npt_temp + ii * ntri  # noqa: PLR6104
+            npt_temp = npt_temp + ii * ntri
 
             # Concatenate as necessary
             if ii == 0:
@@ -361,7 +361,7 @@ class flume:
                 self.npt_bottom = np.concatenate((self.npt_bottom, npt_temp), axis=0)
 
     #############################################################
-    def writeSTL(self, base_filename, npa, npt, path):  # noqa: N802, PLR6301
+    def writeSTL(self, base_filename, npa, npt, path):  # noqa: N802
         """Write the STL files for each patch
 
         Arguments:
@@ -378,19 +378,19 @@ class flume:
         cells = [('triangle', npt)]
         meshio.write_points_cells(filename, npa, cells)
         # Modify first and last line
-        with open(filename) as f:  # noqa: PLW1514, PTH123
+        with open(filename) as f:  # noqa: PTH123
             lines = f.readlines()
             lines[0] = 'solid ' + base_filename + '\n'
             lines[len(lines) - 1] = 'endsolid ' + base_filename + '\n'
         # Write the updated file
-        with open(filename, 'w') as f:  # noqa: PLW1514, PTH123
+        with open(filename, 'w') as f:  # noqa: PTH123
             f.writelines(lines)
         # Move the file to constant/triSurface folder
         newfilepath = os.path.join(path, 'constant', 'triSurface', filename)  # noqa: PTH118
         os.replace(filename, newfilepath)  # noqa: PTH105
 
     #############################################################
-    def extremedata(self, extreme, breadth):  # noqa: PLR6301
+    def extremedata(self, extreme, breadth):
         """Creates the STL files for the flume
 
         Arguments:
@@ -412,7 +412,7 @@ class flume:
         filename = 'temp_geometry.txt'
         if os.path.exists(filename):  # noqa: PTH110
             os.remove(filename)  # noqa: PTH107
-        tempfileID = open('temp_geometry.txt', 'w')  # noqa: N806, PLW1514, PTH123, SIM115
+        tempfileID = open('temp_geometry.txt', 'w')  # noqa: SIM115, PTH123, N806
 
         # Write the extreme values to the files
         tempfileID.write(
@@ -431,4 +431,4 @@ class flume:
         )
         tempfileID.close  # noqa: B018
 
-        return 0
+        return 0  # noqa: DOC201, RUF100

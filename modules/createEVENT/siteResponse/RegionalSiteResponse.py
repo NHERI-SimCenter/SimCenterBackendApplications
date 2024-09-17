@@ -42,7 +42,7 @@ import json
 import os
 import posixpath
 import shutil
-import subprocess  # noqa: S404
+import subprocess
 import sys
 from math import pi
 
@@ -80,13 +80,13 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
         unit_length = output_units.get('length', 'inch')
         f_length = globals().get(unit_length, None)
         if f_length is None:
-            raise ValueError(f'Specified length unit not recognized: {unit_length}')  # noqa: DOC501, EM102, TRY003
+            raise ValueError(f'Specified length unit not recognized: {unit_length}')  # noqa: EM102, TRY003
 
         # if no time unit is specified, 'sec' is assumed
         unit_time = output_units.get('time', 'sec')
         f_time = globals().get(unit_time, None)
         if f_time is None:
-            raise ValueError(f'Specified time unit not recognized: {unit_time}')  # noqa: DOC501, EM102, TRY003
+            raise ValueError(f'Specified time unit not recognized: {unit_time}')  # noqa: EM102, TRY003
 
         scale_factors = {}
 
@@ -99,7 +99,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
                 # get the scale factor to standard units
                 f_in = globals().get(input_unit, None)
                 if f_in is None:
-                    raise ValueError(  # noqa: DOC501, TRY003
+                    raise ValueError(  # noqa: TRY003
                         f'Input unit for event files not recognized: {input_unit}'  # noqa: EM102
                     )
 
@@ -109,7 +109,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
                         unit_type = base_unit_type
 
                 if unit_type is None:
-                    raise ValueError(f'Failed to identify unit type: {input_unit}')  # noqa: DOC501, EM102, TRY003
+                    raise ValueError(f'Failed to identify unit type: {input_unit}')  # noqa: EM102, TRY003
 
                 # the output unit depends on the unit type
                 if unit_type == 'acceleration':
@@ -122,7 +122,7 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
                     f_out = 1.0 / f_length
 
                 else:
-                    raise ValueError(  # noqa: DOC501, TRY003
+                    raise ValueError(  # noqa: TRY003
                         f'Unexpected unit type in workflow: {unit_type}'  # noqa: EM102
                     )
 
@@ -131,12 +131,12 @@ def get_scale_factors(input_units, output_units):  # noqa: C901
 
             scale_factors.update({input_name: f_scale})
 
-    return scale_factors
+    return scale_factors  # noqa: DOC201, RUF100
 
 
 def postProcess(evtName, input_units, f_scale_units):  # noqa: N802, N803, D103
     # if f_scale_units is None
-    if None in [input_units, f_scale_units]:  # noqa: PLR6201
+    if None in [input_units, f_scale_units]:
         f_scale = 1.0
     else:
         for cur_var in list(f_scale_units.keys()):
@@ -206,7 +206,7 @@ def postProcess(evtName, input_units, f_scale_units):  # noqa: N802, N803, D103
 
     dataToWrite = dict(Events=[evts])  # noqa: C408, N806
 
-    with open(evtName, 'w') as outfile:  # noqa: PLW1514, PTH123
+    with open(evtName, 'w') as outfile:  # noqa: PTH123
         json.dump(dataToWrite, outfile, indent=4)
 
     print('DONE postProcess')  # noqa: T201
@@ -227,7 +227,7 @@ def run_opensees(  # noqa: D103
 
     print('**************** run_opensees ****************')  # noqa: T201
     # load the model builder script
-    with open(BIM_file) as f:  # noqa: PLW1514, PTH123
+    with open(BIM_file) as f:  # noqa: PTH123
         BIM_in = json.load(f)  # noqa: N806
 
     model_params = BIM_in['GeneralInformation']
@@ -253,7 +253,7 @@ def run_opensees(  # noqa: D103
     else:
         get_records(BIM_file, EVENT_file, event_path)
         # load the event file
-        with open(EVENT_file) as f:  # noqa: PLW1514, PTH123
+        with open(EVENT_file) as f:  # noqa: PTH123
             EVENT_in_All = json.load(f)  # noqa: N806
             EVENT_in = EVENT_in_All['Events'][0]  # noqa: N806
 
@@ -311,10 +311,10 @@ def run_opensees(  # noqa: D103
 
 
 def get_records(BIM_file, EVENT_file, data_dir):  # noqa: N803, D103
-    with open(BIM_file) as f:  # noqa: PLW1514, PTH123
+    with open(BIM_file) as f:  # noqa: PTH123
         bim_file = json.load(f)
 
-    with open(EVENT_file) as f:  # noqa: PLW1514, PTH123
+    with open(EVENT_file) as f:  # noqa: PTH123
         event_file = json.load(f)
 
     event_id = event_file['Events'][0]['event_id']
@@ -333,14 +333,14 @@ def get_records(BIM_file, EVENT_file, data_dir):  # noqa: N803, D103
 
     event_file['Events'][0].update(load_record(event_id, data_dir, scale_factor))
 
-    with open(EVENT_file, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(EVENT_file, 'w') as f:  # noqa: PTH123
         json.dump(event_file, f, indent=2)
 
 
 def write_RV(BIM_file, EVENT_file, data_dir):  # noqa: N802, N803, D103
     # Copied from SimCenterEvent, write name of motions
 
-    with open(BIM_file) as f:  # noqa: PLW1514, PTH123
+    with open(BIM_file) as f:  # noqa: PTH123
         bim_data = json.load(f)
 
     event_file = {'randomVariables': [], 'Events': []}
@@ -397,7 +397,7 @@ def write_RV(BIM_file, EVENT_file, data_dir):  # noqa: N802, N803, D103
             load_record(events[0][0], data_dir, empty=len(events) > 1)
         )
 
-    with open(EVENT_file, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(EVENT_file, 'w') as f:  # noqa: PTH123
         json.dump(event_file, f, indent=2)
 
 
@@ -406,7 +406,7 @@ def load_record(fileName, data_dir, scale_factor=1.0, empty=False):  # noqa: FBT
 
     fileName = fileName.split('x')[0]  # noqa: N806
 
-    with open(posixpath.join(data_dir, f'{fileName}.json')) as f:  # noqa: PLW1514, PTH123
+    with open(posixpath.join(data_dir, f'{fileName}.json')) as f:  # noqa: PTH123
         event_data = json.load(f)
 
     event_dic = {
@@ -453,7 +453,7 @@ def build_model(model_params, numEvt):  # noqa: N803, D103
 
     numElems = len(Vs)  # noqa: N806
     # Config model
-    f = open('freefield_config.tcl', 'w')  # noqa: PLW1514, PTH123, SIM115
+    f = open('freefield_config.tcl', 'w')  # noqa: SIM115, PTH123
     f.write('# site response configuration file\n')
     f.write(f'set soilThick {thickness:.1f}\n')
     f.write(f'set numLayers {numElems:d}\n')
@@ -491,7 +491,7 @@ def build_model(model_params, numEvt):  # noqa: N803, D103
     f.close()
 
     # Create Material
-    f = open('freefield_material.tcl', 'w')  # noqa: PLW1514, PTH123, SIM115
+    f = open('freefield_material.tcl', 'w')  # noqa: SIM115, PTH123
 
     if model_params['Model'] in 'BA':
         # Borja and Amies 1994 J2 model
@@ -509,7 +509,7 @@ def build_model(model_params, numEvt):  # noqa: N803, D103
                     ii + 1, model_params['Su_rat'] * sig_v
                 )
             )
-            sig_v = sig_v + rhoSoil * gravityG * eleVsize  # noqa: PLR6104
+            sig_v = sig_v + rhoSoil * gravityG * eleVsize
             f.write(
                 'set h({:d}) {:.2f}\n'.format(ii + 1, shearG * model_params['h/G'])
             )
@@ -536,7 +536,7 @@ def build_model(model_params, numEvt):  # noqa: N803, D103
                     numElems - ii, model_params['Su_rat'] * sig_v
                 )
             )
-            sig_v = sig_v + rhoSoil * gravityG * eleVsize  # noqa: PLR6104
+            sig_v = sig_v + rhoSoil * gravityG * eleVsize
             f.write(
                 'set h({:d}) {:.2f}\n'.format(
                     numElems - ii, shearG * model_params['h/G']
@@ -628,7 +628,7 @@ def SVM(Vs30, depthToRock, VsRock, elementSize):  # noqa: N802, N803, D103
         thickness = z[len(Vs_cropped) - 1] + 0.5 * step_size
 
     if plotFlag:
-        import matplotlib.pyplot as plt  # noqa: PLC0415
+        import matplotlib.pyplot as plt
 
         fig = plt.figure()
         plt.plot(Vs, z, label='Vs profile')

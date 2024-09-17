@@ -1,4 +1,4 @@
-#!/usr/bin/env python3  # noqa: CPY001, D100, EXE001
+#!/usr/bin/env python3  # noqa: EXE001, D100
 
 import argparse
 import json
@@ -34,7 +34,7 @@ class FloorForces:  # noqa: D101
             # Read in forces.[out or evt] file and add to EVENT.json
             # now using intermediary forces.evt for output of preceding Python calcs,
             # prevents confusion with forces.out made by FEM tab
-            with open('forces.evt') as file:  # noqa: PLW1514, PTH123
+            with open('forces.evt') as file:  # noqa: PTH123
                 print('Reading forces from forces.evt to EVENT.json')  # noqa: T201
                 lines = file.readlines()
                 j = 0
@@ -59,7 +59,7 @@ class FloorForces:  # noqa: D101
                             self.X.append(float(clean_line[k]))
                             self.Y.append(0.0)
                             self.Z.append(0.0)
-                    j = j + 1  # noqa: PLR6104
+                    j = j + 1
 
                 # must not have empty lists for max and min
                 if len(self.X) == 0:
@@ -100,7 +100,7 @@ def directionToDof(direction):  # noqa: N802
     """Converts direction to degree of freedom"""  # noqa: D400, D401
     directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
 
-    return directioMap[direction]
+    return directioMap[direction]  # noqa: DOC201, RUF100
 
 
 def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):  # noqa: N802, N803

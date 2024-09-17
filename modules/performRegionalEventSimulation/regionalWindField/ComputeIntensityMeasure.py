@@ -41,7 +41,7 @@ import json
 import multiprocessing as mp
 import os
 import shutil
-import subprocess  # noqa: S404
+import subprocess
 import sys
 
 import numpy as np
@@ -162,7 +162,7 @@ def simulate_storm_cpp(  # noqa: C901, D103
 
         config = {'Scenario': scenario_info, 'Event': event_info}
         abs_path_config = os.path.abspath(os.path.join(input_dir, 'SimuConfig.json'))  # noqa: PTH100, PTH118
-        with open(abs_path_config, 'w') as f:  # noqa: PLW1514, PTH123
+        with open(abs_path_config, 'w') as f:  # noqa: PTH123
             json.dump(config, f)
         # site file
         abs_path_site = os.path.abspath(  # noqa: PTH100
@@ -233,7 +233,7 @@ def simulate_storm_cpp(  # noqa: C901, D103
                     }
                 ],
             }
-            with open(abs_path_terrain, 'w') as f:  # noqa: PLW1514, PTH123
+            with open(abs_path_terrain, 'w') as f:  # noqa: PTH123
                 json.dump(dict_dt, f, indent=2)
 
         # configuring perturbation
@@ -282,7 +282,7 @@ def simulate_storm_cpp(  # noqa: C901, D103
                 abs_path_pert = os.path.abspath(  # noqa: PTH100
                     os.path.join(input_dir, 'Perturbation' + str(j) + '.json')  # noqa: PTH118
                 )
-                with open(abs_path_pert, 'w') as f:  # noqa: PLW1514, PTH123
+                with open(abs_path_pert, 'w') as f:  # noqa: PTH123
                     json.dump(pert_dict, f)
                 print('dLatitude, dLongtitude, dAngle = ', delta_path)  # noqa: T201
                 print('dP, dv, dR = ', delta_feat)  # noqa: T201
@@ -378,7 +378,7 @@ def convert_wind_speed(event_info, simu_res):  # noqa: D103
         gust_duration = 3.0
     else:
         exposure = event_info['IntensityMeasure']['Exposure']
-        if exposure not in ['A', 'B', 'C', 'D']:  # noqa: PLR6201
+        if exposure not in ['A', 'B', 'C', 'D']:
             print('ComputeIntensityMeasure: the Exposure should be A, B, C, or D.')  # noqa: T201
             return -1
         gust_duration = event_info['IntensityMeasure']['GustDuration']
@@ -423,7 +423,7 @@ def convert_wind_speed(event_info, simu_res):  # noqa: D103
         # computing gradient-height wind speed
         pws_tmp = pws_raw * (zg / reference_height) ** (1.0 / alpha)
         # converting exposure
-        pws_tmp = pws_tmp * (reference_height / zg_t) ** (1.0 / alpha_t)  # noqa: PLR6104
+        pws_tmp = pws_tmp * (reference_height / zg_t) ** (1.0 / alpha_t)
         pws = pws_tmp * gust_factor_ESDU(gust_duration_simu, gust_duration)
         print(np.max(pws))  # noqa: T201
         # appending to pws_mr
@@ -448,7 +448,7 @@ def interp_wind_by_height(pws_ip, height_simu, height_ref):
         )
 
     # return
-    return pws_op
+    return pws_op  # noqa: DOC201, RUF100
 
 
 def gust_factor_ESDU(gd_c, gd_t):  # noqa: N802
@@ -475,7 +475,7 @@ def gust_factor_ESDU(gd_c, gd_t):  # noqa: N802
         gd_c, gd, gf, left=gf[0], right=gf[-1]
     )
     # return
-    return gf_t  # noqa: RET504
+    return gf_t  # noqa: DOC201, RET504, RUF100
 
 
 def export_pws(stations, pws, output_dir, filename='EventGrid.csv'):  # noqa: D103

@@ -1,4 +1,4 @@
-# import of modules  # noqa: CPY001, D100, INP001
+# import of modules  # noqa: INP001, D100
 import warnings
 
 import numpy as np
@@ -165,7 +165,7 @@ class ERADist:
                         scale=self.Par['b'] - self.Par['a'],
                     )
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Beta distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -174,7 +174,7 @@ class ERADist:
                     self.Par = {'n': int(val[0]), 'p': val[1]}
                     self.Dist = stats.binom(n=self.Par['n'], p=self.Par['p'])
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Binomial distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -183,7 +183,7 @@ class ERADist:
                     self.Par = {'k': np.around(val[0], 0)}
                     self.Dist = stats.chi2(df=self.Par['k'])
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Chi-Squared distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -192,7 +192,7 @@ class ERADist:
                     self.Par = {'lambda': val[0]}
                     self.Dist = stats.expon(scale=1 / self.Par['lambda'])
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Exponential distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -205,7 +205,7 @@ class ERADist:
                         loc=self.Par['a_n'],
                     )
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Frechet distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -216,7 +216,7 @@ class ERADist:
                         a=self.Par['k'], scale=1 / self.Par['lambda']
                     )
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Gamma distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -226,7 +226,7 @@ class ERADist:
                     self.Par = {'p': val}
                     self.Dist = stats.geom(p=self.Par['p'])
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Geometric distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -239,7 +239,7 @@ class ERADist:
                         loc=self.Par['epsilon'],
                     )
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Generalized Extreme Value gistribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -252,7 +252,7 @@ class ERADist:
                         loc=-self.Par['epsilon'],
                     )
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Generalized Extreme Value distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -263,7 +263,7 @@ class ERADist:
                         scale=self.Par['a_n'], loc=self.Par['b_n']
                     )
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Gumbel distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -274,7 +274,7 @@ class ERADist:
                         scale=self.Par['a_n'], loc=self.Par['b_n']
                     )
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Gumbel distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -285,7 +285,7 @@ class ERADist:
                         s=self.Par['sig_lnx'], scale=np.exp(self.Par['mu_lnx'])
                     )
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Lognormal distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -299,7 +299,7 @@ class ERADist:
                     self.Par = {'k': val[0], 'p': val[1]}
                     self.Dist = stats.nbinom(n=self.Par['k'], p=self.Par['p'])
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Negative Binomial distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -310,7 +310,7 @@ class ERADist:
                         loc=self.Par['mu'], scale=self.Par['sigma']
                     )
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Normal distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -323,7 +323,7 @@ class ERADist:
                         loc=self.Par['x_m'],
                     )
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Pareto distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -334,7 +334,7 @@ class ERADist:
                         self.Par = {'lambda': val[0]}
                         self.Dist = stats.poisson(mu=self.Par['lambda'])
                     else:
-                        raise RuntimeError(  # noqa: DOC501, TRY003
+                        raise RuntimeError(  # noqa: TRY003
                             'The Poisson distribution is not defined for your parameters.'  # noqa: EM101
                         )
 
@@ -343,7 +343,7 @@ class ERADist:
                         self.Par = {'v': val[0], 't': val[1]}
                         self.Dist = stats.poisson(mu=self.Par['v'] * self.Par['t'])
                     else:
-                        raise RuntimeError(  # noqa: DOC501, TRY003
+                        raise RuntimeError(  # noqa: TRY003
                             'The Poisson distribution is not defined for your parameters.'  # noqa: EM101
                         )
 
@@ -353,7 +353,7 @@ class ERADist:
                     self.Par = {'alpha': alpha}
                     self.Dist = stats.rayleigh(scale=self.Par['alpha'])
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Rayleigh distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -365,11 +365,11 @@ class ERADist:
 
             elif name.lower() == 'truncatednormal':
                 if val[2] >= val[3]:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The upper bound a must be larger than the lower bound b.'  # noqa: EM101
                     )
                 if val[1] < 0:
-                    raise RuntimeError('sigma must be larger than 0.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('sigma must be larger than 0.')  # noqa: EM101, TRY003
                 self.Par = {
                     'mu_n': val[0],
                     'sig_n': val[1],
@@ -390,7 +390,7 @@ class ERADist:
                         scale=self.Par['upper'] - self.Par['lower'],
                     )
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Uniform distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
@@ -401,12 +401,12 @@ class ERADist:
                         c=self.Par['k'], scale=self.Par['a_n']
                     )
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The Weibull distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
             else:
-                raise RuntimeError("Distribution type '" + name + "' not available.")  # noqa: DOC501
+                raise RuntimeError("Distribution type '" + name + "' not available.")
 
         # ----------------------------------------------------------------------------
         # if the distribution is defined by its moments
@@ -414,11 +414,11 @@ class ERADist:
             val = np.array(val, ndmin=1, dtype=float)
 
             if val.size > 1 and val[1] < 0:
-                raise RuntimeError('The standard deviation must be non-negative.')  # noqa: DOC501, EM101, TRY003
+                raise RuntimeError('The standard deviation must be non-negative.')  # noqa: EM101, TRY003
 
             if name.lower() == 'beta':
                 if val[3] <= val[2]:
-                    raise RuntimeError('Please select an other support [a,b].')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('Please select an other support [a,b].')  # noqa: EM101, TRY003
                 r = (
                     ((val[3] - val[0]) * (val[0] - val[2]) / val[1] ** 2 - 1)
                     * (val[0] - val[2])
@@ -427,7 +427,7 @@ class ERADist:
                 s = r * (val[3] - val[0]) / (val[0] - val[2])
                 # Evaluate if distribution can be defined on the parameters
                 if r <= 0 and s <= 0:
-                    raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
                 self.Par = {'r': r, 's': s, 'a': val[2], 'b': val[3]}
                 self.Dist = stats.beta(
                     a=self.Par['r'],
@@ -444,30 +444,30 @@ class ERADist:
                 if n % 1 <= 10 ** (-4):
                     n = int(n)
                 else:
-                    raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
                 if p >= 0 and p <= 1 and n > 0:
                     self.Par = {'n': n, 'p': p}
                     self.Dist = stats.binom(n=self.Par['n'], p=self.Par['p'])
                 else:
-                    raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
 
             elif name.lower() == 'chisquare':
                 if val[0] > 0 and val[0] < np.inf and val[0] % 1 <= 10 ** (-4):
                     self.Par = {'k': np.around(val[0], 0)}
                     self.Dist = stats.chi2(df=self.Par['k'])
                 else:
-                    raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
 
             elif name.lower() == 'exponential':
                 try:
                     lam = 1 / val[0]
                 except ZeroDivisionError:
-                    raise RuntimeError('The first moment cannot be zero!')  # noqa: B904, DOC501, EM101, TRY003
+                    raise RuntimeError('The first moment cannot be zero!')  # noqa: B904, EM101, TRY003
                 if lam >= 0:
                     self.Par = {'lambda': lam}
                     self.Dist = stats.expon(scale=1 / self.Par['lambda'])
                 else:
-                    raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
 
             elif name.lower() == 'frechet':
                 par0 = 2.0001
@@ -487,7 +487,7 @@ class ERADist:
                     k = sol[0][0]
                     a_n = val[0] / special.gamma(1 - 1 / k)
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'fsolve could not converge to a solution, therefore'  # noqa: EM101
                         'the parameters of the Frechet distribution could not be determined.'
                     )
@@ -499,7 +499,7 @@ class ERADist:
                         loc=self.Par['a_n'],
                     )
                 else:
-                    raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
 
             elif name.lower() == 'gamma':
                 # Solve system of equations for the parameters
@@ -512,7 +512,7 @@ class ERADist:
                         a=self.Par['k'], scale=1 / self.Par['lambda']
                     )
                 else:
-                    raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
 
             elif name.lower() == 'geometric':
                 # Solve Equation for the parameter based on the first moment
@@ -521,7 +521,7 @@ class ERADist:
                     self.Par = {'p': p}
                     self.Dist = stats.geom(p=self.Par['p'])
                 else:
-                    raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
 
             elif name.lower() == 'gev':
                 beta = val[2]
@@ -530,7 +530,7 @@ class ERADist:
                     alpha = val[1] * np.sqrt(6) / np.pi  # scale parameter
                     epsilon = val[2] - np.euler_gamma * alpha  # location parameter
                 elif beta >= 0.5:  # noqa: PLR2004
-                    raise RuntimeError('MOM can only be used for beta < 0.5 .')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('MOM can only be used for beta < 0.5 .')  # noqa: EM101, TRY003
                 else:
                     alpha = (
                         abs(beta)
@@ -555,7 +555,7 @@ class ERADist:
                     alpha = val[1] * np.sqrt(6) / np.pi  # scale parameter
                     epsilon = val[2] + np.euler_gamma * alpha  # location parameter
                 elif beta >= 0.5:  # noqa: PLR2004
-                    raise RuntimeError('MOM can only be used for beta < 0.5 .')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('MOM can only be used for beta < 0.5 .')  # noqa: EM101, TRY003
                 else:
                     alpha = (
                         abs(beta)
@@ -583,7 +583,7 @@ class ERADist:
                         scale=self.Par['a_n'], loc=self.Par['b_n']
                     )
                 else:
-                    raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
 
             elif name.lower() == 'gumbelmin':
                 # solve two equations for the parameters of the distribution
@@ -595,11 +595,11 @@ class ERADist:
                         scale=self.Par['a_n'], loc=self.Par['b_n']
                     )
                 else:
-                    raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
 
             elif name.lower() == 'lognormal':
                 if val[0] <= 0:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'Please select other moments, the first moment must be greater than zero.'  # noqa: EM101
                     )
                 # solve two equations for the parameters of the distribution
@@ -621,9 +621,9 @@ class ERADist:
                         self.Par = {'k': k, 'p': p}
                         self.Dist = stats.nbinom(n=self.Par['k'], p=self.Par['p'])
                     else:
-                        raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                        raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
                 else:
-                    raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
 
             elif (name.lower() == 'normal') or (name.lower() == 'gaussian'):
                 self.Par = {'mu': val[0], 'sigma': val[1]}
@@ -640,7 +640,7 @@ class ERADist:
                         loc=self.Par['x_m'],
                     )
                 else:
-                    raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
 
             elif name.lower() == 'poisson':
                 n = len(val)
@@ -649,17 +649,17 @@ class ERADist:
                         self.Par = {'lambda': val[0]}
                         self.Dist = stats.poisson(mu=self.Par['lambda'])
                     else:
-                        raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                        raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
 
                 if n == 2:  # noqa: PLR2004
                     if val[0] > 0 and val[1] > 0:
                         v = val[0] / val[1]
                         if val[1] <= 0:
-                            raise RuntimeError('t must be positive.')  # noqa: DOC501, EM101, TRY003
+                            raise RuntimeError('t must be positive.')  # noqa: EM101, TRY003
                         self.Par = {'v': v, 't': val[1]}
                         self.Dist = stats.poisson(mu=self.Par['v'] * self.Par['t'])
                     else:
-                        raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                        raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
 
             elif name.lower() == 'rayleigh':
                 alpha = val[0] / np.sqrt(np.pi / 2)
@@ -667,7 +667,7 @@ class ERADist:
                     self.Par = {'alpha': alpha}
                     self.Dist = stats.rayleigh(scale=self.Par['alpha'])
                 else:
-                    raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
 
             elif (name.lower() == 'standardnormal') or (
                 name.lower() == 'standardgaussian'
@@ -677,11 +677,11 @@ class ERADist:
 
             elif name.lower() == 'truncatednormal':
                 if val[2] >= val[3]:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The upper bound a must be larger than the lower bound b.'  # noqa: EM101
                     )
                 if val[0] <= val[2] or val[0] >= val[3]:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The mean of the distribution must be within the interval [a,b].'  # noqa: EM101
                     )
 
@@ -727,7 +727,7 @@ class ERADist:
                         b=b_mod,
                     )
                 else:
-                    raise RuntimeError('fsolve did not converge.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('fsolve did not converge.')  # noqa: EM101, TRY003
 
             elif name.lower() == 'uniform':
                 # compute parameters
@@ -756,7 +756,7 @@ class ERADist:
                     k = sol[0][0]
                     a_n = val[0] / special.gamma(1 + 1 / k)
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'fsolve could not converge to a solution, therefore'  # noqa: EM101
                         'the parameters of the Weibull distribution could not be determined.'
                     )
@@ -766,17 +766,17 @@ class ERADist:
                         c=self.Par['k'], scale=self.Par['a_n']
                     )
                 else:
-                    raise RuntimeError('Please select other moments.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('Please select other moments.')  # noqa: EM101, TRY003
 
             else:
-                raise RuntimeError("Distribution type '" + name + "' not available.")  # noqa: DOC501
+                raise RuntimeError("Distribution type '" + name + "' not available.")
 
         # ----------------------------------------------------------------------------
         # if the distribution is to be fitted to a data vector
         elif opt.upper() == 'DATA':
             if name.lower() == 'beta':
                 if val[2] <= val[1]:
-                    raise RuntimeError('Please select a different support [a,b].')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('Please select a different support [a,b].')  # noqa: EM101, TRY003
                 if min(val[0]) >= val[1] and max(val[0]) <= val[2]:
                     pars = stats.beta.fit(
                         val[0], floc=val[1], fscale=val[2] - val[1]
@@ -789,7 +789,7 @@ class ERADist:
                         scale=self.Par['b'] - self.Par['a'],
                     )
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The given samples must be in the support range [a,b].'  # noqa: EM101
                     )
 
@@ -798,12 +798,12 @@ class ERADist:
                 if val[1] % 1 <= 10 ** (-4) and val[1] > 0:
                     val[1] = int(val[1])
                 else:
-                    raise RuntimeError('n must be a positive integer.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('n must be a positive integer.')  # noqa: EM101, TRY003
                 X = np.array(val[0])  # noqa: N806
                 if all((X) % 1 <= 10 ** (-4)) and all(X >= 0) and all(val[1] >= X):
                     X = np.around(X, 0)  # noqa: N806
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The given samples must be integers in the range [0,n].'  # noqa: EM101
                     )
                 val[0] = np.mean(val[0]) / val[1]
@@ -816,7 +816,7 @@ class ERADist:
                     self.Par = {'k': np.around(pars[0], 0)}
                     self.Dist = stats.chi2(df=self.Par['k'])
                 else:
-                    raise RuntimeError('The given samples must be non-negative.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('The given samples must be non-negative.')  # noqa: EM101, TRY003
 
             elif name.lower() == 'exponential':
                 if min(val) >= 0:
@@ -824,11 +824,11 @@ class ERADist:
                     self.Par = {'lambda': 1 / pars[1]}
                     self.Dist = stats.expon(scale=1 / self.Par['lambda'])
                 else:
-                    raise RuntimeError('The given samples must be non-negative.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('The given samples must be non-negative.')  # noqa: EM101, TRY003
 
             elif name.lower() == 'frechet':
                 if min(val) < 0:
-                    raise RuntimeError('The given samples must be non-negative.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('The given samples must be non-negative.')  # noqa: EM101, TRY003
 
                 def equation(par):
                     return -np.sum(
@@ -852,7 +852,7 @@ class ERADist:
                         loc=self.Par['a_n'],
                     )
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'Maximum likelihood estimation did not converge.'  # noqa: EM101
                     )
 
@@ -868,7 +868,7 @@ class ERADist:
                     self.Par = {'p': 1 / np.mean(val)}
                     self.Dist = stats.geom(p=self.Par['p'])
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The given samples must be integers larger than 0.'  # noqa: EM101
                     )
 
@@ -916,7 +916,7 @@ class ERADist:
                 p = np.mean(val) / (np.mean(val) + np.var(val))
                 k = np.mean(val) * p
                 if k == 0:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'No suitable parameters can be estimated from the given data.'  # noqa: EM101
                     )
                 k = round(
@@ -954,11 +954,11 @@ class ERADist:
                             loc=self.Par['x_m'],
                         )
                     else:
-                        raise RuntimeError(  # noqa: DOC501, TRY003
+                        raise RuntimeError(  # noqa: TRY003
                             'Maximum likelihood estimation did not converge.'  # noqa: EM101
                         )
                 else:
-                    raise RuntimeError('The given data must be positive.')  # noqa: DOC501, EM101, TRY003
+                    raise RuntimeError('The given data must be positive.')  # noqa: EM101, TRY003
 
             elif name.lower() == 'poisson':
                 n = len(val)
@@ -966,20 +966,20 @@ class ERADist:
                     X = val[0]  # noqa: N806
                     t = val[1]
                     if t <= 0:
-                        raise RuntimeError('t must be positive.')  # noqa: DOC501, EM101, TRY003
+                        raise RuntimeError('t must be positive.')  # noqa: EM101, TRY003
                     if all(X >= 0) and all(X % 1 == 0):
                         v = np.mean(X) / t
                         self.Par = {'v': v, 't': t}
                         self.Dist = stats.poisson(mu=self.Par['v'] * self.Par['t'])
                     else:
-                        raise RuntimeError(  # noqa: DOC501, TRY003
+                        raise RuntimeError(  # noqa: TRY003
                             'The given samples must be non-negative integers.'  # noqa: EM101
                         )
                 elif all(val >= 0) and all(val % 1 == 0):
                     self.Par = {'lambda': np.mean(val)}
                     self.Dist = stats.poisson(mu=self.Par['lambda'])
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The given samples must be non-negative integers.'  # noqa: EM101
                     )
 
@@ -991,11 +991,11 @@ class ERADist:
             elif name.lower() == 'truncatednormal':
                 X = val[0]  # noqa: N806
                 if val[1] >= val[2]:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The upper bound a must be larger than the lower bound b.'  # noqa: EM101
                     )
                 if not (all(val[1] <= X) and all(val[2] >= X)):
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'The given samples must be in the range [a,b].'  # noqa: EM101
                     )
 
@@ -1029,7 +1029,7 @@ class ERADist:
                         b=b_mod,
                     )
                 else:
-                    raise RuntimeError(  # noqa: DOC501, TRY003
+                    raise RuntimeError(  # noqa: TRY003
                         'Maximum likelihood estimation did not converge.'  # noqa: EM101
                     )
 
@@ -1046,10 +1046,10 @@ class ERADist:
                 self.Dist = stats.weibull_min(c=self.Par['k'], scale=self.Par['a_n'])
 
             else:
-                raise RuntimeError("Distribution type '" + name + "' not available.")  # noqa: DOC501
+                raise RuntimeError("Distribution type '" + name + "' not available.")
 
         else:
-            raise RuntimeError('Unknown option :' + opt)  # noqa: DOC501
+            raise RuntimeError('Unknown option :' + opt)
 
     # %%
     def mean(self):
@@ -1192,8 +1192,8 @@ def gevpwm(y):
     beta1 = p1 @ y2
     beta2 = p2 @ y2
 
-    beta1 = beta1 / len(y)  # noqa: PLR6104
-    beta2 = beta2 / len(y)  # noqa: PLR6104
+    beta1 = beta1 / len(y)
+    beta2 = beta2 / len(y)
 
     c = (2 * beta1 - beta0) / (3 * beta2 - beta0) - np.log(2) / np.log(3)
     par0 = -7.8590 * c - 2.9554 * c**2

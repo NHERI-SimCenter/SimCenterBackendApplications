@@ -1,7 +1,7 @@
 """Created on Tue Oct  4 16:07:24 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 import datetime
 

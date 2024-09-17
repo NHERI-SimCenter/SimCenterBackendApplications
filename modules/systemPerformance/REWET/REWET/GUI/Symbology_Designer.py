@@ -1,7 +1,7 @@
 """Created on Fri Jan  6 00:08:01 2023
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 import sys
 
@@ -115,7 +115,7 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: D101
         self.updateLegendSample()
 
     def updateLegendSample(self):  # noqa: N802, D102
-        fig, ax = plt.subplots()  # noqa: F841
+        fig, ax = plt.subplots()
         self.plotted_map.plot(
             ax=ax,
             cax=self.ax1,

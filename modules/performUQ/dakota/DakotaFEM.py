@@ -1,4 +1,4 @@
-import json  # noqa: CPY001, D100, INP001
+import json  # noqa: INP001, D100
 import os
 import sys
 
@@ -8,7 +8,7 @@ import argparse
 import platform
 import shutil
 import stat
-import subprocess  # noqa: S404
+import subprocess
 from random import randrange
 
 from preprocessJSON import preProcessDakota
@@ -19,9 +19,9 @@ def str2bool(v):  # noqa: D103
 
     if isinstance(v, bool):
         return v
-    if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):  # noqa: PLR6201
+    if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):
         return True
-    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):  # noqa: PLR6201, RET505
+    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):  # noqa: RET505
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')  # noqa: EM101, TRY003
@@ -34,11 +34,11 @@ def main(args):  # noqa: C901, D103
     if os.getenv('PEGASUS_WF_UUID') is not None:
         print('Pegasus job detected - Pegasus will set up the env')  # noqa: T201
     elif platform.system() == 'Darwin':
-        env['PATH'] = env['PATH'] + f':{home}/bin'  # noqa: PLR6104
-        env['PATH'] = env['PATH'] + f':{home}/dakota/bin'  # noqa: PLR6104
+        env['PATH'] = env['PATH'] + f':{home}/bin'
+        env['PATH'] = env['PATH'] + f':{home}/dakota/bin'
     elif platform.system() == 'Linux':
-        env['PATH'] = env['PATH'] + f':{home}/bin'  # noqa: PLR6104
-        env['PATH'] = env['PATH'] + f':{home}/dakota/dakota-6.5/bin'  # noqa: PLR6104
+        env['PATH'] = env['PATH'] + f':{home}/bin'
+        env['PATH'] = env['PATH'] + f':{home}/dakota/dakota-6.5/bin'
     elif platform.system() == 'Windows':
         pass
     else:
@@ -69,7 +69,7 @@ def main(args):  # noqa: C901, D103
     parser.add_argument('--detailedLog', default=False, type=str2bool)
     parser.add_argument('--runType')
 
-    args, unknowns = parser.parse_known_args()  # noqa: F841
+    args, unknowns = parser.parse_known_args()
 
     # Reading input arguments
     aimName = args.filenameAIM  # noqa: N806
@@ -101,7 +101,7 @@ def main(args):  # noqa: C901, D103
         if 'samplingMethodData' in uq_info.keys():  # noqa: SIM118
             uq_info = uq_info['samplingMethodData']
             for attribute in uqData:
-                if attribute not in ['concurrency', 'keepSamples']:  # noqa: PLR6201
+                if attribute not in ['concurrency', 'keepSamples']:
                     uqData[attribute] = uq_info.get(attribute, None)
 
     runDakota = args.runType  # noqa: N806

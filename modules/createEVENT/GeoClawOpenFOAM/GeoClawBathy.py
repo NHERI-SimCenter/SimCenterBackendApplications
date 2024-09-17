@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -50,7 +50,7 @@ class GeoClawBathy:
     """  # noqa: D205, D400, D404
 
     #############################################################
-    def creategeom(self, data, path):  # noqa: ARG002, PLR6301
+    def creategeom(self, data, path):  # noqa: ARG002
         """Creates the geometry for bathymetry
 
         Arguments:
@@ -61,4 +61,4 @@ class GeoClawBathy:
         # Create a utilities object
         hydroutil = hydroUtils()  # noqa: F841
 
-        return 0
+        return 0  # noqa: DOC201, RUF100

@@ -1,11 +1,11 @@
 """Created on Tue Jun  1 21:04:18 2021
 
 @author: snaeimi
-"""  # noqa: CPY001, D400
+"""  # noqa: D400
 
 import logging
 import os
-import pickle  # noqa: S403
+import pickle
 import time
 
 import Damage
@@ -24,7 +24,7 @@ logging.basicConfig(level=50)
 
 
 class Starter:  # noqa: D101
-    def createProjectFile(self, project_settings, damage_list, project_file_name):  # noqa: D102, N802, PLR6301
+    def createProjectFile(self, project_settings, damage_list, project_file_name):  # noqa: N802, D102
         project = Project(project_settings, damage_list)
         project_file_addr = os.path.join(  # noqa: PTH118
             project_settings.process['result_directory'], project_file_name
@@ -46,7 +46,7 @@ class Starter:  # noqa: D101
         -------
         None.
 
-        """  # noqa: D205, D401
+        """  # noqa: D205, D401, DOC202, RUF100
         settings = Settings()
         if project_file is not None:
             project_file = str(project_file)
@@ -253,7 +253,7 @@ class Starter:  # noqa: D101
         demand_node_name_list = []
         for junction_name, junction in wn.junctions():
             if junction.demand_timeseries_list[0].base_value > 0:
-                junction.demand_timeseries_list[0].base_value = (  # noqa: PLR6104
+                junction.demand_timeseries_list[0].base_value = (
                     junction.demand_timeseries_list[0].base_value
                     * settings.process['demand_ratio']
                 )
@@ -294,8 +294,8 @@ class Starter:  # noqa: D101
         return 1
 
     def run_mpi(self, settings):  # noqa: C901, D102
-        import mpi4py  # noqa: PLC0415
-        from mpi4py import MPI  # noqa: PLC0415
+        import mpi4py
+        from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
         mpi4py.rc.recv_mprobe = False
@@ -331,7 +331,7 @@ class Starter:  # noqa: D101
         else:
             file_name_list = []
 
-        if comm.rank == 0:  # noqa: PLR1702
+        if comm.rank == 0:
             time_jobs_saved = time.time()
             jobs = pd.DataFrame(
                 columns=[
@@ -582,7 +582,7 @@ class Starter:  # noqa: D101
                 flush=True,
             )
 
-    def checkArgument(self, argv):  # noqa: D102, N802, PLR6301
+    def checkArgument(self, argv):  # noqa: N802, D102
         if len(argv) > 2:  # noqa: PLR2004
             print('REWET USAGE is as [./REWET Project.prj: optional]')  # noqa: T201
         if len(argv) == 1:  # noqa: SIM103

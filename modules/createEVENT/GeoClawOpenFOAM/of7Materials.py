@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -65,7 +65,7 @@ class of7Materials:
         mattext = self.matheader()
 
         # Start by stating phases
-        mattext = mattext + 'phases (water air);\n\n'  # noqa: PLR6104
+        mattext = mattext + 'phases (water air);\n\n'
 
         # Water phase
         # Viscosity
@@ -83,13 +83,13 @@ class of7Materials:
             hydroutil.extract_element_from_json(data, ['Events', 'WaterDensity'])
         )
 
-        mattext = mattext + 'water\n{\n'  # noqa: PLR6104
-        mattext = mattext + '\ttransportModel\tNewtonian;\n'  # noqa: PLR6104
+        mattext = mattext + 'water\n{\n'
+        mattext = mattext + '\ttransportModel\tNewtonian;\n'
         mattext = (
             mattext + '\tnu\t[0 2 -1 0 0 0 0]\t' + nuwater + 'e' + nuwaterexp + ';\n'
         )
         mattext = mattext + '\trho\t[1 -3 0 0 0 0 0]\t' + rhowater + ';\n'
-        mattext = mattext + '}\n\n'  # noqa: PLR6104
+        mattext = mattext + '}\n\n'
 
         # Air properties
         # Viscosity
@@ -105,13 +105,13 @@ class of7Materials:
             hydroutil.extract_element_from_json(data, ['Events', 'AirDensity'])
         )
 
-        mattext = mattext + 'air\n{\n'  # noqa: PLR6104
-        mattext = mattext + '\ttransportModel\tNewtonian;\n'  # noqa: PLR6104
+        mattext = mattext + 'air\n{\n'
+        mattext = mattext + '\ttransportModel\tNewtonian;\n'
         mattext = (
             mattext + '\tnu\t[0 2 -1 0 0 0 0]\t' + nuair + 'e' + nuairexp + ';\n'
         )
         mattext = mattext + '\trho\t[1 -3 0 0 0 0 0]\t' + rhoair + ';\n'
-        mattext = mattext + '}\n\n'  # noqa: PLR6104
+        mattext = mattext + '}\n\n'
 
         # Surface tension between water and air
         sigma = ', '.join(
@@ -120,10 +120,10 @@ class of7Materials:
 
         mattext = mattext + 'sigma\t[1 0 -2 0 0 0 0]\t' + sigma + ';\n'
 
-        return mattext  # noqa: RET504
+        return mattext  # noqa: DOC201, RET504, RUF100
 
     #############################################################
-    def matheader(self):  # noqa: PLR6301
+    def matheader(self):
         """Creates the text for the header
 
         Variable
@@ -142,10 +142,10 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
         # Return the header for U file
-        return header  # noqa: RET504
+        return header  # noqa: DOC201, RET504, RUF100
 
     #############################################################
-    def matcheck(self, data):  # noqa: PLR6301
+    def matcheck(self, data):
         """Checks for material properties for openfoam7
 
         Arguments:
@@ -162,7 +162,7 @@ FoamFile
             data, ['Events', 'WaterViscosity']
         )
         if nuwater == [None]:
-            return -1
+            return -1  # noqa: DOC201, RUF100
         # Exponent
         nuwaterexp = hydroutil.extract_element_from_json(
             data, ['Events', 'WaterViscosityExp']

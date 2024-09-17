@@ -1,4 +1,4 @@
-import argparse  # noqa: CPY001, D100, INP001
+import argparse  # noqa: D100, INP001
 import importlib
 import json
 import os
@@ -8,7 +8,8 @@ import sys
 import warnings
 
 import geopandas as gpd
-import momepy
+
+# import momepy
 import numpy as np
 import pandas as pd
 import shapely
@@ -179,10 +180,10 @@ class lineAIMGenerator(generalAIMGenerator):  # noqa: D101
         # Convert find connectivity and add start_node, end_node attributes
         edges = self.gdf
         datacrs = edges.crs
-        graph = momepy.gdf_to_nx(edges.to_crs('epsg:6500'), approach='primal')
+        graph = momepy.gdf_to_nx(edges.to_crs('epsg:6500'), approach='primal')  # noqa: F821
         with warnings.catch_warnings():  # Suppress the warning of disconnected components in the graph
             warnings.simplefilter('ignore')
-            nodes, edges, sw = momepy.nx_to_gdf(  # noqa: F841
+            nodes, edges, sw = momepy.nx_to_gdf(  # noqa: F821
                 graph, points=True, lines=True, spatial_weights=True
             )
         # edges = edges.set_index('ind')
@@ -254,7 +255,7 @@ def split_and_select_components(input_config):  # noqa: C901, D103
             if filterString is None:
                 continue
             assets_requested = []
-            if filterString == '':  # noqa: PLC1901
+            if filterString == '':
                 assets_requested = np.array(assets_requested)
                 requested_dict.update({key: assets_requested})
                 component_dict.update({key: []})
@@ -280,7 +281,7 @@ def split_and_select_components(input_config):  # noqa: C901, D103
             if feat_id in requested_dict[component_type]:
                 feat['properties'].update({'id': feat_id})
                 component_dict[component_type].append(feat)
-    for component in component_dict:  # noqa: PLC0206
+    for component in component_dict:
         component_dict[component] = gpd.GeoDataFrame.from_features(
             component_dict[component], crs=crs['properties']['name']
         ).set_index('id')
@@ -313,7 +314,7 @@ def create_asset_files(output_file, asset_type, input_file, doParallel):  # noqa
         mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
-            from mpi4py import MPI  # noqa: PLC0415
+            from mpi4py import MPI
 
             runParallel = True  # noqa: N806
             comm = MPI.COMM_WORLD
@@ -338,7 +339,7 @@ def create_asset_files(output_file, asset_type, input_file, doParallel):  # noqa
     assets_array = []
     for component_type, component_data in component_dict.items():
         geom_type = type(component_data['geometry'].values[0])  # noqa: PD011
-        if geom_type in [shapely.Point, shapely.Polygon]:  # noqa: PLR6201
+        if geom_type in [shapely.Point, shapely.Polygon]:
             # if component_type in ["HwyBridge", "HwyTunnel"]:
             AIMgenerator = generalAIMGenerator(output_file)  # noqa: N806
             AIMgenerator.set_asset_gdf(component_data)
@@ -372,7 +373,7 @@ def create_asset_files(output_file, asset_type, input_file, doParallel):  # noqa
                         id=AIM_i['GeneralInformation']['AIM_id'], file=AIM_file_name
                     )
                 )
-            count = count + 1  # noqa: PLR6104
+            count = count + 1
     if procID != 0:
         # if not P0, write data to output file with procID in name and barrier
         output_file_p = os.path.join(outDir, f'tmp_{procID}.json')  # noqa: PTH118
@@ -385,7 +386,7 @@ def create_asset_files(output_file, asset_type, input_file, doParallel):  # noqa
             comm.Barrier()
             for i in range(1, numP):
                 fileToAppend = os.path.join(outDir, f'tmp_{i}.json')  # noqa: PTH118, N806
-                with open(fileToAppend, encoding='utf-8') as data_file:  # noqa: FURB101, PTH123
+                with open(fileToAppend, encoding='utf-8') as data_file:  # noqa: PTH123
                     json_data = data_file.read()
                 assetsToAppend = json.loads(json_data)  # noqa: N806
                 assets_array += assetsToAppend

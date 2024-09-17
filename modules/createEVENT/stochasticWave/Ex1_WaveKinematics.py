@@ -1,4 +1,4 @@
-#!/usr/bin/env python3  # noqa: CPY001, EXE001
+#!/usr/bin/env python3  # noqa: EXE001
 
 """Plot the wave kinematics (elevation, velocity, acceleration) for linear waves
 Different locations, times and superposition of frequencies can be used.

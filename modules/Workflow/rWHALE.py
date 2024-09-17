@@ -90,7 +90,7 @@ def main(  # noqa: C901, D103
     mpi_spec = importlib.util.find_spec('mpi4py')
     found = mpi_spec is not None
     if found and parallelType == 'parRUN':
-        from mpi4py import MPI  # noqa: PLC0415
+        from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
         numP = comm.Get_size()  # noqa: N806
@@ -255,7 +255,7 @@ def main(  # noqa: C901, D103
                     force_cleanup=force_cleanup,
                 )
 
-            count = count + 1  # noqa: PLR6104
+            count = count + 1
 
         # wait for every process to finish
         if doParallel == True:  # noqa: E712

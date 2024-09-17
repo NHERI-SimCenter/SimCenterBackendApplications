@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -50,7 +50,7 @@ class of7Dakota:
     """  # noqa: D205, D404
 
     #############################################################
-    def dakotascripts(self, args):  # noqa: PLR6301
+    def dakotascripts(self, args):
         """Create the scripts for caserun.sh
 
         Arguments:
@@ -68,9 +68,9 @@ class of7Dakota:
         )
 
         # Openfoam cleanup
-        caseruntext = caseruntext + 'rm -fr processor*\n'  # noqa: PLR6104
-        caseruntext = caseruntext + 'rm -fr 0\n'  # noqa: PLR6104
-        caseruntext = caseruntext + 'mkdir EVTfiles\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'rm -fr processor*\n'
+        caseruntext = caseruntext + 'rm -fr 0\n'
+        caseruntext = caseruntext + 'mkdir EVTfiles\n'
         caseruntext = (
             caseruntext + 'mv 0.org ' + os.path.join('EVTfiles', '0.org') + '\n'  # noqa: PTH118
         )
@@ -89,21 +89,21 @@ class of7Dakota:
             + os.path.join('EVTfiles', 'postProcessing')  # noqa: PTH118
             + '\n'
         )
-        caseruntext = caseruntext + 'mv *.log EVTfiles\n'  # noqa: PLR6104
-        caseruntext = caseruntext + 'mv *.stl EVTfiles\n'  # noqa: PLR6104
-        caseruntext = caseruntext + 'mv *.sh EVTfiles\n'  # noqa: PLR6104
-        caseruntext = caseruntext + 'mv *.txt EVTfiles\n'  # noqa: PLR6104
-        caseruntext = caseruntext + 'mv cdict* EVTfiles\n'  # noqa: PLR6104
-        caseruntext = caseruntext + 'tar zcBf EVTfiles.tar.gz EVTfiles\n'  # noqa: PLR6104
-        caseruntext = caseruntext + 'rm -fr EVTfiles\n\n'  # noqa: PLR6104
+        caseruntext = caseruntext + 'mv *.log EVTfiles\n'
+        caseruntext = caseruntext + 'mv *.stl EVTfiles\n'
+        caseruntext = caseruntext + 'mv *.sh EVTfiles\n'
+        caseruntext = caseruntext + 'mv *.txt EVTfiles\n'
+        caseruntext = caseruntext + 'mv cdict* EVTfiles\n'
+        caseruntext = caseruntext + 'tar zcBf EVTfiles.tar.gz EVTfiles\n'
+        caseruntext = caseruntext + 'rm -fr EVTfiles\n\n'
 
         # Write to caserun file
-        scriptfile = open('caserun.sh', 'a')  # noqa: PLW1514, PTH123, SIM115
+        scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
         scriptfile.write(caseruntext)
         scriptfile.close()
 
     #############################################################
-    def cleaning(self, args, path):  # noqa: ARG002, PLR6301
+    def cleaning(self, args, path):  # noqa: ARG002
         """Create the scripts for cleaning
 
         Arguments:

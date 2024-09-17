@@ -1,7 +1,7 @@
 """authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, and Prof. J.P. Conte
 affiliation: University of California, San Diego
 modified: Aakash Bangalore Satish, NHERI SimCenter, UC Berkeley
-"""  # noqa: CPY001, D205, D400, INP001
+"""  # noqa: INP001, D205, D400
 
 import csv
 import multiprocessing as mp
@@ -133,7 +133,7 @@ def write_data_to_tab_files(  # noqa: D103
     )
 
     logfile.write(f'\n\t\t\tWriting to file {tab_file_full_path}')
-    with open(tab_file_full_path, 'a+') as f:  # noqa: PLW1514, PTH123
+    with open(tab_file_full_path, 'a+') as f:  # noqa: PTH123
         if model_number == 0:
             f.write(headings)
         for i in range(number_of_samples):
@@ -176,14 +176,14 @@ def write_data_to_csvfile(  # noqa: D103
         string_to_append,
     )
 
-    with open(resultsFilePath, 'w', newline='') as csvfile:  # noqa: PLW1514, PTH123
+    with open(resultsFilePath, 'w', newline='') as csvfile:  # noqa: PTH123
         csvWriter = csv.writer(csvfile)  # noqa: N806
         csvWriter.writerows(data_to_write)
     logfile.write(f'\n\t\t\tWrote to file {resultsFilePath}')
     # Finished writing data
 
 
-def run_TMCMC(  # noqa: N802, PLR0913, PLR0917
+def run_TMCMC(  # noqa: N802, PLR0913
     number_of_samples,
     number_of_chains,
     all_distributions_list,
@@ -280,7 +280,7 @@ def run_TMCMC(  # noqa: N802, PLR0913, PLR0917
             log_likelihoods_list.append(output[0])
             predictions_list.append(output[1])
     else:
-        from mpi4py.futures import MPIPoolExecutor  # noqa: PLC0415
+        from mpi4py.futures import MPIPoolExecutor
 
         executor = MPIPoolExecutor(max_workers=MPI_size)
         write_eval_data_to_logfile(
@@ -336,7 +336,7 @@ def run_TMCMC(  # noqa: N802, PLR0913, PLR0917
         )
         # beta, log_evidence, weights, effective_sample_size = tmcmcFunctions.compute_beta_evidence_old(beta, log_likelihood_values, logfile, int(effective_sample_size/2), threshold=1.0)
 
-        total_log_evidence = total_log_evidence + log_evidence  # noqa: PLR6104
+        total_log_evidence = total_log_evidence + log_evidence
 
         # seed to reproduce results
         ss = SeedSequence(seed)
@@ -561,4 +561,4 @@ def run_TMCMC(  # noqa: N802, PLR0913, PLR0917
                 f'\n\tShutdown mpi4py executor pool for runType: {run_type}'
             )
 
-    return mytrace, total_log_evidence
+    return mytrace, total_log_evidence  # noqa: DOC201, RUF100

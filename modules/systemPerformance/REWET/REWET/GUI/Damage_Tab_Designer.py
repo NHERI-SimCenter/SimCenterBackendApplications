@@ -1,10 +1,10 @@
 """Created on Fri Oct 28 12:50:24 2022
 
 @author: snaeimi
-"""  # noqa: CPY001, D400, N999
+"""  # noqa: N999, D400
 
 import os
-import pickle  # noqa: S403
+import pickle
 
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets
@@ -69,7 +69,7 @@ class Damage_Tab_Designer:  # noqa: D101
         if len(self.scenario_list) < 1:
             self.errorMSG('REWET', 'Damage scenario list is empty.')
             return False
-        if self.damage_input_directory == '':  # noqa: PLC1901
+        if self.damage_input_directory == '':
             self.errorMSG('REWET', 'No Damage Input Directory is selected.')
             return False
 
@@ -200,7 +200,7 @@ class Damage_Tab_Designer:  # noqa: D101
             self.current_xlsx_directory,
             'scenrario file (*.xlsx)',
         )
-        if file[0] == '':  # noqa: PLC1901
+        if file[0] == '':
             return
         split_addr = os.path.split(file[0])
 
@@ -503,7 +503,7 @@ class Damage_Tab_Designer:  # noqa: D101
         directory = QtWidgets.QFileDialog.getExistingDirectory(
             self.asli_MainWindow, 'Select Directory', self.current_xlsx_directory
         )
-        if directory == '':  # noqa: PLC1901
+        if directory == '':
             return
         self.current_xlsx_directory = self.current_xlsx_directory
         self.damage_input_directory = directory

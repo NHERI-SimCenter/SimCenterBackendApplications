@@ -1,6 +1,6 @@
 """Simple Python Script to integrate a strong motion record using
 the Newmark-Beta method
-"""  # noqa: CPY001, D205, D400, INP001
+"""  # noqa: INP001, D205, D400
 
 import numpy as np
 from scipy.constants import g
@@ -23,7 +23,7 @@ def convert_accel_units(acceleration, from_, to_='cm/s/s'):  # noqa: C901
     acceleration = np.asarray(acceleration)
     if from_ == 'g':
         if to_ == 'g':
-            return acceleration
+            return acceleration  # noqa: DOC201, RUF100
         if to_ in m_sec_square:
             return acceleration * g
         if to_ in cm_sec_square:
@@ -43,7 +43,7 @@ def convert_accel_units(acceleration, from_, to_='cm/s/s'):  # noqa: C901
         if to_ in cm_sec_square:
             return acceleration
 
-    raise ValueError(  # noqa: DOC501, TRY003
+    raise ValueError(  # noqa: TRY003
         'Unrecognised time history units. '  # noqa: EM101
         "Should take either ''g'', ''m/s/s'' or ''cm/s/s''"
     )
@@ -70,7 +70,7 @@ def get_velocity_displacement(
         velocity = time_step * cumtrapz(acceleration, initial=0.0)
     if displacement is None:
         displacement = time_step * cumtrapz(velocity, initial=0.0)
-    return velocity, displacement
+    return velocity, displacement  # noqa: DOC201, RUF100
 
 
 class NewmarkBeta:
@@ -160,7 +160,7 @@ class NewmarkBeta:
             'PGV': np.max(np.fabs(self.velocity)),
             'PGD': np.max(np.fabs(self.displacement)),
         }
-        return self.response_spectrum, time_series, accel, vel, disp
+        return self.response_spectrum, time_series, accel, vel, disp  # noqa: DOC201, RUF100
 
     def _newmark_beta(self, omega, cval, kval):  # noqa: ARG002
         """Newmark-beta integral
@@ -216,4 +216,4 @@ class NewmarkBeta:
             disp[j, :] = delta_u + disp[j - 1, :]
             a_t[j, :] = ground_acc[j] + accel[j, :]
 
-        return accel, vel, disp, a_t
+        return accel, vel, disp, a_t  # noqa: DOC201, RUF100

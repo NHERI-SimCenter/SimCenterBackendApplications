@@ -1,6 +1,6 @@
-# %%  # noqa: CPY001, D100, INP001
+# %%  # noqa: INP001, D100
 
-import subprocess  # noqa: S404
+import subprocess
 import sys
 from importlib import metadata as importlib_metadata
 
@@ -238,7 +238,7 @@ def M9(information):  # noqa: C901, N802
             while not (res_success) and (iter_num < max_iter):
                 res = requests.get(jobURL)  # noqa: S113
                 res_success = res.status_code == 200  # noqa: PLR2004
-                iter_num = iter_num + 1  # noqa: PLR6104
+                iter_num = iter_num + 1
 
             if res_success:
                 gmData = res.json()  # noqa: N806
@@ -310,7 +310,7 @@ def write_motion(site_name, directory, i, motiondict, APIFLAG):  # noqa: N803, D
         datatowrite['Data'] = 'Time history generated using M9 simulations'
         datatowrite['name'] = f'{site_name}_{i}'
 
-    with open(filename, 'w') as f:  # noqa: PLW1514, PTH123
+    with open(filename, 'w') as f:  # noqa: PTH123
         json.dump(datatowrite, f, indent=2)
 
 
@@ -332,4 +332,4 @@ def haversine(lat1, lon1, lat2, lon2):
     r = 6371  # Radius of the Earth in kilometers
     distance = r * c
 
-    return distance  # noqa: RET504
+    return distance  # noqa: DOC201, RET504, RUF100

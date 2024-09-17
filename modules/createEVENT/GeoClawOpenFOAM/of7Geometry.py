@@ -1,4 +1,4 @@
-# # noqa: INP001
+#  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -58,7 +58,7 @@ class of7Geometry:
     """  # noqa: D205, D404
 
     #############################################################
-    def geomcheck(self, data, path):  # noqa: C901, PLR0911, PLR6301
+    def geomcheck(self, data, path):  # noqa: C901, PLR0911
         """Checks if all files required for creating the geometry exists
 
         Arguments:
@@ -82,7 +82,7 @@ class of7Geometry:
                 data, ['Events', 'NumBathymetryFiles']
             )
             if numbathy == [None]:
-                return -1
+                return -1  # noqa: DOC201, RUF100
             else:  # noqa: RET505
                 numbathy = ', '.join(
                     hydroutil.extract_element_from_json(
@@ -227,7 +227,7 @@ class of7Geometry:
         return 0
 
     #############################################################
-    def createOFSTL(self, data, path):  # noqa: C901, N802, PLR6301
+    def createOFSTL(self, data, path):  # noqa: C901, N802
         """Creates the STL files
 
         Arguments:
@@ -250,7 +250,7 @@ class of7Geometry:
             # Create geometry (i.e. STL files) and extreme file
             ecode = finalgeom.creategeom(data, path)
             if ecode < 0:
-                return -1
+                return -1  # noqa: DOC201, RUF100
 
         # Bathymetry only
         elif int(simtype) == 2:  # noqa: PLR2004
@@ -291,7 +291,7 @@ class of7Geometry:
         return 0
 
     #############################################################
-    def scripts(self, data):  # noqa: PLR6301
+    def scripts(self, data):
         """Add to caserun.sh
 
         Arguments:
@@ -317,9 +317,9 @@ class of7Geometry:
             # If translate file exists, use it
             if os.path.exists('translate.sh'):  # noqa: PTH110
                 caseruntext = 'echo Translating building STL files...\n'
-                caseruntext = caseruntext + 'chmod +x translate.sh\n'  # noqa: PLR6104
-                caseruntext = caseruntext + './translate.sh\n\n'  # noqa: PLR6104
-                caseruntext = caseruntext + 'echo Combining STL files for usage...\n'  # noqa: PLR6104
+                caseruntext = caseruntext + 'chmod +x translate.sh\n'
+                caseruntext = caseruntext + './translate.sh\n\n'
+                caseruntext = caseruntext + 'echo Combining STL files for usage...\n'
             else:
                 caseruntext = 'echo Combining STL files for usage...\n'
 
@@ -380,6 +380,6 @@ class of7Geometry:
                     + '\n\n'
                 )
             # Write to caserun file
-            scriptfile = open('caserun.sh', 'a')  # noqa: PLW1514, PTH123, SIM115
+            scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
             scriptfile.write(caseruntext)
             scriptfile.close()

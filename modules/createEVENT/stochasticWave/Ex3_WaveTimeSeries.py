@@ -1,4 +1,4 @@
-#!/usr/bin/env python3  # noqa: CPY001, EXE001
+#!/usr/bin/env python3  # noqa: EXE001
 
 """Generate wave time series based on the Jonswap spectrum"""  # noqa: D400
 

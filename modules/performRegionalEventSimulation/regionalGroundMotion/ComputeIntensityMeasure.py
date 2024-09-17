@@ -299,7 +299,7 @@ class IM_Calculator:  # noqa: D101
         # return
         return res
 
-    def get_im_from_opensha(  # noqa: D102, PLR6301
+    def get_im_from_opensha(  # noqa: D102
         self,
         source_info,
         gmpe_list,
@@ -376,7 +376,7 @@ class IM_Calculator:  # noqa: D101
         elif source_info['Type'] == 'ERF':
             source_index = source_info.get('SourceIndex', None)
             rupture_index = source_info.get('RuptureIndex', None)
-            if None in [source_index, rupture_index]:  # noqa: PLR6201
+            if None in [source_index, rupture_index]:
                 print(  # noqa: T201
                     'ComputeIntensityMeasure.get_im_from_local: error - source/rupture index not given.'
                 )
@@ -391,7 +391,7 @@ class IM_Calculator:  # noqa: D101
         elif source_info['Type'] == 'oqSourceXML':
             source_index = source_info.get('SourceIndex', None)
             rupture_index = source_info.get('RuptureIndex', None)
-            if None in [source_index, rupture_index]:  # noqa: PLR6201
+            if None in [source_index, rupture_index]:
                 print(  # noqa: T201
                     'ComputeIntensityMeasure.get_im_from_local: error - source/rupture index not given.'
                 )
@@ -527,18 +527,18 @@ def collect_multi_im_res(res_dict):  # noqa: C901, D103
             res['IM'] = [cur_res['IM']]
             if cur_res.get('Periods', None) is None:
                 res['Periods'] = [None]
-            elif type(cur_res.get('Periods')) in [float, int]:  # noqa: PLR6201
+            elif type(cur_res.get('Periods')) in [float, int]:
                 res['Periods'] = [cur_res.get('Periods')]
             else:
                 res['Periods'] = cur_res.get('Periods')
         else:
             res['IM'].append(cur_res['IM'])
             if cur_res.get('Periods', None) is None:
-                res['Periods'] = res['Periods'] + [None]  # noqa: PLR6104
-            elif type(cur_res.get('Periods')) in [float, int]:  # noqa: PLR6201
-                res['Periods'] = res['Periods'] + [cur_res.get('Periods')]  # noqa: PLR6104
+                res['Periods'] = res['Periods'] + [None]
+            elif type(cur_res.get('Periods')) in [float, int]:
+                res['Periods'] = res['Periods'] + [cur_res.get('Periods')]
             else:
-                res['Periods'] = res['Periods'] + cur_res.get('Periods')  # noqa: PLR6104
+                res['Periods'] = res['Periods'] + cur_res.get('Periods')
             # combine ground motion characteristics
             for j in range(len(cur_res['GroundMotions'])):
                 tmp_res = cur_res['GroundMotions'][j].get(
@@ -725,12 +725,15 @@ def compute_im(  # noqa: C901, D103
         saveInJson = False  # noqa: N806
     filename = os.path.join(output_dir, filename)  # noqa: PTH118
     im_list = []
-    if 'PGA' in im_info.keys():  # noqa: SIM118
+    if 'PGA' in im_info.keys() or im_info.get('Type', None) == 'PGA':  # noqa: SIM118
         im_list.append('PGA')
     if 'SA' in im_info.keys():  # noqa: SIM118
         for cur_period in im_info['SA']['Periods']:
             im_list.append(f'SA({cur_period!s})')  # noqa: PERF401
-    if 'PGV' in im_info.keys():  # noqa: SIM118
+    if im_info.get('Type', None) == 'SA':
+        for cur_period in im_info['Periods']:
+            im_list.append(f'SA({cur_period!s})')  # noqa: PERF401
+    if 'PGV' in im_info.keys() or im_info.get('Type', None) == 'PGV':  # noqa: SIM118
         im_list.append('PGV')
     # Stations
     station_list = [
@@ -887,7 +890,7 @@ def compute_im(  # noqa: C901, D103
     )
 
     if saveInJson:
-        with open(filename, 'w') as f:  # noqa: PLW1514, PTH123
+        with open(filename, 'w') as f:  # noqa: PTH123
             ujson.dump(im_raw, f, indent=1)
     # return
     return filename, im_list
@@ -974,7 +977,7 @@ def export_im(  # noqa: C901, D103, PLR0912
         for i in range(num_stations):
             tmp = []
             for j in range(num_scenarios):
-                tmp.append(stations[i]['lat'])  # noqa: FURB113
+                tmp.append(stations[i]['lat'])
                 tmp.append(stations[i]['lon'])
                 tmp.append(int(stations[i]['vs30']))
                 tmp.append(eq_data[j][0])
@@ -1036,7 +1039,7 @@ def export_im(  # noqa: C901, D103, PLR0912
             maf_out.append(tmp)
         res = {'Station_lnIM': res, 'Earthquake_MAF': maf_out}
         # save SiteIM.json
-        with open(os.path.join(output_dir, filename), 'w') as f:  # noqa: PLW1514, PTH118, PTH123
+        with open(os.path.join(output_dir, filename), 'w') as f:  # noqa: PTH118, PTH123
             json.dump(res, f, indent=2)
     # export the event grid and station csv files
     if csv_flag:
@@ -1093,7 +1096,7 @@ def export_im(  # noqa: C901, D103, PLR0912
                 # Loop over all intensity measures
                 for cur_im_tag in range(len(csvHeader)):
                     if (csvHeader[cur_im_tag].startswith('SA')) or (
-                        csvHeader[cur_im_tag] in ['PGA', 'PGV']  # noqa: PLR6201
+                        csvHeader[cur_im_tag] in ['PGA', 'PGV']
                     ):
                         df.update(
                             {
@@ -1110,27 +1113,27 @@ def export_im(  # noqa: C901, D103, PLR0912
                 # Combine PGD from liquefaction, landslide and fault
                 if (
                     'liq_PGD_h' in df.columns
-                    or 'ls_PGD_h' in df.columns
+                    or 'lsd_PGD_h' in df.columns
                     or 'fd_PGD_h' in df.columns
                 ):
                     PGD_h = np.zeros(df.shape[0])  # noqa: N806
                     if 'liq_PGD_h' in df.columns:
                         PGD_h += df['liq_PGD_h'].to_numpy()  # noqa: N806
-                    if 'ls_PGD_h' in df.columns:
-                        PGD_h += df['ls_PGD_h'].to_numpy()  # noqa: N806
+                    if 'lsd_PGD_h' in df.columns:
+                        PGD_h += df['lsd_PGD_h'].to_numpy()  # noqa: N806
                     if 'fd_PGD_h' in df.columns:
                         PGD_h += df['fd_PGD_h'].to_numpy()  # noqa: N806
                     df['PGD_h'] = PGD_h
                 if (
                     'liq_PGD_v' in df.columns
-                    or 'ls_PGD_v' in df.columns
+                    or 'lsd_PGD_v' in df.columns
                     or 'fd_PGD_v' in df.columns
                 ):
                     PGD_v = np.zeros(df.shape[0])  # noqa: N806
                     if 'liq_PGD_v' in df.columns:
                         PGD_v += df['liq_PGD_v'].to_numpy()  # noqa: N806
-                    if 'ls_PGD_v' in df.columns:
-                        PGD_v += df['ls_PGD_v'].to_numpy()  # noqa: N806
+                    if 'lsd_PGD_v' in df.columns:
+                        PGD_v += df['lsd_PGD_v'].to_numpy()  # noqa: N806
                     if 'fd_PGD_v' in df.columns:
                         PGD_v += df['fd_PGD_v'].to_numpy()  # noqa: N806
                     df['PGD_v'] = PGD_v
@@ -1138,7 +1141,7 @@ def export_im(  # noqa: C901, D103, PLR0912
                 for col in df.columns:
                     if (
                         (not col.startswith('SA'))
-                        and (col not in ['PGA', 'PGV', 'PGD_h', 'PGD_v'])  # noqa: PLR6201
+                        and (col not in ['PGA', 'PGV', 'PGD_h', 'PGD_v'])
                         and (col not in gf_im_list)
                     ):
                         colToDrop.append(col)  # noqa: PERF401
@@ -1160,11 +1163,11 @@ def export_im(  # noqa: C901, D103, PLR0912
                     tmp_list = []
                     # loop over all scenarios
                     for cur_scen in range(len(im_data)):
-                        tmp_list = (  # noqa: PLR6104
+                        tmp_list = (
                             tmp_list + im_data[cur_scen][i, cur_im_tag, :].tolist()
                         )
                     if (csvHeader[cur_im_tag].startswith('SA')) or (
-                        csvHeader[cur_im_tag] in ['PGA', 'PGV']  # noqa: PLR6201
+                        csvHeader[cur_im_tag] in ['PGA', 'PGV']
                     ):
                         df.update({csvHeader[cur_im_tag]: np.exp(tmp_list)})
                     else:
@@ -1173,27 +1176,27 @@ def export_im(  # noqa: C901, D103, PLR0912
                 # Combine PGD from liquefaction, landslide and fault
                 if (
                     'liq_PGD_h' in df.columns
-                    or 'ls_PGD_h' in df.columns
+                    or 'lsd_PGD_h' in df.columns
                     or 'fd_PGD_h' in df.columns
                 ):
                     PGD_h = np.zeros(df.shape[0])  # noqa: N806
                     if 'liq_PGD_h' in df.columns:
                         PGD_h += df['liq_PGD_h'].to_numpy()  # noqa: N806
-                    if 'ls_PGD_h' in df.columns:
-                        PGD_h += df['ls_PGD_h'].to_numpy()  # noqa: N806
+                    if 'lsd_PGD_h' in df.columns:
+                        PGD_h += df['lsd_PGD_h'].to_numpy()  # noqa: N806
                     if 'fd_PGD_h' in df.columns:
                         PGD_h += df['fd_PGD_h'].to_numpy()  # noqa: N806
                     df['PGD_h'] = PGD_h
                 if (
                     'liq_PGD_v' in df.columns
-                    or 'ls_PGD_v' in df.columns
+                    or 'lsd_PGD_v' in df.columns
                     or 'fd_PGD_v' in df.columns
                 ):
                     PGD_v = np.zeros(df.shape[0])  # noqa: N806
                     if 'liq_PGD_v' in df.columns:
                         PGD_v += df['liq_PGD_v'].to_numpy()  # noqa: N806
-                    if 'ls_PGD_v' in df.columns:
-                        PGD_v += df['ls_PGD_v'].to_numpy()  # noqa: N806
+                    if 'lsd_PGD_v' in df.columns:
+                        PGD_v += df['lsd_PGD_v'].to_numpy()  # noqa: N806
                     if 'fd_PGD_v' in df.columns:
                         PGD_v += df['fd_PGD_v'].to_numpy()  # noqa: N806
                     df['PGD_v'] = PGD_v
@@ -1201,7 +1204,7 @@ def export_im(  # noqa: C901, D103, PLR0912
                 for col in df.columns:
                     if (
                         (not col.startswith('SA'))
-                        and (col not in ['PGA', 'PGV', 'PGD_h', 'PGD_v'])  # noqa: PLR6201
+                        and (col not in ['PGA', 'PGV', 'PGD_h', 'PGD_v'])
                         and (col not in gf_im_list)
                     ):
                         colToDrop.append(col)
@@ -1237,7 +1240,7 @@ def compute_weighted_res(res_list, gmpe_weights):  # noqa: C901, D103
     num_site = len(res_list[0]['GroundMotions'])
     # loop over different sites
     gm_collector = []
-    for site_tag in range(num_site):  # noqa: PLR1702
+    for site_tag in range(num_site):
         # loop over different GMPE
         tmp_res = {}
         for i, cur_res in enumerate(res_list):
@@ -1246,11 +1249,11 @@ def compute_weighted_res(res_list, gmpe_weights):  # noqa: C901, D103
             im_keys = list(cur_gmResults.keys())
             for cur_im in im_keys:
                 if cur_im not in list(tmp_res.keys()):
-                    if cur_im in ['Location', 'SiteData']:  # noqa: PLR6201
+                    if cur_im in ['Location', 'SiteData']:
                         tmp_res.update({cur_im: cur_gmResults[cur_im]})
                     else:
                         tmp_res.update({cur_im: {}})
-                if cur_im not in ['Location', 'SiteData']:  # noqa: PLR6201
+                if cur_im not in ['Location', 'SiteData']:
                     # get components
                     comp_keys = list(cur_gmResults[cur_im].keys())
                     # loop over different components
@@ -1280,7 +1283,7 @@ def compute_weighted_res(res_list, gmpe_weights):  # noqa: C901, D103
                                     )
                                 else:
                                     # mean
-                                    tmp_res[cur_im][cur_comp][j] = (  # noqa: PLR6104
+                                    tmp_res[cur_im][cur_comp][j] = (
                                         tmp_res[cur_im][cur_comp][j]
                                         + cur_value * gmpe_weights[i]
                                     )

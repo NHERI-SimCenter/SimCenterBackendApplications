@@ -68,7 +68,7 @@ def create_stations(input_file, output_file, min_id, max_id):
         stn_df = pd.read_csv(input_file, header=0, index_col=0)
     except:  # noqa: E722
         run_tag = 0
-        return run_tag  # noqa: RET504
+        return run_tag  # noqa: DOC201, RET504, RUF100
     # Max and Min IDs
     stn_ids_min = np.min(stn_df.index.values)
     stn_ids_max = np.max(stn_df.index.values)
@@ -94,7 +94,7 @@ def create_stations(input_file, output_file, min_id, max_id):
         stn_file['Stations'].append(tmp)
     # Saving data to the output file
     if output_file:
-        with open(output_file, 'w') as f:  # noqa: PLW1514, PTH123
+        with open(output_file, 'w') as f:  # noqa: PTH123
             json.dump(stn_file, f, indent=2)
     # Returning the final run state
     return stn_file

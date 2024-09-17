@@ -1,4 +1,4 @@
-import argparse  # noqa: CPY001, D100, INP001
+import argparse  # noqa: INP001, D100
 import json
 import os
 import re
@@ -16,7 +16,7 @@ def validateCaseDirectoryStructure(caseDir):  # noqa: N802, N803
     It also checks that system directory contains the controlDict
     """  # noqa: D205, D400, D401, D404
     if not os.path.isdir(caseDir):  # noqa: PTH112
-        return False
+        return False  # noqa: DOC201, RUF100
 
     caseDirList = os.listdir(caseDir)  # noqa: N806
     necessaryDirs = ['0', 'constant', 'system', 'postProcessing']  # noqa: N806
@@ -36,7 +36,7 @@ def parseForceComponents(forceArray):  # noqa: N802, N803
     x = float(components[0])
     y = float(components[1])
     z = float(components[2])
-    return [x, y, z]
+    return [x, y, z]  # noqa: DOC201, RUF100
 
 
 def ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime):  # noqa: N802, N803
@@ -47,7 +47,7 @@ def ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime):  # noqa: N80
         forces.append(FloorForces())  # noqa: PERF401
     forcePattern = re.compile(r'\([0-9.e\+\-\s]+\)')  # noqa: N806
 
-    with open(buildingForcesPath) as forcesFile:  # noqa: N806, PLW1514, PTH123
+    with open(buildingForcesPath) as forcesFile:  # noqa: PTH123, N806
         forceLines = forcesFile.readlines()  # noqa: N806
         needsDeltaT = True  # noqa: N806
         for line in forceLines:
@@ -77,14 +77,14 @@ def ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime):  # noqa: N80
                     forces[i].Y.append(fpry + fvy + fpoy)
                     forces[i].Z.append(fprz + fvz + fpoz)
 
-    return [deltaT, forces]
+    return [deltaT, forces]  # noqa: DOC201, RUF100
 
 
 def directionToDof(direction):  # noqa: N802
     """Converts direction to degree of freedom"""  # noqa: D400, D401
     directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
 
-    return directioMap[direction]
+    return directioMap[direction]  # noqa: DOC201, RUF100
 
 
 def addFloorForceToEvent(  # noqa: N802
@@ -150,7 +150,7 @@ def writeEVENT(forces, deltaT):  # noqa: N802, N803
         )
         addFloorPressure(pressureArray, floor)
 
-    with open('EVENT.json', 'w') as eventsFile:  # noqa: N806, PLW1514, PTH123
+    with open('EVENT.json', 'w') as eventsFile:  # noqa: PTH123, N806
         json.dump(eventDict, eventsFile)
 
 
@@ -176,7 +176,7 @@ def GetOpenFOAMEvent(floorsCount, startTime):  # noqa: N802, N803
 
 
 def ReadBIM(BIMFilePath):  # noqa: N802, N803, D103
-    with open(BIMFilePath) as BIMFile:  # noqa: N806, PLW1514, PTH123
+    with open(BIMFilePath) as BIMFile:  # noqa: PTH123, N806
         bim = json.load(BIMFile)
 
     return [
