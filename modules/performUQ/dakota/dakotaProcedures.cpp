@@ -13,35 +13,64 @@
 int
 writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, std::string idVariables, std::vector<std::string> &rvList, bool includeActiveText = true){
 
+    dakotaFile << "variables \n "; // sy - because 'discrete_state_set' was coming before 'variables', when changing one variable to a constant in quoFEM example
 
     int numContinuousDesign = theRandomVariables.continuousDesignRVs.size();
 
+    std::cout<<"numContinuousDesign"<<std::endl;
+    std::cout<<numContinuousDesign<<std::endl;
+
     if (numContinuousDesign != 0) {
 
-      if (idVariables.empty())
-	dakotaFile << "variables \n ";
-      else
-	dakotaFile << "variables \n id_variables =  '" << idVariables << "'\n";
+            if (!idVariables.empty()) {
+      	     dakotaFile << "id_variables =  '" << idVariables << "'\n";
+            }
 
-      if (numContinuousDesign > 0) {
-	dakotaFile << "  continuous_design = " << numContinuousDesign << "\n    initial_point = ";
-	// std::list<struct continuousDesignRV>::iterator it;
-	for (auto it = theRandomVariables.continuousDesignRVs.begin(); it != theRandomVariables.continuousDesignRVs.end(); it++)
-	  dakotaFile << it->initialPoint << " ";
-	dakotaFile << "\n    lower_bounds = ";
-	for (auto it = theRandomVariables.continuousDesignRVs.begin(); it != theRandomVariables.continuousDesignRVs.end(); it++)
-	  dakotaFile << it->lowerBound << " ";
-	dakotaFile << "\n    upper_bounds = ";
-	for (auto it = theRandomVariables.continuousDesignRVs.begin(); it != theRandomVariables.continuousDesignRVs.end(); it++)
-	  dakotaFile << it->upperBound << " ";
-	dakotaFile << "\n    descriptors = ";
-	for (auto it = theRandomVariables.continuousDesignRVs.begin(); it != theRandomVariables.continuousDesignRVs.end(); it++) {
-	  dakotaFile << "\'" << it->name << "\' ";
-	  rvList.push_back(it->name);
-	}
-	dakotaFile << "\n\n";
+            if (numContinuousDesign > 0) {
+      	dakotaFile << "  continuous_design = " << numContinuousDesign << "\n    initial_point = ";
+      	// std::list<struct continuousDesignRV>::iterator it;
+      	for (auto it = theRandomVariables.continuousDesignRVs.begin(); it != theRandomVariables.continuousDesignRVs.end(); it++)
+      	  dakotaFile << it->initialPoint << " ";
+      	dakotaFile << "\n    lower_bounds = ";
+      	for (auto it = theRandomVariables.continuousDesignRVs.begin(); it != theRandomVariables.continuousDesignRVs.end(); it++)
+      	  dakotaFile << it->lowerBound << " ";
+      	dakotaFile << "\n    upper_bounds = ";
+      	for (auto it = theRandomVariables.continuousDesignRVs.begin(); it != theRandomVariables.continuousDesignRVs.end(); it++)
+      	  dakotaFile << it->upperBound << " ";
+      	dakotaFile << "\n    descriptors = ";
+      	for (auto it = theRandomVariables.continuousDesignRVs.begin(); it != theRandomVariables.continuousDesignRVs.end(); it++) {
+      	  dakotaFile << "\'" << it->name << "\' ";
+      	  rvList.push_back(it->name);
+      	}
+      	dakotaFile << "\n\n";
       }
 
+
+      // sy - Constant in For optimization cases
+
+      int numConstant = theRandomVariables.constantRVs.size();
+      if (numConstant > 0) {
+        dakotaFile << "  discrete_state_set  \n    real = " << numConstant;
+        dakotaFile << "\n    elements_per_variable = ";
+        for (auto it = theRandomVariables.constantRVs.begin(); it != theRandomVariables.constantRVs.end(); it++)
+          dakotaFile << "1 ";     //std::list<struct betaRV>::iterator it;
+        dakotaFile << "\n    elements = ";
+        for (auto it = theRandomVariables.constantRVs.begin(); it != theRandomVariables.constantRVs.end(); it++)
+          dakotaFile << it->value << " ";
+        dakotaFile << "\n    descriptors = ";
+        for (auto it = theRandomVariables.constantRVs.begin(); it != theRandomVariables.constantRVs.end(); it++) {
+          dakotaFile << "\'" << it->name << "\' ";
+          rvList.push_back(it->name);
+        }
+        dakotaFile << "\n\n";
+      }
+
+
+      return 0;
+    }
+
+
+    // sy - Constant in random analysis
 
     int numConstant = theRandomVariables.constantRVs.size();
     if (numConstant > 0) {
@@ -80,19 +109,16 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
       dakotaFile << "\n\n";
     }    
 
+
+
       
-      return 0;
-    }
 
     if (includeActiveText == true) {
       if (idVariables.empty())
-	dakotaFile << "variables \n active uncertain \n";
+	       dakotaFile << "active uncertain \n";
       else
-	dakotaFile << "variables \n id_variables =  '" << idVariables << "'\n active uncertain \n";
-    } else {
-	dakotaFile << "variables \n";
-    }
-
+	       dakotaFile << "id_variables =  '" << idVariables << "'\n active uncertain \n";
+    } 
       // int numNormalUncertain = theRandomVariables.normalRVs.size();
 
     int numNormal = theRandomVariables.normalRVs.size();
