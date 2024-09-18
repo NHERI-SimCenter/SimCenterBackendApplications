@@ -310,7 +310,7 @@ def create_command(command_list, enforced_python=None):
         for command_arg in command_list[1:]:
             command += f'"{command_arg}" '
 
-    return command
+    return command  # noqa: DOC201, RUF100
 
 
 def run_command(command):
@@ -357,7 +357,7 @@ def run_command(command):
 
         py_script.main(arg_list)
 
-        return '', ''
+        return '', ''  # noqa: DOC201, RUF100
 
     else:  # noqa: RET505
         # fmk with Shell=True not working on older windows machines, new approach needed for quoted command .. turn into a list
@@ -668,7 +668,7 @@ class WorkflowApplication:
 
         # pp.pprint(arg_list)
 
-        return arg_list
+        return arg_list  # noqa: DOC201, RUF100
 
 
 class Workflow:
@@ -1316,7 +1316,7 @@ class Workflow:
 
         log_div()
 
-        return assetFilesList
+        return assetFilesList  # noqa: DOC201, RUF100
 
     def augment_asset_files(self):  # noqa: C901
         """Short description
@@ -1504,7 +1504,7 @@ class Workflow:
         )
         log_div()
 
-        return assetFilesList
+        return assetFilesList  # noqa: DOC201, RUF100
 
     def perform_system_performance_assessment(self, asset_type):
         """For an asset type run the system level performance assessment application
@@ -1525,7 +1525,7 @@ class Workflow:
                 prepend_timestamp=False,
             )
             log_div()
-            return False
+            return False  # noqa: DOC201, RUF100
 
         if performance_app.rel_path == None:  # noqa: E711
             log_msg(
@@ -1756,10 +1756,6 @@ class Workflow:
         for input_ in reg_mapping_app.inputs:
             if input_['id'] == 'assetFile':
                 input_['default'] = str(AIM_file_path)
-        # Get the event file path
-        eventFilePath = self.shared_data.get('RegionalEvent', {}).get(  # noqa: N806
-            'eventFilePath', self.reference_dir
-        )
 
         reg_mapping_app.inputs.append(
             {
@@ -1767,7 +1763,7 @@ class Workflow:
                 'type': 'path',
                 'default': resolve_path(
                     self.shared_data['RegionalEvent']['eventFile'],
-                    eventFilePath,
+                    self.reference_dir,
                 ),
             }
         )
@@ -1909,7 +1905,7 @@ class Workflow:
             prepend_timestamp=False,
         )
         log_div()
-        return dst
+        return dst  # noqa: DOC201, RUF100
 
     def cleanup_simdir(self, asst_id):
         """Short description
@@ -2734,7 +2730,7 @@ class Workflow:
                     ],
                 )
                 if ('PID', '0') in df_res.columns:
-                    del df_res[('PID', '0')]
+                    del df_res[('PID', '0')]  # noqa: RUF031, RUF100
 
                 # store the EDP statistics in the output DF
                 for col in np.transpose(col_info):
@@ -2874,7 +2870,7 @@ class Workflow:
                 bldg_dir = Path(os.path.dirname(asst_data[a_i]['file'])).resolve()  # noqa: PTH120
                 main_dir = bldg_dir
                 assetTypeHierarchy = [bldg_dir.name]  # noqa: N806
-                while main_dir.parent.name != 'Results':
+                while main_dir.parent.name != self.run_dir.name:
                     main_dir = bldg_dir.parent
                     assetTypeHierarchy = [main_dir.name] + assetTypeHierarchy  # noqa: N806, RUF005
 

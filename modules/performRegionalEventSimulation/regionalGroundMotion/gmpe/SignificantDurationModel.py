@@ -65,7 +65,7 @@ def abrahamson_silva_ds_1999(
         print(  # noqa: T201
             "SignificantDurationModel.abrahamson_silva_ds_1999: duration_type='DS575H','DS575V','DS595H','DS595V'?"
         )
-        return None, None
+        return None, None  # noqa: DOC201, RUF100
     # modeling coefficients
     beta = [3.2, 3.2, 3.2, 3.2]
     b1 = [5.204, 4.610, 5.204, 4.610]
@@ -140,7 +140,7 @@ def bommer_stafford_alarcon_ds_2009(
         print(  # noqa: T201
             "SignificantDurationModel.bommer_stafford_alarcon_ds_2009: duration_type='DS575H','DS595H'?"
         )
-        return None, None, None, None
+        return None, None, None, None  # noqa: DOC201, RUF100
 
     # modeling coefficients
     c0 = [-5.6298, -2.2393]
@@ -205,7 +205,7 @@ def afshari_stewart_ds_2016(  # noqa: C901
         print(  # noqa: T201
             "SignificantDurationModel.afshari_stewart_ds_2016: mechanism='unknown','normal','reverse','strike-slip'?"
         )
-        return None, None, None, None
+        return None, None, None, None  # noqa: DOC201, RUF100
     # region map
     reg_map = {'california': 0, 'japan': 1, 'other': 2}
     reg_tag = reg_map.get(region.lower(), None)
