@@ -6,4 +6,5 @@ add_subdirectory(IMasEDP)
 add_subdirectory(customPy)
 add_subdirectory(surrogateRegionalPy)
 add_subdirectory(surrogateSimulation)
+add_subdirectory(capacitySpectrum)
 
