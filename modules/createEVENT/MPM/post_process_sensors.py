@@ -38,8 +38,7 @@
 # Contributors:
 # Justin Bonus
 
-""" This script reads HydroUQ MPM output from sensors and then plots the data."""
-
+"""This script reads HydroUQ MPM output from sensors and then plots the data."""
 
 import os
 import sys
@@ -140,7 +139,11 @@ if __name__ == '__main__':
         os.makedirs(output_dir)  # noqa: PTH103
     if output_dir != sensor_data_dir:
         for sensor_name in sensor_names:
-            print('Save ' + os.path.join(output_dir, sensor_name) + '.csv to output directory.')  # noqa: T201, PTH118
+            print(
+                'Save '
+                + os.path.join(output_dir, sensor_name)
+                + '.csv to output directory.'
+            )  # noqa: T201, PTH118
             sensor_data[sensor_name].to_csv(
                 os.path.join(output_dir, sensor_name + '.csv'),  # noqa: PTH118
                 index=False,
@@ -148,7 +151,7 @@ if __name__ == '__main__':
 
     # Plot the sensor data, and save the plots to the output directory (html and png files)
     for sensor_name in sensor_names:
-        sensor_name_png  = sensor_name + '.png'
+        sensor_name_png = sensor_name + '.png'
         sensor_name_html = sensor_name + '.html'
         fig, axes = plt.subplots(1, 1)
         axes.plot(
@@ -165,7 +168,9 @@ if __name__ == '__main__':
         )
         plt.close(fig)
 
-        figure_as_html = "<img src='" + os.path.join(output_dir, sensor_name_png) + "'>"
+        figure_as_html = (
+            "<img src='" + os.path.join(output_dir, sensor_name_png) + "'>"
+        )
 
         # Save the plot as an html file
         with open(os.path.join(output_dir, sensor_name_html), 'w') as f:
