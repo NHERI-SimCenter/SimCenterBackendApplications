@@ -1,4 +1,7 @@
-# Copyright (c) 2016-2017, The Regents of the University of California (Regents).  # noqa: INP001
+#!/usr/bin/env python3
+
+# -*- coding: utf-8 -*-
+# Copyright (c) 2016-2017, The Regents of the University of California (Regents).
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,13 +38,8 @@
 # Contributors:
 # Justin Bonus
 
+""" This script reads HydroUQ MPM output from sensors and then plots the data."""
 
-#
-# This script reads HydroUQ MPM output from sensors and then plots the data
-# Plots are saved to a specified directory.
-#
-
-"""Entry point to read the simulation results from MPM case and post-processes it."""
 
 import os
 import sys
@@ -49,13 +47,14 @@ import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 
-# import json
-# from pathlib import Path
-# import plotly.graph_objects as go
-# from plotly.subplots import make_subplots
+
+def main():
+    """Main function for post-processing sensor data from MPM simulations."""
+    return 0
 
 
 if __name__ == '__main__':
+    """Post-process sensor data from MPM simulations and save the plots."""
     # CLI parser
     input_args = sys.argv[1:]
     print(  # noqa: T201
@@ -75,26 +74,14 @@ if __name__ == '__main__':
     # parser.add_argument('-o', '--output_directory', help="Sensor Plot Output Directory", required=True)
     # parser.add_argument('-f', '--files', help="Sensor Measurement Files", required=True)
     # arguments, unknowns = parser.parse_known_args()
-    # print("post_process_sensors.py - Backend-script post_process_sensors.py received: " + str(arguments))
-    # print("post_process_sensors.py - Backend-script post_process_sensors.py received: " + str(unknowns))
 
-    # Get the directory of the sensor data
-    # Get the directory to save the plots
-    # Get the list of sensor filenames to plot, designated by comma separation
     sensor_data_dir = sys.argv[1]
     output_dir = sys.argv[2]
     sensor_files = sys.argv[3].split(',')
 
-    # sensor_data_dir = arguments.input_directory
-    # output_dir = arguments.output_directory
-    # sensor_files = (arguments.files).split(',')
-    print('Sensor data directory: ', sensor_data_dir)  # noqa: T201
-    print('Output directory: ', output_dir)  # noqa: T201
-    print('Sensor files: ', sensor_files)  # noqa: T201
-    # json_path =  os.path.join(case_path, "constant", "simCenter", "input", "MPM.json")
-    # with open(json_path) as json_file:
-    #     json_data =  json.load(json_file)
-    # print("Backend-script post_process_sensors.py received: " + sys.argv[1] + " " + sys.argv[2] + " " + sys.argv[3] "")
+    print('Raw Sensor Input Directory: ', sensor_data_dir)  # noqa: T201
+    print('Processed Sensor Output Directory: ', output_dir)  # noqa: T201
+    print('Raw Sensor Filenames: ', sensor_files)  # noqa: T201
 
     # Get the list of sensor names
     sensor_names = [
@@ -146,14 +133,14 @@ if __name__ == '__main__':
     # Make sure the output directory exists, and save the sensor raw data to the output directory if they aren't already there
     if not os.path.exists(output_dir):  # noqa: PTH110
         print(  # noqa: T201
-            'Output directory not found... Creating output directory: '
+            'Output directory not found. Creating output directory: '
             + output_dir
-            + '...'
+            + '.'
         )
         os.makedirs(output_dir)  # noqa: PTH103
     if output_dir != sensor_data_dir:
         for sensor_name in sensor_names:
-            print('Save ' + os.path.join(output_dir, sensor_name) + '.csv' + '...')  # noqa: T201, PTH118
+            print('Save ' + os.path.join(output_dir, sensor_name) + '.csv to output directory.')  # noqa: T201, PTH118
             sensor_data[sensor_name].to_csv(
                 os.path.join(output_dir, sensor_name + '.csv'),  # noqa: PTH118
                 index=False,
@@ -161,32 +148,27 @@ if __name__ == '__main__':
 
     # Plot the sensor data, and save the plots to the output directory (html and png files)
     for sensor_name in sensor_names:
-        print('Plotting ' + sensor_name + '...')  # noqa: T201
+        sensor_name_png  = sensor_name + '.png'
+        sensor_name_html = sensor_name + '.html'
         fig, axes = plt.subplots(1, 1)
-        sensor_name_png = sensor_name + '.png'
-        sensor_name_html = sensor_name + '.webp'
-
-        # axes.set_title(sensor_name)
         axes.plot(
             sensor_data[sensor_name]['time'], sensor_data[sensor_name]['value']
         )
+        axes.set_title(sensor_name)
         axes.set_xlabel('Time [s]')
         axes.set_ylabel('Sensor Measurement')
-        print('Save ' + os.path.join(output_dir, sensor_name_png) + '...')  # noqa: T201, PTH118
+        # Save the plot as a png file
         plt.savefig(
             os.path.join(output_dir, sensor_name_png),  # noqa: PTH118
             dpi=300,
             bbox_inches='tight',
-        )  # save the plot as a png file
-        print('Save ' + os.path.join(output_dir, sensor_name_html) + '...')  # noqa: T201, PTH118
-        plt.savefig(
-            os.path.join(output_dir, sensor_name_html),  # noqa: PTH118
-            dpi=300,
-            bbox_inches='tight',
-        )  # save the plot as an html file
-        plt.show()
-        plt.close()
+        )
+        plt.close(fig)
 
-    print(  # noqa: T201
-        'post_process_sensors.py - Backend-script post_process_sensors.py reached end of main. Finished.'
-    )
+        figure_as_html = "<img src='" + os.path.join(output_dir, sensor_name_png) + "'>"
+
+        # Save the plot as an html file
+        with open(os.path.join(output_dir, sensor_name_html), 'w') as f:
+            f.write(figure_as_html)
+
+    sys.exit(main())

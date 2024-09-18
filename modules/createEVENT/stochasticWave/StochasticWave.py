@@ -1,6 +1,6 @@
-#!/usr/bin/env python3  # noqa: EXE001, D100
+#!/usr/bin/env python3
 
-"""Generate the event file using Stochastic Waves."""  # noqa: D205
+"""Generate the event file using Stochastic Waves."""
 
 import argparse
 import json
@@ -16,7 +16,8 @@ Copyright 2019 E. Branlard
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-""" # noqa: D205
+"""
+
 
 class FloorForces:  # noqa: D101
     def __init__(self, recorderID=-1):  # noqa: N803
@@ -116,8 +117,9 @@ def directionToDof(direction):  # noqa: N802
 def dofToDirection(dof):  # noqa: N802
     """Converts degree of freedom to direction"""  # noqa: D400, D401
     directionMap = {1: 'X', 2: 'Y', 3: 'Z'}  # noqa: N806
-    
+
     return directionMap[dof]
+
 
 def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):  # noqa: N802, N803
     """Add force (one component) time series and pattern in the event file
@@ -207,9 +209,10 @@ def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
     return int(bim['GeneralInformation']['stories'])
 
 
-def main():  # noqa: D103
+def main():
     """Generate the event file using Stochastic Waves."""
-    return 0 # noqa: T201
+    return 0
+
 
 if __name__ == '__main__':
     """
@@ -221,10 +224,10 @@ if __name__ == '__main__':
         description='Get sample EVENT file produced by the StochasticWave module'
     )
     parser.add_argument(
-        '-b', 
-        '--filenameAIM', 
-        help='BIM File', 
-        required=True, 
+        '-b',
+        '--filenameAIM',
+        help='BIM File',
+        required=True,
         default='AIM.json',
     )
     parser.add_argument(
@@ -235,12 +238,12 @@ if __name__ == '__main__':
         default='EVENT.json',
     )
     parser.add_argument(
-        '--getRV', 
-        help='getRV', 
-        required=False, 
+        '--getRV',
+        help='getRV',
+        required=False,
         action='store_true',
     )
-    # parser.add_argument('--filenameSAM', default=None) 
+    # parser.add_argument('--filenameSAM', default=None)
 
     arguments, unknowns = parser.parse_known_args()
 
@@ -269,5 +272,5 @@ if __name__ == '__main__':
         # write the event file
         writeEVENT(forces, filenameEVENT, floorsCount=floorsCount)
         # writeEVENT(forces, arguments.filenameEVENT)
-        
+
     sys.exit(main())

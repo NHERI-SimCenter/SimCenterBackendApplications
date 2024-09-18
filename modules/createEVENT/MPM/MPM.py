@@ -11,9 +11,9 @@ class FloorForces:  # noqa: D101
 
 def directionToDof(direction):  # noqa: N802
     """Converts direction to degree of freedom"""  # noqa: D400, D401
-    directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
+    directionMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
 
-    return directioMap[direction]  # noqa: DOC201, RUF100
+    return directionMap[direction]
 
 
 def addFloorForceToEvent(  # noqa: N802
