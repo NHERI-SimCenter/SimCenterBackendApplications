@@ -1,5 +1,5 @@
-#simcenter_add_executable(StochasticGM
-#                         command_parser.cpp eq_generator.cpp main.cpp)
+#simcenter_add_executable(NAME StochasticGM
+#                         DEPENDS CONAN_PKG::kissfft smelt) 
 
 add_executable(StochasticGM command_parser.cpp eq_generator.cpp main.cpp)
 
