@@ -6,10 +6,10 @@ stochastic::StudentstDistribution::StudentstDistribution(double mean,
                                                          double std_dev,
                                                          double dof)
     : Distribution(),
-      mean_{mean},
-      std_dev_{std_dev},
-      dof_{dof},
-      distribution_{dof_}
+      mean_(mean),
+      std_dev_(std_dev),
+      dof_(dof),
+      distribution_(dof_)
 {}
 
 std::vector<double> stochastic::StudentstDistribution::cumulative_dist_func(

@@ -125,7 +125,7 @@ class Factory {
     }
   };
 
-  std::map<std::string, std::shared_ptr<CreatorBase>> registry; /**< Register of
+  std::map<std::string, std::shared_ptr<CreatorBase> > registry; /**< Register of
                                                                    factory
                                                                    functions */
 };

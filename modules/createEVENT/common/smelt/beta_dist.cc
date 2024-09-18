@@ -4,9 +4,9 @@
 
 stochastic::BetaDistribution::BetaDistribution(double alpha, double beta)
   : Distribution(),
-    alpha_{alpha},
-    beta_{beta},
-    distribution_{alpha, beta_}
+    alpha_(alpha),
+    beta_(beta),
+    distribution_(alpha, beta_)
 {}
 
 std::vector<double> stochastic::BetaDistribution::cumulative_dist_func(
