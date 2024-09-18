@@ -11,20 +11,22 @@ import pandas as pd
 
 # Local
 from welib.tools.figure import defaultRC
-
 defaultRC()
-from welib.hydro.morison import *  # noqa: E402, F403
-from welib.hydro.wavekin import *  # noqa: E402, F403
+
+# from welib.hydro.morison import *  # noqa: E402, F403
+# from welib.hydro.wavekin import *  # noqa: E402, F403
+from welib.hydro.morison import inline_load  # noqa: E402
+from welib.hydro.wavekin import elevation2d, kinematics2d, wavenumber  # noqa: E402
 from welib.tools.colors import python_colors  # noqa: E402
 
 # --- Parameters
-g = 9.81  # gravity [m/s^2]
+g = 9.80665  # gravity [m/s^2]
 h = 30.0  # water depth [m]
 rho = 1000  # water density
 D = 6  # monopile diameter [m]
-CD = 1  # given
-CM = 2
-a = 3  # wave peak amplitude [m]
+CD = 1 # drag coefficient
+CM = 2 # added-mass coefficient
+a = 3.0  # wave peak amplitude [m]
 T = 12.0  # period [s]
 eps = 0  # phase shift [rad]
 f = 1.0 / T
@@ -105,10 +107,9 @@ axes1[0, 0].set_xlim(XLIM)
 axes1[0, 0].set_ylim([-h, a + 1])
 axes1[0, 0].set_ylabel('Depth z [m]')
 axes1[1, 0].set_ylabel('Depth z [m]')
-axes1[1, 0].set_xlabel('Inline force [kN/m]')
-axes1[1, 1].set_xlabel('Inline force [kN/m]')
-axes1[1, 2].set_xlabel('Inline force [kN/m]')
-axes1[1, 3].set_xlabel('Inline force [kN/m]')
+for i in range(4):
+    axes1[1, i].set_xlabel('Inline force [kN/m]')
+
 
 fig1.savefig('forces.png')
 # fig1.savefig('forces.webp')
@@ -118,10 +119,8 @@ axes2[0, 0].set_xlim(XLIMM)
 axes2[0, 0].set_ylim([-h, a + 1])
 axes2[0, 0].set_ylabel('Depth z [m]')
 axes2[1, 0].set_ylabel('Depth z [m]')
-axes2[1, 0].set_xlabel('Inline moment [kNm/m]')
-axes2[1, 1].set_xlabel('Inline moment [kNm/m]')
-axes2[1, 2].set_xlabel('Inline moment [kNm/m]')
-axes2[1, 3].set_xlabel('Inline moment [kNm/m]')
+for i in range(4):
+    axes2[1, i].set_xlabel('Inline moment [kNm/m]')
 
 fig2.savefig('moments.png')
 # fig2.savefig('moments.webp')
@@ -140,7 +139,6 @@ vM0 = np.zeros(time.shape)  # noqa: N816
 XLIM = [-75, 75]  # For inline force
 XLIMM = [-2500, 2500]  # For inline moment
 
-# a=6 # NOTE: increased amplitude here to see Effect of Wheeler
 elevation = np.zeros((len(time), nz))
 velocity = np.zeros((len(time), nz))
 accel = np.zeros((len(time), nz))
@@ -207,11 +205,6 @@ for i in range(nz):
     name = 'RMSA_' + str(i + 1) + '_' + str(dof)
     du_df[name] = accel[:, i]
 
-    # transpose the dataframe so one recorder occupies a row, not a column (which are timesteps)
-    # veta_df = veta_df.T
-    # u_df = u_df.T
-    # du_df = du_df.T
-
 # add column per each force recorder
 result_df = pd.DataFrame()
 for i in range(nz):
@@ -219,11 +212,6 @@ for i in range(nz):
     # name = 'Node_' + str(i+1) + '_' + str(dof)
     name = 'Force_' + str(i + 1) + '_' + str(dof)
     result_df[name] = force[:, i]
-    # transpose the dataframe
-    # result_df = result_df.T
-
-    # make sure there are no headers or indices
-
 
 # write columns to columns in csv files
 (veta_df.T).to_csv('disp.evt', sep=' ', encoding='utf-8', index=False, header=False)
@@ -232,7 +220,6 @@ for i in range(nz):
 (result_df.T).to_csv(
     'forces.evt', sep=' ', encoding='utf-8', index=False, header=False
 )
-
 
 # write columns to columns in csv files
 (veta_df.T).to_csv('disp.out', sep=' ', encoding='utf-8', index=False, header=False)
@@ -246,7 +233,6 @@ for i in range(nz):
 )
 
 # make results.out dataframe with 3 columns and one row, no header. Each element is separated by a space
-
 # results_df = pd.DataFrame({'total_impulse':vF[-1], 'max_force':vM[-1], 'total_disp':vF0[-1]}, index=[0])
 # results_df.to_csv('results.out', sep=' ', encoding='utf-8', header=False, index=False)
 
@@ -256,6 +242,7 @@ def main(df=None):  # noqa: D103
 
 
 if __name__ == '__main__':
+    """Entry point for the script."""
     parser = argparse.ArgumentParser(
         description='Compute inline/total hydrodynamic force and moments on a monopile using Morisons equation'
     )

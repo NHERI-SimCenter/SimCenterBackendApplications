@@ -3,13 +3,28 @@
 import argparse
 import json
 import re
+import sys
 
-from welib.tools.figure import defaultRC
+# from welib.tools.figure import defaultRC
 
-defaultRC()
-from welib.hydro.morison import *  # noqa: E402, F403
-from welib.hydro.wavekin import *  # noqa: E402, F403
+# # defaultRC()
+# # from welib.hydro.morison import *  # noqa: E402, F403
+# # from welib.hydro.wavekin import *  # noqa: E402, F403
 
+# import Ex1_WaveKinematics
+# import Ex2_Jonswap_spectrum
+# import Ex3_WaveTimeSeries
+import Ex4_WaveLoads
+
+"""
+Notable portions of this code are derived courtesy of the welib python package 
+and the following source:
+
+Copyright 2019 E. Branlard
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
 
 class FloorForces:  # noqa: D101
     def __init__(self, recorderID=-1):  # noqa: N803
@@ -78,30 +93,38 @@ class FloorForces:  # noqa: D101
                     self.Z.append(max(self.Z))
 
                     print(  # noqa: T201
-                        'Length: ',
+                        'Length: [',
                         len(self.X),
-                        ', Max force: ',
+                        len(self.Y),
+                        len(self.Z),
+                        '], Max force: [',
                         max(self.X),
                         max(self.Y),
                         max(self.Z),
-                        ', Min force: ',
+                        '], Min force: [',
                         min(self.X),
                         min(self.Y),
                         min(self.Z),
-                        ', Last force: ',
+                        '], Last force: [',
                         self.X[-1],
                         self.Y[-1],
                         self.Z[-1],
+                        '].',
                     )
             file.close()
 
 
 def directionToDof(direction):  # noqa: N802
     """Converts direction to degree of freedom"""  # noqa: D400, D401
-    directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
+    directionMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
 
-    return directioMap[direction]
+    return directionMap[direction]
 
+def dofToDirection(dof):  # noqa: N802
+    """Converts degree of freedom to direction"""  # noqa: D400, D401
+    directionMap = {1: 'X', 2: 'Y', 3: 'Z'}  # noqa: N806
+    
+    return directionMap[dof]
 
 def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):  # noqa: N802, N803
     """Add force (one component) time series and pattern in the event file
@@ -141,12 +164,10 @@ def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):
 
 
 def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):  # noqa: N802, N803
-    """This method writes the EVENT.json file"""  # noqa: D400, D401, D404
-    # Adding floor forces
+    """Write the EVENT into the event JSON file."""
     patternsArray = []  # noqa: N806
     timeSeriesArray = []  # noqa: N806
     # timeSeriesType = "Value" # ? saw in old evt files
-
     # pressure = [{"pressure": [0.0, 0.0], "story": 1}]
     pressure = []
 
@@ -156,11 +177,9 @@ def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):  # noqa: N802
             patternsArray, timeSeriesArray, floorForces, 'X', it + 1
         )
 
-    # subtype = "StochasticWindModel-KwonKareem2006"
     eventClassification = 'Hydro'  # noqa: N806
     eventType = 'StochasticWave'  # noqa: N806
     eventSubtype = 'StochasticWaveJonswap'  # noqa: N806, F841
-    # subtype = "StochasticWaveJonswap" # ?
     # timeSeriesName = "HydroForceSeries_1X"
     # patternName = "HydroForcePattern_1X"
 
@@ -196,10 +215,8 @@ def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
 
 
 def main():  # noqa: D103
-    return 0
-    # """
-    # Entry point to generate event file using Stochastic Waves
-    # """
+    """Generate the event file using Stochastic Waves."""
+    return 0 # noqa: T201
     # #CLI parser
     # parser = argparse.ArgumentParser(description="Get sample EVENT file produced by StochasticWave")
     # parser.add_argument('-b', '--filenameAIM', help="BIM File", required=True)
@@ -232,11 +249,12 @@ def main():  # noqa: D103
 
 if __name__ == '__main__':
     """
-    Entry point to generate event file using Stochastic Waves
+    Entry point to generate event file using Stochastic Waves when run as a script.
     """
+
     # CLI parser
     parser = argparse.ArgumentParser(
-        description='Get sample EVENT file produced by StochasticWave'
+        description='Get sample EVENT file produced by the StochasticWave module'
     )
     parser.add_argument(
         '-b', '--filenameAIM', help='BIM File', required=True, default='AIM.json'
@@ -253,6 +271,8 @@ if __name__ == '__main__':
 
     # parsing arguments
     arguments, unknowns = parser.parse_known_args()
+
+    # sys.exit(main(arguments.filenameAIM, arguments.filenameEVENT, arguments.getRV))
 
     # Run Ex4_WaveLoads.py with the given parameters
     # result = Ex4_WaveLoads.main(arguments.water_depth, arguments.peak_period, arguments.significant_wave_height, arguments.pile_diameter, arguments.drag_coefficient, arguments.mass_coefficient, arguments.number_of_recorders_z, arguments.time)
@@ -294,3 +314,4 @@ if __name__ == '__main__':
         # write the event file
         writeEVENT(forces, filenameEVENT, floorsCount=floorsCount)
         # writeEVENT(forces, arguments.filenameEVENT)
+    sys.exit(main())
