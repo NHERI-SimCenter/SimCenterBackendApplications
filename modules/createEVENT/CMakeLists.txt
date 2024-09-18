@@ -1,3 +1,4 @@
+add_subdirectory(common)
 add_subdirectory(CFDEvent)
 add_subdirectory(GeoClawOpenFOAM)
 add_subdirectory(DEDM_HRP)

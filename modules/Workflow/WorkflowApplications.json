@@ -975,6 +975,10 @@
         "ExecutablePath": "applications/performSIMULATION/IMasEDP/IMasEDP.py"
       },
       {
+        "Name": "CapacitySpectrumMethod",
+        "ExecutablePath": "applications/performSIMULATION/capacitySpectrum/runCMS.py"
+      },
+      {
         "Name": "SurrogateSimulation",
         "ExecutablePath": "applications/performSIMULATION/surrogateSimulation/SurrogateSimulation.py"
       },

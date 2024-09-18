@@ -37,12 +37,45 @@
 # Kuanshi Zhong
 #
 
-import socket
+import socket  # noqa: I001
 import sys
 
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+import importlib
+import subprocess
+
+
+if importlib.util.find_spec('joblib') is None:
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'joblib'])  # noqa: S603
+
+if importlib.util.find_spec('contextlib') is None:
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'contextlib'])  # noqa: S603
+
+import joblib  # noqa: I001
+import contextlib
+from joblib import Parallel, delayed
+import multiprocessing
+
+
+@contextlib.contextmanager
+def tqdm_joblib(tqdm_object):
+    """Context manager to patch joblib to report into tqdm progress bar given as argument."""
+
+    class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):
+        def __call__(self, *args, **kwargs):
+            tqdm_object.update(n=self.batch_size)
+            return super().__call__(*args, **kwargs)
+
+    old_batch_callback = joblib.parallel.BatchCompletionCallBack
+    joblib.parallel.BatchCompletionCallBack = TqdmBatchCompletionCallback
+    try:
+        yield tqdm_object
+    finally:
+        joblib.parallel.BatchCompletionCallBack = old_batch_callback
+        tqdm_object.close()
+
 
 if 'stampede2' not in socket.gethostname():
     from FetchOpenSHA import (
@@ -206,6 +239,13 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
                 selected_stn[soil_model_label] = [
                     soil_model_tag for x in range(len(selected_stn.index))
                 ]
+    # Check if any duplicated points
+    if selected_stn.duplicated(subset=[lon_label, lat_label]).any():
+        sys.exit(
+            'Error: Duplicated lat and lon in the Site File (.csv), '
+            f'please check site \n{selected_stn[selected_stn.duplicated(subset=[lon_label, lat_label], keep = False)].index.tolist()}'
+        )
+
     STN = []  # noqa: N806
     stn_file = {'Stations': []}
     # Get Vs30
@@ -428,6 +468,56 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
                         'chi',
                     ]:
                         user_param_list.pop(user_param_list.index(cur_param))
+    # If z1pt0 is OpenSHA default model, use parallel processing to get z1pt0
+    if z1Config['Type'] == 'OpenSHA default model':
+        z1_tag = z1Config['z1_tag']
+        if z1_tag == 2:  # noqa: PLR2004
+            # num_cores = z1Config.get('num_cores', multiprocessing.cpu_count())
+            num_cores = z1Config.get('num_cores', 1)
+            if num_cores == 1:
+                z1pt0_results = [
+                    get_site_z1pt0_from_opensha(lat, lon)
+                    for lat, lon in zip(
+                        selected_stn['Latitude'].tolist(),
+                        selected_stn['Longitude'].tolist(),
+                    )
+                ]
+            else:
+                with tqdm_joblib(
+                    tqdm(desc='Get z1pt0 from openSHA', total=selected_stn.shape[0])
+                ) as progress_bar:
+                    z1pt0_results = Parallel(n_jobs=num_cores)(
+                        delayed(get_site_z1pt0_from_opensha)(lat, lon)
+                        for lat, lon in zip(
+                            selected_stn['Latitude'].tolist(),
+                            selected_stn['Longitude'].tolist(),
+                        )
+                    )
+    if z25Config['Type'] == 'OpenSHA default model':
+        z25_tag = z25Config['z25_tag']
+        if z25_tag == 2:  # noqa: PLR2004
+            # num_cores = z25Config.get('num_cores', multiprocessing.cpu_count())
+            num_cores = z25Config.get('num_cores', 1)
+            if num_cores == 1:
+                z2pt5_results = [
+                    get_site_z2pt5_from_opensha(lat, lon)
+                    for lat, lon in zip(
+                        selected_stn['Latitude'].tolist(),
+                        selected_stn['Longitude'].tolist(),
+                    )
+                ]
+            else:
+                with tqdm_joblib(
+                    tqdm(desc='Get z2pt5 from openSHA', total=selected_stn.shape[0])
+                ) as progress_bar:  # noqa: F841
+                    z2pt5_results = Parallel(n_jobs=num_cores)(
+                        delayed(get_site_z2pt5_from_opensha)(lat, lon)
+                        for lat, lon in zip(
+                            selected_stn['Latitude'].tolist(),
+                            selected_stn['Longitude'].tolist(),
+                        )
+                    )
+
     ground_failure_input_keys = set()
     for ind in tqdm(range(selected_stn.shape[0]), desc='Stations'):
         stn = selected_stn.iloc[ind, :]
@@ -474,9 +564,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
             if z1_tag == 1:
                 tmp.update({'z1pt0': get_z1(tmp['Vs30'])})
             elif z1_tag == 2:  # noqa: PLR2004
-                z1pt0 = get_site_z1pt0_from_opensha(
-                    tmp['Latitude'], tmp['Longitude']
-                )
+                z1pt0 = z1pt0_results[ind]
                 if np.isnan(z1pt0):
                     z1pt0 = get_z1(tmp.get('Vs30'))
                 tmp.update({'z1pt0': z1pt0})
@@ -495,9 +583,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
             if z25_tag == 1:
                 tmp.update({'z2pt5': get_z25(tmp['z1pt0'])})
             elif z25_tag == 2:  # noqa: PLR2004
-                z2pt5 = get_site_z2pt5_from_opensha(
-                    tmp['Latitude'], tmp['Longitude']
-                )
+                z2pt5 = z2pt5_results[ind]
                 if np.isnan(z2pt5):
                     z2pt5 = get_z25(tmp['z1pt0'])
                 tmp.update({'z2pt5': z2pt5})
@@ -665,6 +751,18 @@ def get_vs30_global(lat, lon):
     return vs30  # noqa: DOC201, RET504, RUF100
 
 
+def parallel_interpolation(func, lat, lon):
+    """Interpolate data in parallel
+    Input:
+        func: interpolation function
+        lat: list of latitude
+        lon: list of longitude
+    Output:
+        data: list of interpolated data
+    """  # noqa: D205, D400
+    return func(lat, lon)
+
+
 def get_vs30_thompson(lat, lon):
     """Interpolate global Vs30 at given latitude and longitude
     Input:
@@ -683,51 +781,48 @@ def get_vs30_thompson(lat, lon):
     with open(cwd + '/database/site/thompson_vs30_4km.pkl', 'rb') as f:  # noqa: PTH123
         vs30_thompson = pickle.load(f)  # noqa: S301
     # Interpolation function (linear)
-    # Thompson's map gives zero values for water-covered region and outside CA -> use 760 for default
-    print(  # noqa: T201
-        'CreateStation: Warning - approximate 760 m/s for sites not supported by Thompson Vs30 map (water/outside CA).'
-    )
     vs30_thompson['Vs30'][vs30_thompson['Vs30'] < 0.1] = 760  # noqa: PLR2004
     interpFunc = interpolate.interp2d(  # noqa: N806
         vs30_thompson['Longitude'], vs30_thompson['Latitude'], vs30_thompson['Vs30']
     )
     vs30 = [float(interpFunc(x, y)) for x, y in zip(lon, lat)]
 
+    num_zeros = len([x for x in vs30 if x == 0])
+    if num_zeros > 0:
+        # Thompson's map gives zero values for water-covered region and outside CA -> use 760 for default
+        print(  # noqa: T201
+            f'CreateStation: Warning - approximate 760 m/s for {num_zeros} sites not supported by Thompson Vs30 map (water/outside CA).'
+        )
     # return
     return vs30  # noqa: DOC201, RET504, RUF100
 
 
 def get_z1(vs30):
-    """Compute z1 based on the prediction equation by Chiou and Youngs (2013) (unit of vs30 is meter/second and z1 is meter)"""  # noqa: D400
-    z1 = np.exp(-7.15 / 4.0 * np.log((vs30**4 + 571.0**4) / (1360.0**4 + 571.0**4)))
-    # return
-    return z1  # noqa: DOC201, RET504, RUF100
+    """Compute z1 based on the prediction equation by Chiou and Youngs (2013) (unit of vs30 is meter/second and z1 is meter)."""
+    return np.exp(
+        -7.15 / 4.0 * np.log((vs30**4 + 571.0**4) / (1360.0**4 + 571.0**4))
+    )
 
 
 def get_z25(z1):
-    """Compute z25 based on the prediction equation by Campbell and Bozorgnia (2013)"""  # noqa: D400
-    z25 = 0.748 + 2.218 * z1
-    # return
-    return z25  # noqa: DOC201, RET504, RUF100
+    """Compute z25 based on the prediction equation by Campbell and Bozorgnia (2013)."""
+    return 0.748 + 2.218 * z1
 
 
 def get_z25fromVs(vs):  # noqa: N802
-    """Compute z25 (m) based on the prediction equation 33 by Campbell and Bozorgnia (2014)
-    Vs is m/s
-    """  # noqa: D205, D400
-    z25 = (7.089 - 1.144 * np.log(vs)) * 1000
-    # return
-    return z25  # noqa: DOC201, RET504, RUF100
+    """Compute z25 (m) based on the prediction equation 33 by Campbell and Bozorgnia (2014) Vs is m/s."""
+    return (7.089 - 1.144 * np.log(vs)) * 1000
 
 
 def get_zTR_global(lat, lon):  # noqa: N802
-    """Interpolate depth to rock at given latitude and longitude
+    """Interpolate depth to rock at given latitude and longitude.
+
     Input:
         lat: list of latitude
         lon: list of longitude
     Output:
         zTR: list of zTR
-    """  # noqa: D205, D400
+    """
     import os
     import pickle
 
