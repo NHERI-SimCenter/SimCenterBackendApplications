@@ -122,9 +122,7 @@ class openfoam7:
             hydroutil.extract_element_from_json(data, ['Events', 'MeshType'])
         )
         simtype = ', '.join(  # noqa: F841
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'SimulationType']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
         )
 
         # Add all variables

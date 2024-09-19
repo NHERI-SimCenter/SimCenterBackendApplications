@@ -68,9 +68,7 @@ class of7Process:
 
         # Point data from file
         pprocessfile = ', '.join(
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'PProcessFile']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'PProcessFile'])
         )
         pprocesspath = os.path.join(path, pprocessfile)  # noqa: PTH118
         pp_data = np.genfromtxt(pprocesspath, delimiter=',')
@@ -96,9 +94,7 @@ class of7Process:
         )
         if pprocessV != [None]:
             pprocessV = ', '.join(  # noqa: N806
-                hydroutil.extract_element_from_json(
-                    data, ['Events', 'PPVelocity']
-                )
+                hydroutil.extract_element_from_json(data, ['Events', 'PPVelocity'])
             )
             if pprocessV == 'Yes':
                 value += 1
@@ -107,9 +103,7 @@ class of7Process:
         )
         if pprocessP != [None]:
             pprocessP = ', '.join(  # noqa: N806
-                hydroutil.extract_element_from_json(
-                    data, ['Events', 'PPPressure']
-                )
+                hydroutil.extract_element_from_json(data, ['Events', 'PPPressure'])
             )
             if pprocessP == 'Yes':
                 value += 2
@@ -158,9 +152,7 @@ class of7Process:
 
         # Get the simulation type: Solver
         simtype = ', '.join(
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'SimulationType']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
         )
         if int(simtype) == 4:  # noqa: PLR2004
             cdicttext = cdicttext + '\napplication \t olaDyMFlow;\n\n'
@@ -176,9 +168,7 @@ class of7Process:
         elif restart == 'No':
             # Start time
             startT = ', '.join(  # noqa: N806
-                hydroutil.extract_element_from_json(
-                    data, ['Events', 'StartTime']
-                )
+                hydroutil.extract_element_from_json(data, ['Events', 'StartTime'])
             )
             cdicttext = cdicttext + 'startFrom \t startTime;\n\n'
             cdicttext = cdicttext + 'startTime \t' + startT + ';\n\n'
@@ -192,9 +182,7 @@ class of7Process:
 
         # Time interval
         deltaT = ', '.join(  # noqa: N806
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'TimeInterval']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'TimeInterval'])
         )
         cdicttext = cdicttext + 'deltaT \t' + deltaT + ';\n\n'
 
@@ -203,9 +191,7 @@ class of7Process:
 
         # Write interval
         writeT = ', '.join(  # noqa: N806
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'WriteInterval']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'WriteInterval'])
         )
         cdicttext = cdicttext + 'writeInterval \t' + writeT + ';\n\n'
 
@@ -224,9 +210,7 @@ class of7Process:
 
         # Point data from file
         pprocessfile = ', '.join(
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'PProcessFile']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'PProcessFile'])
         )
         pprocesspath = os.path.join(path, pprocessfile)  # noqa: PTH118
         pp_data = np.genfromtxt(pprocesspath, delimiter=',')
@@ -252,9 +236,7 @@ class of7Process:
         )
         if pprocessV != [None]:
             pprocessV = ', '.join(  # noqa: N806
-                hydroutil.extract_element_from_json(
-                    data, ['Events', 'PPVelocity']
-                )
+                hydroutil.extract_element_from_json(data, ['Events', 'PPVelocity'])
             )
             if pprocessV == 'Yes':
                 value += 1
@@ -263,9 +245,7 @@ class of7Process:
         )
         if pprocessP != [None]:
             pprocessP = ', '.join(  # noqa: N806
-                hydroutil.extract_element_from_json(
-                    data, ['Events', 'PPPressure']
-                )
+                hydroutil.extract_element_from_json(data, ['Events', 'PPPressure'])
             )
             if pprocessP == 'Yes':
                 value += 2
@@ -325,9 +305,7 @@ class of7Process:
             elif pprocess == 'Yes':
                 caseruntext = 'echo postprocessing for EVT\n'
                 # Reconstruct case
-                caseruntext = (
-                    caseruntext + 'reconstructPar > reconstruct.log \n'
-                )
+                caseruntext = caseruntext + 'reconstructPar > reconstruct.log \n'
                 # Move new controlDict
                 cdictpppath = os.path.join('system', 'controlDict')  # noqa: PTH118
                 caseruntext = caseruntext + 'cp cdictpp ' + cdictpppath + '\n'
@@ -343,12 +321,7 @@ class of7Process:
                         'extras', 'wavemakerMovement.txt'
                     )
                     caseruntext = (
-                        caseruntext
-                        + 'mv '
-                        + wavepath
-                        + ' '
-                        + wavepathnew
-                        + '\n'
+                        caseruntext + 'mv ' + wavepath + ' ' + wavepathnew + '\n'
                     )
                 # Copy sample file
                 caseruntext = (
@@ -379,23 +352,17 @@ class of7Process:
 
         # Find if pprocess is required
         pprocess = ', '.join(
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'Postprocessing']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'Postprocessing'])
         )
 
         if pprocess == 'No':
             return 0  # noqa: DOC201, RUF100
         else:  # noqa: RET505
             pprocessV = ', '.join(  # noqa: N806
-                hydroutil.extract_element_from_json(
-                    data, ['Events', 'PPVelocity']
-                )
+                hydroutil.extract_element_from_json(data, ['Events', 'PPVelocity'])
             )
             pprocessP = ', '.join(  # noqa: N806
-                hydroutil.extract_element_from_json(
-                    data, ['Events', 'PPPressure']
-                )
+                hydroutil.extract_element_from_json(data, ['Events', 'PPPressure'])
             )
             if pprocessV == 'Yes' or pprocessP == 'Yes':
                 pprocessfile = hydroutil.extract_element_from_json(

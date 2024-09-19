@@ -197,9 +197,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
 
     # Write 'resolveFeatureAngle'
     start_index = foam.find_keyword_line(dict_lines, 'resolveFeatureAngle')
-    dict_lines[start_index] = (
-        f'    resolveFeatureAngle {resolve_feature_angle:d};\n'
-    )
+    dict_lines[start_index] = f'    resolveFeatureAngle {resolve_feature_angle:d};\n'
 
     # Write 'insidePoint'
     start_index = foam.find_keyword_line(dict_lines, 'insidePoint')
@@ -884,9 +882,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
     # Write writeControl
     start_index = foam.find_keyword_line(dict_lines, 'writeControl')
     if solver_type == 'pimpleFoam':
-        dict_lines[start_index] = 'writeControl \t{};\n'.format(
-            'adjustableRunTime'
-        )
+        dict_lines[start_index] = 'writeControl \t{};\n'.format('adjustableRunTime')
     else:
         dict_lines[start_index] = 'writeControl \t\t{};\n'.format('timeStep')
 
@@ -1090,9 +1086,7 @@ def write_wind_profiles_file(input_json_path, template_dict_path, case_path):  #
                 'adjustableRunTime'
             )
         else:
-            dict_lines[start_index] = '    writeControl \t{};\n'.format(
-                'timeStep'
-            )
+            dict_lines[start_index] = '    writeControl \t{};\n'.format('timeStep')
 
         # Write writeInterval
         start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
@@ -1101,9 +1095,7 @@ def write_wind_profiles_file(input_json_path, template_dict_path, case_path):  #
                 f'    writeInterval \t{write_interval * time_step:.6f};\n'
             )
         else:
-            dict_lines[start_index] = (
-                f'    writeInterval \t{write_interval};\n'
-            )
+            dict_lines[start_index] = f'    writeInterval \t{write_interval};\n'
 
         # Write start time for the probes
         start_index = foam.find_keyword_line(dict_lines, 'timeStart')
@@ -1193,9 +1185,7 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):  # noq
                 'adjustableRunTime'
             )
         else:
-            dict_lines[start_index] = '    writeControl \t{};\n'.format(
-                'timeStep'
-            )
+            dict_lines[start_index] = '    writeControl \t{};\n'.format('timeStep')
 
         # Write writeInterval
         start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
@@ -1204,9 +1194,7 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):  # noq
                 f'    writeInterval \t{write_interval * time_step:.6f};\n'
             )
         else:
-            dict_lines[start_index] = (
-                f'    writeInterval \t{write_interval};\n'
-            )
+            dict_lines[start_index] = f'    writeInterval \t{write_interval};\n'
 
         # Write start and end time for the section
         start_time = pln['startTime']
@@ -1340,9 +1328,7 @@ def write_physicalProperties_file(  # noqa: N802, D103
 
     # Write type of the simulation
     start_index = foam.find_keyword_line(dict_lines, 'nu')
-    dict_lines[start_index] = (
-        f'nu\t\t[0 2 -1 0 0 0 0] {kinematic_viscosity:.4e};\n'
-    )
+    dict_lines[start_index] = f'nu\t\t[0 2 -1 0 0 0 0] {kinematic_viscosity:.4e};\n'
 
     # Write edited dict to file
     write_file_name = case_path + '/constant/physicalProperties'
@@ -1376,9 +1362,7 @@ def write_transportProperties_file(  # noqa: N802, D103
 
     # Write type of the simulation
     start_index = foam.find_keyword_line(dict_lines, 'nu')
-    dict_lines[start_index] = (
-        f'nu\t\t[0 2 -1 0 0 0 0] {kinematic_viscosity:.3e};\n'
-    )
+    dict_lines[start_index] = f'nu\t\t[0 2 -1 0 0 0 0] {kinematic_viscosity:.3e};\n'
 
     # Write edited dict to file
     write_file_name = case_path + '/constant/transportProperties'
@@ -1578,19 +1562,13 @@ if __name__ == '__main__':
     write_fvSchemes_file(input_json_path, template_dict_path, case_path)
 
     # Write momentumTransport dict
-    write_momentumTransport_file(
-        input_json_path, template_dict_path, case_path
-    )
+    write_momentumTransport_file(input_json_path, template_dict_path, case_path)
 
     # Write physicalProperties dict
-    write_physicalProperties_file(
-        input_json_path, template_dict_path, case_path
-    )
+    write_physicalProperties_file(input_json_path, template_dict_path, case_path)
 
     # Write transportProperties (physicalProperties in OF-10) dict for OpenFOAM-9 and below
-    write_transportProperties_file(
-        input_json_path, template_dict_path, case_path
-    )
+    write_transportProperties_file(input_json_path, template_dict_path, case_path)
 
     # Write decomposeParDict
     write_decomposeParDict_file(input_json_path, template_dict_path, case_path)

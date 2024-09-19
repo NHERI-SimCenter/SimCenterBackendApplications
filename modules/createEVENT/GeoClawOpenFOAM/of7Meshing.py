@@ -83,9 +83,7 @@ class of7Meshing:
                 return -1
             else:  # noqa: RET505
                 meshfile = ', '.join(
-                    hydroutil.extract_element_from_json(
-                        data, ['Events', 'MeshFile']
-                    )
+                    hydroutil.extract_element_from_json(data, ['Events', 'MeshFile'])
                 )
                 meshfilepath = os.path.join(fipath, meshfile)  # noqa: PTH118
                 if not os.path.isfile(meshfilepath):  # noqa: PTH113
@@ -355,20 +353,16 @@ FoamFile
         shmtext = shmtext + 'Entry.stl {type triSurfaceMesh; name Entry;}\n\t'
         shmtext = shmtext + 'Exit.stl {type triSurfaceMesh; name Exit;}\n\t'
         shmtext = shmtext + 'Top.stl {type triSurfaceMesh; name Top;}\n\t'
-        shmtext = (
-            shmtext + 'Bottom.stl {type triSurfaceMesh; name Bottom;}\n\t'
-        )
+        shmtext = shmtext + 'Bottom.stl {type triSurfaceMesh; name Bottom;}\n\t'
         shmtext = shmtext + 'Left.stl {type triSurfaceMesh; name Left;}\n\t'
         shmtext = shmtext + 'Right.stl {type triSurfaceMesh; name Right;}\n'
         if int(data_geoext[6]) == 1:
             shmtext = (
-                shmtext
-                + '\tBuilding.stl {type triSurfaceMesh; name Building;}\n'
+                shmtext + '\tBuilding.stl {type triSurfaceMesh; name Building;}\n'
             )
         elif int(data_geoext[6]) == 2:  # noqa: PLR2004
             shmtext = (
-                shmtext
-                + '\tBuilding.stl {type triSurfaceMesh; name Building;}\n'
+                shmtext + '\tBuilding.stl {type triSurfaceMesh; name Building;}\n'
             )
             shmtext = (
                 shmtext
@@ -432,8 +426,7 @@ FoamFile
         # Regional refinement
         # This needs to be added and corrected
         shmtext = (
-            shmtext
-            + '\trefinementRegions\n\t{\n\t\t//Nothing here for now\n\t}\n\n'
+            shmtext + '\trefinementRegions\n\t{\n\t\t//Nothing here for now\n\t}\n\n'
         )
 
         # Get the point inside the body
@@ -537,12 +530,9 @@ FoamFile
             caseruntext = 'echo blockMesh running...\n'
             caseruntext = caseruntext + 'blockMesh > blockMesh.log\n\n'
             # surfaceFeatureExtract
+            caseruntext = caseruntext + 'echo surfaceFeatureExtract running...\n'
             caseruntext = (
-                caseruntext + 'echo surfaceFeatureExtract running...\n'
-            )
-            caseruntext = (
-                caseruntext
-                + 'surfaceFeatureExtract -force > sFeatureExt.log\n\n'
+                caseruntext + 'surfaceFeatureExtract -force > sFeatureExt.log\n\n'
             )
             # snappyHexMesh
             caseruntext = caseruntext + 'echo snappyHexMesh running...\n'
@@ -585,8 +575,7 @@ FoamFile
                 )
             elif int(meshsoftware[0]) == 3:  # noqa: PLR2004
                 caseruntext = (
-                    caseruntext
-                    + 'gambitToFoam $MESHFILE > gambitToFoam.log\n\n'
+                    caseruntext + 'gambitToFoam $MESHFILE > gambitToFoam.log\n\n'
                 )
             elif int(meshsoftware[0]) == 4:  # noqa: PLR2004
                 caseruntext = (
@@ -600,9 +589,7 @@ FoamFile
             bmfile = os.path.join(path, 'blockMeshDict')  # noqa: PTH118
             if os.path.isfile(bmfile):  # noqa: PTH113
                 bmfilenew = os.path.join('system', 'blockMeshDict')  # noqa: PTH118
-                caseruntext = (
-                    caseruntext + 'cp ' + bmfile + ' ' + bmfilenew + '\n'
-                )
+                caseruntext = caseruntext + 'cp ' + bmfile + ' ' + bmfilenew + '\n'
                 caseruntext = caseruntext + 'echo blockMesh running...\n'
                 caseruntext = caseruntext + 'blockMesh > blockMesh.log\n\n'
 
@@ -612,12 +599,8 @@ FoamFile
                 sfdfilenew = os.path.join(  # noqa: PTH118
                     'system', 'surfaceFeatureExtractDict'
                 )
-                caseruntext = (
-                    caseruntext + 'cp ' + sfdfile + ' ' + sfdfilenew + '\n'
-                )
-                caseruntext = (
-                    caseruntext + 'echo surfaceFeatureExtract running...\n'
-                )
+                caseruntext = caseruntext + 'cp ' + sfdfile + ' ' + sfdfilenew + '\n'
+                caseruntext = caseruntext + 'echo surfaceFeatureExtract running...\n'
                 caseruntext = (
                     caseruntext
                     + 'surfaceFeatureExtract -force > sFeatureExt.log\n\n'
@@ -627,13 +610,9 @@ FoamFile
             shmfile = os.path.join(path, 'snappyHexMeshDict')  # noqa: PTH118
             if os.path.isfile(shmfile):  # noqa: PTH113
                 shmfilenew = os.path.join('system', 'snappyHexMeshDict')  # noqa: PTH118
-                caseruntext = (
-                    caseruntext + 'cp ' + shmfile + ' ' + shmfilenew + '\n'
-                )
+                caseruntext = caseruntext + 'cp ' + shmfile + ' ' + shmfilenew + '\n'
                 caseruntext = caseruntext + 'echo snappyHexMesh running...\n'
-                caseruntext = (
-                    caseruntext + 'snappyHexMesh > snappyHexMesh.log\n'
-                )
+                caseruntext = caseruntext + 'snappyHexMesh > snappyHexMesh.log\n'
                 path2c = os.path.join('2', 'polyMesh')  # noqa: PTH118
                 caseruntext = caseruntext + 'cp -r ' + path2c + ' constant\n'
                 caseruntext = caseruntext + 'rm -fr 1 2\n'

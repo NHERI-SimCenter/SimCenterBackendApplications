@@ -125,8 +125,7 @@ FoamFile
         fvSchemetext = fvSchemetext + 'div(phi,k)\tGauss upwind;\n\t'  # noqa: N806
         fvSchemetext = fvSchemetext + 'div(phi,epsilon)\tGauss upwind;\n\t'  # noqa: N806
         fvSchemetext = (  # noqa: N806
-            fvSchemetext
-            + 'div((phi|interpolate(porosity)),k)\tGauss upwind;\n\t'
+            fvSchemetext + 'div((phi|interpolate(porosity)),k)\tGauss upwind;\n\t'
         )
         fvSchemetext = (  # noqa: N806
             fvSchemetext + 'div((phi*interpolate(rho)),k)\tGauss upwind;\n\t'
@@ -141,12 +140,10 @@ FoamFile
             + 'div((phi|interpolate(porosity)),omega)\tGauss upwind;\n\t'
         )
         fvSchemetext = (  # noqa: N806
-            fvSchemetext
-            + 'div((phi*interpolate(rho)),omega)\tGauss upwind;\n\t'
+            fvSchemetext + 'div((phi*interpolate(rho)),omega)\tGauss upwind;\n\t'
         )
         fvSchemetext = (  # noqa: N806
-            fvSchemetext
-            + 'div((phi*interpolate(rho)),epsilon)\tGauss upwind;\n'
+            fvSchemetext + 'div((phi*interpolate(rho)),epsilon)\tGauss upwind;\n'
         )
         fvSchemetext = fvSchemetext + '}\n\n'  # noqa: N806
 
@@ -190,16 +187,12 @@ FoamFile
 
         # Get the simulation type
         simtype = ', '.join(
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'SimulationType']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
         )
 
         # Get the turbulence model
         turb = ', '.join(
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'TurbulenceModel']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'TurbulenceModel'])
         )
 
         # Get the header text for the U-file
@@ -316,9 +309,7 @@ FoamFile
 
         # Get the simulation type: Solver
         simtype = ', '.join(
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'SimulationType']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
         )
         if int(simtype) == 4:  # noqa: PLR2004
             cdicttext = cdicttext + '\napplication \t olaDyMFlow;\n\n'
@@ -334,9 +325,7 @@ FoamFile
         elif restart == 'No':
             # Start time
             startT = ', '.join(  # noqa: N806
-                hydroutil.extract_element_from_json(
-                    data, ['Events', 'StartTime']
-                )
+                hydroutil.extract_element_from_json(data, ['Events', 'StartTime'])
             )
             cdicttext = cdicttext + 'startFrom \t startTime;\n\n'
             cdicttext = cdicttext + 'startTime \t' + startT + ';\n\n'
@@ -431,9 +420,7 @@ FoamFile
 
         # Get the simulation type: Solver
         simtype = ', '.join(
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'SimulationType']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
         )
         if int(simtype) == 4:  # noqa: PLR2004
             cdicttext = cdicttext + '\napplication \t olaDyMFlow;\n\n'
@@ -449,9 +436,7 @@ FoamFile
         elif restart == 'No':
             # Start time
             startT = ', '.join(  # noqa: N806
-                hydroutil.extract_element_from_json(
-                    data, ['Events', 'StartTime']
-                )
+                hydroutil.extract_element_from_json(data, ['Events', 'StartTime'])
             )
             cdicttext = cdicttext + 'startFrom \t startTime;\n\n'
             cdicttext = cdicttext + 'startTime \t' + startT + ';\n\n'
@@ -465,9 +450,7 @@ FoamFile
 
         # Time interval
         deltaT = ', '.join(  # noqa: N806
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'TimeInterval']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'TimeInterval'])
         )
         cdicttext = cdicttext + 'deltaT \t' + deltaT + ';\n\n'
 
@@ -476,9 +459,7 @@ FoamFile
 
         # Write interval
         writeT = ', '.join(  # noqa: N806
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'WriteInterval']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'WriteInterval'])
         )
         cdicttext = cdicttext + 'writeInterval \t' + writeT + ';\n\n'
 

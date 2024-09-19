@@ -122,9 +122,7 @@ def main():  # noqa: C901
     hydroutil = hydroUtils()
 
     # Get the project name
-    projname = hydroutil.extract_element_from_json(
-        data, ['Events', 'ProjectName']
-    )
+    projname = hydroutil.extract_element_from_json(data, ['Events', 'ProjectName'])
     projname = ', '.join(projname)
 
     # Initialize a log ID number

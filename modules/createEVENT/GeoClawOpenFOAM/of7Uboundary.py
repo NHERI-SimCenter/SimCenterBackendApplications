@@ -95,9 +95,7 @@ class of7Uboundary:
 
         # Check for building and other building
         utext = utext + '\tBuilding\n'
-        utext = utext + self.Upatchtext(
-            data, '301', 'Building', fipath, numMovWall
-        )
+        utext = utext + self.Upatchtext(data, '301', 'Building', fipath, numMovWall)
         utext = utext + '\tOtherBuilding\n'
         utext = utext + self.Upatchtext(
             data, '301', 'OtherBuilding', fipath, numMovWall
@@ -473,17 +471,13 @@ FoamFile
         filepath = os.path.join(fipath, 'constant', 'dynamicMeshDict')  # noqa: PTH118
         fileID = open(filepath, 'w')  # noqa: SIM115, PTH123, N806
         # Header
-        header = hydroutil.of7header(
-            'dictionary', 'constant', 'dynamicMeshDict'
-        )
+        header = hydroutil.of7header('dictionary', 'constant', 'dynamicMeshDict')
         fileID.write(header)
         # Other data
         fileID.write('\ndynamicFvMesh\tdynamicMotionSolverFvMesh;\n\n')
         fileID.write('motionSolverLibs\t("libfvMotionSolvers.so");\n\n')
         fileID.write('solver\tdisplacementLaplacian;\n\n')
-        fileID.write(
-            'displacementLaplacianCoeffs\n{\n\tdiffusivity uniform;\n}\n'
-        )
+        fileID.write('displacementLaplacianCoeffs\n{\n\tdiffusivity uniform;\n}\n')
         # Close the file
         fileID.close()
 

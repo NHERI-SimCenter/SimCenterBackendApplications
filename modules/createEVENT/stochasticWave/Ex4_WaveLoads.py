@@ -77,9 +77,7 @@ for it, t in enumerate(time[:-1]):
 
     # Plot inline force
     ax = axes1[int(it / 4), np.mod(it, 4)]
-    ax.plot(
-        p_inertia / 1000, z, '-', c=python_colors(0), label=r'$f_{inertia}$'
-    )
+    ax.plot(p_inertia / 1000, z, '-', c=python_colors(0), label=r'$f_{inertia}$')
     ax.plot(p_drag / 1000, z, '-', c=python_colors(3), label=r'$f_{drag}$')
     ax.plot(p_tot / 1000, z, 'k-', label=r'$f_{tot}$')
     ax.plot(p_inertia0 / 1000, z, '+', c=python_colors(0))
@@ -215,29 +213,17 @@ for i in range(nz):
     result_df[name] = force[:, i]
 
 # write columns to columns in csv files
-(veta_df.T).to_csv(
-    'disp.evt', sep=' ', encoding='utf-8', index=False, header=False
-)
-(u_df.T).to_csv(
-    'vel.evt', sep=' ', encoding='utf-8', index=False, header=False
-)
-(du_df.T).to_csv(
-    'accel.evt', sep=' ', encoding='utf-8', index=False, header=False
-)
+(veta_df.T).to_csv('disp.evt', sep=' ', encoding='utf-8', index=False, header=False)
+(u_df.T).to_csv('vel.evt', sep=' ', encoding='utf-8', index=False, header=False)
+(du_df.T).to_csv('accel.evt', sep=' ', encoding='utf-8', index=False, header=False)
 (result_df.T).to_csv(
     'forces.evt', sep=' ', encoding='utf-8', index=False, header=False
 )
 
 # write columns to columns in csv files
-(veta_df.T).to_csv(
-    'disp.out', sep=' ', encoding='utf-8', index=False, header=False
-)
-(u_df.T).to_csv(
-    'vel.out', sep=' ', encoding='utf-8', index=False, header=False
-)
-(du_df.T).to_csv(
-    'accel.out', sep=' ', encoding='utf-8', index=False, header=False
-)
+(veta_df.T).to_csv('disp.out', sep=' ', encoding='utf-8', index=False, header=False)
+(u_df.T).to_csv('vel.out', sep=' ', encoding='utf-8', index=False, header=False)
+(du_df.T).to_csv('accel.out', sep=' ', encoding='utf-8', index=False, header=False)
 (result_df.T).to_csv(
     'forces.out', sep=' ', encoding='utf-8', index=False, header=False
 )
@@ -309,9 +295,7 @@ if __name__ == '__main__':
         default=4,
         help='Number of points used in the z direction to compute loads',
     )
-    parser.add_argument(
-        '-t', '--time', type=float, default=1.0, help='Time [s]'
-    )
+    parser.add_argument('-t', '--time', type=float, default=1.0, help='Time [s]')
 
     arguments, unknowns = parser.parse_known_args()
 

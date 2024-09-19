@@ -30,9 +30,7 @@ input_cli = False  # Use command line input for simulation parameters
 # output_particles_as_bgeo = True # Outputs particles at individual frames as xyz files
 # output_particles_as_npy = True # Outputs particles at individual frames as npy files
 output_particles_as_npz = True  # Outputs particles at all frames as a single npz file at the end of the simulation
-output_particles_as_vtk = (
-    True  # Outputs particles at individual frames as vtk files
-)
+output_particles_as_vtk = True  # Outputs particles at individual frames as vtk files
 output_particles_as_filetype = ['npz', 'vtk']
 support_output_particle_filetypes = [
     'npz',
@@ -40,8 +38,7 @@ support_output_particle_filetypes = [
 ]  # "ply", "bgeo", "npy", "npz", "vtk"
 if not any(
     [  # noqa: C419
-        x in support_output_particle_filetypes
-        for x in output_particles_as_filetype
+        x in support_output_particle_filetypes for x in output_particles_as_filetype
     ]
 ):
     raise ValueError(  # noqa: TRY003
@@ -104,7 +101,9 @@ particles_per_dx = int(
 if preallocate_memory_style == 'bits':
     # More bits = higher resolution, more accurate simulation, but slower and more memory usage
     quality = 6  # Resolution multiplier that affects both particles and grid nodes by multiplying their base units w.r.t. dimensions
-    particle_quality_bits = 13  # Bits for particle count base unit, e.g. 13 = 2^13 = 8192 particles
+    particle_quality_bits = (
+        13  # Bits for particle count base unit, e.g. 13 = 2^13 = 8192 particles
+    )
     grid_quality_bits = 7  # Bits for grid nodes base unit in a direction, e.g. 7 = 2^7 = 128 grid nodes in a direction
 
     n_grid_base = (
@@ -236,9 +235,7 @@ particle_volume = float((dx**DIMENSIONS) * particle_volume_ratio)
 
 n_particles_default = 81000
 n_particles = n_particles_default
-set_particle_count_style = (
-    'auto'  # "auto" or "manual" or "optimized" or "compiled"
-)
+set_particle_count_style = 'auto'  # "auto" or "manual" or "optimized" or "compiled"
 
 
 if set_particle_count_style == 'manual':
@@ -271,9 +268,7 @@ experiment = 'breaking'
 if experiment == 'breaking' and (
     paper == 'Mascarenas 2022' or paper == 'Bonus 2023'  # noqa: PLR1714
 ):
-    piston_amplitude = (
-        3.6  # 4 meters max range on piston's stroke in the OSU LWF
-    )
+    piston_amplitude = 3.6  # 4 meters max range on piston's stroke in the OSU LWF
     piston_scale_factor = (
         1.0  # Standard deviation scaling of the piston motion's error-function
     )
@@ -292,9 +287,7 @@ if experiment == 'breaking' and (
 elif experiment == 'unbreaking' and (
     paper == 'Mascarenas 2022' or paper == 'Bonus 2023'  # noqa: PLR1714
 ):
-    piston_amplitude = (
-        3.9  # 4 meters max range on piston's stroke in the OSU LWF
-    )
+    piston_amplitude = 3.9  # 4 meters max range on piston's stroke in the OSU LWF
     piston_scale_factor = 5.0
     piston_period = (
         piston_scale_factor * 3.14159265359 * 2
@@ -307,18 +300,14 @@ elif experiment == 'unbreaking' and (
     time_shift_piston = 10.0  # Time shift for the piston motion's error-function, experiments used ~10 seconds to ensure a smooth start to the wave
 
 else:
-    piston_amplitude = (
-        np.pi
-    )  # 4 meters max range on piston's stroke in the OSU LWF
+    piston_amplitude = np.pi  # 4 meters max range on piston's stroke in the OSU LWF
     piston_scale_factor = 1.0
     piston_time_mean = 3.14159265359
     max_water_depth_tsunami = 2.0  # SWL maximum for tsunami irregular wave at OSU LWF [m], though the flume can accept more water it may affect the wave generation
     piston_period = (
         piston_scale_factor * 3.14159265359
     )  # Period of the piston's motion [s] (DEPRECATED?)
-    wave_height_expected = (
-        1.0  # Expected wave height for the tsunami wave in meters
-    )
+    wave_height_expected = 1.0  # Expected wave height for the tsunami wave in meters
     wave_length_expected = (
         2 * 3.14159265359
     )  # Expected wave length for the tsunami wave in meters
@@ -326,9 +315,7 @@ else:
 
 
 piston_motion_sample_frequency = 120.0  # Sampling frequency of the piston motion's in experimental data on DesignSafe for Mascarenas 2022
-piston_time_mean = (
-    piston_scale_factor * np.pi // 120.0
-) * 120.0 + time_shift_piston
+piston_time_mean = (piston_scale_factor * np.pi // 120.0) * 120.0 + time_shift_piston
 piston_time_stdev = (
     piston_scale_factor * 0.707106781187
 )  # Std. dev. for the piston motion's error-function, SF / sqrt(2)
@@ -341,7 +328,9 @@ piston_pos = (
     + (dx * np.array([buffer_cells, buffer_cells, buffer_cells]))
 )  # Initial [X,Y,Z] position of the piston face
 piston_travel_x = piston_amplitude / grid_length
-piston_wait_time = 0.0  # don't immediately start the piston, let things settle with gravity first
+piston_wait_time = (
+    0.0  # don't immediately start the piston, let things settle with gravity first
+)
 
 
 # ------------------------ Bathymetry Setup ------------------------
@@ -390,12 +379,8 @@ for i, bath_x in enumerate(bathymetry_joints_x):  # noqa: B007
 for j, bath_y in enumerate(bathymetry_joints_y):  # noqa: B007
     bathymetry_joints_y[j] += buffer_cells * dx
 
-bathymetry_joints_taichi_x = ti.Vector.field(
-    n=NUM_JOINTS, dtype=float, shape=()
-)
-bathymetry_joints_taichi_y = ti.Vector.field(
-    n=NUM_JOINTS, dtype=float, shape=()
-)
+bathymetry_joints_taichi_x = ti.Vector.field(n=NUM_JOINTS, dtype=float, shape=())
+bathymetry_joints_taichi_y = ti.Vector.field(n=NUM_JOINTS, dtype=float, shape=())
 bathymetry_joints_taichi_x[None] = bathymetry_joints_x
 bathymetry_joints_taichi_y[None] = bathymetry_joints_y
 
@@ -404,29 +389,19 @@ bathymetry_joints_taichi_y[None] = bathymetry_joints_y
 buffer_shift_particles = -1.5  # How many cells to shift the particles to account for position of the actual buffer nodes
 xyz_water = (
     np.mgrid[
-        (
-            piston_pos[0] + buffer_shift_particles * dx + particle_spacing / 2
-        ) : (
+        (piston_pos[0] + buffer_shift_particles * dx + particle_spacing / 2) : (
             flume_length
             + buffer_cells * dx
             + buffer_shift_particles * dx
             - particle_spacing / 2
         ) : particle_spacing,
-        (
-            buffer_cells * dx
-            + buffer_shift_particles * dx
-            + particle_spacing / 2
-        ) : (
+        (buffer_cells * dx + buffer_shift_particles * dx + particle_spacing / 2) : (
             max_water_depth_tsunami
             + buffer_cells * dx
             + buffer_shift_particles * dx
             - particle_spacing / 2
         ) : particle_spacing,
-        (
-            buffer_cells * dx
-            + buffer_shift_particles * dx
-            + particle_spacing / 2
-        ) : (
+        (buffer_cells * dx + buffer_shift_particles * dx + particle_spacing / 2) : (
             flume_width
             + buffer_cells * dx
             + buffer_shift_particles * dx
@@ -526,9 +501,7 @@ if downsampling:
 n_particles_water = xyz_water.shape[0]
 print('Number of Water Particles: ', n_particles_water)  # noqa: T201
 
-debris_dimensions = 1.0 * np.array(
-    [0.5, 0.05, 0.1]
-)  # Debris dimensions in meters
+debris_dimensions = 1.0 * np.array([0.5, 0.05, 0.1])  # Debris dimensions in meters
 debris_array = np.array(
     [8, 1, 1]
 )  # Number of debris in the debris-field in each direction
@@ -536,7 +509,9 @@ debris_spacing_gap = 5 * np.array(
     [dx, dx, dx]
 )  # Spacing between faces of debris in the debris-field,
 debris_field_downstream_edge = 43.8  # Downstream edge of the debris field in meters, from Mascerenas 2022 experiments
-debris_water_gap = dx  # Gap between water and debris in, Y direction, to avoid overlap/stickiness
+debris_water_gap = (
+    dx  # Gap between water and debris in, Y direction, to avoid overlap/stickiness
+)
 debris_spacing = (
     debris_dimensions + debris_spacing_gap
 )  # Spacing between centers of debris in the debris-field
@@ -562,22 +537,13 @@ small = 1e-6
 xyz_debris = (
     np.mgrid[
         (debris_offset[0] + particle_spacing / 2) : (
-            debris_offset[0]
-            + debris_dimensions[0]
-            - particle_spacing / 2
-            + small
+            debris_offset[0] + debris_dimensions[0] - particle_spacing / 2 + small
         ) : particle_spacing,
         (debris_offset[1] + particle_spacing / 2) : (
-            debris_offset[1]
-            + debris_dimensions[1]
-            - particle_spacing / 2
-            + small
+            debris_offset[1] + debris_dimensions[1] - particle_spacing / 2 + small
         ) : particle_spacing,
         (debris_offset[2] + particle_spacing / 2) : (
-            debris_offset[2]
-            + debris_dimensions[2]
-            - particle_spacing / 2
-            + small
+            debris_offset[2] + debris_dimensions[2] - particle_spacing / 2 + small
         ) : particle_spacing,
     ]
     .reshape(3, -1)
@@ -590,10 +556,7 @@ print('Start debris-field generation')  # noqa: T201
 # Make an array to hold all the particle positions for the debris. It will make debris_array number of xyz_debris particle positions with the correct spacing
 xyz_debris_group = np.zeros(
     (
-        debris_array[0]
-        * debris_array[1]
-        * debris_array[2]
-        * xyz_debris.shape[0],
+        debris_array[0] * debris_array[1] * debris_array[2] * xyz_debris.shape[0],
         3,
     )
 )
@@ -601,11 +564,7 @@ for i in range(debris_array[0]):
     for j in range(debris_array[1]):
         for k in range(debris_array[2]):
             xyz_debris_group[
-                (
-                    i * debris_array[1] * debris_array[2]
-                    + j * debris_array[2]
-                    + k
-                )
+                (i * debris_array[1] * debris_array[2] + j * debris_array[2] + k)
                 * xyz_debris.shape[0] : (
                     i * debris_array[1] * debris_array[2]
                     + j * debris_array[2]
@@ -624,10 +583,7 @@ for i in range(debris_array[0]):
 print('End debris-field generation')  # noqa: T201
 xyz_debris_group = xyz_debris_group[
     np.where(
-        (
-            xyz_debris_group[:, 2]
-            >= dx * (buffer_cells + buffer_shift_particles)
-        )
+        (xyz_debris_group[:, 2] >= dx * (buffer_cells + buffer_shift_particles))
         & (
             xyz_debris_group[:, 2]
             <= flume_width + dx * (buffer_cells + buffer_shift_particles)
@@ -973,9 +929,7 @@ def compute_stress_svd(p, mu, la):
 
         stress = 2 * mu * (F[p] - U @ V.transpose()) @ F[
             p
-        ].transpose() + ti.Matrix.identity(float, DIMENSIONS) * la * J * (
-            J - 1
-        )
+        ].transpose() + ti.Matrix.identity(float, DIMENSIONS) * la * J * (J - 1)
         return stress  # noqa: RET504
 
 
@@ -1128,9 +1082,7 @@ def p2g():  # noqa: C901, D103
                 offset = ti.Vector([i, j])
                 dpos = (offset.cast(float) - fx) * dx
                 weight = w[i][0] * w[j][1]
-                grid_v[base + offset] += weight * (
-                    p_mass * v[p] + affine @ dpos
-                )
+                grid_v[base + offset] += weight * (p_mass * v[p] + affine @ dpos)
                 grid_m[base + offset] += weight * p_mass
                 if ti.static(use_antilocking):
                     grid_VBar[base + offset] += weight * p_vol
@@ -1140,9 +1092,7 @@ def p2g():  # noqa: C901, D103
                 offset = ti.Vector([i, j, k])
                 dpos = (offset.cast(float) - fx) * dx
                 weight = w[i][0] * w[j][1] * w[k][2]
-                grid_v[base + offset] += weight * (
-                    p_mass * v[p] + affine @ dpos
-                )
+                grid_v[base + offset] += weight * (p_mass * v[p] + affine @ dpos)
                 grid_m[base + offset] += weight * p_mass
                 if ti.static(use_antilocking):
                     grid_VBar[base + offset] += weight * p_vol
@@ -1251,9 +1201,7 @@ def apply_boundary_conditions(i, j, k):  # noqa: C901, D103
         for joint_id in ti.static(range(NUM_RAMPS)):
             in_range_x = (
                 i
-                >= bathymetry_joints_taichi_x[None][joint_id]
-                / grid_length
-                * n_grid
+                >= bathymetry_joints_taichi_x[None][joint_id] / grid_length * n_grid
             ) and (
                 i
                 < bathymetry_joints_taichi_x[None][joint_id + 1]
@@ -1262,9 +1210,7 @@ def apply_boundary_conditions(i, j, k):  # noqa: C901, D103
             )
             in_range_y = (
                 j
-                <= bathymetry_joints_taichi_y[None][joint_id]
-                / grid_length
-                * n_grid
+                <= bathymetry_joints_taichi_y[None][joint_id] / grid_length * n_grid
                 + decay_layer_cells
             ) or (
                 j
@@ -1283,14 +1229,8 @@ def apply_boundary_conditions(i, j, k):  # noqa: C901, D103
             )
             j_ramp = bathymetry_slope * (
                 i
-                - (bathymetry_joints_taichi_x[None][joint_id])
-                / grid_length
-                * n_grid
-            ) + (
-                bathymetry_joints_taichi_y[None][joint_id]
-                / grid_length
-                * n_grid
-            )
+                - (bathymetry_joints_taichi_x[None][joint_id]) / grid_length * n_grid
+            ) + (bathymetry_joints_taichi_y[None][joint_id] / grid_length * n_grid)
             below_ramp_surface = j <= j_ramp
             below_ramp_decay = j <= (j_ramp + decay_layer_cells)
 
@@ -1318,8 +1258,7 @@ def apply_boundary_conditions(i, j, k):  # noqa: C901, D103
                     1.0,
                     ti.max(
                         0.0,
-                        float(decay_layer_cells - (j - j_ramp))
-                        * decay_layer_inv,
+                        float(decay_layer_cells - (j - j_ramp)) * decay_layer_inv,
                     ),
                 )
 
@@ -1328,9 +1267,7 @@ def apply_boundary_conditions(i, j, k):  # noqa: C901, D103
 
         # Just considering the x and y (streamwise and vertical) components for OSU LWF ramps
         if apply_ramp_condition and velocity_pointing_into_ramp:
-            grid_v[i, j, k] -= decay_coefficient * (
-                velocity_ramp_mag * ramp_normal
-            )
+            grid_v[i, j, k] -= decay_coefficient * (velocity_ramp_mag * ramp_normal)
             # grid_v[i, j, k][2] += float(apply_ramp_condition) * decay_coefficient * (velocity_ramp_mag * ramp_normal[2])
 
     # piston_pos_current = board_states[None][0]
@@ -1449,9 +1386,7 @@ def move_board_solitary():  # noqa: D103
         0.5
         * piston_amplitude
         * (
-            math.erf(
-                (t - piston_time_mean) / (piston_time_stdev) * 0.707106781187
-            )
+            math.erf((t - piston_time_mean) / (piston_time_stdev) * 0.707106781187)
             + 1.0
         )
         + piston_pos[0]
@@ -1492,9 +1427,7 @@ def reset():  # noqa: C901, D103
                 JBar[i] = 1.0
         elif ti.static(DIMENSIONS == 3):  # noqa: PLR2004
             v[i] = [0.0, 0.0, 0.0]
-            F[i] = ti.Matrix(
-                [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
-            )
+            F[i] = ti.Matrix([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
             Jp[i] = 1.0
             C[i] = ti.Matrix.zero(float, DIMENSIONS, DIMENSIONS)
 
@@ -1600,15 +1533,11 @@ def save_metadata(file_path):
     for i in range(DIMENSIONS):
         while bounds_metadata[i][0] < 0.0 or bounds_metadata[i][0] > 1.0:
             print('Scale bounds to 0 to 1 range')  # noqa: T201
-            bounds_metadata[i][0] = float(
-                abs(bounds_metadata[i][0]) / grid_length
-            )
+            bounds_metadata[i][0] = float(abs(bounds_metadata[i][0]) / grid_length)
 
         while bounds_metadata[i][1] > 1.0 or bounds_metadata[i][1] < 0.0:
             print('Scale bounds to 0 to 1 range')  # noqa: T201
-            bounds_metadata[i][1] = float(
-                abs(bounds_metadata[i][1]) / grid_length
-            )
+            bounds_metadata[i][1] = float(abs(bounds_metadata[i][1]) / grid_length)
 
         if bounds_metadata[i][0] == bounds_metadata[i][1]:
             print(  # noqa: T201
@@ -1747,9 +1676,7 @@ def save_simulation():  # noqa: C901
         mat_data = np.asarray(downsampled_mat_data, dtype=object)
     else:
         print('Warning: Using numpy version: ', np.version.version)  # noqa: T201
-        pos_data = np.array(
-            np.stack(downsampled_data, axis=0), dtype=np.float32
-        )
+        pos_data = np.array(np.stack(downsampled_data, axis=0), dtype=np.float32)
         mat_data = np.asarray(downsampled_mat_data, dtype=object)
         # np.array(material_data.tolist())
 
@@ -1790,9 +1717,7 @@ def save_simulation():  # noqa: C901
             '/valid.npz] for validation of trained and tested surrogate models.',
         )
         output_file_path = os.path.join(file_path, 'valid.npz')  # noqa: PTH118
-        np.savez_compressed(
-            f'{file_path}/valid.npz', **simulation_data
-        )  # Proper
+        np.savez_compressed(f'{file_path}/valid.npz', **simulation_data)  # Proper
 
     else:
         (  # noqa: B018
@@ -1892,9 +1817,7 @@ def render_3D():  # noqa: N802, D103
     # Copy data to Taichi fields
     copy_to_field(colors_np, colors_field)
 
-    scene.particles(
-        x, per_vertex_color=colors_field, radius=0.002 * grid_length
-    )
+    scene.particles(x, per_vertex_color=colors_field, radius=0.002 * grid_length)
     canvas.scene(scene)
 
 
@@ -1929,14 +1852,12 @@ else:
 
 
 # Preallocate numpy arrays to store particle positions and velocities
-# NOTE: This can become many GBs large, exceeding the RAM of your computer. 
-# TODO: Use file(s) on disk and perform writes in smaller chunks from the RAM
+# NOTE: This can become many GBs large, exceeding the RAM of your computer.
+# TODO: Use file(s) on disk and perform writes in smaller chunks from the RAM  # noqa: TD002
 x_data_gns = np.zeros(
     (sequence_length, n_particles, DIMENSIONS), dtype=np.float32
 )  # float 32 for mac compatibility
-v_data_gns = np.zeros(
-    (sequence_length, n_particles, DIMENSIONS), dtype=np.float32
-)
+v_data_gns = np.zeros((sequence_length, n_particles, DIMENSIONS), dtype=np.float32)
 wave_numerical_soln = np.zeros(
     (sequence_length, 3), dtype=np.float32
 )  # 1. time 2. corresponding x positional value 3. max y
@@ -2100,12 +2021,8 @@ for frame in range(sequence_length):
             print(f'Piston Velocity V_x = {board_velocity[None][0]:.5f}')  # noqa: T201
 
     x_np = x.to_numpy()
-    data_to_save.append(
-        x.to_numpy()
-    )  # Save particle positions for each substep
-    v_data_to_save.append(
-        v.to_numpy()
-    )  # Save particle velocities for each substep
+    data_to_save.append(x.to_numpy())  # Save particle positions for each substep
+    v_data_to_save.append(v.to_numpy())  # Save particle velocities for each substep
 
     # Get max y for the wave
     if (
@@ -2140,9 +2057,7 @@ for frame in range(sequence_length):
 
                 if wave_formed:
                     time_formed += dt
-                    wave_numerical_soln[formed_wave_frames, 0] = (
-                        time_formed  # Time
-                    )
+                    wave_numerical_soln[formed_wave_frames, 0] = time_formed  # Time
                     wave_numerical_soln[formed_wave_frames, 1] = x_np[
                         max_wave_ind, 0
                     ]  # Save x position of max water particle value
@@ -2190,8 +2105,7 @@ for frame in range(sequence_length):
                 int(
                     '0x'
                     + ''.join(
-                        f'{rgb_component:02X}'
-                        for rgb_component in rgba_tuple[:3]
+                        f'{rgb_component:02X}' for rgb_component in rgba_tuple[:3]
                     ),
                     0,
                 )
@@ -2226,24 +2140,21 @@ for frame in range(sequence_length):
                             np.sqrt(
                                 v.to_numpy()[
                                     n_particles_water : (
-                                        n_particles_water
-                                        + n_particles_debris_group
+                                        n_particles_water + n_particles_debris_group
                                     ),
                                     0,
                                 ]
                                 ** 2
                                 + v.to_numpy()[
                                     n_particles_water : (
-                                        n_particles_water
-                                        + n_particles_debris_group
+                                        n_particles_water + n_particles_debris_group
                                     ),
                                     1,
                                 ]
                                 ** 2
                                 + v.to_numpy()[
                                     n_particles_water : (
-                                        n_particles_water
-                                        + n_particles_debris_group
+                                        n_particles_water + n_particles_debris_group
                                     ),
                                     2,
                                 ]
@@ -2262,8 +2173,7 @@ for frame in range(sequence_length):
                 int(
                     '0x'
                     + ''.join(
-                        f'{rgb_component:02X}'
-                        for rgb_component in rgba_tuple[:3]
+                        f'{rgb_component:02X}' for rgb_component in rgba_tuple[:3]
                     ),
                     0,
                 )
@@ -2273,9 +2183,7 @@ for frame in range(sequence_length):
 
     if vis_pressure:
         Pressure_vmax = (
-            (max_water_depth_tsunami + wave_height_expected)
-            * 9.80665
-            * 0.10000
+            (max_water_depth_tsunami + wave_height_expected) * 9.80665 * 0.10000
         )
         Pressure_img = (
             cm.turbo(
@@ -2293,8 +2201,7 @@ for frame in range(sequence_length):
                 int(
                     '0x'
                     + ''.join(
-                        f'{rgb_component:02X}'
-                        for rgb_component in rgba_tuple[:3]
+                        f'{rgb_component:02X}' for rgb_component in rgba_tuple[:3]
                     ),
                     0,
                 )
@@ -2419,8 +2326,7 @@ for frame in range(sequence_length):
                     radius=1.0,
                     palette=chosen_palette,
                     palette_indices=[  # noqa: C416
-                        palette_idx
-                        for palette_idx in range(len(chosen_palette))
+                        palette_idx for palette_idx in range(len(chosen_palette))
                     ],
                 )
             else:
@@ -2491,8 +2397,7 @@ for frame in range(sequence_length):
                             j
                         )  # Remove the first palette that was selected
                         chosen_palette_indices = [  # noqa: C416
-                            palette_idx
-                            for palette_idx in range(len(chosen_palette))
+                            palette_idx for palette_idx in range(len(chosen_palette))
                         ]
                         break
                     j += 1
@@ -2508,10 +2413,7 @@ for frame in range(sequence_length):
                         [
                             dx * buffer_cells,
                             dx * buffer_cells
-                            + (
-                                flume_height
-                                * (viewport_buffer + viewport_buffer)
-                            )
+                            + (flume_height * (viewport_buffer + viewport_buffer))
                             / grid_length
                             * gui_res_ratio[1],
                         ]
@@ -2529,10 +2431,7 @@ for frame in range(sequence_length):
                             / grid_length
                             * gui_res_ratio[0],
                             dx * buffer_cells
-                            + (
-                                flume_height
-                                * (viewport_buffer + viewport_buffer)
-                            )
+                            + (flume_height * (viewport_buffer + viewport_buffer))
                             / grid_length
                             * gui_res_ratio[1],
                         ]

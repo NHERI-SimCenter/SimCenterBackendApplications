@@ -98,9 +98,7 @@ FoamFile
         gz = 0.0
 
         simtype = ', '.join(
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'SimulationType']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
         )
 
         if int(simtype) == 4:  # noqa: PLR2004
@@ -108,9 +106,7 @@ FoamFile
         else:
             # Get the gravity from dakota.json file
             gravity = ', '.join(
-                hydroutil.extract_element_from_json(
-                    data, ['Events', 'Gravity']
-                )
+                hydroutil.extract_element_from_json(data, ['Events', 'Gravity'])
             )
             # Depending on the inputs, initialize gravity in the right direction
             if int(gravity) == 11:  # noqa: PLR2004

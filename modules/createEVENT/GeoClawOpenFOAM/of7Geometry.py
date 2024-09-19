@@ -72,9 +72,7 @@ class of7Geometry:
 
         # Get the simulation type
         simtype = ', '.join(
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'SimulationType']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
         )
 
         # Simtype: Multiscale with SW solutions
@@ -243,9 +241,7 @@ class of7Geometry:
 
         # Get the simulation type
         simtype = ', '.join(
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'SimulationType']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
         )
 
         # Bathymetry + SW solutions
@@ -323,9 +319,7 @@ class of7Geometry:
                 caseruntext = 'echo Translating building STL files...\n'
                 caseruntext = caseruntext + 'chmod +x translate.sh\n'
                 caseruntext = caseruntext + './translate.sh\n\n'
-                caseruntext = (
-                    caseruntext + 'echo Combining STL files for usage...\n'
-                )
+                caseruntext = caseruntext + 'echo Combining STL files for usage...\n'
             else:
                 caseruntext = 'echo Combining STL files for usage...\n'
 
@@ -361,13 +355,7 @@ class of7Geometry:
                 caseruntext = caseruntext + all01 + ' > ' + full + '\n\n'
             elif flag == 1:
                 caseruntext = (
-                    caseruntext
-                    + all01
-                    + ' '
-                    + buildingf
-                    + ' > '
-                    + full
-                    + '\n\n'
+                    caseruntext + all01 + ' ' + buildingf + ' > ' + full + '\n\n'
                 )
             elif flag == 2:  # noqa: PLR2004
                 caseruntext = (

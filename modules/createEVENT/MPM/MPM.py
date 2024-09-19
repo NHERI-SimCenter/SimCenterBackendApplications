@@ -108,9 +108,7 @@ if __name__ == '__main__':
         description='Get sample EVENT file produced by HydroUQ MPM'
     )
     parser.add_argument('-b', '--filenameAIM', help='BIM File', required=True)
-    parser.add_argument(
-        '-e', '--filenameEVENT', help='Event File', required=True
-    )
+    parser.add_argument('-e', '--filenameEVENT', help='Event File', required=True)
     parser.add_argument(
         '--getRV',
         help='getRV',

@@ -61,9 +61,7 @@ class FloorForces:  # noqa: D101
                             # Delimit by regex to capture " ", \s, "  ", tabs, etc.
                             # Each value should be a number, rep. the force on recorder j at a time-step i
                             # clean_line = re.split() # default is '\s+', which is any whitespace
-                            clean_line = re.split(
-                                r';\s|;|,\s|,|\s+', strip_line
-                            )
+                            clean_line = re.split(r';\s|;|,\s|,|\s+', strip_line)
                             # clean_line = re.split(r';|,\s', strip_line)
                             # clean_line = re.split("\s+", strip_line)
 
@@ -282,9 +280,7 @@ if __name__ == '__main__':
         required=True,
         default='EVENT.json',
     )
-    parser.add_argument(
-        '--getRV', help='getRV', required=False, action='store_true'
-    )
+    parser.add_argument('--getRV', help='getRV', required=False, action='store_true')
     # parser.add_argument('--filenameSAM', default=None)
 
     # parsing arguments

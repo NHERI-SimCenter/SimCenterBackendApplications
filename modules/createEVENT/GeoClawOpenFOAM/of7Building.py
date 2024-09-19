@@ -80,9 +80,7 @@ class of7Building:
         if buildeftype == 'Manual':
             # Find number of buildings
             numbuild = ', '.join(
-                hydroutil.extract_element_from_json(
-                    data, ['Events', 'NumBuild']
-                )
+                hydroutil.extract_element_from_json(data, ['Events', 'NumBuild'])
             )
             if int(numbuild) > 0:
                 # Number of buildings with response
@@ -137,12 +135,12 @@ class of7Building:
                             data, ['GeneralInformation']
                         )
                         geninfo = str(geninfo[0])
-                        xbuild = geninfo.partition(
-                            "'location': {'latitude': "
-                        )[1].partition(", 'longitude':")[0]
-                        ybuild = geninfo.partition("'longitude': ")[
-                            2
-                        ].partition('},')[0]
+                        xbuild = geninfo.partition("'location': {'latitude': ")[
+                            1
+                        ].partition(", 'longitude':")[0]
+                        ybuild = geninfo.partition("'longitude': ")[2].partition(
+                            '},'
+                        )[0]
                         # if not depth:
                         # 	return -1
                         # # else:
@@ -169,9 +167,7 @@ class of7Building:
 
         elif buildeftype == 'Parameters':
             buildshape = ', '.join(
-                hydroutil.extract_element_from_json(
-                    data, ['Events', 'BuildShape']
-                )
+                hydroutil.extract_element_from_json(data, ['Events', 'BuildShape'])
             )
             if int(buildshape) == 0:
                 return -1
@@ -192,9 +188,7 @@ class of7Building:
 
             # Check if building distribution selected
             buildDist = ', '.join(  # noqa: N806
-                hydroutil.extract_element_from_json(
-                    data, ['Events', 'BuildDist']
-                )
+                hydroutil.extract_element_from_json(data, ['Events', 'BuildDist'])
             )
             if int(buildDist) == 0:
                 return -1
@@ -400,9 +394,7 @@ class of7Building:
 
         # Filename
         stlfile = ', '.join(
-            hydroutil.extract_element_from_json(
-                data, ['Events', 'BuildingSTLFile']
-            )
+            hydroutil.extract_element_from_json(data, ['Events', 'BuildingSTLFile'])
         )
 
         # Read the stlfile
@@ -415,9 +407,7 @@ class of7Building:
         mesh.points[:, 2] = mesh.points[:, 2] / (max(abs(mesh.points[:, 2])))
 
         # Get GI
-        geninfo = hydroutil.extract_element_from_json(
-            data, ['GeneralInformation']
-        )
+        geninfo = hydroutil.extract_element_from_json(data, ['GeneralInformation'])
         geninfo = str(geninfo[0])
         # depth = float(geninfo.partition("'depth': ")[2].partition(", 'height':")[0])
         # width = float(geninfo.partition("'width': ")[2].partition("}")[0])
@@ -427,9 +417,7 @@ class of7Building:
                 ", 'longitude':"
             )[0]
         )
-        ybuild = float(
-            geninfo.partition("'longitude': ")[2].partition('},')[0]
-        )
+        ybuild = float(geninfo.partition("'longitude': ")[2].partition('},')[0])
         depth = hydroutil.extract_element_from_json(
             data, ['GeneralInformation', 'depth']
         )

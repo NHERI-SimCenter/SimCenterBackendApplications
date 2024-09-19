@@ -157,17 +157,13 @@ class of7PtDboundary:
                     )
                 )
 
-            ptdtext = ptdtext + self.PtDpatchtext(
-                data, Utype, patchname, fipath
-            )
+            ptdtext = ptdtext + self.PtDpatchtext(data, Utype, patchname, fipath)
 
         # Check for building and other building
         ptdtext = ptdtext + '\tBuilding\n'
         ptdtext = ptdtext + self.PtDpatchtext(data, '301', 'Building', fipath)
         ptdtext = ptdtext + '\tOtherBuilding\n'
-        ptdtext = ptdtext + self.PtDpatchtext(
-            data, '301', 'OtherBuilding', fipath
-        )
+        ptdtext = ptdtext + self.PtDpatchtext(data, '301', 'OtherBuilding', fipath)
 
         # Close the outside
         ptdtext = ptdtext + '}\n\n'
