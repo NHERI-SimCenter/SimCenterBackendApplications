@@ -72,7 +72,10 @@ class of7Dakota:
         caseruntext = caseruntext + 'rm -fr 0\n'
         caseruntext = caseruntext + 'mkdir EVTfiles\n'
         caseruntext = (
-            caseruntext + 'mv 0.org ' + os.path.join('EVTfiles', '0.org') + '\n'  # noqa: PTH118
+            caseruntext
+            + 'mv 0.org '
+            + os.path.join('EVTfiles', '0.org')  # noqa: PTH118
+            + '\n'
         )
         caseruntext = (
             caseruntext
@@ -81,7 +84,10 @@ class of7Dakota:
             + '\n'
         )
         caseruntext = (
-            caseruntext + 'mv system ' + os.path.join('EVTfiles', 'system') + '\n'  # noqa: PTH118
+            caseruntext
+            + 'mv system '
+            + os.path.join('EVTfiles', 'system')  # noqa: PTH118
+            + '\n'
         )
         caseruntext = (
             caseruntext

@@ -64,7 +64,9 @@ class of7Initial:
 
         # Get the simulation type
         simtype = ', '.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'SimulationType']
+            )
         )
 
         # Get the header text for the U-file
@@ -211,7 +213,9 @@ FoamFile
 
         # Get the simulation type
         simtype = ', '.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'SimulationType']
+            )
         )
 
         # For SW-CFD coupling

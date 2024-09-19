@@ -66,7 +66,9 @@ class of7Turbulence:
 
         # Get the type of turbulence model
         turbmodel = ', '.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'TurbulenceModel'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'TurbulenceModel']
+            )
         )
 
         if int(turbmodel) == 0:

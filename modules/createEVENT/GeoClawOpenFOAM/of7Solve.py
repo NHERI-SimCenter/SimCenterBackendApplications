@@ -92,11 +92,15 @@ FoamFile
         fvSchemetext = fvSchemetext + 'ddtSchemes\n{\n\tdefault\tEuler;\n}\n\n'  # noqa: N806
 
         # grad
-        fvSchemetext = fvSchemetext + 'gradSchemes\n{\n\tdefault\tGauss linear;\n}\n'  # noqa: N806
+        fvSchemetext = (  # noqa: N806
+            fvSchemetext + 'gradSchemes\n{\n\tdefault\tGauss linear;\n}\n'
+        )
 
         # div
         fvSchemetext = fvSchemetext + '\ndivSchemes\n{\n\t'  # noqa: N806
-        fvSchemetext = fvSchemetext + 'div(rhoPhi,U)\tGauss limitedLinearV 1;\n\t'  # noqa: N806
+        fvSchemetext = (  # noqa: N806
+            fvSchemetext + 'div(rhoPhi,U)\tGauss limitedLinearV 1;\n\t'
+        )
         fvSchemetext = fvSchemetext + 'div(U)\tGauss linear;\n\t'  # noqa: N806
         fvSchemetext = (  # noqa: N806
             fvSchemetext
@@ -105,8 +109,12 @@ FoamFile
         fvSchemetext = (  # noqa: N806
             fvSchemetext + 'div(rhoPhiPor,UPor)\tGauss limitedLinearV 1;\n\t'
         )
-        fvSchemetext = fvSchemetext + 'div(rhoPhi,UPor)\tGauss limitedLinearV 1;\n\t'  # noqa: N806
-        fvSchemetext = fvSchemetext + 'div(rhoPhiPor,U)\tGauss limitedLinearV 1;\n\t'  # noqa: N806
+        fvSchemetext = (  # noqa: N806
+            fvSchemetext + 'div(rhoPhi,UPor)\tGauss limitedLinearV 1;\n\t'
+        )
+        fvSchemetext = (  # noqa: N806
+            fvSchemetext + 'div(rhoPhiPor,U)\tGauss limitedLinearV 1;\n\t'
+        )
         fvSchemetext = fvSchemetext + 'div(phi,alpha)\tGauss vanLeer;\n\t'  # noqa: N806
         fvSchemetext = (  # noqa: N806
             fvSchemetext + 'div(phirb,alpha)\tGauss interfaceCompression;\n\t'
@@ -117,7 +125,8 @@ FoamFile
         fvSchemetext = fvSchemetext + 'div(phi,k)\tGauss upwind;\n\t'  # noqa: N806
         fvSchemetext = fvSchemetext + 'div(phi,epsilon)\tGauss upwind;\n\t'  # noqa: N806
         fvSchemetext = (  # noqa: N806
-            fvSchemetext + 'div((phi|interpolate(porosity)),k)\tGauss upwind;\n\t'
+            fvSchemetext
+            + 'div((phi|interpolate(porosity)),k)\tGauss upwind;\n\t'
         )
         fvSchemetext = (  # noqa: N806
             fvSchemetext + 'div((phi*interpolate(rho)),k)\tGauss upwind;\n\t'
@@ -132,10 +141,12 @@ FoamFile
             + 'div((phi|interpolate(porosity)),omega)\tGauss upwind;\n\t'
         )
         fvSchemetext = (  # noqa: N806
-            fvSchemetext + 'div((phi*interpolate(rho)),omega)\tGauss upwind;\n\t'
+            fvSchemetext
+            + 'div((phi*interpolate(rho)),omega)\tGauss upwind;\n\t'
         )
         fvSchemetext = (  # noqa: N806
-            fvSchemetext + 'div((phi*interpolate(rho)),epsilon)\tGauss upwind;\n'
+            fvSchemetext
+            + 'div((phi*interpolate(rho)),epsilon)\tGauss upwind;\n'
         )
         fvSchemetext = fvSchemetext + '}\n\n'  # noqa: N806
 
@@ -179,12 +190,16 @@ FoamFile
 
         # Get the simulation type
         simtype = ', '.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'SimulationType']
+            )
         )
 
         # Get the turbulence model
         turb = ', '.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'TurbulenceModel'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'TurbulenceModel']
+            )
         )
 
         # Get the header text for the U-file
@@ -240,7 +255,9 @@ FoamFile
         # Turbulece variables (if exist)
         if (int(turb) == 1) or (int(turb) == 2):  # noqa: PLR2004
             fvSolntext = fvSolntext + '\n\t'  # noqa: N806
-            fvSolntext = fvSolntext + '"(k|epsilon|omega|B|nuTilda).*"\n\t{\n\t\t'  # noqa: N806
+            fvSolntext = (  # noqa: N806
+                fvSolntext + '"(k|epsilon|omega|B|nuTilda).*"\n\t{\n\t\t'
+            )
             fvSolntext = fvSolntext + 'solver\tsmoothSolver;\n\t\t'  # noqa: N806
             fvSolntext = fvSolntext + 'smoother\tsymGaussSeidel;\n\t\t'  # noqa: N806
             fvSolntext = fvSolntext + 'tolerance\t1e-08;\n\t\t'  # noqa: N806
@@ -299,7 +316,9 @@ FoamFile
 
         # Get the simulation type: Solver
         simtype = ', '.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'SimulationType']
+            )
         )
         if int(simtype) == 4:  # noqa: PLR2004
             cdicttext = cdicttext + '\napplication \t olaDyMFlow;\n\n'
@@ -315,7 +334,9 @@ FoamFile
         elif restart == 'No':
             # Start time
             startT = ', '.join(  # noqa: N806
-                hydroutil.extract_element_from_json(data, ['Events', 'StartTime'])
+                hydroutil.extract_element_from_json(
+                    data, ['Events', 'StartTime']
+                )
             )
             cdicttext = cdicttext + 'startFrom \t startTime;\n\n'
             cdicttext = cdicttext + 'startTime \t' + startT + ';\n\n'
@@ -364,7 +385,9 @@ FoamFile
         hydroutil = hydroUtils()
 
         # Start time
-        startT = hydroutil.extract_element_from_json(data, ['Events', 'StartTime'])  # noqa: N806
+        startT = hydroutil.extract_element_from_json(  # noqa: N806
+            data, ['Events', 'StartTime']
+        )
         if startT == [None]:
             return -1  # noqa: DOC201, RUF100
 
@@ -408,7 +431,9 @@ FoamFile
 
         # Get the simulation type: Solver
         simtype = ', '.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'SimulationType']
+            )
         )
         if int(simtype) == 4:  # noqa: PLR2004
             cdicttext = cdicttext + '\napplication \t olaDyMFlow;\n\n'
@@ -424,7 +449,9 @@ FoamFile
         elif restart == 'No':
             # Start time
             startT = ', '.join(  # noqa: N806
-                hydroutil.extract_element_from_json(data, ['Events', 'StartTime'])
+                hydroutil.extract_element_from_json(
+                    data, ['Events', 'StartTime']
+                )
             )
             cdicttext = cdicttext + 'startFrom \t startTime;\n\n'
             cdicttext = cdicttext + 'startTime \t' + startT + ';\n\n'
@@ -438,7 +465,9 @@ FoamFile
 
         # Time interval
         deltaT = ', '.join(  # noqa: N806
-            hydroutil.extract_element_from_json(data, ['Events', 'TimeInterval'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'TimeInterval']
+            )
         )
         cdicttext = cdicttext + 'deltaT \t' + deltaT + ';\n\n'
 
@@ -447,7 +476,9 @@ FoamFile
 
         # Write interval
         writeT = ', '.join(  # noqa: N806
-            hydroutil.extract_element_from_json(data, ['Events', 'WriteInterval'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'WriteInterval']
+            )
         )
         cdicttext = cdicttext + 'writeInterval \t' + writeT + ';\n\n'
 

@@ -167,7 +167,9 @@ def GetOpenFOAMEvent(floorsCount, startTime):  # noqa: N802, N803
             'postProcessing', forcesOutputName, '0', 'forces_bins.dat'
         )
 
-    [deltaT, forces] = ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime)  # noqa: N806
+    [deltaT, forces] = ReadOpenFOAMForces(  # noqa: N806
+        buildingForcesPath, floorsCount, startTime
+    )
 
     # Write the EVENT file
     writeEVENT(forces, deltaT)

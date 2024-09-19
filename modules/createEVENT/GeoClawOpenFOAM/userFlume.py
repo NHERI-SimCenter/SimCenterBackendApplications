@@ -66,11 +66,15 @@ class userFlume:
 
         # Read the flume segments
         flumesegs = ', '.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'FlumeSegments'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'FlumeSegments']
+            )
         )
         # Get the number of flume segments
         numflumesegs = ', '.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'NumFlumeSegments'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'NumFlumeSegments']
+            )
         )
 
         # Replace the comma by spaces in segments list
@@ -91,7 +95,9 @@ class userFlume:
 
         # Get the breadth
         breadthval = ''.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'FlumeBreadth'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'FlumeBreadth']
+            )
         )
         breadth = float(breadthval)
 

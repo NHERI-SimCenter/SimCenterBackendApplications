@@ -100,7 +100,9 @@ class flume:
         # Top face
         self.top()  # Top vertices
         self.toptri()  # Top triangles
-        self.writeSTL('Top', self.npa_top, self.npt_top, path)  # Write top STL file
+        self.writeSTL(
+            'Top', self.npa_top, self.npt_top, path
+        )  # Write top STL file
 
         # Bottom face
         self.bottom()  # Bottom vertices
@@ -122,7 +124,9 @@ class flume:
 
         """  # noqa: D400, D401
         # Get the data for the boundary
-        data_boun = np.genfromtxt(IpPTFile, delimiter=',', dtype=(float, float))
+        data_boun = np.genfromtxt(
+            IpPTFile, delimiter=',', dtype=(float, float)
+        )
 
         # Add extremum to the constants file
         maxvalues = np.max(data_boun, axis=0)
@@ -358,7 +362,9 @@ class flume:
             if ii == 0:
                 self.npt_bottom = npt_temp
             else:
-                self.npt_bottom = np.concatenate((self.npt_bottom, npt_temp), axis=0)
+                self.npt_bottom = np.concatenate(
+                    (self.npt_bottom, npt_temp), axis=0
+                )
 
     #############################################################
     def writeSTL(self, base_filename, npa, npt, path):  # noqa: N802

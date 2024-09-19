@@ -66,7 +66,9 @@ class GeoClaw:
 
         # Get information about the interface
         swcfdfile = ', '.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'SWCFDInteFile'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'SWCFDInteFile']
+            )
         )
         swcfdfilepath = os.path.join(path, swcfdfile)  # noqa: PTH118
         swcfdpoints = np.genfromtxt(

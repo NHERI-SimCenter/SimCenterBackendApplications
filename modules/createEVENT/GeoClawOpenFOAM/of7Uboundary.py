@@ -95,7 +95,9 @@ class of7Uboundary:
 
         # Check for building and other building
         utext = utext + '\tBuilding\n'
-        utext = utext + self.Upatchtext(data, '301', 'Building', fipath, numMovWall)
+        utext = utext + self.Upatchtext(
+            data, '301', 'Building', fipath, numMovWall
+        )
         utext = utext + '\tOtherBuilding\n'
         utext = utext + self.Upatchtext(
             data, '301', 'OtherBuilding', fipath, numMovWall
@@ -222,7 +224,8 @@ FoamFile
                     if heightfilename != [None]:
                         heightfilename = ', '.join(
                             hydroutil.extract_element_from_json(
-                                data, ['Events', 'OSUMovingWallHeight_' + patchname]
+                                data,
+                                ['Events', 'OSUMovingWallHeight_' + patchname],
                             )
                         )
                         heightfilepath = os.path.join(fipath, heightfilename)  # noqa: PTH118
@@ -265,7 +268,8 @@ FoamFile
                     if heightfilename != [None]:
                         heightfilename = ', '.join(
                             hydroutil.extract_element_from_json(
-                                data, ['Events', 'MovingWallHeight_' + patchname]
+                                data,
+                                ['Events', 'MovingWallHeight_' + patchname],
                             )
                         )
                         heightfilepath = os.path.join(fipath, heightfilename)  # noqa: PTH118
@@ -469,18 +473,28 @@ FoamFile
         filepath = os.path.join(fipath, 'constant', 'dynamicMeshDict')  # noqa: PTH118
         fileID = open(filepath, 'w')  # noqa: SIM115, PTH123, N806
         # Header
-        header = hydroutil.of7header('dictionary', 'constant', 'dynamicMeshDict')
+        header = hydroutil.of7header(
+            'dictionary', 'constant', 'dynamicMeshDict'
+        )
         fileID.write(header)
         # Other data
         fileID.write('\ndynamicFvMesh\tdynamicMotionSolverFvMesh;\n\n')
         fileID.write('motionSolverLibs\t("libfvMotionSolvers.so");\n\n')
         fileID.write('solver\tdisplacementLaplacian;\n\n')
-        fileID.write('displacementLaplacianCoeffs\n{\n\tdiffusivity uniform;\n}\n')
+        fileID.write(
+            'displacementLaplacianCoeffs\n{\n\tdiffusivity uniform;\n}\n'
+        )
         # Close the file
         fileID.close()
 
     #############################################################
-    def OSUwavemakerText(self, fipath, dispfilepath, heightfilepath, numMovWall):  # noqa: ARG002, C901, N802, N803
+    def OSUwavemakerText(  # noqa: C901, N802
+        self,
+        fipath,
+        dispfilepath,
+        heightfilepath,
+        numMovWall,  # noqa: ARG002, N803
+    ):
         """Creates the wavemaker text file for the OSU moving wall
 
         Arguments:
@@ -562,7 +576,13 @@ FoamFile
             fileID.write(')\n);')
 
     #############################################################
-    def GenwavemakerText(self, fipath, dispfilepath, heightfilepath, numMovWall):  # noqa: ARG002, C901, N802, N803
+    def GenwavemakerText(  # noqa: C901, N802
+        self,
+        fipath,
+        dispfilepath,
+        heightfilepath,
+        numMovWall,  # noqa: ARG002, N803
+    ):
         """Creates the wavemaker text file for a general moving wall
 
         Arguments:

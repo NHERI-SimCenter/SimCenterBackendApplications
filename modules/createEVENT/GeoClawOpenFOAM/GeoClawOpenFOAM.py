@@ -55,4 +55,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    main(inputFile=args.filenameAIM, evtFile=args.filenameEVENT, getRV=args.getRV)
+    main(
+        inputFile=args.filenameAIM,
+        evtFile=args.filenameEVENT,
+        getRV=args.getRV,
+    )

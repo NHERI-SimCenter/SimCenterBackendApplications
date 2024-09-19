@@ -70,7 +70,9 @@ class of7Materials:
         # Water phase
         # Viscosity
         nuwater = ', '.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'WaterViscosity'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'WaterViscosity']
+            )
         )
         # Exponent
         nuwaterexp = ', '.join(
@@ -80,13 +82,20 @@ class of7Materials:
         )
         # Density
         rhowater = ', '.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'WaterDensity'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'WaterDensity']
+            )
         )
 
         mattext = mattext + 'water\n{\n'
         mattext = mattext + '\ttransportModel\tNewtonian;\n'
         mattext = (
-            mattext + '\tnu\t[0 2 -1 0 0 0 0]\t' + nuwater + 'e' + nuwaterexp + ';\n'
+            mattext
+            + '\tnu\t[0 2 -1 0 0 0 0]\t'
+            + nuwater
+            + 'e'
+            + nuwaterexp
+            + ';\n'
         )
         mattext = mattext + '\trho\t[1 -3 0 0 0 0 0]\t' + rhowater + ';\n'
         mattext = mattext + '}\n\n'
@@ -94,11 +103,15 @@ class of7Materials:
         # Air properties
         # Viscosity
         nuair = ', '.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'AirViscosity'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'AirViscosity']
+            )
         )
         # Exponent
         nuairexp = ', '.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'AirViscosityExp'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'AirViscosityExp']
+            )
         )
         # Density
         rhoair = ', '.join(
@@ -108,14 +121,21 @@ class of7Materials:
         mattext = mattext + 'air\n{\n'
         mattext = mattext + '\ttransportModel\tNewtonian;\n'
         mattext = (
-            mattext + '\tnu\t[0 2 -1 0 0 0 0]\t' + nuair + 'e' + nuairexp + ';\n'
+            mattext
+            + '\tnu\t[0 2 -1 0 0 0 0]\t'
+            + nuair
+            + 'e'
+            + nuairexp
+            + ';\n'
         )
         mattext = mattext + '\trho\t[1 -3 0 0 0 0 0]\t' + rhoair + ';\n'
         mattext = mattext + '}\n\n'
 
         # Surface tension between water and air
         sigma = ', '.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'SurfaceTension'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'SurfaceTension']
+            )
         )
 
         mattext = mattext + 'sigma\t[1 0 -2 0 0 0 0]\t' + sigma + ';\n'
@@ -178,7 +198,9 @@ FoamFile
 
         # Check air properties
         # Viscosity
-        nuair = hydroutil.extract_element_from_json(data, ['Events', 'AirViscosity'])
+        nuair = hydroutil.extract_element_from_json(
+            data, ['Events', 'AirViscosity']
+        )
         if nuair == [None]:
             return -1
         # Exponent
@@ -188,7 +210,9 @@ FoamFile
         if nuairexp == [None]:
             return -1
         # Density
-        rhoair = hydroutil.extract_element_from_json(data, ['Events', 'AirDensity'])
+        rhoair = hydroutil.extract_element_from_json(
+            data, ['Events', 'AirDensity']
+        )
         if rhoair == [None]:
             return -1
 

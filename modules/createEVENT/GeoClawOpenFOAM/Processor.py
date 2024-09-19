@@ -97,7 +97,11 @@ def main():  # noqa: C901
     )
     # Driver file
     h2oparser.add_argument(
-        '-d', metavar='driver file', type=str, help='driver file', required=True
+        '-d',
+        metavar='driver file',
+        type=str,
+        help='driver file',
+        required=True,
     )
 
     # Execute the parse_args() method
@@ -118,7 +122,9 @@ def main():  # noqa: C901
     hydroutil = hydroUtils()
 
     # Get the project name
-    projname = hydroutil.extract_element_from_json(data, ['Events', 'ProjectName'])
+    projname = hydroutil.extract_element_from_json(
+        data, ['Events', 'ProjectName']
+    )
     projname = ', '.join(projname)
 
     # Initialize a log ID number

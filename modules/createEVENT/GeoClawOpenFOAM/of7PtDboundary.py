@@ -157,13 +157,17 @@ class of7PtDboundary:
                     )
                 )
 
-            ptdtext = ptdtext + self.PtDpatchtext(data, Utype, patchname, fipath)
+            ptdtext = ptdtext + self.PtDpatchtext(
+                data, Utype, patchname, fipath
+            )
 
         # Check for building and other building
         ptdtext = ptdtext + '\tBuilding\n'
         ptdtext = ptdtext + self.PtDpatchtext(data, '301', 'Building', fipath)
         ptdtext = ptdtext + '\tOtherBuilding\n'
-        ptdtext = ptdtext + self.PtDpatchtext(data, '301', 'OtherBuilding', fipath)
+        ptdtext = ptdtext + self.PtDpatchtext(
+            data, '301', 'OtherBuilding', fipath
+        )
 
         # Close the outside
         ptdtext = ptdtext + '}\n\n'
@@ -220,7 +224,9 @@ FoamFile
         if (int(Utype) == 103) or (int(Utype) == 104):  # noqa: PLR2004
             PtDtext = '\t{\n\t\t'  # noqa: N806
             PtDtext = PtDtext + 'type\twavemakerMovement;\n\t\t'  # noqa: N806
-            PtDtext = PtDtext + 'wavemakerDictName\twavemakerMovementDict;\n\t\t'  # noqa: N806
+            PtDtext = (  # noqa: N806
+                PtDtext + 'wavemakerDictName\twavemakerMovementDict;\n\t\t'
+            )
             PtDtext = PtDtext + 'value\tuniform (0 0 0);\n'  # noqa: N806
             PtDtext = PtDtext + '\t}\n'  # noqa: N806
 

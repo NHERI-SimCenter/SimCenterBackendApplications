@@ -121,7 +121,9 @@ FoamFile
 
         # Get simulation type
         simtype = ', '.join(
-            hydroutil.extract_element_from_json(data, ['Events', 'SimulationType'])
+            hydroutil.extract_element_from_json(
+                data, ['Events', 'SimulationType']
+            )
         )
 
         # Decompose for parallel, else serial

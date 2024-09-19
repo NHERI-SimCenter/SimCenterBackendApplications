@@ -1,4 +1,4 @@
-#!/usr/bin/env python  # noqa: EXE001, D100
+#!/usr/bin/env python  # noqa: D100
 import argparse
 import json
 import os
@@ -52,7 +52,9 @@ def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):  # 
 
     lineIndex -= 2  # noqa: N806
     for key, value in forceDictionary.items():
-        controlDictLines.insert(lineIndex, '\t\t' + key + '\t' + str(value) + ';\n')
+        controlDictLines.insert(
+            lineIndex, '\t\t' + key + '\t' + str(value) + ';\n'
+        )
         lineIndex += 1  # noqa: N806
 
     for line in ['\n', '\t\tbinData\n', '\t\t{\n', '\t\t}\n', '\n']:
