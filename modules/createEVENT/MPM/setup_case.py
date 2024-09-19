@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 
+#!/usr/bin/env python3
 """This script writes BC and initial condition, and setups the OpenFoam case
 directory.
 
