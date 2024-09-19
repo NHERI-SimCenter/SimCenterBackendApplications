@@ -1,8 +1,16 @@
-#!/usr/bin/env python3  # noqa: EXE001, D100
+#!/usr/bin/env python3
+
+"""Generate the event file using Stochastic Waves."""
+
+import argparse
+import json
+import re
+import sys
+
+import Ex4_WaveLoads
 
 """
-Notable portions of this code are derived courtesy of the welib python package 
-and the following source:
+Portions of this module are implemented courtesy of the welib python package:
 
 Copyright 2019 E. Branlard
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -10,20 +18,6 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import argparse
-import json
-import re
-
-from welib.tools.figure import defaultRC
-
-defaultRC()
-from welib.hydro.morison import *  # noqa: E402, F403
-from welib.hydro.wavekin import *  # noqa: E402, F403
-
-import Ex1_WaveKinematics
-import Ex2_Jonswap_spectrum
-import Ex3_WaveTimeSeries
-import Ex4_WaveLoads
 
 class FloorForces:  # noqa: D101
     def __init__(self, recorderID=-1):  # noqa: N803
@@ -92,32 +86,48 @@ class FloorForces:  # noqa: D101
                     self.Z.append(max(self.Z))
 
                     print(  # noqa: T201
-                        'Length: ',
+                        'Length: [',
                         len(self.X),
-                        ', Max force: ',
+                        len(self.Y),
+                        len(self.Z),
+                        '], Max force: [',
                         max(self.X),
                         max(self.Y),
                         max(self.Z),
-                        ', Min force: ',
+                        '], Min force: [',
                         min(self.X),
                         min(self.Y),
                         min(self.Z),
-                        ', Last force: ',
+                        '], Last force: [',
                         self.X[-1],
                         self.Y[-1],
                         self.Z[-1],
+                        '].',
                     )
             file.close()
 
 
 def directionToDof(direction):  # noqa: N802
     """Converts direction to degree of freedom"""  # noqa: D400, D401
-    directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
+    directionMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
 
-    return directioMap[direction]  # noqa: DOC201, RUF100
+    return directionMap[direction]
 
 
-def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):  # noqa: N802, N803
+def dofToDirection(dof):  # noqa: N802
+    """Converts degree of freedom to direction"""  # noqa: D400, D401
+    directionMap = {1: 'X', 2: 'Y', 3: 'Z'}  # noqa: N806
+
+    return directionMap[dof]
+
+
+def addFloorForceToEvent(  # noqa: N802
+    patternsList,  # noqa: N803
+    timeSeriesList,  # noqa: N803
+    force,
+    direction,
+    floor,
+):
     """Add force (one component) time series and pattern in the event file
     Use of Wind is just a placeholder for now, since its more developed than Hydro
     """  # noqa: D205, D400
@@ -155,12 +165,10 @@ def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):
 
 
 def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):  # noqa: N802, N803
-    """This method writes the EVENT.json file"""  # noqa: D400, D401, D404
-    # Adding floor forces
+    """Write the EVENT into the event JSON file."""
     patternsArray = []  # noqa: N806
     timeSeriesArray = []  # noqa: N806
     # timeSeriesType = "Value" # ? saw in old evt files
-
     # pressure = [{"pressure": [0.0, 0.0], "story": 1}]
     pressure = []
 
@@ -170,11 +178,9 @@ def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):  # noqa: N802
             patternsArray, timeSeriesArray, floorForces, 'X', it + 1
         )
 
-    # subtype = "StochasticWindModel-KwonKareem2006"
     eventClassification = 'Hydro'  # noqa: N806
     eventType = 'StochasticWave'  # noqa: N806
     eventSubtype = 'StochasticWaveJonswap'  # noqa: N806, F841
-    # subtype = "StochasticWaveJonswap" # ?
     # timeSeriesName = "HydroForceSeries_1X"
     # patternName = "HydroForcePattern_1X"
 
@@ -209,51 +215,26 @@ def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
     return int(bim['GeneralInformation']['stories'])
 
 
-def main():  # noqa: D103
+def main():
+    """Generate the event file using Stochastic Waves."""
     return 0
-    # """
-    # Entry point to generate event file using Stochastic Waves
-    # """
-    # #CLI parser
-    # parser = argparse.ArgumentParser(description="Get sample EVENT file produced by StochasticWave")
-    # parser.add_argument('-b', '--filenameAIM', help="BIM File", required=True)
-    # parser.add_argument('-e', '--filenameEVENT', help= "Event File", required=True)
-    # parser.add_argument('--getRV', help= "getRV", required=False, action='store_true')
-
-    # #parsing arguments
-    # arguments, unknowns = parser.parse_known_args()
-
-    # exec(open("Ex1_WaveKinematics.py").read())
-    # exec(open("Ex2_Jonswap_Spectrum.py").read())
-    # exec(open("Ex3_WaveTimeSeries.py").read())
-    # # exec(open("Ex4_WaveLoads.py").read())
-
-    # # Run Ex4_WaveLoads.py with the given parameters
-    # # result = Ex4_WaveLoads.main(arguments.water_depth, arguments.peak_period, arguments.significant_wave_height, arguments.pile_diameter, arguments.drag_coefficient, arguments.mass_coefficient, arguments.number_of_recorders_z, arguments.time)
-    # import subprocess
-    # result = subprocess.run(["python", "Ex4_WaveLoads.py", "-hw", 30.0, "-Tp", 12.7, "-Hs", 5.0, "-Dp", 1.0, "-Cd", 2.1, "-Cm", 2.1, "-nz", GetFloorsCount(arguments.filenameAIM), "-t", 10.0], stdout=subprocess.PIPE)
-
-    # if arguments.getRV == True:
-    #     #Read the number of floors
-    #     floorsCount = GetFloorsCount(arguments.filenameAIM)
-    #     forces = []
-    #     for i in range(floorsCount):
-    #         forces.append(FloorForces())
-
-    #     #write the event file
-    #     writeEVENT(forces, arguments.filenameEVENT)
 
 
 if __name__ == '__main__':
     """
-    Entry point to generate event file using Stochastic Waves
+    Entry point to generate event file using Stochastic Waves when run as a script.
     """
+
     # CLI parser
     parser = argparse.ArgumentParser(
-        description='Get sample EVENT file produced by StochasticWave'
+        description='Get sample EVENT file produced by the StochasticWave module'
     )
     parser.add_argument(
-        '-b', '--filenameAIM', help='BIM File', required=True, default='AIM.json'
+        '-b',
+        '--filenameAIM',
+        help='BIM File',
+        required=True,
+        default='AIM.json',
     )
     parser.add_argument(
         '-e',
@@ -262,28 +243,21 @@ if __name__ == '__main__':
         required=True,
         default='EVENT.json',
     )
-    parser.add_argument('--getRV', help='getRV', required=False, action='store_true')
+    parser.add_argument(
+        '--getRV',
+        help='getRV',
+        required=False,
+        action='store_true',
+    )
     # parser.add_argument('--filenameSAM', default=None)
 
-    # parsing arguments
     arguments, unknowns = parser.parse_known_args()
-
-    # Run Ex4_WaveLoads.py with the given parameters
-    # result = Ex4_WaveLoads.main(arguments.water_depth, arguments.peak_period, arguments.significant_wave_height, arguments.pile_diameter, arguments.drag_coefficient, arguments.mass_coefficient, arguments.number_of_recorders_z, arguments.time)
-
-    # import subprocess
-    # result = subprocess.run(["python", f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex4_WaveLoads.py", "-hw", 30.0, "-Tp", 12.7, "-Hs", 5.0, "-Dp", 1.0, "-Cd", 2.1, "-Cm", 2.1, "-nz", floorsCount, "-t", 10.0], stdout=subprocess.PIPE)
 
     if arguments.getRV == True:  # noqa: E712
         print('RVs requested in StochasticWave.py')  # noqa: T201
         # Read the number of floors
         floorsCount = GetFloorsCount(arguments.filenameAIM)  # noqa: N816
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
-
-        # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex1_WaveKinematics.py").read())
-        # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex2_Jonswap_spectrum.py").read())
-        # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex3_WaveTimeSeries.py").read())
-        # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex4_WaveLoads.py").read())
 
         forces = []
         for i in range(floorsCount):
@@ -295,10 +269,6 @@ if __name__ == '__main__':
     else:
         print('No RVs requested in StochasticWave.py')  # noqa: T201
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
-        # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex1_WaveKinematics.py").read())
-        # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex2_Jonswap_spectrum.py").read())
-        # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex3_WaveTimeSeries.py").read())
-        # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex4_WaveLoads.py").read())
 
         forces = []
         floorsCount = 1  # noqa: N816
@@ -308,3 +278,5 @@ if __name__ == '__main__':
         # write the event file
         writeEVENT(forces, filenameEVENT, floorsCount=floorsCount)
         # writeEVENT(forces, arguments.filenameEVENT)
+
+    sys.exit(main())

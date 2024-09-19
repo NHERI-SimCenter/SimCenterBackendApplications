@@ -1,4 +1,4 @@
-#  # noqa: INP001
+#  # noqa: INP001, EXE002
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -220,7 +220,9 @@ FoamFile
         if (int(Utype) == 103) or (int(Utype) == 104):  # noqa: PLR2004
             PtDtext = '\t{\n\t\t'  # noqa: N806
             PtDtext = PtDtext + 'type\twavemakerMovement;\n\t\t'  # noqa: N806
-            PtDtext = PtDtext + 'wavemakerDictName\twavemakerMovementDict;\n\t\t'  # noqa: N806
+            PtDtext = (  # noqa: N806
+                PtDtext + 'wavemakerDictName\twavemakerMovementDict;\n\t\t'
+            )
             PtDtext = PtDtext + 'value\tuniform (0 0 0);\n'  # noqa: N806
             PtDtext = PtDtext + '\t}\n'  # noqa: N806
 
