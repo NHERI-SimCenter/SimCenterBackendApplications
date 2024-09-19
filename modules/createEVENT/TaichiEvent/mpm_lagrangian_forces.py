@@ -1,4 +1,6 @@
-import numpy as np  # noqa: INP001, D100
+#!/usr/bin/env python3  # noqa: D100
+
+import numpy as np
 import taichi as ti
 
 ti.init(arch=ti.gpu)

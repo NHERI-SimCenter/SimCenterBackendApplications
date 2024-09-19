@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3 
 """This script writes BC and initial condition, and setups the OpenFoam case
 directory.
 
-"""  # noqa: INP001, D205, D404
+"""  # noqa: D205, D404
 
 import json
 import os
