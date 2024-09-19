@@ -50,7 +50,7 @@ def determine_Fa_coefficient(site_class, Ss):  # noqa: C901, N802, N803
         Fa = None  # noqa: N806
         print('Site class is entered with an invalid value')  # noqa: T201
 
-    return Fa
+    return Fa  # noqa: DOC201, RUF100
 
 
 def determine_Fv_coefficient(site_class, S1):  # noqa: C901, N802, N803
@@ -94,7 +94,7 @@ def determine_Fv_coefficient(site_class, S1):  # noqa: C901, N802, N803
         Fv = None  # noqa: N806
         print('Site class is entered with an invalid value')  # noqa: T201
 
-    return Fv
+    return Fv  # noqa: DOC201, RUF100
 
 
 def calculate_DBE_acceleration(Ss, S1, Fa, Fv):  # noqa: N802, N803
@@ -111,7 +111,7 @@ def calculate_DBE_acceleration(Ss, S1, Fa, Fv):  # noqa: N802, N803
     SM1 = Fv * S1  # noqa: N806
     SDS = 2 / 3 * SMS  # noqa: N806
     SD1 = 2 / 3 * SM1  # noqa: N806
-    return SMS, SM1, SDS, SD1
+    return SMS, SM1, SDS, SD1  # noqa: DOC201, RUF100
 
 
 def determine_Cu_coefficient(SD1):  # noqa: N802, N803
@@ -133,7 +133,7 @@ def determine_Cu_coefficient(SD1):  # noqa: N802, N803
     else:
         Cu = 1.4  # noqa: N806
 
-    return Cu
+    return Cu  # noqa: DOC201, RUF100
 
 
 def determine_floor_height(
@@ -161,7 +161,7 @@ def determine_floor_height(
                 level - 2
             )
 
-    return floor_height
+    return floor_height  # noqa: DOC201, RUF100
 
 
 def calculate_Cs_coefficient(SDS, SD1, S1, T, TL, R, Ie):  # noqa: N802, N803
@@ -212,7 +212,7 @@ def calculate_Cs_coefficient(SDS, SD1, S1, T, TL, R, Ie):  # noqa: N802, N803
     else:
         pass
 
-    return Cs
+    return Cs  # noqa: DOC201, RUF100
 
 
 def determine_k_coeficient(period):
@@ -227,7 +227,7 @@ def determine_k_coeficient(period):
     else:
         k = 1 + 0.5 * (period - 0.5)
 
-    return k
+    return k  # noqa: DOC201, RUF100
 
 
 def calculate_seismic_force(base_shear, floor_weight, floor_height, k):
@@ -252,7 +252,7 @@ def calculate_seismic_force(base_shear, floor_weight, floor_height, k):
     for story in range(len(floor_weight) - 1, -1, -1):
         story_shear[story] = np.sum(seismic_force[story:])
 
-    return seismic_force, story_shear
+    return seismic_force, story_shear  # noqa: DOC201, RUF100
 
 
 def find_section_candidate(target_depth, section_database):
@@ -267,7 +267,7 @@ def find_section_candidate(target_depth, section_database):
         if match:
             candidate_index.append(indx)
     candidates = section_database.loc[candidate_index, 'section size']
-    return candidates  # noqa: RET504
+    return candidates  # noqa: DOC201, RET504, RUF100
 
 
 def search_member_size(target_name, target_quantity, candidate, section_database):
@@ -299,7 +299,7 @@ def search_member_size(target_name, target_quantity, candidate, section_database
         section_size = section_database.loc[
             candidate_index[min_index[0][0]], 'section size'
         ]
-    return section_size
+    return section_size  # noqa: DOC201, RUF100
 
 
 def search_section_property(target_size, section_database):
@@ -316,7 +316,7 @@ def search_section_property(target_size, section_database):
         for indx in np.array(section_database['index']):
             if target_size == section_database.loc[indx, 'section size']:
                 section_info = section_database.loc[indx, :]
-        return section_info.to_dict()
+        return section_info.to_dict()  # noqa: DOC201, RUF100
     except:  # noqa: E722
         sys.stderr.write(
             'Error: wrong size nominated!\nNo such size exists in section database!'
@@ -336,7 +336,7 @@ def decrease_member_size(candidate, current_size):
         # This means the smallest candidate still cannot make design drift close to drift limit,
         # which further means the smallest section candidate is too large.
         sys.stderr.write('The lower bound for depth initialization is too large!\n')
-    return candidate[candidate_pool_index + 1]
+    return candidate[candidate_pool_index + 1]  # noqa: DOC201, RUF100
 
 
 def extract_depth(size):
@@ -346,7 +346,7 @@ def extract_depth(size):
     """  # noqa: D205, D400, D401, D404
     # Use Python regular expression to extract the char between 'W' and 'X', which then become depth
     output = re.findall(r'.*W(.*)X.*', size)
-    return int(output[0])
+    return int(output[0])  # noqa: DOC201, RUF100
 
 
 def extract_weight(size):
@@ -357,7 +357,7 @@ def extract_weight(size):
     # Use Python regular expression to extract the char after 'W' to the end of the string,
     # which then becomes weight
     output = re.findall(r'.X(.*)', size)
-    return int(output[0])
+    return int(output[0])  # noqa: DOC201, RUF100
 
 
 def constructability_helper(  # noqa: C901
@@ -541,7 +541,7 @@ def constructability_helper(  # noqa: C901
         variation_story.pop()
         # Update the ending index for next "identical story block"
         ending_index = variation_story[-1]
-    return section_size
+    return section_size  # noqa: DOC201, RUF100
 
     # # Loop over all stories from top to bottom to consider the constructability
     # starting_story = total_story - 1
@@ -596,4 +596,4 @@ def increase_member_size(candidate, current_size):
     if candidate_pool_index - 1 < 0:  # Make sure the index does not exceed the bound
         # This means the largest candidate still fails to satisfy the requirement
         sys.stderr.write('The upper bound for depth initialization is too small!\n')
-    return candidate[candidate_pool_index - 1]
+    return candidate[candidate_pool_index - 1]  # noqa: DOC201, RUF100

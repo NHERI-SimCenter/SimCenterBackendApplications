@@ -18,8 +18,6 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
     }
     options = {'shared': [True, False]}  # noqa: RUF012
     default_options = {  # noqa: RUF012
-        'mkl-static:threaded': False,
-        'ipp-static:simcenter_backend': True,
         'libcurl:with_ssl': 'openssl',
     }
     generators = 'cmake'
@@ -33,6 +31,8 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
         'jsonformoderncpp/3.7.0',
         'nanoflann/1.3.2',
         'nlopt/2.7.1',
+        'boost/1.71.0',
+        'kissfft/131.1.0',
     ]
 
     # Custom attributes for Bincrafters recipe conventions
