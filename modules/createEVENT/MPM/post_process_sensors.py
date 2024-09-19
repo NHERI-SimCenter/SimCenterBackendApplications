@@ -38,7 +38,7 @@
 # Contributors:
 # Justin Bonus
 
-"""This script reads HydroUQ MPM output from sensors and then plots the data."""
+"""This script reads HydroUQ MPM output from sensors and then plots the data."""  # noqa: D404
 
 import os
 import sys
@@ -48,7 +48,7 @@ import pandas as pd
 
 
 def main():
-    """Main function for post-processing sensor data from MPM simulations."""
+    """Main function for post-processing sensor data from MPM simulations."""  # noqa: D401
     return 0
 
 
@@ -139,11 +139,11 @@ if __name__ == '__main__':
         os.makedirs(output_dir)  # noqa: PTH103
     if output_dir != sensor_data_dir:
         for sensor_name in sensor_names:
-            print(
+            print(  # noqa: T201
                 'Save '
-                + os.path.join(output_dir, sensor_name)
+                + os.path.join(output_dir, sensor_name)  # noqa: PTH118
                 + '.csv to output directory.'
-            )  # noqa: T201, PTH118
+            )
             sensor_data[sensor_name].to_csv(
                 os.path.join(output_dir, sensor_name + '.csv'),  # noqa: PTH118
                 index=False,
@@ -169,11 +169,11 @@ if __name__ == '__main__':
         plt.close(fig)
 
         figure_as_html = (
-            "<img src='" + os.path.join(output_dir, sensor_name_png) + "'>"
+            "<img src='" + os.path.join(output_dir, sensor_name_png) + "'>"  # noqa: PTH118
         )
 
         # Save the plot as an html file
-        with open(os.path.join(output_dir, sensor_name_html), 'w') as f:
+        with open(os.path.join(output_dir, sensor_name_html), 'w') as f:  # noqa: PTH118, PTH123
             f.write(figure_as_html)
 
     sys.exit(main())
