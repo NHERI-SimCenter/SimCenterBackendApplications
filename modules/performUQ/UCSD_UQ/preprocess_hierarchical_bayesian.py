@@ -7,9 +7,8 @@ from typing import Literal
 
 import numpy as np
 
-path_to_common_uq = Path(__file__).parent.parent / 'common'
-sys.path.append(str(path_to_common_uq))
-import uq_utilities  # noqa: E402
+sys.path.append(str(Path(__file__).parent.parent / 'common'))
+import uq_utilities
 
 InputsType = tuple[
     Path,
