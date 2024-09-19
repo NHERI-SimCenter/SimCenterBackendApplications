@@ -252,7 +252,7 @@ if set_particle_count_style == 'manual':
 elif set_particle_count_style == 'optimized':
     n_particles_base = (
         2**particle_quality_bits
-    )  # Better ways to do this, shouldnt have to set it manually
+    )  # Better ways to do this, should not have to set it manually
     n_particles = n_particles_base * (quality**DIMENSIONS)
     print('Number of Particles: ', n_particles)  # noqa: T201
 
@@ -1408,7 +1408,7 @@ def g2p():  # noqa: D103
 
 # @ti.func
 def erf_approx(erf_x):
-    """Needed an approximation to the gauss error function (math lib doesnt work with taichi)
+    """Needed an approximation to the gauss error function (math lib does not work with taichi)
 
     From: https://en.wikipedia.org/wiki/Error_function
     """  # noqa: D400
@@ -1557,7 +1557,7 @@ def save_metadata(file_path):
     )  # Scale velocity data to 1x1x1 domain for GNS
     vel_diff = np.diff(
         vel, axis=0
-    )  # computing acceleration along the time dependant axis
+    )  # computing acceleration along the time dependent axis
 
     # Define meta data dictionary from trajectories and timesteps
     if DIMENSIONS == 2:  # noqa: PLR2004
@@ -1929,7 +1929,8 @@ else:
 
 
 # Preallocate numpy arrays to store particle positions and velocities
-# NOTE: This can become many GBs large, exceeding the RAM of your computer. TODO: Use a file(s) on disk and perform writes in smaller chunks from the RAM
+# NOTE: This can become many GBs large, exceeding the RAM of your computer. 
+# TODO: Use file(s) on disk and perform writes in smaller chunks from the RAM
 x_data_gns = np.zeros(
     (sequence_length, n_particles, DIMENSIONS), dtype=np.float32
 )  # float 32 for mac compatibility

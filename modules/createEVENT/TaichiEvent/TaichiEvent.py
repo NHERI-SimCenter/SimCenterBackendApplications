@@ -41,7 +41,7 @@ class FloorForces:  # noqa: D101
                 self.Z.append(0.0)
 
             # Read in forces.[out or evt] file and add to EVENT.json
-            # now using intermediary forces.evt for output of preceeding Python calcs,
+            # now using intermediary forces.evt for output of preceding Python calcs,
             # prevents confusion with forces.out made by FEM tab
             if os.path.exists('forces.evt'):  # noqa: PTH110
                 with open('forces.evt') as file:  # noqa: PTH123
