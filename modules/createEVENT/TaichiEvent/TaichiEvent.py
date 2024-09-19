@@ -61,7 +61,9 @@ class FloorForces:  # noqa: D101
                             # Delimit by regex to capture " ", \s, "  ", tabs, etc.
                             # Each value should be a number, rep. the force on recorder j at a time-step i
                             # clean_line = re.split() # default is '\s+', which is any whitespace
-                            clean_line = re.split(r';\s|;|,\s|,|\s+', strip_line)
+                            clean_line = re.split(
+                                r';\s|;|,\s|,|\s+', strip_line
+                            )
                             # clean_line = re.split(r';|,\s', strip_line)
                             # clean_line = re.split("\s+", strip_line)
 
@@ -105,7 +107,9 @@ class FloorForces:  # noqa: D101
                     )
                 file.close  # noqa: B018
             else:
-                print('No forces.evt file found, defaulting to 0.0 for all forces.')  # noqa: T201
+                print(  # noqa: T201
+                    'No forces.evt file found, defaulting to 0.0 for all forces.'
+                )
                 self.X.append(0.0)
                 self.Y.append(0.0)
                 self.Z.append(0.0)
@@ -120,7 +124,13 @@ def directionToDof(direction):  # noqa: N802
     return directioMap[direction]
 
 
-def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):  # noqa: N802, N803
+def addFloorForceToEvent(  # noqa: N802
+    patternsList,  # noqa: N803
+    timeSeriesList,  # noqa: N803
+    force,
+    direction,
+    floor,
+):
     """
     Add force (one component) time series and pattern in the event file
     Use of Wind is just a placeholder for now, since its more developed than Hydro
@@ -259,7 +269,11 @@ if __name__ == '__main__':
         description='Get sample EVENT file produced by StochasticWave'
     )
     parser.add_argument(
-        '-b', '--filenameAIM', help='BIM File', required=True, default='AIM.json'
+        '-b',
+        '--filenameAIM',
+        help='BIM File',
+        required=True,
+        default='AIM.json',
     )
     parser.add_argument(
         '-e',
@@ -268,7 +282,9 @@ if __name__ == '__main__':
         required=True,
         default='EVENT.json',
     )
-    parser.add_argument('--getRV', help='getRV', required=False, action='store_true')
+    parser.add_argument(
+        '--getRV', help='getRV', required=False, action='store_true'
+    )
     # parser.add_argument('--filenameSAM', default=None)
 
     # parsing arguments

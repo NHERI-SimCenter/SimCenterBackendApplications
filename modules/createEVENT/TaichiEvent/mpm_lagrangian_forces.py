@@ -89,7 +89,11 @@ def p2g():  # noqa: D103
     for p in x:
         base = ti.cast(x[p] * inv_dx - 0.5, ti.i32)
         fx = x[p] * inv_dx - ti.cast(base, float)
-        w = [0.5 * (1.5 - fx) ** 2, 0.75 - (fx - 1) ** 2, 0.5 * (fx - 0.5) ** 2]
+        w = [
+            0.5 * (1.5 - fx) ** 2,
+            0.75 - (fx - 1) ** 2,
+            0.5 * (fx - 0.5) ** 2,
+        ]
         affine = p_mass * C[p]
         for i in ti.static(range(3)):
             for j in ti.static(range(3)):
@@ -135,7 +139,11 @@ def g2p():  # noqa: D103
     for p in x:
         base = ti.cast(x[p] * inv_dx - 0.5, ti.i32)
         fx = x[p] * inv_dx - float(base)
-        w = [0.5 * (1.5 - fx) ** 2, 0.75 - (fx - 1.0) ** 2, 0.5 * (fx - 0.5) ** 2]
+        w = [
+            0.5 * (1.5 - fx) ** 2,
+            0.75 - (fx - 1.0) ** 2,
+            0.5 * (fx - 0.5) ** 2,
+        ]
         new_v = ti.Vector([0.0, 0.0])
         new_C = ti.Matrix([[0.0, 0.0], [0.0, 0.0]])  # noqa: N806
 
@@ -182,7 +190,10 @@ def main():  # noqa: D103
         gui.lines(particle_pos[a], particle_pos[b], radius=1, color=0x4FB99F)
         gui.circles(particle_pos, radius=1.5, color=0xF2B134)
         gui.line(
-            (0.00, 0.03 / quality), (1.0, 0.03 / quality), color=0xFFFFFF, radius=3
+            (0.00, 0.03 / quality),
+            (1.0, 0.03 / quality),
+            color=0xFFFFFF,
+            radius=3,
         )
         gui.show()
 
