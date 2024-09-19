@@ -121,7 +121,13 @@ def dofToDirection(dof):  # noqa: N802
     return directionMap[dof]
 
 
-def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):  # noqa: N802, N803
+def addFloorForceToEvent(  # noqa: N802
+    patternsList,  # noqa: N803
+    timeSeriesList,  # noqa: N803
+    force,
+    direction,
+    floor,
+):
     """Add force (one component) time series and pattern in the event file
     Use of Wind is just a placeholder for now, since its more developed than Hydro
     """  # noqa: D205, D400
