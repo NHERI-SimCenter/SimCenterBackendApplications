@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#!/usr/bin/env python  # noqa: INP001, D100, EXE002
 # Copyright (c) 2019 The Regents of the University of California
 #
 # This file is part of the SimCenter Backend Applications.

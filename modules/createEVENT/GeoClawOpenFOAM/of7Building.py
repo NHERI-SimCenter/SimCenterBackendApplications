@@ -1,4 +1,4 @@
-#  # noqa: INP001
+#  # noqa: INP001, EXE002
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:

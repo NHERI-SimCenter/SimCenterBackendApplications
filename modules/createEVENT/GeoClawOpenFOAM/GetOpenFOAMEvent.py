@@ -1,4 +1,5 @@
-import argparse  # noqa: INP001, D100
+#!/usr/bin/env python  # noqa: INP001, D100
+import argparse
 import json
 import os
 import re

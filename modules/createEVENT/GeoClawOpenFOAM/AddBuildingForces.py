@@ -1,5 +1,5 @@
-#!/usr/bin/env python  # noqa: D100
-import argparse
+#!/usr/bin/env python
+import argparse  # noqa: D100
 import json
 import os
 
