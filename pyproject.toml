@@ -8,7 +8,7 @@ ignore = ["ANN", "D211", "D212", "Q000", "Q003", "COM812", "D203", "ISC001", "E5
 preview = false
 
 [tool.ruff.lint.per-file-ignores]
-"path/to/folder/*" = ["ALL"]
+"*.ipynb" = ["ALL"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
@@ -20,9 +20,6 @@ max-returns=11
 max-branches=50
 max-statements=150
 max-bool-expr=5
-
-[tool.ruff.lint.per-file-ignores]
-"*.ipynb" = ["ALL"]
 
 [tool.ruff.format]
 quote-style = "single"
