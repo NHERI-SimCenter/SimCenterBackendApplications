@@ -9,4 +9,3 @@ jobs:
         with:
           args: 'format --check'
           version: 0.6.1
-          changed-files: 'true'
