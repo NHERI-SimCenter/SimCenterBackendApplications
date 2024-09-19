@@ -1,11 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3  # noqa: D100
 
 # Added above lines for external execution of the script
 import json
 import math
 import os
 import platform  # For getting the operating system name, taichi may already have something for this
-import time as T
+import time as T  # noqa: N812
 
 import imageio
 import numpy as np
@@ -37,14 +37,14 @@ support_output_particle_filetypes = [
     'vtk',
 ]  # "ply", "bgeo", "npy", "npz", "vtk"
 if not any(
-    [x in support_output_particle_filetypes for x in output_particles_as_filetype]
+    [x in support_output_particle_filetypes for x in output_particles_as_filetype]  # noqa: C419
 ):
-    raise ValueError(
-        'Invalid output particle filetype selected. Please select from: ',
+    raise ValueError(  # noqa: TRY003
+        'Invalid output particle filetype selected. Please select from: ',  # noqa: EM101
         support_output_particle_filetypes,
     )
 
-print(
+print(  # noqa: T201
     'Output frames to GUI window{}, and PNG files{}'.format(
         ' enabled' if output_gui else ' disabled',
         ' enabled' if output_png else ' disabled',
@@ -63,14 +63,14 @@ if input_cli:
         or '3'
     )
 
-if dim == '2d' or int(dim) == 2:
+if dim == '2d' or int(dim) == 2:  # noqa: PLR2004
     DIMENSIONS = 2
-    print('2D Simulation Selected')
-elif dim == '3d' or int(dim) == 3:
+    print('2D Simulation Selected')  # noqa: T201
+elif dim == '3d' or int(dim) == 3:  # noqa: PLR2004
     DIMENSIONS = 3
-    print('3D Simulation Selected')
+    print('3D Simulation Selected')  # noqa: T201
 else:
-    raise ValueError('Invalid dimensionality selected. Please select 2D or 3D.')
+    raise ValueError('Invalid dimensionality selected. Please select 2D or 3D.')  # noqa: EM101, TRY003
 
 # Configure simulation resolution and memory allocation
 system = platform.system().lower()  # Useful for defining the sim environment
@@ -80,7 +80,7 @@ preallocate_memory_style = 'manual'
 n_grid = 1024  # Default number of grid nodes in a direction
 particles_per_dx = 4  # Default number of particles per dx, e.g. 4 -> 4^d = 16 or 64 particles per cell in 2d and 4d
 particles_per_cell = particles_per_dx**DIMENSIONS
-print(
+print(  # noqa: T201
     f'NOTE: Common initial Particles-per-Cell, (PPC), are {1**DIMENSIONS}, {2**DIMENSIONS}, {3**DIMENSIONS}, or {4**DIMENSIONS}.'
 )
 
@@ -111,7 +111,7 @@ if preallocate_memory_style == 'bits':
 if preallocate_memory_style == 'manual':
     # check OS to see if its ubuntu
     n_grid = 1024  # For 102.4 m domain, 102.4 / n_grid cm grid spacing
-    if (system != 'linux' and system != 'linux2') and on_weak_pc:
+    if (system != 'linux' and system != 'linux2') and on_weak_pc:  # noqa: PLR1714
         n_grid = min(
             512, n_grid
         )  # For weak PCs, decrease the grid size to 512 to save memory
@@ -126,8 +126,8 @@ buffer_cells = (
 bspline_kernel_order = 2  # Quadratic BSpline kernel
 supported_bspline_orders = [2]  # Quadratic, Cubic, Quartic BSpline kernels
 if bspline_kernel_order not in supported_bspline_orders:
-    raise ValueError(
-        'Invalid BSpline kernel order selected. Please select from: ',
+    raise ValueError(  # noqa: TRY003
+        'Invalid BSpline kernel order selected. Please select from: ',  # noqa: EM101
         supported_bspline_orders,
     )
 
@@ -135,8 +135,8 @@ if bspline_kernel_order not in supported_bspline_orders:
 use_antilocking = True  # Use anti-locking for improved pressures
 JB_fluid_ratio = 0.95  # Amount of antilocking, [0,1]. Recc < 0.9, < 0.99, < 0.999 for bulk of ~2e7, ~2e8, and ~2e9
 if JB_fluid_ratio > 1.0 or JB_fluid_ratio < 0.0:
-    raise ValueError(
-        'Invalid mixing ratio selected for F-Bar vol. antilocking pressure smoothing: [',
+    raise ValueError(  # noqa: TRY003
+        'Invalid mixing ratio selected for F-Bar vol. antilocking pressure smoothing: [',  # noqa: EM101
         JB_fluid_ratio,
         ']. Please select from: [0,1].',
     )
@@ -145,21 +145,21 @@ if JB_fluid_ratio > 1.0 or JB_fluid_ratio < 0.0:
 # ------------------------ Flume Setup ------------------------
 flume_shorten_ratio = 1.0  # Halve the flume length for testing purposes
 flume_thin_ratio = 0.0625 / 4
-if (system != 'linux' and system != 'linux2') and on_weak_pc:
+if (system != 'linux' and system != 'linux2') and on_weak_pc:  # noqa: PLR1714
     flume_shorten_ratio = 1.0  # Halve the flume length for testing purposes
     weak_pc_max_flume_width_ratio = 0.125
     flume_thin_ratio = min(weak_pc_max_flume_width_ratio, flume_thin_ratio)
-    print('Running on a weak PC, reducing width by ratio of: ', flume_thin_ratio)
+    print('Running on a weak PC, reducing width by ratio of: ', flume_thin_ratio)  # noqa: T201
 if flume_shorten_ratio > 1.0 or flume_shorten_ratio < 0.0:
-    raise ValueError(
-        'Invalid flume length ratio selected. Please select from: [0,1].'
+    raise ValueError(  # noqa: TRY003
+        'Invalid flume length ratio selected. Please select from: [0,1].'  # noqa: EM101
     )
 if flume_thin_ratio > 1.0 or flume_thin_ratio < 0.0:
-    raise ValueError(
-        'Invalid flume width ratio selected. Please select from: [0,1].'
+    raise ValueError(  # noqa: TRY003
+        'Invalid flume width ratio selected. Please select from: [0,1].'  # noqa: EM101
     )
 
-if dim == '3d' or int(dim) == 3:
+if dim == '3d' or int(dim) == 3:  # noqa: PLR2004
     DIMENSIONS = 3
     # Wave Flume Render 3d using grid_length as the flume length in 2D & 3D
     # https://engineering.oregonstate.edu/wave-lab/facilities/large-wave-flume
@@ -206,11 +206,11 @@ grid_ratio_y = 0.25
 grid_ratio_z = 0.125
 # grid_ratio_y = (2**(math.ceil((flume_height / grid_length) * n_grid) - 1).bit_length()) / n_grid
 # grid_ratio_z = (2**(math.ceil((flume_width / grid_length) * n_grid) - 1).bit_length()) / n_grid
-print('Grid Ratios: ', grid_ratio_x, grid_ratio_y, grid_ratio_z)
+print('Grid Ratios: ', grid_ratio_x, grid_ratio_y, grid_ratio_z)  # noqa: T201
 grid_length_x = grid_length * ti.max(0.0, ti.min(1.0, grid_ratio_x))
 grid_length_y = grid_length * ti.max(0.0, ti.min(1.0, grid_ratio_y))
 grid_length_z = grid_length * ti.max(0.0, ti.min(1.0, grid_ratio_z))
-print('Domain Dimensions', grid_length_x, grid_length_y, grid_length_z)
+print('Domain Dimensions', grid_length_x, grid_length_y, grid_length_z)  # noqa: T201
 n_grid_x = int(ti.max(n_grid * ti.min(grid_ratio_x, 1), 1))
 n_grid_y = int(ti.max(n_grid * ti.min(grid_ratio_y, 1), 1))
 n_grid_z = int(ti.max(n_grid * ti.min(grid_ratio_z, 1), 1))
@@ -220,8 +220,8 @@ n_grid_total = int(
 )  # Define this to work in 2d and 3d
 
 
-print('Particles-per-Dx: ', particles_per_dx)
-print('Particles-per-Cell: ', particles_per_cell)
+print('Particles-per-Dx: ', particles_per_dx)  # noqa: T201
+print('Particles-per-Cell: ', particles_per_cell)  # noqa: T201
 particle_spacing_ratio = float(1.0 / particles_per_dx)
 particle_spacing = float(dx * particle_spacing_ratio)
 particle_volume_ratio = float(1.0 / particles_per_cell)
@@ -238,16 +238,16 @@ if set_particle_count_style == 'manual':
         n_particles = int(
             input('Number of Particles to Simulate: ').strip() or '64000'
         )
-    print('Number of Particles: ', n_particles)
+    print('Number of Particles: ', n_particles)  # noqa: T201
 
 elif set_particle_count_style == 'optimized':
     n_particles_base = (
         2**particle_quality_bits
     )  # Better ways to do this, shouldnt have to set it manually
     n_particles = n_particles_base * (quality**DIMENSIONS)
-    print('Number of Particles: ', n_particles)
+    print('Number of Particles: ', n_particles)  # noqa: T201
 
-elif set_particle_count_style == 'compiled' or set_particle_count_style == 'default':
+elif set_particle_count_style == 'compiled' or set_particle_count_style == 'default':  # noqa: PLR1714
     n_particles = n_particles_default
 
 
@@ -257,7 +257,7 @@ paper = 'Bonus 2023'
 experiment = 'breaking'
 
 if experiment == 'breaking' and (
-    paper == 'Mascarenas 2022' or paper == 'Bonus 2023'
+    paper == 'Mascarenas 2022' or paper == 'Bonus 2023'  # noqa: PLR1714
 ):
     piston_amplitude = 3.6  # 4 meters max range on piston's stroke in the OSU LWF
     piston_scale_factor = (
@@ -276,7 +276,7 @@ if experiment == 'breaking' and (
     time_shift_piston = 2.5  # Time shift for the piston motion's error-function, experiments used ~10 seconds to ensure a smooth start to the wave
 
 elif experiment == 'unbreaking' and (
-    paper == 'Mascarenas 2022' or paper == 'Bonus 2023'
+    paper == 'Mascarenas 2022' or paper == 'Bonus 2023'  # noqa: PLR1714
 ):
     piston_amplitude = 3.9  # 4 meters max range on piston's stroke in the OSU LWF
     piston_scale_factor = 5.0
@@ -356,16 +356,16 @@ bathymetry_joints_y.append(2.3628)
 bathymetry_joints_y.append(2.3628)
 
 if len(bathymetry_joints_x) != len(bathymetry_joints_y):
-    raise ValueError('Bathymetry joint x and y arrays must be the same length')
-if len(bathymetry_joints_x) < 2:
-    raise ValueError('Bathymetry joint x and y arrays must have at least 2 points')
+    raise ValueError('Bathymetry joint x and y arrays must be the same length')  # noqa: EM101, TRY003
+if len(bathymetry_joints_x) < 2:  # noqa: PLR2004
+    raise ValueError('Bathymetry joint x and y arrays must have at least 2 points')  # noqa: EM101, TRY003
 
 NUM_JOINTS = len(bathymetry_joints_x)
 NUM_RAMPS = int(max(0, NUM_JOINTS - 1))
 
-for i, bath_x in enumerate(bathymetry_joints_x):
+for i, bath_x in enumerate(bathymetry_joints_x):  # noqa: B007
     bathymetry_joints_x[i] += buffer_cells * dx
-for j, bath_y in enumerate(bathymetry_joints_y):
+for j, bath_y in enumerate(bathymetry_joints_y):  # noqa: B007
     bathymetry_joints_y[j] += buffer_cells * dx
 
 bathymetry_joints_taichi_x = ti.Vector.field(n=NUM_JOINTS, dtype=float, shape=())
@@ -443,9 +443,9 @@ if use_bathymetry_ramps:
             )
             water_below_bathymetry_mask[p] = below_ramp_surface
 
-    print('Water Particles Before Applying Bathymetry: ', xyz_water.shape[0])
+    print('Water Particles Before Applying Bathymetry: ', xyz_water.shape[0])  # noqa: T201
     xyz_water = xyz_water[~water_below_bathymetry_mask]
-    print(
+    print(  # noqa: T201
         'Water Particles Below Bathymetry Removed: ',
         water_below_bathymetry_mask.sum(),
     )
@@ -460,7 +460,7 @@ xyz_water = xyz_water[
 # idx is an array of integer indices into v indicating which samples to keep
 downsampling = True
 downsampling_ratio = 100  # Downsamples by 100x
-print('Downsampling: {}'.format(' enabled' if downsampling else 'disabled'))
+print('Downsampling: {}'.format(' enabled' if downsampling else 'disabled'))  # noqa: T201
 
 xyz_water_sampled = None
 xyz_debris_sampled = None
@@ -480,7 +480,7 @@ if downsampling:
         idx_water_sampled
     ]  # Use the indices to get the sample positions
     # n_water_sampled = n[idx] # Use the indices to get the sample  normals
-    print(
+    print(  # noqa: T201
         'Downsampled Water Particles: ',
         xyz_water_sampled.shape[0],
         ' , Original Water Particles: ',
@@ -488,7 +488,7 @@ if downsampling:
     )
 
 n_particles_water = xyz_water.shape[0]
-print('Number of Water Particles: ', n_particles_water)
+print('Number of Water Particles: ', n_particles_water)  # noqa: T201
 
 debris_dimensions = 1.0 * np.array([0.5, 0.05, 0.1])  # Debris dimensions in meters
 debris_array = np.array(
@@ -539,9 +539,9 @@ xyz_debris = (
     .T
 )
 n_particles_debris = xyz_debris.shape[0]
-print('Number of Debris Particles: ', n_particles_debris)
+print('Number of Debris Particles: ', n_particles_debris)  # noqa: T201
 
-print('Start debris-field generation')
+print('Start debris-field generation')  # noqa: T201
 # Make an array to hold all the particle positions for the debris. It will make debris_array number of xyz_debris particle positions with the correct spacing
 xyz_debris_group = np.zeros(
     (debris_array[0] * debris_array[1] * debris_array[2] * xyz_debris.shape[0], 3)
@@ -562,7 +562,7 @@ for i in range(debris_array[0]):
             ] = xyz_debris + np.array(
                 [i * debris_spacing[0], j * debris_spacing[1], k * debris_spacing[2]]
             )
-print('End debris-field generation')
+print('End debris-field generation')  # noqa: T201
 xyz_debris_group = xyz_debris_group[
     np.where(
         (xyz_debris_group[:, 2] >= dx * (buffer_cells + buffer_shift_particles))
@@ -578,7 +578,7 @@ xyz_debris_group = xyz_debris_group[
     )
 ]
 n_particles_debris_group = xyz_debris_group.shape[0]
-print('Number of Debris Particles: ', n_particles_debris_group)
+print('Number of Debris Particles: ', n_particles_debris_group)  # noqa: T201
 
 # Downsample a point cloud so that all the points are separated by approximately a fixed value
 # i.e. the downsampled points follow a blue noise distribution
@@ -595,7 +595,7 @@ if downsampling:
         idx_debris_sampled
     ]  # Use the indices to get the sample positions
     # n_debris_sampled = n[idx] # Use the indices to get the sample  normals
-    print(
+    print(  # noqa: T201
         'Downsampled debris Particles: ',
         xyz_debris_sampled.shape[0],
         ' , Original debris Particles: ',
@@ -603,13 +603,13 @@ if downsampling:
     )
 
 
-print('Debris Dimensions: ', debris_dimensions)
-print('Debris Array: ', debris_array)
-print('Debris Spacing Gaps: ', debris_spacing_gap)
-print('Debris Group Dimensions: ', debris_field_dimensions)
-print('Debris Group Offset: ', debris_offset)
-print('XYZ Debris Shape: ', xyz_debris.shape)
-print('XYZ Debris Group Shape: ', xyz_debris_group.shape)
+print('Debris Dimensions: ', debris_dimensions)  # noqa: T201
+print('Debris Array: ', debris_array)  # noqa: T201
+print('Debris Spacing Gaps: ', debris_spacing_gap)  # noqa: T201
+print('Debris Group Dimensions: ', debris_field_dimensions)  # noqa: T201
+print('Debris Group Offset: ', debris_offset)  # noqa: T201
+print('XYZ Debris Shape: ', xyz_debris.shape)  # noqa: T201
+print('XYZ Debris Group Shape: ', xyz_debris_group.shape)  # noqa: T201
 
 max_base_y = np.max(
     xyz_water[:, 1]
@@ -621,14 +621,14 @@ xyz = np.concatenate((xyz_water, xyz_debris_group), axis=0)
 xyz_sampled = np.concatenate((xyz_water_sampled, xyz_debris_sampled), axis=0)
 idx_sampled = np.concatenate((idx_water_sampled, idx_debris_sampled), axis=0)
 
-if DIMENSIONS == 3:
-    if set_particle_count_style == 'auto' or 'automatic':
+if DIMENSIONS == 3:  # noqa: PLR2004
+    if set_particle_count_style == 'auto' or 'automatic':  # noqa: SIM222
         n_particles = xyz.shape[0]
 else:
     n_particles = 20000
 
-print('Total Number of Particles: ', n_particles)
-print(f'Max Initialized Water Particle Height: {max_base_y}')
+print('Total Number of Particles: ', n_particles)  # noqa: T201
+print(f'Max Initialized Water Particle Height: {max_base_y}')  # noqa: T201
 
 # xyz_numpy = np.zeros((n_particles, 3))
 # xyz_numpy[:xyz.shape[0], :] = xyz
@@ -640,8 +640,8 @@ print(f'Max Initialized Water Particle Height: {max_base_y}')
 # n_particles_water = (flume_height, flume_height, flume_width, flume_length)
 
 
-print('Number of Grid-Nodes each Direction: ', n_grid_x, n_grid_y, n_grid_z)
-print('dx: ', dx)
+print('Number of Grid-Nodes each Direction: ', n_grid_x, n_grid_y, n_grid_z)  # noqa: T201
+print('dx: ', dx)  # noqa: T201
 
 
 # Material Ids
@@ -675,7 +675,7 @@ material_id_numpy[
 p_vol, p_rho = particle_volume, 1000.0
 p_mass = p_vol * p_rho
 E, nu = 2.5e7, 0.25  # Young's modulus and Poisson's ratio
-# TODO: Define material laws for various materials
+# TODO: Define material laws for various materials  # noqa: TD002
 gamma_water = 7.125  # Ratio of specific heats for water
 mu_0, lambda_0 = (
     E / (2 * (1 + nu)),
@@ -697,18 +697,18 @@ critical_time_step = (
 scaled_time_step = (
     critical_time_step * 1.0
 )  # may need to adjust based on the domain size
-print('Critical Time Step: ', critical_time_step)
-print('Scaled Time Step: ', scaled_time_step)
+print('Critical Time Step: ', critical_time_step)  # noqa: T201
+print('Scaled Time Step: ', scaled_time_step)  # noqa: T201
 set_dt_to_critical = True
 if set_dt_to_critical:
-    print('Using CFL condition for time-step (dt)...')
+    print('Using CFL condition for time-step (dt)...')  # noqa: T201
     # CFL condition for explicit time-integration
     dt = scaled_time_step
 else:
-    print('Using fixed time-step (dt)...')
+    print('Using fixed time-step (dt)...')  # noqa: T201
     # Manual
     dt = 1e-4 / max(abs(quality), 1)
-print('dt = ', dt)
+print('dt = ', dt)  # noqa: T201
 
 
 # Added parameters for piston and particle interaction
@@ -781,9 +781,9 @@ material.from_numpy(
 )  # Load in the material ids for the water and debris field
 material_id_numpy = None  # Clear the numpy array to save memory
 
-if DIMENSIONS == 2:
+if DIMENSIONS == 2:  # noqa: PLR2004
     grid_tuple = (n_grid_x, n_grid_y)
-elif DIMENSIONS == 3:
+elif DIMENSIONS == 3:  # noqa: PLR2004
     grid_tuple = (n_grid_x, n_grid_y, n_grid_z)
 
 grid_v = ti.Vector.field(
@@ -791,10 +791,10 @@ grid_v = ti.Vector.field(
 )  # grid node momentum/velocity
 grid_m = ti.field(dtype=float, shape=grid_tuple)  # grid node interpolated mass
 if ti.static(use_antilocking):
-    grid_VBar = ti.field(
+    grid_VBar = ti.field(  # noqa: N816
         dtype=float, shape=grid_tuple
     )  # grid node plastic deformation
-    grid_JBar = ti.field(
+    grid_JBar = ti.field(  # noqa: N816
         dtype=float, shape=grid_tuple
     )  # grid node volume change ratio
 # grid_volume = ti.field(dtype=float, shape=grid_tuple)  # grid node interpolated volume
@@ -809,7 +809,7 @@ if ti.static(use_antilocking):
 
 
 @ti.func
-def update_material_properties(p):
+def update_material_properties(p):  # noqa: D103
     # Hardening coefficient: snow gets harder when compressed
     # Metals between h = .1-.5
     h = 1.0
@@ -843,7 +843,7 @@ def update_material_properties(p):
 
 
 @ti.func
-def neo_hookean_model(h, mu, la, F, J):
+def neo_hookean_model(h, mu, la, F, J):  # noqa: ARG001, N803
     """Due to waters near incompressibility we can treat it as a near-incompressible hyperelastic material
 
     Args:
@@ -853,13 +853,13 @@ def neo_hookean_model(h, mu, la, F, J):
         F: Deformation gradient for a single particle
     Returns:
 
-    """
-    K = la
-    C = F.transpose() @ F  # Left Cauchy Green Tensor
-    I1 = C.trace()  # Trace of Left Cauchy Green Tensor
+    """  # noqa: D400
+    K = la  # noqa: N806
+    C = F.transpose() @ F  # Left Cauchy Green Tensor  # noqa: N806
+    I1 = C.trace()  # Trace of Left Cauchy Green Tensor  # noqa: N806
     nhstrain = (mu / 2) * (I1 - 3) + (K / 2) * (ti.math.log(J) ** 2)
 
-    return nhstrain
+    return nhstrain  # noqa: RET504
 
 
 @ti.func
@@ -873,8 +873,8 @@ def compute_stress_svd(p, mu, la):
     Returns
     -------
         stress: Cauchy stress tensor
-    """
-    U, sig, V = ti.svd(
+    """  # noqa: D205, D400, D401
+    U, sig, V = ti.svd(  # noqa: N806
         F[p]
     )  # Singular Value Decomposition of deformation gradient (on particle)
 
@@ -894,9 +894,9 @@ def compute_stress_svd(p, mu, la):
             )  # Plasticity
         Jp[p] *= sig[d, d] / new_sig  # stable?
         sig[d, d] = new_sig
-        J *= new_sig
+        J *= new_sig  # noqa: N806, F821
 
-    if material[p] == material_id_dict_mpm['Debris']:  # 2:
+    if material[p] == material_id_dict_mpm['Debris']:  # 2:  # noqa: RET503
         # Reconstruct elastic deformation gradient after plasticity
         F[p] = (
             U @ sig @ V.transpose()
@@ -905,11 +905,11 @@ def compute_stress_svd(p, mu, la):
         stress = 2 * mu * (F[p] - U @ V.transpose()) @ F[
             p
         ].transpose() + ti.Matrix.identity(float, DIMENSIONS) * la * J * (J - 1)
-        return stress
+        return stress  # noqa: RET504
 
 
 @ti.func
-def compute_stress(mu, la, F):
+def compute_stress(mu, la, F):  # noqa: N803
     """Computes Cauchy stress tensor for a near-incompressible Neo-Hookean material
     (can also use strain energy density function)
 
@@ -921,13 +921,13 @@ def compute_stress(mu, la, F):
     Returns
     -------
         stress: Cauchy stress tensor
-    """
-    J = ti.math.determinant(F)
-    K = la
-    FinvT = F.inverse().transpose()
+    """  # noqa: D205, D400, D401
+    J = ti.math.determinant(F)  # noqa: N806
+    K = la  # noqa: N806
+    FinvT = F.inverse().transpose()  # noqa: N806
 
     # First Piola-Kirchhoff stress tensor (P)
-    P = mu * (F - FinvT) + K * ti.math.log(J) * FinvT
+    P = mu * (F - FinvT) + K * ti.math.log(J) * FinvT  # noqa: N806
 
     # Neo-hookean strain energy density function
     # nh_strain = neo_hookean_model( h, mu, la, F, J )
@@ -935,11 +935,11 @@ def compute_stress(mu, la, F):
     # Cauchy stress tensor (denoted by sigma)
     stress = (1 / J) * P @ F.transpose()
 
-    return stress
+    return stress  # noqa: RET504
 
 
 @ti.func
-def compute_stress_jfluid(mu, la, J):
+def compute_stress_jfluid(mu, la, J):  # noqa: ARG001, N803
     """Computes Cauchy stress tensor for an isotropic fluid material
     assuming Tait-Murnaghan equation of state
 
@@ -951,7 +951,7 @@ def compute_stress_jfluid(mu, la, J):
     Returns
     -------
         stress: Cauchy stress tensor
-    """
+    """  # noqa: D205, D400, D401
     # J = ti.math.determinant(F[p])  #particle volume ratio = V /Vo
 
     # pressure = (bulk_modulus / gamma_water ) * (J - 1)
@@ -960,7 +960,7 @@ def compute_stress_jfluid(mu, la, J):
 
 
 @ti.kernel
-def substep():
+def substep():  # noqa: D103
     clear_grid()
     p2g()
     update_grid()
@@ -969,15 +969,15 @@ def substep():
 
 
 @ti.func
-def clear_grid():
-    if ti.static(DIMENSIONS == 2):
+def clear_grid():  # noqa: D103
+    if ti.static(DIMENSIONS == 2):  # noqa: PLR2004
         for i, j in grid_m:
             grid_v[i, j] = ti.Vector.zero(float, DIMENSIONS)
             grid_m[i, j] = 0
             if ti.static(use_antilocking):
                 grid_VBar[i, j] = 0
                 grid_JBar[i, j] = 0
-    elif ti.static(DIMENSIONS == 3):
+    elif ti.static(DIMENSIONS == 3):  # noqa: PLR2004
         for i, j, k in grid_m:
             grid_v[i, j, k] = ti.Vector.zero(float, DIMENSIONS)
             grid_m[i, j, k] = 0
@@ -985,20 +985,20 @@ def clear_grid():
                 grid_VBar[i, j, k] = 0
                 grid_JBar[i, j, k] = 0
     else:
-        raise Exception('Improper Dimensionality for Simulation Must Be 2D or 3D ')
+        raise Exception('Improper Dimensionality for Simulation Must Be 2D or 3D ')  # noqa: EM101, TRY002, TRY003
 
 
 @ti.func
-def p2g():
+def p2g():  # noqa: C901, D103
     for p in x:  # Particle state update and scatter to grid (P2G)
         base = (x[p] * inv_dx - 0.5).cast(int)
         fx = x[p] * inv_dx - base.cast(float)
         # Quadratic kernels  [http://mpm.graphics   Eqn. 123, with x=fx, fx-1,fx-2] or Weights for MPM
         w = [0.5 * (1.5 - fx) ** 2, 0.75 - (fx - 1) ** 2, 0.5 * (fx - 0.5) ** 2]
         # deformation gradient update
-        J_prev = ti.math.determinant(F[p])
+        J_prev = ti.math.determinant(F[p])  # noqa: N806
         F[p] = (ti.Matrix.identity(float, DIMENSIONS) + dt * C[p]) @ F[p]
-        J = ti.math.determinant(F[p])  # particle volume ratio = V /Vo
+        J = ti.math.determinant(F[p])  # particle volume ratio = V /Vo  # noqa: N806
 
         # Hardening coefficient and Lame parameter updates
         h, mu, la = update_material_properties(p)
@@ -1015,9 +1015,9 @@ def p2g():
         #     JMix = (1.0 - JB_fluid_ratio) * (J) + (JB_fluid_ratio) * JBar[p] * (J / J_prev)
 
         # Might be a memory-race in taichi, as we read/write to JBar[p] without explicit synchronization
-        JMix = J
+        JMix = J  # noqa: N806
         if ti.static(use_antilocking):
-            JMix = (1.0 - JB_fluid_ratio) * (J) + (JB_fluid_ratio) * JBar[p] * (
+            JMix = (1.0 - JB_fluid_ratio) * (J) + (JB_fluid_ratio) * JBar[p] * (  # noqa: N806
                 J / J_prev
             )
             # JBar[p] = JMix
@@ -1043,7 +1043,7 @@ def p2g():
 
         stress = (-dt * p_vol * 4 * inv_dx * inv_dx) * stress
         affine = stress + p_mass * C[p]
-        if ti.static(DIMENSIONS == 2):
+        if ti.static(DIMENSIONS == 2):  # noqa: PLR2004
             for i, j in ti.static(ti.ndrange(3, 3)):
                 # Loop over 3x3 grid node neighborhood
                 offset = ti.Vector([i, j])
@@ -1054,7 +1054,7 @@ def p2g():
                 if ti.static(use_antilocking):
                     grid_VBar[base + offset] += weight * p_vol
                     grid_JBar[base + offset] += weight * p_vol * JMix
-        elif ti.static(DIMENSIONS == 3):
+        elif ti.static(DIMENSIONS == 3):  # noqa: PLR2004
             for i, j, k in ti.static(ti.ndrange(3, 3, 3)):
                 offset = ti.Vector([i, j, k])
                 dpos = (offset.cast(float) - fx) * dx
@@ -1067,15 +1067,15 @@ def p2g():
 
 
 @ti.func
-def update_grid():
-    if ti.static(DIMENSIONS == 2):
+def update_grid():  # noqa: C901, D103
+    if ti.static(DIMENSIONS == 2):  # noqa: PLR2004
         for i, j in grid_m:
             if grid_m[i, j] > 0:  # No need for epsilon here
                 # Momentum to velocity
                 grid_v[i, j] = (1 / grid_m[i, j]) * grid_v[i, j]
                 grid_v[i, j] += dt * gravity[None]  # gravity
                 apply_boundary_conditions(i, j, 0)
-    elif ti.static(DIMENSIONS == 3):
+    elif ti.static(DIMENSIONS == 3):  # noqa: PLR2004
         for i, j, k in grid_m:
             if grid_m[i, j, k] > 0:  # No need for epsilon here
                 # Momentum to velocity
@@ -1084,13 +1084,13 @@ def update_grid():
                 apply_boundary_conditions(i, j, k)
 
     if ti.static(use_antilocking):
-        if ti.static(DIMENSIONS == 2):
+        if ti.static(DIMENSIONS == 2):  # noqa: PLR2004
             for i, j in grid_VBar:
                 if grid_VBar[i, j] > 0:  # No need for epsilon here
                     # Momentum to velocity
                     grid_JBar[i, j] = (1 / grid_VBar[i, j]) * grid_JBar[i, j]
                     apply_boundary_conditions(i, j, 0)
-        elif ti.static(DIMENSIONS == 3):
+        elif ti.static(DIMENSIONS == 3):  # noqa: PLR2004
             for i, j, k in grid_VBar:
                 if grid_VBar[i, j, k] > 0:
                     grid_JBar[i, j, k] = (1 / grid_VBar[i, j, k]) * grid_JBar[
@@ -1099,8 +1099,8 @@ def update_grid():
 
 
 @ti.func
-def apply_boundary_conditions(i, j, k):
-    if ti.static(DIMENSIONS == 2):
+def apply_boundary_conditions(i, j, k):  # noqa: C901, D103
+    if ti.static(DIMENSIONS == 2):  # noqa: PLR2004
         if i < buffer_cells and grid_v[i, j][0] < 0:
             grid_v[i, j][0] = 0  # Boundary conditions
         if i > n_grid_x - buffer_cells and grid_v[i, j][0] > 0:
@@ -1114,7 +1114,7 @@ def apply_boundary_conditions(i, j, k):
             and grid_v[i, j][0] < board_velocity[None][0]
         ):
             grid_v[i, j][0] = 1.0 * board_velocity[None][0]
-    elif ti.static(DIMENSIONS == 3):
+    elif ti.static(DIMENSIONS == 3):  # noqa: PLR2004
         if i < buffer_cells and grid_v[i, j, k][0] < 0:
             grid_v[i, j, k][0] = 0
         if i > n_grid_x - buffer_cells and grid_v[i, j, k][0] > 0:
@@ -1253,36 +1253,36 @@ def apply_boundary_conditions(i, j, k):
 
 
 @ti.func
-def g2p():
+def g2p():  # noqa: D103
     for p in x:  # grid to particle (G2P)
         base = (x[p] * inv_dx - 0.5).cast(int)
         fx = x[p] * inv_dx - base.cast(float)
         w = [0.5 * (1.5 - fx) ** 2, 0.75 - (fx - 1.0) ** 2, 0.5 * (fx - 0.5) ** 2]
         new_v = ti.Vector.zero(float, DIMENSIONS)
-        new_C = ti.Matrix.zero(float, DIMENSIONS, DIMENSIONS)
-        new_JBar = 0.0
-        if ti.static(DIMENSIONS == 2):
+        new_C = ti.Matrix.zero(float, DIMENSIONS, DIMENSIONS)  # noqa: N806
+        new_JBar = 0.0  # noqa: N806
+        if ti.static(DIMENSIONS == 2):  # noqa: PLR2004
             for i, j in ti.static(ti.ndrange(3, 3)):
                 # loop over 3x3 grid node neighborhood
                 dpos = ti.Vector([i, j]).cast(float) - fx
                 g_v = grid_v[base + ti.Vector([i, j])]
                 weight = w[i][0] * w[j][1]
                 new_v += weight * g_v
-                new_C += 4 * inv_dx * weight * g_v.outer_product(dpos)
+                new_C += 4 * inv_dx * weight * g_v.outer_product(dpos)  # noqa: N806
                 if ti.static(use_antilocking):
-                    g_JBar = grid_JBar[base + ti.Vector([i, j])]
-                    new_JBar += weight * grid_JBar[base + ti.Vector([i, j])]
-        elif ti.static(DIMENSIONS == 3):
+                    g_JBar = grid_JBar[base + ti.Vector([i, j])]  # noqa: N806
+                    new_JBar += weight * grid_JBar[base + ti.Vector([i, j])]  # noqa: N806
+        elif ti.static(DIMENSIONS == 3):  # noqa: PLR2004
             for i, j, k in ti.static(ti.ndrange(3, 3, 3)):
                 # loop over 3x3x3 grid node neighborhood
                 dpos = ti.Vector([i, j, k]).cast(float) - fx
                 g_v = grid_v[base + ti.Vector([i, j, k])]
                 weight = w[i][0] * w[j][1] * w[k][2]
                 new_v += weight * g_v
-                new_C += 4 * inv_dx * weight * g_v.outer_product(dpos)
+                new_C += 4 * inv_dx * weight * g_v.outer_product(dpos)  # noqa: N806
                 if ti.static(use_antilocking):
-                    g_JBar = grid_JBar[base + ti.Vector([i, j, k])]
-                    new_JBar += weight * grid_JBar[base + ti.Vector([i, j, k])]
+                    g_JBar = grid_JBar[base + ti.Vector([i, j, k])]  # noqa: N806, F841
+                    new_JBar += weight * grid_JBar[base + ti.Vector([i, j, k])]  # noqa: N806
 
         v[p], C[p] = new_v, new_C
         x[p] += dt * v[p]  # advection
@@ -1311,7 +1311,7 @@ def erf_approx(erf_x):
     """Needed an approximation to the gauss error function (math lib doesnt work with taichi)
 
     From: https://en.wikipedia.org/wiki/Error_function
-    """
+    """  # noqa: D400
     # Approximation constants
     a1 = 0.254829592
     a2 = -0.284496736
@@ -1335,7 +1335,7 @@ def erf_approx(erf_x):
     return sign * erf_y
 
 
-def move_board_solitary():
+def move_board_solitary():  # noqa: D103
     t = time - piston_wait_time
     b = board_states[None]
     bv = board_velocity[None]
@@ -1344,7 +1344,7 @@ def move_board_solitary():
     # if b[1] >= 2 * piston_period:
     #     b[1] = 0
 
-    piston_time_variance = piston_time_stdev * piston_time_stdev
+    piston_time_variance = piston_time_stdev * piston_time_stdev  # noqa: F841
     b[0] = (
         0.5
         * piston_amplitude
@@ -1379,16 +1379,16 @@ def move_board_solitary():
 
 
 @ti.kernel
-def reset():
+def reset():  # noqa: C901, D103
     for i in range(n_particles):
-        if ti.static(DIMENSIONS == 2):
+        if ti.static(DIMENSIONS == 2):  # noqa: PLR2004
             v[i] = [0.0, 0.0]
             F[i] = ti.Matrix([[1.0, 0.0], [0.0, 1.0]])
             Jp[i] = 1.0
             C[i] = ti.Matrix.zero(float, DIMENSIONS, DIMENSIONS)
             if ti.static(use_antilocking):
                 JBar[i] = 1.0
-        elif ti.static(DIMENSIONS == 3):
+        elif ti.static(DIMENSIONS == 3):  # noqa: PLR2004
             v[i] = [0.0, 0.0, 0.0]
             F[i] = ti.Matrix([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
             Jp[i] = 1.0
@@ -1397,14 +1397,14 @@ def reset():
             if ti.static(use_antilocking):
                 JBar[i] = 1.0
 
-    if ti.static(DIMENSIONS == 2):
+    if ti.static(DIMENSIONS == 2):  # noqa: PLR2004
         for i, j in grid_m:
             grid_m[i, j] = 0
             grid_v[i, j] = [0.0, 0.0]
             if ti.static(use_antilocking):
                 grid_VBar[i, j] = 0
                 grid_JBar[i, j] = 0
-    elif ti.static(DIMENSIONS == 3):
+    elif ti.static(DIMENSIONS == 3):  # noqa: PLR2004
         for i, j, k in grid_m:
             grid_m[i, j, k] = 0
             grid_v[i, j, k] = [0.0, 0.0, 0.0]
@@ -1412,10 +1412,10 @@ def reset():
                 grid_VBar[i, j, k] = 0
                 grid_JBar[i, j, k] = 0
 
-    if ti.static(DIMENSIONS == 2):
+    if ti.static(DIMENSIONS == 2):  # noqa: PLR2004
         board_states[None] = [float(piston_pos[0]), 0.0]  # Initial piston position
         board_velocity[None] = [0.0, 0.0]  # Initial piston velocity
-    elif ti.static(DIMENSIONS == 3):
+    elif ti.static(DIMENSIONS == 3):  # noqa: PLR2004
         board_states[None] = [
             float(piston_pos[0]),
             0.0,
@@ -1440,11 +1440,11 @@ def save_metadata(file_path):
     Returns
     -------
         None
-    """
+    """  # noqa: D205, D400
     # Using a list for each time step for formatting
-    global v_data_to_save
+    global v_data_to_save  # noqa: PLW0602
     # Assume scaled already
-    global bounds
+    global bounds  # noqa: PLW0602
     vel = (
         np.stack(v_data_to_save, axis=0) / grid_length
     )  # Scale velocity data to 1x1x1 domain for GNS
@@ -1453,18 +1453,18 @@ def save_metadata(file_path):
     )  # computing acceleration along the time dependant axis
 
     # Define meta data dictionary from trajectories and timesteps
-    if DIMENSIONS == 2:
+    if DIMENSIONS == 2:  # noqa: PLR2004
         vel_mean = np.nanmean(vel, axis=(0))
         vel_std = np.nanstd(vel, axis=(0))
         acc_mean = np.nanmean(vel_diff, axis=(0))
         acc_std = np.nanstd(vel_diff, axis=(0))
-    elif DIMENSIONS == 3:
+    elif DIMENSIONS == 3:  # noqa: PLR2004
         vel_mean = np.nanmean(vel, axis=(0, 1))
         vel_std = np.nanstd(vel, axis=(0, 1))
         acc_mean = np.nanmean(vel_diff, axis=(0, 1))
         acc_std = np.nanstd(vel_diff, axis=(0, 1))
     else:
-        raise Exception('Improper Dimensionality for Simulation Must Be 2D or 3D ')
+        raise Exception('Improper Dimensionality for Simulation Must Be 2D or 3D ')  # noqa: EM101, TRY002, TRY003
 
     # Convert numpy types to native Python types
     vel_mean = [float(x) for x in vel_mean]
@@ -1490,25 +1490,25 @@ def save_metadata(file_path):
 
     for i in range(DIMENSIONS):
         while bounds_metadata[i][0] < 0.0 or bounds_metadata[i][0] > 1.0:
-            print('Scale bounds to 0 to 1 range')
+            print('Scale bounds to 0 to 1 range')  # noqa: T201
             bounds_metadata[i][0] = float(abs(bounds_metadata[i][0]) / grid_length)
 
         while bounds_metadata[i][1] > 1.0 or bounds_metadata[i][1] < 0.0:
-            print('Scale bounds to 0 to 1 range')
+            print('Scale bounds to 0 to 1 range')  # noqa: T201
             bounds_metadata[i][1] = float(abs(bounds_metadata[i][1]) / grid_length)
 
         if bounds_metadata[i][0] == bounds_metadata[i][1]:
-            print(
+            print(  # noqa: T201
                 'Assume that the bounds were centered around the origin, so we shift the to the right into 0 to 1 range'
             )
             bounds_metadata[i][0] = 0.5 - min(0.5, bounds_metadata[i][0])
             bounds_metadata[i][1] = 0.5 + min(0.5, bounds_metadata[i][1])
 
         if bounds_metadata[i][0] > bounds_metadata[i][1]:
-            print(
+            print(  # noqa: T201
                 'Swap the bounds if they are in the wrong order, i.e. [1, 0] -> [0, 1]'
             )
-            bounds_temp = float(bounds_metadata[i][0])
+            bounds_temp = float(bounds_metadata[i][0])  # noqa: F841
             bounds_metadata[i][0] = float(bounds_metadata[i][1])
             # bounds = bounds_temp
 
@@ -1527,26 +1527,26 @@ def save_metadata(file_path):
         'acc_std': acc_std,  # [0.0002582944917306106, 0.00029554531667679154]
     }
 
-    print('Cpmstricted simulation metadata: ', metadata)
+    print('Cpmstricted simulation metadata: ', metadata)  # noqa: T201
 
     # Write metadata to a JSON file
-    with open(os.path.join(file_path, 'metadata.json'), 'w') as file:
+    with open(os.path.join(file_path, 'metadata.json'), 'w') as file:  # noqa: PTH118, PTH123
         json.dump(metadata, file)
-        print(
+        print(  # noqa: T201
             'Saved metadata to file: ',
-            os.path.join(file_path, 'metadata.json', '\n'),
+            os.path.join(file_path, 'metadata.json', '\n'),  # noqa: PTH118
         )
 
 
-def save_simulation():
+def save_simulation():  # noqa: C901
     """Save train.npz, test.npz,or valid.npz to file
     Args:
         None
     Returns:
         None
-    """
-    global data_designation
-    global data
+    """  # noqa: D205, D400
+    global data_designation  # noqa: PLW0602
+    global data  # noqa: PLW0602
 
     # Define file_path to save to data, models, rollout folder. Located in directory of this file script
 
@@ -1561,21 +1561,21 @@ def save_simulation():
         file_path = './Flume/dataset'
 
     save_relative_to_cwd = True
-    ROLLOUT_PATH = './Flume/rollout'
-    MODEL_PATH = './Flume/models'
+    ROLLOUT_PATH = './Flume/rollout'  # noqa: N806
+    MODEL_PATH = './Flume/models'  # noqa: N806
     if save_relative_to_cwd:
-        cwd_path = os.getcwd()
-        file_path = os.path.join(cwd_path, file_path)
-        ROLLOUT_PATH = os.path.join(cwd_path, ROLLOUT_PATH)
-        MODEL_PATH = os.path.join(cwd_path, MODEL_PATH)
+        cwd_path = os.getcwd()  # noqa: PTH109
+        file_path = os.path.join(cwd_path, file_path)  # noqa: PTH118
+        ROLLOUT_PATH = os.path.join(cwd_path, ROLLOUT_PATH)  # noqa: PTH118, N806
+        MODEL_PATH = os.path.join(cwd_path, MODEL_PATH)  # noqa: PTH118, N806
 
     # Ensuring the directories exist within the cwd
-    if not os.path.exists(file_path):
-        os.makedirs(file_path)
-    if not os.path.exists(ROLLOUT_PATH):
-        os.makedirs(ROLLOUT_PATH)
-    if not os.path.exists(MODEL_PATH):
-        os.makedirs(MODEL_PATH)
+    if not os.path.exists(file_path):  # noqa: PTH110
+        os.makedirs(file_path)  # noqa: PTH103
+    if not os.path.exists(ROLLOUT_PATH):  # noqa: PTH110
+        os.makedirs(ROLLOUT_PATH)  # noqa: PTH103
+    if not os.path.exists(MODEL_PATH):  # noqa: PTH110
+        os.makedirs(MODEL_PATH)  # noqa: PTH103
 
     material_numpy = material.to_numpy()
     mat_data_tmp = np.where(
@@ -1589,7 +1589,7 @@ def save_simulation():
         np.stack(data_to_save, axis=0) / grid_length
     )  # Scale position data to 1x1x1 domain for GNS
 
-    print('Down-sampling index list: ', idx_sampled.shape)
+    print('Down-sampling index list: ', idx_sampled.shape)  # noqa: T201
 
     # Perform downsampling for GNS
     downsampling_style = 'poisson-disk'
@@ -1616,14 +1616,14 @@ def save_simulation():
             )
         ]
     else:
-        raise Exception('Downsampling Style Not Supported')
+        raise Exception('Downsampling Style Not Supported')  # noqa: EM101, TRY002, TRY003
 
     # check version of numpy >= 1.22.0
     # Newer versions of numpy require the dtype to be explicitly set to object, I think, for some python versions
     # Should add a check for the python version as well
 
     if np.version.version > '1.23.5':
-        print(
+        print(  # noqa: T201
             'Using numpy version (>= 1.23.5), may require alternative approach to save npz files (e.g. dtype=object): ',
             np.version.version,
         )
@@ -1633,59 +1633,59 @@ def save_simulation():
         )
         mat_data = np.asarray(downsampled_mat_data, dtype=object)
     else:
-        print('Warning: Using numpy version: ', np.version.version)
+        print('Warning: Using numpy version: ', np.version.version)  # noqa: T201
         pos_data = np.array(np.stack(downsampled_data, axis=0), dtype=np.float32)
         mat_data = np.asarray(downsampled_mat_data, dtype=object)
         # np.array(material_data.tolist())
 
-    print('pos_data: ', pos_data.shape)
-    print('mat_data: ', mat_data.shape)
+    print('pos_data: ', pos_data.shape)  # noqa: T201
+    print('mat_data: ', mat_data.shape)  # noqa: T201
     simulation_data = {'simulation_0': (pos_data, mat_data)}
 
-    file = open('forces.evt', 'w')
+    file = open('forces.evt', 'w')  # noqa: SIM115, PTH123
     file.write('0.0 0.0 0.0 0.0 0.0 0.0\n')
     file.close()
-    print('Forces file saved to: forces.evt')
+    print('Forces file saved to: forces.evt')  # noqa: T201
 
     if data_designation.lower() in ('r', 'rollout', 'test'):
         # Should clarify the difference in naming between test and rollout
-        print(
+        print(  # noqa: T201
             'Saving simulatiomn particle data to: [',
             file_path,
             '/test.npz] for testing of surrogate models trained on similar but different data, i.e. [train.npz].',
         )
-        output_file_path = os.path.join(file_path, 'test.npz')
+        output_file_path = os.path.join(file_path, 'test.npz')  # noqa: PTH118
         np.savez_compressed(f'{file_path}/test.npz', **simulation_data)
-        output_particles_as_vtk = True
+        output_particles_as_vtk = True  # noqa: F841
 
     elif data_designation.lower() in ('t', 'train'):
-        print(
+        print(  # noqa: T201
             'Saving simulation particle data to: [',
             file_path,
             '/train.npz] for training surrogate models.',
         )
-        output_file_path = os.path.join(file_path, 'train.npz')
+        output_file_path = os.path.join(file_path, 'train.npz')  # noqa: PTH118
         np.savez_compressed(f'{file_path}/train.npz', **simulation_data)
         save_metadata(file_path)
 
     elif data_designation.lower() in ('v', 'valid'):
-        print(
+        print(  # noqa: T201
             'Saving simulation particle data to: [',
             file_path,
             '/valid.npz] for validation of trained and tested surrogate models.',
         )
-        output_file_path = os.path.join(file_path, 'valid.npz')
+        output_file_path = os.path.join(file_path, 'valid.npz')  # noqa: PTH118
         np.savez_compressed(f'{file_path}/valid.npz', **simulation_data)  # Proper
 
     else:
-        (
+        (  # noqa: B018
             'Unspecified data designation, saving to: [',
             cwd_path,
             '/unspecified_sim_data.npz]',
         )
-        output_file_path = os.path.join(cwd_path, 'unspecified_sim_data.npz')
+        output_file_path = os.path.join(cwd_path, 'unspecified_sim_data.npz')  # noqa: PTH118, F841
         np.savez_compressed(
-            os.path.join(cwd_path, 'unspecified_sim_data2.npz'), **simulation_data
+            os.path.join(cwd_path, 'unspecified_sim_data2.npz'), **simulation_data  # noqa: PTH118
         )
         # np.savez_compressed('simulation_data_kwargs.npz', pos_data=downsampled_data, material_ids=downsampled_mat_data)
         # Save to HDF5
@@ -1693,14 +1693,14 @@ def save_simulation():
         #    f.create_dataset('pos_data', data=downsampled_data)
         #    f.create_dataset('material_ids', data=downsampled_mat_data)
 
-    print('Simulation Data Saved to: ', file_path)
+    print('Simulation Data Saved to: ', file_path)  # noqa: T201
 
 
 # Define a Taichi field to store the result
 
 
 @ti.kernel
-def create_flume_vertices():
+def create_flume_vertices():  # noqa: D103
     flume_vertices[0] = ti.Vector([0, 0, 0])
     flume_vertices[1] = ti.Vector([grid_length, 0, 0])
     flume_vertices[2] = ti.Vector([grid_length, 0, flume_width])
@@ -1712,7 +1712,7 @@ def create_flume_vertices():
 
 
 @ti.kernel
-def create_flume_indices():
+def create_flume_indices():  # noqa: D103
     # Bottom face
     bottom[0], bottom[1], bottom[2] = 0, 1, 2
     bottom[3], bottom[4], bottom[5] = 0, 2, 3
@@ -1733,13 +1733,13 @@ def create_flume_indices():
 
 
 @ti.kernel
-def copy_to_field(source: ti.types.ndarray(), target: ti.template()):
+def copy_to_field(source: ti.types.ndarray(), target: ti.template()):  # noqa: D103
     for i in range(source.shape[0]):
         for j in ti.static(range(DIMENSIONS)):
             target[i][j] = source[i, j]
 
 
-def render_3D():
+def render_3D():  # noqa: N802, D103
     # camera.position(grid_length*1.2, flume_height*10, flume_width*8) #Actual Camera to use
     # camera.position(grid_length*1.5, flume_height*4, flume_width*6) # 50m flume camera
     camera.position(
@@ -1837,7 +1837,7 @@ gui_res_ratio_y = int(1 / grid_ratio_y)
 gui_res_ratio_z = int(1 / grid_ratio_z)
 
 
-if DIMENSIONS == 2:
+if DIMENSIONS == 2:  # noqa: PLR2004
     palette = [0x2389DA, 0xED553B, 0x068587, 0x6D214F]
     gravity[None] = [
         0.0,
@@ -1854,7 +1854,7 @@ if DIMENSIONS == 2:
         background_color=gui_background_color_white,
     )
 
-elif DIMENSIONS == 3 and use_vulkan_gui:
+elif DIMENSIONS == 3 and use_vulkan_gui:  # noqa: PLR2004
     palette = [
         (35 / 255, 137 / 255, 218 / 255),
         (237 / 255, 85 / 255, 59 / 255),
@@ -1880,7 +1880,7 @@ elif DIMENSIONS == 3 and use_vulkan_gui:
     scene = gui.get_scene()
     camera = ti.ui.Camera()
 
-elif DIMENSIONS == 3 and not use_vulkan_gui:
+elif DIMENSIONS == 3 and not use_vulkan_gui:  # noqa: PLR2004
     gui_res = (2048, int(2048 * grid_ratio_z))
     on_2k_monitor = ~on_weak_pc
 
@@ -1921,12 +1921,12 @@ elif DIMENSIONS == 3 and not use_vulkan_gui:
 
 # Saving Figures of the simulation (2D only so far)
 base_frame_dir = './Flume/figures/'
-os.makedirs(base_frame_dir, exist_ok=True)  # Ensure the directory exists
+os.makedirs(base_frame_dir, exist_ok=True)  # Ensure the directory exists  # noqa: PTH103
 frame_paths = []
 
 
-def T(a):
-    if dim == 2:
+def T(a):  # noqa: N802, D103, F811
+    if dim == 2:  # noqa: PLR2004
         return a
 
     phi, theta = np.radians(60), np.radians(32)
@@ -1945,33 +1945,33 @@ reset()  # Reset sim and initialize particles
 
 for frame in range(sequence_length):
     # for s in range(int(2e-3 // dt)): # Will need to double-check the use of 2e-3, dt, etc.
-    for s in range(int((1.0 / fps) // dt)):
+    for s in range(int((1.0 / fps) // dt)):  # noqa: B007
         move_board_solitary()
         substep()
         time += dt  # Update time by dt so that the time used in move_board_solitary() is accurate, otherwise the piston moves only once every frame position-wise which causes instabilities
 
     # 30 is a magic number, make it a parameter
 
-    print('\n' + '=' * 30)
-    print('     Simulation Details     ')
-    print('=' * 30)
+    print('\n' + '=' * 30)  # noqa: T201
+    print('     Simulation Details     ')  # noqa: T201
+    print('=' * 30)  # noqa: T201
     if wave_height_expected - 0.3 <= wave_height <= wave_height_expected + 0.1:
-        print(f'Frame: {frame}, Saving Frame: {formed_wave_frames}')
-        print(f'Time: {time:.3f}, Time of formed wave: {time_formed:.3f}')
+        print(f'Frame: {frame}, Saving Frame: {formed_wave_frames}')  # noqa: T201
+        print(f'Time: {time:.3f}, Time of formed wave: {time_formed:.3f}')  # noqa: T201
     else:
-        print(f'Frame: {frame}')
-        print(f'Time: {time:.3f}')
+        print(f'Frame: {frame}')  # noqa: T201
+        print(f'Time: {time:.3f}')  # noqa: T201
 
-    print('-' * 30)
+    print('-' * 30)  # noqa: T201
 
-    print('=' * 30)
-    print('  Simulation Particle Data  ')
-    print('=' * 30)
+    print('=' * 30)  # noqa: T201
+    print('  Simulation Particle Data  ')  # noqa: T201
+    print('=' * 30)  # noqa: T201
 
     if board_states[None][0] < piston_wait_time:  # max piston draw is 3.9m
-        print(f'Piston Position x = {board_states[None][0]:.5f}')
-        if board_velocity[None][0] >= 0.2:  # Why 0.2?
-            print(f'Piston Velocity V_x = {board_velocity[None][0]:.5f}')
+        print(f'Piston Position x = {board_states[None][0]:.5f}')  # noqa: T201
+        if board_velocity[None][0] >= 0.2:  # Why 0.2?  # noqa: PLR2004
+            print(f'Piston Velocity V_x = {board_velocity[None][0]:.5f}')  # noqa: T201
 
     x_np = x.to_numpy()
     data_to_save.append(x.to_numpy())  # Save particle positions for each substep
@@ -1990,8 +1990,8 @@ for frame in range(sequence_length):
             ]  # Max water particle Value for each time step based on boolean indexing
             wave_height = max_wave_y - max_base_y
 
-            print(f'\nCurrent Wave Height: {wave_height:.3f}(m)')
-            print(f'Expected Wave Height: {wave_height_expected:.3f}(m)')
+            print(f'\nCurrent Wave Height: {wave_height:.3f}(m)')  # noqa: T201
+            print(f'Expected Wave Height: {wave_height_expected:.3f}(m)')  # noqa: T201
 
             if (
                 wave_height_expected - 0.3
@@ -2003,10 +2003,10 @@ for frame in range(sequence_length):
                     wave_numerical_soln = np.zeros(
                         (abs(sequence_length - frame), 3), dtype=np.float32
                     )
-                    print('\n' + '*' * 30)
-                    print('Wave is fully formed.')
-                    print('Starting to save wave data.')
-                    print('*' * 30)
+                    print('\n' + '*' * 30)  # noqa: T201
+                    print('Wave is fully formed.')  # noqa: T201
+                    print('Starting to save wave data.')  # noqa: T201
+                    print('*' * 30)  # noqa: T201
 
                 if wave_formed:
                     time_formed += dt
@@ -2018,12 +2018,12 @@ for frame in range(sequence_length):
                         wave_height  # Wave Amplitude
                     )
                     formed_wave_frames += 1
-                print('\n...Saving Wave Data...')
+                print('\n...Saving Wave Data...')  # noqa: T201
 
             else:
-                print('\nWave height not within expected range.')
+                print('\nWave height not within expected range.')  # noqa: T201
 
-    print('\n' + '=' * 30)
+    print('\n' + '=' * 30)  # noqa: T201
 
     clipped_material = np.clip(
         material.to_numpy(), 0, len(palette) - 1
@@ -2181,7 +2181,7 @@ for frame in range(sequence_length):
             chosen_palette = palette_options.pop(
                 j
             )  # Retrieve palette and remove from remaining options
-            chosen_palette_indices = [
+            chosen_palette_indices = [  # noqa: C416
                 palette_idx for palette_idx in range(len(chosen_palette))
             ]  # Indices for above palette
             break
@@ -2193,7 +2193,7 @@ for frame in range(sequence_length):
 
     np_x = x.to_numpy()
 
-    if DIMENSIONS == 2:
+    if DIMENSIONS == 2:  # noqa: PLR2004
         if gui.get_event(ti.GUI.PRESS):
             if gui.event.key in [ti.GUI.ESCAPE, ti.GUI.EXIT]:
                 break
@@ -2213,8 +2213,8 @@ for frame in range(sequence_length):
         piston_pos_current = board_states[None][0]
         piston_draw = np.array(
             [
-                board_states[None][0] / grid_length * gui_res_ratio[0],
-                board_states[None][1] / grid_length * gui_res_ratio[1],
+                board_states[None][0] / grid_length * gui_res_ratio[0],  # noqa: F821
+                board_states[None][1] / grid_length * gui_res_ratio[1],  # noqa: F821
             ]
         )
 
@@ -2236,7 +2236,7 @@ for frame in range(sequence_length):
         p2 = [(n_grid - 6) / n_grid, (n_grid - 6) / n_grid]
         while gui.running:
             gui.rect(topleft=p1, bottomright=p2, color=0x000000)
-    elif DIMENSIONS == 3:
+    elif DIMENSIONS == 3:  # noqa: PLR2004
         # DO NOT USE MATPLOTLIB FOR 3D RENDERING
         # Update the scene with particle positions
 
@@ -2265,7 +2265,7 @@ for frame in range(sequence_length):
                     palette=chosen_palette,
                     palette_indices=chosen_palette_indices,
                 )
-            elif view_style != 'both' and view_style != 'perspective':
+            elif view_style != 'both' and view_style != 'perspective':  # noqa: PLR1714
                 if view_style == 'top':
                     view_slices = [0, 2]
                 elif view_style == 'side':
@@ -2278,7 +2278,7 @@ for frame in range(sequence_length):
                     * gui_res_ratio[view_slices],
                     radius=1.0,
                     palette=chosen_palette,
-                    palette_indices=[
+                    palette_indices=[  # noqa: C416
                         palette_idx for palette_idx in range(len(chosen_palette))
                     ],
                 )
@@ -2349,7 +2349,7 @@ for frame in range(sequence_length):
                         chosen_palette = palette_options.pop(
                             j
                         )  # Remove the first palette that was selected
-                        chosen_palette_indices = [
+                        chosen_palette_indices = [  # noqa: C416
                             palette_idx for palette_idx in range(len(chosen_palette))
                         ]
                         break
@@ -2420,7 +2420,7 @@ for frame in range(sequence_length):
             # piston_pos_current = board_states[None][0]
 
             # print(piston_pos)
-            if view_style == 'top' or view_style == 'both':
+            if view_style == 'top' or view_style == 'both':  # noqa: PLR1714
                 piston_draw = np.array(
                     [board_states[None][0] / grid_length, flume_width / grid_length]
                 )
@@ -2460,7 +2460,7 @@ for frame in range(sequence_length):
                 ]
                 gui.rect(topleft=p1, bottomright=p2, color=0x000000)
 
-            if view_style == 'side' or view_style == 'both':
+            if view_style == 'side' or view_style == 'both':  # noqa: PLR1714
                 piston_draw = np.array(
                     [
                         float(board_states[None].to_numpy()[0]) / grid_length
@@ -2511,7 +2511,7 @@ for frame in range(sequence_length):
             #     gui.rect(draw_persp_box[0], draw_persp_box[1], color=0x000000)
 
     frame_filename = f'frame_{frame:05d}.png'
-    frame_path = os.path.join(base_frame_dir, frame_filename)
+    frame_path = os.path.join(base_frame_dir, frame_filename)  # noqa: PTH118
 
     if output_particles_as_vtk:
         # Save the particles as a VTK file
@@ -2535,26 +2535,26 @@ for frame in range(sequence_length):
     if output_png and output_gui:
         try:
             gui.show(frame_path)
-        except Exception as e:
-            print(f'Error showing frame: {e}')
+        except Exception as e:  # noqa: BLE001
+            print(f'Error showing frame: {e}')  # noqa: T201
             # Fallback to imwrite
             try:
                 tools.imwrite(x.to_numpy(), frame_path)
                 frame_paths.append(frame_path)
-            except Exception as e:
-                print(f'Error writing frame: {e}')
+            except Exception as e:  # noqa: BLE001
+                print(f'Error writing frame: {e}')  # noqa: T201
         else:
             frame_paths.append(frame_path)
     elif output_png and not output_gui:
         try:
             tools.imwrite(x.to_numpy(), frame_path)
             frame_paths.append(frame_path)
-        except Exception as e:
-            print(f'Error writing frame: {e}')
+        except Exception as e:  # noqa: BLE001
+            print(f'Error writing frame: {e}')  # noqa: T201
     elif output_gui and not output_png:
         gui.show()
     else:
-        print('WARNING - No output method selected, frame not saved or displayed...')
+        print('WARNING - No output method selected, frame not saved or displayed...')  # noqa: T201
     if not output_gui:
         continue
 
@@ -2566,15 +2566,15 @@ if frame_paths:
             for frame_path in frame_paths:
                 image = imageio.imread(frame_path)
                 writer.append_data(image)
-        print(f'GIF created at {gif_path}')
-    except Exception as e:
-        print(f'Error creating GIF: {e}')
+        print(f'GIF created at {gif_path}')  # noqa: T201
+    except Exception as e:  # noqa: BLE001
+        print(f'Error creating GIF: {e}')  # noqa: T201
 
 
-# TODO: Keep wave formed, wave time saving, and saving_frme in the main loop.
-# TODO: Delete data_to_save and v_data_to_save
-# TODO: Save it all to either taichi or csv file
-# TODO: Save Max water particle values to wave_numerical_soln = np.zeros((abs(formed_wave_frames), 3), dtype=np.float32)
+# TODO: Keep wave formed, wave time saving, and saving_frme in the main loop.  # noqa: TD002
+# TODO: Delete data_to_save and v_data_to_save  # noqa: TD002
+# TODO: Save it all to either taichi or csv file  # noqa: TD002
+# TODO: Save Max water particle values to wave_numerical_soln = np.zeros((abs(formed_wave_frames), 3), dtype=np.float32)  # noqa: TD002
 
 
 # Prep for GNS input

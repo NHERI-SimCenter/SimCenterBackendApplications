@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3  # noqa: D100
 
 import argparse
 import json
@@ -20,10 +20,10 @@ import taichi as ti
 # from params import *
 
 
-class FloorForces:
-    def __init__(self, recorderID=-1):
+class FloorForces:  # noqa: D101
+    def __init__(self, recorderID=-1):  # noqa: N803
         if recorderID < 0:
-            print(
+            print(  # noqa: T201
                 'No recorder ID, or a negative ID, provided, defaulting to 0 for all forces.'
             )
             self.X = [0.0]
@@ -34,7 +34,7 @@ class FloorForces:
             self.Y = []
             self.Z = []
             # prepend zeros to the list to account for the timeSeries transient analysis req in OpenSees
-            prependZero = False
+            prependZero = False  # noqa: N806
             if prependZero:
                 self.X.append(0.0)
                 self.Y.append(0.0)
@@ -43,16 +43,16 @@ class FloorForces:
             # Read in forces.[out or evt] file and add to EVENT.json
             # now using intermediary forces.evt for output of preceeding Python calcs,
             # prevents confusion with forces.out made by FEM tab
-            if os.path.exists('forces.evt'):
-                with open('forces.evt') as file:
-                    print('Reading forces from forces.evt to EVENT.json')
+            if os.path.exists('forces.evt'):  # noqa: PTH110
+                with open('forces.evt') as file:  # noqa: PTH123
+                    print('Reading forces from forces.evt to EVENT.json')  # noqa: T201
                     lines = file.readlines()
                     j = 0
                     for line in lines:
                         # Ensure not empty line
                         strip_line = line.strip()
                         if not strip_line:
-                            print('Empty line found in forces.evt... skip')
+                            print('Empty line found in forces.evt... skip')  # noqa: T201
                             continue
                         # Assume there is no header in the file
                         # Assume recorder IDs are sequential, starting from 1
@@ -73,7 +73,7 @@ class FloorForces:
 
                 # must not have empty lists for max and min
                 if len(self.X) == 0:
-                    print(
+                    print(  # noqa: T201
                         'No forces found in the file for recorder ',
                         recorderID,
                         ', defaulting to 0.0 for all forces.',
@@ -87,7 +87,7 @@ class FloorForces:
                     self.Y.append(max(self.Y))
                     self.Z.append(max(self.Z))
 
-                    print(
+                    print(  # noqa: T201
                         'Length: ',
                         len(self.X),
                         ', Max force: ',
@@ -103,32 +103,32 @@ class FloorForces:
                         self.Y[-1],
                         self.Z[-1],
                     )
-                file.close
+                file.close  # noqa: B018
             else:
-                print('No forces.evt file found, defaulting to 0.0 for all forces.')
+                print('No forces.evt file found, defaulting to 0.0 for all forces.')  # noqa: T201
                 self.X.append(0.0)
                 self.Y.append(0.0)
                 self.Z.append(0.0)
 
 
-def directionToDof(direction):
+def directionToDof(direction):  # noqa: N802
     """
     Converts direction to degree of freedom
-    """
-    directioMap = {'X': 1, 'Y': 2, 'Z': 3}
+    """  # noqa: D200, D400, D401
+    directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
 
     return directioMap[direction]
 
 
-def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):
+def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):  # noqa: N802, N803
     """
     Add force (one component) time series and pattern in the event file
     Use of Wind is just a placeholder for now, since its more developed than Hydro
-    """
-    seriesName = '1'
-    patternName = '1'
-    seriesName = 'WindForceSeries_' + str(floor) + direction
-    patternName = 'WindForcePattern_' + str(floor) + direction
+    """  # noqa: D205, D400
+    seriesName = '1'  # noqa: N806
+    patternName = '1'  # noqa: N806
+    seriesName = 'WindForceSeries_' + str(floor) + direction  # noqa: N806
+    patternName = 'WindForcePattern_' + str(floor) + direction  # noqa: N806
 
     pattern = {
         'name': patternName,
@@ -141,7 +141,7 @@ def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):
         'dof': directionToDof(direction),
         'units': {'force': 'Newton', 'length': 'Meter', 'time': 'Sec'},
     }
-    sensorData = {
+    sensorData = {  # noqa: N806
         'name': seriesName,
         'pattern': patternName,
         'type': 'Value',
@@ -158,33 +158,33 @@ def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):
     timeSeriesList.append(sensorData)
 
 
-def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):
+def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):  # noqa: N802, N803
     """
     This method writes the EVENT.json file
-    """
+    """  # noqa: D200, D400, D401, D404
     # Adding floor forces
-    patternsArray = []
-    timeSeriesArray = []
+    patternsArray = []  # noqa: N806
+    timeSeriesArray = []  # noqa: N806
     # timeSeriesType = "Value" # ? saw in old evt files
 
     # pressure = [{"pressure": [0.0, 0.0], "story": 1}]
     pressure = []
 
     for it in range(floorsCount):
-        floorForces = forces[it]
+        floorForces = forces[it]  # noqa: N806
         addFloorForceToEvent(
             patternsArray, timeSeriesArray, floorForces, 'X', it + 1
         )
 
     # subtype = "StochasticWindModel-KwonKareem2006"
-    eventClassification = 'Hydro'
-    eventType = 'StochasticWave'
-    eventSubtype = 'StochasticWaveJonswap'
+    eventClassification = 'Hydro'  # noqa: N806
+    eventType = 'StochasticWave'  # noqa: N806
+    eventSubtype = 'StochasticWaveJonswap'  # noqa: N806, F841
     # subtype = "StochasticWaveJonswap" # ?
     # timeSeriesName = "HydroForceSeries_1X"
     # patternName = "HydroForcePattern_1X"
 
-    hydroEventJson = {
+    hydroEventJson = {  # noqa: N806
         'type': eventClassification,
         'subtype': eventType,
         'eventClassification': eventClassification,
@@ -198,24 +198,24 @@ def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):
     }
 
     # Creating the event dictionary that will be used to export the EVENT json file
-    eventDict = {'randomVariables': [], 'Events': [hydroEventJson]}
+    eventDict = {'randomVariables': [], 'Events': [hydroEventJson]}  # noqa: N806
 
-    filePath = eventFilePath
-    with open(filePath, 'w', encoding='utf-8') as file:
+    filePath = eventFilePath  # noqa: N806
+    with open(filePath, 'w', encoding='utf-8') as file:  # noqa: PTH123
         json.dump(eventDict, file)
-    file.close
+    file.close  # noqa: B018
 
 
-def GetFloorsCount(BIMFilePath):
-    filePath = BIMFilePath
-    with open(filePath, encoding='utf-8') as file:
+def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
+    filePath = BIMFilePath  # noqa: N806
+    with open(filePath, encoding='utf-8') as file:  # noqa: PTH123
         bim = json.load(file)
-    file.close
+    file.close  # noqa: B018
 
     return int(bim['GeneralInformation']['stories'])
 
 
-def main():
+def main():  # noqa: D103
     return 0
     # """
     # Entry point to generate event file using Stochastic Waves
@@ -279,16 +279,16 @@ if __name__ == '__main__':
 
     # import subprocess
 
-    if arguments.getRV == True:
-        print('RVs requested in StochasticWave.py')
+    if arguments.getRV == True:  # noqa: E712
+        print('RVs requested in StochasticWave.py')  # noqa: T201
         # Read the number of floors
-        floorsCount = GetFloorsCount(arguments.filenameAIM)
-        filenameEVENT = arguments.filenameEVENT
+        floorsCount = GetFloorsCount(arguments.filenameAIM)  # noqa: N816
+        filenameEVENT = arguments.filenameEVENT  # noqa: N816
 
-        result = subprocess.run(
-            [
+        result = subprocess.run(  # noqa: S603
+            [  # noqa: S607
                 'ti',
-                f'{os.path.realpath(os.path.dirname(__file__))}'
+                f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: ISC003, PTH120
                 + '/taichi_script.py',
             ],
             stdout=subprocess.PIPE,
@@ -297,18 +297,18 @@ if __name__ == '__main__':
 
         forces = []
         for i in range(floorsCount):
-            forces.append(FloorForces(recorderID=(i + 1)))
+            forces.append(FloorForces(recorderID=(i + 1)))  # noqa: PERF401
 
         # write the event file
         writeEVENT(forces, filenameEVENT, floorsCount)
 
     else:
-        print('No RVs requested in StochasticWave.py')
-        filenameEVENT = arguments.filenameEVENT
-        result = subprocess.run(
-            [
+        print('No RVs requested in StochasticWave.py')  # noqa: T201
+        filenameEVENT = arguments.filenameEVENT  # noqa: N816
+        result = subprocess.run(  # noqa: S603
+            [  # noqa: S607
                 'ti',
-                f'{os.path.realpath(os.path.dirname(__file__))}'
+                f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: ISC003, PTH120
                 + '/taichi_script.py',
             ],
             stdout=subprocess.PIPE,
@@ -316,7 +316,7 @@ if __name__ == '__main__':
         )
 
         forces = []
-        floorsCount = 1
+        floorsCount = 1  # noqa: N816
         for i in range(floorsCount):
             forces.append(FloorForces(recorderID=(i + 1)))
 
