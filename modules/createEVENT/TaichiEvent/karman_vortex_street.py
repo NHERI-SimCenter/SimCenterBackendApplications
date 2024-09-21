@@ -144,7 +144,7 @@ class lbm_solver:
             vel = self.vel.to_numpy()
             ugrad = np.gradient(vel[:, :, 0])
             vgrad = np.gradient(vel[:, :, 1])
-            vor = ugrad[1] - vgrad[0]
+            vorticity = ugrad[1] - vgrad[0]
             vel_mag = (vel[:, :, 0] ** 2.0 + vel[:, :, 1] ** 2.0) ** 0.5
             ## color map
             colors = [
@@ -156,7 +156,7 @@ class lbm_solver:
             ]
             my_cmap = matplotlib.colors.LinearSegmentedColormap.from_list("my_cmap", colors)
             vor_img = cm.ScalarMappable(norm=matplotlib.colors.Normalize(vmin=-0.02, vmax=0.02), cmap=my_cmap).to_rgba(
-                vor
+                vorticity
             )
             vel_img = cm.plasma(vel_mag / 0.15)
             img = np.concatenate((vor_img, vel_img), axis=1)

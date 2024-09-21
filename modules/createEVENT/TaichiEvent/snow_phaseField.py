@@ -39,7 +39,7 @@ class Dendrite:
         self.n_fold_symmetry = n_fold_symmetry  # n-fold rotational symmetry of the crystalline structure
         self.angle0 = angle0 / 180.0 * np.pi  # initial tilt angle of the crystal
 
-        ### m(T) = (α / π) * arctan[γ(Te - T)], m determines the relative potential between water vapor and crystal
+        ### m(T) = (α / π) * arctan[γ(T_equi - T)], m determines the relative potential between water vapor and crystal
         self.alpha = 0.9 / np.pi  # α
         self.gamma = 10.0  # γ
         self.temperature_equi = 1.0  # temperature of equilibrium state

@@ -147,17 +147,17 @@ def matmul_cell(ret: ti.template(), vel: ti.template()):
 
 
 @ti.kernel
-def add(ans: ti.template(), a: ti.template(), k: ti.f32, b: ti.template()):
-    for i in ans:
-        ans[i] = a[i] + k * b[i]
+def add(input: ti.template(), a: ti.template(), k: ti.f32, b: ti.template()):
+    for i in input:
+        input[i] = a[i] + k * b[i]
 
 
 @ti.kernel
 def dot(a: ti.template(), b: ti.template()) -> ti.f32:
-    ans = 0.0
+    value = 0.0
     for i in a:
-        ans += a[i].dot(b[i])
-    return ans
+        value += a[i].dot(b[i])
+    return value
 
 
 F_b = ti.Vector.field(3, dtype=ti.f32, shape=n_verts)
@@ -245,7 +245,7 @@ def flatten(dest: ti.types.ndarray(), src: ti.template()):
 
 
 @ti.kernel
-def aggragate(dest: ti.template(), src: ti.types.ndarray()):
+def aggregate(dest: ti.template(), src: ti.types.ndarray()):
     for i in range(n_verts):
         for j in range(3):
             dest[i][j] = src[3 * i + j]
@@ -256,7 +256,7 @@ def direct():
     get_b()
     flatten(F_b_ndarr, F_b)
     v = solver.solve(F_b_ndarr)
-    aggragate(F_v, v)
+    aggregate(F_v, v)
     F_f.fill(0)
     add(F_x, F_x, dt, F_v)
 
@@ -304,16 +304,16 @@ def floor_bound():
 
 @ti.func
 def check(u):
-    ans = 0
+    value = 0
     rest = u
     for i in ti.static(range(3)):
         k = rest % n_cube[2 - i]
         rest = rest // n_cube[2 - i]
         if k == 0:
-            ans |= 1 << (i * 2)
+            value |= 1 << (i * 2)
         if k == n_cube[2 - i] - 1:
-            ans |= 1 << (i * 2 + 1)
-    return ans
+            value |= 1 << (i * 2 + 1)
+    return value
 
 
 def gen_indices():

@@ -161,7 +161,7 @@ def pressure_projection(pf: ti.template(), vf: ti.template(), vf_new: ti.templat
 
 
 #####################
-# Boundry Condition
+# Boundary Condition
 #####################
 @ti.func
 def vel_with_boundary(vf: ti.template(), i: int, j: int, shape) -> ti.f32:
