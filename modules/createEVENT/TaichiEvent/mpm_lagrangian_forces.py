@@ -1,6 +1,5 @@
-#!/usr/bin/env python3  # noqa: D100
-
 import numpy as np
+
 import taichi as ti
 
 ti.init(arch=ti.gpu)
@@ -26,18 +25,18 @@ v = ti.Vector.field(dim, dtype=float, shape=n_particles)
 C = ti.Matrix.field(dim, dim, dtype=float, shape=n_particles)
 grid_v = ti.Vector.field(dim, dtype=float, shape=(n_grid, n_grid))
 grid_m = ti.field(dtype=float, shape=(n_grid, n_grid))
-restT = ti.Matrix.field(dim, dim, dtype=float, shape=n_elements)  # noqa: N816
+restT = ti.Matrix.field(dim, dim, dtype=float, shape=n_elements)
 total_energy = ti.field(dtype=float, shape=(), needs_grad=True)
 vertices = ti.field(dtype=ti.i32, shape=(n_elements, 3))
 
 
 @ti.func
-def mesh(i, j):  # noqa: D103
+def mesh(i, j):
     return i * n_particle_y + j
 
 
 @ti.func
-def compute_T(i):  # noqa: N802, D103
+def compute_T(i):
     a = vertices[i, 0]
     b = vertices[i, 1]
     c = vertices[i, 2]
@@ -47,7 +46,7 @@ def compute_T(i):  # noqa: N802, D103
 
 
 @ti.kernel
-def initialize():  # noqa: D103
+def initialize():
     for i in range(n_particle_x):
         for j in range(n_particle_y):
             t = mesh(i, j)
@@ -73,38 +72,30 @@ def initialize():  # noqa: D103
 
 
 @ti.kernel
-def compute_total_energy():  # noqa: D103
+def compute_total_energy():
     for i in range(n_elements):
-        currentT = compute_T(i)  # noqa: N806
-        F = currentT @ restT[i].inverse()  # noqa: N806
+        currentT = compute_T(i)
+        F = currentT @ restT[i].inverse()
         # NeoHookean
-        I1 = (F @ F.transpose()).trace()  # noqa: N806
-        J = F.determinant()  # noqa: N806
-        element_energy = (
-            0.5 * mu * (I1 - 2) - mu * ti.log(J) + 0.5 * la * ti.log(J) ** 2
-        )
+        I1 = (F @ F.transpose()).trace()
+        J = F.determinant()
+        element_energy = 0.5 * mu * (I1 - 2) - mu * ti.log(J) + 0.5 * la * ti.log(J) ** 2
         total_energy[None] += E * element_energy * dx * dx
 
 
 @ti.kernel
-def p2g():  # noqa: D103
+def p2g():
     for p in x:
         base = ti.cast(x[p] * inv_dx - 0.5, ti.i32)
         fx = x[p] * inv_dx - ti.cast(base, float)
-        w = [
-            0.5 * (1.5 - fx) ** 2,
-            0.75 - (fx - 1) ** 2,
-            0.5 * (fx - 0.5) ** 2,
-        ]
+        w = [0.5 * (1.5 - fx) ** 2, 0.75 - (fx - 1) ** 2, 0.5 * (fx - 0.5) ** 2]
         affine = p_mass * C[p]
         for i in ti.static(range(3)):
             for j in ti.static(range(3)):
-                I = ti.Vector([i, j])  # noqa: N806, E741
+                I = ti.Vector([i, j])
                 dpos = (float(I) - fx) * dx
                 weight = w[i].x * w[j].y
-                grid_v[base + I] += weight * (
-                    p_mass * v[p] - dt * x.grad[p] + affine @ dpos
-                )
+                grid_v[base + I] += weight * (p_mass * v[p] - dt * x.grad[p] + affine @ dpos)
                 grid_m[base + I] += weight * p_mass
 
 
@@ -112,7 +103,7 @@ bound = 3
 
 
 @ti.kernel
-def grid_op():  # noqa: D103
+def grid_op():
     for i, j in grid_m:
         if grid_m[i, j] > 0:
             inv_m = 1 / grid_m[i, j]
@@ -121,7 +112,7 @@ def grid_op():  # noqa: D103
 
             # center collision circle
             dist = ti.Vector([i * dx - 0.5, j * dx - 0.5])
-            if dist.norm_sqr() < 0.005:  # noqa: PLR2004
+            if dist.norm_sqr() < 0.005:
                 dist = dist.normalized()
                 grid_v[i, j] -= dist * ti.min(0, grid_v[i, j].dot(dist))
 
@@ -137,42 +128,38 @@ def grid_op():  # noqa: D103
 
 
 @ti.kernel
-def g2p():  # noqa: D103
+def g2p():
     for p in x:
         base = ti.cast(x[p] * inv_dx - 0.5, ti.i32)
         fx = x[p] * inv_dx - float(base)
-        w = [
-            0.5 * (1.5 - fx) ** 2,
-            0.75 - (fx - 1.0) ** 2,
-            0.5 * (fx - 0.5) ** 2,
-        ]
+        w = [0.5 * (1.5 - fx) ** 2, 0.75 - (fx - 1.0) ** 2, 0.5 * (fx - 0.5) ** 2]
         new_v = ti.Vector([0.0, 0.0])
-        new_C = ti.Matrix([[0.0, 0.0], [0.0, 0.0]])  # noqa: N806
+        new_C = ti.Matrix([[0.0, 0.0], [0.0, 0.0]])
 
         for i in ti.static(range(3)):
             for j in ti.static(range(3)):
-                I = ti.Vector([i, j])  # noqa: N806, E741
+                I = ti.Vector([i, j])
                 dpos = float(I) - fx
                 g_v = grid_v[base + I]
                 weight = w[i].x * w[j].y
                 new_v += weight * g_v
-                new_C += 4 * weight * g_v.outer_product(dpos) * inv_dx  # noqa: N806
+                new_C += 4 * weight * g_v.outer_product(dpos) * inv_dx
 
         v[p] = new_v
         x[p] += dt * v[p]
         C[p] = new_C
 
 
-gui = ti.GUI('MPM', (640, 640), background_color=0x112F41)
+gui = ti.GUI("MPM", (640, 640), background_color=0x112F41)
 
 
-def main():  # noqa: D103
+def main():
     initialize()
 
     vertices_ = vertices.to_numpy()
 
     while gui.running and not gui.get_event(gui.ESCAPE):
-        for s in range(int(1e-2 // dt)):  # noqa: B007
+        for s in range(int(1e-2 // dt)):
             grid_m.fill(0)
             grid_v.fill(0)
             # Note that we are now differentiating the total energy w.r.t. the particle position.
@@ -191,14 +178,9 @@ def main():  # noqa: D103
         b = np.roll(vertices_, shift=1, axis=1).reshape(n_elements * 3)
         gui.lines(particle_pos[a], particle_pos[b], radius=1, color=0x4FB99F)
         gui.circles(particle_pos, radius=1.5, color=0xF2B134)
-        gui.line(
-            (0.00, 0.03 / quality),
-            (1.0, 0.03 / quality),
-            color=0xFFFFFF,
-            radius=3,
-        )
+        gui.line((0.00, 0.03 / quality), (1.0, 0.03 / quality), color=0xFFFFFF, radius=3)
         gui.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

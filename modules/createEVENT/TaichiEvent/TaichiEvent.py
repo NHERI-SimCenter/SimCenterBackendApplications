@@ -186,9 +186,8 @@ def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):  # noqa: N802
 
     # subtype = "StochasticWindModel-KwonKareem2006"
     eventClassification = 'Hydro'  # noqa: N806
-    eventType = 'StochasticWave'  # noqa: N806
-    eventSubtype = 'StochasticWaveJonswap'  # noqa: N806, F841
-    # subtype = "StochasticWaveJonswap" # ?
+    eventType = 'TaichiEvent'  # noqa: N806
+    eventSubtype = 'TaichiEvent-OSU-LWF'  # noqa: N806, F841
     # timeSeriesName = "HydroForceSeries_1X"
     # patternName = "HydroForcePattern_1X"
 
@@ -223,39 +222,29 @@ def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
     return int(bim['GeneralInformation']['stories'])
 
 
+def GetTaichiScript(BIMFilePath):  # noqa: N802, N803, D103
+    filePath = BIMFilePath  # noqa: N806
+    with open(filePath, encoding='utf-8') as file:  # noqa: PTH123
+        evt = json.load(file)
+    file.close  # noqa: B018
+
+    fileNameKey = 'interfaceSurface' 
+    filePathKey = fileNameKey + 'Path'
+    
+    for event in evt['Events']:
+        fileName = event[fileNameKey]
+        filePath = event[filePathKey]
+        return os.path.join(filePath, fileName)
+    
+    defaultScriptPath = f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: ISC003, PTH120
+    defaultScriptName = 'taichi_script.py'
+    return defaultScriptPath + defaultScriptName 
+
 def main():  # noqa: D103
+    """
+    Entry point to generate event file using TaichiEvent.
+    """
     return 0
-    # """
-    # Entry point to generate event file using Stochastic Waves
-    # """
-    # #CLI parser
-    # parser = argparse.ArgumentParser(description="Get sample EVENT file produced by StochasticWave")
-    # parser.add_argument('-b', '--filenameAIM', help="BIM File", required=True)
-    # parser.add_argument('-e', '--filenameEVENT', help= "Event File", required=True)
-    # parser.add_argument('--getRV', help= "getRV", required=False, action='store_true')
-
-    # #parsing arguments
-    # arguments, unknowns = parser.parse_known_args()
-
-    # exec(open("Ex1_WaveKinematics.py").read())
-    # exec(open("Ex2_Jonswap_Spectrum.py").read())
-    # exec(open("Ex3_WaveTimeSeries.py").read())
-    # # exec(open("Ex4_WaveLoads.py").read())
-
-    # # Run Ex4_WaveLoads.py with the given parameters
-    # # result = Ex4_WaveLoads.main(arguments.water_depth, arguments.peak_period, arguments.significant_wave_height, arguments.pile_diameter, arguments.drag_coefficient, arguments.mass_coefficient, arguments.number_of_recorders_z, arguments.time)
-    # import subprocess
-    # result = subprocess.run(["python", "Ex4_WaveLoads.py", "-hw", 30.0, "-Tp", 12.7, "-Hs", 5.0, "-Dp", 1.0, "-Cd", 2.1, "-Cm", 2.1, "-nz", GetFloorsCount(arguments.filenameAIM), "-t", 10.0], stdout=subprocess.PIPE)
-
-    # if arguments.getRV == True:
-    #     #Read the number of floors
-    #     floorsCount = GetFloorsCount(arguments.filenameAIM)
-    #     forces = []
-    #     for i in range(floorsCount):
-    #         forces.append(FloorForces())
-
-    #     #write the event file
-    #     writeEVENT(forces, arguments.filenameEVENT)
 
 
 if __name__ == '__main__':
@@ -286,22 +275,24 @@ if __name__ == '__main__':
     # parsing arguments
     arguments, unknowns = parser.parse_known_args()
 
-    # Run Ex4_WaveLoads.py with the given parameters
-    # result = Ex4_WaveLoads.main(arguments.water_depth, arguments.peak_period, arguments.significant_wave_height, arguments.pile_diameter, arguments.drag_coefficient, arguments.mass_coefficient, arguments.number_of_recorders_z, arguments.time)
-
     # import subprocess
 
+    # Get json of filenameAIM
+    scriptName = GetTaichiScript(arguments.filenameAIM)  # noqa: N816        
+    
     if arguments.getRV == True:  # noqa: E712
-        print('RVs requested in StochasticWave.py')  # noqa: T201
+        print('RVs requested')  # noqa: T201
         # Read the number of floors
         floorsCount = GetFloorsCount(arguments.filenameAIM)  # noqa: N816
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
 
+
         result = subprocess.run(  # noqa: S603
             [  # noqa: S607
                 'ti',
-                f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: ISC003, PTH120
-                + '/taichi_script.py',
+                scriptName,
+                # f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: ISC003, PTH120
+                # + '/taichi_script.py',
             ],
             stdout=subprocess.PIPE,
             check=False,
@@ -315,13 +306,14 @@ if __name__ == '__main__':
         writeEVENT(forces, filenameEVENT, floorsCount)
 
     else:
-        print('No RVs requested in StochasticWave.py')  # noqa: T201
+        print('No RVs requested')  # noqa: T201
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
         result = subprocess.run(  # noqa: S603
             [  # noqa: S607
                 'ti',
-                f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: ISC003, PTH120
-                + '/taichi_script.py',
+                scriptName,
+                # f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: ISC003, PTH120
+                # + '/taichi_script.py',
             ],
             stdout=subprocess.PIPE,
             check=False,
