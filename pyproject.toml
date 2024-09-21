@@ -1,5 +1,7 @@
 [tool.ruff]
 line-length = 85
+# Example Taichi programs for users to test are held here until formal examples are made/documented for HydroUQ, etc. Don't need to lint/format - JustinBonus
+extend-exclude = ["modules/createEVENT/TaichiEvent"]
 
 [tool.ruff.lint]
 # Enable all known categories
