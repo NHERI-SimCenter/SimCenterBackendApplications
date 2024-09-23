@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+#  # noqa: D104
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -38,4 +37,4 @@
 # Kuanshi Zhong
 #
 
-__all__ = ['CorrelationModel','SignificantDurationModel']
+__all__ = ['CorrelationModel', 'SignificantDurationModel']

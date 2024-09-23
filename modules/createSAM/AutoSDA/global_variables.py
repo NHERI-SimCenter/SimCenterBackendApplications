@@ -1,4 +1,4 @@
-# This file is used to declare all global constants.
+# This file is used to declare all global constants.  # noqa: INP001, D100
 # All user input parameters are summarized here.
 # Developed by GUAN, XINGQUAN @ UCLA in Feb 2019
 # Be cautious with line 19 - 25:
@@ -9,9 +9,8 @@
 # Last revision: 09/2020
 
 import os
-import pandas as pd
-import pathlib
 
+import pandas as pd
 from steel_material import SteelMaterial
 
 ##########################################################################
@@ -21,10 +20,12 @@ from steel_material import SteelMaterial
 # Variables defined in this section is used in "seismic_design.py" file
 
 # Define the current utilized steel type:
-steel = SteelMaterial(yield_stress=50, ultimate_stress=65, elastic_modulus=29000, Ry_value=1.1)  # Unit: ksi
+steel = SteelMaterial(
+    yield_stress=50, ultimate_stress=65, elastic_modulus=29000, Ry_value=1.1
+)  # Unit: ksi
 
 # The path where THIS file is located is the base directory
-baseDirectory = os.path.dirname(os.path.realpath(__file__))
+baseDirectory = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N816
 
 ##########################################################################
 #            User Defined Ratios Involved in Design                      #
@@ -58,7 +59,7 @@ UPPER_LOWER_COLUMN_Zx = 0.5
 # If the accidental torsion is considered -> one frame will take 0.55 of total lateral force
 # since the center is assumed to be deviated from its actual location by 5% of the building dimension
 # Then the ACCIDENTAL_TORSION = 0.55/0.50 = 1.1
-ACCIDENTAL_TORSION = 0.55/0.50
+ACCIDENTAL_TORSION = 0.55 / 0.50
 
 # Define a boolean variable to determine whether the Section 12.8.6.2 is enforced or not
 # Section 12.8.6.2:

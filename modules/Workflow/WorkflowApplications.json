@@ -1,3 +1,4 @@
+
 {
   "DefaultValues": {
       "workflowInput": "scInput.json",
@@ -18,7 +19,7 @@
         {
           "id": "assetFile",
           "type": "string",
-          "description": "name of JSON file containing an array of id,filename pairs. For each asset id the aplication creates a AIM file with name filename",
+          "description": "name of JSON file containing an array of id,filename pairs. For each asset id the application creates a AIM file with name filename",
           "default": "assetsFile.json"
         }
       ]
@@ -79,6 +80,27 @@
       {
         "Name": "GEOJSON_TO_ASSET",
           "ExecutablePath": "applications/createAIM/GeoJSON_to_ASSET/GeoJSON_to_ASSET.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "assetSourceFile",
+            "type": "path",
+            "description": "path to asset database file"
+          },
+          {
+            "id": "assetType",
+            "type": "string",
+            "description": "name of the asset type e.g., Building, Transportation Network"
+          },
+          {
+            "id": "inputJsonFile",
+            "type": "path",
+            "description": "path to the rWHALE.json"
+          }
+        ]
+      },
+	  {
+        "Name": "INP_FILE",
+          "ExecutablePath": "applications/createAIM/INP_FILE/INP_FILE.py",
         "ApplicationSpecificInputs": [
           {
             "id": "assetFile",
@@ -295,7 +317,7 @@
         {
           "id": "assetFile",
           "type": "path",
-          "description": "Name of JSON file containing an array of id,filename pairs. For each asset id the aplication creates a AIM file with name filename",
+          "description": "Name of JSON file containing an array of id,filename pairs. For each asset id the application creates a AIM file with name filename",
           "default": "assets.json"
         }
       ],
@@ -373,6 +395,22 @@
         "ApplicationSpecificInputs": [
   ]
       },
+      {
+        "Name": "MultiModel",
+        "ExecutablePath": "applications/Workflow/MultiModelApplication.py",
+          "ApplicationSpecificInputs": [
+              {"id": "appKey",
+               "type": "string",
+               "description": "keyword of application data in input file"
+              }
+	  ]
+      },
+    {
+        "Name": "PhysicsBasedMotion",
+        "ExecutablePath": "applications/createEVENT/physicsBasedMotion/PhysicsBasedMotion",
+        "ApplicationSpecificInputs": [
+  ]
+      },	
       {
         "Name": "ExistingPEER_Events",
         "ExecutablePath": "applications/createEVENT/multiplePEER/MultiplePEER",
@@ -474,7 +512,13 @@
         },
       {
         "Name": "IsolatedBuildingCFD",
-        "ExecutablePath": "applications/createEVENT/isolatedBuildingCFD/IsolatedBuildingCFD.py",
+        "ExecutablePath": "applications/createEVENT/IsolatedBuildingCFD/IsolatedBuildingCFD.py",
+        "ApplicationSpecificInputs":[
+        ]
+      },
+      {
+        "Name": "SurroundedBuildingCFD",
+        "ExecutablePath": "applications/createEVENT/SurroundedBuildingCFD/SurroundedBuildingCFD.py",
         "ApplicationSpecificInputs":[
         ]
       },
@@ -483,6 +527,22 @@
         "ExecutablePath": "applications/createEVENT/coupledDigitalTwin/CoupledDigitalTwin.py",
         "ApplicationSpecificInputs":[
         ]
+      },  
+      {
+        "Name": "MPM",
+        "ExecutablePath": "applications/createEVENT/MPM/MPM.py",
+        "ApplicationSpecificInputs":[
+          {
+            "id":"publicDirectory",
+            "type":"string",
+            "description": "Remote directory hosting ClaymoreUW MPM assets (e.g. geometries, checkpoints, motion-paths) for the application for any user to access on the HPC system."
+          }
+        ]
+      },
+      {
+        "Name": "StochasticWave",
+        "ExecutablePath": "applications/createEVENT/stochasticWave/StochasticWave.py",
+        "ApplicationSpecificInputs":[]
       },  
       {
         "Name": "GeoClawOpenFOAM",
@@ -521,7 +581,7 @@
           {
             "id": "pathSW4results",
             "type": "path",
-            "description": "Path to directory containig output point files"
+            "description": "Path to directory containing output point files"
           }
         ]
       },
@@ -553,6 +613,10 @@
       {
         "Name": "ExperimentalWindForces",
         "ExecutablePath": "applications/createEVENT/experimentalWindForces/experimentalWindForces.py"
+      },
+      {
+        "Name": "ExperimentalWindPressures",
+        "ExecutablePath": "applications/createEVENT/experimentalWindPressures/experimentalWindPressures.py"
       },
       {
         "Name": "WindForceSpectrum",
@@ -807,6 +871,39 @@
         "Name": "SurrogateEDP",
         "ExecutablePath": "applications/createEDP/surrogateEDP/surrogateEDP.py",
         "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "StandardHydroEDP",
+        "ExecutablePath": "applications/createEDP/standardHydroEDP/StandardHydroEDP",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "EDPPath",
+            "type": "path",
+            "description": "Identifies the location of where the txt files with requested EDPs are stored."
+          }
+	]
+      },
+      {
+        "Name": "StandardTsunamiEDP",
+        "ExecutablePath": "applications/createEDP/standardTsunamiEDP/StandardTsunamiEDP",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "EDPPath",
+            "type": "path",
+            "description": "Identifies the location of where the txt files with requested EDPs are stored."
+          }
+	]
+      },
+      {
+        "Name": "StandardStormSurgeEDP",
+        "ExecutablePath": "applications/createEDP/standardStormSurgeEDP/StandardStormSurgeEDP",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "EDPPath",
+            "type": "path",
+            "description": "Identifies the location of where the txt files with requested EDPs are stored."
+          }
+	]
       }
     ]
   },
@@ -938,7 +1035,7 @@
         "ExecutablePath": "applications/performUQ/dakota/DakotaFEM1.py"
       },
       {
-        "Name": "CustomUQ",
+        "Name": "Custom-UQ",
         "ExecutablePath": "applications/performUQ/other/runOtherUQ.py"
       }
     ]
@@ -1012,85 +1109,10 @@
       "Outputs": [
       ]
     },
-    "Applications": [
-      {
-        "Name": "pelicun",
-        "ExecutablePath": "applications/performDL/pelicun/DL_calculation.py",
-        "ApplicationSpecificInputs": [
-          {
-            "id": "demandFile",
-            "type": "string",
-            "description": "name of file containing the EDP data",
-            "default": "response.csv"
-          },
-          {
-            "id": "DL_Method",
-            "type": "string",
-            "description": "Defines the damage and loss assessment method."
-          },
-          {
-            "id": "Realizations",
-            "type": "int",
-            "description": "Specifies the number of realizations to generate"
-          },
-          {
-            "id": "detailed_results",
-            "type": "bool",
-            "description": "If false, only the main results are saved to improve performance."
-          },
-          {
-            "id": "log_file",
-            "type": "bool",
-            "description": "If false, pelicun does not create a log file."
-          },
-          {
-            "id": "coupled_EDP",
-            "type": "bool",
-            "description": "If true, the raw EDPs are used as-is without re-sampling."
-          },
-          {
-            "id": "event_time",
-            "type": "string",
-            "description": "Defines the time of the event in YYYY-MM-DD:HH format. 'off' turns all time-effects off."
-          },
-          {
-            "id": "ground_failure",
-            "type": "bool",
-            "description": "If true, fragility groups associated with ground failure are added in the auto-population phase. Note that such analysis requires PGD values as inputs."
-          },
-          {
-            "id": "auto_script",
-            "type": "path",
-            "description": "Identifies the location of a python script that can be used to auto-populate the loss model."
-          },
-          {
-            "id": "custom_fragility_dir",
-            "type": "path",
-            "description": "Identifies the location of a folder with custom fragility function JSON files."
-          },
-          {
-            "id": "outputEDP",
-            "type": "string",
-            "description": "name of file to store response estimates",
-            "default": "EDP.csv"
-          },
-          {
-            "id": "outputDM",
-            "type": "string",
-            "description": "name of file to store damage estimates",
-            "default": "DM.csv"
-          },
-          {
-            "id": "outputDV",
-            "type": "string",
-            "description": "name of DV file to store decision variable estimates",
-            "default": "DV.csv"
-          }
-        ]
-      },
+    "Applications": [      
       {
         "Name": "Pelicun3",
-        "ExecutablePath": "applications/performDL/pelicun3/DL_calculation.py",
+        "ExecutablePath": "applications/performDL/pelicun3/pelicun3_wrapper.py",
         "ApplicationSpecificInputs": [
           {
             "id": "Realizations",
@@ -1126,6 +1148,11 @@
             "id": "auto_script",
             "type": "path",
             "description": "Identifies the location of a python script that can be used to auto-populate the loss model."
+          },
+          {
+            "id": "custom_model_dir",
+            "type": "path",
+            "description": "Identifies the location of user-provided custom damage and loss models."
           },
           {
             "id": "regional",
@@ -1142,6 +1169,22 @@
       }
     ]
   },
+    "SystemPerformanceApplications":{
+	"API": {
+	    "Inputs": [
+	    ],
+	    "Outputs": [
+	    ]
+	},
+	"Applications": [
+	    {
+		"Name": "REWETRecovery",
+		"ExecutablePath": "applications/systemPerformance/REWEt/REWET_Wrapper.py",
+		"ApplicationSpecificInputs": [		    
+		]
+	    }
+	]
+    },
   "PerformanceApplications": {
     "API": {
       "Inputs": [

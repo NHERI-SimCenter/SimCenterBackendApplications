@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -39,57 +38,58 @@
 # Joanna J. Zou
 #
 
-import os, sys
-import argparse, json
+import argparse
 import importlib
-
+import json
+import os
+import sys
 from pathlib import Path
 
 # import the common constants and methods
-this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
 main_dir = this_dir.parents[1]
 
 sys.path.insert(0, str(main_dir / 'common'))
 
-from simcenter_common import *
+from simcenter_common import *  # noqa: E402, F403
 
-convert_EDP = {
-    'max_abs_acceleration' : 'PFA',
-    'max_rel_disp' : 'PFD',
-    'max_drift' : 'PID',
+convert_EDP = {  # noqa: N816
+    'max_abs_acceleration': 'PFA',
+    'max_rel_disp': 'PFD',
+    'max_drift': 'PID',
     'max_roof_drift': 'PRD',
     'residual_drift': 'RID',
-    'residual_disp': 'RFD'
+    'residual_disp': 'RFD',
 }
 
-def write_RV():
 
+def write_RV():  # noqa: N802, D103
     pass
 
-    # TODO: check simulation data exists and contains all important fields
-    # TODO: get simulation data & write to SIM file
+    # TODO: check simulation data exists and contains all important fields  # noqa: TD002
+    # TODO: get simulation data & write to SIM file  # noqa: TD002
 
-def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
-                   EDP_input_path):
 
+def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path, EDP_input_path):  # noqa: C901, N802, N803, D103
     # these imports are here to save time when the app is called without
     # the -getRV flag
     import sys
+
     import numpy as np
     import openseespy.opensees as ops
 
-    log_msg('Startring simulation script...')
+    log_msg('Startring simulation script...')  # noqa: F405
 
-    sys.path.insert(0, os.getcwd())
+    sys.path.insert(0, os.getcwd())  # noqa: PTH109
 
     # load the model builder script
-    with open(BIM_input_path, 'r') as f:
-        BIM_in = json.load(f)
+    with open(BIM_input_path, encoding='utf-8') as f:  # noqa: PTH123
+        BIM_in = json.load(f)  # noqa: N806
 
     model_params = BIM_in['GeneralInformation']
 
-    with open(SAM_input_path, 'r') as f:
-        SAM_in = json.load(f)
+    with open(SAM_input_path, encoding='utf-8') as f:  # noqa: PTH123
+        SAM_in = json.load(f)  # noqa: N806
 
     sys.path.insert(0, SAM_in['modelPath'])
 
@@ -97,11 +97,22 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
 
     dof_map = [int(dof) for dof in SAM_in['dofMap'].split(',')]
 
-    node_map = dict([(int(entry['floor']), int(entry['node']))
-                     for entry in SAM_in['NodeMapping']])
+    node_map = dict(  # noqa: C404
+        [
+            (int(entry['floor']), int(entry['node']))
+            for entry in SAM_in['NodeMapping']
+        ]
+    )
 
     model_script = importlib.__import__(
-        model_script_path[:-3], globals(), locals(), ['build_model',], 0)
+        model_script_path[:-3],
+        globals(),
+        locals(),
+        [
+            'build_model',
+        ],
+        0,
+    )
     build_model = model_script.build_model
 
     ops.wipe()
@@ -110,31 +121,61 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     build_model(model_params=model_params)
 
     # load the event file
-    with open(EVENT_input_path, 'r') as f:
-        EVENT_in = json.load(f)['Events'][0]
+    with open(EVENT_input_path, encoding='utf-8') as f:  # noqa: PTH123
+        EVENT_in = json.load(f)['Events'][0]  # noqa: N806
 
     event_list = EVENT_in['timeSeries']
     pattern_list = EVENT_in['pattern']
-    # TODO: use dictionary
+    # TODO: use dictionary  # noqa: TD002
     pattern_ts_link = [p['timeSeries'] for p in pattern_list]
 
-    TS_list = []
+    TS_list = []  # noqa: N806
 
     # define the time series
     for evt_i, event in enumerate(event_list):
-
-        ops.timeSeries('Path', evt_i+2, '-dt', event['dT'], '-factor', 1.0,
-                   '-values', *event['data'], '-prependZero')
+        ops.timeSeries(
+            'Path',
+            evt_i + 2,
+            '-dt',
+            event['dT'],
+            '-factor',
+            1.0,
+            '-values',
+            *event['data'],
+            '-prependZero',
+        )
 
         pat = pattern_list[pattern_ts_link.index(event['name'])]
 
-        ops.pattern('UniformExcitation', evt_i+2, dof_map[pat['dof']-1], '-accel', evt_i+2)
+        ops.pattern(
+            'UniformExcitation',
+            evt_i + 2,
+            dof_map[pat['dof'] - 1],
+            '-accel',
+            evt_i + 2,
+        )
 
-        TS_list.append(list(np.array([0.,] + event['data'])))
+        TS_list.append(
+            list(
+                np.array(
+                    [
+                        0.0,
+                    ]
+                    + event['data']
+                )
+            )
+        )
 
     # load the analysis script
     analysis_script = importlib.__import__(
-        model_script_path[:-3], globals(), locals(), ['run_analysis',], 0)
+        model_script_path[:-3],
+        globals(),
+        locals(),
+        [
+            'run_analysis',
+        ],
+        0,
+    )
     run_analysis = analysis_script.run_analysis
 
     recorder_nodes = SAM_in['recorderNodes']
@@ -142,33 +183,39 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     # create the EDP specification
 
     # load the EDP file
-    with open(EDP_input_path, 'r') as f:
-        EDP_in = json.load(f)
+    with open(EDP_input_path, encoding='utf-8') as f:  # noqa: PTH123
+        EDP_in = json.load(f)  # noqa: N806
 
-    EDP_list = EDP_in['EngineeringDemandParameters'][0]['responses']
+    EDP_list = EDP_in['EngineeringDemandParameters'][0]['responses']  # noqa: N806
 
     edp_specs = {}
     for response in EDP_list:
-
         if response['type'] in list(convert_EDP.keys()):
             response['type'] = convert_EDP[response['type']]
 
-        if response['type'] not in edp_specs.keys():
+        if response['type'] not in edp_specs:
             edp_specs.update({response['type']: {}})
 
         if 'node' in list(response.keys()):
-
             if response.get('id', None) is None:
                 response.update({'id': 0})
 
-            edp_specs[response['type']].update({
-                response['id']: dict([(dof, list(np.atleast_1d(response['node'])))
-                                      for dof in response['dofs']])})
+            edp_specs[response['type']].update(
+                {
+                    response['id']: dict(  # noqa: C404
+                        [
+                            (dof, list(np.atleast_1d(response['node'])))
+                            for dof in response['dofs']
+                        ]
+                    )
+                }
+            )
         else:
-
             if response.get('floor', None) is not None:
                 floor = int(response['floor'])
-                node_list = [node_map[floor],]
+                node_list = [
+                    node_map[floor],
+                ]
             else:
                 floor = int(response['floor2'])
                 floor1 = int(response['floor1'])
@@ -177,57 +224,64 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
             if response.get('id', None) is None:
                 response.update({'id': floor})
             if floor is not None:
-                edp_specs[response['type']].update({
-                    response['id']: dict([(dof, node_list)
-                                          for dof in response['dofs']])})
+                edp_specs[response['type']].update(
+                    {
+                        response['id']: dict(  # noqa: C404
+                            [(dof, node_list) for dof in response['dofs']]
+                        )
+                    }
+                )
 
-    #for edp_name, edp_data in edp_specs.items():
+    # for edp_name, edp_data in edp_specs.items():
     #    print(edp_name, edp_data)
 
     # run the analysis
-    # TODO: default analysis script
-    EDP_res = run_analysis(GM_dt = EVENT_in['dT'],
+    # TODO: default analysis script  # noqa: TD002
+    EDP_res = run_analysis(  # noqa: N806
+        GM_dt=EVENT_in['dT'],
         GM_npts=EVENT_in['numSteps'],
-        TS_List = TS_list, EDP_specs = edp_specs,
-        model_params = model_params)
+        TS_List=TS_list,
+        EDP_specs=edp_specs,
+        model_params=model_params,
+    )
 
     # save the EDP results
 
-    #print(EDP_res)
+    # print(EDP_res)
 
     for response in EDP_list:
         edp = EDP_res[response['type']][response['id']]
-        #print(edp)
+        # print(edp)
 
-        response['scalar_data'] = edp # [val for dof, val in edp.items()]
-        #print(response)
+        response['scalar_data'] = edp  # [val for dof, val in edp.items()]
+        # print(response)
 
-    with open(EDP_input_path, 'w') as f:
+    with open(EDP_input_path, 'w', encoding='utf-8') as f:  # noqa: PTH123
         json.dump(EDP_in, f, indent=2)
 
-    log_msg('Simulation script finished.')
+    log_msg('Simulation script finished.')  # noqa: F405
+
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--filenameAIM',
-        default=None)
+    parser.add_argument('--filenameAIM', default=None)
     parser.add_argument('--filenameSAM')
     parser.add_argument('--filenameEVENT')
-    parser.add_argument('--filenameEDP',
-        default=None)
-    parser.add_argument('--filenameSIM',
-        default=None)
-    parser.add_argument('--getRV',
-        default=False,
-        nargs='?', const=True)
+    parser.add_argument('--filenameEDP', default=None)
+    parser.add_argument('--filenameSIM', default=None)
+    parser.add_argument('--getRV', default=False, nargs='?', const=True)
 
     args = parser.parse_args()
 
     if args.getRV:
         sys.exit(write_RV())
     else:
-        sys.exit(run_openseesPy(
-            args.filenameEVENT, args.filenameSAM, args.filenameAIM,
-            args.filenameEDP))
+        sys.exit(
+            run_openseesPy(
+                args.filenameEVENT,
+                args.filenameSAM,
+                args.filenameAIM,
+                args.filenameEDP,
+            )
+        )

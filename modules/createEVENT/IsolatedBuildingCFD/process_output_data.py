@@ -1,122 +1,103 @@
-"""
-This script create blockMeshDict for OpenFoam given vertices and boundary type. 
+"""This script create blockMeshDict for OpenFoam given vertices and boundary type.
 
+code creates pressure probes for the main simulation. Three types of
+probes are created.
 
-code creates pressure probes for the main simulation. Three types of 
-probes are created. 
+"""  # noqa: INP001, D404
 
-"""
-
-import sys
-import os
-import subprocess
 import json
-import stat
-import shutil
+import sys
+
+import CWE as cwe  # noqa: N811
 import numpy as np
-import CWE as cwe
-import matplotlib.pyplot as plt   
-import matplotlib.gridspec as gridspec   
-import numpy as np
-import CWE as cwe
-from scipy import signal
-from scipy.interpolate import interp1d
-from scipy.interpolate import UnivariateSpline
-from scipy import stats
 
 
-def write_wind_profiles(case_path):
-    inf_path  = case_path + "/constant/boundaryData/windProfile/sampledData/verticalProfile/"
-    
-    
+def write_wind_profiles(case_path):  # noqa: D103
+    inf_path = (
+        case_path + '/constant/boundaryData/windProfile/sampledData/verticalProfile/'
+    )
+
     inf = cwe.VelocityData('cfd', inf_path, start_time=None, end_time=None)
-    
-    
-    #Read JSON data for turbulence model
-    wc_json_file = open(case_path + "/constant/simCenter/windCharacteristics.json")
-    
+
+    # Read JSON data for turbulence model
+    wc_json_file = open(case_path + '/constant/simCenter/windCharacteristics.json')  # noqa: SIM115, PTH123
+
     # Returns JSON object as a dictionary
-    wind_data = json.load(wc_json_file)
+    wind_data = json.load(wc_json_file, 'r', encoding='utf-8')
     wc_json_file.close()
-      
+
     building_height = wind_data['buildingHeight']
-    
-    #Wind profile z, Uav, Iu, Lu
+
+    # Wind profile z, Uav, Iu, Lu
     prof = np.zeros((len(inf.z), 4))
-    prof[:,0] = inf.z
-    prof[:,1] = inf.Uav
-    prof[:,2] = inf.I[:,0]
-    prof[:,3] = inf.L[:,0]
-    
-    
-    #Wind velocity at roof height 
-    H_loc = np.argmin(np.abs(inf.z - building_height))
-    
-    # U, v, w in at roof height 
-    Uh = inf.U[H_loc, :, :].T
-    
-    Suh = []
-    
-    
+    prof[:, 0] = inf.z
+    prof[:, 1] = inf.Uav
+    prof[:, 2] = inf.I[:, 0]
+    prof[:, 3] = inf.L[:, 0]
+
+    # Wind velocity at roof height
+    H_loc = np.argmin(np.abs(inf.z - building_height))  # noqa: N806
+
+    # U, v, w in at roof height
+    Uh = inf.U[H_loc, :, :].T  # noqa: N806
+
+    s_uh = []
+
     for i in range(3):
         f, s = cwe.psd(Uh[:, i], 0.0025, 8)
-        Suh.append(np.abs(s))
-        
-    Suh.insert(0, f)
-    
-    Suhout = np.asarray(Suh, dtype=np.float32).T  
-    
+        s_uh.append(np.abs(s))
+
+    s_uh.insert(0, f)
+
+    Suhout = np.asarray(s_uh, dtype=np.float32).T  # noqa: N806
+
     write_precision = 6
-    fmt ='%.{}e'.format(write_precision)
-    
-    prof_path = case_path + "/constant/simCenter/output/windProfiles.txt"    
-    Suh_path = case_path + "/constant/simCenter/output/Suh.txt"    
-    
+    fmt = f'%.{write_precision}e'
+
+    prof_path = case_path + '/constant/simCenter/output/windProfiles.txt'
+    s_uh_path = case_path + '/constant/simCenter/output/Suh.txt'
+
     np.savetxt(prof_path, prof, fmt=fmt)
-    np.savetxt(Suh_path, Suhout, fmt=fmt)
+    np.savetxt(s_uh_path, Suhout, fmt=fmt)
 
 
-def write_wind_loads(case_path):    
-    #Write base forces 
-    base_forces_path  = case_path + "/postProcessing/baseForces/0/forces.dat"
+def write_wind_loads(case_path):  # noqa: D103
+    # Write base forces
+    base_forces_path = case_path + '/postProcessing/baseForces/0/forces.dat'
     base_o, base_t, base_f, base_m = cwe.read_forces_OF10(base_forces_path)
-    
+
     base_forces = np.zeros((len(base_t), 3))
-    
-    base_forces[:,0:2] = base_f[:, 0:2]
-    base_forces[:,2] = base_m[:, 2]
-    
-      
-    #Write story forces 
-    story_forces_path  = case_path + "/postProcessing/storyForces/0/forces_bins.dat"
-    story_coord, story_t, story_f, story_m = cwe.read_bin_forces_OF10(story_forces_path)
 
-    
+    base_forces[:, 0:2] = base_f[:, 0:2]
+    base_forces[:, 2] = base_m[:, 2]
+
+    # Write story forces
+    story_forces_path = case_path + '/postProcessing/storyForces/0/forces_bins.dat'
+    story_coord, story_t, story_f, story_m = cwe.read_bin_forces_OF10(
+        story_forces_path
+    )
+
     write_precision = 6
-    fmt ='%.{}e'.format(write_precision)
-    
-    out_base_path = case_path + "/constant/simCenter/output/baseForces.txt"    
-    
-    out_story_path_Fx = case_path + "/constant/simCenter/output/storyForcesFx.txt"    
-    out_story_path_Fy = case_path + "/constant/simCenter/output/storyForcesFy.txt"    
-    out_story_path_Mz = case_path + "/constant/simCenter/output/storyForcesMz.txt"    
-    
+    fmt = f'%.{write_precision}e'
+
+    out_base_path = case_path + '/constant/simCenter/output/baseForces.txt'
+
+    out_story_path_Fx = case_path + '/constant/simCenter/output/storyForcesFx.txt'  # noqa: N806
+    out_story_path_Fy = case_path + '/constant/simCenter/output/storyForcesFy.txt'  # noqa: N806
+    out_story_path_Mz = case_path + '/constant/simCenter/output/storyForcesMz.txt'  # noqa: N806
+
     np.savetxt(out_base_path, base_forces, fmt=fmt)
-    
-    np.savetxt(out_story_path_Fx, story_f[:,:,0], fmt=fmt)
-    np.savetxt(out_story_path_Fy, story_f[:,:,1], fmt=fmt)
-    np.savetxt(out_story_path_Mz, story_m[:,:,2], fmt=fmt)
+
+    np.savetxt(out_story_path_Fx, story_f[:, :, 0], fmt=fmt)
+    np.savetxt(out_story_path_Fy, story_f[:, :, 1], fmt=fmt)
+    np.savetxt(out_story_path_Mz, story_m[:, :, 2], fmt=fmt)
 
 
-
-
-if __name__ == '__main__':    
-    
+if __name__ == '__main__':
     input_args = sys.argv
 
     # Set filenames
     case_path = sys.argv[1]
-    
+
     write_wind_profiles(case_path)
     write_wind_loads(case_path)
-    

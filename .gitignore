@@ -20,8 +20,9 @@ moc*
 
 # Compiled Dynamic libraries
 *.so
-*.dylib
+# *.dylib
 *.dll
+!epanet22_mod.dll
 
 # Fortran module files
 *.mod
@@ -61,8 +62,6 @@ UserDefinedEDP
 SiteResponse
 MDOF_BuildingModel
 ExtractPGA
-StochasticWind
-StochasticGroundMotion
 StandardEarthquakeEDP
 OpenSeesInput
 OpenSeesPostprocessor

@@ -93,7 +93,7 @@ main(int argc, char **argv) {
   json_t *generalInformation = json_object_get(input, "GeneralInformation");  
   json_t *inputEventsArray = json_object_get(input, "Events");  
   if (generalInformation == NULL || inputEventsArray == NULL) {
-    std::cerr << "FATAL ERROR - input file conatins no Events key-pair\n";
+    std::cerr << "FATAL ERROR - input file contains no Events key-pair\n";
     exit(-1);
   }
   
@@ -127,7 +127,7 @@ main(int argc, char **argv) {
       json_object_set(units,"time",json_string("sec"));
       json_object_set(outputEvent,"units",units);
 
-      // call function to fill in event details .. depends on getRV flag what is acually done
+      // call function to fill in event details .. depends on getRV flag what is actually done
       addEvent(generalInformation, inputEvent, outputEvent, doRV);
 
       json_array_append(outputEventsArray, outputEvent);
@@ -179,7 +179,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 	  widthJO == NULL  ||
 	  depthJO == NULL  ||
 	  storiesJO == NULL ) {
-	std::cerr << "ERROR missing Information from GeneralInformation (height, width, stories all neeed)\n";
+	std::cerr << "ERROR missing Information from GeneralInformation (height, width, stories all needed)\n";
 	return -2;        
       }
       
@@ -333,7 +333,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       }
 
       //
-      // for each tap determine factors fr moments and forces for the buiding asuming a mesh discretization
+      // for each tap determine factors fr moments and forces for the building assuming a mesh discretization
       //
 
       int numDivisionX = 10;
@@ -526,7 +526,10 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 
       // so instead invoke a process
       std::string pyArgs = "HighRiseTPU.py tmpSimCenterHighRiseTPU.mat tmpSimCenterHighRiseTPU.json";
-      std::string command = "python ";
+      std::string command = "python3 ";
+#ifdef _WIN32
+      command = "python ";
+#endif
       command += pyArgs;
       system(command.c_str());
       //      std::cerr << "DONE PYTHON\n";
@@ -535,7 +538,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 
       json_t *storiesJO = json_object_get(generalInfo,"stories");
       if (storiesJO == NULL ) {
-	std::cerr << "ERROR missing Information from GeneralInformation (height, width, stories all neeed)\n";
+	std::cerr << "ERROR missing Information from GeneralInformation (height, width, stories all needed)\n";
 	return -2;        
       }
       
@@ -638,10 +641,10 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 
 //
 // function to add factors for forces and moment contribution coefficients for taps to building floor
-// determine coeffiecients for each tap for a building face. This is done by going over each story of 
+// determine coefficients for each tap for a building face. This is done by going over each story of 
 // For each story break into numDiv X numDiv segments. For each segment assume point load at center 
 // segment and equal in mag to area of segment and using simply supported beam formula determine force 
-// at floor below and floor above. based on distance from center line of story determine actibg moments 
+// at floor below and floor above. based on distance from center line of story determine acting moments 
 // on floors.
 //
 // inputs: height: height of building
@@ -728,9 +731,9 @@ int addForcesFace(TAP *theTaps, int numTaps,
 // function to fnd nearest tap
 // inputs: theTAPS: array of Taps, 
 //         numTaps: number of taps in array
-//         xLoc, yLoc: is location of inut point
+//         xLoc, yLoc: is location of input point
 //         face: if of face
-// output: pinter to nearest TAp in the array, NULL if no taps with face
+// output: pointer to nearest TAp in the array, NULL if no taps with face
 // 
 
 TAP *findNearestTAP(TAP *theTAPS, int numTaps, double locX, double locY, int face) {

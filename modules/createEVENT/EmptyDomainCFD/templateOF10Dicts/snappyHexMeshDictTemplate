@@ -112,7 +112,12 @@ castellatedMeshControls
     // NOTE: This point should never be on a face, always inside a cell, even
     // after refinement.
     insidePoint (0 0 0);
+
+    //Used for older versions of OpenFOAM < v10
     locationInMesh (0 0 0);
+
+    //For some system not having 'outsidePoint' might make the snappy to fail
+    outsidePoint (0 0 0);
     
     // Whether any faceZones (as specified in the refinementSurfaces)
     // are only on the boundary of corresponding cellZones or also allow

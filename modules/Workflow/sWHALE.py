@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+#  # noqa: EXE002, INP001, D100
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -42,28 +41,31 @@
 # Chaofeng Wang
 # Stevan Gavrilovic
 
-import sys, os, json
 import argparse
+import json
+import os
+import sys
 from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
 
 import whale.main as whale
-from whale.main import log_msg, log_div
+from whale.main import log_div, log_msg
 
 
-def runSWhale(inputs,
-              WF,
-              assetID = None,
-              assetAIM = 'AIM.json', 
-              prep_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'], 
-              WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'], 
-              asset_type = None,
-              copy_resources = False,
-              force_cleanup = False) :
-
+def runSWhale(  # noqa: N802, D103
+    inputs,
+    WF,  # noqa: N803
+    assetID=None,  # noqa: N803
+    assetAIM='AIM.json',  # noqa: N803
+    prep_app_sequence=['Event', 'Modeling', 'EDP', 'Simulation'],  # noqa: B006
+    WF_app_sequence=['Event', 'Modeling', 'EDP', 'Simulation'],  # noqa: B006, N803
+    asset_type=None,
+    copy_resources=False,  # noqa: FBT002
+    force_cleanup=False,  # noqa: FBT002
+):
     # update the runDir, if needed
-    #    with open(input_file, 'r') as f:
+    #    with open(input_file, 'r', encoding="utf-8") as f:
     #        inputs = json.load(f)
     #    runDir = inputs['runDir']
     #
@@ -82,10 +84,14 @@ def runSWhale(inputs,
     #        "PrintLog": True
     #        })
     #
-    
-    log_msg('\nStarting sWHALE workflow\n', prepend_timestamp=False, prepend_blank_space=False)
 
-#    whale.print_system_info()
+    log_msg(
+        '\nStarting sWHALE workflow\n',
+        prepend_timestamp=False,
+        prepend_blank_space=False,
+    )
+
+    #    whale.print_system_info()
 
     # echo the inputs
     log_div(prepend_blank_space=False)
@@ -94,45 +100,46 @@ def runSWhale(inputs,
     log_div()
 
     if WF.run_type != 'loss_only':
-
         # initialize the working directory
         #  assetID is a unique asset identifier, assetAIM is the asset information model, e.g., 'AIM.json'
         WF.init_simdir(assetID, assetAIM)
 
-        #Delete the origional AIM and use the templatedir/AIM from here
-
         # prepare the input files for the simulation
         WF.preprocess_inputs(prep_app_sequence, assetAIM, assetID, asset_type)
-        
+
         # create the workflow driver file
         WF.create_driver_file(WF_app_sequence, assetID, assetAIM)
-        
+
         # gather all Randomvariables and EDP's and place in new input file for UQ
-        WF.gather_workflow_inputs(assetID, assetAIM);
-
+        WF.gather_workflow_inputs(assetID, assetAIM)
         # run uq engine to simulate response
-        WF.simulate_response(AIM_file_path = assetAIM, asst_id = assetID)
-        
-    if WF.run_type != 'set_up':
+        WF.simulate_response(AIM_file_path=assetAIM, asst_id=assetID)
 
+    if WF.run_type != 'set_up':
         # run dl engine to estimate losses
         # Use the templatedir/AIM.json for pelicun
-        WF.estimate_losses(AIM_file_path = assetAIM,
-                           asst_id = assetID,
-                           asset_type = asset_type,
-                           input_file = inputs,
-                           copy_resources=copy_resources)
-    
+        WF.estimate_losses(
+            AIM_file_path=assetAIM,
+            asst_id=assetID,
+            asset_type=asset_type,
+            input_file=inputs,
+            copy_resources=copy_resources,
+        )
 
         # run performance engine to assess asset performance, e.g., recovery
-        WF.estimate_performance(AIM_file_path = assetAIM,
-                                asst_id = assetID,
-                                asset_type = asset_type,
-                                input_file = inputs,
-                                copy_resources=copy_resources)
+        WF.estimate_performance(
+            AIM_file_path=assetAIM,
+            asst_id=assetID,
+            asset_type=asset_type,
+            input_file=inputs,
+            copy_resources=copy_resources,
+        )
 
+    # When used in rWhale, delete the original AIM since it is the same with asset_id/templatedir/AIM
+    if assetAIM != 'AIM.json':
+        os.remove(assetAIM)  # noqa: PTH107
     if force_cleanup:
-        #clean up intermediate files from the simulation
+        # clean up intermediate files from the simulation
         WF.cleanup_simdir(assetID)
 
     log_msg('Workflow completed.')
@@ -140,30 +147,27 @@ def runSWhale(inputs,
     log_div(prepend_blank_space=False)
 
 
-def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
-
+def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):  # noqa: ARG001, D103
     # update the runDir, if needed
-    with open(input_file, 'r') as f:
+    with open(input_file, encoding='utf-8') as f:  # noqa: PTH123
         inputs = json.load(f)
-    runDir = inputs['runDir']
+    runDir = inputs['runDir']  # noqa: N806
 
     if working_dir is not None:
-        runDir = working_dir
+        runDir = working_dir  # noqa: N806
     else:
-        runDir = inputs['runDir']
-
+        runDir = inputs['runDir']  # noqa: N806
 
     whale.log_file = runDir + '/log.txt'
-    
+
     # initialize log file
-    whale.set_options({
-        "LogFile": runDir + '/log.txt',
-        "LogShowMS": False,
-        "PrintLog": True
-        })
-    
-    log_msg('\nsWHALE workflow\n',
-            prepend_timestamp=False, prepend_blank_space=False)
+    whale.set_options(
+        {'LogFile': runDir + '/log.txt', 'LogShowMS': False, 'PrintLog': True}
+    )
+
+    log_msg(
+        '\nsWHALE workflow\n', prepend_timestamp=False, prepend_blank_space=False
+    )
 
     whale.print_system_info()
 
@@ -177,22 +181,35 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
     try:
         if inputs['DL']['Demands']['DemandFilePath'] is not None:
             run_type = 'loss_only'
-    except:
+    except:  # noqa: S110, E722
         pass
 
-    WF = whale.Workflow(run_type, input_file, app_registry,
-        app_type_list = ['Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL', 'Performance'],
-        working_dir = working_dir,
-        app_dir = app_dir)
-        
-    runSWhale(inputs = input_file,
-              WF = WF,
-              prep_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'],
-              WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'])
+    WF = whale.Workflow(  # noqa: N806
+        run_type,
+        input_file,
+        app_registry,
+        app_type_list=[
+            'Event',
+            'Modeling',
+            'EDP',
+            'Simulation',
+            'UQ',
+            'DL',
+            'Performance',
+        ],
+        working_dir=working_dir,
+        app_dir=app_dir,
+    )
+
+    runSWhale(
+        inputs=input_file,
+        WF=WF,
+        prep_app_sequence=['Event', 'Modeling', 'EDP', 'Simulation'],
+        WF_app_sequence=['Event', 'Modeling', 'EDP', 'Simulation'],
+    )
 
 
 if __name__ == '__main__':
-
     """
     if len(sys.argv) != 4:
         print('\nNeed three arguments, e.g.:\n')
@@ -203,42 +220,60 @@ if __name__ == '__main__':
     main(run_type=sys.argv[1], input_file=sys.argv[2], app_registry=sys.argv[3])
     """
 
-    #Defining the command line arguments
+    # Defining the command line arguments
 
-    workflowArgParser = argparse.ArgumentParser(
-        "Run the NHERI SimCenter sWHALE workflow for a single asset.",
-        allow_abbrev=False)
+    workflowArgParser = argparse.ArgumentParser(  # noqa: N816
+        'Run the NHERI SimCenter sWHALE workflow for a single asset.',
+        allow_abbrev=False,
+    )
 
-    workflowArgParser.add_argument("runType",
-        help="Specifies the type of run requested.")
-    workflowArgParser.add_argument("inputFile",
-        help="Specifies the input file for the workflow.")
-    workflowArgParser.add_argument("registry",
-        default=os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             "WorkflowApplications.json"),
-        help="Path to file containing registered workflow applications")
-    workflowArgParser.add_argument("-w", "--workDir",
+    workflowArgParser.add_argument(
+        'runType', help='Specifies the type of run requested.'
+    )
+    workflowArgParser.add_argument(
+        'inputFile', help='Specifies the input file for the workflow.'
+    )
+    workflowArgParser.add_argument(
+        'registry',
+        default=os.path.join(  # noqa: PTH118
+            os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
+            'WorkflowApplications.json',
+        ),
+        help='Path to file containing registered workflow applications',
+    )
+    workflowArgParser.add_argument(
+        '-w',
+        '--workDir',
         default=None,
-        help="Absolute path to the working directory.")
-    workflowArgParser.add_argument("-a", "--appDir",
+        help='Absolute path to the working directory.',
+    )
+    workflowArgParser.add_argument(
+        '-a',
+        '--appDir',
         default=None,
-        help="Absolute path to the local application directory.")
-    workflowArgParser.add_argument("-l", "--logFile",
+        help='Absolute path to the local application directory.',
+    )
+    workflowArgParser.add_argument(
+        '-l',
+        '--logFile',
         default='log.txt',
-        help="Path where the log file will be saved.")
+        help='Path where the log file will be saved.',
+    )
 
-    #Parsing the command line arguments
-    wfArgs = workflowArgParser.parse_args()
+    # Parsing the command line arguments
+    wfArgs = workflowArgParser.parse_args()  # noqa: N816
 
     # update the local app dir with the default - if needed
     if wfArgs.appDir is None:
-        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
         wfArgs.appDir = workflow_dir.parents[1]
 
-    #Calling the main workflow method and passing the parsed arguments
-    main(run_type = wfArgs.runType,
-         input_file = Path(wfArgs.inputFile).resolve(),
-         app_registry = wfArgs.registry,
-         working_dir = wfArgs.workDir,
-         app_dir = wfArgs.appDir,
-         log_file = wfArgs.logFile)
+    # Calling the main workflow method and passing the parsed arguments
+    main(
+        run_type=wfArgs.runType,
+        input_file=Path(wfArgs.inputFile).resolve(),
+        app_registry=wfArgs.registry,
+        working_dir=wfArgs.workDir,
+        app_dir=wfArgs.appDir,
+        log_file=wfArgs.logFile,
+    )

@@ -1,3 +1,4 @@
+add_subdirectory(common)
 add_subdirectory(CFDEvent)
 add_subdirectory(GeoClawOpenFOAM)
 add_subdirectory(DEDM_HRP)
@@ -17,10 +18,16 @@ add_subdirectory(stochasticWind)
 add_subdirectory(groundMotionIM)
 add_subdirectory(uniformPEER)
 add_subdirectory(experimentalWindForces)
+add_subdirectory(experimentalWindPressures)
 add_subdirectory(EmptyDomainCFD)
 add_subdirectory(IsolatedBuildingCFD)
+add_subdirectory(SurroundedBuildingCFD)
 add_subdirectory(coupledDigitalTwin)
-
+add_subdirectory(physicsBasedMotion)
+add_subdirectory(M9)
+add_subdirectory(Istanbul)
+add_subdirectory(MPM)
+add_subdirectory(stochasticWave)
 
 
 

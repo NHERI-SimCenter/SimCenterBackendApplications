@@ -1,61 +1,71 @@
-# written: Michael Gardner @ UNR
+# written: Michael Gardner @ UNR  # noqa: INP001, D100
 
 # import sys
-import preProcessUQ
 
-def prepareUQ(paramsFile, inputFile, outputFile, rvSpecifier):
+
+def prepareUQ(paramsFile, inputFile, outputFile, rvSpecifier):  # noqa: C901, N802, N803, D103
     # These are the delimiter choices, which can expanded as more UQ programs are added. Remember to also
-    # extend the factory in rvDelimiter to handle addtional cases
-    rvDelimiterChoices=["SimCenterDelimiter", "UQpyDelimiter"]
-    
+    # extend the factory in rvDelimiter to handle additional cases
+    rvDelimiterChoices = ['SimCenterDelimiter', 'UQpyDelimiter']  # noqa: N806
+
     if rvSpecifier not in rvDelimiterChoices:
-        except IOError:
-            print("ERROR: preProcessUQ.py: Symbol identifying value as random variable not recognized : ", rvSpecifier)            
-    
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # Tue Jul 30 05:16:30 PM PDT 2024
+        # JVM
+        # Commenting out the following, since it is invalid.
+
+        # except IOError:
+        #     print("ERROR: preProcessUQ.py: Symbol identifying value as random variable not recognized : ", rvSpecifier)
+
+        pass
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     # Open parameters file and read parameter settings
-    numRVs = 0
-    lineCount = 0
-    rvNames = []
-    rvSettings = []
-    
+    numRVs = 0  # noqa: N806
+    lineCount = 0  # noqa: N806
+    rvNames = []  # noqa: N806
+    rvSettings = []  # noqa: N806
+
     try:
-        with open(paramsFile, 'r') as params:
+        with open(paramsFile) as params:  # noqa: PTH123
             for line in params:
                 if lineCount == 0:
-                    rvNames = [i.strip() for i in line.split(',')]
-                    numRVs = len(rvNames)
+                    rvNames = [i.strip() for i in line.split(',')]  # noqa: N806
+                    numRVs = len(rvNames)  # noqa: N806, F841
                     # Replace RV names based on delimiter
                     for i, rv in enumerate(rvNames):
                         rvNames[i] = rvSpecifier.replaceRV(rv)
 
                 else:
-                    rvSettings = [i.strip() for i in line.split(',')]
+                    rvSettings = [i.strip() for i in line.split(',')]  # noqa: N806
 
-                lineCount = lineCount + 1
-                    
-    except IOError:
-        print("ERROR: preProcessUQ.py could not open parameters file: " + paramsFile)
+                lineCount = lineCount + 1  # noqa: N806
+
+    except OSError:
+        print('ERROR: preProcessUQ.py could not open parameters file: ' + paramsFile)  # noqa: T201
 
     # Next, open input file and search for random variables that need to be replaced by parameter realizations
-    inputTemplate = "inputTemplate"
-    realizationOutput = "outputFile"
+    inputTemplate = 'inputTemplate'  # noqa: N806
+    realizationOutput = 'outputFile'  # noqa: N806
     try:
-        inputTemplate = open(inputFile, 'r')
-    except IOError:
-        print("ERROR: preProcessUQ.py could not open input template file: " + inputFile)
+        inputTemplate = open(inputFile)  # noqa: SIM115, PTH123, N806
+    except OSError:
+        print(  # noqa: T201
+            'ERROR: preProcessUQ.py could not open input template file: ' + inputFile
+        )
 
     try:
-        realizationOutput = open(outputFile, 'w')
-    except IOError:
-        print("ERROR: preProcessUQ.py could not open output file: " + outputFile)        
+        realizationOutput = open(outputFile, 'w')  # noqa: SIM115, PTH123, N806
+    except OSError:
+        print('ERROR: preProcessUQ.py could not open output file: ' + outputFile)  # noqa: T201
 
     # Iterate over all lines in input template
     for line in inputTemplate:
         # Iterate over all RVs to check they need to be replaced
         for i, rv in enumerate(rvNames):
-            try:
-                line = line.replace(rv, rvSettings[i])
-            except:
+            try:  # noqa: SIM105
+                line = line.replace(rv, rvSettings[i])  # noqa: PLW2901
+            except:  # noqa: S110, PERF203, E722
                 pass
 
         realizationOutput.write(line)

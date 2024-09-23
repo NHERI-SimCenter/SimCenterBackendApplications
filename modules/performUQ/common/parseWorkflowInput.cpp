@@ -222,8 +222,26 @@ parseInputForRV(json_t *root, struct randomVariables &theRandomVariables){
       //theRV.name = json_string_value(json_object_get(fileRandomVariable,"name"));
       theRandomVariables.theNames.insert(rvName);
       theRV.name = rvName;      
-      theRV.alphas = json_number_value(json_object_get(fileRandomVariable,"alphas"));
-      theRV.betas = json_number_value(json_object_get(fileRandomVariable,"betas"));
+      theRV.alphas = json_number_value(json_object_get(fileRandomVariable,"k"));
+      theRV.betas = json_number_value(json_object_get(fileRandomVariable,"lambda"));
+      if (theRV.betas != 0)
+	theRV.betas = 1.0/theRV.betas;
+
+      theRandomVariables.gammaRVs.push_back(theRV);
+      theRandomVariables.numRandomVariables += 1;
+      theRandomVariables.ordering.push_back(8);
+      numberRVs++;
+    }
+
+    else if (strcmp(variableType, "Chisquare") == 0) {
+
+      struct gammaRV theRV;
+
+      //theRV.name = json_string_value(json_object_get(fileRandomVariable,"name"));
+      theRandomVariables.theNames.insert(rvName);
+      theRV.name = rvName;      
+      theRV.alphas = json_number_value(json_object_get(fileRandomVariable,"k"));
+      theRV.betas = 1.0/2.0;
 
       theRandomVariables.gammaRVs.push_back(theRV);
       theRandomVariables.numRandomVariables += 1;
@@ -267,6 +285,25 @@ parseInputForRV(json_t *root, struct randomVariables &theRandomVariables){
       numberRVs++;
     }
 
+    else if (strcmp(variableType, "Exponential") == 0) {
+
+      struct exponentialRV theRV;
+
+      //theRV.name = json_string_value(json_object_get(fileRandomVariable,"name"));
+      theRandomVariables.theNames.insert(rvName);
+      theRV.name = rvName;      
+      theRV.betas = json_number_value(json_object_get(fileRandomVariable,"lambda"));
+      if (theRV.betas != 0)
+	theRV.betas = 1.0/theRV.betas;
+
+      theRandomVariables.exponentialRVs.push_back(theRV);
+      theRandomVariables.numRandomVariables += 1;
+      theRandomVariables.ordering.push_back(10);
+      numberRVs++;
+    }            
+
+
+      
     else if (strcmp(variableType, "discrete_design_set_string") == 0) {
 
       struct discreteDesignSetRV theRV;
@@ -287,66 +324,102 @@ parseInputForRV(json_t *root, struct randomVariables &theRandomVariables){
 
     	theRV.elements = theValues;
 
-      // std::list<double> theWeights;
-      // double weight = 1.0/theValues.size();
-      // double sumWeights = 0;
-      // for (int j=0; j<numValues-1; j++) {
-      //   sumWeights += weight;
-      //   theWeights.push_back(weight);
-      // }
-      // theWeights.push_back(1-sumWeights);
-      // theRV.weights = theWeights;
-
     	theRandomVariables.discreteDesignSetRVs.push_back(theRV);
     	theRandomVariables.numRandomVariables += 1;
-      //theRandomVariables.ordering.push_back(-1);
+	//theRandomVariables.ordering.push_back(-1);
     	numberRVs++;
       }
     }
 
     else if (strcmp(variableType, "Discrete") == 0) {
 
-      struct discreteUncertainIntegerSetRV theRV;
-
-      theRandomVariables.theNames.insert(rvName);
-      theRV.name = rvName; 
-
-      std::list<int> theValues;
       json_t *elementsSet =  json_object_get(fileRandomVariable, "Values");
-      if (elementsSet != NULL) {
-        int numValues = json_array_size(elementsSet);
-        for (int j=0; j<numValues; j++) {
-          json_t *element = json_array_get(elementsSet, j);
-          int value = json_integer_value(element);
-          theValues.push_back(value);
-          // if (value != 0) {
-          //   theValues.push_back(value);
-          // } else {
-          //     std::cout << "ERROR: The value at index " << j << " of the Discrete RV " << rvName << 
-          //     " must be an integer, but was " << element << std::endl;
-          //     return EXIT_FAILURE;
-          // }
-          }
-        theRV.elements = theValues;
+      int numValues = json_array_size(elementsSet);
+      bool intSet = true;
+      for (int j=0; j<numValues; j++) {
+	json_t *element = json_array_get(elementsSet, j);
+	if (json_is_integer(element) != true) {
+	  intSet = false;
+	  i=numValues;
+	}
+      }
 
-        std::list<double> theWeights;
-        json_t *weightsSet =  json_object_get(fileRandomVariable, "Weights");
-        if (weightsSet != NULL) {
-          int numWeights = json_array_size(weightsSet);
-          for (int j=0; j<numWeights; j++) {
-            json_t *wt = json_array_get(weightsSet, j);
-            double weight = json_number_value(wt);
-            theWeights.push_back(weight);
-          }
-        }
-        theRV.weights = theWeights;
+      if (intSet == true) {
+	
+	struct discreteUncertainIntegerSetRV theRV;
 
-        theRandomVariables.discreteUncertainIntegerSetRVs.push_back(theRV);
-        theRandomVariables.numRandomVariables += 1;
-        //theRandomVariables.ordering.push_back(-1);
-        numberRVs++;
-        }
+	theRandomVariables.theNames.insert(rvName);
+	theRV.name = rvName;
+
+	json_t *elementsSet =  json_object_get(fileRandomVariable, "Values");
+	json_t *weightsSet =  json_object_get(fileRandomVariable, "Weights");	
+	if (elementsSet != NULL && weightsSet != NULL) {
+	  std::list<int> theValues;
+	  int numValues = json_array_size(elementsSet);
+	  for (int j=0; j<numValues; j++) {
+	    json_t *element = json_array_get(elementsSet, j);
+	    int value = json_integer_value(element);
+	    theValues.push_back(value);
+          }
+	  theRV.elements = theValues;
+	  
+	  std::list<double> theWeights;
+	  int numWeights = json_array_size(weightsSet);
+	  for (int j=0; j<numWeights; j++) {
+	    json_t *wt = json_array_get(weightsSet, j);
+	    double weight = json_number_value(wt);
+	    theWeights.push_back(weight);
+	  }
+
+	  theRV.weights = theWeights;
+	  
+	  theRandomVariables.discreteUncertainIntegerSetRVs.push_back(theRV);
+	  theRandomVariables.numRandomVariables += 1;
+	  //theRandomVariables.ordering.push_back(-1);
+	  numberRVs++;
+	}
+	
+      } else {
+	
+	struct discreteUncertainRealSetRV theRV;
+
+	theRandomVariables.theNames.insert(rvName);
+	theRV.name = rvName;
+
+	json_t *elementsSet =  json_object_get(fileRandomVariable, "Values");
+	json_t *weightsSet =  json_object_get(fileRandomVariable, "Weights");
+	 
+	if (elementsSet != NULL && weightsSet != NULL) {
+
+	  std::list<double> theValues;	  
+	  
+	  int numValues = json_array_size(elementsSet);
+	  for (int j=0; j<numValues; j++) {
+	    json_t *element = json_array_get(elementsSet, j);
+	    char *json_string1 = json_dumps(element, JSON_INDENT(4));
+	    double value = json_number_value(element);
+	    theValues.push_back(value);
+          }
+	  theRV.elements = theValues;	  
+	  
+	  std::list<double> theWeights;
+	  int numWeights = json_array_size(weightsSet);
+	  for (int j=0; j<numWeights; j++) {
+	    json_t *wt = json_array_get(weightsSet, j);
+	    double weight = json_number_value(wt);
+	    theWeights.push_back(weight);
+	  }
+	  
+	  theRV.weights = theWeights;
+	  
+	  theRandomVariables.discreteUncertainRealSetRVs.push_back(theRV);
+	  theRandomVariables.numRandomVariables += 1;
+	  //theRandomVariables.ordering.push_back(-1);
+	  numberRVs++;	  
+	}
+      }
     }
+
 
     //correlation
     json_t* corrMatJson =  json_object_get(root,"correlationMatrix");

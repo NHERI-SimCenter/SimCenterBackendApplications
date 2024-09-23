@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+#  # noqa: EXE002, INP001, D100
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -41,36 +40,37 @@
 # Michael Gardner
 # Chaofeng Wang
 
-import sys, os, json
 import argparse
+import json
+import os
+import sys
 from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
 
 import whale.main as whale
-from whale.main import log_msg, log_div
+from whale.main import log_div, log_msg
 
-def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
 
+def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):  # noqa: ARG001, D103
     # initialize the log file
-    with open(input_file, 'r') as f:
+    with open(input_file) as f:  # noqa: PTH123
         inputs = json.load(f)
-    runDir = inputs['runDir']
+    runDir = inputs['runDir']  # noqa: N806
 
     if working_dir is not None:
-        runDir = working_dir
+        runDir = working_dir  # noqa: N806
     else:
-        runDir = inputs['runDir']
+        runDir = inputs['runDir']  # noqa: N806
 
     whale.log_file = runDir + '/log.txt'
     # initialize log file
-    whale.set_options({
-        "LogFile": runDir + '/log.txt',
-        "LogShowMS": False,
-        "PrintLog": True
-        })
-    log_msg('\nqWHALE workflow\n',
-            prepend_timestamp=False, prepend_blank_space=False)    
+    whale.set_options(
+        {'LogFile': runDir + '/log.txt', 'LogShowMS': False, 'PrintLog': True}
+    )
+    log_msg(
+        '\nqWHALE workflow\n', prepend_timestamp=False, prepend_blank_space=False
+    )
 
     whale.print_system_info()
 
@@ -78,25 +78,28 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
     log_div(prepend_blank_space=False)
     log_div(prepend_blank_space=False)
     log_msg('Started running the workflow script')
-    log_div()    
+    log_div()
 
-    WF = whale.Workflow(run_type, input_file, app_registry,
-        app_type_list = ['FEM', 'UQ'],
-        working_dir = working_dir,
-        app_dir = app_dir)
-
+    WF = whale.Workflow(  # noqa: N806
+        run_type,
+        input_file,
+        app_registry,
+        app_type_list=['FEM', 'UQ'],
+        working_dir=working_dir,
+        app_dir=app_dir,
+    )
 
     # initialize the working directory
     WF.init_simdir()
-    
+
     # prepare the input files for the simulation
-    WF.preprocess_inputs(app_sequence = ['FEM'])
+    WF.preprocess_inputs(app_sequence=['FEM'])
 
     # run uq engine to simulate response
-    WF.simulate_response()     
+    WF.simulate_response()
+
 
 if __name__ == '__main__':
-
     """
     if len(sys.argv) != 4:
         print('\nNeed three arguments, e.g.:\n')
@@ -107,45 +110,61 @@ if __name__ == '__main__':
     main(run_type=sys.argv[1], input_file=sys.argv[2], app_registry=sys.argv[3])
     """
 
-    #Defining the command line arguments
+    # Defining the command line arguments
 
-    workflowArgParser = argparse.ArgumentParser(
-        "Run the NHERI SimCenter sWHALE workflow for a single asset.",
-        allow_abbrev=False)
+    workflowArgParser = argparse.ArgumentParser(  # noqa: N816
+        'Run the NHERI SimCenter sWHALE workflow for a single asset.',
+        allow_abbrev=False,
+    )
 
-    workflowArgParser.add_argument("runType",
-        help="Specifies the type of run requested.")
-    workflowArgParser.add_argument("inputFile",
-        help="Specifies the input file for the workflow.")
-    workflowArgParser.add_argument("registry",
-        default=os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             "WorkflowApplications.json"),
-        help="Path to file containing registered workflow applications")
-    workflowArgParser.add_argument("-w", "--workDir",
+    workflowArgParser.add_argument(
+        'runType', help='Specifies the type of run requested.'
+    )
+    workflowArgParser.add_argument(
+        'inputFile', help='Specifies the input file for the workflow.'
+    )
+    workflowArgParser.add_argument(
+        'registry',
+        default=os.path.join(  # noqa: PTH118
+            os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
+            'WorkflowApplications.json',
+        ),
+        help='Path to file containing registered workflow applications',
+    )
+    workflowArgParser.add_argument(
+        '-w',
+        '--workDir',
         default=None,
-        help="Absolute path to the working directory.")
-    workflowArgParser.add_argument("-a", "--appDir",
+        help='Absolute path to the working directory.',
+    )
+    workflowArgParser.add_argument(
+        '-a',
+        '--appDir',
         default=None,
-        help="Absolute path to the local application directory.")
-    workflowArgParser.add_argument("-l", "--logFile",
+        help='Absolute path to the local application directory.',
+    )
+    workflowArgParser.add_argument(
+        '-l',
+        '--logFile',
         default='log.txt',
-        help="Path where the log file will be saved.")
+        help='Path where the log file will be saved.',
+    )
 
-    #Parsing the command line arguments
-    wfArgs = workflowArgParser.parse_args()
+    # Parsing the command line arguments
+    wfArgs = workflowArgParser.parse_args()  # noqa: N816
 
     # update the local app dir with the default - if needed
     if wfArgs.appDir is None:
-        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
         wfArgs.appDir = workflow_dir.parents[1]
 
-    #Calling the main workflow method and passing the parsed arguments
-    
-    main(run_type = wfArgs.runType,
-         input_file = wfArgs.inputFile,
-         app_registry = wfArgs.registry,
-         working_dir = wfArgs.workDir,
-         app_dir = wfArgs.appDir,
-         log_file = wfArgs.logFile)
+    # Calling the main workflow method and passing the parsed arguments
 
-
+    main(
+        run_type=wfArgs.runType,
+        input_file=wfArgs.inputFile,
+        app_registry=wfArgs.registry,
+        working_dir=wfArgs.workDir,
+        app_dir=wfArgs.appDir,
+        log_file=wfArgs.logFile,
+    )

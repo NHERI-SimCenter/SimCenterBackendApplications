@@ -592,6 +592,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 
 		const int endm = comb.size(); // (nx+ng)-1
 		const int endx = endm - 1;			// (nx)-1
+        //no need for gsa
 		if (endm == 0)
 		{
 			if (Opt == 'T')
@@ -676,8 +677,18 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 		}
 
 		while (1) {
-			status = model.learn(data, Kos, maha_dist, static_subset, 1000, 1000, V * 1.e-12, false);// max kmeans iter = 100, max EM iter = 200, convergence variance = V*1.e-15
-			logL = model.sum_log_p(data);
+
+            try
+            {
+                status = model.learn(data, Kos, maha_dist, static_subset, 1000, 1000, V * 1.e-12, false);// max kmeans iter = 100, max EM iter = 200, convergence variance = V*1.e-15
+                logL = model.sum_log_p(data);
+            }
+            catch (std::exception& e)
+            {
+                std::string errMsg = "GSA engine failed to fit a Gaussian Mixture model. Check if your input and output random variables are continuous. If so, a larger number of samples is desired.";
+                theErrorFile.write(errMsg);
+            }
+
 			if ((logL < oldLogL) || (Kos >= Kthres)) {
 				break;
 			}
@@ -796,7 +807,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 	}
 
 	if (performPCA) {
-		std::cout << "  - Converting PCA sobol incides (" << nqoi_red << ") to orginal domain values (" << nqoi << ")...\n";
+		std::cout << "  - Converting PCA sobol incides (" << nqoi_red << ") to original domain values (" << nqoi << ")...\n";
 
 		auto readStart = std::chrono::high_resolution_clock::now();
 
@@ -1182,7 +1193,7 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
 		vec Lvece;
 		eig_sym(Lvece, U_matrix, gramMat, "dc"); // gramMat = U*L*U^T
 		//std::cout << "lambda is " << Lvece << std::endl;
-		svec = sqrt(reverse(Lvece)); // becasue eigenvalues are ascending order
+		svec = sqrt(reverse(Lvece)); // because eigenvalues are ascending order
 		U_matrix = fliplr((U_matrix)); // because eigenvalues are ascending order
 		svec.replace(datum::nan, min(svec));
 

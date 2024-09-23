@@ -1,48 +1,56 @@
-from __future__ import division, print_function
-import os, sys
+import os  # noqa: INP001, D100
+import sys
+
 if sys.version.startswith('2'):
-    range=xrange
-    string_types = basestring
+    range = xrange  # noqa: A001, F821
+    string_types = basestring  # noqa: F821
 else:
     string_types = str
 
-import argparse, posixpath, ntpath, json
+import argparse
+import json
 
-def write_RV(AIM_input_path, EDP_input_path, EDP_type):
-    
+
+def write_RV(AIM_input_path, EDP_input_path, EDP_type):  # noqa: ARG001, N802, N803, D103
     # load the AIM file
-    with open(AIM_input_path, 'r') as f:
-        root_AIM = json.load(f)
+    with open(AIM_input_path, encoding='utf-8') as f:  # noqa: PTH123
+        root_AIM = json.load(f)  # noqa: N806
 
     #
     # Is this the correct application
     #
 
-    if root_AIM["Applications"]["Modeling"]["Application"] != "SurrogateGPBuildingModel":
-            with open("../workflow.err","w") as f:
-                f.write("Do not select [None] in the EDP tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.")
-            exit(-1)
+    if (
+        root_AIM['Applications']['Modeling']['Application']
+        != 'SurrogateGPBuildingModel'
+    ):
+        with open('../workflow.err', 'w') as f:  # noqa: PTH123
+            f.write(
+                'Do not select [None] in the EDP tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'
+            )
+        exit(-1)  # noqa: PLR1722
 
     #
     # Get EDP info from surrogate model file
     #
 
-    print("General Information tab is ignored")
-    root_SAM = root_AIM['Applications']['Modeling']
+    print('General Information tab is ignored')  # noqa: T201
+    root_SAM = root_AIM['Applications']['Modeling']  # noqa: N806
 
-    surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'], root_SAM['ApplicationData']['mainScript'])
-    print(surrogate_path)
+    surrogate_path = os.path.join(  # noqa: PTH118
+        root_SAM['ApplicationData']['MS_Path'],
+        root_SAM['ApplicationData']['mainScript'],
+    )
+    print(surrogate_path)  # noqa: T201
 
-    with open(surrogate_path, 'r') as f:
+    with open(surrogate_path, encoding='utf-8') as f:  # noqa: PTH123
         surrogate_model = json.load(f)
 
-    root_EDP = surrogate_model['EDP']
-
-
+    root_EDP = surrogate_model['EDP']  # noqa: N806
 
     # if it is surrogate,
     # Save Load EDP.json from standard surrogate models and write it to EDP
-    '''
+    """
     EDP_list = []
     if "EDP" in AIM_in.keys():
         for edp in AIM_in["EDP"]:
@@ -69,15 +77,16 @@ def write_RV(AIM_input_path, EDP_input_path, EDP_type):
             "responses": EDP_list
         },]
     }
-    '''
-    with open(EDP_input_path, 'w') as f:
+    """  # noqa: W291
+    with open(EDP_input_path, 'w', encoding='utf-8') as f:  # noqa: PTH123
         json.dump(root_EDP, f, indent=2)
 
-def create_EDP(AIM_input_path, EDP_input_path, EDP_type):
-    pass   
+
+def create_EDP(AIM_input_path, EDP_input_path, EDP_type):  # noqa: ARG001, N802, N803, D103
+    pass
+
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--filenameAIM', default=None)
     parser.add_argument('--filenameSAM', default=None)

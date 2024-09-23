@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -40,158 +39,166 @@
 # Wael Elhaddad
 # Stevan Gavrilovic
 
-import argparse, sys, os
+import argparse
+import os
+import sys
 
-def create_asset_files(output_file, asset_source_file, asset_filter, doParallel):
 
+def create_asset_files(output_file, asset_source_file, asset_filter, doParallel):  # noqa: C901, N803, D103
     # these imports are here to save time when the app is called without
     # the -getRV flag
+    import importlib
     import json
+
     import numpy as np
     import pandas as pd
-    import importlib
 
     # check if running parallel
-    numP = 1
-    procID = 0
-    runParallel = False
+    numP = 1  # noqa: N806
+    procID = 0  # noqa: N806
+    runParallel = False  # noqa: N806
 
-    if doParallel == "True":
-        mpi_spec = importlib.util.find_spec("mpi4py")
+    if doParallel == 'True':
+        mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
-            import mpi4py
             from mpi4py import MPI
-            runParallel = True
+
+            runParallel = True  # noqa: N806
             comm = MPI.COMM_WORLD
-            numP = comm.Get_size()
-            procID = comm.Get_rank();
-            if numP < 2:
-                doParallel = "False"
-                runParallel = False
-                numP = 1
-                procID = 0
+            numP = comm.Get_size()  # noqa: N806
+            procID = comm.Get_rank()  # noqa: N806
+            if numP < 2:  # noqa: PLR2004
+                doParallel = 'False'  # noqa: N806
+                runParallel = False  # noqa: N806
+                numP = 1  # noqa: N806
+                procID = 0  # noqa: N806
 
     # Get the out dir, may not always be in the results folder if multiple assets are used
-    outDir = os.path.dirname(output_file)
-    
+    outDir = os.path.dirname(output_file)  # noqa: PTH120, N806
+
     # check if a filter is provided
     if asset_filter is not None:
         assets_requested = []
         for assets in asset_filter.split(','):
-            if "-" in assets:
-                asset_low, asset_high = assets.split("-")
-                assets_requested += list(range(int(asset_low), int(asset_high)+1))
+            if '-' in assets:
+                asset_low, asset_high = assets.split('-')
+                assets_requested += list(range(int(asset_low), int(asset_high) + 1))
             else:
                 assets_requested.append(int(assets))
         assets_requested = np.array(assets_requested)
-        
+
     # load the CSV file with the asset information
     assets_df = pd.read_csv(asset_source_file, header=0, index_col=0)
 
     # if there is a filter, then pull out only the required assets
     if asset_filter is not None:
-        assets_available = assets_df.index.values
+        assets_available = assets_df.index.values  # noqa: PD011
         assets_to_run = assets_requested[
-            np.where(np.in1d(assets_requested, assets_available))[0]]
+            np.where(np.isin(assets_requested, assets_available))[0]
+        ]
         selected_assets = assets_df.loc[assets_to_run]
     else:
         selected_assets = assets_df
 
     # identify the labels
-    labels = selected_assets.columns.values
+    labels = selected_assets.columns.values  # noqa: PD011
 
     assets_array = []
 
     # for each asset...
     count = 0
     for asset_id, asset in selected_assets.iterrows():
-
-        if runParallel == False or (count % numP) == procID:
-
+        if runParallel == False or (count % numP) == procID:  # noqa: E712
             # initialize the AIM file
-            AIM_i = {
-                "RandomVariables": [],
-                "GeneralInformation": dict(
-                    AIM_id = str(int(asset_id)),
-                    location = {
-                        'latitude': asset["Latitude"],
-                        'longitude': asset["Longitude"]
-                    }
-                )
+            AIM_i = {  # noqa: N806
+                'RandomVariables': [],
+                'GeneralInformation': dict(  # noqa: C408
+                    AIM_id=str(int(asset_id)),
+                    location={
+                        'latitude': asset['Latitude'],
+                        'longitude': asset['Longitude'],
+                    },
+                ),
             }
 
             # save every label as-is
             for label in labels:
-                AIM_i["GeneralInformation"].update({label: asset[label]})
+                AIM_i['GeneralInformation'].update({label: asset[label]})
 
-            AIM_file_name = "{}-AIM.json".format(asset_id)
-        
-            AIM_file_name = os.path.join(outDir,AIM_file_name)
-            
-            with open(AIM_file_name, 'w') as f:
+            AIM_file_name = f'{asset_id}-AIM.json'  # noqa: N806
+
+            AIM_file_name = os.path.join(outDir, AIM_file_name)  # noqa: PTH118, N806
+
+            with open(AIM_file_name, 'w', encoding='utf-8') as f:  # noqa: PTH123
                 json.dump(AIM_i, f, indent=2)
 
-            assets_array.append(dict(id=str(asset_id), file=AIM_file_name))
+            assets_array.append(dict(id=str(asset_id), file=AIM_file_name))  # noqa: C408
 
         count = count + 1
 
     if procID != 0:
-
         # if not P0, write data to output file with procID in name and barrier
 
-        output_file = os.path.join(outDir,f'tmp_{procID}.json')
+        output_file = os.path.join(outDir, f'tmp_{procID}.json')  # noqa: PTH118
 
-        with open(output_file, 'w') as f:
+        with open(output_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
             json.dump(assets_array, f, indent=0)
-    
-        comm.Barrier()        
+
+        comm.Barrier()
 
     else:
-
-        if runParallel == True:
-
+        if runParallel == True:  # noqa: E712
             # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append
-            comm.Barrier()        
+            comm.Barrier()
 
             for i in range(1, numP):
-                fileToAppend = os.path.join(outDir,f'tmp_{i}.json')
-                with open(fileToAppend, 'r') as data_file:
+                fileToAppend = os.path.join(outDir, f'tmp_{i}.json')  # noqa: PTH118, N806
+                with open(fileToAppend, encoding='utf-8') as data_file:  # noqa: PTH123
                     json_data = data_file.read()
-                assetsToAppend = json.loads(json_data)
+                assetsToAppend = json.loads(json_data)  # noqa: N806
                 assets_array += assetsToAppend
 
-        with open(output_file, 'w') as f:
+        with open(output_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
             json.dump(assets_array, f, indent=2)
 
 
-
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--assetFile',
-        help = "Path to the file that will contain a list of asset ids and "
-               "corresponding AIM filenames")
-    parser.add_argument('--assetSourceFile',
-        help = "Path to the CSV file with the asset inventory")
-    parser.add_argument('--filter',
-        help = "Filter applied to select a subset of assets from the "
-               "inventory",
-        default=None)
-    parser.add_argument('--doParallel', default="False")    
-    parser.add_argument("-n", "--numP", default='8')
-    parser.add_argument("-m", "--mpiExec", default='mpiexec')
-    parser.add_argument('--getRV',
-        help = "Identifies the preparational stage of the workflow. This app "
-               "is only used in that stage, so it does not do anything if "
-               "called without this flag.",
+    parser.add_argument(
+        '--assetFile',
+        help='Path to the file that will contain a list of asset ids and '
+        'corresponding AIM filenames',
+    )
+    parser.add_argument(
+        '--assetSourceFile', help='Path to the CSV file with the asset inventory'
+    )
+    parser.add_argument(
+        '--filter',
+        help='Filter applied to select a subset of assets from the ' 'inventory',
+        default=None,
+    )
+    parser.add_argument('--doParallel', default='False')
+    parser.add_argument('-n', '--numP', default='8')
+    parser.add_argument('-m', '--mpiExec', default='mpiexec')
+    parser.add_argument(
+        '--getRV',
+        help='Identifies the preparational stage of the workflow. This app '
+        'is only used in that stage, so it does not do anything if '
+        'called without this flag.',
         default=False,
-        nargs='?', const=True)
+        nargs='?',
+        const=True,
+    )
 
     args = parser.parse_args()
 
     if args.getRV:
-        sys.exit(create_asset_files(args.assetFile, args.assetSourceFile, args.filter, args.doParallel))
+        sys.exit(
+            create_asset_files(
+                args.assetFile, args.assetSourceFile, args.filter, args.doParallel
+            )
+        )
     else:
-        pass # not used
+        pass  # not used

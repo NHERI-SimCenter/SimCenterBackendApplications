@@ -94,7 +94,7 @@ main(int argc, char **argv) {
   json_t *generalInformation = json_object_get(input, "GeneralInformation");  
   json_t *inputEventsArray = json_object_get(input, "Events");  
   if (generalInformation == NULL || inputEventsArray == NULL) {
-    std::cerr << "FATAL ERROR - input file conatins no Events key-pair\n";
+    std::cerr << "FATAL ERROR - input file contains no Events key-pair\n";
     exit(-1);
   }
   
@@ -109,7 +109,7 @@ main(int argc, char **argv) {
     json_t *type = json_object_get(inputEvent,"type");
     const char *eventType = json_string_value(type);
 
-    if (strcmp(eventType,"LowRiseTPU") != 0) {
+    if ((strcmp(eventType,"LowRiseTPU") != 0) && (strcmp(eventType,"ExperimentalWindPressures") != 0)) {
       
       json_array_append(outputEventsArray, inputEvent); 
       
@@ -128,7 +128,7 @@ main(int argc, char **argv) {
       json_object_set(units,"time",json_string("sec"));
       json_object_set(outputEvent,"units",units);
 
-      // call function to fill in event details .. depends on getRV flag what is acually done
+      // call function to fill in event details .. depends on getRV flag what is actually done
       addEvent(generalInformation, inputEvent, outputEvent, doRV);
 
       json_array_append(outputEventsArray, outputEvent);
@@ -180,7 +180,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 	  widthJO == NULL  ||
 	  depthJO == NULL  ||
 	  storiesJO == NULL ) {
-	std::cerr << "ERROR missing Information from GeneralInformation (height, width, stories all neeed)\n";
+	std::cerr << "ERROR missing Information from GeneralInformation (height, width, stories all needed)\n";
 	return -2;        
       }
       
@@ -260,7 +260,8 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       // std::cerr << "lU, lT: " << lambdaU << " " << lambdaT << "\n";;
       //      std::cerr << "dT: " << dT << "numSteps: " << numSteps << " " << modelFrequency << " " << lambdaT << "\n";
 
-      double loadFactor = airDensity*0.5*windSpeed*windSpeed / 1000.;
+		  // fmk,sy - Note we are outputting in "kN"  unit, opensees will follow this unit instead of GI units 
+      double loadFactor = airDensity*0.5*windSpeed*windSpeed / 1000.;       //double loadFactor = airDensity*0.5*windSpeed*windSpeed;
       //      std::cerr << "\n LOAD FACTOR: " << loadFactor << "\n";
 
       //
@@ -337,7 +338,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       }
 
       //
-      // for each tap determine factors fr moments and forces for the buiding asuming a mesh discretization
+      // for each tap determine factors fr moments and forces for the building assuming a mesh discretization
       //
 
       int numDivisionX = 10;
@@ -360,121 +361,121 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 
       for (int i = 0; i < numFloors; i++) {
 	
-	// create and fill in a time series object
-	char floor[10];
-	char name[50];
+				// create and fill in a time series object
+				char floor[10];
+				char name[50];
 
-	sprintf(floor,"%d",i+1);
+				sprintf(floor,"%d",i+1);
 
-	//
-	// forces in x direction
-	//
+				//
+				// forces in x direction
+				//
 
-	sprintf(name,"Fx_%d",i+1);
-	json_t *timeSeriesX = json_object();     
-	json_object_set(timeSeriesX,"name",json_string(name));    
-	json_object_set(timeSeriesX,"dT",json_real(dT));
-	json_object_set(timeSeriesX,"type",json_string("Value"));
-	json_t *dataFloorX = json_array();   
-	double maxPressureX = 0.0;
-	double minPressureX = 0.0;
+				sprintf(name,"Fx_%d",i+1);
+				json_t *timeSeriesX = json_object();     
+				json_object_set(timeSeriesX,"name",json_string(name));    
+				json_object_set(timeSeriesX,"dT",json_real(dT));
+				json_object_set(timeSeriesX,"type",json_string("Value"));
+				json_t *dataFloorX = json_array();   
+				double maxPressureX = 0.0;
+				double minPressureX = 0.0;
 
-	for (int j=0; j<numSteps; j++) {
-	  double value = 0.0;
-	  for (int k=0; k<numTaps; k++) {
-	    if (theTAPS[k].face == 1 || theTAPS[k].face == 3)
-	      value = value + theTAPS[k].forces[i] * theTAPS[k].data[j];
-	  }
-	  value = loadFactor * value;
-	  json_array_append(dataFloorX,json_real(value));
-	}
-	json_object_set(timeSeriesX,"data",dataFloorX);
+				for (int j=0; j<numSteps; j++) {
+				  double value = 0.0;
+				  for (int k=0; k<numTaps; k++) {
+				    if (theTAPS[k].face == 1 || theTAPS[k].face == 3)
+				      value = value + theTAPS[k].forces[i] * theTAPS[k].data[j];
+				  }
+				  value = loadFactor * value;
+				  json_array_append(dataFloorX,json_real(value));
+				}
+				json_object_set(timeSeriesX,"data",dataFloorX);
 
-	json_t *patternX = json_object();
-	json_object_set(patternX,"name",json_string(name));        
-	json_object_set(patternX,"timeSeries",json_string(name));        
-	json_object_set(patternX,"type",json_string("WindFloorLoad"));        
+				json_t *patternX = json_object();
+				json_object_set(patternX,"name",json_string(name));        
+				json_object_set(patternX,"timeSeries",json_string(name));        
+				json_object_set(patternX,"type",json_string("WindFloorLoad"));        
 
-	json_object_set(patternX,"floor",json_string(floor));        
-	json_object_set(patternX,"dof",json_integer(1));        
-	json_array_append(patternArray,patternX);
+				json_object_set(patternX,"floor",json_string(floor));        
+				json_object_set(patternX,"dof",json_integer(1));        
+				json_array_append(patternArray,patternX);
 
-	//
-	// forces y direction
-	//
+				//
+				// forces y direction
+				//
 
-	sprintf(name,"Fy_%d",i+1);
-	json_t *timeSeriesY = json_object();     
-	json_object_set(timeSeriesY,"name",json_string(name));    
-	json_object_set(timeSeriesY,"dT",json_real(dT));
-	json_object_set(timeSeriesY,"type",json_string("Value"));
-	json_t *dataFloorY = json_array();   
-	double maxPressureY = 0.0;
-	double minPressureY = 0.0;
+				sprintf(name,"Fy_%d",i+1);
+				json_t *timeSeriesY = json_object();     
+				json_object_set(timeSeriesY,"name",json_string(name));    
+				json_object_set(timeSeriesY,"dT",json_real(dT));
+				json_object_set(timeSeriesY,"type",json_string("Value"));
+				json_t *dataFloorY = json_array();   
+				double maxPressureY = 0.0;
+				double minPressureY = 0.0;
 
-	for (int j=0; j<numSteps; j++) {
-	  double value = 0.0;
-	  for (int k=0; k<numTaps; k++) {
-	    if (theTAPS[k].face == 2 || theTAPS[k].face == 4)
-	      value = value + theTAPS[k].forces[i] * theTAPS[k].data[j];
-	  }
-	  value = loadFactor * value;
-	  json_array_append(dataFloorY,json_real(value));
-	}
+				for (int j=0; j<numSteps; j++) {
+				  double value = 0.0;
+				  for (int k=0; k<numTaps; k++) {
+				    if (theTAPS[k].face == 2 || theTAPS[k].face == 4)
+				      value = value + theTAPS[k].forces[i] * theTAPS[k].data[j];
+				  }
+				  value = loadFactor * value;
+				  json_array_append(dataFloorY,json_real(value));
+				}
 
-	json_object_set(timeSeriesY,"data",dataFloorY);
+				json_object_set(timeSeriesY,"data",dataFloorY);
 
-	json_t *patternY = json_object();
-	json_object_set(patternY,"name",json_string(name));        
-	json_object_set(patternY,"timeSeries",json_string(name));        
-	json_object_set(patternY,"type",json_string("WindFloorLoad"));        
-	json_object_set(patternY,"floor",json_string(floor));        
-	json_object_set(patternY,"dof",json_integer(2));        
-	json_array_append(patternArray,patternY);
+				json_t *patternY = json_object();
+				json_object_set(patternY,"name",json_string(name));        
+				json_object_set(patternY,"timeSeries",json_string(name));        
+				json_object_set(patternY,"type",json_string("WindFloorLoad"));        
+				json_object_set(patternY,"floor",json_string(floor));        
+				json_object_set(patternY,"dof",json_integer(2));        
+				json_array_append(patternArray,patternY);
 
-	//
-	// moments about z
-	//
+				//
+				// moments about z
+				//
 
-	sprintf(name,"Mz_%d",i+1);
-	json_t *timeSeriesRZ = json_object();     
-	json_object_set(timeSeriesRZ,"name",json_string(name));    
-	json_object_set(timeSeriesRZ,"dT",json_real(dT));
-	json_object_set(timeSeriesRZ,"type",json_string("Value"));
-	json_t *dataFloorRZ = json_array();   
+				sprintf(name,"Mz_%d",i+1);
+				json_t *timeSeriesRZ = json_object();     
+				json_object_set(timeSeriesRZ,"name",json_string(name));    
+				json_object_set(timeSeriesRZ,"dT",json_real(dT));
+				json_object_set(timeSeriesRZ,"type",json_string("Value"));
+				json_t *dataFloorRZ = json_array();   
 
-	for (int j=0; j<numSteps; j++) {
-	  double value = 0.0;
-	  for (int k=0; k<numTaps; k++) {
-	    value = value + theTAPS[k].moments[i] * theTAPS[k].data[j];
-	  }
-	  value = loadFactor * value;
-	  json_array_append(dataFloorRZ,json_real(value));
-	}
-	json_object_set(timeSeriesRZ,"data",dataFloorRZ);
+				for (int j=0; j<numSteps; j++) {
+				  double value = 0.0;
+				  for (int k=0; k<numTaps; k++) {
+				    value = value + theTAPS[k].moments[i] * theTAPS[k].data[j];
+				  }
+				  value = loadFactor * value;
+				  json_array_append(dataFloorRZ,json_real(value));
+				}
+				json_object_set(timeSeriesRZ,"data",dataFloorRZ);
 
-	json_t *patternRZ = json_object();
-	json_object_set(patternRZ,"name",json_string(name));        
-	json_object_set(patternRZ,"timeSeries",json_string(name));        
-	json_object_set(patternRZ,"type",json_string("WindFloorLoad"));        
-	json_object_set(patternRZ,"floor",json_string(floor));        
-	json_object_set(patternRZ,"dof",json_integer(6));        
-	json_array_append(patternArray,patternRZ);
-	
-	json_t *pressureObject = json_object();
-	json_t *pressureStoryArray = json_array();
-	
-	json_array_append(pressureStoryArray, json_real(minPressureX));
-	json_array_append(pressureStoryArray, json_real(maxPressureX));
-	json_object_set(pressureObject,"pressure",pressureStoryArray);
-	json_object_set(pressureObject,"story",json_string(name));
-	
-	json_array_append(pressureArray, pressureObject);
-	
-	// add object to timeSeries array
-	json_array_append(timeSeriesArray,timeSeriesX);
-	json_array_append(timeSeriesArray,timeSeriesY);
-	json_array_append(timeSeriesArray,timeSeriesRZ);
+				json_t *patternRZ = json_object();
+				json_object_set(patternRZ,"name",json_string(name));        
+				json_object_set(patternRZ,"timeSeries",json_string(name));        
+				json_object_set(patternRZ,"type",json_string("WindFloorLoad"));        
+				json_object_set(patternRZ,"floor",json_string(floor));        
+				json_object_set(patternRZ,"dof",json_integer(6));        
+				json_array_append(patternArray,patternRZ);
+				
+				json_t *pressureObject = json_object();
+				json_t *pressureStoryArray = json_array();
+				
+				json_array_append(pressureStoryArray, json_real(minPressureX));
+				json_array_append(pressureStoryArray, json_real(maxPressureX));
+				json_object_set(pressureObject,"pressure",pressureStoryArray);
+				json_object_set(pressureObject,"story",json_string(name));
+				
+				json_array_append(pressureArray, pressureObject);
+				
+				// add object to timeSeries array
+				json_array_append(timeSeriesArray,timeSeriesX);
+				json_array_append(timeSeriesArray,timeSeriesY);
+				json_array_append(timeSeriesArray,timeSeriesRZ);
       }
       
       json_t *units = json_object();
@@ -531,7 +532,10 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 
       // so instead invoke a process
       std::string pyArgs = "LowRiseTPU.py tmpSimCenterLowRiseTPU.mat tmpSimCenterLowRiseTPU.json";
-      std::string command = "python ";
+      std::string command = "python3 ";
+#ifdef _WIN32
+      command = "python ";      
+#endif
       command += pyArgs;
       system(command.c_str());
       //      std::cerr << "DONE PYTHON\n";
@@ -540,8 +544,8 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 
       json_t *storiesJO = json_object_get(generalInfo,"stories");
       if (storiesJO == NULL ) {
-	std::cerr << "ERROR missing Information from GeneralInformation (height, width, stories all neeed)\n";
-	return -2;        
+				std::cerr << "ERROR missing Information from GeneralInformation (height, width, stories all needed)\n";
+				return -2;        
       }
       
       int numFloors = json_integer_value(storiesJO);
@@ -553,75 +557,75 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 
       for (int i = 0; i < numFloors; i++) {
 	
-	// create and fill in a time series object
-	char floor[10];
-	char name[50];
+			// create and fill in a time series object
+			char floor[10];
+			char name[50];
 
-	sprintf(floor,"%d",i+1);
+			sprintf(floor,"%d",i+1);
 
-	sprintf(name,"Fx_%d",i+1);
-	json_t *timeSeriesX = json_object();     
-	json_object_set(timeSeriesX,"name",json_string(name));    
-	json_object_set(timeSeriesX,"dT",json_real(0.01));
-	json_object_set(timeSeriesX,"type",json_string("Value"));
-	json_t *dataFloorX = json_array();   
-	json_object_set(timeSeriesX,"data",dataFloorX);
+			sprintf(name,"Fx_%d",i+1);
+			json_t *timeSeriesX = json_object();     
+			json_object_set(timeSeriesX,"name",json_string(name));    
+			json_object_set(timeSeriesX,"dT",json_real(0.01));
+			json_object_set(timeSeriesX,"type",json_string("Value"));
+			json_t *dataFloorX = json_array();   
+			json_object_set(timeSeriesX,"data",dataFloorX);
 
-	json_t *patternX = json_object();
-	json_object_set(patternX,"name",json_string(name));        
-	json_object_set(patternX,"timeSeries",json_string(name));        
-	json_object_set(patternX,"type",json_string("WindFloorLoad"));        
+			json_t *patternX = json_object();
+			json_object_set(patternX,"name",json_string(name));        
+			json_object_set(patternX,"timeSeries",json_string(name));        
+			json_object_set(patternX,"type",json_string("WindFloorLoad"));        
 
-	json_object_set(patternX,"floor",json_string(floor));        
-	json_object_set(patternX,"dof",json_integer(1));        
-	json_array_append(patternArray,patternX);
+			json_object_set(patternX,"floor",json_string(floor));        
+			json_object_set(patternX,"dof",json_integer(1));        
+			json_array_append(patternArray,patternX);
 
-	sprintf(name,"Fy_%d",i+1);
-	json_t *timeSeriesY = json_object();     
-	json_object_set(timeSeriesY,"name",json_string(name));    
-	json_object_set(timeSeriesY,"dT",json_real(0.01));
-	json_object_set(timeSeriesY,"type",json_string("Value"));
-	json_t *dataFloorY = json_array();   
-	json_object_set(timeSeriesY,"data",dataFloorY);
+			sprintf(name,"Fy_%d",i+1);
+			json_t *timeSeriesY = json_object();     
+			json_object_set(timeSeriesY,"name",json_string(name));    
+			json_object_set(timeSeriesY,"dT",json_real(0.01));
+			json_object_set(timeSeriesY,"type",json_string("Value"));
+			json_t *dataFloorY = json_array();   
+			json_object_set(timeSeriesY,"data",dataFloorY);
 
-	json_t *patternY = json_object();
-	json_object_set(patternY,"name",json_string(name));        
-	json_object_set(patternY,"timeSeries",json_string(name));        
-	json_object_set(patternY,"type",json_string("WindFloorLoad"));        
-	json_object_set(patternY,"floor",json_string(floor));        
-	json_object_set(patternY,"dof",json_integer(2));        
-	json_array_append(patternArray,patternY);
+			json_t *patternY = json_object();
+			json_object_set(patternY,"name",json_string(name));        
+			json_object_set(patternY,"timeSeries",json_string(name));        
+			json_object_set(patternY,"type",json_string("WindFloorLoad"));        
+			json_object_set(patternY,"floor",json_string(floor));        
+			json_object_set(patternY,"dof",json_integer(2));        
+			json_array_append(patternArray,patternY);
 
-	sprintf(name,"Mz_%d",i+1);
-	json_t *timeSeriesRZ = json_object();     
-	json_object_set(timeSeriesRZ,"name",json_string(name));    
-	json_object_set(timeSeriesRZ,"dT",json_real(0.01));
-	json_object_set(timeSeriesRZ,"type",json_string("Value"));
-	json_t *dataFloorRZ = json_array();   
-	json_object_set(timeSeriesRZ,"data",dataFloorRZ);
+			sprintf(name,"Mz_%d",i+1);
+			json_t *timeSeriesRZ = json_object();     
+			json_object_set(timeSeriesRZ,"name",json_string(name));    
+			json_object_set(timeSeriesRZ,"dT",json_real(0.01));
+			json_object_set(timeSeriesRZ,"type",json_string("Value"));
+			json_t *dataFloorRZ = json_array();   
+			json_object_set(timeSeriesRZ,"data",dataFloorRZ);
 
-	json_t *patternRZ = json_object();
-	json_object_set(patternRZ,"name",json_string(name));        
-	json_object_set(patternRZ,"timeSeries",json_string(name));        
-	json_object_set(patternRZ,"type",json_string("WindFloorLoad"));        
-	json_object_set(patternRZ,"floor",json_string(floor));        
-	json_object_set(patternRZ,"dof",json_integer(6));        
-	json_array_append(patternArray,patternRZ);
-	
-	json_t *pressureObject = json_object();
-	json_t *pressureStoryArray = json_array();
+			json_t *patternRZ = json_object();
+			json_object_set(patternRZ,"name",json_string(name));        
+			json_object_set(patternRZ,"timeSeries",json_string(name));        
+			json_object_set(patternRZ,"type",json_string("WindFloorLoad"));        
+			json_object_set(patternRZ,"floor",json_string(floor));        
+			json_object_set(patternRZ,"dof",json_integer(6));        
+			json_array_append(patternArray,patternRZ);
+			
+			json_t *pressureObject = json_object();
+			json_t *pressureStoryArray = json_array();
 
-	json_array_append(pressureStoryArray, json_real(0.0));
-	json_array_append(pressureStoryArray, json_real(0.0));
-	json_object_set(pressureObject,"pressure",pressureStoryArray);
-	json_object_set(pressureObject,"story",json_string(name));
-	
-	json_array_append(pressureArray, pressureObject);
-	
-	// add object to timeSeries array
-	json_array_append(timeSeriesArray,timeSeriesX);
-	json_array_append(timeSeriesArray,timeSeriesY);
-	json_array_append(timeSeriesArray,timeSeriesRZ);
+			json_array_append(pressureStoryArray, json_real(0.0));
+			json_array_append(pressureStoryArray, json_real(0.0));
+			json_object_set(pressureObject,"pressure",pressureStoryArray);
+			json_object_set(pressureObject,"story",json_string(name));
+			
+			json_array_append(pressureArray, pressureObject);
+			
+			// add object to timeSeries array
+			json_array_append(timeSeriesArray,timeSeriesX);
+			json_array_append(timeSeriesArray,timeSeriesY);
+			json_array_append(timeSeriesArray,timeSeriesRZ);
       }
       
       json_t *units = json_object();
@@ -643,7 +647,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 
 //
 // function to add factors for forces and moment contribution coefficients for taps to building floor
-// determine coeffiecients for each tap for a building face. This is done by going over each story of 
+// determine coefficients for each tap for a building face. This is done by going over each story of 
 // For each story break into numDiv X numDiv segments. For each segment assume point load at center 
 // segment and equal in mag to area of segment and using simply supported beam formula determine force 
 // at floor below and floor above. based on distance from center line of story determine actibg moments 
@@ -678,52 +682,52 @@ int addForcesFace(TAP *theTaps, int numTaps,
     for (int j=0; j<numDivisionY; j++) {
       
       double locX = dX/2.0;
-      double Rabove = locY*A/heightStory;
-      double Rbelow = (heightStory-locY)*A/heightStory;
+      //double Rabove = locY*A/heightStory;
+      //double Rbelow = (heightStory-locY)*A/heightStory;
+      double Rabove = (locY-i*heightStory)/heightStory*A;
+      double Rbelow = (heightStory-(locY-i*heightStory))/heightStory*A;
       
       /*
       for (int k=0; k<numTaps; k++) {
-	TAP *theTap = &theTaps[k];
-	if (theTap->face == 1)
-	  std::cerr << theTap->id << " " << theTap->forces[0] << "\n";
+			TAP *theTap = &theTaps[k];
+			if (theTap->face == 1)
+	  	std::cerr << theTap->id << " " << theTap->forces[0] << "\n";
       }
       */
             
-      for (int k=0; k<numDivisionX; k++) {
+  		for (int k=0; k<numDivisionX; k++) {
 	
-	double Mabove = Rabove*(locX-centerLine);
-	double Mbelow = Rbelow*(locX-centerLine);
+				double Mabove = Rabove*(locX-centerLine);
+				double Mbelow = Rbelow*(locX-centerLine);
 	
-	// find nearestTAP
-	TAP *theTap = findNearestTAP(theTaps, numTaps, locX, locY, face);
+				// find nearestTAP
+				TAP *theTap = findNearestTAP(theTaps, numTaps, locX, locY, face);
 	
-	// add force coefficients
-	if (theTap != NULL) {
+				// add force coefficients
+				if (theTap != NULL) {
 	  
-	  if (i != 0) { // don;t add to ground floor
-	    if (face == 1 || face == 2) // pressure on face 3 and 4 are negative to pos x & y dirn
-	      theTap->forces[i-1] = theTap->forces[i-1] + Rbelow;
-	    else
-	      theTap->forces[i-1] = theTap->forces[i-1] - Rbelow;
-	    
-	    theTap->moments[i-1] = theTap->moments[i-1] + Mbelow;
-	  }
+		  		if (i != 0) { // don;t add to ground floor
+		    		if (face == 1 || face == 2) // pressure on face 3 and 4 are negative to pos x & y dirn
+		      		theTap->forces[i-1] = theTap->forces[i-1] + Rbelow;
+		    		else
+		      		theTap->forces[i-1] = theTap->forces[i-1] - Rbelow;
+		    		theTap->moments[i-1] = theTap->moments[i-1] + Mbelow;
+		  		}
 	  
-	  if (face == 1 || face == 2) // pressure on face 3 and 4 are negative to pos x & y dirn
-	    
-	    theTap->forces[i] = theTap->forces[i] + Rabove;
-	  else
-	    theTap->forces[i] = theTap->forces[i] - Rabove;
+	  			if (face == 1 || face == 2) // pressure on face 3 and 4 are negative to pos x & y dirn
+	    			theTap->forces[i] = theTap->forces[i] + Rabove;
+	  			else
+	    			theTap->forces[i] = theTap->forces[i] - Rabove;
 	  
-	  theTap->moments[i] = theTap->moments[i] + Mabove;
+	  			theTap->moments[i] = theTap->moments[i] + Mabove;
 	  
-	  //	  std::cerr << theTap->id << " " << locX << " " << locY << " " << theTap->locX << " " << theTap->locY << " " << theTap->forces[i] << " " << i << " " << j << "\n";
+	  		//	  std::cerr << theTap->id << " " << locX << " " << locY << " " << theTap->locX << " " << theTap->locY << " " << theTap->forces[i] << " " << i << " " << j << "\n";
 	  
-	}	    
-	locX += dX;
-      }
-      locY += dY;
-    }
+				}	    
+			locX += dX;
+  		}
+  	locY += dY;
+  	}
   }
 
   return 0;
@@ -733,9 +737,9 @@ int addForcesFace(TAP *theTaps, int numTaps,
 // function to fnd nearest tap
 // inputs: theTAPS: array of Taps, 
 //         numTaps: number of taps in array
-//         xLoc, yLoc: is location of inut point
+//         xLoc, yLoc: is location of Inuit point
 //         face: if of face
-// output: pinter to nearest TAp in the array, NULL if no taps with face
+// output: pointer to nearest TAp in the array, NULL if no taps with face
 // 
 
 TAP *findNearestTAP(TAP *theTAPS, int numTaps, double locX, double locY, int face) {
