@@ -1,4 +1,4 @@
-#  # noqa: INP001
+#  # noqa: INP001, EXE002
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -596,7 +596,9 @@ FoamFile
             # surfaceFeatureExtract
             sfdfile = os.path.join(path, 'surfaceFeatureExtractDict')  # noqa: PTH118
             if os.path.isfile(sfdfile):  # noqa: PTH113
-                sfdfilenew = os.path.join('system', 'surfaceFeatureExtractDict')  # noqa: PTH118
+                sfdfilenew = os.path.join(  # noqa: PTH118
+                    'system', 'surfaceFeatureExtractDict'
+                )
                 caseruntext = caseruntext + 'cp ' + sfdfile + ' ' + sfdfilenew + '\n'
                 caseruntext = caseruntext + 'echo surfaceFeatureExtract running...\n'
                 caseruntext = (

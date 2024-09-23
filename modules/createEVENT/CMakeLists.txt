@@ -1,3 +1,4 @@
+add_subdirectory(common)
 add_subdirectory(CFDEvent)
 add_subdirectory(GeoClawOpenFOAM)
 add_subdirectory(DEDM_HRP)
@@ -12,8 +13,8 @@ add_subdirectory(pointWindSpeed)
 add_subdirectory(LLNL_SW4)
 add_subdirectory(SimCenterEvent)
 add_subdirectory(ASCE7_WindSpeed)
-#add_subdirectory(stochasticGroundMotion)
-#add_subdirectory(stochasticWind)
+add_subdirectory(stochasticGroundMotion)
+add_subdirectory(stochasticWind)
 add_subdirectory(groundMotionIM)
 add_subdirectory(uniformPEER)
 add_subdirectory(experimentalWindForces)
@@ -27,6 +28,6 @@ add_subdirectory(M9)
 add_subdirectory(Istanbul)
 add_subdirectory(MPM)
 add_subdirectory(stochasticWave)
-
+add_subdirectory(TaichiEvent)
 
 

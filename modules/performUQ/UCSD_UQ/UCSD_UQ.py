@@ -50,25 +50,20 @@ def main(args):  # noqa: D103
 
         command_list = shlex.split(command)
 
-        result = subprocess.run(  # noqa: S603, UP022
-            command_list,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=True,
-            text=True,
-        )
-
         err_file = Path(tmpSimCenterDir) / 'UCSD_UQ.err'
         err_file.touch()
 
         try:
+            result = subprocess.run(  # noqa: S603
+                command_list,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
             result.check_returncode()
         except subprocess.CalledProcessError:
             with open(err_file, 'a') as f:  # noqa: PTH123
-                f.write(f'ERROR: {result.stderr}\n\n')
-                f.write(f'The command was: {result.args}\n\n')
-                f.write(f'The return code was: {result.returncode}\n\n')
-                f.write(f'The output of the command was: {result.stdout}\n\n')
+                f.write(f'ERROR: {result.stderr}')
 
 
 if __name__ == '__main__':

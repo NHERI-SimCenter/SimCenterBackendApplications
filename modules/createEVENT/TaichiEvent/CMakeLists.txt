@@ -1,0 +1,3 @@
+simcenter_add_python_script(SCRIPT TaichiEvent.py)
+simcenter_add_python_script(SCRIPT taichi_script.py)
+simcenter_add_python_script(SCRIPT mpm_lagrangian_forces.py)

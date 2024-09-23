@@ -1,4 +1,4 @@
-#  # noqa: INP001
+#  # noqa: INP001, EXE002
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -92,11 +92,15 @@ FoamFile
         fvSchemetext = fvSchemetext + 'ddtSchemes\n{\n\tdefault\tEuler;\n}\n\n'  # noqa: N806
 
         # grad
-        fvSchemetext = fvSchemetext + 'gradSchemes\n{\n\tdefault\tGauss linear;\n}\n'  # noqa: N806
+        fvSchemetext = (  # noqa: N806
+            fvSchemetext + 'gradSchemes\n{\n\tdefault\tGauss linear;\n}\n'
+        )
 
         # div
         fvSchemetext = fvSchemetext + '\ndivSchemes\n{\n\t'  # noqa: N806
-        fvSchemetext = fvSchemetext + 'div(rhoPhi,U)\tGauss limitedLinearV 1;\n\t'  # noqa: N806
+        fvSchemetext = (  # noqa: N806
+            fvSchemetext + 'div(rhoPhi,U)\tGauss limitedLinearV 1;\n\t'
+        )
         fvSchemetext = fvSchemetext + 'div(U)\tGauss linear;\n\t'  # noqa: N806
         fvSchemetext = (  # noqa: N806
             fvSchemetext
@@ -105,8 +109,12 @@ FoamFile
         fvSchemetext = (  # noqa: N806
             fvSchemetext + 'div(rhoPhiPor,UPor)\tGauss limitedLinearV 1;\n\t'
         )
-        fvSchemetext = fvSchemetext + 'div(rhoPhi,UPor)\tGauss limitedLinearV 1;\n\t'  # noqa: N806
-        fvSchemetext = fvSchemetext + 'div(rhoPhiPor,U)\tGauss limitedLinearV 1;\n\t'  # noqa: N806
+        fvSchemetext = (  # noqa: N806
+            fvSchemetext + 'div(rhoPhi,UPor)\tGauss limitedLinearV 1;\n\t'
+        )
+        fvSchemetext = (  # noqa: N806
+            fvSchemetext + 'div(rhoPhiPor,U)\tGauss limitedLinearV 1;\n\t'
+        )
         fvSchemetext = fvSchemetext + 'div(phi,alpha)\tGauss vanLeer;\n\t'  # noqa: N806
         fvSchemetext = (  # noqa: N806
             fvSchemetext + 'div(phirb,alpha)\tGauss interfaceCompression;\n\t'
@@ -240,7 +248,9 @@ FoamFile
         # Turbulece variables (if exist)
         if (int(turb) == 1) or (int(turb) == 2):  # noqa: PLR2004
             fvSolntext = fvSolntext + '\n\t'  # noqa: N806
-            fvSolntext = fvSolntext + '"(k|epsilon|omega|B|nuTilda).*"\n\t{\n\t\t'  # noqa: N806
+            fvSolntext = (  # noqa: N806
+                fvSolntext + '"(k|epsilon|omega|B|nuTilda).*"\n\t{\n\t\t'
+            )
             fvSolntext = fvSolntext + 'solver\tsmoothSolver;\n\t\t'  # noqa: N806
             fvSolntext = fvSolntext + 'smoother\tsymGaussSeidel;\n\t\t'  # noqa: N806
             fvSolntext = fvSolntext + 'tolerance\t1e-08;\n\t\t'  # noqa: N806
@@ -364,7 +374,9 @@ FoamFile
         hydroutil = hydroUtils()
 
         # Start time
-        startT = hydroutil.extract_element_from_json(data, ['Events', 'StartTime'])  # noqa: N806
+        startT = hydroutil.extract_element_from_json(  # noqa: N806
+            data, ['Events', 'StartTime']
+        )
         if startT == [None]:
             return -1  # noqa: DOC201, RUF100
 

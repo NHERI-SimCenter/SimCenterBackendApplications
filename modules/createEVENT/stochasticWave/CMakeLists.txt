@@ -1,5 +1,2 @@
 simcenter_add_python_script(SCRIPT StochasticWave.py)
-simcenter_add_python_script(SCRIPT Ex1_WaveKinematics.py)
-simcenter_add_python_script(SCRIPT Ex2_Jonswap_spectrum.py)
-simcenter_add_python_script(SCRIPT Ex3_WaveTimeSeries.py)
 simcenter_add_python_script(SCRIPT Ex4_WaveLoads.py)

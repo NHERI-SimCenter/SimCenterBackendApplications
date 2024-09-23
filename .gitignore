@@ -62,8 +62,6 @@ UserDefinedEDP
 SiteResponse
 MDOF_BuildingModel
 ExtractPGA
-StochasticWind
-StochasticGroundMotion
 StandardEarthquakeEDP
 OpenSeesInput
 OpenSeesPostprocessor
@@ -98,5 +96,4 @@ fmkTest.sh
 #Remove .vscode
 .vscode
 
-
-
+.coverage

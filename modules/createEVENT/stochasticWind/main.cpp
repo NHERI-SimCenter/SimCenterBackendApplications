@@ -10,6 +10,7 @@
 #include "command_parser.h"
 #include "function_dispatcher.h"
 #include "wind_generator.h"
+#include <filesystem>
 
 using json = nlohmann::json;
 typedef std::chrono::duration<
@@ -121,24 +122,64 @@ int main(int argc, char** argv) {
         auto nanoseconds =
             std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
 
-        auto wind_forces =
-            inputs.seed_provided()
-                ? Dispatcher<std::tuple<std::vector<double>, json>, std::string,
-                             double, double, double, double, unsigned int,
-                             double, double, int>::instance()
-                      ->dispatch("WittigSinha1975", exposure_category,
-                                 gust_wind_speed, drag_coeff, width, height,
-                                 num_floors, total_time, force_conversion,
-                                 inputs.get_seed())
-                : Dispatcher<std::tuple<std::vector<double>, json>, std::string,
-                             double, double, double, double, unsigned int,
-                             double, double, int>::instance()
-                      ->dispatch("WittigSinha1975", exposure_category,
-                                 gust_wind_speed, drag_coeff, width, height,
-                                 num_floors, total_time, force_conversion,
-                                 nanoseconds.count());
 
-        auto static_forces = std::get<0>(wind_forces);
+        // main seed
+        int seed;
+        if (input_data["Events"][0]["seed"].is_string()) {
+            // if this is "None"
+            seed = nanoseconds.count();
+
+        } else {
+
+            int base_seed = input_data["Events"][0]["seed"].get<int>();
+
+            // Get the current working directory
+            std::string folderName = std::filesystem::path(std::filesystem::current_path()).filename().string();
+
+            
+            // Split by '.' and get the last part (sampNum)
+            std::size_t pos = folderName.find_last_of('.');
+
+            if (pos!= std::string::npos) {
+                           std::string samp_num_str = (pos != std::string::npos) ? folderName.substr(pos + 1) : folderName;
+                            int samp_num = std::stoi(samp_num_str);
+                            seed = samp_num + base_seed; 
+                        } else {
+                            seed = base_seed; 
+                        }
+
+
+         }
+
+
+        std::cout << seed << std::endl;
+            auto wind_forces = Dispatcher<std::tuple<std::vector<double>, json>, std::string,
+                                 double, double, double, double, unsigned int,
+                                 double, double, int>::instance()
+                          ->dispatch("WittigSinha1975", exposure_category,
+                                     gust_wind_speed, drag_coeff, width, height,
+                                     num_floors, total_time, force_conversion,
+                                     seed);
+
+            // auto wind_forces =
+            //     inputs.seed_provided()
+            //         ? Dispatcher<std::tuple<std::vector<double>, json>, std::string,
+            //                      double, double, double, double, unsigned int,
+            //                      double, double, int>::instance()
+            //               ->dispatch("WittigSinha1975", exposure_category,
+            //                          gust_wind_speed, drag_coeff, width, height,
+            //                          num_floors, total_time, force_conversion,
+            //                          inputs.get_seed())
+            //         : Dispatcher<std::tuple<std::vector<double>, json>, std::string,
+            //                      double, double, double, double, unsigned int,
+            //                      double, double, int>::instance()
+            //               ->dispatch("WittigSinha1975", exposure_category,
+            //                          gust_wind_speed, drag_coeff, width, height,
+            //                          num_floors, total_time, force_conversion,
+            //                          nanoseconds.count());
+
+
+    auto static_forces = std::get<0>(wind_forces);
 	auto dynamic_forces = std::get<1>(wind_forces);
 	auto pattern = json::array();
 	auto time_series = json::array();
