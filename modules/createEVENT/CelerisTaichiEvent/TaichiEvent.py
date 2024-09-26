@@ -1,4 +1,4 @@
-#!/usr/bin/env python3  # noqa: D100
+#!/usr/bin/env python3  # noqa: D100, EXE001
 
 import argparse
 import json
