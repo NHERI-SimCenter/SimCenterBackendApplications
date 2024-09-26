@@ -1,4 +1,12 @@
-from celeris.solver import *  # noqa: INP001, D100, F403
+"""
+No license was provided with the initial Celeris_TL_v0 codebase (dropbox),
+so tentatively we assume all rights are reserved by the original authors.
+
+Permission for respectful distribution related to the SimCenter's mission
+was granted by Patrick Lynett and Willington Renteria on 2024-9-25.
+"""  # noqa: INP001, D205
+
+from celeris.solver import *  # noqa: F403
 from celeris.utils import *  # noqa: F403
 
 USE_NEW_GUI = False  # New GGUI uses Vulkan, not always available on windows/macos/debian/wsl. Provide option to use old GUI - jb

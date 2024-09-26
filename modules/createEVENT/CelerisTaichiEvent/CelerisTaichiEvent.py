@@ -1,4 +1,14 @@
-#!/usr/bin/env python3  # noqa: D100, EXE001
+#!/usr/bin/env python3
+
+"""
+This script generates an EVENT.json file using the CelerisTaichiEvent EVT.
+
+No license was provided with the initial Celeris_TL_v0 codebase (dropbox),
+so tentatively we assume all rights are reserved by the original authors.
+
+Permission for respectful distribution related to the SimCenter's mission
+was granted by Patrick Lynett and Willington Renteria on 2024-9-25.
+"""  # noqa: D404
 
 import argparse
 import json
@@ -15,11 +25,6 @@ import pandas as pd
 
 subprocess.run([sys.executable, '-m', 'pip', 'install', 'taichi'], check=False)  # noqa: S603
 import taichi as ti  # noqa: E402
-
-# import taichi_script
-
-# from taichi.tools import *
-# from params import *
 
 
 class FloorForces:  # noqa: D101

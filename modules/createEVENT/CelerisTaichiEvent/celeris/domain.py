@@ -1,4 +1,12 @@
-import json  # noqa: INP001, D100
+"""
+No license was provided with the initial Celeris_TL_v0 codebase (dropbox),
+so tentatively we assume all rights are reserved by the original authors.
+
+Permission for respectful distribution related to the SimCenter's mission
+was granted by Patrick Lynett and Willington Renteria on 2024-9-25.
+"""  # noqa: INP001, D205
+
+import json
 
 import matplotlib.pyplot as plt
 import numpy as np
