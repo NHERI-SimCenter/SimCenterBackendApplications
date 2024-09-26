@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3  # noqa: EXE001
 
 """
 This script generates an EVENT.json file using the CelerisTaichiEvent EVT.
