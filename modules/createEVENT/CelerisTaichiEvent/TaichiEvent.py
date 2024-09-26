@@ -13,8 +13,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-subprocess.run([sys.executable, '-m', 'pip', 'install', 'taichi'])
-import taichi as ti
+subprocess.run([sys.executable, '-m', 'pip', 'install', 'taichi'], check=False)  # noqa: S603
+import taichi as ti  # noqa: E402
 
 # import taichi_script
 
@@ -230,22 +230,23 @@ def GetTaichiScript(BIMFilePath):  # noqa: N802, N803, D103
         evt = json.load(file)
     file.close  # noqa: B018
 
-    fileNameKey = 'interfaceSurface' 
-    filePathKey = fileNameKey + 'Path'
-    
-    for event in evt['Events']:
-        fileName = event[fileNameKey]
-        filePath = event[filePathKey]
-        return os.path.join(filePath, fileName)
-    
-    defaultScriptPath = f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: ISC003, PTH120
-    defaultScriptName = 'taichi_script.py'
-    return defaultScriptPath + defaultScriptName 
+    fileNameKey = 'interfaceSurface'  # noqa: N806
+    filePathKey = fileNameKey + 'Path'  # noqa: N806
 
-def main():  # noqa: D103
+    for event in evt['Events']:
+        fileName = event[fileNameKey]  # noqa: N806
+        filePath = event[filePathKey]  # noqa: N806
+        return os.path.join(filePath, fileName)  # noqa: PTH118
+
+    defaultScriptPath = f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: N806, PTH120
+    defaultScriptName = 'taichi_script.py'  # noqa: N806
+    return defaultScriptPath + defaultScriptName
+
+
+def main():
     """
     Entry point to generate event file using TaichiEvent.
-    """
+    """  # noqa: D200
     return 0
 
 
@@ -280,20 +281,19 @@ if __name__ == '__main__':
     # import subprocess
 
     # Get json of filenameAIM
-    scriptName = GetTaichiScript(arguments.filenameAIM)  # noqa: N816        
-    
+    scriptName = GetTaichiScript(arguments.filenameAIM)  # noqa: N816
+
     if arguments.getRV == True:  # noqa: E712
         print('RVs requested')  # noqa: T201
         # Read the number of floors
         floorsCount = GetFloorsCount(arguments.filenameAIM)  # noqa: N816
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
 
-
         result = subprocess.run(  # noqa: S603
             [  # noqa: S607
                 'ti',
                 scriptName,
-                # f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: ISC003, PTH120
+                # f'{os.path.realpath(os.path.dirname(__file__))}'
                 # + '/taichi_script.py',
             ],
             stdout=subprocess.PIPE,
@@ -314,7 +314,7 @@ if __name__ == '__main__':
             [  # noqa: S607
                 'ti',
                 scriptName,
-                # f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: ISC003, PTH120
+                # f'{os.path.realpath(os.path.dirname(__file__))}'
                 # + '/taichi_script.py',
             ],
             stdout=subprocess.PIPE,

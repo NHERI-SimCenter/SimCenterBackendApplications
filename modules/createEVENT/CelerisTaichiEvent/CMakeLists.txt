@@ -1,0 +1,7 @@
+simcenter_add_python_script(SCRIPT CelerisTaichiEvent.py)
+simcenter_add_python_script(SCRIPT TaichiEvent.py)
+simcenter_add_python_script(SCRIPT setrun.py)
+simcenter_add_python_script(SCRIPT celeris/domain.py)
+simcenter_add_python_script(SCRIPT celeris/runner.py)
+simcenter_add_python_script(SCRIPT celeris/solver.py)
+simcenter_add_python_script(SCRIPT celeris/utils.py)
