@@ -5,3 +5,7 @@ simcenter_add_python_script(SCRIPT celeris/domain.py)
 simcenter_add_python_script(SCRIPT celeris/runner.py)
 simcenter_add_python_script(SCRIPT celeris/solver.py)
 simcenter_add_python_script(SCRIPT celeris/utils.py)
+
+add_subdirectory(celeris)
+add_subdirectory(Miami_Beach_FL)
+add_subdirectory(Ventura_Harbor_CA)
