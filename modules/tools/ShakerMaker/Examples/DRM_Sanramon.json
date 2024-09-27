@@ -1,0 +1,40 @@
+{
+    "dt": 0.005,
+    "nfft": 2048,
+    "dk": 0.2,
+    "tmin":0,
+    "tmax": 60,
+    "dh": 40.0,
+    "dv_rec": 5.0,
+    "dv_src": 200,
+    "layers":[
+        {"Layer Name":"Layer1",          "Thickness":0.20, "Vp":1.32, "Vs":0.75, "Density":2.4, "Qp": 1000, "Qs": 1000},
+        {"Layer Name":"Layer2",          "Thickness":0.80, "Vp":2.75, "Vs":1.57, "Density":2.5, "Qp": 1000, "Qs": 1000},
+        {"Layer Name":"Layer3",          "Thickness":14.5, "Vp":5.50, "Vs":3.14, "Density":2.5, "Qp": 1000, "Qs": 1000},
+        {"Layer Name":"Half Space Layer","Thickness":0,    "Vp":7.00, "Vs":4.00, "Density":2.67,"Qp": 1000, "Qs": 1000}
+    ],
+    "station_type": "DRM",
+    "station_info": { 
+        "Latitude": -33.40657,
+        "Longitude": -70.50653,
+        "Width X": 105,
+        "Width Y": 105,
+        "Depth" : 30,
+        "Mesh Size X" : 2.5,
+        "Mesh Size Y" : 2.5,
+        "Mesh Size Z" : 2.5
+    },
+    "fault_type": "Database",
+    "fault_info": {
+        "Country": "Chile",
+        "Fault": "Sanramon",
+        "Magnitude": "6.7",
+        "Fault Type": "bl",
+        "Realization": "3"
+    },
+    "System": "Frontera",
+    "Queue": "development",
+    "Number of Nodes": 40,
+    "Cores per Node": 50,
+    "Max Run Time": "02:00:00"
+}
