@@ -1,5 +1,7 @@
 [tool.ruff]
 line-length = 85
+# Example Taichi programs for users to test are held here until formal examples are made/documented for HydroUQ, etc. Don't need to lint/format - JustinBonus
+extend-exclude = ["modules/createEVENT/TaichiEvent"]
 
 [tool.ruff.lint]
 # Enable all known categories
@@ -8,7 +10,7 @@ ignore = ["ANN", "D211", "D212", "Q000", "Q003", "COM812", "D203", "ISC001", "E5
 preview = false
 
 [tool.ruff.lint.per-file-ignores]
-"path/to/folder/*" = ["ALL"]
+"*.ipynb" = ["ALL"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

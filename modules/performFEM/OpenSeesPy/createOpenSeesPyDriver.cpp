@@ -10,6 +10,13 @@
 #include <filesystem>
 #include <algorithm>
 #include <regex>
+#include <cstdio> // for freopen
+#include <cstdlib> // for exit
+#include <stdexcept>
+#include <exception>
+#include <csignal>
+
+
 
 int getEDP(json_t *edp, std::vector<std::string> &edpList);
 int getRV(json_t *edp, std::vector<std::string> &rvList);
@@ -33,7 +40,8 @@ std::string appendModelIndexToStem(int modelIndex, std::string filename) {
     return filename;
 }
 
-int main(int argc, const char **argv) {
+//int main(int argc, const char **argv) {
+int createDriver(int argc, const char **argv) {
   
   if (argc < 5) {
     std::cerr << "createOpenSeesPyDriver:: expecting 4 inputs\n";
@@ -197,7 +205,21 @@ int main(int argc, const char **argv) {
     if (modelIndex > 0) {
       parametersScriptTemplate = appendModelIndexToStem(modelIndex, parametersScriptTemplate);
     }
-    std::filesystem::copy_file(parametersScript, parametersScriptTemplate);
+    try {
+        std::filesystem::copy_file(parametersScript, parametersScriptTemplate);
+        std::cout << "File copied successfully from " 
+                  << parametersScript << " to " 
+                  << parametersScriptTemplate << std::endl;
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Error copying file: " << e.what() << std::endl;
+        std::cerr << "Source: " << e.path1() << ", Destination: " << e.path2() << std::endl;
+        exit(-1);
+    } catch (const std::exception& e) {
+        std::cerr << "An unexpected error occurred: " << e.what() << std::endl;
+        exit(-1);
+    }
+
+
   } else {
     for(std::vector<std::string>::iterator itRV = rvList.begin(); itRV != rvList.end(); ++itRV) {
       std::string nm = *itRV;
@@ -218,14 +240,14 @@ int main(int argc, const char **argv) {
   }  
   std::string mainScript = json_string_value(femScript);
   std::ifstream modelFile(mainScript);
-  while (!modelFile.eof()) {
-    std::string line;
-    std::getline(modelFile, line);
-    templateFile << line << std::endl;
+  std::string line;
+  while (std::getline(modelFile, line)) {
+      std::cout << line << std::endl; // Print line to console
+      templateFile << line << std::endl; // Write line to template file
   }
   templateFile.close();
+  if (strcmp(parametersScript.c_str(),"") == 0) {
 
-  if (strcmp(parametersScript.c_str(),"") == 0) {	
     // workflowDriverFile << moveCommand << mainScript << " tmpSimCenter.script \n";
     workflowDriverFile << dpreproCommand << "  params.in " << mainScriptTemplate << " " << mainScript << "\n";
   } else {
@@ -268,7 +290,39 @@ int main(int argc, const char **argv) {
   //
   // done
   //
+  std::cerr << "The run was successful" << std::endl;
 
   exit(0);
 }
 
+void signalHandler(int signal) {
+    std::cerr << "Caught signal: " << signal << std::endl;
+    exit(signal);
+}
+
+void setupSignalHandlers() {
+    std::signal(SIGSEGV, signalHandler);
+}
+
+void redirectCerrToFile() {
+    if (freopen("FEMpreprocessor.err", "w", stderr) == nullptr) {
+        std::cerr << "Failed to redirect stderr to error.log" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
+
+int main(int argc, const char **argv) {
+   // to redirect the file
+    redirectCerrToFile();
+    setupSignalHandlers();
+
+    try {
+        createDriver(argc, argv); // Pass arguments to the main logic function
+    } catch (const std::exception& e) {
+        std::cerr << "Caught exception in main: " << e.what() << std::endl;
+    }
+
+    return 0;
+
+}

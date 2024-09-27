@@ -149,8 +149,6 @@ def main(input_args):  # noqa: D103
         number_of_samples,
         seed_value,
         calibration_data_filename,
-        loglikelihood_module,
-        write_outputs,
         variables_list,
         edp_names_list,
         edp_lengths_list,
@@ -159,8 +157,6 @@ def main(input_args):  # noqa: D103
     ) = parseDataFunction(
         input_json_filename_full_path,
         logfile,
-        working_directory,
-        os.path.dirname(mainscript_path),  # noqa: PTH120
     )
     syncLogFile(logfile)
 

@@ -1,4 +1,4 @@
-#  # noqa: INP001
+#!/usr/bin/env python
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:

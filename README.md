@@ -1,6 +1,6 @@
 # SimCenterBackendApplications
 
-[![Build status](https://ci.appveyor.com/api/projects/status/2fitp6tm5sj00qwr?svg=true)](https://ci.appveyor.com/project/fmckenna/simcenterbackendapplications)
+[![Build status](https://ci.appveyor.com/api/projects/status/2fitp6tm5sj00qwr?svg=true)](https://ci.appveyor.com/project/JustinBonus/simcenterbackendapplications)
 
 This repo contains the backend applications that make up SimCeA (SimCenter Aquarium). SimCeA is a collection of applications developed by SimCenter that are utilized when the research applications (quoFEM, EE-UQ, WE-UQ, PBE, and RDT) perform the numerical computations. These computations are performed using scientific workflows; the software that runs the workflows are found in the modules/Workflow directory. The applications these workflows invoke when running are found in the other directories under modules. 
 
