@@ -29,7 +29,7 @@ totalcores = str(corespernode * numnodes)
 queue = jobinfo['queue']
 
 
-# chane hh:mm:ss to minutes
+# change hh:mm:ss to minutes
 maxminutes = (
     int(maxminutes.split(':')[0]) * 60
     + int(maxminutes.split(':')[1])
@@ -44,7 +44,7 @@ faultfiles = faultinfo['Faultfilenames']
 
 filenames = []
 for filename in faultfiles:
-    # // seperate the filename from the whole path
+    # // separate the filename from the whole path
     filename = os.path.basename(filename)  # noqa: PTH119, PLW2901
     filenames.append(filename)
 faultinfo['Faultfilenames'] = filenames
@@ -80,7 +80,7 @@ t.get_tokens()
 
 # %%
 # =============================================================================
-# uploding files
+# uploading files
 # =============================================================================
 print('Uploading files to DesignSafe')  # noqa: T201
 # create shakermaker directory if it does not exist

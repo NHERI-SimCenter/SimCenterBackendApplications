@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3  # noqa: EXE001
 
 """Compute inline/total hydrodynamic force and moments on a monopile using Morison's equation"""  # noqa: D400
 

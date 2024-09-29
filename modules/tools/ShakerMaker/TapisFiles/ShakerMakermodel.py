@@ -1,7 +1,7 @@
 # %%  # noqa: INP001, D100
 #############################################################
-# This is shaker Maker model created for runing simulations #
-# for the EE-UQ app.                                        #
+# This script creates Shaker Maker model for simulations    #
+# within the EE-UQ app.                                     #
 # This code created by Amin Pakzad and Pedro Arduino based  #
 # on the initial code by Jose Abell and Jorge Crempien      #
 # date = September 2024                                     #

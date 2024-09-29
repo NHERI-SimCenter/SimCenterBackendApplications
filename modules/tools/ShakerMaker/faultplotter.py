@@ -60,7 +60,7 @@ def PlotSources(info):  # noqa: C901, N802, D103
     faultinfopath = tmpLocation + '/fault/faultInfo.json'
     faultinfo = json.load(open(faultinfopath))  # noqa: SIM115, PTH123
 
-    # // load the source time fuction in the faultinfo path
+    # // load the source time function in the faultinfo path
     sourcetimeinfopath = tmpLocation + '/fault/SourceTimeFunction.py'
     # // load the source time function
     source_time_function = load_function_from_file(
@@ -226,13 +226,13 @@ def PlotSources(info):  # noqa: C901, N802, D103
 
     if info['plotlayers'].lower() in ['yes', 'true']:
         thickness = info['thickness']
-        # insert zero at the begining
+        # insert zero at the beginning
         thickness.insert(0, 0)
-        # cummulative thickness
-        cummulative = np.cumsum(thickness)
-        if zmax < cummulative[-1]:
-            zamx = cummulative[-1] + cummulative[-1] * 0.8  # noqa: F841
-        cummulative[-1] = zmax + cummulative[-1] * 0.8
+        # cumulative thickness
+        cumulative = np.cumsum(thickness)
+        if zmax < cumulative[-1]:
+            zamx = cumulative[-1] + cumulative[-1] * 0.8  # noqa: F841
+        cumulative[-1] = zmax + cumulative[-1] * 0.8
         for j in range(len(thickness) - 1):
             pl.add_mesh(
                 pv.Cube(
@@ -241,8 +241,8 @@ def PlotSources(info):  # noqa: C901, N802, D103
                         xmax,
                         ymin,
                         ymax,
-                        cummulative[j],
-                        cummulative[j + 1],
+                        cumulative[j],
+                        cumulative[j + 1],
                     ]
                 ),
                 color=colors[j],
