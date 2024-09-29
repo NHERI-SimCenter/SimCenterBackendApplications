@@ -89,25 +89,26 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
     dakotaFile << "\n\n";
   }
 
-  int numRealDiscrete = theRandomVariables.discreteDesignSetRVs.size();
-  if (numRealDiscrete > 0) {
-    dakotaFile << "  discrete_design_set  \n    real = " << numRealDiscrete;
-    dakotaFile << "\n    elements_per_variable = ";
-    for (auto it = theRandomVariables.discreteDesignSetRVs.begin(); it != theRandomVariables.discreteDesignSetRVs.end(); it++)
-      dakotaFile << it->elements.size() << " ";     //std::list<struct betaRV>::iterator it;
-    dakotaFile << "\n    elements = ";
-    for (auto it = theRandomVariables.discreteDesignSetRVs.begin(); it != theRandomVariables.discreteDesignSetRVs.end(); it++) {
-      it->elements.sort();
-      for (auto element = it->elements.begin(); element != it->elements.end(); element++)
-        dakotaFile << " \'" << *element << "\'";
-    }
-    dakotaFile << "\n    descriptors = ";
-    for (auto it = theRandomVariables.discreteDesignSetRVs.begin(); it != theRandomVariables.discreteDesignSetRVs.end(); it++) {
-      dakotaFile << "\'" << it->name << "\' ";
-      rvList.push_back(it->name);
-    }
-    dakotaFile << "\n\n";
-  }
+  // sy - below is not needed. Both ground motion events and multiple FEM/EVT works without it
+  // int numRealDiscrete = theRandomVariables.discreteDesignSetRVs.size();
+  // if (numRealDiscrete > 0) {
+  //   dakotaFile << "  discrete_design_set  \n    real = " << numRealDiscrete;
+  //   dakotaFile << "\n    elements_per_variable = ";
+  //   for (auto it = theRandomVariables.discreteDesignSetRVs.begin(); it != theRandomVariables.discreteDesignSetRVs.end(); it++)
+  //     dakotaFile << it->elements.size() << " ";     //std::list<struct betaRV>::iterator it;
+  //   dakotaFile << "\n    elements = ";
+  //   for (auto it = theRandomVariables.discreteDesignSetRVs.begin(); it != theRandomVariables.discreteDesignSetRVs.end(); it++) {
+  //     it->elements.sort();
+  //     for (auto element = it->elements.begin(); element != it->elements.end(); element++)
+  //       dakotaFile << " \'" << *element << "\'";
+  //   }
+  //   dakotaFile << "\n    descriptors = ";
+  //   for (auto it = theRandomVariables.discreteDesignSetRVs.begin(); it != theRandomVariables.discreteDesignSetRVs.end(); it++) {
+  //     dakotaFile << "\'" << it->name << "\' ";
+  //     rvList.push_back(it->name);
+  //   }
+  //   dakotaFile << "\n\n";
+  // }
 
 
 
