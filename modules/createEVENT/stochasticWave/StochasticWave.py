@@ -7,7 +7,7 @@ import json
 import re
 import sys
 
-import Ex4_WaveLoads
+import StochasticWaveLoadsJONSWAP
 
 """
 Portions of this module are implemented courtesy of the welib python package:
