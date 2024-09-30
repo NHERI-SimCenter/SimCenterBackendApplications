@@ -286,8 +286,23 @@
       },
       {
         "Name": "UserInputShakeMap",
-        "ExecutablePath": null,
+        "ExecutablePath": "applications/createEVENT/shakeMapEvent/shakeMapEvent.py",
         "ApplicationSpecificInputs": [
+          {
+            "id": "Directory",
+            "type": "path",
+            "description": "Path to file containing folder of shake maps"
+          },
+          {
+            "id": "EventPath",
+            "type": "string",
+            "description": "Path to the shake map event"
+          },
+          {
+            "id": "IntensityMeasureType",
+            "type": "list",
+            "description": "List of intensity measures"
+          }
         ]
       },
       {
@@ -360,6 +375,18 @@
       {
         "Name": "SiteSpecifiedEvents",
           "ExecutablePath": "applications/performRegionalMapping/SiteSpecifiedEvents/SSE.py",
+  "RunsParallel": true,   
+        "ApplicationSpecificInputs": [
+          {
+            "id": "filenameEVENTgrid",
+            "type": "path",
+            "description": "Path to file containing location information on each event file"
+          }
+        ]
+      },
+      {
+        "Name": "GISSpecifiedEvents",
+          "ExecutablePath": "applications/performRegionalMapping/GISSpecifiedEvents/GISSpecifiedEvent.py",
   "RunsParallel": true,   
         "ApplicationSpecificInputs": [
           {
