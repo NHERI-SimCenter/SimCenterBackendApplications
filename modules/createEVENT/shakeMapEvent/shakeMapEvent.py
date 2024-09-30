@@ -45,10 +45,9 @@ from pathlib import Path
 
 
 def create_shakemap_event(eventDirectory, eventPath, IMTypes):  # noqa: D103
+    IMTypesList = eval(IMTypes)
 
-    IMTypesList = eval(IMTypes) 
-
-    print("Creating shakemap event")
+    print('Creating shakemap event')
 
     xml_file_path = Path(eventDirectory) / eventPath / 'grid.xml'
 
@@ -69,7 +68,7 @@ def create_shakemap_event(eventDirectory, eventPath, IMTypes):  # noqa: D103
         lon, lat = float(values[0]), float(values[1])
         point = Point(lon, lat)
         points.append(point)
-        
+
         # Store only the specified attributes
         attr = {}
         attribute_mapping = {
@@ -78,37 +77,35 @@ def create_shakemap_event(eventDirectory, eventPath, IMTypes):  # noqa: D103
             'MMI': 4,
             'PSA03': 5,
             'PSA10': 6,
-            'PSA30': 7
+            'PSA30': 7,
         }
-        
+
         for im_type in IMTypesList:
             if im_type in attribute_mapping:
                 attr[im_type] = float(values[attribute_mapping[im_type]])
-    
+
         attributes.append(attr)
 
     # Create GeoDataFrame
-    gdf = gpd.GeoDataFrame(attributes, geometry=points, crs="EPSG:4326")
+    gdf = gpd.GeoDataFrame(attributes, geometry=points, crs='EPSG:4326')
 
     # Display the first few rows
-    print("Saving shakemap to gpkg")
+    print('Saving shakemap to gpkg')
 
     # Save as a GeoPackage file
     gdf_path = Path(eventDirectory) / 'EventGrid.gpkg'
-    gdf.to_file(gdf_path, driver="GPKG")
+    gdf.to_file(gdf_path, driver='GPKG')
 
     return
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', help='Input file')
     parser.add_argument('--Directory', help='Directory path')
     parser.add_argument('--EventPath', help='Event path')
     parser.add_argument('--IntensityMeasureType', help='types of intensity measures')
 
-    
     args = parser.parse_args()
 
     create_shakemap_event(args.Directory, args.EventPath, args.IntensityMeasureType)
