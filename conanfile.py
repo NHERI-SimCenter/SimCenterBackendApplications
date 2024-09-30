@@ -19,6 +19,7 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
     options = {'shared': [True, False]}  # noqa: RUF012
     default_options = {  # noqa: RUF012
         'libcurl:with_ssl': 'openssl',
+        'boost:without_fiber': True,
     }
     generators = 'cmake'
     build_policy = 'missing'
