@@ -51,16 +51,15 @@ def sample_raster_at_latlon(src, lat, lon):
 
     # Ensure the indices are within the bounds of the raster
     if row < 0 or row >= src.height or col < 0 or col >= src.width:
-        raise IndexError("Transformed coordinates are out of raster bounds")
+        raise IndexError('Transformed coordinates are out of raster bounds')
 
     # Read the raster value at the given row and column
     raster_value = src.read(1)[row, col]
 
     return raster_value
 
+
 def create_event(asset_file, event_grid_file):  # noqa: C901, N803, D103
-
-
     # read the event grid data file
     event_grid_path = Path(event_grid_file).resolve()
     event_dir = event_grid_path.parent
@@ -82,22 +81,21 @@ def create_event(asset_file, event_grid_file):  # noqa: C901, N803, D103
         asset_dict = json.load(f)
 
     data_final = [
-            ['GP_file','Latitude','Longitude'],
-        ]
+        ['GP_file', 'Latitude', 'Longitude'],
+    ]
 
     # Iterate through each asset
     for asset in asset_dict:
         asset_id = asset['id']
         asset_file_path = asset['file']
-        
-        # Load the corresponding file for each asset
-        with open(asset_file_path, encoding='utf-8') as asset_file :
 
+        # Load the corresponding file for each asset
+        with open(asset_file_path, encoding='utf-8') as asset_file:
             # Load the asset data
             asset_data = json.load(asset_file)
 
             im_tag = asset_data['RegionalEvent']['intensityMeasures'][0]
-            
+
             # Extract the latitude and longitude
             lat = float(asset_data['GeneralInformation']['location']['latitude'])
             lon = float(asset_data['GeneralInformation']['location']['longitude'])
@@ -107,34 +105,33 @@ def create_event(asset_file, event_grid_file):  # noqa: C901, N803, D103
 
             # Check if the transformed coordinates are within the raster bounds
             bounds = src.bounds
-            if (bounds.left <= lon_transformed <= bounds.right and
-                bounds.bottom <= lat_transformed <= bounds.top):
+            if (
+                bounds.left <= lon_transformed <= bounds.right
+                and bounds.bottom <= lat_transformed <= bounds.top
+            ):
                 try:
-                    val = sample_raster_at_latlon(src=src, 
-                                                  lat=lat_transformed, 
-                                                  lon=lon_transformed)
-                    
-                    data = [
-                                [im_tag],
-                                [val]
-                            ]
-                                                
+                    val = sample_raster_at_latlon(
+                        src=src, lat=lat_transformed, lon=lon_transformed
+                    )
+
+                    data = [[im_tag], [val]]
+
                     # Save the simcenter file name
                     file_name = f'Site_{asset_id}.csvx{0}x{int(asset_id):05d}'
 
-                    data_final.append([file_name,lat,lon])
+                    data_final.append([file_name, lat, lon])
 
                     csv_save_path = event_dir / f'Site_{asset_id}.csv'
                     with open(csv_save_path, 'w', newline='') as file:
                         # Create a CSV writer object
                         writer = csv.writer(file)
-                        
+
                         # Write the data to the CSV file
                         writer.writerows(data)
 
                     # prepare a dictionary of events
                     event_list_json = [[file_name, 1.0]]
-                    
+
                     asset_data['Events'] = [{}]
                     asset_data['Events'][0] = {
                         'EventFolderPath': str(event_dir),
@@ -145,12 +142,10 @@ def create_event(asset_file, event_grid_file):  # noqa: C901, N803, D103
                     with open(asset_file_path, 'w', encoding='utf-8') as f:  # noqa: PTH123
                         json.dump(asset_data, f, indent=2)
 
-
                 except IndexError as e:
-                    print(f"Error for asset ID {asset_id}: {e}")
+                    print(f'Error for asset ID {asset_id}: {e}')
             else:
-                print(f"Asset ID: {asset_id} is outside the raster bounds")
-
+                print(f'Asset ID: {asset_id} is outside the raster bounds')
 
         # # save the event dictionary to the BIM
         # asset_data['Events'] = [{}]
@@ -165,13 +160,12 @@ def create_event(asset_file, event_grid_file):  # noqa: C901, N803, D103
         # with open(asset_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
         #     json.dump(asset_data, f, indent=2)
 
-
     # Save the final event grid
     csv_save_path = event_dir / 'EventGrid.csv'
     with open(csv_save_path, 'w', newline='') as file:
         # Create a CSV writer object
         writer = csv.writer(file)
-        
+
         # Write the data to the CSV file
         writer.writerows(data_final)
 
@@ -185,6 +179,4 @@ if __name__ == '__main__':
     parser.add_argument('--filenameEVENTgrid')
     args = parser.parse_args()
 
-    create_event(
-        args.assetFile, args.filenameEVENTgrid
-    )
+    create_event(args.assetFile, args.filenameEVENTgrid)

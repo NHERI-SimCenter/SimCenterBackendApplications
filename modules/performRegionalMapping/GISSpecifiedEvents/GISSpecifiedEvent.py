@@ -43,21 +43,23 @@ import xml.etree.ElementTree as ET
 
 from RasterEvent import create_event as create_raster_event
 
+
 def is_raster_file(filename):
     # Define a set of common raster file extensions
     raster_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif'}
-    
+
     # Create a Path object from the filename
     file_path = Path(filename)
-    
+
     # Extract the file extension and check if it is in the set of raster extensions
     return file_path.suffix.lower() in raster_extensions
+
 
 def is_xml_file(filename):
     # Check if the file has an .xml extension
     if not filename.lower().endswith('.xml'):
         return False
-    
+
     # Try to parse the file as XML
     try:
         ET.parse(filename)
@@ -65,17 +67,18 @@ def is_xml_file(filename):
     except ET.ParseError:
         return False
 
-def create_event(asset_file : str, event_grid_file: str):  # noqa: C901, N803, D103
 
+def create_event(asset_file: str, event_grid_file: str):  # noqa: C901, N803, D103
     if is_raster_file(event_grid_file):
         return create_raster_event(asset_file, event_grid_file)
     elif is_xml_file(event_grid_file):
         # Here you would call a function to handle XML files
         # For now, we'll just raise a NotImplementedError
-        raise NotImplementedError("XML file handling is not yet implemented.")
+        raise NotImplementedError('XML file handling is not yet implemented.')
     else:
-        raise ValueError(f"{event_grid_file} is not a raster. Only rasters are currently supported.")
-
+        raise ValueError(
+            f'{event_grid_file} is not a raster. Only rasters are currently supported.'
+        )
 
 
 if __name__ == '__main__':
@@ -84,6 +87,4 @@ if __name__ == '__main__':
     parser.add_argument('--filenameEVENTgrid')
     args = parser.parse_args()
 
-    create_event(
-        args.assetFile, args.filenameEVENTgrid
-    )
+    create_event(args.assetFile, args.filenameEVENTgrid)

@@ -48,6 +48,7 @@ import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 import geopandas as gpd
 
+
 def find_neighbors(  # noqa: C901, D103
     asset_file,
     event_grid_file,
@@ -89,7 +90,7 @@ def find_neighbors(  # noqa: C901, D103
     if file_extension == '.csv':
         # Existing code for CSV files
         grid_df = pd.read_csv(event_dir / event_grid_file, header=0)
-        
+
         # store the locations of the grid points in X
         lat_E = grid_df['Latitude']  # noqa: N806
         lon_E = grid_df['Longitude']  # noqa: N806
@@ -103,15 +104,15 @@ def find_neighbors(  # noqa: C901, D103
     else:
         # Else assume GIS files - works will all gis files that geopandas supports
         gdf = gpd.read_file(event_dir / event_grid_file)
-        
+
         # Ensure the GIS file is in a geographic coordinate system
         if not gdf.crs.is_geographic:
             gdf = gdf.to_crs(epsg=4326)  # Convert to WGS84
-        
+
         # Extract coordinates from the geometry
         gdf['Longitude'] = gdf.geometry.x
         gdf['Latitude'] = gdf.geometry.y
-        
+
         # store the locations of the grid points in X
         lat_E = gdf['Latitude']  # noqa: N806
         lon_E = gdf['Longitude']  # noqa: N806
@@ -121,7 +122,7 @@ def find_neighbors(  # noqa: C901, D103
             grid_extra_keys = list(
                 gdf.drop(['geometry', 'Longitude', 'Latitude'], axis=1).columns
             )
-        
+
         # Convert GeoDataFrame to regular DataFrame for consistency with the rest of the code
         grid_df = pd.DataFrame(gdf.drop(columns='geometry'))
 
@@ -131,7 +132,9 @@ def find_neighbors(  # noqa: C901, D103
     else:
         neighbors_to_get = neighbors
 
-    nbrs = NearestNeighbors(n_neighbors=neighbors_to_get, algorithm='ball_tree').fit(X)
+    nbrs = NearestNeighbors(n_neighbors=neighbors_to_get, algorithm='ball_tree').fit(
+        X
+    )
 
     # load the building data file
     with open(asset_file, encoding='utf-8') as f:  # noqa: PTH123
@@ -307,34 +310,46 @@ def find_neighbors(  # noqa: C901, D103
                     ] * e
 
                 scale_list = np.ones(len(event_list))
-        else : 
+        else:
             event_list = []
             scale_list = []
             event_type = 'intensityMeasure'
 
             # Determine event_count (number of IMs per grid point)
-            im_columns = [col for col in grid_df.columns if col not in ['geometry', 'Longitude', 'Latitude']]
+            im_columns = [
+                col
+                for col in grid_df.columns
+                if col not in ['geometry', 'Longitude', 'Latitude']
+            ]
             event_count = len(im_columns)
 
             # for each neighbor
             for sample_j, nbr in enumerate(nbr_samples):
-
                 # make sure we resample events if samples > event_count
                 event_j = sample_j % event_count
 
                 # get the index of the nth neighbor
                 nbr_index = ind_list[nbr]
-        
+
                 # For GIS files, create a new CSV file
                 csv_filename = f'Site_{sample_j}.csv'
 
                 csv_path = event_dir / csv_filename
-                
+
                 # Create a CSV file with data from the GIS file
                 # Use actual data from the GIS file if available, otherwise use dummy data
-                im_columns = [col for col in grid_df.columns if col not in ['geometry', 'Longitude', 'Latitude']]
-                
-                im_data = pd.DataFrame({col: [grid_df.iloc[nbr_index][col]] * event_count for col in im_columns})
+                im_columns = [
+                    col
+                    for col in grid_df.columns
+                    if col not in ['geometry', 'Longitude', 'Latitude']
+                ]
+
+                im_data = pd.DataFrame(
+                    {
+                        col: [grid_df.iloc[nbr_index][col]] * event_count
+                        for col in im_columns
+                    }
+                )
 
                 im_data.to_csv(csv_path, index=False)
                 # save the collection file name and the IM row id
