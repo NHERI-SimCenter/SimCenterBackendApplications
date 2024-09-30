@@ -174,30 +174,30 @@ int main(int argc, char **argv)
       const char *eventType = json_string_value(type);
       
       if (strcmp(eventType,"Seismic") == 0) {
-	json_t *subType = json_object_get(value,"subtype");  
-	if ((subType != NULL) && (strcmp("MultiplePEER_Event",json_string_value(subType)) ==0)) {
+        json_t *subType = json_object_get(value,"subtype");  
+        if ((subType != NULL) && (strcmp("MultiplePEER_Event",json_string_value(subType)) ==0)) {
 
-	  json_t *index = json_object_get(value,"index"); 
+          json_t *index = json_object_get(value,"index"); 
 
-	  if (json_is_integer(index) == false) {
-	    const char *eventName = json_string_value(index);
+          if (json_is_integer(index) == false) {
+            const char *eventName = json_string_value(index);
 
-	    // we need to replace the EVENT with another event
-	    json_t *inputEvent = json_array_get(inputEventsArray,count);
-	    json_t *events = json_object_get(inputEvent,"Events");
-	    for (int i=0; i<json_array_size(events); i++) {
-	      json_t *theEvent = json_array_get(events, i);
-	      const char * name = json_string_value(json_object_get(theEvent,"name"));
+            // we need to replace the EVENT with another event
+            json_t *inputEvent = json_array_get(inputEventsArray,count);
+            json_t *events = json_object_get(inputEvent,"Events");
+            for (int i=0; i<json_array_size(events); i++) {
+              json_t *theEvent = json_array_get(events, i);
+              const char * name = json_string_value(json_object_get(theEvent,"name"));
 
-	      if (strcmp(eventName, name) == 0) {
-		addEvent(name, value);
-		
-		i = json_array_size(events);
-	      }
-	    }
-	  }
-	  json_t *eventObj = json_object();
-	}	  
+              if (strcmp(eventName, name) == 0) {
+          addEvent(name, value);
+          
+          i = json_array_size(events);
+              }
+            }
+          }
+          json_t *eventObj = json_object();
+        }	  
       }
     }
     // write rootEvent

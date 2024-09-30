@@ -1,4 +1,4 @@
-#  # noqa: INP001
+#  # noqa: INP001, EXE002
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -97,7 +97,11 @@ def main():  # noqa: C901
     )
     # Driver file
     h2oparser.add_argument(
-        '-d', metavar='driver file', type=str, help='driver file', required=True
+        '-d',
+        metavar='driver file',
+        type=str,
+        help='driver file',
+        required=True,
     )
 
     # Execute the parse_args() method

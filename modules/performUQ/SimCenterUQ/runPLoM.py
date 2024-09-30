@@ -673,14 +673,17 @@ class runPLoM:
         run_flag = 0
         try:
             # load constraints first
-            constr_file = Path(self.constraintsFile).resolve()  # noqa: F405
-            sys.path.insert(0, str(constr_file.parent) + '/')
-            constr_script = importlib.__import__(  # noqa: F405
-                constr_file.name[:-3], globals(), locals(), [], 0
-            )
-            self.beta_c = constr_script.beta_c()
-            print('beta_c = ', self.beta_c)  # noqa: T201
-            # if smootherKDE
+            if (
+                self.constraintsFlag
+            ):  # sy - added because quoFEM/EE-UQ example failed 09/10/2024
+                constr_file = Path(self.constraintsFile).resolve()  # noqa: F405
+                sys.path.insert(0, str(constr_file.parent) + '/')
+                constr_script = importlib.__import__(  # noqa: F405
+                    constr_file.name[:-3], globals(), locals(), [], 0
+                )
+                self.beta_c = constr_script.beta_c()
+                print('beta_c = ', self.beta_c)  # noqa: T201
+                # if smootherKDE
             if self.smootherKDE_Customize:
                 kde_file = Path(self.smootherKDE_file).resolve()  # noqa: F405
                 sys.path.insert(0, str(kde_file.parent) + '/')

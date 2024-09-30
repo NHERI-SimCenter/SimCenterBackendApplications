@@ -1,7 +1,8 @@
+#!/usr/bin/env python3
 """This script writes BC and initial condition, and setups the OpenFoam case
 directory.
 
-"""  # noqa: INP001, D205, D404
+"""  # noqa: D205, D404
 
 import json
 import os
@@ -154,7 +155,11 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
     y_max = y_min + Ly
     z_max = z_min + Lz
 
-    inside_point = [x_min + Lf / 2.0, (y_min + y_max) / 2.0, (z_min + z_max) / 2.0]
+    inside_point = [
+        x_min + Lf / 2.0,
+        (y_min + y_max) / 2.0,
+        (z_min + z_max) / 2.0,
+    ]
 
     # Open the template blockMeshDict (OpenFOAM file) for manipulation
     dict_file = open(template_dict_path + '/snappyHexMeshDictTemplate')  # noqa: SIM115, PTH123
@@ -1247,7 +1252,9 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):  # noq
         output_file.close()
 
 
-def write_momentumTransport_file(input_json_path, template_dict_path, case_path):  # noqa: N802, D103
+def write_momentumTransport_file(  # noqa: N802, D103
+    input_json_path, template_dict_path, case_path
+):
     # Read JSON data
     with open(input_json_path + '/EmptyDomainCFD.json') as json_file:  # noqa: PTH123
         json_data = json.load(json_file)
@@ -1302,7 +1309,9 @@ def write_momentumTransport_file(input_json_path, template_dict_path, case_path)
     output_file.close()
 
 
-def write_physicalProperties_file(input_json_path, template_dict_path, case_path):  # noqa: N802, D103
+def write_physicalProperties_file(  # noqa: N802, D103
+    input_json_path, template_dict_path, case_path
+):
     # Read JSON data
     with open(input_json_path + '/EmptyDomainCFD.json') as json_file:  # noqa: PTH123
         json_data = json.load(json_file)
@@ -1334,7 +1343,9 @@ def write_physicalProperties_file(input_json_path, template_dict_path, case_path
     output_file.close()
 
 
-def write_transportProperties_file(input_json_path, template_dict_path, case_path):  # noqa: N802, D103
+def write_transportProperties_file(  # noqa: N802, D103
+    input_json_path, template_dict_path, case_path
+):
     # Read JSON data
     with open(input_json_path + '/EmptyDomainCFD.json') as json_file:  # noqa: PTH123
         json_data = json.load(json_file)
@@ -1377,7 +1388,9 @@ def write_fvSchemes_file(input_json_path, template_dict_path, case_path):  # noq
     simulation_type = turb_data['simulationType']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + f'/fvSchemesTemplate{simulation_type}')  # noqa: SIM115, PTH123
+    dict_file = open(  # noqa: SIM115, PTH123
+        template_dict_path + f'/fvSchemesTemplate{simulation_type}'
+    )
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1394,7 +1407,9 @@ def write_fvSchemes_file(input_json_path, template_dict_path, case_path):  # noq
     output_file.close()
 
 
-def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):  # noqa: N802, D103
+def write_decomposeParDict_file(  # noqa: N802, D103
+    input_json_path, template_dict_path, case_path
+):
     # Read JSON data
     with open(input_json_path + '/EmptyDomainCFD.json') as json_file:  # noqa: PTH123
         json_data = json.load(json_file)

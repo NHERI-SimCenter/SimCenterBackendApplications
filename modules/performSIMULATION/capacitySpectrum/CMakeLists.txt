@@ -1,0 +1,13 @@
+simcenter_add_python_script(SCRIPT CapacityModels.py)
+simcenter_add_python_script(SCRIPT DampingModels.py)
+simcenter_add_python_script(SCRIPT DemandModels.py)
+simcenter_add_python_script(SCRIPT runCMS.py)
+simcenter_add_python_script(SCRIPT hazus_capacity_alpha2.csv)
+simcenter_add_python_script(SCRIPT hazus_kappa_data.csv)
+simcenter_add_python_script(SCRIPT hazus_typical_roof_height.csv)
+simcenter_add_python_script(SCRIPT HC_capacity_data.csv)
+simcenter_add_python_script(SCRIPT MC_capacity_data.csv)
+simcenter_add_python_script(SCRIPT LC_capacity_data.csv)
+simcenter_add_python_script(SCRIPT PC_capacity_data.csv)
+
+
