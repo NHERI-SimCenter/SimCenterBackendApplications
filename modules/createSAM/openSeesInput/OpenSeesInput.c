@@ -67,23 +67,23 @@ main(int argc, char **argv) {
     if (fileName == 0) { // not passed in input, should be in AIM
       json_t *theApplications = json_object_get(rootAIM,"Applications");
       if (theApplications == NULL) {
-	fprintf(stderr, "AIM file missing Applications");
-	exit(-1);
+        fprintf(stderr, "AIM file missing Applications");
+        exit(-1);
       }
       json_t *theModeling = json_object_get(theApplications,"Modeling");
       if (theModeling == NULL) {
-	fprintf(stderr, "AIM file Applications missing Modeling");
-	exit(-1);
+        fprintf(stderr, "AIM file Applications missing Modeling");
+        exit(-1);
       }
       json_t *theAppData = json_object_get(theModeling,"ApplicationData");
       if (theAppData == NULL) {
-	fprintf(stderr, "AIM file Applications missing AppData");
-	exit(-1);
+        fprintf(stderr, "AIM file Applications missing AppData");
+        exit(-1);
       }
       json_t *theFileName = json_object_get(theAppData,"fileName");
       if (theFileName == NULL && !json_is_string(theFileName)) {
-	fprintf(stderr, "AIM file AppData missing fileName");
-	exit(-1);
+        fprintf(stderr, "AIM file AppData missing fileName");
+        exit(-1);
       }
       const char *fileName2 = json_string_value(theFileName);
       length = json_string_length(theFileName);
@@ -130,14 +130,14 @@ main(int argc, char **argv) {
       floor = 0;  // ground floor floor 0
       
       json_array_foreach(theCentroidNodes, index, intObj) {
-	json_t *nodeEntry =json_object();
-	int tag = json_integer_value(intObj);
-	json_object_set(nodeEntry,"node",json_integer(tag));
-	json_object_set(nodeEntry,"cline",json_string("centroid"));
-	sprintf(floorString,"%d",floor);
-	json_object_set(nodeEntry,"floor",json_string(floorString));
-	floor++;
-	json_array_append(mappingArray, nodeEntry);
+        json_t *nodeEntry =json_object();
+        int tag = json_integer_value(intObj);
+        json_object_set(nodeEntry,"node",json_integer(tag));
+        json_object_set(nodeEntry,"cline",json_string("centroid"));
+        sprintf(floorString,"%d",floor);
+        json_object_set(nodeEntry,"floor",json_string(floorString));
+        floor++;
+        json_array_append(mappingArray, nodeEntry);
       }
     }
     

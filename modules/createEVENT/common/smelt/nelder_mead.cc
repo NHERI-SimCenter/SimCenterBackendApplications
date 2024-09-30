@@ -10,7 +10,7 @@ std::vector<double> optimization::NelderMead::minimize(
     std::function<double(const std::vector<double>&)>& objective_function) {
   // Create vector of deltas with length equal to the number of dimensions
   std::vector<double> deltas(initial_point.size(), delta);
-  // Call minmize with vector of deltas
+  // Call minimize with vector of deltas
   return minimize(initial_point, deltas, objective_function);
 }
 
@@ -33,7 +33,7 @@ std::vector<double> optimization::NelderMead::minimize(
     }
   }
 
-  // Call minimize with matrix definining initial simplex
+  // Call minimize with matrix defining initial simplex
   return minimize(simplex, objective_function);
 }
 

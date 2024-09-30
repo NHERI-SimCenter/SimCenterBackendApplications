@@ -23,7 +23,7 @@ class DataProcessingError(Exception):
         self.message = message
 
 
-def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):  # noqa: C901, N802, N803, D103, PLR0915
+def parseDataFunction(dakotaJsonFile, logFile):  # noqa: C901, N802, N803, D103, PLR0915
     # Read in the json object
     logFile.write('\n\tReading the json file')
     with open(dakotaJsonFile) as f:  # noqa: PTH123
@@ -35,83 +35,13 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
     applications = jsonInputs['Applications']
     edpInputs = jsonInputs['EDP']  # noqa: N806
     uqInputs = jsonInputs['UQ']  # noqa: N806
-    femInputs = jsonInputs['FEM']  # noqa: N806, F841
     rvInputs = jsonInputs['randomVariables']  # noqa: N806
-    # localAppDirInputs = jsonInputs['localAppDir']
-    # pythonInputs = jsonInputs['python']
-    # remoteAppDirInputs = jsonInputs['remoteAppDir']
-    # uqResultsInputs = jsonInputs['uqResults']
-    # if uqResultsInputs:
-    #    resultType = uqResultsInputs['resultType']
-    #    if resultType == 'UCSD_Results':
-    #        spreadsheet = uqResultsInputs['spreadsheet']
-    #        dataValues = spreadsheet['data']
-    #        headings = spreadsheet['headings']
-    #        numCol = spreadsheet['numCol']
-    #        numRow = spreadsheet['numRow']
-    #        summary = uqResultsInputs['summary']
-    workingDir = jsonInputs['workingDir']  # noqa: N806, F841
 
     # Processing UQ inputs
     logFile.write('\n\t\tProcessing UQ inputs')
     seedValue = uqInputs['seed']  # noqa: N806
     nSamples = uqInputs['numParticles']  # noqa: N806
-    # maxRunTime = uqInputs["maxRunTime"]
-    if 'maxRunTime' in uqInputs.keys():  # noqa: SIM118
-        maxRunTime = uqInputs['maxRunTime']  # noqa: N806
-    else:
-        maxRunTime = float('inf')  # noqa: N806, F841
-    logLikelihoodFile = uqInputs['logLikelihoodFile']  # noqa: N806
     calDataFile = uqInputs['calDataFile']  # noqa: N806
-
-    parallelizeMCMC = True  # noqa: N806
-    if 'parallelExecution' in uqInputs:
-        parallelizeMCMC = uqInputs['parallelExecution']  # noqa: N806, F841
-
-    logFile.write('\n\t\t\tProcessing the log-likelihood script options')
-    # If log-likelihood script is provided, use that, otherwise, use default log-likelihood function
-    if (
-        len(logLikelihoodFile) > 0
-    ):  # if the log-likelihood file is not an empty string
-        logFile.write(
-            f"\n\t\t\t\tSearching for a user-defined log-likelihood script '{logLikelihoodFile}'"
-        )
-        if os.path.exists(os.path.join(tmpSimCenterDir, logLikelihoodFile)):  # noqa: PTH110, PTH118
-            logFile.write(
-                f"\n\t\t\t\tFound log-likelihood file '{logLikelihoodFile}' in {tmpSimCenterDir}."
-            )
-            logLikeModuleName = os.path.splitext(logLikelihoodFile)[0]  # noqa: PTH122, N806
-            try:
-                import_module(logLikeModuleName)
-            except:
-                logFile.write(
-                    f"\n\t\t\t\tERROR: The log-likelihood script '{os.path.join(tmpSimCenterDir, logLikelihoodFile)}' cannot be imported."  # noqa: PTH118
-                )
-                raise
-        else:
-            logFile.write(
-                f"\n\t\t\t\tERROR: The log-likelihood script '{logLikelihoodFile}' cannot be found in {tmpSimCenterDir}."
-            )
-            raise FileNotFoundError(  # noqa: TRY003
-                f"ERROR: The log-likelihood script '{logLikelihoodFile}' cannot be found in {tmpSimCenterDir}."  # noqa: EM102
-            )
-    else:
-        defaultLogLikeFileName = 'defaultLogLikeScript.py'  # noqa: N806
-        defaultLogLikeDirectoryPath = mainscriptDir  # noqa: N806
-        sys.path.append(defaultLogLikeDirectoryPath)
-        logLikeModuleName = os.path.splitext(defaultLogLikeFileName)[0]  # noqa: PTH122, N806
-        logFile.write('\n\t\t\t\tLog-likelihood script not provided.')
-        logFile.write(
-            f'\n\t\t\t\tUsing the default log-likelihood script: \n\t\t\t\t\t{os.path.join(defaultLogLikeDirectoryPath, defaultLogLikeFileName)}'  # noqa: PTH118
-        )
-        try:
-            import_module(logLikeModuleName)
-        except:
-            logFile.write(
-                f"\n\t\t\t\tERROR: The log-likelihood script '{os.path.join(tmpSimCenterDir, logLikelihoodFile)}' cannot be imported."  # noqa: PTH118
-            )
-            raise
-    logLikeModule = import_module(logLikeModuleName)  # noqa: N806
 
     # Processing EDP inputs
     logFile.write('\n\n\t\tProcessing EDP inputs')
@@ -134,8 +64,6 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
     # Processing model inputs
     logFile.write('\n\n\t\tProcessing application inputs')
     # Processing number of models
-    # Check if this is a multi-model analysis
-    runMultiModel = False  # noqa: N806, F841
     modelsDict = {}  # noqa: N806
     modelIndicesList = []  # noqa: N806
     modelRVNamesList = []  # noqa: N806
@@ -169,18 +97,6 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
     for _, data in modelsDict.items():  # noqa: PERF102
         nModels = nModels * data['nModels']  # noqa: N806
     cartesianProductOfModelIndices = list(itertools.product(*modelIndicesList))  # noqa: N806
-    # logFile.write("\n\t\t\tNO LONGER Getting the number of models")
-    # inputFileList = []
-    # nModels = femInputs['numInputs']
-    # nModels = 1
-    # if nModels > 1:
-    #    fileInfo = femInputs['fileInfo']
-    #    for m in range(nModels):
-    #        inputFileList.append(fileInfo[m]['inputFile'])
-    # else:
-    #    inputFileList.append(femInputs['inputFile'])
-    # logFile.write('\n\t\t\t\tThe number of models is: {}'.format(nModels))
-    writeFEMOutputs = True  # noqa: N806
 
     # Variables
     variablesList = []  # noqa: N806
@@ -332,8 +248,6 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
                     i, rv['name'], rv['distribution'], paramString
                 )
             )
-        # if runMultiModel:
-        #     variablesList[ind][]
 
         # Adding one prior distribution per EDP for the error covariance multiplier term
         logFile.write(
@@ -371,8 +285,6 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
         nSamples,
         seedValue,
         calDataFile,
-        logLikeModule,
-        writeFEMOutputs,
         variablesList,
         edpNamesList,
         edpLengthsList,

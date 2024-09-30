@@ -96,5 +96,6 @@ fmkTest.sh
 #Remove .vscode
 .vscode
 
+.coverage
 
-
+applications.*

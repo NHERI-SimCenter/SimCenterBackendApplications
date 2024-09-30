@@ -62,84 +62,84 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
       
       json_array_foreach(defaultRVs, index, value) {
 	
-	const char *fName = json_string_value(value);
-	// std::cerr << "rvFILE: " << fName << "\n";
-	json_t *rootOther = json_load_file(fName, 0, &error);
-	json_t *fileRandomVariables =  json_object_get(rootOther, "randomVariables");
-	if (fileRandomVariables == NULL) {
-	  fileRandomVariables =  json_object_get(rootOther, "RandomVariables");
-	}
-	if (fileRandomVariables != NULL) {
-	  // std::cerr << "RANDOM VARIABLES: " << json_dumps(fileRandomVariables, JSON_ENCODE_ANY) << "\n\n";	  
-	  int numRVs = json_array_size(fileRandomVariables);
-	  //std::cerr << "numRVs=" <<numRVs <<std::endl;
-	  for (int i=0; i<numRVs; i++) {
-	    json_t *fileRandomVariable = json_array_get(fileRandomVariables,i);
-	    json_t *nameValue = json_object_get(fileRandomVariable, "name");
-	    const char *name = json_string_value(nameValue);
-	    std::string nameS(name);
+        const char *fName = json_string_value(value);
+        // std::cerr << "rvFILE: " << fName << "\n";
+        json_t *rootOther = json_load_file(fName, 0, &error);
+        json_t *fileRandomVariables =  json_object_get(rootOther, "randomVariables");
+        if (fileRandomVariables == NULL) {
+          fileRandomVariables =  json_object_get(rootOther, "RandomVariables");
+        }
+        if (fileRandomVariables != NULL) {
+          // std::cerr << "RANDOM VARIABLES: " << json_dumps(fileRandomVariables, JSON_ENCODE_ANY) << "\n\n";	  
+          int numRVs = json_array_size(fileRandomVariables);
+          //std::cerr << "numRVs=" <<numRVs <<std::endl;
+          for (int i=0; i<numRVs; i++) {
+            json_t *fileRandomVariable = json_array_get(fileRandomVariables,i);
+            json_t *nameValue = json_object_get(fileRandomVariable, "name");
+            const char *name = json_string_value(nameValue);
+            std::string nameS(name);
 
-	    std::vector<std::string>::iterator it;
+            std::vector<std::string>::iterator it;
 
-	    it = std::find(randomVariableNames.begin(), 
-			   randomVariableNames.end(), 
-			   nameS);
+            it = std::find(randomVariableNames.begin(), 
+              randomVariableNames.end(), 
+              nameS);
 
-	    if (it == randomVariableNames.end() ) {
-	      randomVariableNames.push_back(nameS);
-	      json_array_append(rootRVs, fileRandomVariable);
-	    }
-
-
-	  }
-
-    json_t * corrMatJson =  json_object_get(rootINPUT,"correlationMatrix");
-    json_t * newCorrMatJson = json_array();
-    
-    // if correlation matrix exists
-    if (corrMatJson != NULL) {
-
-      int numCorrs = json_array_size(corrMatJson);
-      int numOrgRVs = std::sqrt(numCorrs);
-      int numTotRVs = json_array_size(rootRVs);
-
-      std::cerr << "RANDOM VARIABLES: numORIG: " << numOrgRVs << " new: " << numTotRVs << "\n";
-
-      if (numOrgRVs<numTotRVs){
-
-	double val;
-	for (int i=0;i<numTotRVs;i++) {
-	  for (int j=0; j<numTotRVs; j++) {
-	    if ((i<numOrgRVs) && (j<numOrgRVs)) {
-	      val = json_number_value(json_array_get(corrMatJson,i + numOrgRVs*j)); // symmetry so i,j order does not matter
-	    } else {
-	      if (i == j)
-		val = 1.0;
-	      else
-		val = 0.0;
-	    }
-	    json_array_append(newCorrMatJson,json_real(val));
-	  }
-	}
-      }
-      //json_object_update_existing(json_object_get(rootINPUT,"correlationMatrix"),newCorrMatJson);
-
-      
-      json_object_set(rootINPUT, "correlationMatrix", newCorrMatJson);
-
-      //std::cerr << "OLD CORRELATION " << json_dumps(corrMatJson, JSON_ENCODE_ANY) << "\n\n";      
-      //std::cerr << "NEW CORRELATION " << json_dumps(newCorrMatJson, JSON_ENCODE_ANY) << "\n\n";
-      
-    }
+            if (it == randomVariableNames.end() ) {
+              randomVariableNames.push_back(nameS);
+              json_array_append(rootRVs, fileRandomVariable);
+            }
 
 
-	  // KZ: commented for fixing RVs not in BIM.json which is not passed to individual json files (i.e., EVENT.json, SIM.json, SAM.json)
-	  //if (numRVs != 0) {
-	  rvFiles.insert(std::string(fName));
-	  //}
-	} else {
-	  ; //	std::cerr << "NO RANDOM VARIABLES: " << json_dumps(rootOther, JSON_ENCODE_ANY) << "\n\n";
-	}
+          }
+
+          json_t * corrMatJson =  json_object_get(rootINPUT,"correlationMatrix");
+          json_t * newCorrMatJson = json_array();
+          
+          // if correlation matrix exists
+          if (corrMatJson != NULL) {
+
+            int numCorrs = json_array_size(corrMatJson);
+            int numOrgRVs = std::sqrt(numCorrs);
+            int numTotRVs = json_array_size(rootRVs);
+
+            std::cerr << "RANDOM VARIABLES: numORIG: " << numOrgRVs << " new: " << numTotRVs << "\n";
+
+            if (numOrgRVs<numTotRVs){
+
+              double val;
+              for (int i=0;i<numTotRVs;i++) {
+                for (int j=0; j<numTotRVs; j++) {
+                  if ((i<numOrgRVs) && (j<numOrgRVs)) {
+                    val = json_number_value(json_array_get(corrMatJson,i + numOrgRVs*j)); // symmetry so i,j order does not matter
+                  } else {
+                    if (i == j)
+                      val = 1.0;
+                    else
+                      val = 0.0;
+                  }
+                  json_array_append(newCorrMatJson,json_real(val));
+                }
+              }
+            }
+            //json_object_update_existing(json_object_get(rootINPUT,"correlationMatrix"),newCorrMatJson);
+
+            
+            json_object_set(rootINPUT, "correlationMatrix", newCorrMatJson);
+
+            //std::cerr << "OLD CORRELATION " << json_dumps(corrMatJson, JSON_ENCODE_ANY) << "\n\n";      
+            //std::cerr << "NEW CORRELATION " << json_dumps(newCorrMatJson, JSON_ENCODE_ANY) << "\n\n";
+            
+          }
+
+
+          // KZ: commented for fixing RVs not in BIM.json which is not passed to individual json files (i.e., EVENT.json, SIM.json, SAM.json)
+          //if (numRVs != 0) {
+          rvFiles.insert(std::string(fName));
+          //}
+        } else {
+          ; //	std::cerr << "NO RANDOM VARIABLES: " << json_dumps(rootOther, JSON_ENCODE_ANY) << "\n\n";
+        }
       }
     }
   } 
@@ -185,120 +185,119 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
       json_t *value;
       
       json_array_foreach(defaultEDPs, index, value) {
-	const char *fName = json_string_value(value);
-	// std::cerr << "Parsing file: " << fName << "\n";
-	json_t *rootOther = json_load_file(fName, 0, &error);
-	json_t *fileEDPs =  json_object_get(rootOther, "EngineeringDemandParameters");
-	if (fileEDPs != NULL) {
+        const char *fName = json_string_value(value);
+        // std::cerr << "Parsing file: " << fName << "\n";
+        json_t *rootOther = json_load_file(fName, 0, &error);
+        json_t *fileEDPs =  json_object_get(rootOther, "EngineeringDemandParameters");
+        if (fileEDPs != NULL) {
 
-	  //std::string fNameString(fName);
-	  edpFile = std::string(fName);
-	  
-	  // for each event write the edps
-	  int numEvents = json_array_size(fileEDPs);
+          //std::string fNameString(fName);
+          edpFile = std::string(fName);
+          
+          // for each event write the edps
+          int numEvents = json_array_size(fileEDPs);
 
-	  //
-	  // loop over all events
-	  //
-	  
-	  for (int i=0; i<numEvents; i++) {
-	    
-	    json_t *event = json_array_get(fileEDPs,i);
-	    json_t *eventEDPs = json_object_get(event,"responses");
-	    int numResponses = json_array_size(eventEDPs);
+          //
+          // loop over all events
+          //
+          
+          for (int i=0; i<numEvents; i++) {
+            
+            json_t *event = json_array_get(fileEDPs,i);
+            json_t *eventEDPs = json_object_get(event,"responses");
+            int numResponses = json_array_size(eventEDPs);
 
-	    //
-	    // loop over all edp for the event
-	    //
-	    
-	    for (int j=0; j<numResponses; j++) {
-	      
-	      json_t *eventEDP = json_array_get(eventEDPs,j);
-	      const char *edpEngType = json_string_value(json_object_get(eventEDP,"type"));
-	      bool known = false;
-	      std::string edpAcronym("");
-	      std::string edpName("");
-	      const char *floor = NULL;
-	      // std::cerr << "writeResponse: type: " << edpEngType << " " << j << " " << numResponses << "\n";
-	      // based on edp do something
-	      if (strcmp(edpEngType,"max_abs_acceleration") == 0) {
-		edpAcronym = "PFA";
-		floor = json_string_value(json_object_get(eventEDP,"floor"));
-		known = true;
-	      } else if (strcmp(edpEngType,"rms_acceleration") == 0) {
-		edpAcronym = "RMSA";
-		floor = json_string_value(json_object_get(eventEDP,"floor"));
-		known = true;		
-	      } else if	(strcmp(edpEngType,"max_drift") == 0) {
-		edpAcronym = "PID";
-		floor = json_string_value(json_object_get(eventEDP,"floor2"));
-		known = true;
-	      } else if	(strcmp(edpEngType,"residual_disp") == 0) {
-		edpAcronym = "RD";
-		floor = json_string_value(json_object_get(eventEDP,"floor"));
-		known = true;
-	      } else if (strcmp(edpEngType,"max_pressure") == 0) {
-		edpAcronym = "PSP";
-		floor = json_string_value(json_object_get(eventEDP,"floor2"));
-		known = true;
-	      } else if (strcmp(edpEngType,"max_rel_disp") == 0) {
-		edpAcronym = "PFD";
-		floor = json_string_value(json_object_get(eventEDP,"floor"));
-		known = true;
-	      } else if (strcmp(edpEngType,"max_roof_drift") == 0) {
-		edpAcronym = "PRD";
-		floor = "1";
-		known = true;		
-	      } else if (strcmp(edpEngType,"peak_wind_gust_speed") == 0) {
-		edpAcronym = "PWS";
-		floor = json_string_value(json_object_get(eventEDP,"floor"));
-		known = true;
-	      } else {
-		edpName = edpEngType;
-		// edpList.push_back(newEDP);
-	      }
-	      
-	      if (known == true) {
-		json_t *dofs = json_object_get(eventEDP,"dofs");
-		int numDOF = json_array_size(dofs);
-		
-		// loop over all edp for the event
-		for (int k=0; k<numDOF; k++) {
-		  int dof = json_integer_value(json_array_get(dofs,k));
-		  edpName = std::string(std::to_string(i+1)) + std::string("-")
-		    + edpAcronym
-		    + std::string("-")
-		    + std::string(floor) +
-		    std::string("-") + std::string(std::to_string(dof));
-		  
-		  // edpList.push_back(newEDP);
-		  // add new EDP
-		  json_t *newEDP = json_object();
-		  json_object_set(newEDP, "length", json_integer(1));
-		  json_object_set(newEDP, "type", json_string("scalar"));
-		  json_object_set(newEDP, "name", json_string(edpName.c_str()));
-		  
-		  json_array_append(rootEDPs, newEDP);	      
-		}		  
-	      }
+            //
+            // loop over all edp for the event
+            //
+            
+            for (int j=0; j<numResponses; j++) {
+              
+              json_t *eventEDP = json_array_get(eventEDPs,j);
+              const char *edpEngType = json_string_value(json_object_get(eventEDP,"type"));
+              bool known = false;
+              std::string edpAcronym("");
+              std::string edpName("");
+              const char *floor = NULL;
+              // std::cerr << "writeResponse: type: " << edpEngType << " " << j << " " << numResponses << "\n";
+              // based on edp do something
+              if (strcmp(edpEngType,"max_abs_acceleration") == 0) {
+                edpAcronym = "PFA";
+                floor = json_string_value(json_object_get(eventEDP,"floor"));
+                known = true;
+                    } else if (strcmp(edpEngType,"rms_acceleration") == 0) {
+                edpAcronym = "RMSA";
+                floor = json_string_value(json_object_get(eventEDP,"floor"));
+                known = true;		
+                    } else if	(strcmp(edpEngType,"max_drift") == 0) {
+                edpAcronym = "PID";
+                floor = json_string_value(json_object_get(eventEDP,"floor2"));
+                known = true;
+                    } else if	(strcmp(edpEngType,"residual_disp") == 0) {
+                edpAcronym = "RD";
+                floor = json_string_value(json_object_get(eventEDP,"floor"));
+                known = true;
+                    } else if (strcmp(edpEngType,"max_pressure") == 0) {
+                edpAcronym = "PSP";
+                floor = json_string_value(json_object_get(eventEDP,"floor2"));
+                known = true;
+                    } else if (strcmp(edpEngType,"max_rel_disp") == 0) {
+                edpAcronym = "PFD";
+                floor = json_string_value(json_object_get(eventEDP,"floor"));
+                known = true;
+                    } else if (strcmp(edpEngType,"max_roof_drift") == 0) {
+                edpAcronym = "PRD";
+                floor = "1";
+                known = true;		
+                    } else if (strcmp(edpEngType,"peak_wind_gust_speed") == 0) {
+                edpAcronym = "PWS";
+                floor = json_string_value(json_object_get(eventEDP,"floor"));
+                known = true;
+                    } else {
+                edpName = edpEngType;
+                // edpList.push_back(newEDP);
+              }
+              
+              if (known == true) {
+                json_t *dofs = json_object_get(eventEDP,"dofs");
+                int numDOF = json_array_size(dofs);
+                
+                // loop over all edp for the event
+                for (int k=0; k<numDOF; k++) {
+                  int dof = json_integer_value(json_array_get(dofs,k));
+                  edpName = std::string(std::to_string(i+1)) + std::string("-")
+                    + edpAcronym
+                    + std::string("-")
+                    + std::string(floor) +
+                    std::string("-") + std::string(std::to_string(dof));
+                  
+                  // edpList.push_back(newEDP);
+                  // add new EDP
+                  json_t *newEDP = json_object();
+                  json_object_set(newEDP, "length", json_integer(1));
+                  json_object_set(newEDP, "type", json_string("scalar"));
+                  json_object_set(newEDP, "name", json_string(edpName.c_str()));
+                  
+                  json_array_append(rootEDPs, newEDP);	      
+                }		  
+              }
 
-	      // KZ: for not standard edp (known==false)
-	      else {
-		// add new EDP as defined by users
-		json_t *newEDP = json_object();
-		json_object_set(newEDP, "length", json_integer(1));
-		json_object_set(newEDP, "type", json_string("scalar"));
-		json_object_set(newEDP, "name", json_string(edpName.c_str()));
-		json_array_append(rootEDPs, newEDP);	   
-		
-	      }
-	    }
-	  }
-	} else {
-	  
-	  // standard EDP
-	  
-	}	    
+              // KZ: for not standard edp (known==false)
+              else {
+                // add new EDP as defined by users
+                json_t *newEDP = json_object();
+                json_object_set(newEDP, "length", json_integer(1));
+                json_object_set(newEDP, "type", json_string("scalar"));
+                json_object_set(newEDP, "name", json_string(edpName.c_str()));
+                json_array_append(rootEDPs, newEDP);	   
+              }
+            }
+          }
+        } else {
+          
+          // standard EDP
+          
+        }	    
       }
     }
   }
