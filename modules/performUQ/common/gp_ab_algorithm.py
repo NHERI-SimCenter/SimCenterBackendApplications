@@ -1,3 +1,10 @@
+"""
+Module implementing the GP-AB Algorithm for Bayesian calibration.
+
+It includes classes and functions for performing Gaussian Process modeling,
+Principal Component Analysis, and various convergence metrics.
+"""
+
 import importlib
 import json
 import os
@@ -7,6 +14,8 @@ from functools import partial
 from pathlib import Path
 from typing import Literal
 
+import common_datamodels
+import convergence_metrics
 import numpy as np
 import pydantic
 
@@ -14,35 +23,96 @@ import pydantic
 #     "/Users/aakash/SimCenter/SimCenterBackendApplications/modules/performUQ/common"
 # )
 import uq_utilities
-from scipy.stats import invgamma, norm
-
-import common_datamodels
-import convergence_metrics
 from adaptive_doe import AdaptiveDesignOfExperiments
 from gp_model import GaussianProcessModel
 from principal_component_analysis import PrincipalComponentAnalysis
+from scipy.stats import invgamma, norm
 from space_filling_doe import LatinHypercubeSampling
 from tmcmc import TMCMC, calculate_warm_start_stage
 
 
 def log_likelihood(prediction_error_vector, prediction_error_variance):
+    """
+    Calculate the log-likelihood of the prediction errors given the variance.
+
+    Args:
+        prediction_error_vector (np.ndarray): The vector of prediction errors.
+        prediction_error_variance (float): The variance of the prediction errors.
+
+    Returns
+    -------
+        float: The log-likelihood value.
+    """
     return np.sum(
         norm.logpdf(prediction_error_vector, 0, np.sqrt(prediction_error_variance))
     )
 
 
 def _response_approximation(current_gp, current_pca, model_parameters):
+    """
+    Approximate the response using the current GP model and PCA.
+
+    Args:
+        current_gp (GaussianProcessModel): The current Gaussian Process model.
+        current_pca (PrincipalComponentAnalysis): The current PCA model.
+        model_parameters (np.ndarray): The model parameters.
+
+    Returns
+    -------
+        np.ndarray: The approximated response.
+    """
     latent_predictions, _ = current_gp.predict(model_parameters)
     gp_prediction = current_pca.project_back_to_original_space(latent_predictions)
-    return gp_prediction
+    return gp_prediction  # noqa: RET504
 
 
 class GP_AB_Algorithm:
-    def __init__(
+    """
+    A class to represent the GP-AB Algorithm for Bayesian calibration.
+
+    Attributes
+    ----------
+        data (np.ndarray): The observed data.
+        input_dimension (int): The input dimension of the model.
+        output_dimension (int): The output dimension of the model.
+        output_length_list (list[int]): The list of output lengths.
+        domain (list[tuple[float, float]]): The domain for each dimension.
+        prior_variances (np.ndarray): The prior variances.
+        prior_pdf_function (callable): The prior PDF function.
+        log_likelihood_function (callable): The log-likelihood function.
+        pca_threshold (float): The threshold for PCA.
+        gkl_threshold (float): The threshold for GKL.
+        gmap_threshold (float): The threshold for GMAP.
+        max_simulations (int): The maximum number of simulations.
+        max_computational_time (float): The maximum computational time.
+        start_time (float): The start time of the algorithm.
+        converged (bool): Whether the algorithm has converged.
+        budget_exceeded (bool): Whether the budget has been exceeded.
+        terminate (bool): Whether to terminate the algorithm.
+        num_experiments (list[int]): The number of experiments.
+        num_recalibration_experiments (int): The number of recalibration experiments.
+        recalibration_ratio (float): The recalibration ratio.
+        sample_transformation_function (callable): The sample transformation function.
+        model_evaluation_function (callable): The model evaluation function.
+        run_type (str): The run type (e.g., "runningLocal").
+        parallel_pool (uq_utilities.ParallelPool): The parallel pool instance.
+        parallel_evaluation_function (callable): The parallel evaluation function.
+        loocv_threshold (float): The threshold for LOOCV.
+        results (dict): The results dictionary.
+        current_gp_model (GaussianProcessModel): The current GP model.
+        current_pca (PrincipalComponentAnalysis): The current PCA model.
+        samples_dict (dict): The dictionary of samples.
+        betas_dict (dict): The dictionary of betas.
+        log_likelihoods_dict (dict): The dictionary of log-likelihoods.
+        log_target_density_values_dict (dict): The dictionary of log-target density values.
+        log_evidence_dict (dict): The dictionary of log evidence.
+    """
+
+    def __init__(  # noqa: PLR0913
         self,
         data,
         output_length_list,
-        output_names_list,
+        output_names_list,  # noqa: ARG002
         input_dimension,
         output_dimension,
         domain,
@@ -54,12 +124,36 @@ class GP_AB_Algorithm:
         max_simulations=np.inf,
         max_computational_time=np.inf,
         pca_threshold=0.999,
-        run_type="runningLocal",
+        run_type='runningLocal',
         loocv_threshold=0.2,
         recalibration_ratio=0.1,
         gkl_threshold=0.01,
         gmap_threshold=0.01,
     ):
+        """
+        Initialize the GP_AB_Algorithm class.
+
+        Args:
+            data (np.ndarray): The observed data.
+            output_length_list (list[int]): The list of output lengths.
+            output_names_list (list[str]): The list of output names.
+            input_dimension (int): The input dimension of the model.
+            output_dimension (int): The output dimension of the model.
+            domain (list[tuple[float, float]]): The domain for each dimension.
+            model_evaluation_function (callable): The model evaluation function.
+            sample_transformation_function (callable): The sample transformation function.
+            prior_pdf_function (callable): The prior PDF function.
+            log_likelihood_function (callable): The log-likelihood function.
+            prior_variances (np.ndarray): The prior variances.
+            max_simulations (int, optional): The maximum number of simulations. Defaults to np.inf.
+            max_computational_time (float, optional): The maximum computational time. Defaults to np.inf.
+            pca_threshold (float, optional): The threshold for PCA. Defaults to 0.999.
+            run_type (str, optional): The run type (e.g., "runningLocal"). Defaults to "runningLocal".
+            loocv_threshold (float, optional): The threshold for LOOCV. Defaults to 0.2.
+            recalibration_ratio (float, optional): The recalibration ratio. Defaults to 0.1.
+            gkl_threshold (float, optional): The threshold for GKL. Defaults to 0.01.
+            gmap_threshold (float, optional): The threshold for GMAP. Defaults to 0.01.
+        """
         self.data = data
         self.input_dimension = input_dimension
         self.output_dimension = output_dimension
@@ -100,42 +194,82 @@ class GP_AB_Algorithm:
 
         self.loocv_threshold = loocv_threshold
 
-        self.results = dict()
+        self.results = {}
         self.current_gp_model = GaussianProcessModel(
             self.input_dimension, 1, ARD=True
         )
         self.current_pca = PrincipalComponentAnalysis(self.pca_threshold)
 
-        self.samples_dict = dict()
-        self.betas_dict = dict()
-        self.log_likelihoods_dict = dict()
-        self.log_target_density_values_dict = dict()
-        self.log_evidence_dict = dict()
+        self.samples_dict = {}
+        self.betas_dict = {}
+        self.log_likelihoods_dict = {}
+        self.log_target_density_values_dict = {}
+        self.log_evidence_dict = {}
 
     def _evaluate_in_parallel(self, func, samples):
+        """
+        Evaluate the model in parallel using the provided function and samples.
+
+        Args:
+            func (callable): The function to evaluate.
+            samples (np.ndarray): The samples to evaluate.
+
+        Returns
+        -------
+            np.ndarray: The evaluated outputs.
+        """
         transformed_samples = self.sample_transformation_function(samples)
         simulation_numbers = np.arange(len(samples))
         iterable = zip(simulation_numbers, transformed_samples)
         outputs = np.atleast_2d(
             list(self.parallel_evaluation_function(func, iterable))
         )
-        return outputs
+        return outputs  # noqa: RET504
 
     def _perform_initial_doe(self, n_samples):
+        """
+        Perform the initial Design of Experiments (DoE) using Latin Hypercube Sampling.
+
+        Args:
+            n_samples (int): The number of samples to generate.
+
+        Returns
+        -------
+            np.ndarray: The generated samples.
+        """
         self.initial_doe = LatinHypercubeSampling(
             n_samples=n_samples, n_dimensions=self.input_dimension
         )
         samples = self.initial_doe.generate(self.domain)
-        return samples
+        return samples  # noqa: RET504
 
     def _get_initial_training_set(self, n_samples):
+        """
+        Get the initial training set by performing DoE and evaluating the model.
+
+        Args:
+            n_samples (int): The number of samples to generate.
+
+        Returns
+        -------
+            tuple: A tuple containing the inputs and outputs of the initial training set.
+        """
         inputs = self._perform_initial_doe(n_samples)
         outputs = self._evaluate_in_parallel(self.model_evaluation_function, inputs)
-        # initial_training_set = np.hstack((inputs, outputs))
-        # return initial_training_set
         return inputs, outputs
 
     def _log_likelihood_approximation(self, response_approximation, samples):
+        """
+        Approximate the log-likelihood for the given samples.
+
+        Args:
+            response_approximation (callable): The response approximation function.
+            samples (np.ndarray): The samples to evaluate.
+
+        Returns
+        -------
+            np.ndarray: The approximated log-likelihood values.
+        """
         u_values = samples[:, : self.input_dimension]
         model_parameters = self.sample_transformation_function(u_values).reshape(
             1, -1
@@ -164,36 +298,68 @@ class GP_AB_Algorithm:
         return np.array(log_likes).reshape((num_samples, 1))
 
     def _log_prior_pdf(self, samples):
+        """
+        Calculate the log-prior PDF for the given samples.
+
+        Args:
+            samples (np.ndarray): The samples to evaluate.
+
+        Returns
+        -------
+            np.ndarray: The log-prior PDF values.
+        """
         u_values = samples[:, : self.input_dimension]
         model_parameters = self.sample_transformation_function(u_values)
         log_prior_model_parameters = np.log(
             self.prior_pdf_function(model_parameters)
         ).reshape((-1, 1))
-        # TODO: (ABS) Decide what prior to use for q
         q = samples[:, self.input_dimension :]
         log_prior_q = np.sum(invgamma.logpdf(q, 1, scale=0.5), axis=1)
         prior_log_pdf = log_prior_model_parameters + log_prior_q
-        return prior_log_pdf
+        return prior_log_pdf  # noqa: RET504
 
     def _log_posterior_approximation(self, samples, log_likelihoods):
+        """
+        Approximate the log-posterior for the given samples and log-likelihoods.
+
+        Args:
+            samples (np.ndarray): The samples to evaluate.
+            log_likelihoods (np.ndarray): The log-likelihood values.
+
+        Returns
+        -------
+            np.ndarray: The approximated log-posterior values.
+        """
         log_prior = self._log_prior_pdf(samples)
         log_posterior = log_likelihoods + log_prior
-        return log_posterior
+        return log_posterior  # noqa: RET504
 
     def loocv_measure(self, log_likelihood_approximation):
-        lls = log_likelihood_approximation(self.inputs)
+        """
+        Calculate the Leave-One-Out Cross-Validation (LOOCV) measure.
 
-        # weights = (
-        #     2 / 3 * np.ones((self.database.shape[0], 1))
-        #     + 1 / 3 * self.adaptive_weights_per_stage
-        # )
+        Args:
+            log_likelihood_approximation (callable): The log-likelihood approximation function.
+
+        Returns
+        -------
+            float: The LOOCV measure.
+        """
+        lls = log_likelihood_approximation(self.inputs)
         loo_predictions = self.current_gp_model.loo_predictions(self.outputs)
         loocv_measure = convergence_metrics.calculate_loo_nrmse_w(
             loo_predictions, lls
         )
-        return loocv_measure
+        return loocv_measure  # noqa: RET504
 
     def calibrate_gp(self, model_parameters, model_outputs):
+        """
+        Calibrate the Gaussian Process (GP) model using the given parameters and outputs.
+
+        Args:
+            model_parameters (np.ndarray): The model parameters.
+            model_outputs (np.ndarray): The model outputs.
+        """
         latent_outputs = self.current_pca.project_to_latent_space(model_outputs)
         self.num_pca_components_list.append(np.shape(latent_outputs)[1])
         self.current_gp_model = GaussianProcessModel(
@@ -203,6 +369,16 @@ class GP_AB_Algorithm:
         self.num_recalibration_experiments = self.num_experiments[-1]
 
     def run_iteration(self, k):
+        """
+        Run a single iteration of the GP-AB Algorithm.
+
+        Args:
+            k (int): The iteration number.
+
+        Returns
+        -------
+            tuple: A tuple containing a boolean indicating whether to terminate and the current TMCMC results.
+        """
         self.iteration_number = k
         model_parameters = self.inputs
         model_outputs = self.outputs
@@ -233,13 +409,13 @@ class GP_AB_Algorithm:
         gp_prediction_latent_mean, gp_prediction_latent_variance = (
             self.current_gp_model.predict(model_parameters)
         )
-        gp_prediction_mean = self.current_pca.project_back_to_original_space(
+        gp_prediction_mean = self.current_pca.project_back_to_original_space(  # noqa: F841
             gp_prediction_latent_mean
         )
         loo_predictions_latent_space = self.current_gp_model.loo_predictions(
             self.latent_outputs
         )
-        loo_predictions = self.current_pca.project_back_to_original_space(
+        loo_predictions = self.current_pca.project_back_to_original_space(  # noqa: F841
             loo_predictions_latent_space
         )
 
@@ -258,11 +434,11 @@ class GP_AB_Algorithm:
         j_star = 0
         beta = 0
 
-        samples_dict = dict()
-        betas_dict = dict()
-        log_likelihoods_dict = dict()
-        log_target_density_values_dict = dict()
-        log_evidence_dict = dict()
+        samples_dict = {}
+        betas_dict = {}
+        log_likelihoods_dict = {}
+        log_target_density_values_dict = {}
+        log_evidence_dict = {}
 
         num_samples_per_stage = 50
         if k > 0:
@@ -272,7 +448,8 @@ class GP_AB_Algorithm:
             #         log_likelihood_approximation, self.betas_dict
             #     )
             j_star = calculate_warm_start_stage(
-                log_likelihood_approximation, current_tmcmc_results
+                log_likelihood_approximation,
+                current_tmcmc_results,  # noqa: F821
             )
             previous_log_posterior_approximation = log_posterior_approximation
 
@@ -368,16 +545,33 @@ class GP_AB_Algorithm:
         return self.terminate, current_tmcmc_results
 
     def run_initial_doe(self, num_initial_doe_per_dim=2):
+        """
+        Run the initial Design of Experiments (DoE).
+
+        Args:
+            num_initial_doe_per_dim (int, optional): Number of initial DoE samples per dimension. Defaults to 2.
+
+        Returns
+        -------
+            tuple: A tuple containing the inputs, outputs, and number of initial DoE samples.
+        """
         num_initial_doe_samples = num_initial_doe_per_dim * self.input_dimension
         inputs, outputs = self._get_initial_training_set(num_initial_doe_samples)
         return inputs, outputs, num_initial_doe_samples
 
     def write_results(self):
-        print(f"{self.iteration_number = }")
-        print("Results written to file")
+        """Write the results of the GP-AB Algorithm to a file."""
+        # print(f'{self.iteration_number = }')
+        # print('Results written to file')
 
 
 def main(input_arguments):
+    """
+    Run the GP-AB Algorithm.
+
+    Args:
+        input_arguments (InputArguments): The input arguments for the algorithm.
+    """
     gp_ab = GP_AB_Algorithm(*preprocess(input_arguments))
     inputs, outputs, num_initial_doe_samples = gp_ab.run_initial_doe(
         num_initial_doe_per_dim=2
@@ -393,7 +587,17 @@ def main(input_arguments):
 
 
 def read_inputs(input_json_file):
-    with open(input_json_file, encoding="utf-8") as f:
+    """
+    Read and parse the input JSON file.
+
+    Args:
+        input_json_file (str): Path to the input JSON file.
+
+    Returns
+    -------
+        tuple: A tuple containing UQ inputs, random variables, correlation matrix, EDP inputs, and application inputs.
+    """
+    with Path(input_json_file).open(encoding='utf-8') as f:
         inputs = json.load(f)
 
     # application_inputs = inputs["Applications"]
@@ -406,7 +610,7 @@ def read_inputs(input_json_file):
     uq_inputs = input_data.UQ
     rv_inputs = input_data.randomVariables
     correlation_matrix_inputs = input_data.correlationMatrix
-    edp_inputs = inputs["EDP"]
+    edp_inputs = inputs['EDP']
     application_inputs = input_data.Applications
 
     # application_inputs = common_datamodels.Applications.model_validate(
@@ -429,6 +633,16 @@ def read_inputs(input_json_file):
 
 
 def preprocess(input_arguments):
+    """
+    Preprocess the input arguments for the GP-AB Algorithm.
+
+    Args:
+        input_arguments (InputArguments): The input arguments for the algorithm.
+
+    Returns
+    -------
+        tuple: A tuple containing the preprocessed data required for the GP-AB Algorithm.
+    """
     (
         uq_inputs,
         rv_inputs,
@@ -440,8 +654,8 @@ def preprocess(input_arguments):
     data_file = (
         uq_inputs.calibration_data_path / uq_inputs.calibration_data_file_name
     )
-    with open(data_file, "r") as f:
-        data = np.genfromtxt(f, delimiter=",")
+    with data_file.open() as f:
+        data = np.genfromtxt(f, delimiter=',')
 
     log_likelihood_file_name = uq_inputs.log_likelihood_file_name
     log_likelihood_path = uq_inputs.log_likelihood_path
@@ -449,14 +663,14 @@ def preprocess(input_arguments):
     if log_likelihood_file_name:
         sys.path.append(str(log_likelihood_path))
         ll_module = importlib.import_module(log_likelihood_file_name)
-        log_likelihood_function = getattr(ll_module, "log_likelihood")
+        log_likelihood_function = ll_module.log_likelihood
 
     joint_distribution = uq_utilities.ERANatafJointDistribution(
         rv_inputs,
         correlation_matrix_inputs,
     )
     domain = [(-3, 3) for _ in range(len(rv_inputs))]
-    prior_variances = [1 for _ in range(len(rv_inputs))]  # TODO: (ABS) Validate this
+    prior_variances = [1 for _ in range(len(rv_inputs))]  # TODO(ABS): Validate this
     # Transformation function from standard to physical space
     sample_transformation_function = joint_distribution.u_to_x
 
@@ -471,16 +685,16 @@ def preprocess(input_arguments):
         list_of_dir_names_to_copy_files_from=[main_script_path],
         run_directory=input_arguments.path_to_working_directory,
         driver_filename=str(input_arguments.driver_file_name),
-        workdir_prefix="workdir",
+        workdir_prefix='workdir',
     )
     model_evaluation_function = model.evaluate_model_once
 
-    edp_names_list = [edp["name"] for edp in edp_inputs]
-    edp_lengths_list = [edp["length"] for edp in edp_inputs]
+    edp_names_list = [edp['name'] for edp in edp_inputs]
+    edp_lengths_list = [edp['length'] for edp in edp_inputs]
     input_dimension = len(rv_inputs)
     output_dimension = sum(
         edp_lengths_list
-    )  # TODO: (ABS) Validate this against length of data
+    )  # TODO(ABS): Validate this against length of data
 
     max_simulations = np.inf
     max_computational_time = np.inf
@@ -511,24 +725,41 @@ def preprocess(input_arguments):
 
 
 class InputArguments(pydantic.BaseModel):
+    """
+    A class to represent the input arguments for the GP-AB Algorithm.
+
+    Attributes
+    ----------
+    path_to_working_directory : Path
+        The path to the working directory.
+    path_to_template_directory : Path
+        The path to the template directory.
+    run_type : Literal['runningLocal', 'runningRemote']
+        The type of run (local or remote).
+    driver_file_name : Path
+        The name of the driver file.
+    input_json_file : Path
+        The path to the input JSON file.
+    """
+
     path_to_working_directory: Path
     path_to_template_directory: Path
-    run_type: Literal["runningLocal", "runningRemote"]
+    run_type: Literal['runningLocal', 'runningRemote']
     driver_file_name: Path
     input_json_file: Path
 
-    model_config = pydantic.ConfigDict(revalidate_instances="always")
+    model_config = pydantic.ConfigDict(revalidate_instances='always')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     this = Path(__file__).resolve()
-    os.chdir("/Users/aakash/Documents/quoFEM/LocalWorkDir/tmp.SimCenter")
+    os.chdir('/Users/aakash/Documents/quoFEM/LocalWorkDir/tmp.SimCenter')
     args = {
-        "path_to_working_directory": Path(sys.argv[1]).resolve(),
-        "path_to_template_directory": Path(sys.argv[2]).resolve(),
-        "run_type": sys.argv[3],
-        "driver_file_name": Path(sys.argv[4]).resolve(),
-        "input_json_file": Path(sys.argv[5]).resolve(),
+        'path_to_working_directory': Path(sys.argv[1]).resolve(),
+        'path_to_template_directory': Path(sys.argv[2]).resolve(),
+        'run_type': sys.argv[3],
+        'driver_file_name': Path(sys.argv[4]).resolve(),
+        'input_json_file': Path(sys.argv[5]).resolve(),
     }
     input_arguments = InputArguments.model_validate(args)
     main(input_arguments)
