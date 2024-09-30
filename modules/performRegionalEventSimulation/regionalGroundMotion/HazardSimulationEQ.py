@@ -99,6 +99,15 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
         event_info = hazard_info['Event']
         # When vector IM is used. The PGA/SA needs to be computed before PGV
         im_info = event_info['IntensityMeasure']
+        # To make the SA format consistent with R2D requirement
+        if im_info['Type'] == 'Vector' and 'SA' in im_info.keys():  # noqa: SIM118
+            periods = im_info['SA']['Periods']
+            periods = [float(i) for i in periods]
+            im_info['SA']['Periods'] = periods
+        if im_info['Type'] == 'SA':
+            periods = im_info['Periods']
+            periods = [float(i) for i in periods]
+            im_info['Periods'] = periods
         if im_info['Type'] == 'Vector' and 'PGV' in im_info.keys():  # noqa: SIM118
             PGV_info = im_info.pop('PGV')  # noqa: N806
             im_info.update({'PGV': PGV_info})
@@ -548,21 +557,24 @@ if __name__ == '__main__':
     import socket
 
     if 'stampede2' not in socket.gethostname():
-        if importlib.util.find_spec('jpype') is None:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])  # noqa: S603
-        import jpype
-        from jpype import imports
-        from jpype.types import *  # noqa: F403
+        import GlobalVariable
 
-        memory_total = psutil.virtual_memory().total / (1024.0**3)
-        memory_request = int(memory_total * 0.75)
-        jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
-        try:
+        if GlobalVariable.JVM_started is False:
+            GlobalVariable.JVM_started = True
+            if importlib.util.find_spec('jpype') is None:
+                subprocess.check_call(  # noqa: S603
+                    [sys.executable, '-m', 'pip', 'install', 'JPype1']
+                )  # noqa: RUF100, S603
+            import jpype
+
+            # from jpype import imports
+            import jpype.imports
+            from jpype.types import *  # noqa: F403
+
+            memory_total = psutil.virtual_memory().total / (1024.0**3)
+            memory_request = int(memory_total * 0.75)
+            jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
             jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
-        except:  # noqa: E722
-            print(  # noqa: T201
-                f'StartJVM of ./lib/OpenSHA-1.5.2.jar with {memory_request} GB Memory fails. Try again after releasing some memory'
-            )
     if oq_flag:
         # clear up old db.sqlite3 if any
         if os.path.isfile(os.path.expanduser('~/oqdata/db.sqlite3')):  # noqa: PTH111, PTH113
