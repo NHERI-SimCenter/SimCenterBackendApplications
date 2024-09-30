@@ -97,3 +97,5 @@ fmkTest.sh
 .vscode
 
 .coverage
+modules/performREC/pyrecodes/pyrecodes*
+modules/performREC/pyrecodes/residual_demand_traffic_simulator/projects*
