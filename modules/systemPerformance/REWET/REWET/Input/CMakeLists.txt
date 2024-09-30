@@ -1,5 +1,0 @@
-
-simcenter_add_python_script(SCRIPT GUI_Input_Interface.py)
-simcenter_add_python_script(SCRIPT Input_IO.py)
-simcenter_add_python_script(SCRIPT Policy_IO.py)
-simcenter_add_python_script(SCRIPT Settings.py)
