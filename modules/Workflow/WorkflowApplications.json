@@ -1194,6 +1194,47 @@
 	    }
 	]
     },
+    "RecoverySimulationApplications":{
+      "API": {
+          "Inputs": [
+          ],
+          "Outputs": [
+          ]
+      },
+      "Applications": [
+          {
+        "Name": "Pyrecodes",
+        "ExecutablePath": "applications/performREC/pyrecodes/run_pyrecodes.py",
+        "ApplicationSpecificInputs": [	
+          {
+            "id": "mainFile",
+            "type": "path",
+            "description": "Path to pyrecodes mainFile."
+          },
+          {
+            "id": "systemConfigFile",
+            "type": "path",
+            "description": "Path to pyrecodes system configuration file."
+          }, 
+          {
+            "id": "componentLibraryFile",
+            "type": "path",
+            "description": "Path to pyrecodes component library file."
+          },
+          {
+            "id": "localityGeojsonFile",
+            "type": "path",
+            "description": "Path to the geojson file that defines locality (Optional)."
+          },
+          {
+            "id": "rewetINPFile",
+            "type": "path",
+            "description": "Path to rewet INPfile (Optional)."
+          }
+        ]
+          }
+      ]
+        },
   "PerformanceApplications": {
     "API": {
       "Inputs": [

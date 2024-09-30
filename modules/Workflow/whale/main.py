@@ -1590,6 +1590,71 @@ class Workflow:
         log_div()
         return True
 
+    def perform_recovery_simulation(self):
+        # Make sure that we are in the run directory before we run recovery
+        # Every other path will be relative to the Run Directory (result dir)
+        os.chdir(self.run_dir)
+        # Check if system performance is requested
+        if 'RecoverySimulation' in self.workflow_apps:
+            performance_app = self.workflow_apps['RecoverySimulation']
+        else:
+            log_msg(
+                'No Recovery application to run.',
+                prepend_timestamp=False,
+            )
+            log_div()
+            return False
+
+        if performance_app.rel_path is None:
+            log_msg(
+                'No Performance application to run.',
+                prepend_timestamp=False,
+            )
+            log_div()
+            return False
+
+        log_msg(
+            'Performing Recovery Application',
+            prepend_timestamp=False,
+        )
+        log_div()
+
+        app_command_list = performance_app.get_command_list(
+            app_path=self.app_dir_local
+        )
+
+        if self.parType == 'parSETUP':
+            pass
+            # log_msg(
+            #     '\nParallel settings for Recovery Simulation',
+            #     prepend_timestamp=False,
+            # )
+            # app_command_list.append('--par')
+
+        command = create_command(app_command_list)
+
+        log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
+        log_msg(
+            f'\n{command}\n',
+            prepend_timestamp=False,
+            prepend_blank_space=False,
+        )
+
+        result, returncode = run_command(command)
+        log_msg(
+            f'\n{result}\n',
+            prepend_timestamp=False,
+            prepend_blank_space=False,
+        )
+
+        log_msg(
+            'Recover Simulation Application Completed',
+            prepend_timestamp=False,
+        )
+
+        log_div()
+        return True
+
     def perform_regional_event(self):
         """Run an application to simulate a regional-scale hazard event.
 
