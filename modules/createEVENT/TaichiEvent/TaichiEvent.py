@@ -12,6 +12,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
+subprocess.run([sys.executable, '-m', 'pip', 'install', 'taichi'])
 import taichi as ti
 
 # import taichi_script
