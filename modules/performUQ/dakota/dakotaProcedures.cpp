@@ -17,9 +17,6 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
 
   int numContinuousDesign = theRandomVariables.continuousDesignRVs.size();
 
-  std::cout << "numContinuousDesign" << std::endl;
-  std::cout << numContinuousDesign << std::endl;
-
   if (numContinuousDesign != 0) {
 
     if (!idVariables.empty()) {

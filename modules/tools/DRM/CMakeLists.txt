@@ -1,0 +1,3 @@
+add_subdirectory(MeshGenerator)
+add_subdirectory(StructresFiles)
+simcenter_add_python_script(SCRIPT modelCreator.py)
