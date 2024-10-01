@@ -139,7 +139,7 @@ for filename in filenames:
 
 my_job = {
     'name': jobname,
-    'appId': 'Shakermaker-app-amnp95',
+    'appId': 'simcenter-shakermaker-frontera',
     'appVersion': '1.0.0',
     'jobType': 'BATCH',
     'execSystemId': 'frontera',
