@@ -38,6 +38,8 @@ if __name__ == '__main__':
         '-o', '--output', help='number of realizations', required=False
     )
     parser.add_argument('-a', '--API', help='API FLAG', required=False)
+    parser.add_argument("--username", help="username", required=False)
+    parser.add_argument("--password", help="password", required=False)
     args = parser.parse_args()
 
     if args.lat:
@@ -53,6 +55,7 @@ if __name__ == '__main__':
     if args.API == 'true':
         information['APIFLAG'] = True
 
+
     #
     # go get the motions
     #
@@ -64,5 +67,5 @@ if __name__ == '__main__':
         M9API.M9(information)
     else:
         M9Stations.getStations(information, plot=False, show=False)
-        M9App2.Submit_tapis_job()
+        M9App2.Submit_tapis_job(args.username, args.password)
     exit()  # noqa: PLR1722
