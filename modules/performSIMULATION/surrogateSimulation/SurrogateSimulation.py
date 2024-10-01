@@ -105,12 +105,12 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ARG001, N802, N803
     # print(f"{pythonEXE} {surrogatePredictionPath} {params_name} {surrogate_meta_name} {surrogate_name}")
 
     command = [
-            pythonEXE,
-            surrogatePredictionPath,
-            params_name,
-            surrogate_meta_name,
-            surrogate_name
-            ]
+        pythonEXE,
+        surrogatePredictionPath,
+        params_name,
+        surrogate_meta_name,
+        surrogate_name,
+    ]
     subprocess.run(command, check=True)  # noqa: S603
 
     # os.system(  # noqa: RUF100, S605
@@ -133,9 +133,11 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ARG001, N802, N803
         #         'Do not select [None] in the FEM tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'
         #     )
         # exit(-1)  # noqa: PLR1722, RUF100
-        print('Do not select [None] in the FEM tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.', file=sys.stderr)  # noqa: T201
+        print(
+            'Do not select [None] in the FEM tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.',
+            file=sys.stderr,
+        )  # noqa: T201
         exit(-1)  # noqa: PLR1722
-
 
 
 def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):  # noqa: C901, N802, N803, D103

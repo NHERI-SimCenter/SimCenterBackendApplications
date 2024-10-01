@@ -17,8 +17,9 @@ try:
     import GPy as GPy  # noqa: PLC0414
 except:  # noqa: E722
     print(  # noqa: T201
-        'Error running surrogate prediction - Failed to import module: Surrogate modeling module uses GPy python package which is facing a version compatibility issue at this moment (01.05.2024). To use the surrogate module, one needs to update manually the GPy version to 1.13. The instruction can be found in the the documentation: https://nheri-simcenter.github.io/quoFEM-Documentation/common/user_manual/usage/desktop/SimCenterUQSurrogate.html#lblsimsurrogate'
-    , file=sys.stderr)
+        'Error running surrogate prediction - Failed to import module: Surrogate modeling module uses GPy python package which is facing a version compatibility issue at this moment (01.05.2024). To use the surrogate module, one needs to update manually the GPy version to 1.13. The instruction can be found in the the documentation: https://nheri-simcenter.github.io/quoFEM-Documentation/common/user_manual/usage/desktop/SimCenterUQSurrogate.html#lblsimsurrogate',
+        file=sys.stderr,
+    )
     exit(-1)  # noqa: PLR1722
 
 
@@ -38,7 +39,8 @@ try:
 except:  # noqa: E722
     error_tag = True
     print(  # noqa: T201
-        'Error running surrogate prediction - Failed to import module:' + moduleName, file=sys.stderr
+        'Error running surrogate prediction - Failed to import module:' + moduleName,
+        file=sys.stderr,
     )
     exit(-1)  # noqa: PLR1722
 
@@ -46,7 +48,6 @@ except:  # noqa: E722
 
 
 def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa: C901, D103, PLR0912, PLR0915
-  # noqa: W293
 
     global error_file  # noqa: PLW0602
 
@@ -129,8 +130,8 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             myseed = inp_tmp['UQ']['samplingMethodData']['seed']
         except:  # noqa: E722
             myseed = 42
-        #folderName = os.path.basename(os.path.dirname(os.getcwd()))  # noqa: N806, PTH109, PTH119, PTH120, RUF100
-        #myseed = int(folderName) * int(1.0e7)
+        # folderName = os.path.basename(os.path.dirname(os.getcwd()))  # noqa: N806, PTH109, PTH119, PTH120, RUF100
+        # myseed = int(folderName) * int(1.0e7)
 
     np.random.seed(int(myseed) + int(sampNum))
 
@@ -894,7 +895,6 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
                 # back to directory, copy result.out
                 # shutil.copyfile(os.path.join(sim_dir, 'results.out'), os.path.join(os.getcwd(), 'results.out'))
-
 
                 with open('results.out') as f:  # noqa: PTH123
                     y_pred = np.array([np.loadtxt(f)]).flatten()
