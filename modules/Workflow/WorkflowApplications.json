@@ -701,6 +701,17 @@
         ]
       },
       {
+        "Name": "MultiFidelityBuildingModel",
+        "ExecutablePath": "applications/createSAM/multiFidelityBuildingModel/MultiFidelityBuildingModel.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "buildingDatabase",
+            "type": "path",
+            "description": "Defines the location of the building database (.json) file."
+          }
+        ]
+      },
+      {
         "Name": "OpenSeesInput",
         "ExecutablePath": "applications/createSAM/openSeesInput/OpenSeesInput",
         "ApplicationSpecificInputs": [

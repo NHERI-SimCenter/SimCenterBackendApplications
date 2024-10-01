@@ -381,6 +381,24 @@ def run_command(command):
         #     #print(result, returncode)
         #     return str(result), returncode
 
+        # sy - error checking trial 2 : only for windows and python & additional try statement
+
+        try:
+            if (platform.system() == 'Windows') and ('python.exe' in str(command)):
+                if returncode != 0:
+                    raise WorkFlowInputError('Analysis Failed')
+
+            return str(result), returncode
+
+        except WorkFlowInputError as e:
+            print(str(e).replace('\'',''))
+            print(str(result))
+            sys.exit(-20)
+
+        except:
+            # if for whatever reason the above failes, move on
+            return str(result), 0
+
         return result, returncode
 
 
@@ -2155,15 +2173,18 @@ class Workflow:
                     prepend_blank_space=False,
                 )
 
-                # sy - trying adding exit command
-                # if platform.system() == 'Windows':
-                #    with open("driver.bat","r", encoding="utf-8") as f:
-                #        lines = f.readlines()
-                #    #lines.append(r'if %errorlevel% neq 0 exit /b -1')
-                #    with open("driver.bat","w", encoding="utf-8") as f:
-                #        f.writelines(lines)
-                # else:
-                #    pass
+                # sy - error checking trial 2
+                #      This time, (1) we do it only for python; (2) added try statement
+
+                try:
+                    if command.startswith('python'):
+                        if platform.system() == 'Windows':
+                            driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                        else:
+                            pass
+
+                except:
+                    pass
 
                 log_msg(
                     'Successfully Created Driver File for Workflow.',
@@ -2320,13 +2341,25 @@ class Workflow:
 
                     driver_script += create_command(command_list) + '\n'
 
-                # sy - trying adding exit command
+                # sy - error checking trial 2
+                #      This time, (1) we do it only for python; (2) added try statement
 
-                # if platform.system() == 'Windows':
-                #   #driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
-                #   pass
-                # else:
-                #   pass
+                # try:
+                if 'python' in command_list[0].lower():
+                    if platform.system() == 'Windows':
+                        driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                    else:
+                        pass
+                elif (
+                    'stochasticgm' in command_list[0].lower()
+                ):  # This function follows our standard
+                    if platform.system() == 'Windows':
+                        driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                    else:
+                        pass
+
+                # except:
+                #    pass
 
             # log_msg('Workflow driver script:', prepend_timestamp=False)
             # log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False, prepend_blank_space=False)

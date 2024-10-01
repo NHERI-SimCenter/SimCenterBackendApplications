@@ -38,12 +38,16 @@
 # Joanna J. Zou
 #
 
-import argparse
+import argparse  # noqa: I001
 import json
 import os
 import sys
+import subprocess
 
 import numpy as np
+
+errFileName = 'workflow.err'  # noqa: N816
+sys.stderr = open(errFileName, 'a')  # noqa: SIM115, PTH123
 
 # from simcenter_common import *
 
@@ -99,9 +103,35 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ARG001, N802, N803
 
     # compute IMs
     # print(f"{pythonEXE} {surrogatePredictionPath} {params_name} {surrogate_meta_name} {surrogate_name}")
-    os.system(  # noqa: S605
-        f'{pythonEXE} {surrogatePredictionPath} {params_name} {surrogate_meta_name} {surrogate_name}'
-    )
+
+    command = [
+        pythonEXE,
+        surrogatePredictionPath,
+        params_name,
+        surrogate_meta_name,
+        surrogate_name,
+    ]
+    #subprocess.run(command, check=True)  # noqa: S603
+
+    try:
+        result = subprocess.check_output(  # noqa: S603
+            command, stderr=subprocess.STDOUT, text=True
+        )
+        returncode = 0
+    except subprocess.CalledProcessError as e:
+        result = e.output
+        returncode = e.returncode
+
+    if not returncode == 0:
+        print(
+            result,
+            file=sys.stderr,
+        )  # noqa: T201
+
+
+    # os.system(  # noqa: RUF100, S605
+    #    f'{pythonEXE} {surrogatePredictionPath} {params_name} {surrogate_meta_name} {surrogate_name}'
+    # )
 
     #
     # check if the correct workflow applications are selected
@@ -114,10 +144,15 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ARG001, N802, N803
         root_AIM['Applications']['Simulation']['Application']
         != 'SurrogateRegionalPy'
     ):
-        with open('../workflow.err', 'w') as f:  # noqa: PTH123
-            f.write(
-                'Do not select [None] in the FEM tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'
-            )
+        # with open('./workflow.err', 'w') as f:  # noqa: PTH123, RUF100
+        #     f.write(
+        #         'Do not select [None] in the FEM tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'
+        #     )
+        # exit(-1)  # noqa: PLR1722, RUF100
+        print(
+            'Do not select [None] in the FEM tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.',
+            file=sys.stderr,
+        )  # noqa: T201
         exit(-1)  # noqa: PLR1722
 
 
@@ -152,7 +187,6 @@ def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):  # noqa: 
         exit(-1)  # noqa: PLR1722
 
     edp_vals = np.loadtxt('results.out').tolist()
-
     #
     # Read EDP file, mapping between EDPnames and EDP.json and write scalar_data
     #
@@ -176,6 +210,10 @@ def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):  # noqa: 
         elif eventType == 'max_drift':
             edpAcronym = 'PID'  # noqa: N806
             floor = eventEDP['floor2']
+            known = True
+        elif eventType == 'rms_acceleration':
+            edpAcronym = 'RMSA'  # noqa: N806
+            floor = eventEDP['floor']
             known = True
         elif eventType == 'max_roof_drift':
             edpAcronym = 'PRD'  # noqa: N806
