@@ -92,8 +92,8 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             msg = 'invalid json format: ' + json_dir
             error_exit(msg)
 
-    isEEUQ = sur['isEEUQ']  # noqa: N806
-    isWEUQ = sur['isWEUQ']  # noqa: N806
+    isEEUQ = sur.get('isEEUQ', False)  # noqa: N806
+    isWEUQ = sur.get('isWEUQ', False)  # noqa: N806
 
     if isEEUQ or isWEUQ:
         dakota_path = 'sc_scInput.json'

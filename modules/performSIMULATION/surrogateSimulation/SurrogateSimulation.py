@@ -111,7 +111,23 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ARG001, N802, N803
         surrogate_meta_name,
         surrogate_name,
     ]
-    subprocess.run(command, check=True)  # noqa: S603
+    #subprocess.run(command, check=True)  # noqa: S603
+
+    try:
+        result = subprocess.check_output(  # noqa: S603
+            command, stderr=subprocess.STDOUT, text=True
+        )
+        returncode = 0
+    except subprocess.CalledProcessError as e:
+        result = e.output
+        returncode = e.returncode
+
+    if not returncode == 0:
+        print(
+            result,
+            file=sys.stderr,
+        )  # noqa: T201
+
 
     # os.system(  # noqa: RUF100, S605
     #    f'{pythonEXE} {surrogatePredictionPath} {params_name} {surrogate_meta_name} {surrogate_name}'
