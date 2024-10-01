@@ -9,13 +9,16 @@ import time
 import numpy as np
 from scipy.stats import lognorm, norm
 
+errFileName = 'workflow.err'  # noqa: N816
+sys.stderr = open(errFileName, 'a')  # noqa: SIM115, PTH123
+
 try:
     moduleName = 'GPy'  # noqa: N816
     import GPy as GPy  # noqa: PLC0414
 except:  # noqa: E722
     print(  # noqa: T201
         'Error running surrogate prediction - Failed to import module: Surrogate modeling module uses GPy python package which is facing a version compatibility issue at this moment (01.05.2024). To use the surrogate module, one needs to update manually the GPy version to 1.13. The instruction can be found in the the documentation: https://nheri-simcenter.github.io/quoFEM-Documentation/common/user_manual/usage/desktop/SimCenterUQSurrogate.html#lblsimsurrogate'
-    )
+    , file=sys.stderr)
     exit(-1)  # noqa: PLR1722
 
 
@@ -35,7 +38,7 @@ try:
 except:  # noqa: E722
     error_tag = True
     print(  # noqa: T201
-        'Error running surrogate prediction - Failed to import module:' + moduleName
+        'Error running surrogate prediction - Failed to import module:' + moduleName, file=sys.stderr
     )
     exit(-1)  # noqa: PLR1722
 
@@ -43,6 +46,8 @@ except:  # noqa: E722
 
 
 def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa: C901, D103, PLR0912, PLR0915
+  # noqa: W293
+
     global error_file  # noqa: PLW0602
 
     os_type = sys.platform.lower()
@@ -67,7 +72,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         error_file.close()
         file_object.write(msg0 + msg)  # global file
         file_object.close()
-        print(msg)  # noqa: T201
+        print(msg, file=sys.stderr)  # noqa: T201
         exit(-1)  # noqa: PLR1722
 
     def error_warning(msg):
@@ -87,8 +92,9 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             error_exit(msg)
 
     isEEUQ = sur['isEEUQ']  # noqa: N806
+    isWEUQ = sur['isWEUQ']  # noqa: N806
 
-    if isEEUQ:
+    if isEEUQ or isWEUQ:
         dakota_path = 'sc_scInput.json'
     else:
         dakota_path = input_json
@@ -105,7 +111,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             pass
 
     try:
-        if isEEUQ:
+        if isEEUQ or isWEUQ:
             inp_fem = inp_tmp['Applications']['Modeling']
         else:
             inp_fem = inp_tmp['FEM']
@@ -119,8 +125,13 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     myseed = inp_fem.get('gpSeed', None)
     prediction_option = inp_fem.get('predictionOption', 'random')
     if myseed == None:  # noqa: E711
-        folderName = os.path.basename(os.path.dirname(os.getcwd()))  # noqa: PTH109, PTH119, PTH120, N806
-        myseed = int(folderName) * int(1.0e7)
+        try:
+            myseed = inp_tmp['UQ']['samplingMethodData']['seed']
+        except:  # noqa: E722
+            myseed = 42
+        #folderName = os.path.basename(os.path.dirname(os.getcwd()))  # noqa: N806, PTH109, PTH119, PTH120, RUF100
+        #myseed = int(folderName) * int(1.0e7)
+
     np.random.seed(int(myseed) + int(sampNum))
 
     # if no g and rv,
@@ -362,7 +373,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 id_vec += [id_map]
 
             if ns != nsamp:
-                msg = 'Error importing input data: sample size in params.in is not consistent.'
+                msg = 'Error importing input data to surrogate: sample size in params.in is not consistent.'
                 error_exit(msg)
 
         g_idx = []
@@ -378,7 +389,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     id_map = g_name_sur.index(edp_names[i])
                     g_idx += [id_map]
             except ValueError:
-                msg = 'Error importing input data: qoi "{}" not identified.'.format(
+                msg = 'Error importing input data to surrogate: qoi "{}" not identified.'.format(
                     edp['name']
                 )
                 error_exit(msg)
@@ -428,7 +439,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 try:
                     id_map = rv_name_sur.index(name)
                 except ValueError:
-                    msg = f'Error importing input data: variable "{name}" not identified.'
+                    msg = f'Error importing input data to surrogate: variable "{name}" not identified.'
                     error_exit(msg)
 
                 if not first_eeuq_found:
@@ -441,7 +452,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     id_vec2 += [id_map]
 
                 if ns != nsamp:
-                    msg = 'Error importing input data: sample size in params.in is not consistent.'
+                    msg = 'Error importing input data to surrogate: sample size in params.in is not consistent.'
                     error_exit(msg)
         # TODO: fix for different nys m  # noqa: TD002
 
@@ -648,6 +659,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     y_q3 = np.zeros([nsamp, y_dim])
     y_q1m = np.zeros([nsamp, y_dim])
     y_q3m = np.zeros([nsamp, y_dim])
+
     for ny in range(y_dim):
         y_data_var[:, ny] = np.var(m_list[ny].Y)
         if ny in constIdx:
@@ -767,7 +779,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 templatedirFolder = os.path.join(os.getcwd(), 'templatedir_SIM')  # noqa: PTH109, PTH118, N806
 
                 if (
-                    isEEUQ and nsamp == 1
+                    (isEEUQ or isWEUQ) and nsamp == 1
                 ):  # because stochastic ground motion generation uses folder number when generating random seed.............
                     current_dir_i = os.path.join(  # noqa: PTH118
                         os.getcwd(),  # noqa: PTH109
@@ -785,7 +797,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                         msg = 'Error running FEM: ' + str(ex)
 
                 # change directory, create params.in
-                if isEEUQ:
+                if isEEUQ or isWEUQ:
                     shutil.copyfile(
                         os.path.join(os.getcwd(), 'params.in'),  # noqa: PTH109, PTH118
                         os.path.join(current_dir_i, 'params.in'),  # noqa: PTH118
@@ -861,7 +873,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
                 # run workflowDriver
 
-                if isEEUQ:
+                if isEEUQ or isWEUQ:
                     if (
                         os_type.lower().startswith('win')
                         and run_type.lower() == 'runninglocal'
@@ -882,6 +894,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
                 # back to directory, copy result.out
                 # shutil.copyfile(os.path.join(sim_dir, 'results.out'), os.path.join(os.getcwd(), 'results.out'))
+
 
                 with open('results.out') as f:  # noqa: PTH123
                     y_pred = np.array([np.loadtxt(f)]).flatten()
@@ -922,7 +935,8 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             elif prediction_option.lower().startswith('rand'):
                 y_pred_subset[ns, :] = y_samp[ns, g_idx]
 
-    np.savetxt(result_file, y_pred_subset, fmt='%.5e')
+    with open(result_file, 'w') as f:  # noqa: PTH123
+        np.savetxt(f, y_pred_subset, fmt='%.5e')
 
     y_pred_median_subset = y_pred_median[:, g_idx]
     y_q1_subset = y_q1[:, g_idx]
