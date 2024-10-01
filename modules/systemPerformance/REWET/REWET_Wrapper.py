@@ -56,9 +56,9 @@ from shapely import geometry
 this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
 
 # TODO (SINA): Import REWET instead and check these
-sys.path.insert(0, str(this_dir / 'REWET'))
-from initial import Starter  # noqa: E402
-from Result_Project import Project_Result  # noqa: E402
+# sys.path.insert(0, str(this_dir / 'REWET'))
+from rewet.initial import Starter  # noqa: E402
+from rewet.result import Result  # noqa: E402
 
 PAR_CERITERIA = 2
 
@@ -604,7 +604,7 @@ if __name__ == '__main__':
         REWET_starter = Starter()
         REWET_starter.run(settings_json_file_path)
 
-        p = Project_Result(
+        p = Result(
             Path(rewet_input_data['settings']['result_directory']) / 'project.prj'
         )
 
@@ -797,7 +797,7 @@ if __name__ == '__main__':
                 json_to_attach.update(
                     {
                         asset_id: {
-                            'general_information': general_info,
+                            'GeneralInformation': general_info,
                             'R2Dres': R2Dres,
                         }
                     }

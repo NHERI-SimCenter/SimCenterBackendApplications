@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3  # noqa: EXE001
 
 """Generate the event file using Stochastic Waves."""
 
@@ -7,7 +7,7 @@ import json
 import re
 import sys
 
-import Ex4_WaveLoads
+import StochasticWaveLoadsJONSWAP
 
 """
 Portions of this module are implemented courtesy of the welib python package:
