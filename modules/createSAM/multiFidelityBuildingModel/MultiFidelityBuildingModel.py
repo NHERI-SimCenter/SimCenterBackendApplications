@@ -38,82 +38,82 @@
 
 import argparse
 import json
-import sys
 import os
-import subprocess
 import shutil
+import subprocess
+import sys
 
-def create_SAM(  # noqa: N802, D103
+
+def create_SAM(  # noqa: N802, D103, C901
     AIM_file,  # noqa: N803
-    EVENT_file,  # noqa: ARG001, N803
+    EVENT_file,  # noqa: N803
     SAM_file,  # noqa: N803
-    model_script,
-    model_path,
-    ndm,
-    dof_map,
-    column_line,
-    getRV,  # noqa: ARG001, N803
+    getRV,  # noqa: N803
 ):
-    
-
     with open(AIM_file, encoding='utf-8') as f:  # noqa: PTH123
         AIM = json.load(f)  # noqa: N806
 
-    current_building_id = AIM['GeneralInformation']["AIM_id"]
+    current_building_id = AIM['GeneralInformation']['AIM_id']
     database_path = AIM['Modeling']['buildingDatabase']
-    with open(os.path.join('../../../../input_data',database_path),'r') as f:
+    with open(  # noqa: PTH123, UP015
+        os.path.join('..', '..', '..', '..', 'input_data', database_path), 'r'  # noqa: PTH118
+    ) as f:
         json_string = f.read()
         database = json.loads(json_string)
 
     ### check if the id exists in json file
     matching_count = 0
     for item in database:
-        if "id" in item:    
-            if isinstance(item["id"], list):
-
-                id_list = [int(myid) for myid in item["id"]]
+        if 'id' in item:
+            if isinstance(item['id'], list):
+                id_list = [int(myid) for myid in item['id']]
                 if int(current_building_id) in id_list:
-                    print("found")
-                    matching_model = item  # If user_id is in the list, return this item
-                    #break
+                    print(f'building {current_building_id} found in the database')  # noqa: T201
+                    matching_model = (
+                        item  # If user_id is in the list, return this item
+                    )
+                    # break
                     matching_count += 1
-            elif int(item["id"]) == int(current_building_id):
+            elif int(item['id']) == int(current_building_id):
                 matching_model = item  # If the id matches directly, return this item
                 matching_count += 1
 
+    if matching_count > 2:  # noqa: PLR2004
+        msg = f'Error in multifidelity preprocessor: Multiple model files are mapped to the same asset id {current_building_id}.'
+        print(msg)  # noqa: T201
+        raise ValueError(msg)
 
-    if matching_count>2:
-        print("Multiple model files are mapped to the same asset id {}.".format(current_building_id))
-        raise "Error in multifidelity preprocessor: Multiple model files are mapped to the same asset id."
-
-    elif matching_count==1:        
-        print("Model found, running custom OpenSees model")
-        with open('SAM.json', 'w') as f:
-                json.dump(matching_model, f, indent=2)  # Write with pretty formatting
+    if matching_count == 1:
+        print('Model found, running custom OpenSees model')  # noqa: T201
+        with open('SAM.json', 'w') as f:  # noqa: PTH123
+            json.dump(matching_model, f, indent=2)  # Write with pretty formatting
 
         if getRV:
             #
             # Copy all the important files
             #
-            src = os.path.join("..","..","..","..","input_data",matching_model["mainFolder"])
-            dst = os.getcwd()
+            src = os.path.join(  # noqa: PTH118
+                '..', '..', '..', '..', 'input_data', matching_model['mainFolder']
+            )
+            dst = os.getcwd()  # noqa: PTH109
 
             for item in os.listdir(src):
-                source_item = os.path.join(src, item)
-                dest_item = os.path.join(dst, item)
+                source_item = os.path.join(src, item)  # noqa: PTH118
+                dest_item = os.path.join(dst, item)  # noqa: PTH118
 
                 # If the item is a directory, recursively copy it
-                if os.path.isdir(source_item):
+                if os.path.isdir(source_item):  # noqa: PTH112
                     shutil.copytree(source_item, dest_item, dirs_exist_ok=True)
                 else:
                     # If it's a file, copy it to the destination
                     shutil.copy2(source_item, dest_item)
 
     else:
-
         # call MDOF-Lu
         MDOF_exe = os.path.join(  # noqa: PTH118, N806
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),  # noqa: PTH100, PTH120
+            os.path.dirname(  # noqa: PTH120
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
+            ),
             'createSAM',
             'MDOF-LU',
             'MDOF-LU',
@@ -121,25 +121,28 @@ def create_SAM(  # noqa: N802, D103
 
         if getRV:
             command = [
-                    MDOF_exe,
-                    '--filenameAIM', AIM_file,
-                    '--filenameEVENT', EVENT_file,
-                    '--filenameSAM', SAM_file,
-                    '--getRV'
+                MDOF_exe,
+                '--filenameAIM',
+                AIM_file,
+                '--filenameEVENT',
+                EVENT_file,
+                '--filenameSAM',
+                SAM_file,
+                '--getRV',
             ]
         else:
             command = [
-                    MDOF_exe,
-                    '--filenameAIM', AIM_file,
-                    '--filenameEVENT', EVENT_file,
-                    '--filenameSAM', SAM_file,
+                MDOF_exe,
+                '--filenameAIM',
+                AIM_file,
+                '--filenameEVENT',
+                EVENT_file,
+                '--filenameSAM',
+                SAM_file,
             ]
 
+        subprocess.run(command, check=True)  # noqa: S603
 
-        subprocess.run(command, check=True)
-
-
-    return
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -159,11 +162,6 @@ if __name__ == '__main__':
             args.filenameAIM,
             args.filenameEVENT,
             args.filenameSAM,
-            args.mainScript,
-            args.modelPath,
-            args.ndm,
-            args.dofMap,
-            args.columnLine,
             args.getRV,
         )
     )
