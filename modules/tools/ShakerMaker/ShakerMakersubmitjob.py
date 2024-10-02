@@ -14,6 +14,7 @@ parser.add_argument(
 parser.add_argument('--tapisfolder', type=str, help='folder to upload the files to')
 parser.add_argument('--username', type=str, help='username for DesignSafe')
 parser.add_argument('--password', type=str, help='password for DesignSafe')
+parser.add_argument('--allocation', type=str, help='allocation for DesignSafe')
 
 
 args = parser.parse_args()
@@ -39,6 +40,7 @@ maxminutes = int(maxminutes)
 
 
 systemcodepath = args.tapisfolder
+allocation = f"-A {args.allocation}"
 faultinfo = metadata['faultdata']
 faultfiles = faultinfo['Faultfilenames']
 
@@ -155,7 +157,7 @@ my_job = {
     'archiveOnAppError': False,
     'fileInputArrays': [{'sourceUrls': urls, 'targetDir': '*'}],
     'parameterSet': {
-        'schedulerOptions': [{'arg': '-A DesignSafe-SimCenter'}],
+        'schedulerOptions': [{'arg': allocation}],
         'envVariables': [
             {'key': 'inputFile', 'value': 'ShakerMakermodel.py'},
             {'key': 'numProcessors', 'value': totalcores},
