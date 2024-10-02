@@ -178,9 +178,10 @@ while job_info.status not in [
     'FINISHED',
     'FAILED',
     'CANCELLED',
-    'CANCELLED',
+    'STAGING_INPUTS',
     'QUEUED',
     'RUNNING',
+    'BLOCKED',
 ]:
     job_info = t.jobs.getJob(jobUuid=uuid)
     if job_info.status != previous_status:
@@ -200,9 +201,19 @@ if job_info.status == 'QUEUED':
     print('This can take several days according to the queue')  # noqa: T201
     print('please wait for the job to finish')  # noqa: T201
     print('you can check the job status through the designsafe portal')  # noqa: T201
+if job_info.status == 'STAGING_INPUTS':
+    print('Job is staging inputs')
+    print('This can take several hours')
+    print('please wait for the job to finish')
+    print('you can check the job status through the designsafe portal')
 if job_info.status == 'RUNNING':
     print('Job is running')  # noqa: T201
     print('This can take several hours')  # noqa: T201
     print('please wait for the job to finish')  # noqa: T201
     print('you can check the job status through the designsafe portal')  # noqa: T201
+if job_info.status == 'BLOCKED':
+    print('Job is blocked for now')  
+    print('Please wait for the job to be staged')
+    print('This can take several hours')
+    print('you can check the job status through the designsafe portal')
 # %%
