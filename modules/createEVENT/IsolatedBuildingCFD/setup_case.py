@@ -1246,7 +1246,6 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
     monitor_base_load = rm_data['monitorBaseLoad']
     monitor_surface_pressure = rm_data['monitorSurfacePressure']
 
-<<<<<<< HEAD
     monitor_vtk_planes = rm_data['monitorVTKPlane']
     vtk_planes = rm_data['vtkPlanes']
     
@@ -1254,12 +1253,6 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
     max_delta_t = 10*time_step
     
     #Write 10 times
-=======
-    # Need to change this for
-    max_delta_t = 10 * time_step
-
-    # Write 10 times
->>>>>>> upstream/master
     write_frequency = 10.0
     write_interval_time = duration / write_frequency
     write_interval_count = int(write_interval_time / time_step)
@@ -1329,7 +1322,6 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
         added_part = '    #includeFunc  baseForces\n'
         dict_lines.insert(start_index, added_part)
 
-<<<<<<< HEAD
     #Write VTK sampling sampling points 
     if monitor_vtk_planes:
         added_part = ""
@@ -1346,21 +1338,6 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
         os.remove(write_file_name)
     
     output_file = open(write_file_name, "w+")
-=======
-    # Write pressure sampling points
-    if monitor_surface_pressure:
-        added_part = '    #includeFunc  generatedPressureSamplingPoints\n'
-        added_part += '    #includeFunc  importedPressureSamplingPoints\n'
-        dict_lines.insert(start_index, added_part)
-
-    # Write edited dict to file
-    write_file_name = case_path + '/system/controlDict'
-
-    if os.path.exists(write_file_name):  # noqa: PTH110
-        os.remove(write_file_name)  # noqa: PTH107
-
-    output_file = open(write_file_name, 'w+')  # noqa: SIM115, PTH123
->>>>>>> upstream/master
     for line in dict_lines:
         output_file.write(line)
 
