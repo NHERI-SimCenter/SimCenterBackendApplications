@@ -47,6 +47,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <cmath>
 #include "nlopt.hpp"
 #include "boost/math/distributions/normal.hpp" // for normal_distribution
 
@@ -173,7 +174,7 @@ gammaDist::~gammaDist() {}
 void gammaDist::checkParams()
 {
 	double std = getStd();
-	if (isnan(std) || isinf(std) || std <= 0)
+	if (std::isnan(std) || std::isinf(std) || std <= 0)
 	{
 		std::string errMSG = "Error running UQ engine: stdandard deviation of " + name + " should be greater than 0 ";
 		theErrorFile.write(errMSG);
