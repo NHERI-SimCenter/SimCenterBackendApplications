@@ -30,11 +30,11 @@ def select_realizations_to_run(damage_input, run_dir):
     """
     # Get the available realizations
     results_files = [f for f in os.listdir(run_dir) if f.startswith('Results_') and f.endswith('.json')]
-    rlzs_available = [
+    rlzs_available = sorted([
         int(file.split('_')[1].split('.')[0])
         for file in results_files
-        if file.split('_')[1].split('.')[0] != 'det'
-    ]
+        if file.split('_')[1].split('.')[0].isnumeric()
+    ])
     # Get the number of realizations
     if damage_input['Type'] == 'SpecificRealization':
         rlz_filter = damage_input['Parameters']['Filter']
@@ -76,16 +76,15 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
     """
     # Run the pyrecodes
     system = pyrecodes.main.run(main_file)
-    system.calculate_resilience()
+    system.calculate_resilience(print_output=False)
 
     # Add the component recovery time to the Results_rlz.json file
     with Path(rwhale_run_dir / f'Results_{rlz}.json').open() as f:
         results_rlz = json.load(f)
     all_recovery_time = list(system.resilience_calculators[1].\
-        component_recovery_time.values())
+        component_recovery_times.values())
     for ind, comp in enumerate(system.components):
-        comp_type = str(type(comp)).lower()
-        if 'r2d' in comp_type:
+        if getattr(comp, 'r2d_comp', False) is True:
             asset_type = comp.asset_type
             asset_subtype = comp.asset_subtype
             asset_id = comp.general_information['AIM_id']
@@ -99,13 +98,12 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
     # Create a gif of the recovery process
     geo_visualizer = R2D_GeoVisualizer(system.components)
     time_step_list = list(range(0, system.time_step, 1))
-    fig, ax = plt.subplots(figsize=(10, 10))
     for time_step in time_step_list:
+        fig, ax = plt.subplots(figsize=(10, 10))
         geo_visualizer.create_current_state_figure(time_step, ax=ax)
         legend = ax.get_legend()
         legend.set(loc='center left', bbox_to_anchor=(1, 0.5))
-        geo_visualizer.create_recovery_gif(time_step_list, fps=2)
-        plt.savefig(f'status_at_time_step_{time_step}.png', dpi=300, bbox_inches='tight', transparent=True, pad_inches=0)
+        plt.savefig(f'status_at_time_step_{time_step}.png', dpi=300, bbox_inches='tight', transparent=False, pad_inches=0)
     geo_visualizer.create_recovery_gif(time_step_list, file_name = \
                                 'status_at_time_step_TIME_STEP.png', fps=2)
 
@@ -115,14 +113,15 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
     first_unit = system_config['Resources'][first_resource].get('Unit', f'unit_{first_resource}')
     y_axis_label = f'{first_resource} {first_unit} | {system.resilience_calculators[0].scope}'
     x_axis_label = 'Time step [day]'
-    axis_object = plotter_object.setup_lor_plot_fig(x_axis_label, y_axis_label)    
+    axis_object = plotter_object.setup_lor_plot_fig(x_axis_label, y_axis_label)
     time_range = system.time_step+1
     time_steps_before_event = 10
     plotter_object.plot_single_resource(list(range(-time_steps_before_event, time_range)), system.resilience_calculators[0].system_supply[first_resource][:time_range],
                                     system.resilience_calculators[0].system_demand[first_resource][:time_range],
                                     system.resilience_calculators[0].system_consumption[first_resource][:time_range], axis_object, warmup=time_steps_before_event,
-                                    save = True,
-                                    savename = f'{first_resource}_supply_demand_consumption.png')
+                                    show = False
+                                    )
+    plotter_object.save_current_figure(savename = f'{first_resource}_supply_demand_consumption.png')
     return True
 
 def modify_system_config_conent(system_config, locality_geojson, rwhale_run_dir):
@@ -213,11 +212,98 @@ def modify_main_file(main_file_dict, component_library, run_dir):
     main_file_dict['System']['SystemConfigurationFile'] = str(
             run_dir / 'SystemConfiguration.json')
     main_file_dict['ComponentLibrary']['ComponentLibraryFile'] = component_library
-    main_file_dict.pop('DamageInput')
     main_file_path = str(run_dir / 'main.json')
     with Path(main_file_path).open('w') as f:
         json.dump(main_file_dict, f)
     return main_file_path
+
+def create_agg_results_dict(results_det_path):
+    """
+    Create an aggregated results dictionary from the detailed results file.
+
+    Parameters
+    ----------
+    results_det_path : Path
+        Path to the detailed results JSON file.
+
+    Returns
+    -------
+    dict
+        Aggregated results dictionary.
+    """
+    with results_det_path.open() as f:
+        results_det = json.load(f)
+    results_agg = {}
+    for asset_type, asset_type_dict in results_det.items():
+            results_agg[asset_type] = {}
+            for asset_subtype, asset_subtype_dict in asset_type_dict.items():
+                results_agg[asset_type][asset_subtype] = {}
+                for asset_id in asset_subtype_dict:
+                    results_agg[asset_type][asset_subtype][asset_id] = {}
+                    results_agg[asset_type][asset_subtype][asset_id].update(
+                        {'RecoveryDuration': []}
+                    )
+    return results_agg
+
+def append_to_results_agg(results_agg, results_rlz_path):
+    """
+    Append recovery duration data from a realization results file to the aggregated results dictionary.
+
+    Parameters
+    ----------
+    results_agg : dict
+        Aggregated results dictionary.
+    results_rlz_path : Path
+        Path to the realization results JSON file.
+
+    Returns
+    -------
+    dict
+        Updated aggregated results dictionary.
+    """
+    with results_rlz_path.open() as f:
+        results_rlz = json.load(f)
+    for asset_type, asset_type_dict in results_rlz.items():
+        for asset_subtype, asset_subtype_dict in asset_type_dict.items():
+            for asset_id, asset_id_dict in asset_subtype_dict.items():
+                if 'Recovery' in asset_id_dict:
+                    results_agg[asset_type][asset_subtype][asset_id]['RecoveryDuration'].append(
+                        asset_id_dict['Recovery']['Time']
+                    )
+                else:
+                    results_agg[asset_type][asset_subtype][asset_id]['RecoveryDuration'].append(
+                        np.inf
+                    )
+    return results_agg
+
+def aggregate_results_to_det(results_agg, results_det_path):
+    """
+    Aggregate recovery duration data from multiple realizations into the detailed results file.
+
+    Parameters
+    ----------
+    results_agg : dict
+        Aggregated results dictionary.
+    results_det_path : Path
+        Path to the detailed results JSON file.
+    """
+    with results_det_path.open() as f:
+        results_det = json.load(f)
+
+    for asset_type, asset_type_dict in results_agg.items():
+        for asset_subtype, asset_subtype_dict in asset_type_dict.items():
+            for asset_id, asset_id_dict in asset_subtype_dict.items():
+                mean_recovery_duration = np.mean(asset_id_dict['RecoveryDuration'])
+                std_recovery_duration = np.std(asset_id_dict['RecoveryDuration'])
+                results_det[asset_type][asset_subtype][asset_id]['R2Dres'].update(
+                    {'R2Dres_mean_RecoveryDuration': mean_recovery_duration}
+                )
+                results_det[asset_type][asset_subtype][asset_id]['R2Dres'].update(
+                    {'R2Dres_std_RecoveryDuration': std_recovery_duration}
+                )
+    with results_det_path.open('w') as f:
+        json.dump(results_det, f)
+
 
 def run_pyrecodes(  # noqa: C901
         main_file,
@@ -296,13 +382,15 @@ def run_pyrecodes(  # noqa: C901
                         for comp in loss_dist['Repair']['Cost']:
                             mean_cost_key = next(x for x in results_det[asset_type][asset_subtype]\
                                 [asset_id]['R2Dres'] if x.startswith('R2Dres_mean_RepairCost'))
-                            loss_dist['Repair']['Cost'][comp] = results_det[asset_type][asset_subtype]\
-                            [asset_id]['R2Dres'][mean_cost_key]
+                            # A minmum cost of 0.1 is set to avoid division by zero
+                            loss_dist['Repair']['Cost'][comp] = max(results_det[asset_type][asset_subtype]\
+                            [asset_id]['R2Dres'][mean_cost_key], 0.1)
                         for comp in loss_dist['Repair']['Time']:
                             mean_time_key = next(x for x in results_det[asset_type][asset_subtype]\
                                 [asset_id]['R2Dres'] if x.startswith('R2Dres_mean_RepairTime'))
-                            loss_dist['Repair']['Time'][comp] = results_det[asset_type][asset_subtype]\
-                            [asset_id]['R2Dres'][mean_time_key]
+                            # A minmum time of 0.1 is set to avoid division by zero
+                            loss_dist['Repair']['Time'][comp] = max(results_det[asset_type][asset_subtype]\
+                            [asset_id]['R2Dres'][mean_time_key], 0.1)
 
         rlz = 'mostlikely'
         # Create a directory for the realization
@@ -310,12 +398,12 @@ def run_pyrecodes(  # noqa: C901
         os.chdir(f'workdir.{rlz}')
         rlz_run_dir = Path.cwd()
 
-        with Path('Results_mostlikely.json').open('w') as f:
+        with (run_dir /'Results_mostlikely.json').open('w') as f:
             json.dump(results_rlz, f)
 
         pyrecodes_damage_input = system_config['DamageInput']
         pyrecodes_damage_input['Parameters']['DamageFile'] = str(
-            rlz_run_dir / f'Results_{rlz}.json')
+            run_dir / f'Results_{rlz}.json')
 
         # Modify the file pathes in the REWETDistributionModel part of the system configuration
         system_config = modify_system_config_rewet_distribution(system_config, rewet_inp_file, rlz_run_dir)
@@ -329,19 +417,60 @@ def run_pyrecodes(  # noqa: C901
         # Run the pyrecodes
         run_one_realization(main_file_path, rlz, run_dir, system_config)
 
+        # Add the recovery time to the Results_det.json file
+        with Path(run_dir / 'Results_det.json').open() as f:
+            results_det = json.load(f)
+        with Path(rlz_run_dir / f'Results_{rlz}.json').open() as f:
+            results_rlz = json.load(f)
+        for asset_type, asset_type_dict in results_rlz.items():
+            for asset_subtype, asset_subtype_dict in asset_type_dict.items():
+                for asset_id, asset_id_dict in asset_subtype_dict.items():
+                    if 'Recovery' in asset_id_dict:
+                        recovery_dict = asset_id_dict['Recovery']
+                        results_det[asset_type][asset_subtype][asset_id]['R2Dres'].update(
+                                {'R2Dres_mean_RecoveryDuration': recovery_dict['Time']}
+                            )
+                    else:
+                        results_det[asset_type][asset_subtype][asset_id]['R2Dres'].update(
+                                {'R2Dres_mean_RecoveryDuration': np.inf}
+                            )
+        with Path(run_dir / 'Results_det.json').open('w') as f:
+            json.dump(results_det, f)
+
     elif damage_input['Type'] == 'SpecificRealization' or \
             damage_input['Type'] == 'SampleFromRealizations':
         rlz_to_run = select_realizations_to_run(damage_input, run_dir)
+        results_agg = create_agg_results_dict(Path(run_dir/'Results_det.json'))
         for rlz in rlz_to_run:
+            print(f'Running realization {rlz}')  # noqa: T201
             # Create a directory for the realization
-            Path(f'workdir.{rlz}').mkdir()
-            os.chdir(f'workdir.{rlz}')
+            rlz_run_dir = run_dir / 'RecoverySimulation'/f'workdir.{rlz}'
+            rlz_run_dir.mkdir()
+            os.chdir(rlz_run_dir)
             # Create a Results_rlz.json file for the specific realization
             pyrecodes_damage_input = system_config['DamageInput']
             pyrecodes_damage_input['Parameters']['DamageFile'] = str(
                 run_dir / f'Results_{rlz}.json')
 
-            rlz_run_dir = Path.cwd()
+            # Modify the loss values in the Results_rlz.json file so that the
+            # loss values are a small number if the damage is nonzero but loss is zero
+            # This needs to be removed once the pyrecodes is updated to handle this
+            with Path(run_dir / f'Results_{rlz}.json').open() as f:
+                results_rlz = json.load(f)
+            for asset_type_dict in results_rlz.values():
+                for asset_subtype_dict in asset_type_dict.values():
+                    for asset_id_dict in asset_subtype_dict.values():
+                        damage_dict = asset_id_dict['Damage']
+                        if 'Loss' in asset_id_dict:
+                            loss_dist = asset_id_dict['Loss']
+                            for comp in loss_dist['Repair']['Cost']:
+                                # A minmum cost of 0.1 is set to avoid division by zero
+                                loss_dist['Repair']['Cost'][comp] = max(loss_dist['Repair']['Cost'][comp], 0.1)
+                            for comp in loss_dist['Repair']['Time']:
+                                # A minmum time of 0.1 is set to avoid division by zero
+                                loss_dist['Repair']['Time'][comp] = max(loss_dist['Repair']['Time'][comp], 0.1)
+            with Path(run_dir / f'Results_{rlz}.json').open('w') as f:
+                json.dump(results_rlz, f)
 
             # Modify the file pathes in the REWETDistributionModel part of the system configuration
             system_config = modify_system_config_rewet_distribution(system_config, rewet_inp_file, rlz_run_dir)
@@ -353,7 +482,13 @@ def run_pyrecodes(  # noqa: C901
             main_file_path = modify_main_file(main_file_dict, component_library, rlz_run_dir)
 
             # Run the pyrecodes
-            run_one_realization(main_file_path, rlz_run_dir, run_dir, system_config)
+            run_one_realization(main_file_path, rlz, run_dir, system_config)
+
+            # Append the results to the aggregated results dictionary
+            results_agg = append_to_results_agg(results_agg, Path(rlz_run_dir / f'Results_{rlz}.json'))
+            print(f'Rrealization {rlz} completed')  # noqa: T201
+        # Write the aggregated results to the Results_det.json file
+        aggregate_results_to_det(results_agg, Path(run_dir / 'Results_det.json'))
     else:
         msg = 'Damage input type not recognized'
         raise ValueError(msg)
