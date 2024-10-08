@@ -47,6 +47,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <cmath>
 #include "nlopt.hpp"
 
 using std::vector;
@@ -154,7 +155,7 @@ exponentialDist::~exponentialDist() {}
 void exponentialDist::checkParams()
 {
 	double std = getStd();
-	if (isnan(std) || isinf(std) || std <= 0)
+	if (std::isnan(std) || std::isinf(std) || std <= 0)
 	{
 		std::string errMSG = "Error running UQ engine: stdandard deviation of " + name + " should be greater than 0 ";
 		theErrorFile.write(errMSG);

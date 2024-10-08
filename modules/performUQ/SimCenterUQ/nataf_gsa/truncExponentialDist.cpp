@@ -46,6 +46,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <cmath>
 #include "nlopt.hpp"
 #include <iomanip>
 
@@ -202,7 +203,7 @@ void truncExponentialDist::checkParams()
 	double mean = getMean();
 	vector<double> par = getParam();
 
-	if (isnan(std) || isinf(std) || std <= 0)
+	if (std::isnan(std) || std::isinf(std) || std <= 0)
 	{
 		std::string errMsg = "Error running UQ engine: stdandard deviation of " + name + " distribution must be greater than 0 ";
 		theErrorFile.write(errMsg);

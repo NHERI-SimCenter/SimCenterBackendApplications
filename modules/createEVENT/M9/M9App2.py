@@ -92,7 +92,7 @@ def Submit_tapis_job(username, password):
     status =t.jobs.getJobStatus(jobUuid=mjobUuid).status
     previous = status
     while True:
-        if status in ["FINISHED","FAILED","STOPPED"]:
+        if status in ["FINISHED","FAILED","STOPPED","STAGING_INPUTS"]:
             break
         status = t.jobs.getJobStatus(jobUuid=mjobUuid).status
         if status == previous:
