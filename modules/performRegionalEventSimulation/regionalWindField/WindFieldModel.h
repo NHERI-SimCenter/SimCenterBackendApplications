@@ -1,5 +1,5 @@
 #ifndef WIND_FIELD_MODEL_H_
-#define WIND_FILED_MODEL_H_
+#define WIND_FIELD_MODEL_H_
 
 #include <Eigen/Dense>
 
@@ -89,4 +89,4 @@ public:
 
 };
 
-#endif
+#endif // WIND_FIELD_MODEL_H_

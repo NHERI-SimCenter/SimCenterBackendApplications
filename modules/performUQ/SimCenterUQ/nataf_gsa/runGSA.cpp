@@ -44,6 +44,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 #include "runGSA.h"
 #include "ERANataf.h"
+#include <cmath>
 #include <iterator>
 using namespace arma::newarp;
 
@@ -895,7 +896,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 
 	for (int nq = 0; nq < nqoi_eff; nq++) {
 		//printf("GSA nq=%i, Si=%.2f, %c \n", nq + 1, Si[nq], Opt);
-		if (isinf(Si[nq]) || isnan(Si[nq]))
+	  if (std::isinf(Si[nq]) || std::isnan(Si[nq]))
 		{
 			Si[nq] = -100;
 		}
@@ -1117,7 +1118,7 @@ void runGSA::runSingleGSA(vector<double> gvec,int Ko,char Opt, vector<double>& S
 
 		printf("GSA i=%i, Si=%.2f, K=%i, %c \n", nc + 1, Si[nc], Kos, Opt);
 
-		if (isinf(Si[nc]) || isnan(Si[nc]))
+		if (std::isinf(Si[nc]) || std::isnan(Si[nc]))
 		{
 			Si[nc] = -100;
 		}

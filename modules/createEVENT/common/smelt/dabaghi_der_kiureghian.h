@@ -218,7 +218,7 @@ class DabaghiDerKiureghian : public StochasticModel {
       unsigned int num_gms = 1) const;
 
   /**
-   * Backcalculate modulating parameters given Arias Intesity and duration parameters
+   * Backcalculate modulating parameters given Arias Intensity and duration parameters
    * @param[in] q_params Vector containing Ia, D595, D05, and D030
    * @param[in] t0 Initial time. Defaults to 0.0.
    * @return Vector containing parameters alpha, beta, tmaxq, and c
@@ -256,7 +256,7 @@ class DabaghiDerKiureghian : public StochasticModel {
    * @param[in] d095_target Time from t0 to time of 95% Arias intensity of
    *                        target motion
    * @param[in] t0 Start time of modulating function and of target ground motion
-   * @return ERrro in modulating function
+   * @return error in modulating function
    */
   double calc_parameter_error(const std::vector<double>& parameters,
                               double d05_target, double d030_target,
@@ -399,8 +399,8 @@ class DabaghiDerKiureghian : public StochasticModel {
   Eigen::VectorXd std_dev_nopulse_; /**< No-pulse-like parameter standard deviation */
   Eigen::MatrixXd corr_matrix_pulse_; /**< Pulse-like parameter correlation matrix */
   Eigen::MatrixXd corr_matrix_nopulse_; /**< No-pulse-like parameter correlation matrix */
-  Eigen::MatrixXd beta_distribution_pulse_; /**< Beta distrubution parameters for pulse-like motion */
-  Eigen::MatrixXd beta_distribution_nopulse_; /**< Beta distrubution parameters for no-pulse-like motion */
+  Eigen::MatrixXd beta_distribution_pulse_; /**< Beta distribution parameters for pulse-like motion */
+  Eigen::MatrixXd beta_distribution_nopulse_; /**< Beta distribution parameters for no-pulse-like motion */
   Eigen::VectorXd params_lower_bound_;        /**< Lower bound for marginal distributions fitted to params
 						 (Table 5 in Dabaghi & Der Kiureghian, 2017) */
   Eigen::VectorXd params_upper_bound_;        /**< Upper bound for marginal distributions fitted to params

@@ -1,2 +1,3 @@
 add_subdirectory(NearestNeighborEvents)
 add_subdirectory(SiteSpecifiedEvents)
+add_subdirectory(GISSpecifiedEvents)

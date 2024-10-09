@@ -228,11 +228,14 @@ class surrogate(UQengine):  # noqa: D101
         #
         # TODO: multihazards?  # noqa: TD002
         self.isEEUQ = False
+        self.isWEUQ = False
         if dakotaJson['Applications'].get('Events') != None:  # noqa: E711
             Evt = dakotaJson['Applications']['Events']  # noqa: N806
             if Evt[0].get('EventClassification') != None:  # noqa: E711
                 if Evt[0]['EventClassification'] == 'Earthquake':
                     self.isEEUQ = True
+                elif Evt[0]['EventClassification'] == 'Wind':
+                    self.isWEUQ = True
 
         self.rv_name_ee = []
         if surrogateJson.get('IntensityMeasure') != None and self.isEEUQ:  # noqa: E711
@@ -250,7 +253,7 @@ class surrogate(UQengine):  # noqa: D101
             self.IntensityMeasure = {}
             self.unitInfo = {}
 
-        if self.isEEUQ:
+        if self.isEEUQ or self.isWEUQ:
             self.checkWorkflow(dakotaJson)
         #
         #  common for all surrogate options
@@ -934,7 +937,7 @@ class surrogate(UQengine):  # noqa: D101
         myrange = np.max(X, axis=0) - np.min(X, axis=0)
         kernel_mean = GPy.kern.Matern52(input_dim=my_x_dim, ARD=True, lengthscale=myrange)
         # kernel_mean = GPy.kern.Matern52(input_dim=my_x_dim, ARD=True) + GPy.kern.Linear(input_dim=my_x_dim, ARD=True)
-        if self.do_linear and not self.isEEUQ:
+        if self.do_linear and not (self.isEEUQ or self.isWEUQ):
             kernel_mean = kernel_mean + GPy.kern.Linear(input_dim=my_x_dim, ARD=True)
 
         m_mean = GPy.models.GPRegression(
@@ -1997,6 +2000,7 @@ class surrogate(UQengine):  # noqa: D101
         results['doStochastic'] = self.stochastic
         results['doNormalization'] = self.set_normalizer
         results['isEEUQ'] = self.isEEUQ
+        results['isWEUQ'] = self.isWEUQ
 
         if self.isEEUQ:
             if len(self.IM_names) > 0:
@@ -2154,7 +2158,7 @@ class surrogate(UQengine):  # noqa: D101
                         eval('self.m_list[ny].' + parname)  # noqa: S307
                     )
 
-        if self.isEEUQ:
+        if self.isEEUQ or self.isWEUQ:
             # read SAM.json
             SAMpath = self.work_dir + '/templatedir/SAM.json'  # noqa: N806
             try:

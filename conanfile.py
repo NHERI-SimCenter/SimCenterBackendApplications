@@ -2,6 +2,7 @@ import os  # noqa: D100
 
 from conans import CMake, ConanFile
 
+
 class simCenterBackendApps(ConanFile):  # noqa: D101
     name = 'SimCenterBackendApplications'
     version = '1.2.2'
@@ -18,6 +19,7 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
     options = {'shared': [True, False]}  # noqa: RUF012
     default_options = {  # noqa: RUF012
         'libcurl:with_ssl': 'openssl',
+        'boost:without_fiber': True,
     }
     generators = 'cmake'
     build_policy = 'missing'
@@ -30,8 +32,8 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
         'jsonformoderncpp/3.7.0',
         'nanoflann/1.3.2',
         'nlopt/2.7.1',
-        "boost/1.71.0",
-        'kissfft/131.1.0'
+        'boost/1.71.0',
+        'kissfft/131.1.0',
     ]
 
     # Custom attributes for Bincrafters recipe conventions

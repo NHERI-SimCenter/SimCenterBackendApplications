@@ -4,9 +4,9 @@
 
 stochastic::LognormalDistribution::LognormalDistribution(double mean, double std_dev)
   : Distribution(),
-    mean_{mean},
-    std_dev_{std_dev},
-    distribution_{mean, std_dev_}
+    mean_(mean),
+    std_dev_(std_dev),
+    distribution_(mean, std_dev_)
 {}
 
 std::vector<double> stochastic::LognormalDistribution::cumulative_dist_func(

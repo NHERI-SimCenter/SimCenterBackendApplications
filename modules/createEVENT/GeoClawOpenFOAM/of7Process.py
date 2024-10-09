@@ -1,4 +1,4 @@
-#  # noqa: INP001
+#  # noqa: INP001, EXE002
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -310,10 +310,16 @@ class of7Process:
                 cdictpppath = os.path.join('system', 'controlDict')  # noqa: PTH118
                 caseruntext = caseruntext + 'cp cdictpp ' + cdictpppath + '\n'
                 # Move the wavemakerfile (if exists)
-                if os.path.exists(os.path.join('constant', 'wavemakerMovement.txt')):  # noqa: PTH110, PTH118
+                if os.path.exists(  # noqa: PTH110
+                    os.path.join('constant', 'wavemakerMovement.txt')  # noqa: PTH118
+                ):
                     caseruntext = caseruntext + 'mkdir extras\n'
-                    wavepath = os.path.join('constant', 'wavemakerMovement.txt')  # noqa: PTH118
-                    wavepathnew = os.path.join('extras', 'wavemakerMovement.txt')  # noqa: PTH118
+                    wavepath = os.path.join(  # noqa: PTH118
+                        'constant', 'wavemakerMovement.txt'
+                    )
+                    wavepathnew = os.path.join(  # noqa: PTH118
+                        'extras', 'wavemakerMovement.txt'
+                    )
                     caseruntext = (
                         caseruntext + 'mv ' + wavepath + ' ' + wavepathnew + '\n'
                     )
