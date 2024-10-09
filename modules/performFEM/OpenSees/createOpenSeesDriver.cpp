@@ -9,6 +9,8 @@
 #include <thread>
 #include <filesystem>
 #include <algorithm>
+#include <regex>
+#include <cmath>
 
 
 int getEDP(json_t *edp, std::vector<std::string> &edpList);
@@ -32,6 +34,77 @@ std::string appendModelIndexToStem(int modelIndex, std::string filename) {
     filename = newStem + extension;
     return filename;
 }
+
+
+void writeFile(const std::string& inFilename, const std::string& outFilename, const std::vector<std::string>& varToChange) {
+    std::cout << "writeFile: " << inFilename << " out: " << outFilename << " args: ";
+    for (const auto& var : varToChange) {
+        std::cout << var << " ";
+    }
+    std::cout << std::endl;
+
+    std::ifstream inFile(inFilename);
+    if (!inFile.is_open()) {
+        throw std::runtime_error("Failed to open input file: " + inFilename);
+    }
+
+    std::string tempFilename = outFilename + ".tmp";
+    std::ofstream outFile(tempFilename);
+    if (!outFile.is_open()) {
+        throw std::runtime_error("Failed to open temporary output file: " + tempFilename);
+    }
+
+    std::regex pset("pset[ \t]+[A-Za-z_][A-Za-z0-9_]*[ \t]+");
+
+    std::string line;
+    while (std::getline(inFile, line)) {
+        if (std::regex_search(line, pset)) {
+
+            // If comment ignore
+            bool commented = false;
+            std::size_t foundC = line.find('#');
+            std::size_t foundP = line.find("pset");
+            if (foundC != std::string::npos && foundC < foundP) {
+                commented = true;
+            }
+
+            if (!commented) {
+                // If found break into cmd, varName, and value (ignore the rest)
+                std::istringstream iss(line);
+                std::string cmd, varName, value;
+                iss >> cmd >> varName >> value;
+
+                // Check if varName is in input string list
+                if (std::find(varToChange.begin(), varToChange.end(), varName) != varToChange.end()) {
+                    // Comment out the line instead
+                    outFile << "#" << line << "\n";
+                } else {
+                    // Not there, write current line
+                    outFile << line << "\n";
+                }
+            }
+        } else {
+            // Just copy line to output
+            outFile << line << "\n";
+        }
+    }
+
+    // Check if the output stream is in a good state
+    if (!outFile.good()) {
+        throw std::runtime_error("Failed to write to output file: " + outFilename);
+    }
+
+    // Close file
+    inFile.close();
+    outFile.close();
+
+    // Replace the original file with the temporary file
+    std::remove(inFilename.c_str());
+    std::rename(tempFilename.c_str(), outFilename.c_str());
+}
+
+
+
 
 int main(int argc, const char **argv) {
   
@@ -252,11 +325,22 @@ int main(int argc, const char **argv) {
     std::cerr << "createOpenSeesDriver - failed in setting permissions\n";
     exit(-1);
   }
+
+  //
+  // sy - moving special copy from frontend to backend
+  //
+
+  std::string inputString(mainInput);
+  writeFile(inputString,inputString,rvList);
+
     
   //
   // done
   //
 
+
   exit(0);
 }
+
+
 
