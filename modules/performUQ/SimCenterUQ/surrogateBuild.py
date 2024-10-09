@@ -79,7 +79,7 @@ except:  # noqa: E722
     print('Failed to import module:' + moduleName)  # noqa: T201
 
 errFileName = 'dakota.err'  # noqa: N816
-develop_mode = True
+develop_mode = False
 if develop_mode:
     import matplotlib.pyplot as plt;
     print("developer mode")
