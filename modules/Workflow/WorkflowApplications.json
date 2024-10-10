@@ -102,6 +102,11 @@
         "Name": "INP_FILE",
           "ExecutablePath": "applications/createAIM/INP_FILE/INP_FILE.py",
         "ApplicationSpecificInputs": [
+			{
+            "id": "assetSourceFile",
+            "type": "path",
+            "description": "path to asset database file"
+          },
           {
             "id": "assetFile",
             "type": "path",
@@ -1189,7 +1194,17 @@
 	    {
 		"Name": "REWETRecovery",
 		"ExecutablePath": "applications/systemPerformance/REWEt/REWET_Wrapper.py",
-		"ApplicationSpecificInputs": [		    
+		"ApplicationSpecificInputs": [
+		{
+			"id": "assetSourceFile",
+			"type": "path",
+			"description": "path to asset database file"
+        },
+		{
+			"id": "inputDir",
+			"type": "path",
+			"description": "path to input directory"
+        }
 		]
 	    }
 	]
