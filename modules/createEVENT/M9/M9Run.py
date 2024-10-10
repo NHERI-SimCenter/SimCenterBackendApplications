@@ -52,7 +52,7 @@ if __name__ == '__main__':
         information['number_of_realizations'] = int(args.number)
     if args.gridType:
         information['grid_type'] = args.gridType
-    if args.API == 'true':
+    if args.API in ['true', 1, 'True', 'TRUE']:
         information['APIFLAG'] = True
 
 

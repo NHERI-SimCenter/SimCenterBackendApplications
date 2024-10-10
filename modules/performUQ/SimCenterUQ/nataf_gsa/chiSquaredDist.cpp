@@ -46,6 +46,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <cmath>
 #include "nlopt.hpp"
 #include "boost/math/distributions/normal.hpp" // for normal_distribution
 
@@ -151,7 +152,7 @@ void chiSquaredDist::checkParams()
 	double mean = getMean();
 	vector<double> par = getParam();
 
-	if (isnan(std) || isinf(std) || std <= 0)
+	if (std::isnan(std) || std::isinf(std) || std <= 0)
 	{
 		std::string errMSG = "Error running UQ engine: stdandard deviation of " + name + " must be greater than 0 ";
 		theErrorFile.write(errMSG);
