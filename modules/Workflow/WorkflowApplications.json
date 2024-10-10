@@ -1231,7 +1231,7 @@
 	"Applications": [
 	    {
 		"Name": "REWETRecovery",
-		"ExecutablePath": "applications/systemPerformance/REWEt/REWET_Wrapper.py",
+		"ExecutablePath": "applications/systemPerformance/REWET/REWET_Wrapper.py",
 		"ApplicationSpecificInputs": [
 		{
 			"id": "assetSourceFile",
