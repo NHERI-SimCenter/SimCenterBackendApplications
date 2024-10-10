@@ -1,4 +1,4 @@
-import typing  # noqa: INP001, D100
+import typing  # noqa: D100, N999
 from typing import Any
 
 import numpy as np
