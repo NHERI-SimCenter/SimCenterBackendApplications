@@ -123,12 +123,20 @@ int createDriver(int argc, const char **argv) {
     workflowDriver.append(std::string(".bat"));
   
   std::ofstream workflowDriverFile(workflowDriver, std::ios::binary);
-  
+
   if (!workflowDriverFile.is_open()) {
     std::cerr << "createOpenSeesPyDriver:: could not create workflow driver file: " << workflowDriver << "\n";
     exit(802); // no random variables is allowed
   }
 
+  // put in shebang fow linux
+  bool isWindows = (osType.compare("Windows") == 0);
+  bool isRunningLocal = (runType.compare("runningLocal") == 0);
+  if (!(isWindows && isRunningLocal)) {
+    workflowDriverFile << "#!/bin/bash\n";
+  }  
+
+  
   std::string dpreproCommand;
   std::string openSeesCommand;
   std::string pythonCommand;
