@@ -54,7 +54,20 @@ def main(input_args):  # noqa: D103
         f'{run_type} "{driver_file_name}" "{input_file_full_path}"'
     )
     command_list = shlex.split(command)
-    main_function(command_list)
+
+    # Check if 'UCSD_UQ.err' exists, and create it if not
+    err_file = path_to_working_directory / 'UCSD_UQ.err'
+
+    if not err_file.exists():
+        err_file.touch()  # Create the file
+
+    # Try running the main_function and catch any exceptions
+    try:
+        main_function(command_list)
+    except Exception as e:  # noqa: BLE001
+        # Write the exception message to the .err file
+        with err_file.open('a') as f:
+            f.write(f'ERROR: {e!s}\n')
 
 
 # ======================================================================================================================
