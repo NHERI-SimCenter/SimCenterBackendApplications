@@ -396,7 +396,7 @@ def run_command(command):
             sys.exit(-20)
 
         except:
-            # if for whatever reason the above failes, move on
+            # if for whatever reason the above fails, move on
             return str(result), 0
 
         return result, returncode
