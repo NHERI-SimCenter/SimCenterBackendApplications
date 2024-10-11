@@ -194,6 +194,13 @@ int main(int argc, const char **argv) {
     exit(802); // no random variables allowed
   }
 
+  // put in shebang fow linux
+  bool isWindows = (osType.compare("Windows") == 0);
+  bool isRunningLocal = (runType.compare("runningLocal") == 0);
+  if (!(isWindows && isRunningLocal)) {
+    workflowDriverFile << "#!/bin/bash\n";
+  }
+
   std::string dpreproCommand;
   std::string openSeesCommand;
   std::string pythonCommand;

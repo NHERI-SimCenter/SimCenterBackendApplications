@@ -391,12 +391,12 @@ def run_command(command):
             return str(result), returncode
 
         except WorkFlowInputError as e:
-            print(str(e).replace('\'',''))
+            print(str(e).replace("'", ''))
             print(str(result))
             sys.exit(-20)
 
         except:
-            # if for whatever reason the above failes, move on
+            # if for whatever reason the above fails, move on
             return str(result), 0
 
         return result, returncode
