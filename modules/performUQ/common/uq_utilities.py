@@ -1,4 +1,4 @@
-import glob  # noqa: INP001, D100
+import glob  # noqa: D100
 import os
 import shutil
 import subprocess

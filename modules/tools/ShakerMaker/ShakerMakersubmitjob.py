@@ -40,7 +40,7 @@ maxminutes = int(maxminutes)
 
 
 systemcodepath = args.tapisfolder
-allocation = f"-A {args.allocation}"
+allocation = f'-A {args.allocation}'
 faultinfo = metadata['faultdata']
 faultfiles = faultinfo['Faultfilenames']
 
@@ -214,7 +214,7 @@ if job_info.status == 'RUNNING':
     print('please wait for the job to finish')  # noqa: T201
     print('you can check the job status through the designsafe portal')  # noqa: T201
 if job_info.status == 'BLOCKED':
-    print('Job is blocked for now')  
+    print('Job is blocked for now')
     print('Please wait for the job to be staged')
     print('This can take several hours')
     print('you can check the job status through the designsafe portal')
