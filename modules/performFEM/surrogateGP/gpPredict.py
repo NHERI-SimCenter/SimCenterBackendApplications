@@ -9,8 +9,9 @@ import time
 import numpy as np
 from scipy.stats import lognorm, norm
 
-errFileName = 'workflow.err'  # noqa: N816
-sys.stderr = open(errFileName, 'a')  # noqa: SIM115, PTH123
+# sy - this conflicts with workflow.err in upper level
+# errFileName = 'workflow.err'  # noqa: N816
+# sys.stderr = open(errFileName, 'a')  # noqa: SIM115, PTH123
 
 try:
     moduleName = 'GPy'  # noqa: N816
@@ -232,9 +233,10 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 if (np.max(Y_var) / np.var(Y_mean) < 1.0e-10) and len(idx_repl) > 0:  # noqa: PLR2004
                     return np.ones((X.shape[0], 1))
 
-                kernel_var = GPy.kern.Matern52(
-                    input_dim=nrv_sur, ARD=True
-                ) + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
+                #kernel_var = GPy.kern.Matern52(
+                #    input_dim=nrv_sur, ARD=True
+                #) + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
+                kernel_var = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True)
                 log_vars = np.log(Y_var[idx_repl])
                 m_var = GPy.models.GPRegression(
                     X_unique[idx_repl, :],
@@ -267,9 +269,12 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 Y_mean = Y  # noqa: N806
                 indices = range(Y.shape[0])
 
+                #kernel_var = GPy.kern.Matern52(
+                #    input_dim=nrv_sur, ARD=True
+                #) + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
                 kernel_var = GPy.kern.Matern52(
                     input_dim=nrv_sur, ARD=True
-                ) + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
+                )
                 log_vars = np.atleast_2d(
                     sur['modelInfo'][g_name_sur[ny] + '_Var']['TrainingSamplesY']
                 ).T
