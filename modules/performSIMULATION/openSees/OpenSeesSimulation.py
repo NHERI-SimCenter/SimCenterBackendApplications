@@ -1,4 +1,4 @@
-#!/usr/bin/env python3  # noqa: EXE001, D100
+#!/usr/bin/env python3  # noqa: D100, EXE001, RUF100
 
 import os
 import subprocess
@@ -26,14 +26,14 @@ def main(args):  # noqa: D103
     # If requesting random variables run getUncertainty
     # Otherwise, Run Opensees
     if '--getRV' in args:
-        getUncertaintyCommand = f'"{scriptDir}/OpenSeesPreprocessor" {aimName} {samName} {evtName} {simName}'  # noqa: N806
+        getUncertaintyCommand = f'"{scriptDir}/OpenSeesPreprocessor" {aimName} {samName} {evtName} {simName} > workflow.err 2>&1'  # noqa: N806
         exit_code = subprocess.Popen(getUncertaintyCommand, shell=True).wait()  # noqa: S602
         # exit_code = subprocess.run(getUncertaintyCommand, shell=True).returncode
         # if not exit_code==0:
         #    exit(exit_code)
     else:
         # Run preprocessor
-        preprocessorCommand = f'"{scriptDir}/OpenSeesPreprocessor" {aimName} {samName} {evtName} {edpName} {simName} example.tcl'  # noqa: N806
+        preprocessorCommand = f'"{scriptDir}/OpenSeesPreprocessor" {aimName} {samName} {evtName} {edpName} {simName} example.tcl > workflow.err 2>&1'  # noqa: N806
         exit_code = subprocess.Popen(preprocessorCommand, shell=True).wait()  # noqa: S602
         # exit_code = subprocess.run(preprocessorCommand, shell=True).returncode # Maybe better for compatibility - jb
         # if not exit_code==0:
@@ -41,7 +41,7 @@ def main(args):  # noqa: D103
 
         # Run OpenSees
         exit_code = subprocess.Popen(  # noqa: S602
-            'OpenSees example.tcl >> workflow.err 2>&1',  # noqa: S607
+            'OpenSees example.tcl  >> workflow.err 2>&1',  # noqa: S607
             shell=True,
         ).wait()
         # Maybe better for compatibility, need to doublecheck - jb
@@ -58,7 +58,7 @@ def main(args):  # noqa: D103
         #                exit(exit_code)
 
         # Run postprocessor
-        postprocessorCommand = f'"{scriptDir}/OpenSeesPostprocessor" {aimName} {samName} {evtName} {edpName}'  # noqa: N806
+        postprocessorCommand = f'"{scriptDir}/OpenSeesPostprocessor" {aimName} {samName} {evtName} {edpName}  >> workflow.err 2>&1'  # noqa: N806
         exit_code = subprocess.Popen(postprocessorCommand, shell=True).wait()  # noqa: S602, F841
         # exit_code = subprocess.run(postprocessorCommand, shell=True).returncode # Maybe better for compatibility - jb
         # if not exit_code==0:

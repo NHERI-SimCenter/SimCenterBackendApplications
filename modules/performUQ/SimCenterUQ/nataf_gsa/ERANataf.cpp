@@ -544,6 +544,12 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 		// TODO: need to use numExistingDirectories for MFMC
 		return;
 	}
+	else if (inp.femAppName.compare("unknown") == 0) {
+		//*ERROR*
+		std::string errMsg = "FEM simulation model is unknown.";
+		theErrorFile.write(errMsg);
+		return;
+	}
 
 	//
 	// u -> x;
