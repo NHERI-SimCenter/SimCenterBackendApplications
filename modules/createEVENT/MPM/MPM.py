@@ -1,4 +1,5 @@
-import argparse  # noqa: INP001, D100
+#!/usr/bin/env python3 # noqa: D100
+import argparse
 import json
 
 
@@ -11,9 +12,9 @@ class FloorForces:  # noqa: D101
 
 def directionToDof(direction):  # noqa: N802
     """Converts direction to degree of freedom"""  # noqa: D400, D401
-    directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
+    directionMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
 
-    return directioMap[direction]
+    return directionMap[direction]
 
 
 def addFloorForceToEvent(  # noqa: N802
@@ -110,7 +111,11 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--filenameAIM', help='BIM File', required=True)
     parser.add_argument('-e', '--filenameEVENT', help='Event File', required=True)
     parser.add_argument(
-        '--getRV', help='getRV', required=False, action='store_true', default=False
+        '--getRV',
+        help='getRV',
+        required=False,
+        action='store_true',
+        default=False,
     )
 
     # Parsing arguments

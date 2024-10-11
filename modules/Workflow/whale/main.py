@@ -310,7 +310,7 @@ def create_command(command_list, enforced_python=None):
         for command_arg in command_list[1:]:
             command += f'"{command_arg}" '
 
-    return command
+    return command  # noqa: DOC201, RUF100
 
 
 def run_command(command):
@@ -357,7 +357,7 @@ def run_command(command):
 
         py_script.main(arg_list)
 
-        return '', ''
+        return '', ''  # noqa: DOC201, RUF100
 
     else:  # noqa: RET505
         # fmk with Shell=True not working on older windows machines, new approach needed for quoted command .. turn into a list
@@ -380,6 +380,24 @@ def run_command(command):
         # else:
         #     #print(result, returncode)
         #     return str(result), returncode
+
+        # sy - error checking trial 2 : only for windows and python & additional try statement
+
+        try:
+            if (platform.system() == 'Windows') and ('python.exe' in str(command)):
+                if returncode != 0:
+                    raise WorkFlowInputError('Analysis Failed')
+
+            return str(result), returncode
+
+        except WorkFlowInputError as e:
+            print(str(e).replace("'", ''))
+            print(str(result))
+            sys.exit(-20)
+
+        except:
+            # if for whatever reason the above fails, move on
+            return str(result), 0
 
         return result, returncode
 
@@ -668,7 +686,7 @@ class WorkflowApplication:
 
         # pp.pprint(arg_list)
 
-        return arg_list
+        return arg_list  # noqa: DOC201, RUF100
 
 
 class Workflow:
@@ -1316,7 +1334,7 @@ class Workflow:
 
         log_div()
 
-        return assetFilesList
+        return assetFilesList  # noqa: DOC201, RUF100
 
     def augment_asset_files(self):  # noqa: C901
         """Short description
@@ -1504,20 +1522,26 @@ class Workflow:
         )
         log_div()
 
-        return assetFilesList
+        return assetFilesList  # noqa: DOC201, RUF100
 
     def perform_system_performance_assessment(self, asset_type):
-        """For an asset type run the system level performance assessment application
+        """Run the system level performance assessment application.
 
-        Longer description
+        For an asset type run the system level performance assessment
+        application.
 
         Parameters
         ----------
         asset_type: string
            Asset type to run perform system assessment of
 
-        """  # noqa: D400
-        if 'SystemPerformance' in self.workflow_apps.keys():  # noqa: SIM118
+        """
+        # Make sure that we are in the run directory before we run REWET
+        # Every other path will be relative to the Run Directory (result dir)
+        os.chdir(self.run_dir)
+
+        # Check if system performance is requested
+        if 'SystemPerformance' in self.workflow_apps:
             performance_app = self.workflow_apps['SystemPerformance'][asset_type]
         else:
             log_msg(
@@ -1527,7 +1551,7 @@ class Workflow:
             log_div()
             return False
 
-        if performance_app.rel_path == None:  # noqa: E711
+        if performance_app.rel_path is None:
             log_msg(
                 f'No Performance application to run for asset type: {asset_type}.',
                 prepend_timestamp=False,
@@ -1536,8 +1560,7 @@ class Workflow:
             return False
 
         log_msg(
-            'Performing System Performance Application for asset type: '
-            + asset_type,
+            f'Performing System Performance Application for asset type: {asset_type}',
             prepend_timestamp=False,
         )
         log_div()
@@ -1550,18 +1573,13 @@ class Workflow:
         # defaults added to a system performance app are asset_type, input_dir and running_parallel (default False)
         #
 
-        # app_command_list.append('--asset_type')
-        # app_command_list.append(asset_type)
         app_command_list.append('--input')
         app_command_list.append(self.input_file)
-        # app_command_list.append('--working_dir')
-        # app_command_list.append(self.working_dir)
 
         # Sina added this part for parallel run in REWET
         if self.parType == 'parSETUP':
             log_msg(
-                '\nParallel settings for System Performance for asset type:'
-                + asset_type,
+                f'\nParallel settings for System Performance for asset type:{asset_type}',
                 prepend_timestamp=False,
             )
             app_command_list.append('--par')
@@ -1583,33 +1601,9 @@ class Workflow:
         )
 
         log_msg(
-            'System Performance Application Completed for asset type: ' + asset_type,
+            f'System Performance Application Completed for asset type: {asset_type}',
             prepend_timestamp=False,
         )
-
-        #  end of Sina's odifications for parallel run
-
-        # if (self.parType == 'parSETUP'):
-
-        #     log_msg('\nWriting System Performance application for asset type:' + asset_type, prepend_timestamp=False)
-        #     self.parCommandFile.write("\n# Writing System Performance application for asset type:" + asset_type +"\n")
-
-        #     if performance_app.runsParallel == False:
-        #         self.parCommandFile.write(command + "\n")
-        #     else:
-        #         self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + " --running_parallel True\n")
-
-        # else:
-
-        #     log_msg('\n{}\n'.format(command), prepend_timestamp=False,
-        #             prepend_blank_space=False)
-
-        #     result, returncode = run_command(command)
-
-        #     log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
-        #     log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
-
-        #     log_msg('System Performance Application Completed for asset type: ' + asset_type, prepend_timestamp=False)
 
         log_div()
         return True
@@ -1756,10 +1750,6 @@ class Workflow:
         for input_ in reg_mapping_app.inputs:
             if input_['id'] == 'assetFile':
                 input_['default'] = str(AIM_file_path)
-        # Get the event file path
-        eventFilePath = self.shared_data.get('RegionalEvent', {}).get(  # noqa: N806
-            'eventFilePath', self.reference_dir
-        )
 
         reg_mapping_app.inputs.append(
             {
@@ -1767,7 +1757,7 @@ class Workflow:
                 'type': 'path',
                 'default': resolve_path(
                     self.shared_data['RegionalEvent']['eventFile'],
-                    eventFilePath,
+                    self.reference_dir,
                 ),
             }
         )
@@ -1909,7 +1899,7 @@ class Workflow:
             prepend_timestamp=False,
         )
         log_div()
-        return dst
+        return dst  # noqa: DOC201, RUF100
 
     def cleanup_simdir(self, asst_id):
         """Short description
@@ -2183,15 +2173,18 @@ class Workflow:
                     prepend_blank_space=False,
                 )
 
-                # sy - trying adding exit command
-                # if platform.system() == 'Windows':
-                #    with open("driver.bat","r", encoding="utf-8") as f:
-                #        lines = f.readlines()
-                #    #lines.append(r'if %errorlevel% neq 0 exit /b -1')
-                #    with open("driver.bat","w", encoding="utf-8") as f:
-                #        f.writelines(lines)
-                # else:
-                #    pass
+                # sy - error checking trial 2
+                #      This time, (1) we do it only for python; (2) added try statement
+
+                try:
+                    if command.startswith('python'):
+                        if platform.system() == 'Windows':
+                            driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                        else:
+                            pass
+
+                except:
+                    pass
 
                 log_msg(
                     'Successfully Created Driver File for Workflow.',
@@ -2348,13 +2341,25 @@ class Workflow:
 
                     driver_script += create_command(command_list) + '\n'
 
-                # sy - trying adding exit command
+                # sy - error checking trial 2
+                #      This time, (1) we do it only for python; (2) added try statement
 
-                # if platform.system() == 'Windows':
-                #   #driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
-                #   pass
-                # else:
-                #   pass
+                # try:
+                if 'python' in command_list[0].lower():
+                    if platform.system() == 'Windows':
+                        driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                    else:
+                        pass
+                elif (
+                    'stochasticgm' in command_list[0].lower()
+                ):  # This function follows our standard
+                    if platform.system() == 'Windows':
+                        driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                    else:
+                        pass
+
+                # except:
+                #    pass
 
             # log_msg('Workflow driver script:', prepend_timestamp=False)
             # log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False, prepend_blank_space=False)
@@ -2734,7 +2739,7 @@ class Workflow:
                     ],
                 )
                 if ('PID', '0') in df_res.columns:
-                    del df_res[('PID', '0')]
+                    del df_res[('PID', '0')]  # noqa: RUF031, RUF100
 
                 # store the EDP statistics in the output DF
                 for col in np.transpose(col_info):

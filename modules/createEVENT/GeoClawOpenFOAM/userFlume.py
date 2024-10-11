@@ -1,4 +1,4 @@
-#  # noqa: INP001
+#  # noqa: INP001, EXE002
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -102,4 +102,4 @@ class userFlume:
         # Write extreme values and building data to temporary file for later usage
         flumeobj.extremedata(extreme, breadth)
 
-        return 0
+        return 0  # noqa: DOC201, RUF100

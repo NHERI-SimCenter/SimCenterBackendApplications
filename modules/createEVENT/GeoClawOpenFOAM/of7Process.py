@@ -1,4 +1,4 @@
-#  # noqa: INP001
+#  # noqa: INP001, EXE002
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -132,7 +132,7 @@ class of7Process:
         sampletext = sampletext + ');\n\n'
         sampletext = sampletext + 'fields\t' + fieldtext + ';\n'
 
-        return sampletext  # noqa: RET504
+        return sampletext  # noqa: DOC201, RET504, RUF100
 
     #############################################################
     def pprocesscdict(self, data, path):  # noqa: C901
@@ -275,7 +275,7 @@ class of7Process:
         cdicttext = cdicttext + '\t\tfields\t' + fieldtext + ';\n'
         cdicttext = cdicttext + '\t}\n}'
 
-        return cdicttext  # noqa: RET504
+        return cdicttext  # noqa: DOC201, RET504, RUF100
 
     #############################################################
     def scripts(self, data, path):  # noqa: ARG002
@@ -293,7 +293,7 @@ class of7Process:
             data, ['Events', 'Postprocessing']
         )
         if pprocess == [None]:
-            return 0
+            return 0  # noqa: DOC201, RUF100
         else:  # noqa: RET505
             pprocess = ', '.join(
                 hydroutil.extract_element_from_json(
@@ -310,10 +310,16 @@ class of7Process:
                 cdictpppath = os.path.join('system', 'controlDict')  # noqa: PTH118
                 caseruntext = caseruntext + 'cp cdictpp ' + cdictpppath + '\n'
                 # Move the wavemakerfile (if exists)
-                if os.path.exists(os.path.join('constant', 'wavemakerMovement.txt')):  # noqa: PTH110, PTH118
+                if os.path.exists(  # noqa: PTH110
+                    os.path.join('constant', 'wavemakerMovement.txt')  # noqa: PTH118
+                ):
                     caseruntext = caseruntext + 'mkdir extras\n'
-                    wavepath = os.path.join('constant', 'wavemakerMovement.txt')  # noqa: PTH118
-                    wavepathnew = os.path.join('extras', 'wavemakerMovement.txt')  # noqa: PTH118
+                    wavepath = os.path.join(  # noqa: PTH118
+                        'constant', 'wavemakerMovement.txt'
+                    )
+                    wavepathnew = os.path.join(  # noqa: PTH118
+                        'extras', 'wavemakerMovement.txt'
+                    )
                     caseruntext = (
                         caseruntext + 'mv ' + wavepath + ' ' + wavepathnew + '\n'
                     )
@@ -350,7 +356,7 @@ class of7Process:
         )
 
         if pprocess == 'No':
-            return 0
+            return 0  # noqa: DOC201, RUF100
         else:  # noqa: RET505
             pprocessV = ', '.join(  # noqa: N806
                 hydroutil.extract_element_from_json(data, ['Events', 'PPVelocity'])

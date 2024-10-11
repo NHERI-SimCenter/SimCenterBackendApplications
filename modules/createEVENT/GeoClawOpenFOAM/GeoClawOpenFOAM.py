@@ -1,4 +1,4 @@
-#  # noqa: INP001, D100
+#!/usr/bin/env python  # noqa: D100
 # Copyright (c) 2019 The Regents of the University of California
 #
 # This file is part of the SimCenter Backend Applications.
@@ -55,4 +55,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    main(inputFile=args.filenameAIM, evtFile=args.filenameEVENT, getRV=args.getRV)
+    main(
+        inputFile=args.filenameAIM,
+        evtFile=args.filenameEVENT,
+        getRV=args.getRV,
+    )

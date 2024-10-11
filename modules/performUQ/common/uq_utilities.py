@@ -1,4 +1,4 @@
-import glob  # noqa: INP001, D100
+import glob  # noqa: D100
 import os
 import shutil
 import subprocess
@@ -10,10 +10,14 @@ from typing import Any, Union
 
 import numpy as np
 import numpy.typing as npt
+import quoFEM_RV_models
 import scipy.stats
 from ERAClasses.ERADist import ERADist
 from ERAClasses.ERANataf import ERANataf
 from numpy.typing import NDArray
+
+if quoFEM_RV_models not in sys.modules:
+    import quoFEM_RV_models
 
 
 def _copytree(src, dst, symlinks=False, ignore=None):  # noqa: FBT002

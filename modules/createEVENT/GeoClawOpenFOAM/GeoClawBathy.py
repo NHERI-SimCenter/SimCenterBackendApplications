@@ -1,4 +1,4 @@
-#  # noqa: INP001
+#  # noqa: INP001, EXE002
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -61,4 +61,4 @@ class GeoClawBathy:
         # Create a utilities object
         hydroutil = hydroUtils()  # noqa: F841
 
-        return 0
+        return 0  # noqa: DOC201, RUF100

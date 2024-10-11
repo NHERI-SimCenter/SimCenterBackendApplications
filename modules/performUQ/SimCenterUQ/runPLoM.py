@@ -428,7 +428,7 @@ class runPLoM:
 
         # check if training data source from simulation
         if training_data == 'Sampling and Simulation':
-            return x_dim, y_dim, rv_name, g_name
+            return x_dim, y_dim, rv_name, g_name  # noqa: DOC201, RUF100
 
         # read X and Y variable names
         for rv in job_config['randomVariables']:
@@ -562,7 +562,7 @@ class runPLoM:
             run_flag = 1
 
         # return
-        return run_flag
+        return run_flag  # noqa: DOC201, RUF100
 
     def _set_up_parallel(self):
         """_set_up_parallel: set up modules and variables for parallel jobs
@@ -592,7 +592,7 @@ class runPLoM:
             run_flag = 1
 
         # return
-        return run_flag
+        return run_flag  # noqa: DOC201, RUF100
 
     def _load_variables(self, do_sampling, do_simulation):  # noqa: C901
         """_load_variables: load variables
@@ -666,21 +666,24 @@ class runPLoM:
         #    run_flag = 1
 
         # return
-        return run_flag
+        return run_flag  # noqa: DOC201, RUF100
 
     # KZ, 07/24: loading user-defined hyper-parameter files
     def _load_hyperparameter(self):
         run_flag = 0
         try:
             # load constraints first
-            constr_file = Path(self.constraintsFile).resolve()  # noqa: F405
-            sys.path.insert(0, str(constr_file.parent) + '/')
-            constr_script = importlib.__import__(  # noqa: F405
-                constr_file.name[:-3], globals(), locals(), [], 0
-            )
-            self.beta_c = constr_script.beta_c()
-            print('beta_c = ', self.beta_c)  # noqa: T201
-            # if smootherKDE
+            if (
+                self.constraintsFlag
+            ):  # sy - added because quoFEM/EE-UQ example failed 09/10/2024
+                constr_file = Path(self.constraintsFile).resolve()  # noqa: F405
+                sys.path.insert(0, str(constr_file.parent) + '/')
+                constr_script = importlib.__import__(  # noqa: F405
+                    constr_file.name[:-3], globals(), locals(), [], 0
+                )
+                self.beta_c = constr_script.beta_c()
+                print('beta_c = ', self.beta_c)  # noqa: T201
+                # if smootherKDE
             if self.smootherKDE_Customize:
                 kde_file = Path(self.smootherKDE_file).resolve()  # noqa: F405
                 sys.path.insert(0, str(kde_file.parent) + '/')

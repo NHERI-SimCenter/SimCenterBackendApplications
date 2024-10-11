@@ -1,4 +1,4 @@
-#  # noqa: INP001
+#  # noqa: INP001, EXE002
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -105,7 +105,7 @@ class of7Uboundary:
         utext = utext + '}\n\n'
 
         # Return the text for velocity BC
-        return utext  # noqa: RET504
+        return utext  # noqa: DOC201, RET504, RUF100
 
     #############################################################
     def Uheader(self):  # noqa: N802
@@ -130,7 +130,7 @@ FoamFile
         header = header + 'internalField\tuniform (0 0 0);\n\n'
 
         # Return the header for U file
-        return header  # noqa: RET504
+        return header  # noqa: DOC201, RET504, RUF100
 
     #############################################################
     def Upatchtext(self, data, Utype, patchname, fipath, numMovWall):  # noqa: C901, N802, N803
@@ -222,7 +222,8 @@ FoamFile
                     if heightfilename != [None]:
                         heightfilename = ', '.join(
                             hydroutil.extract_element_from_json(
-                                data, ['Events', 'OSUMovingWallHeight_' + patchname]
+                                data,
+                                ['Events', 'OSUMovingWallHeight_' + patchname],
                             )
                         )
                         heightfilepath = os.path.join(fipath, heightfilename)  # noqa: PTH118
@@ -265,7 +266,8 @@ FoamFile
                     if heightfilename != [None]:
                         heightfilename = ', '.join(
                             hydroutil.extract_element_from_json(
-                                data, ['Events', 'MovingWallHeight_' + patchname]
+                                data,
+                                ['Events', 'MovingWallHeight_' + patchname],
                             )
                         )
                         heightfilepath = os.path.join(fipath, heightfilename)  # noqa: PTH118
@@ -345,7 +347,7 @@ FoamFile
             Utext = Utext + 'type\tempty;\n\t}\n'  # noqa: N806
 
         # Return the header for U file
-        return Utext
+        return Utext  # noqa: DOC201, RUF100
 
     #############################################################
     def Uchecks(self, data, fipath, patches):  # noqa: C901, N802
@@ -384,7 +386,7 @@ FoamFile
                 # Checking for multiple moving walls
                 numMovWall += 1  # noqa: N806
                 if numMovWall > 1:
-                    return -1
+                    return -1  # noqa: DOC201, RUF100
 
                 # Check for existing moving wall files
                 dispfilename = hydroutil.extract_element_from_json(
@@ -480,7 +482,13 @@ FoamFile
         fileID.close()
 
     #############################################################
-    def OSUwavemakerText(self, fipath, dispfilepath, heightfilepath, numMovWall):  # noqa: ARG002, C901, N802, N803
+    def OSUwavemakerText(  # noqa: C901, N802
+        self,
+        fipath,
+        dispfilepath,
+        heightfilepath,
+        numMovWall,  # noqa: ARG002, N803
+    ):
         """Creates the wavemaker text file for the OSU moving wall
 
         Arguments:
@@ -562,7 +570,13 @@ FoamFile
             fileID.write(')\n);')
 
     #############################################################
-    def GenwavemakerText(self, fipath, dispfilepath, heightfilepath, numMovWall):  # noqa: ARG002, C901, N802, N803
+    def GenwavemakerText(  # noqa: C901, N802
+        self,
+        fipath,
+        dispfilepath,
+        heightfilepath,
+        numMovWall,  # noqa: ARG002, N803
+    ):
         """Creates the wavemaker text file for a general moving wall
 
         Arguments:

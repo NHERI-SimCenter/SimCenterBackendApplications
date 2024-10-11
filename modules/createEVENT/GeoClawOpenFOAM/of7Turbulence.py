@@ -1,4 +1,4 @@
-#  # noqa: INP001
+#  # noqa: INP001, EXE002
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -84,7 +84,7 @@ class of7Turbulence:
             turbtext = turbtext + '\tturbulence\ton;\n'
             turbtext = turbtext + '\tprintCoeffs\ton;\n}\n'
 
-        return turbtext
+        return turbtext  # noqa: DOC201, RUF100
 
     #############################################################
     def turbheader(self):
@@ -106,4 +106,4 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
         # Return the header for U file
-        return header  # noqa: RET504
+        return header  # noqa: DOC201, RET504, RUF100

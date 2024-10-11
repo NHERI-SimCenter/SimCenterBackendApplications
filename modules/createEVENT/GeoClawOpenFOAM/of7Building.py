@@ -1,4 +1,4 @@
-#  # noqa: INP001
+#  # noqa: INP001, EXE002
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -100,7 +100,7 @@ class of7Building:
                             data, ['Events', 'BuildingSTLFile']
                         )
                         if stlfile == [None]:
-                            return -1
+                            return -1  # noqa: DOC201, RUF100
                         else:  # noqa: RET505
                             stlfile = ', '.join(
                                 hydroutil.extract_element_from_json(
@@ -218,7 +218,7 @@ class of7Building:
         elif buildeftype == 'Parameters':
             self.buildpara(data, path)
 
-        return 0
+        return 0  # noqa: DOC201, RUF100
 
     #############################################################
     def buildmanual(self, data, path):
@@ -365,12 +365,16 @@ class of7Building:
         # Create the translation script
         if os.path.exists('translate.sh'):  # noqa: PTH110
             with open('translate.sh', 'a') as f:  # noqa: PTH123
-                buildpath = os.path.join('constant', 'triSurface', 'Building.stl')  # noqa: PTH118
+                buildpath = os.path.join(  # noqa: PTH118
+                    'constant', 'triSurface', 'Building.stl'
+                )
                 lines = 'cp Building.stl ' + buildpath + '\n'
                 f.writelines(lines)
         else:
             with open('translate.sh', 'w') as f:  # noqa: PTH123
-                buildpath = os.path.join('constant', 'triSurface', 'Building.stl')  # noqa: PTH118
+                buildpath = os.path.join(  # noqa: PTH118
+                    'constant', 'triSurface', 'Building.stl'
+                )
                 lines = 'cp Building.stl ' + buildpath + '\n'
                 f.writelines(lines)
 
@@ -446,13 +450,17 @@ class of7Building:
             f.writelines(lines)
 
         # Move the file to constant/triSurface folder
-        newfilepath = os.path.join(path, 'constant', 'triSurface', 'Building.stl')  # noqa: PTH118
+        newfilepath = os.path.join(  # noqa: PTH118
+            path, 'constant', 'triSurface', 'Building.stl'
+        )
         os.replace('Building.stl', newfilepath)  # noqa: PTH105
 
         # Create the translation script
         if os.path.exists('translate.sh'):  # noqa: PTH110
             with open('translate.sh', 'a') as f:  # noqa: PTH123
-                buildpath = os.path.join('constant', 'triSurface', 'Building.stl')  # noqa: PTH118
+                buildpath = os.path.join(  # noqa: PTH118
+                    'constant', 'triSurface', 'Building.stl'
+                )
                 lines = 'export FILE="' + buildpath + '"\n'
                 lines = (
                     lines
@@ -467,7 +475,9 @@ class of7Building:
                 f.writelines(lines)
         else:
             with open('translate.sh', 'w') as f:  # noqa: PTH123
-                buildpath = os.path.join('constant', 'triSurface', 'Building.stl')  # noqa: PTH118
+                buildpath = os.path.join(  # noqa: PTH118
+                    'constant', 'triSurface', 'Building.stl'
+                )
                 lines = 'export FILE="' + buildpath + '"\n'
                 lines = (
                     lines

@@ -1,4 +1,4 @@
-#  # noqa: INP001
+#!/usr/bin/env python
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -90,7 +90,7 @@ class hydroUtils:
             else:
                 arr.append(None)
 
-        return arr
+        return arr  # noqa: DOC201, RUF100
 
     #############################################################
     def extract_element_from_json(self, obj, path):
@@ -106,7 +106,7 @@ class hydroUtils:
 
         """  # noqa: D205, D401
         if isinstance(obj, dict):  # noqa: RET503
-            return self.extract(obj, path, 0, [])
+            return self.extract(obj, path, 0, [])  # noqa: DOC201, RUF100
         elif isinstance(obj, list):  # noqa: RET505
             outer_arr = []
             for item in obj:
@@ -129,7 +129,7 @@ class hydroUtils:
 |	   | O  |
 \\*---------------------------------------------------------------------------*/ \n\n"""  # noqa: W291
 
-        return header  # noqa: RET504
+        return header  # noqa: DOC201, RET504, RUF100
 
     ####################################################################
     def of7header(self, OFclass, location, filename):  # noqa: N803
@@ -156,7 +156,7 @@ FoamFile
 }}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
-        return header  # noqa: RET504
+        return header  # noqa: DOC201, RET504, RUF100
 
     #############################################################
     def hydrolog(self, projname, fipath):
@@ -210,4 +210,4 @@ FoamFile
         data = data.replace(',', ' ')
         results = [float(n) for n in data.split()]
 
-        return results  # noqa: RET504
+        return results  # noqa: DOC201, RET504, RUF100

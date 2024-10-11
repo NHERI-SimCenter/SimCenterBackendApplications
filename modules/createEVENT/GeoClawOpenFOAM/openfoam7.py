@@ -1,4 +1,4 @@
-#  # noqa: INP001
+#  # noqa: INP001, EXE002
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -169,7 +169,7 @@ class openfoam7:
         scriptfile.close()
 
         # Return completion flag
-        return 0
+        return 0  # noqa: DOC201, RUF100
 
     #############################################################
     def creategeometry(self, data, path):
@@ -192,7 +192,7 @@ class openfoam7:
         # Create the geometry related files
         Geometry = of7Geometry()  # noqa: N806
         if int(mesher[0]) == 1:
-            return 0
+            return 0  # noqa: DOC201, RUF100
         elif int(mesher[0]) == 0 or int(mesher[0]) == 2:  # noqa: RET505, PLR2004
             geomcode = Geometry.geomcheck(data, path)
             if geomcode == -1:
@@ -245,7 +245,7 @@ class openfoam7:
         Meshing = of7Meshing()  # noqa: N806
         meshcode = Meshing.meshcheck(data, path)
         if meshcode == -1:
-            return -1
+            return -1  # noqa: DOC201, RUF100
         elif int(mesher[0]) == 0:  # noqa: RET505
             # blockMesh
             bmeshtext = Meshing.bmeshtext(data)
@@ -295,7 +295,7 @@ class openfoam7:
         Materials = of7Materials()  # noqa: N806
         matcode = Materials.matcheck(data)
         if matcode == -1:
-            return -1
+            return -1  # noqa: DOC201, RUF100
         else:  # noqa: RET505
             mattext = Materials.mattext(data)
             fname = 'transportProperties'
@@ -320,7 +320,7 @@ class openfoam7:
         Inicond = of7Initial()  # noqa: N806
         initcode = Inicond.alphacheck(data, path)
         if initcode == -1:
-            return -1
+            return -1  # noqa: DOC201, RUF100
         else:  # noqa: RET505
             alphatext = Inicond.alphatext(data, path)
             fname = 'setFieldsDict'
@@ -355,7 +355,7 @@ class openfoam7:
         # Check for boundary conditions here
         ecode = Uboundary.Uchecks(data, path, patches)
         if ecode == -1:
-            return -1
+            return -1  # noqa: DOC201, RUF100
         else:  # noqa: RET505
             # Write the U-file if no errors
             # Path to the file
@@ -421,7 +421,7 @@ class openfoam7:
         turbfile.write(turbtext)
         turbfile.close()
 
-        return 0
+        return 0  # noqa: DOC201, RUF100
 
     #############################################################
     def parallelize(self, data, path):
@@ -445,7 +445,7 @@ class openfoam7:
         # Scripts
         Decomp.scripts(data, path)
 
-        return 0
+        return 0  # noqa: DOC201, RUF100
 
     #############################################################
     def solve(self, data, path):
@@ -478,7 +478,7 @@ class openfoam7:
         # controlDict
         ecode = Solve.cdictcheck(data)
         if ecode == -1:
-            return -1
+            return -1  # noqa: DOC201, RUF100
         else:  # noqa: RET505
             cdicttext = Solve.cdicttext(data)
             fname = 'controlDict'
@@ -516,7 +516,7 @@ class openfoam7:
         gfile.write(gfiletext)
         gfile.close()
 
-        return 0
+        return 0  # noqa: DOC201, RUF100
 
     #############################################################
     def dakota(self, args):
@@ -533,7 +533,7 @@ class openfoam7:
         # Dakota Scripts
         dakota.dakotascripts(args)
 
-        return 0
+        return 0  # noqa: DOC201, RUF100
 
     #############################################################
     def postprocessing(self, data, path):
@@ -550,7 +550,7 @@ class openfoam7:
         # controlDict
         ecode = pprocess.pprocesscheck(data, path)
         if ecode == -1:
-            return -1
+            return -1  # noqa: DOC201, RUF100
         elif ecode == 0:  # noqa: RET505
             return 0
         else:
@@ -589,4 +589,4 @@ class openfoam7:
         # Dakota Scripts
         cleaner.cleaning(args, path)
 
-        return 0
+        return 0  # noqa: DOC201, RUF100
