@@ -49,7 +49,6 @@ except:  # noqa: E722
 
 
 def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa: C901, D103, PLR0912, PLR0915
-
     global error_file  # noqa: PLW0602
 
     os_type = sys.platform.lower()

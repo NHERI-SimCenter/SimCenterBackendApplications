@@ -69,6 +69,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 			gammaDist.cpp
 			runGSA.cpp
 			runForward.cpp
+			runMFMC.cpp			
 			RVDist.cpp
 			gumbelDist.cpp
 			truncExponentialDist.cpp
@@ -139,6 +140,7 @@ else()
 			gammaDist.cpp
 			runGSA.cpp
 			runForward.cpp
+			runMFMC.cpp			
 			RVDist.cpp
 			gumbelDist.cpp
 			truncExponentialDist.cpp
