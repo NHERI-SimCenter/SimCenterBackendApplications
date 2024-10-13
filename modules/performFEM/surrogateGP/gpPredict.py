@@ -253,7 +253,8 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 var_pred = np.exp(log_var_pred)
 
                 if did_normalization:
-                    Y_normFact = np.var(Y_mean)  # noqa: N806
+                    # Y_normFact = np.var(Y_mean)  # noqa: N806
+                    Y_normFact = np.mean(var_pred.T[0])  # noqa: N806
                 else:
                     Y_normFact = 1  # noqa: N806
 
@@ -290,7 +291,9 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 var_pred = np.exp(log_var_pred)
 
                 if did_normalization:
-                    Y_normFact = np.var(Y)  # noqa: N806
+                    # Y_normFact = np.var(Y)  # noqa: N806
+                    Y_normFact = np.mean(var_pred.T[0])  # noqa: N806
+                
                 else:
                     Y_normFact = 1  # noqa: N806
 
