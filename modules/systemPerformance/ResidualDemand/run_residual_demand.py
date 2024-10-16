@@ -43,6 +43,8 @@ import os
 import shutil
 import sys
 import time
+import warnings
+from datetime import datetime
 from pathlib import Path
 
 import contextily as cx
@@ -50,6 +52,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import shapely
 from matplotlib.animation import FuncAnimation
 from shapely import wkt
 from shapely.wkt import loads
@@ -219,6 +222,65 @@ def aggregate_delay_results(undamaged_time, damaged_time,
     od_df['std_delay_ratio'] = delay_ratio.std(axis = 1)
     od_df.to_csv('travel_delay_stats.csv', index=False)
 
+def compile_r2d_results_geojson(residual_demand_dir, results_det_file):
+    with open(results_det_file, encoding='utf-8') as f:  # noqa: PTH123
+        res_det = json.load(f)
+    metadata = {
+            'WorkflowType': 'ResidualDemandSimulation',
+            'Time': datetime.now().strftime('%m-%d-%Y %H:%M:%S'),  # noqa: DTZ005
+        }
+    # create the geojson for R2D visualization
+    geojson_result = {
+        'type': 'FeatureCollection',
+        'crs': {
+            'type': 'name',
+            'properties': {'name': 'urn:ogc:def:crs:OGC:1.3:CRS84'},
+        },
+        'metadata': metadata,
+        'features': [],
+    }
+    for asset_type in res_det.keys():  # noqa: SIM118
+        for assetSubtype, subtypeResult in res_det[asset_type].items():  # noqa: N806
+            allAssetIds = sorted([int(x) for x in subtypeResult.keys()])  # noqa: SIM118, N806
+            for asset_id in allAssetIds:
+                ft = {'type': 'Feature'}
+                asst_GI = subtypeResult[str(asset_id)][  # noqa: N806
+                    'GeneralInformation'
+                ].copy()
+                asst_GI.update({'assetType': asset_type})
+                try:
+                    if 'geometry' in asst_GI:
+                        asst_geom = shapely.wkt.loads(asst_GI['geometry'])
+                        asst_geom = shapely.geometry.mapping(asst_geom)
+                        asst_GI.pop('geometry')
+                    elif 'Footprint' in asst_GI:
+                        asst_geom = json.loads(asst_GI['Footprint'])['geometry']
+                        asst_GI.pop('Footprint')
+                    else:
+                        # raise ValueError("No valid geometric information in GI.")
+                        asst_lat = asst_GI['location']['latitude']
+                        asst_lon = asst_GI['location']['longitude']
+                        asst_geom = {
+                            'type': 'Point',
+                            'coordinates': [asst_lon, asst_lat],
+                        }
+                        asst_GI.pop('location')
+                except:  # noqa: E722
+                    warnings.warn(  # noqa: B028
+                        UserWarning(
+                            f'Geospatial info is missing in {assetSubtype} {asset_id}'
+                        )
+                    )
+                    continue
+                if asst_GI.get('units', None) is not None:
+                    asst_GI.pop('units')
+                ft.update({'geometry': asst_geom})
+                ft.update({'properties': asst_GI})
+                ft['properties'].update(subtypeResult[str(asset_id)]['R2Dres'])
+                geojson_result['features'].append(ft)
+    with open(residual_demand_dir / 'R2D_results.geojson', 'w', encoding='utf-8') as f:  # noqa: PTH123
+        json.dump(geojson_result, f, indent=2)
+
 def create_congestion_agg(edge_file):
     all_edges = pd.read_csv(edge_file)[['id', 'uniqueid']]
     all_edges = all_edges.groupby('id').count()
@@ -327,15 +389,17 @@ def run_residual_demand(
 
     # Make a dir for ResidualDemand
     if residual_demand_dir is None:
+        geojson_needed = False
         residual_demand_dir = run_dir / 'ResidualDemand'
     else:
+        geojson_needed = True
         residual_demand_dir = Path(residual_demand_dir)
 
-    log_file = residual_demand_dir / 'run_residual_demand.log'
+    # log_file = residual_demand_dir / 'run_residual_demand.log'
     # f = open(log_file, 'w')
     # sys.stdout = f
-    logging.basicConfig(filename=log_file, level=logging.DEBUG)
-    logging.info('Running Residual Demand')
+    # logging.basicConfig(filename=log_file, level=logging.DEBUG)
+    # logging.info('Running Residual Demand')
     if residual_demand_dir.exists():
         msg = 'ResidualDemand directory already exists'
         # Remove all the files and subfolders
@@ -423,7 +487,7 @@ def run_residual_demand(
                             loss_dist['Repair']['Time'][comp] = max(results_det[asset_type][asset_subtype]\
                             [asset_id]['R2Dres'][mean_time_key], 0.1)
         rlz = 'mostlikely'
-        with (run_dir /'Results_{rlz}.json').open('w') as f:
+        with (run_dir /f'Results_{rlz}.json').open('w') as f:
             json.dump(results_rlz, f)
 
         # Create a directory for the realization
@@ -497,7 +561,13 @@ def run_residual_demand(
         msg = 'Damage input type not recognized'
         raise ValueError(msg)
 
-    f.close()
+    if geojson_needed:
+        # If run in tool box, compile a geojson for visualization
+        # Otherwise, the geojson is compiled in rWHALE
+        compile_r2d_results_geojson(residual_demand_dir, 
+                                    Path(run_dir / 'Results_det.json'))
+
+    # f.close()
 
 
 if __name__ == '__main__':
