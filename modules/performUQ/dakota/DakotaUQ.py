@@ -67,7 +67,7 @@ def main(args):  # noqa: C901, D103
         osType = 'Linux'  # noqa: N806
 
     cwd = os.getcwd()  # noqa: PTH109
-    print('CWD: ' + cwd)  # noqa: T201
+    print('cwd: ' + cwd)  # noqa: T201
 
     thisScriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N806
 
@@ -127,7 +127,9 @@ def main(args):  # noqa: C901, D103
             if data['parType'] == 'parRUN':
                 dakotaCommand = data['mpiExec'] + ' -n 1 ' + dakotaCommand  # noqa: N806
 
-        print('running Dakota: ', dakotaCommand)  # noqa: T201
+        print('Running Dakota: ', dakotaCommand)  # noqa: T201
+
+        run_success = True
 
         try:
             result = subprocess.check_output(  # noqa: S602
@@ -136,19 +138,55 @@ def main(args):  # noqa: C901, D103
             returncode = 0
         except subprocess.CalledProcessError as e:
             result = e.output
-            print('RUNNING DAKOTA ERROR: ', result)  # noqa: T201
+            #print('RUNNING DAKOTA ERROR: ', result)  # noqa: RUF100, T201
             returncode = e.returncode  # noqa: F841
+            run_success = False
 
         dakotaErrFile = os.path.join(os.getcwd(), 'dakota.err')  # noqa: PTH109, PTH118, N806
         dakotaOutFile = os.path.join(os.getcwd(), 'dakota.out')  # noqa: PTH109, PTH118, N806
+        dakotaTabFile = os.path.join(os.getcwd(), 'dakotaTab.out')  # noqa: PTH109, PTH118, N806
         checkErrFile = os.path.getsize(dakotaErrFile)  # noqa: PTH202, N806
         checkOutFile = os.path.exists(dakotaOutFile)  # noqa: PTH110, N806
+        checkTabFile = os.path.exists(dakotaTabFile)  # noqa: F841, N806, PTH110
 
         if checkOutFile == False and checkErrFile == 0:  # noqa: E712
             with open(dakotaErrFile, 'a') as file:  # noqa: PTH123
                 file.write(result.decode('utf-8'))
         else:
             pass
+
+
+        if not run_success:
+            # noqa: W293
+            display_err = "\nERROR. Dakota did not run. dakota.err not created."
+                                #  # noqa: PLR2044
+
+            # First see if dakota.err is created
+            with open(dakotaErrFile, 'r') as file:  # noqa: PTH123, UP015
+                dakota_err = file.read()
+
+            display_err = "\nERROR. Workflow did not run: " + dakota_err
+
+
+            # Second, see if workflow.err is found
+            if 'workdir.' in dakota_err:
+
+                display_err = "\nERROR. Workflow did not run: " + dakota_err
+
+                start_index = dakota_err.find("workdir.") + len("workdir.")
+                end_index = dakota_err.find("\\", start_index)
+                workdir_no = dakota_err[start_index:end_index]
+
+                workflow_err_path = os.path.join(os.getcwd(),f'workdir.{workdir_no}/workflow.err')  # noqa: PTH109, PTH118
+                if os.path.isfile(workflow_err_path):  # noqa: N806, PTH110, PTH113, RUF100
+                    with open(workflow_err_path, 'r') as file:  # noqa: PTH123, UP015
+                        workflow_err = file.read()
+
+                    if not workflow_err=="":  # noqa: SIM201
+                        display_err = str("\nERROR running the workflow: \n" + workflow_err + "\n Check out more in " +  str(os.path.dirname(workflow_err_path)).replace('\\','/'))
+
+            print(display_err)  # noqa: T201
+            exit(0) # sy - this could be -1 like any other tools. But if it is 0, quoFEM,EE,WE,Hydro will highlight the error messages in "red" by using the parser in UI. To use this parser in UI, we need to make UI believe that the analysis is successful. Something that needs improvment # noqa: PLR1722
 
 
 if __name__ == '__main__':
