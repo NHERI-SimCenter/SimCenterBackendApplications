@@ -97,7 +97,8 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
 
     # Create a gif of the recovery process
     geo_visualizer = R2D_GeoVisualizer(system.components)
-    time_step_list = list(range(0, system.time_step, 1))
+    # time_step_list = list(range(0, system.time_step, 1))
+    time_step_list = list(np.linspace(0, 189, 20).astype(int))
     for time_step in time_step_list:
         fig, ax = plt.subplots(figsize=(10, 10))
         geo_visualizer.create_current_state_figure(time_step, ax=ax)
