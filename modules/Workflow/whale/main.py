@@ -381,8 +381,8 @@ def run_command(command, app_category=""):  # noqa: C901
 
         try:
 
-            if (platform.system() == 'Windows') and ('python.exe' in str(command)):
-                if returncode != 0:
+            # if (platform.system() == 'Windows') and ('python.exe' in str(command)):
+            if returncode != 0:
                     raise WorkFlowInputError('Analysis Failed at ' + app_category)  # noqa: TRY301
 
             # sy - safe apps should be added below
