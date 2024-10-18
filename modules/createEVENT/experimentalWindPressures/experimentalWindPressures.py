@@ -8,8 +8,6 @@ try:
     import numpy as np
 
     moduleName = 'scipy'  # noqa: N816
-    import os
-
     from scipy import interpolate
     from scipy.interpolate import interp1d
     from scipy.signal import butter, csd, lfilter, windows
@@ -21,7 +19,7 @@ except:  # noqa: E722
 
 from convertWindMat import *  # noqa: F403
 
-errPath = './workflow.err'  # error file name  # noqa: N816
+errPath = os.path.join(os.getcwd(),'workflow.err')  # noqa: N816
 sys.stderr = open(  # noqa: SIM115, PTH123
     errPath, 'w'
 )  # redirecting stderr (this way we can capture all sorts of python errors)

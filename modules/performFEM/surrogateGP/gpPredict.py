@@ -10,10 +10,6 @@ import numpy as np
 from scipy.stats import lognorm, norm
 from sklearn.linear_model import LinearRegression
 
-# sy - this conflicts with workflow.err in upper level
-# errFileName = 'workflow.err'  # noqa: N816
-# sys.stderr = open(errFileName, 'a')  # noqa: SIM115, PTH123
-
 try:
     moduleName = 'GPy'  # noqa: N816
     import GPy as GPy  # noqa: PLC0414

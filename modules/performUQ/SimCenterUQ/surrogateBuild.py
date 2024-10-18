@@ -85,6 +85,7 @@ except:  # noqa: E722
     error_tag = True
     print('Failed to import module:' + moduleName)  # noqa: T201
 
+
 errFileName = os.path.join(os.getcwd(),'dakota.err')  # noqa: N816
 develop_mode = (len(sys.argv)==7) # a flag for develeopmode
 if develop_mode:
