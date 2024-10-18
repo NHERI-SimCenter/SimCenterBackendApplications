@@ -47,6 +47,7 @@ import json
 import os
 import sys
 
+errFileName = os.path.join(os.getcwd(),'workflow.err')  # noqa: N816
 
 def create_SAM(AIM_file, SAM_file):  # noqa: N802, N803, D103
     #
@@ -82,7 +83,7 @@ def create_SAM(AIM_file, SAM_file):  # noqa: N802, N803, D103
     if root_AIM['Applications']['EDP']['Application'] != 'SurrogateEDP':
         msg = 'Please select [None] in the EDP tab.'
         print(msg, file=sys.stderr)  # noqa: T201
-        with open('./workflow.err', 'w') as f:  # noqa: PTH123
+        with open(errFileName, 'w') as f:  # noqa: PTH123
             f.write(msg)
         exit(-1)  # noqa: PLR1722
 
@@ -92,7 +93,7 @@ def create_SAM(AIM_file, SAM_file):  # noqa: N802, N803, D103
     ):
         msg = 'Please select [None] in the FEM tab.'
         print(msg, file=sys.stderr)  # noqa: T201
-        with open('./workflow.err', 'w') as f:  # noqa: PTH123
+        with open(errFileName, 'w') as f:  # noqa: PTH123
             f.write(msg)
         exit(-1)  # noqa: PLR1722
 

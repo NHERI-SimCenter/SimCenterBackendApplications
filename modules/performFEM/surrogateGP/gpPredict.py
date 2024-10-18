@@ -9,7 +9,7 @@ import time
 import numpy as np
 from scipy.stats import lognorm, norm
 
-errFileName = 'workflow.err'  # noqa: N816
+errFileName = os.path.join(os.getcwd(),'workflow.err')  # noqa: N816
 sys.stderr = open(errFileName, 'a')  # noqa: SIM115, PTH123
 
 try:

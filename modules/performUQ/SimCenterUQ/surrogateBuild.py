@@ -78,7 +78,9 @@ except:  # noqa: E722
     error_tag = True
     print('Failed to import module:' + moduleName)  # noqa: T201
 
-errFileName = 'dakota.err'  # noqa: N816
+#errFileName = 'dakota.err'  # noqa: N816
+
+errFileName = os.path.join(os.getcwd(),'dakota.err')  # noqa: N816
 sys.stderr = open(errFileName, 'w')  # noqa: SIM115, PTH123
 
 
