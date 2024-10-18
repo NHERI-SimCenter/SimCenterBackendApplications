@@ -96,7 +96,6 @@ else:
     with open(errFileName, 'w') as f:
         f.write("")
     sys.stderr = open(errFileName, 'w')  # noqa: SIM115, PTH123
-
 #
 # Modify GPy package
 #
