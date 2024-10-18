@@ -328,7 +328,7 @@ int main(int argc, char **argv) {
   json_error_t error;
   json_t *rootINPUT = json_load_file(inputFile, 0, &error);
   if (rootINPUT == NULL) {
-    std::cerr << "createStandardUQ_INput could not open file" << inputFile << "\n";
+    std::cerr << "createStandardUQ_Input could not open file: " << inputFile << "\n";
     exit(801); // no random variables is allowed
   }
 
