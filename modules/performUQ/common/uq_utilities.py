@@ -243,8 +243,9 @@ class ParallelRunnerMultiprocessing:  # noqa: D101
                 'Number of processes must be at least 1.                     '  # noqa: EM102
                 f'         Got {num_processors}'
             )
-        elif num_processors > 8:
-            num_processors = 8;
+        elif num_processors > 32:
+            # this is to get past memory problems when running large number processors in a container
+            num_processors = 8
         
         return num_processors
 
