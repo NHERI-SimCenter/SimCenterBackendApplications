@@ -915,8 +915,13 @@ class surrogate(UQengine):  # noqa: D101
             if parname.endswith('lengthscale'):
                 for nx in range(X_repl.shape[1]):
                     myrange = np.max(X_repl, axis=0) - np.min(X_repl, axis=0)
+                    lb = myrange[nx]/X_repl.shape[0]
+                    ub = myrange[nx]*5
+                    if lb>=ub:
+                        lb = 0
+
                     
-                    m_var.Mat52.lengthscale[[nx]].constrain_bounded( myrange[nx]/X_repl.shape[0], myrange[nx]*5,warning=False)
+                    m_var.Mat52.lengthscale[[nx]].constrain_bounded( lb, ub, warning=False)
                     m_var.Mat52.lengthscale[[nx]] = myrange[nx] # initial points
                     # m_var.Gaussian_noise.value = 0.05
                     # m_var.Gaussian_noise.constrain_bounded(0.1/np.var(log_vars), 0.8/np.var(log_vars), warning=False)
@@ -1092,8 +1097,8 @@ class surrogate(UQengine):  # noqa: D101
         nugget_opt_tmp = self.nugget_opt
         nopt = self.nopt
 
-        parallel_calib = True
-        # parallel_calib = self.do_parallel
+        # parallel_calib = True
+        parallel_calib = self.do_parallel
 
         if parallel_calib:
             iterables = (
@@ -3329,10 +3334,16 @@ def calibrating(  # noqa: C901, D103
                 if parname.endswith('lengthscale'):
                     for nx in range(X.shape[1]):  # noqa: B007
                         myrange = np.max(X, axis=0) - np.min(X, axis=0)  # noqa: F841
+                        lb = myrange[nx]
+                        ub = myrange[nx] / X.shape[0]*10
+                        if lb>=ub:
+                            lb = 0
+
+
                         exec(  # noqa: S102
                             'm_tmp.'
                             + parname
-                            + '[[nx]].constrain_bounded(myrange[nx] / X.shape[0]*10, myrange[nx],warning=False)'
+                            + '[[nx]].constrain_bounded(lb, ub,warning=False)'
                         )
                         # m_tmp[parname][nx].constrain_bounded(myrange[nx] / X.shape[0], myrange[nx]*100)
         elif nugget_opt_tmp == 'Fixed Values':
@@ -3365,10 +3376,15 @@ def calibrating(  # noqa: C901, D103
                 if parname.endswith('lengthscale'):
                     for nx in range(X.shape[1]):  # noqa: B007
                         myrange = np.max(X, axis=0) - np.min(X, axis=0)  # noqa: F841
+                        lb = myrange[nx] / X.shape[0]*10
+                        ub = myrange[nx]
+                        if lb>=ub:
+                            lb = 0
+                            
                         exec(  # noqa: S102
                             'm_tmp.'
                             + parname
-                            + '[[nx]].constrain_bounded(myrange[nx] / X.shape[0]*10, myrange[nx],warning=False)'
+                            + '[[nx]].constrain_bounded(lb, ub, warning=False)'
                         )
                         exec(  # noqa: S102
                             'm_tmp.'
