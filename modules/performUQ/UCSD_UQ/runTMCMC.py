@@ -264,17 +264,33 @@ def run_TMCMC(  # noqa: N802, PLR0913
 
     # Evaluate log-likelihood at current samples Sm
     if run_type == 'runningLocal':
-        mp.set_start_method('forkserver', force=True)
+
         processor_count = mp.cpu_count()
-        with mp.Pool(processes=processor_count) as pool:
-            write_eval_data_to_logfile(
-                logfile,
-                parallelize_MCMC,
-                run_type,
-                proc_count=processor_count,
-                stage_num=stage_number,
+        if processor_count > 32:
+            processor_count = 8
+        
+        pool = Pool(processes=processor_count)
+        write_eval_data_to_logfile(
+            logfile,
+            parallelize_MCMC,
+            run_type,
+            proc_count=processor_count,
+            stage_num=stage_number,
             )
-            outputs = pool.starmap(runFEM, iterables)
+        outputs = pool.starmap(runFEM, iterables)
+        
+        # pool does not start
+        #mp.set_start_method('forkserver', force=True)
+        #processor_count = mp.cpu_count()
+        #with mp.Pool(processes=processor_count) as pool:
+        #    write_eval_data_to_logfile(
+        #        logfile,
+        #        parallelize_MCMC,
+        #        run_type,
+        #        proc_count=processor_count,
+        #        stage_num=stage_number,
+        #    )
+        #    outputs = pool.starmap(runFEM, iterables)
 
         #mp.set_start_method('spawn')
         #with mp.Pool(processes=processor_count) as pool:
