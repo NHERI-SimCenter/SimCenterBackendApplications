@@ -238,11 +238,14 @@ class ParallelRunnerMultiprocessing:  # noqa: D101
         num_processors = os.cpu_count()
         if num_processors is None:
             num_processors = 1
-        if num_processors < 1:
+        elif num_processors < 1:
             raise ValueError(  # noqa: TRY003
                 'Number of processes must be at least 1.                     '  # noqa: EM102
                 f'         Got {num_processors}'
             )
+        elif num_processors > 8:
+            num_processors = 8;
+        
         return num_processors
 
     def get_pool(self) -> Pool:  # noqa: D102
