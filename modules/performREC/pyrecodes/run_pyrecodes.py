@@ -98,7 +98,7 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
     # Create a gif of the recovery process
     geo_visualizer = R2D_GeoVisualizer(system.components)
     # time_step_list = list(range(0, system.time_step, 1))
-    time_step_list = list(np.linspace(0, 189, 20).astype(int))
+    time_step_list = list(np.linspace(0, system.time_step, min(system.time_step, 20)).astype(int))
     for time_step in time_step_list:
         fig, ax = plt.subplots(figsize=(10, 10))
         geo_visualizer.create_current_state_figure(time_step, ax=ax)
@@ -112,17 +112,23 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
     plotter_object = ConcretePlotter()
     first_resource = next(iter(system_config['Resources'].keys()))
     first_unit = system_config['Resources'][first_resource].get('Unit', f'unit_{first_resource}')
-    y_axis_label = f'{first_resource} {first_unit} | {system.resilience_calculators[0].scope}'
-    x_axis_label = 'Time step [day]'
-    axis_object = plotter_object.setup_lor_plot_fig(x_axis_label, y_axis_label)
-    time_range = system.time_step+1
-    time_steps_before_event = 10
-    plotter_object.plot_single_resource(list(range(-time_steps_before_event, time_range)), system.resilience_calculators[0].system_supply[first_resource][:time_range],
-                                    system.resilience_calculators[0].system_demand[first_resource][:time_range],
-                                    system.resilience_calculators[0].system_consumption[first_resource][:time_range], axis_object, warmup=time_steps_before_event,
-                                    show = False
-                                    )
-    plotter_object.save_current_figure(savename = f'{first_resource}_supply_demand_consumption.png')
+    resources_to_plot = [first_resource]
+    units_to_plot = [first_unit]
+    if 'PotableWater' in system_config['Resources']:
+        resources_to_plot.append('PotableWater')
+        units_to_plot.append(system_config['Resources']['PotableWater'].get('Unit', 'unit_PotableWater'))
+    for recource, unit in zip(resources_to_plot, units_to_plot):
+        y_axis_label = f'{recource} {unit} | {system.resilience_calculators[0].scope}'
+        x_axis_label = 'Time step [day]'
+        axis_object = plotter_object.setup_lor_plot_fig(x_axis_label, y_axis_label)
+        time_range = system.time_step+1
+        time_steps_before_event = 10
+        plotter_object.plot_single_resource(list(range(-time_steps_before_event, time_range)), system.resilience_calculators[0].system_supply[recource][:time_range],
+                                        system.resilience_calculators[0].system_demand[recource][:time_range],
+                                        system.resilience_calculators[0].system_consumption[recource][:time_range], axis_object, warmup=time_steps_before_event,
+                                        show = False
+                                        )
+        plotter_object.save_current_figure(savename = f'{recource}_supply_demand_consumption.png')
     return True
 
 def modify_system_config_conent(system_config, locality_geojson, rwhale_run_dir):
