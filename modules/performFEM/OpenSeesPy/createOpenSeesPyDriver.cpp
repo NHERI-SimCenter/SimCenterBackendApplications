@@ -17,7 +17,6 @@
 #include <csignal>
 
 
-
 int getEDP(json_t *edp, std::vector<std::string> &edpList);
 int getRV(json_t *edp, std::vector<std::string> &rvList);
 
@@ -39,6 +38,60 @@ std::string appendModelIndexToStem(int modelIndex, std::string filename) {
     filename = newStem + extension;
     return filename;
 }
+
+
+void writeFile(const std::string& inFilename, const std::string& outFilename, const std::vector<std::string>& varToChange) {
+    std::ifstream inFile(inFilename);
+    if (!inFile.is_open()) {
+        throw std::runtime_error("Failed to open input file: " + inFilename);
+    }
+
+    // Use a temporary file for output
+    std::string tempFilename = outFilename + ".tmp";
+    std::ofstream outFile(tempFilename);
+    if (!outFile.is_open()) {
+        throw std::runtime_error("Failed to open temporary output file: " + tempFilename);
+    }
+
+    std::string line;
+    while (std::getline(inFile, line)) {
+        std::string equalTo = "=";
+        std::size_t found = line.find(equalTo);
+        if (found != std::string::npos) {
+            std::string varNameWithSpaces = line.substr(0, found);
+            std::string varName(varNameWithSpaces);
+            varName.erase(std::remove_if(varName.begin(), varName.end(), ::isspace), varName.end());
+
+            // Check if varName is in the input string list
+            if (std::find(varToChange.begin(), varToChange.end(), varName) != varToChange.end()) {
+                outFile << varNameWithSpaces << " = \"RV." << varName << "\"\n";
+            } else {
+                // Not there, write current line
+                outFile << line << "\n";
+            }
+        } else {
+            // Just copy line to output
+            outFile << line << "\n";
+        }
+    }
+
+    // Check if the output stream is in a good state
+    if (!outFile.good()) {
+        throw std::runtime_error("Failed to write to output file: " + tempFilename);
+    }
+
+    // Close files
+    inFile.close();
+    outFile.close();
+
+    // Replace the original file with the temporary file
+    std::remove(outFilename.c_str());
+    std::rename(tempFilename.c_str(), outFilename.c_str());
+}
+
+
+
+
 
 //int main(int argc, const char **argv) {
 int createDriver(int argc, const char **argv) {
@@ -208,6 +261,13 @@ int createDriver(int argc, const char **argv) {
   const char *postprocessScript =  json_string_value(json_object_get(fem, "postprocessScript"));
   std::string parametersScript =  json_string_value(json_object_get(fem, "parametersScript"));
 
+  //
+  // sy - moving special copy from frontend to backend
+  //
+
+  std::string inputString(parametersScript);
+  writeFile(inputString,inputString,rvList);
+
   std::string parametersScriptTemplate = "tmpSimCenter.params";
   if (strcmp(parametersScript.c_str(),"") != 0) { // if parametersScript name is provided
     if (modelIndex > 0) {
@@ -299,6 +359,9 @@ int createDriver(int argc, const char **argv) {
   // done
   //
   std::cerr << "The run was successful" << std::endl;
+
+
+
 
   exit(0);
 }

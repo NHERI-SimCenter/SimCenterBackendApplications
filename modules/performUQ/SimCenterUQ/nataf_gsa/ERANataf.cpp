@@ -49,6 +49,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <random>
 #include <filesystem>
 #include "nlopt.hpp"
+#include <thread> // This is necessary for std::this_thread
 
 //#include <chrono>
 
@@ -767,29 +768,46 @@ vector<vector<double>> ERANataf::simulateAppOnce(int i, string workingDirs, stri
 		writeFile.close();
 	}
 
-	//
-	// (4) run workflow_driver.bat(e.g. It will make "SimCenterInput.tcl" and run OpenSees)
-	//
+
+	bool tryMore = true;
+	auto tryStart = std::chrono::high_resolution_clock::now();
+	double elapsedTime;
+
+	std::ifstream readFile; // Declare the ifstream object
+
+	while (tryMore) {
+
+		//
+		// (4) run workflow_driver.bat(e.g. It will make "SimCenterInput.tcl" and run OpenSees)
+		//
 
 
-	string workflowDriver_string = "cd \"" + workDir + "\" && \"" + workDir + "/" + workflowDriver + "\"" ;
+		string workflowDriver_string = "cd \"" + workDir + "\" && \"" + workDir + "/" + workflowDriver + "\"" ;
+		
+		const char* workflowDriver_char = workflowDriver_string.c_str();
+		system(workflowDriver_char);
+		
+		//
+		// (5) get the values in "results.out"
+		//
 
-	
-	const char* workflowDriver_char = workflowDriver_string.c_str();
-	system(workflowDriver_char);
+		string results = workDir + "/results.out";
+   	//std::ifstream readFile(results.data());
+		readFile.open(results.data()); // Assign by opening the file
 
-	
-	if (i == 0) {
-		//std::cout << workflowDriver_char << "\n\n";
-		//std::cout << "Simulating Workdir." << i +1 << "\n\n";
+     elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - tryStart).count() / 1.e3; // seconds
+
+     // Check if the file opened successfully or if the elapsed time exceeds 1 second
+     if (readFile.is_open() || elapsedTime > 1.0) {
+         tryMore = false; // Exit the loop if the file opened or if time limit exceeded
+     } else {
+         // Wait for a short period before retrying
+         std::this_thread::sleep_for(std::chrono::milliseconds(100));
+     }
 	}
 
-	//
-	// (5) get the values in "results.out"
-	//
 
-	string results = workDir + "/results.out";
-	std::ifstream readFile(results.data());
+
 	if (!readFile.is_open()) {
 		//*ERROR*
 		std::string errMsg = "Error running FEM: results.out missing in workdir." + std::to_string(i + 1) + ".";
