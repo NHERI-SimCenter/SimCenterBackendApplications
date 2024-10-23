@@ -866,6 +866,9 @@ class TransportationPerformance(ABC):
         scen_nm = 'simulation_out'
 
         hour_list = self.hour_list
+        if hour_list is None or len(hour_list) == 0:
+            od_all = pd.read_csv(demand_file)
+            hour_list = sorted(od_all['hour'].unique())
         quarter_list = [0, 1, 2, 3, 4, 5]
         closure_hours = hour_list
 
