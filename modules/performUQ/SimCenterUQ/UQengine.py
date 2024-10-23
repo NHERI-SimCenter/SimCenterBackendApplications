@@ -270,7 +270,11 @@ class UQengine:  # noqa: D101
         if self.run_type.lower() == 'runninglocal':
             from multiprocessing import Pool
 
+
             n_processor = os.cpu_count()
+
+            if n_processor > 32:
+                n_processor = 8
             pool = Pool(n_processor, initializer=initfn, initargs=(seed_val,)) 
 
         else:
