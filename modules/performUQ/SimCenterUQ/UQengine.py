@@ -265,13 +265,18 @@ class UQengine:  # noqa: D101
         pass
 
     def make_pool(  # noqa: D102
-        self,
+        self, seed_val=42
     ):
         if self.run_type.lower() == 'runninglocal':
             from multiprocessing import Pool
 
+
             n_processor = os.cpu_count()
-            pool = Pool(n_processor)
+
+            if n_processor > 32:
+                n_processor = 8
+            pool = Pool(n_processor, initializer=initfn, initargs=(seed_val,)) 
+
         else:
             from mpi4py import MPI
             from mpi4py.futures import MPIPoolExecutor
@@ -434,7 +439,9 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):  # noqa: C9
     # def makePool(self):
     #     pass
 
-
+# for creating pool
+def initfn(seed_val):
+    np.random.seed(seed_val)  # enforcing seeds
 #
 # When sampled X is different from surrogate input X. e.g. we sample ground motion parameters or indices, but we use IM as input of GP
 #
