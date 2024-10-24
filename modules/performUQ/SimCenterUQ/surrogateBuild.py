@@ -86,17 +86,26 @@ except:  # noqa: E722
     print('Failed to import module:' + moduleName)  # noqa: T201
 
 
-errFileName = os.path.join(os.getcwd(),'dakota.err')  # noqa: N816
-develop_mode = (len(sys.argv)==7) # a flag for develeopmode
+
+print("Initializing error log file..")
+print(f"Current working dir (getcwd): {os.getcwd()}")
+
+work_dir_tmp = sys.argv[1].replace(os.sep, '/')
+errFileName = os.path.join(work_dir_tmp,'dakota.err')  # noqa: N816
+
+develop_mode = (len(sys.argv)==8) # a flag for develeopmode
 if develop_mode:
     # import matplotlib
     # matplotlib.use('TkAgg')
     import matplotlib.pyplot as plt
-    print("developer mode")
+    print("Developer mode")
 else:
     with open(errFileName, 'w') as f:
         f.write("")
     sys.stderr = open(errFileName, 'w')  # noqa: SIM115, PTH123
+    print(f"Error file created at: {errFileName}")
+
+
 
 #
 # Modify GPy package
