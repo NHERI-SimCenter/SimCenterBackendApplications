@@ -79,12 +79,12 @@ class UQengine:  # noqa: D101
         for del_pkl in del_pkls:
             os.remove(del_pkl)  # noqa: PTH107
 
-        try:
-            del_errs = glob.glob(os.path.join(self.work_dir, '*err'))  # noqa: PTH118, PTH207
-            for del_err in del_errs:
-                os.remove(del_err)  # noqa: PTH107
-        except:  # noqa: S110, E722
-            pass
+        #try:
+        #    del_errs = glob.glob(os.path.join(self.work_dir, '*err'))  # noqa: PTH118, PTH207
+        #    for del_err in del_errs:
+        #        os.remove(del_err)  # noqa: PTH107
+        #except:  # noqa: S110, E722
+        #    pass
 
         if glob.glob(os.path.join(self.work_dir, 'templatedir', 'results.out')):  # noqa: PTH118, PTH207
             try:
