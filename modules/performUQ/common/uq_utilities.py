@@ -216,13 +216,14 @@ class SimCenterWorkflowDriver:  # noqa: D101
             outputs = self._read_outputs_from_results_file(workdir)
         except Exception:  # noqa: BLE001
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            outputs = (
+            msg = (
                 f'\nSimulation number: {simulation_number}\n'  # noqa: ISC003
                 + f'Samples values: {sample_values}\n'
             )
-            outputs += ''.join(
+            msg += ''.join(
                 traceback.format_exception(exc_type, exc_value, exc_traceback)
             )
+            raise RuntimeError(msg)
         finally:
             os.chdir(self.full_path_of_tmpSimCenter_dir)
         return outputs
@@ -238,11 +239,15 @@ class ParallelRunnerMultiprocessing:  # noqa: D101
         num_processors = os.cpu_count()
         if num_processors is None:
             num_processors = 1
-        if num_processors < 1:
+        elif num_processors < 1:
             raise ValueError(  # noqa: TRY003
                 'Number of processes must be at least 1.                     '  # noqa: EM102
                 f'         Got {num_processors}'
             )
+        elif num_processors > 32:
+            # this is to get past memory problems when running large number processors in a container
+            num_processors = 8
+
         return num_processors
 
     def get_pool(self) -> Pool:  # noqa: D102

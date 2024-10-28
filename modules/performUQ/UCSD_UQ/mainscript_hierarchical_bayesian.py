@@ -78,24 +78,42 @@ def main(input_args):  # noqa: D103
 
     # input_file_full_path = template_directory / input_file
 
-    with open(input_file, encoding='utf-8') as f:  # noqa: PTH123
-        inputs = json.load(f)
+    try:
+        with open(input_file, encoding='utf-8') as f:  # noqa: PTH123
+            inputs = json.load(f)
 
-    uq_inputs = inputs['UQ']
-    rv_inputs = inputs['randomVariables']
-    edp_inputs = inputs['EDP']
+        uq_inputs = inputs['UQ']
+        rv_inputs = inputs['randomVariables']
+        edp_inputs = inputs['EDP']
+    except FileNotFoundError as fnf_error:
+        raise FileNotFoundError(
+            f"Input file '{input_file}' not found. Please check the file path."
+        ) from fnf_error
+    except json.JSONDecodeError as json_error:
+        raise ValueError(
+            f"Error decoding JSON from file '{input_file}'. Ensure the file contains valid JSON."
+        ) from json_error
+    except KeyError as key_error:
+        raise KeyError(
+            f'Missing required key in JSON data: {key_error}. Please check the input file format.'
+        ) from key_error
 
-    (
-        parallel_pool,
-        function_to_evaluate,
-        joint_distribution,
-        num_rv,
-        num_edp,
-        list_of_model_evaluation_functions,
-        list_of_datasets,
-        list_of_dataset_lengths,
-        restart_file,
-    ) = preprocess_hierarchical_bayesian.preprocess_arguments(input_args)
+    try:
+        (
+            parallel_pool,
+            function_to_evaluate,
+            joint_distribution,
+            num_rv,
+            num_edp,
+            list_of_model_evaluation_functions,
+            list_of_datasets,
+            list_of_dataset_lengths,
+            restart_file,
+        ) = preprocess_hierarchical_bayesian.preprocess_arguments(input_args)
+    except Exception as e:
+        raise RuntimeError(
+            "Error during the preprocessing of arguments in 'preprocess_hierarchical_bayesian'."
+        ) from e
     transformation_function = joint_distribution.u_to_x
 
     prior_inverse_gamma_parameters = uq_utilities.InverseGammaParameters(
