@@ -60,10 +60,13 @@ def main(args):  # noqa: D103
                 text=True,
                 check=False,
             )
-            result.check_returncode()
+            result.check_returncode()  # Raises CalledProcessError if return code is non-zero
         except subprocess.CalledProcessError:
             with open(err_file, 'a') as f:  # noqa: PTH123
                 f.write(f'ERROR: {result.stderr}')
+        else:
+            # Print success if no error occurs
+            print('SUCCESS')  # noqa: T201
 
 
 if __name__ == '__main__':

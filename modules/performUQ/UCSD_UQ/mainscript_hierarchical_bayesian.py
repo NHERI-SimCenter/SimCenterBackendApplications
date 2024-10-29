@@ -86,17 +86,14 @@ def main(input_args):  # noqa: D103
         rv_inputs = inputs['randomVariables']
         edp_inputs = inputs['EDP']
     except FileNotFoundError as fnf_error:
-        raise FileNotFoundError(
-            f"Input file '{input_file}' not found. Please check the file path."
-        ) from fnf_error
+        msg = f"Input file '{input_file}' not found. Please check the file path."
+        raise FileNotFoundError(msg) from fnf_error
     except json.JSONDecodeError as json_error:
-        raise ValueError(
-            f"Error decoding JSON from file '{input_file}'. Ensure the file contains valid JSON."
-        ) from json_error
+        msg = f"Error decoding JSON from file '{input_file}'. Ensure the file contains valid JSON."
+        raise ValueError(msg) from json_error
     except KeyError as key_error:
-        raise KeyError(
-            f'Missing required key in JSON data: {key_error}. Please check the input file format.'
-        ) from key_error
+        msg = f'Missing required key in JSON data: {key_error}. Please check the input file format.'
+        raise KeyError(msg) from key_error
 
     try:
         (
@@ -111,9 +108,8 @@ def main(input_args):  # noqa: D103
             restart_file,
         ) = preprocess_hierarchical_bayesian.preprocess_arguments(input_args)
     except Exception as e:
-        raise RuntimeError(
-            "Error during the preprocessing of arguments in 'preprocess_hierarchical_bayesian'."
-        ) from e
+        msg = "Error during the preprocessing of arguments in 'preprocess_hierarchical_bayesian'."
+        raise RuntimeError(msg) from e
     transformation_function = joint_distribution.u_to_x
 
     prior_inverse_gamma_parameters = uq_utilities.InverseGammaParameters(
