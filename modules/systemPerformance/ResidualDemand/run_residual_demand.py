@@ -350,6 +350,14 @@ def aggregate_congestions_results_to_det(undamaged_congestion, damaged_congestio
                 )
     with Path(results_det_file).open('w') as f:
         json.dump(results_det, f)
+    # If TransportationNetwork_det.json exists, sync the changes
+    results_folder = Path(results_det_file).parent
+    transportation_det_file = results_folder/"TransportationNetwork"/ 'TransportationNetwork_det.json'
+    if transportation_det_file.exists():
+        transportation_det = {"TransportationNetwork": results_det['TransportationNetwork']}
+        with transportation_det_file.open('w') as f:
+            json.dump(transportation_det, f)
+
 
 def run_one_realization(edge_file, node_file, od_file_pre, od_file_post, damage_rlz_file,
                         damage_det_file, config_file_dict):
@@ -647,7 +655,13 @@ if __name__ == '__main__':
     workflowArgParser.add_argument(
         '--residualDemandRunDir',
         default=None,
-        help='Residual demand run directory (default: ta)',
+        help='Residual demand run directory',
+    )
+
+    workflowArgParser.add_argument(
+        '--input',
+        default=None,
+        help='This is temporary for running in rWHALE and need to be remove in the future',
     )
 
     # Parsing the command line arguments

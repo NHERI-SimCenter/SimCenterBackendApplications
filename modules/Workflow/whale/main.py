@@ -1546,7 +1546,15 @@ class Workflow:
 
         # Check if system performance is requested
         if 'SystemPerformance' in self.workflow_apps:
-            performance_app = self.workflow_apps['SystemPerformance'][asset_type]
+            if asset_type in self.workflow_apps['SystemPerformance']:
+                performance_app = self.workflow_apps['SystemPerformance'][asset_type]
+            else:
+                log_msg(
+                    f'No Performance application to run for asset type: {asset_type}.',
+                    prepend_timestamp=False,
+                )
+                log_div()
+                return False
         else:
             log_msg(
                 f'No Performance application to run for asset type: {asset_type}.',

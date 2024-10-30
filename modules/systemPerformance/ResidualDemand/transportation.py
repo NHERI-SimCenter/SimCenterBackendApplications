@@ -397,9 +397,9 @@ class TransportationPerformance(ABC):
                                open_edges_df[["weight"]],
                                twoway=two_way_edges)
 
-            print('network')  # noqa: T201
+            # print('network')  # noqa: T201
             net.set(pd.Series(net.node_ids))
-            print('net')  # noqa: T201
+            # print('net')  # noqa: T201
 
             nodes_origin = od_ss['origin_nid'].to_numpy()
             nodes_destin = od_ss['destin_nid'].to_numpy()
