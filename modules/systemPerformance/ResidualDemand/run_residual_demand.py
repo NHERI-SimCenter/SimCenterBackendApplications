@@ -358,14 +358,13 @@ def aggregate_congestions_results_to_det(undamaged_congestion, damaged_congestio
         with transportation_det_file.open('w') as f:
             json.dump(transportation_det, f)
 
+def run_on_undamaged_network(edge_file, node_file, od_file_pre, damage_det_file, config_file_dict):
 
-def run_one_realization(edge_file, node_file, od_file_pre, od_file_post, damage_rlz_file,
-                        damage_det_file, config_file_dict):
-
-    with Path(damage_rlz_file).open() as f:
-        damage_rlz = json.load(f)
-
-    assets = list(damage_rlz['TransportationNetwork'].keys())
+    with Path(damage_det_file).open() as f:
+        damage_det = json.load(f)
+    assets = list(damage_det['TransportationNetwork'].keys())
+    # If create animation
+    create_animation = config_file_dict['CreateAnimation']
 
     residual_demand_simulator = TransportationPerformance(
         assets=assets,
@@ -379,24 +378,60 @@ def run_one_realization(edge_file, node_file, od_file_pre, od_file_post, damage_
 
     )
 
-        # Create animation
-    create_animation = config_file_dict['CreateAnimation']
-
     # run simulation on undamged network
-    Path('undamaged').mkdir()
-    Path(Path('undamaged')/'trip_info').mkdir()
-    Path(Path('undamaged')/'edge_vol').mkdir()
-    residual_demand_simulator.simulation_outputs = Path.cwd() / 'undamaged'
+    Path('trip_info').mkdir()
+    Path('edge_vol').mkdir()
+    residual_demand_simulator.simulation_outputs = Path.cwd()
     residual_demand_simulator.system_performance(state=None)
     if create_animation:
-        create_congestion_animation(Path.cwd() / 'undamaged'/'edge_vol', Path.cwd() / 'undamaged'/'congestion.gif')
+        create_congestion_animation(Path.cwd() /'edge_vol', Path.cwd() /'congestion.gif')
 
+def run_one_realization(edge_file, node_file, undamaged_dir, od_file_post, damage_rlz_file,
+                        damage_det_file, config_file_dict):
+
+    with Path(damage_rlz_file).open() as f:
+        damage_rlz = json.load(f)
+
+    assets = list(damage_rlz['TransportationNetwork'].keys())
+    # If create animation
+    create_animation = config_file_dict['CreateAnimation']
+
+    # residual_demand_simulator = TransportationPerformance(
+    #     assets=assets,
+    #     csv_files={'network_edges': edge_file,
+    #                      'network_nodes': node_file,
+    #                      'edge_closures': None,
+    #                      'od_pairs': str(od_file_pre)},
+    #     capacity_map=config_file_dict['CapacityMap'],
+    #     od_file=od_file_pre,
+    #     hour_list=config_file_dict['HourList'],
+
+    # )
+
+    # run simulation on undamged network
+    # Path('undamaged').mkdir()
+    # Path(Path('undamaged')/'trip_info').mkdir()
+    # Path(Path('undamaged')/'edge_vol').mkdir()
+    # residual_demand_simulator.simulation_outputs = Path.cwd() / 'undamaged'
+    # residual_demand_simulator.system_performance(state=None)
+    # if create_animation:
+    #     create_congestion_animation(Path.cwd() / 'undamaged'/'edge_vol', Path.cwd() / 'undamaged'/'congestion.gif')
+
+    # Create residual demand simulator
+    residual_demand_simulator = TransportationPerformance(
+        assets=assets,
+        csv_files={'network_edges': edge_file,
+                         'network_nodes': node_file,
+                         'edge_closures': None,
+                         'od_pairs': str(od_file_post)},
+        capacity_map=config_file_dict['CapacityMap'],
+        od_file=od_file_post,
+        hour_list=config_file_dict['HourList'],
+
+    )
     # update the capacity due to damage
     damaged_edge_file = residual_demand_simulator.update_edge_capacity(damage_rlz_file, damage_det_file)
     residual_demand_simulator.csv_files.update({'network_edges': damaged_edge_file})
-    # update the od after damage
-    residual_demand_simulator.csv_files.update({'od_pairs': str(od_file_post)})
-    residual_demand_simulator.od_file = od_file_post
     # run simulation on damaged network
     Path('damaged').mkdir()
     Path(Path('damaged')/'trip_info').mkdir()
@@ -407,7 +442,7 @@ def run_one_realization(edge_file, node_file, od_file_pre, od_file_post, damage_
         create_congestion_animation(Path.cwd() / 'damaged'/'edge_vol', Path.cwd() / 'damaged'/'congestion.gif')
 
     # conpute the delay time of each trip
-    undamaged_trip_info = pd.read_csv(Path.cwd() / 'undamaged'/'trip_info'/'trip_info_simulation_out.csv')
+    undamaged_trip_info = pd.read_csv(undamaged_dir/'trip_info'/'trip_info_simulation_out.csv')
     damaged_trip_info = pd.read_csv(Path.cwd() / 'damaged'/'trip_info'/'trip_info_simulation_out.csv')
     # trip_info_compare = undamaged_trip_info.merge(damaged_trip_info, on='agent_id', suffixes=('_undamaged', '_damaged'))
     # trip_info_compare['delay_duration'] = trip_info_compare['travel_time_used_damaged'] - \
@@ -501,10 +536,20 @@ def run_residual_demand(
     nodes_gdf['lon'] = nodes_gdf['geometry'].apply(lambda x: x.x)
     nodes_gdf.to_csv('nodes.csv', index=False)
 
-    edges_csv = Path.cwd() / 'edges.csv'
+    edges_csv = residual_demand_dir / 'edges.csv'
 
     # Get Damage Input
     damage_input = config_file_dict['DamageInput']
+
+    # Run the undamaged network
+    undamged_dir_path = residual_demand_dir / 'undamaged'
+    undamged_dir_path.mkdir()
+    os.chdir(undamged_dir_path)
+    run_on_undamaged_network(residual_demand_dir/'edges.csv',
+                             residual_demand_dir/'nodes.csv',
+                             od_file_pre,
+                             Path(run_dir / 'Results_det.json'), config_file_dict)
+    os.chdir(residual_demand_dir)
 
     if damage_input['Type'] == 'MostlikelyDamageState':
         # Create a Results_rlz.json file for the most likely damage state
@@ -547,13 +592,13 @@ def run_residual_demand(
         undamaged_congestion, damaged_congestion = create_congestion_agg(edges_csv)
         # Run the simulation
         run_one_realization(residual_demand_dir/'edges.csv', residual_demand_dir/'nodes.csv',
-                            od_file_pre, od_file_post, Path(run_dir / f'Results_{rlz}.json'),
+                            undamged_dir_path, od_file_post, Path(run_dir / f'Results_{rlz}.json'),
                              Path(run_dir / 'Results_det.json'),
                             config_file_dict)
         # Append relay and congestion results to the aggregated results
         undamaged_time, damaged_time = append_to_delay_agg(
                 undamaged_time, damaged_time, rlz_run_dir/'trip_info_compare.csv')
-        undamaged_edge_vol_dir = rlz_run_dir / 'undamaged'/'edge_vol'
+        undamaged_edge_vol_dir = undamged_dir_path / 'edge_vol'
         damaged_edge_vol_dir = rlz_run_dir / 'damaged'/'edge_vol'
         undamaged_congestion, damaged_congestion = append_to_congestion_agg(
             undamaged_congestion, damaged_congestion,
@@ -585,14 +630,14 @@ def run_residual_demand(
 
             # Run the simulation
             run_one_realization(residual_demand_dir/'edges.csv', residual_demand_dir/'nodes.csv',
-                            od_file_pre, od_file_post, Path(run_dir / f'Results_{rlz}.json'),
+                            undamged_dir_path, od_file_post, Path(run_dir / f'Results_{rlz}.json'),
                              Path(run_dir / 'Results_det.json'),
                             config_file_dict)
 
             # Append relay and congestion results to the aggregated results
             undamaged_time, damaged_time = append_to_delay_agg(
                     undamaged_time, damaged_time, rlz_run_dir/'trip_info_compare.csv')
-            undamaged_edge_vol_dir = rlz_run_dir / 'undamaged'/'edge_vol'
+            undamaged_edge_vol_dir = undamged_dir_path / 'edge_vol'
             damaged_edge_vol_dir = rlz_run_dir / 'damaged'/'edge_vol'
             undamaged_congestion, damaged_congestion = append_to_congestion_agg(
                 undamaged_congestion, damaged_congestion,
