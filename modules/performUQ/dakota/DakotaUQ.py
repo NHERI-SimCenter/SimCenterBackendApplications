@@ -142,18 +142,18 @@ def main(args):  # noqa: C901, D103
             returncode = e.returncode  # noqa: F841
             run_success = False
 
-        dakotaErrFile = os.path.join(cwd, 'dakota.err')  # noqa: PTH109, PTH118, N806 
-        dakotaOutFile = os.path.join(cwd, 'dakota.out')  # noqa: PTH109, PTH118, N806
-        dakotaTabFile = os.path.join(cwd, 'dakotaTab.out')  # noqa: PTH109, PTH118, N806
+        dakotaErrFile = os.path.join(cwd, 'dakota.err')  # noqa: N806, PTH109, PTH118, RUF100, W291
+        dakotaOutFile = os.path.join(cwd, 'dakota.out')  # noqa: N806, PTH109, PTH118, RUF100
+        dakotaTabFile = os.path.join(cwd, 'dakotaTab.out')  # noqa: N806, PTH109, PTH118, RUF100
         checkErrFile = os.path.exists(dakotaErrFile)  # noqa: PTH110, N806
         checkOutFile = os.path.exists(dakotaOutFile)  # noqa: PTH110, N806
         checkTabFile = os.path.exists(dakotaTabFile)  # noqa: F841, N806, PTH110
 
 
-        checkErrSize=-1
+        checkErrSize=-1  # noqa: N806
         if checkErrFile>0:
-            checkErrSize = os.path.getsize(dakotaErrFile)  # noqa: PTH202, N806
-        
+            checkErrSize = os.path.getsize(dakotaErrFile)  # noqa: F841, N806, PTH202
+  # noqa: W293
         if checkOutFile == False and checkErrFile == 0:  # noqa: E712
 
             with open(dakotaErrFile, 'a') as file:  # noqa: PTH123
@@ -163,9 +163,9 @@ def main(args):  # noqa: C901, D103
 
 
         if not run_success:
-            # noqa: W293
+  # noqa: RUF100, W293
             display_err = "\nERROR. Dakota did not run. dakota.err not created."
-                                #  # noqa: PLR2044
+                                #  # noqa: PLR2044, RUF100
 
             # First see if dakota.err is created
             with open(dakotaErrFile, 'r') as file:  # noqa: PTH123, UP015
@@ -189,7 +189,7 @@ def main(args):  # noqa: C901, D103
                         workflow_err = file.read()
 
                     if not workflow_err=="":  # noqa: SIM201
-                        display_err = str("\nERROR running the workflow: \n" + workflow_err + "\n Check out more in " +  str(os.path.dirname(workflow_err_path)).replace('\\','/'))
+                        display_err = str("\nERROR running the workflow: \n" + workflow_err + "\n Check out more in " +  str(os.path.dirname(workflow_err_path)).replace('\\','/'))  # noqa: PTH120
 
             print(display_err)  # noqa: T201
             exit(0) # sy - this could be -1 like any other tools. But if it is 0, quoFEM,EE,WE,Hydro will highlight the error messages in "red" by using the parser in UI. To use this parser in UI, we need to make UI believe that the analysis is successful. Something that needs improvment # noqa: PLR1722

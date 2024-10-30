@@ -1,5 +1,5 @@
-# %%
-import pyvista as pv
+# %%  # noqa: INP001, D100
+import pyvista as pv  # noqa: I001
 import numpy as np
 import ctypes
 import os
@@ -8,9 +8,9 @@ import h5py
 from scipy.spatial import KDTree
 
 
-def partition_with_pilebox(messh, numcores, pileboxinfo, tol=1e-6):
-    if pileboxinfo['Havepilebox'] == False:
-        print('No pilebox is defined')
+def partition_with_pilebox(messh, numcores, pileboxinfo, tol=1e-6):  # noqa: C901, D103
+    if pileboxinfo['Havepilebox'] == False:  # noqa: E712
+        print('No pilebox is defined')  # noqa: T201
         partition(messh, numcores)
         return
 
@@ -18,19 +18,19 @@ def partition_with_pilebox(messh, numcores, pileboxinfo, tol=1e-6):
     mesh = messh.copy()
     eps = 1e-6
     # check if the xmin,xmax, ymin ymax ,zmin zmax is exist in the infokeys
-    if 'xmin' in pileboxinfo.keys():
+    if 'xmin' in pileboxinfo.keys():  # noqa: SIM118
         pilebox_xmin = pileboxinfo['xmin']
-    if 'xmax' in pileboxinfo.keys():
+    if 'xmax' in pileboxinfo.keys():  # noqa: SIM118
         pilebox_xmax = pileboxinfo['xmax']
-    if 'ymin' in pileboxinfo.keys():
+    if 'ymin' in pileboxinfo.keys():  # noqa: SIM118
         pilebox_ymin = pileboxinfo['ymin']
-    if 'ymax' in pileboxinfo.keys():
+    if 'ymax' in pileboxinfo.keys():  # noqa: SIM118
         pilebox_ymax = pileboxinfo['ymax']
-    if 'zmin' in pileboxinfo.keys():
+    if 'zmin' in pileboxinfo.keys():  # noqa: SIM118
         pilebox_zmin = pileboxinfo['zmin']
-    if 'zmax' in pileboxinfo.keys():
+    if 'zmax' in pileboxinfo.keys():  # noqa: SIM118
         pilebox_zmax = pileboxinfo['zmax']
-    if 'center' in pileboxinfo.keys():
+    if 'center' in pileboxinfo.keys():  # noqa: SIM118
         pilebox_xmin = pileboxinfo['center'][0] - pileboxinfo['lx'] / 2 + eps
         pilebox_xmax = pileboxinfo['center'][0] + pileboxinfo['lx'] / 2 - eps
         pilebox_ymin = pileboxinfo['center'][1] - pileboxinfo['ly'] / 2 + eps
@@ -61,9 +61,9 @@ def partition_with_pilebox(messh, numcores, pileboxinfo, tol=1e-6):
     mesh2 = mesh.extract_cells(newindices)
     # partition the mesh
 
-    if numcores > 2:
+    if numcores > 2:  # noqa: PLR2004
         partition(mesh2, numcores - 1)
-    if numcores == 2:
+    if numcores == 2:  # noqa: PLR2004
         mesh2.cell_data['partitioned'] = np.zeros(mesh2.n_cells, dtype=np.int32)
 
     mesh.cell_data['partitioned'] = np.zeros(mesh.n_cells, dtype=np.int32)
@@ -71,13 +71,13 @@ def partition_with_pilebox(messh, numcores, pileboxinfo, tol=1e-6):
     messh.cell_data['partitioned'] = mesh.cell_data['partitioned']
 
 
-def partition(mesh, numcores):
+def partition(mesh, numcores):  # noqa: D103
     # =============================================================================
     # define partioner
     # =============================================================================
 
     libpath = (
-        os.getcwd().split('OpenSeesProjects')[0]
+        os.getcwd().split('OpenSeesProjects')[0]  # noqa: PTH109
         + 'OpenSeesProjects/'
         + 'MeshGenerator/lib'
     )
@@ -98,7 +98,7 @@ def partition(mesh, numcores):
 
     numcells = mesh.n_cells
     numpoints = mesh.n_points
-    numweights = 1
+    numweights = 1  # noqa: F841
     cells = np.array(mesh.cells.reshape(-1, 9), dtype=np.int32)
     cells = cells[:, 1:]
     cellspointer = cells.flatten().ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
@@ -110,71 +110,71 @@ def partition(mesh, numcores):
     mesh.cell_data['partitioned'] = partitioned
 
 
-def kdtree_partition(grid, n_partitions=4):
+def kdtree_partition(grid, n_partitions=4):  # noqa: D103
     blocks = grid.partition(n_partitions, generate_global_id=True, as_composite=True)
     i = 0
     grid['partitioned'] = np.zeros(grid.n_cells, dtype=np.int32)
     for block in blocks:
         grid['partitioned'][block['vtkGlobalCellIds']] = i
-        i += 1
+        i += 1  # noqa: SIM113
 
 
-def DRM_PML_Foundation_Meshgenrator(meshinfo):
+def DRM_PML_Foundation_Meshgenrator(meshinfo):  # noqa: C901, N802, D103, PLR0912, PLR0915
     xwidth, ywidth, zwidth = (
         meshinfo['xwidth'],
         meshinfo['ywidth'],
         meshinfo['zwidth'],
     )
     eps = 1e-6
-    Xmeshsize, Ymeshsize, Zmeshsize = (
+    Xmeshsize, Ymeshsize, Zmeshsize = (  # noqa: N806
         meshinfo['Xmeshsize'],
         meshinfo['Ymeshsize'],
         meshinfo['Zmeshsize'],
     )
-    PMLThickness = np.array(
+    PMLThickness = np.array(  # noqa: N806
         [
             meshinfo['PMLThickness'][0],
             meshinfo['PMLThickness'][1],
             meshinfo['PMLThickness'][2],
         ]
     )  # thickness of the each PML layer
-    numPMLLayers = meshinfo['numPMLLayers']  # number of PML layers
-    PMLTotalThickness = (
+    numPMLLayers = meshinfo['numPMLLayers']  # number of PML layers  # noqa: N806
+    PMLTotalThickness = (  # noqa: N806
         PMLThickness * numPMLLayers
     )  # total thickness of the PML layers
-    DRMThickness = np.array(
+    DRMThickness = np.array(  # noqa: N806
         [
             meshinfo['DRMThickness'][0],
             meshinfo['DRMThickness'][1],
             meshinfo['DRMThickness'][2],
         ]
     )  # thickness of the DRM layers
-    numDrmLayers = meshinfo['numDrmLayers']  # number of DRM layers
-    DRMTotalThickness = (
+    numDrmLayers = meshinfo['numDrmLayers']  # number of DRM layers  # noqa: N806
+    DRMTotalThickness = (  # noqa: N806
         DRMThickness * numDrmLayers
     )  # total thickness of the DRM layers
-    padLayers = numPMLLayers + numDrmLayers  # number of layers to pad the meshgrid
-    padThickness = (
+    padLayers = numPMLLayers + numDrmLayers  # number of layers to pad the meshgrid  # noqa: N806, F841
+    padThickness = (  # noqa: N806, F841
         PMLTotalThickness + DRMThickness
     )  # thickness of the padding layers
     reg_num_cores = meshinfo['reg_num_cores']
-    DRM_num_cores = meshinfo['DRM_num_cores']
-    PML_num_cores = meshinfo['PML_num_cores']
+    DRM_num_cores = meshinfo['DRM_num_cores']  # noqa: N806
+    PML_num_cores = meshinfo['PML_num_cores']  # noqa: N806
     structurecores = meshinfo['Structure_num_cores']
-    Dir = meshinfo['Dir']
-    OutputDir = meshinfo['OutputDir']
-    AbsorbingElements = meshinfo['AbsorbingElements']
-    DRMfile = meshinfo['DRMfile']
-    foundationBlocks = meshinfo['foundationBlocks']
+    Dir = meshinfo['Dir']  # noqa: N806
+    OutputDir = meshinfo['OutputDir']  # noqa: N806
+    AbsorbingElements = meshinfo['AbsorbingElements']  # noqa: N806
+    DRMfile = meshinfo['DRMfile']  # noqa: N806
+    foundationBlocks = meshinfo['foundationBlocks']  # noqa: N806
     pilelist = meshinfo['pilelist']
-    EmbeddeFoundation = meshinfo['EmbeddedFoundationDict']
-    HaveEmbeddingFoundation = meshinfo['EmbeddingFoundation']
-    HaveFoundation = meshinfo['HaveFoundation']
-    HavePiles = meshinfo['HavePiles']
-    HaveStructure = meshinfo['HaveStructure']
-    AttachFoundation = meshinfo['AttachFoundation']
-    DRMinformation = meshinfo['DRMinformation']
-    PartitionAlgorithm = meshinfo['PartitionAlgorithm']
+    EmbeddeFoundation = meshinfo['EmbeddedFoundationDict']  # noqa: N806
+    HaveEmbeddingFoundation = meshinfo['EmbeddingFoundation']  # noqa: N806
+    HaveFoundation = meshinfo['HaveFoundation']  # noqa: N806
+    HavePiles = meshinfo['HavePiles']  # noqa: N806
+    HaveStructure = meshinfo['HaveStructure']  # noqa: N806
+    AttachFoundation = meshinfo['AttachFoundation']  # noqa: N806
+    DRMinformation = meshinfo['DRMinformation']  # noqa: N806
+    PartitionAlgorithm = meshinfo['PartitionAlgorithm']  # noqa: N806
 
     # =============================================================================
     if HaveStructure != 'YES':
@@ -187,24 +187,24 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
         'DRMDomain': 3,
         'PMLDomain': 4,
     }
-    DomainNames = ['Foundation', 'Soil', 'Soil', 'PML']
+    DomainNames = ['Foundation', 'Soil', 'Soil', 'PML']  # noqa: N806
 
     pileboxinfo = {}
 
-    if not os.path.exists(Dir):
-        os.makedirs(Dir)
+    if not os.path.exists(Dir):  # noqa: PTH110
+        os.makedirs(Dir)  # noqa: PTH103
     else:
         # remove the files in the directory
         for file in os.listdir(Dir):
             try:
-                os.remove(os.path.join(Dir, file))
-            except:
+                os.remove(os.path.join(Dir, file))  # noqa: PTH107, PTH118
+            except:  # noqa: S112, PERF203, E722
                 continue
 
     # adding different plots
     meshplotdir = Dir + '/../meshplots'
-    if not os.path.exists(meshplotdir):
-        os.makedirs(meshplotdir)
+    if not os.path.exists(meshplotdir):  # noqa: PTH110
+        os.makedirs(meshplotdir)  # noqa: PTH103
 
     # =============================================================================
     # meshing
@@ -283,16 +283,16 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
     # =============================================================================
     if HaveFoundation == 'YES':
         for i, block in enumerate(foundationBlocks):
-            xBLOCK = np.arange(
+            xBLOCK = np.arange(  # noqa: N806
                 block['xmin'], block['xmax'] + eps, block['Xmeshsize']
             )
-            yBLOCK = np.arange(
+            yBLOCK = np.arange(  # noqa: N806
                 block['ymin'], block['ymax'] + eps, block['Ymeshsize']
             )
-            zBLOCK = np.arange(
+            zBLOCK = np.arange(  # noqa: N806
                 block['zmin'], block['zmax'] + eps, block['Zmeshsize']
             )
-            xBLOCK, yBLOCK, zBLOCK = np.meshgrid(
+            xBLOCK, yBLOCK, zBLOCK = np.meshgrid(  # noqa: N806
                 xBLOCK, yBLOCK, zBLOCK, indexing='ij'
             )
             if i == 0:
@@ -384,7 +384,7 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
     zmin = z.min() + PMLTotalThickness[2]
     zmax = z.max() + PMLTotalThickness[2]
     cube = pv.Cube(bounds=[xmin, xmax, ymin, ymax, zmin, 1000.0])
-    PML = mesh.clip_box(cube, invert=True, crinkle=True, progress_bar=False)
+    PML = mesh.clip_box(cube, invert=True, crinkle=True, progress_bar=False)  # noqa: N806
     reg = mesh.clip_box(cube, invert=False, crinkle=True, progress_bar=False)
 
     # now find DRM layer
@@ -400,9 +400,9 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
     )
 
     # now create complemntary indices for DRM
-    DRMindices = np.ones(reg.n_cells, dtype=bool)
+    DRMindices = np.ones(reg.n_cells, dtype=bool)  # noqa: N806
     DRMindices[indices] = False
-    DRMindices = np.where(DRMindices)[0]
+    DRMindices = np.where(DRMindices)[0]  # noqa: N806
 
     # reg.cell_data['Domain'] = np.ones(reg.n_cells,dtype=np.int8)*info["DRMDomain"]
     # reg.cell_data['Domain'][indices] = info["RegularDomain"]
@@ -414,16 +414,16 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
 
     # partitioning regular mesh
     regular = reg.extract_cells(indices, progress_bar=False)
-    DRM = reg.extract_cells(DRMindices, progress_bar=False)
-    regularvtkOriginalCellIds = regular['vtkOriginalCellIds']
-    DRMvtkOriginalCellIds = DRM['vtkOriginalCellIds']
+    DRM = reg.extract_cells(DRMindices, progress_bar=False)  # noqa: N806
+    regularvtkOriginalCellIds = regular['vtkOriginalCellIds']  # noqa: N806
+    DRMvtkOriginalCellIds = DRM['vtkOriginalCellIds']  # noqa: N806
 
     if reg_num_cores > 1:
         if PartitionAlgorithm.lower() == 'metis':
-            print('Using Metis partitioning')
+            print('Using Metis partitioning')  # noqa: T201
             partition_with_pilebox(regular, reg_num_cores, pileboxinfo, tol=10)
         if PartitionAlgorithm.lower() == 'kd-tree':
-            print('Using KD-Tree partitioning')
+            print('Using KD-Tree partitioning')  # noqa: T201
             kdtree_partition(regular, reg_num_cores)
 
     if DRM_num_cores > 1:
@@ -436,7 +436,7 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
         if PartitionAlgorithm.lower() == 'metis':
             partition(PML, PML_num_cores)
         if PartitionAlgorithm.lower() == 'kd-tree':
-            PMLcopy = PML.copy()
+            PMLcopy = PML.copy()  # noqa: N806
             kdtree_partition(PMLcopy, PML_num_cores)
             PML.cell_data['partitioned'] = PMLcopy['partitioned']
             del PMLcopy
@@ -463,7 +463,7 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
     # mapping between PML and regular mesh on the boundary
     mapping = mesh.clean(produce_merge_map=True)['PointMergeMap']
     regindicies = np.where(mapping[PML.n_points :] < PML.n_points)[0]
-    PMLindicies = mapping[PML.n_points + regindicies]
+    PMLindicies = mapping[PML.n_points + regindicies]  # noqa: N806
 
     mesh.point_data['boundary'] = np.zeros(mesh.n_points, dtype=int) - 1
     mesh.point_data['boundary'][PMLindicies] = regindicies + PML.n_points
@@ -478,7 +478,7 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
         mesh = mesh.clean(tolerance=1e-6, remove_unused_points=False)
         mesh['ASDA_type'] = np.zeros(mesh.n_cells, dtype=np.uint8)
 
-        ASDAelem_type = {
+        ASDAelem_type = {  # noqa: N806
             'B': 1,
             'L': 2,
             'R': 3,
@@ -498,7 +498,7 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
             'BRK': 17,
         }
 
-        ASDAelem_typereverse = {
+        ASDAelem_typereverse = {  # noqa: N806
             1: 'B',
             2: 'L',
             3: 'R',
@@ -518,9 +518,9 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
             17: 'BRK',
         }
         xmin, xmax, ymin, ymax, zmin, zmax = reg.bounds
-        ASDA_xwidth = xmax - xmin
-        ASDA_ywidth = ymax - ymin
-        ASDA_zwidth = zmax - zmin
+        ASDA_xwidth = xmax - xmin  # noqa: N806
+        ASDA_ywidth = ymax - ymin  # noqa: N806
+        ASDA_zwidth = zmax - zmin  # noqa: N806
         # print("ASDA_xwidth", ASDA_xwidth)
         # print("ASDA_ywidth", ASDA_ywidth)
         # print("ASDA_zwidth", ASDA_zwidth)
@@ -549,7 +549,7 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
                     else:
                         # it is in the top
                         mesh['ASDA_type'][i] = ASDAelem_type['LF']
-                else:
+                else:  # noqa: PLR5501
                     # it is in the middle
                     # check if it is in the bottom or top
                     if ele_center[2] < -ASDA_zwidth:
@@ -580,7 +580,7 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
                     else:
                         # it is in the top
                         mesh['ASDA_type'][i] = ASDAelem_type['RF']
-                else:
+                else:  # noqa: PLR5501
                     # it is in the middle
                     # check if it is in the bottom or top
                     if ele_center[2] < -ASDA_zwidth:
@@ -589,7 +589,7 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
                     else:
                         # it is in the top
                         mesh['ASDA_type'][i] = ASDAelem_type['R']
-            else:
+            else:  # noqa: PLR5501
                 # it is in the middle
                 # check if it is in the front or back
                 if ele_center[1] < (-ASDA_ywidth / 2.0):
@@ -610,7 +610,7 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
                     else:
                         # it is in the top
                         mesh['ASDA_type'][i] = ASDAelem_type['F']
-                else:
+                else:  # noqa: PLR5501
                     # it is in the middle
                     # check if it is in the bottom or top
                     if ele_center[2] < -ASDA_zwidth:
@@ -630,7 +630,7 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
     # write the  mesh nodes
     for core in range(min_core, max_core + 1):
         tmp = mesh.extract_cells(np.where(mesh.cell_data['partitioned'] == core)[0])
-        f = open(Dir + '/Nodes' + str(core + structurecores) + '.tcl', 'w')
+        f = open(Dir + '/Nodes' + str(core + structurecores) + '.tcl', 'w')  # noqa: SIM115, PTH123
 
         for i in range(tmp.n_points):
             f.write(
@@ -645,7 +645,7 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
             tmp = mesh.extract_cells(
                 np.where(mesh.cell_data['partitioned'] == core)[0]
             )
-            f = open(Dir + '/Elements' + str(core + structurecores) + '.tcl', 'w')
+            f = open(Dir + '/Elements' + str(core + structurecores) + '.tcl', 'w')  # noqa: SIM115, PTH123
             if core >= reg_num_cores + DRM_num_cores:
                 for eletag in range(tmp.n_cells):
                     tmpeletag = (
@@ -653,17 +653,17 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
                         + str(tmp['vtkOriginalCellIds'][eletag])
                         + ')]'
                     )
-                    tmpNodeTags = [
+                    tmpNodeTags = [  # noqa: N806
                         f'[expr int($StructureMaxNodeTag + 1 + {x})]'
                         for x in tmp['vtkOriginalPointIds'][
                             tmp.get_cell(eletag).point_ids
                         ]
                     ]
-                    Domainname = DomainNames[tmp['Domain'][eletag] - 1]
+                    Domainname = DomainNames[tmp['Domain'][eletag] - 1]  # noqa: N806
                     if Domainname == 'PML':
-                        Domainname = 'Absorbing'
-                    tmpmatTag = f"${Domainname}matTag{tmp['matTag'][eletag]}"
-                    tmpASDA_type = ASDAelem_typereverse[tmp['ASDA_type'][eletag]]
+                        Domainname = 'Absorbing'  # noqa: N806
+                    tmpmatTag = f"${Domainname}matTag{tmp['matTag'][eletag]}"  # noqa: N806
+                    tmpASDA_type = ASDAelem_typereverse[tmp['ASDA_type'][eletag]]  # noqa: N806
                     f.write(
                         f"eval \"element $elementType {tmpeletag} {' '.join(tmpNodeTags)} {tmpmatTag} {tmpASDA_type}\" \n"
                     )
@@ -674,14 +674,14 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
                         + str(tmp['vtkOriginalCellIds'][eletag])
                         + ')]'
                     )
-                    tmpNodeTags = [
+                    tmpNodeTags = [  # noqa: N806
                         f'[expr int($StructureMaxNodeTag + 1 + {x})]'
                         for x in tmp['vtkOriginalPointIds'][
                             tmp.get_cell(eletag).point_ids
                         ]
                     ]
-                    Domainname = DomainNames[tmp['Domain'][eletag] - 1]
-                    tmpmatTag = f"${Domainname}matTag{tmp['matTag'][eletag]}"
+                    Domainname = DomainNames[tmp['Domain'][eletag] - 1]  # noqa: N806
+                    tmpmatTag = f"${Domainname}matTag{tmp['matTag'][eletag]}"  # noqa: N806
                     f.write(
                         f"eval \"element $elementType {tmpeletag} {' '.join(tmpNodeTags)} {tmpmatTag}\" \n"
                     )
@@ -691,23 +691,23 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
             tmp = mesh.extract_cells(
                 np.where(mesh.cell_data['partitioned'] == core)[0]
             )
-            f = open(Dir + '/Elements' + str(core + structurecores) + '.tcl', 'w')
+            f = open(Dir + '/Elements' + str(core + structurecores) + '.tcl', 'w')  # noqa: SIM115, PTH123
             for eletag in range(tmp.n_cells):
                 tmpeletag = (
                     '[expr int($StructureMaxEleTag + 1 + '
                     + str(tmp['vtkOriginalCellIds'][eletag])
                     + ')]'
                 )
-                tmpNodeTags = [
+                tmpNodeTags = [  # noqa: N806
                     f'[expr int($StructureMaxNodeTag + 1 + {x})]'
                     for x in tmp['vtkOriginalPointIds'][
                         tmp.get_cell(eletag).point_ids
                     ]
                 ]
-                Domainname = DomainNames[tmp['Domain'][eletag] - 1]
+                Domainname = DomainNames[tmp['Domain'][eletag] - 1]  # noqa: N806
                 if Domainname == 'PML':
-                    Domainname = 'Absorbing'
-                tmpmatTag = f"${Domainname}matTag{tmp['matTag'][eletag]}"
+                    Domainname = 'Absorbing'  # noqa: N806
+                tmpmatTag = f"${Domainname}matTag{tmp['matTag'][eletag]}"  # noqa: N806
                 f.write(
                     f"eval \"element $elementType {tmpeletag} {' '.join(tmpNodeTags)} {tmpmatTag}\" \n"
                 )
@@ -719,14 +719,14 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
             tmp = mesh.extract_cells(
                 np.where(mesh.cell_data['partitioned'] == core)[0]
             )
-            f = open(Dir + '/Boundary' + str(core + structurecores) + '.tcl', 'w')
+            f = open(Dir + '/Boundary' + str(core + structurecores) + '.tcl', 'w')  # noqa: SIM115, PTH123
             for i in range(tmp.n_points):
                 if tmp['boundary'][i] != -1:
                     x, y, z = tmp.points[i]
-                    nodeTag1 = tmp['vtkOriginalPointIds'][i]
-                    nodeTag2 = tmp['boundary'][i]
+                    nodeTag1 = tmp['vtkOriginalPointIds'][i]  # noqa: N806
+                    nodeTag2 = tmp['boundary'][i]  # noqa: N806
                     f.write(
-                        f'node [expr int($StructureMaxNodeTag + 1 +{nodeTag2})] {str(x)} {str(y)} {str(z)}\n'
+                        f'node [expr int($StructureMaxNodeTag + 1 +{nodeTag2})] {str(x)} {str(y)} {str(z)}\n'  # noqa: RUF010
                     )
                     f.write(
                         f'equalDOF [expr int($StructureMaxNodeTag + 1 + {nodeTag2})] [expr int($StructureMaxNodeTag + 1 +{nodeTag1})] 1 2 3\n'
@@ -735,26 +735,26 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
     # =============================================================================
     # printing information
     # =============================================================================
-    print(f'Number of regular cores: {reg_num_cores}')
-    print(f'Number of DRM cores: {DRM_num_cores}')
-    print(f'Number of PML cores: {PML_num_cores}')
-    print(
+    print(f'Number of regular cores: {reg_num_cores}')  # noqa: T201
+    print(f'Number of DRM cores: {DRM_num_cores}')  # noqa: T201
+    print(f'Number of PML cores: {PML_num_cores}')  # noqa: T201
+    print(  # noqa: T201
         f'Number of regular elements: {regular.n_cells} roughly {int(regular.n_cells/reg_num_cores)} each core'
     )
-    print(
+    print(  # noqa: T201
         f'Number of DRM elements: {DRM.n_cells} roughly {int(DRM.n_cells/DRM_num_cores)} each core'
     )
-    print(
+    print(  # noqa: T201
         f'Number of PML elements: {PML.n_cells} roughly {int(PML.n_cells/PML_num_cores)} each core'
     )
-    print(f'Number of total elements: {mesh.n_cells}')
-    print(f'Number of total points: {mesh.n_points}')
-    print(f'Number of cores: {max_core-min_core+1}')
-    print(f'Number of PML nodes: {PML.n_points}')
-    print(f'Number of regular nodes: {regular.n_points}')
-    print(f'Number of DRM nodes: {DRM.n_points}')
+    print(f'Number of total elements: {mesh.n_cells}')  # noqa: T201
+    print(f'Number of total points: {mesh.n_points}')  # noqa: T201
+    print(f'Number of cores: {max_core-min_core+1}')  # noqa: T201
+    print(f'Number of PML nodes: {PML.n_points}')  # noqa: T201
+    print(f'Number of regular nodes: {regular.n_points}')  # noqa: T201
+    print(f'Number of DRM nodes: {DRM.n_points}')  # noqa: T201
     if AbsorbingElements == 'PML':
-        print(f'Number of MP constraints: {regindicies.size}')
+        print(f'Number of MP constraints: {regindicies.size}')  # noqa: T201
 
     # calculating number of surface points on the boundaries
     eps = 1e-2
@@ -766,13 +766,13 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
         selected['SelectedPoints'].view(bool),
         include_cells=False,
     )
-    print(f'number of sp constriants: {pts.n_points*9}')
+    print(f'number of sp constriants: {pts.n_points*9}')  # noqa: T201
 
     # f = h5py.File('./DRMloadSmall.h5drm', 'r')
     if DRMinformation['DRM_Location'].lower() == 'local':
         f = h5py.File(DRMfile, 'r')
         pts = f['DRM_Data']['xyz'][:]
-        internal = f['DRM_Data']['internal'][:]
+        internal = f['DRM_Data']['internal'][:]  # noqa: F841
         xyz0 = f['DRM_QA_Data']['xyz'][:]
 
     if (
@@ -800,14 +800,14 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
                 break
 
         if issubset:
-            print('The DRM nodes in the loading file are subset of the DRM mesh')
+            print('The DRM nodes in the loading file are subset of the DRM mesh')  # noqa: T201
         else:
-            print('The DRM nodes in the loading file are not subset of the DRM mesh')
-            print(
+            print('The DRM nodes in the loading file are not subset of the DRM mesh')  # noqa: T201
+            print(  # noqa: T201
                 'Please check the DRM nodes in the loading file or change the DRM mesh'
             )
     else:
-        print('The DRM nodes are not checked for subset')
+        print('The DRM nodes are not checked for subset')  # noqa: T201
 
     pl = pv.Plotter()
     # plot the DRM layer with the DRM nodes loaded from the DRM file
@@ -852,7 +852,7 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):
     pl.close()
 
     # save the mesh
-    mesh.save(os.path.join(OutputDir, 'mesh.vtk'), binary=True)
+    mesh.save(os.path.join(OutputDir, 'mesh.vtk'), binary=True)  # noqa: PTH118
 
     # return thenumber of elements
     return (mesh.n_cells, mesh.n_points)

@@ -1,14 +1,14 @@
-# %%
-import numpy as np
-from MeshGenerator.MeshGenrator import *
-from MeshGenerator.Infowriter import *
+# %%  # noqa: INP001, D100
+import numpy as np  # noqa: I001
+from MeshGenerator.MeshGenrator import *  # noqa: F403
+from MeshGenerator.Infowriter import *  # noqa: F403
 import os
 import shutil
 import argparse
 
 # change the current directory to the directory of the script
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
+abspath = os.path.abspath(__file__)  # noqa: PTH100
+dname = os.path.dirname(abspath)  # noqa: PTH120
 os.chdir(dname)
 
 
@@ -166,7 +166,7 @@ EmbeddedFoundation = {
 # ============================================================================
 HaveFoundation = 'NO'
 AttachFoundation = 'NO'
-foundationBlocks = []
+foundationBlocks = []  # noqa: N816
 
 # adding a block
 foundationBlocks.append(
@@ -199,7 +199,7 @@ y = y.flatten()
 
 HavePiles = 'NO'
 for i in range(len(x)):
-    pilelist.append(
+    pilelist.append(  # noqa: PERF401
         {
             'xtop': x[i],
             'ytop': y[i],
@@ -255,7 +255,7 @@ analysisinfo = {
 # material information
 # ============================================================================
 # creating the material information
-materialInfo = {
+materialInfo = {  # noqa: N816
     'Vs': args.Vs,
     'nu': args.nu,
     'rho': args.rho,
@@ -265,16 +265,16 @@ materialInfo = {
 # Create directories
 # ============================================================================
 # delete the directories if exists
-if os.path.exists(meshdir):
+if os.path.exists(meshdir):  # noqa: PTH110
     # removing directory
     shutil.rmtree(meshdir, ignore_errors=False)
 
-if os.path.exists(outputdir):
+if os.path.exists(outputdir):  # noqa: PTH110
     shutil.rmtree(outputdir, ignore_errors=False)
 
 # creating directories using shutil
-os.makedirs(meshdir)
-os.makedirs(outputdir)
+os.makedirs(meshdir)  # noqa: PTH103
+os.makedirs(outputdir)  # noqa: PTH103
 
 
 # ============================================================================
@@ -314,9 +314,9 @@ info = {
     'Absorbing_rayleigh_beta': Absorbing_rayleigh_beta,
 }
 
-numcells, numpoints = DRM_PML_Foundation_Meshgenrator(info)
-print(f'Number of cells: {numcells}')
-print(f'Number of points: {numpoints}')
+numcells, numpoints = DRM_PML_Foundation_Meshgenrator(info)  # noqa: F405
+print(f'Number of cells: {numcells}')  # noqa: T201
+print(f'Number of points: {numpoints}')  # noqa: T201
 # ============================================================================
 # Writing the information file
 # ============================================================================
@@ -380,27 +380,27 @@ info = {
     'AnalysisInfo': analysisinfo,
     'MaterialInfo': materialInfo,
 }
-infowriter(info, meshdir)
+infowriter(info, meshdir)  # noqa: F405
 
 
 # ============================================================================
 # copy the related file as model.tcl to the current directory
 # ============================================================================
-def copy_file(source_path, destination_path):
-    with open(destination_path, 'wb') as dst_file:
-        with open(f'{meshdir}/Modelinfo.tcl', 'rb') as src_file:
+def copy_file(source_path, destination_path):  # noqa: D103
+    with open(destination_path, 'wb') as dst_file:  # noqa: PTH123
+        with open(f'{meshdir}/Modelinfo.tcl', 'rb') as src_file:  # noqa: PTH123
             dst_file.write(src_file.read())
-        with open(source_path, 'rb') as src_file:
+        with open(source_path, 'rb') as src_file:  # noqa: PTH123
             dst_file.write(src_file.read())
 
 
 # delete the model file if exists
-if os.path.exists('./model.tcl'):
-    os.remove('./model.tcl')
+if os.path.exists('./model.tcl'):  # noqa: PTH110
+    os.remove('./model.tcl')  # noqa: PTH107
 
 if Target == 'Soil-with-structure':
     copy_file(
-        f'MeshGenerator/models/Soil_with_structure.tcl', f'{meshdir}/model.tcl'
+        f'MeshGenerator/models/Soil_with_structure.tcl', f'{meshdir}/model.tcl'  # noqa: F541
     )
 
 # %%

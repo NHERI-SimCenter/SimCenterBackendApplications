@@ -243,10 +243,10 @@ class ParallelRunnerMultiprocessing:  # noqa: D101
                 'Number of processes must be at least 1.                     '  # noqa: EM102
                 f'         Got {num_processors}'
             )
-        elif num_processors > 32:
+        elif num_processors > 32:  # noqa: PLR2004
             # this is to get past memory problems when running large number processors in a container
             num_processors = 8
-        
+  # noqa: W293
         return num_processors
 
     def get_pool(self) -> Pool:  # noqa: D102

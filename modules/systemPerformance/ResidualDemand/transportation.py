@@ -1,4 +1,4 @@
-"""Methods for performance simulations of transportation networks."""
+"""Methods for performance simulations of transportation networks."""  # noqa: INP001
 
 # -*- coding: utf-8 -*-
 #
@@ -42,7 +42,7 @@
 # Last updated:
 # 08-14-2024
 
-from __future__ import annotations
+from __future__ import annotations  # noqa: I001
 
 import gc
 import os
@@ -71,7 +71,7 @@ from brails.workflow.TransportationElementHandler import ROADLANES_MAP, ROADSPEE
 
 
 
-class TransportationPerformance(ABC):
+class TransportationPerformance(ABC):  # noqa: B024
     """
     An abstract base class for simulating transportation networks.
 
@@ -124,11 +124,11 @@ class TransportationPerformance(ABC):
                  assets: Union[list[str], None] = None,  # noqa: UP007
                  capacity_map: Union[dict[int, float], None] = None,  # noqa: UP007
                  csv_files: Union[dict[str, str], None] = None,  # noqa: UP007
-                 no_identifier: Union[dict[str, str], None] = None,
-                 network_inventory: Union[dict[str, str], None] = None,
-                 two_way_edges = False,
+                 no_identifier: Union[dict[str, str], None] = None,  # noqa: UP007
+                 network_inventory: Union[dict[str, str], None] = None,  # noqa: UP007
+                 two_way_edges = False,  # noqa: FBT002
                  od_file = None,
-                 hour_list = []):  # noqa: UP007
+                 hour_list = []):  # noqa: B006, RUF100, UP007
         """
         Initialize the TransportationPerformance class with essential data.
 
@@ -267,7 +267,7 @@ class TransportationPerformance(ABC):
                     if capacity_ratio == 0:
                         if asset_type == 'Roadway':
                             closed_edges.append(int(aim_id))
-                        elif asset_type == 'Bridge' or asset_type == 'Tunnel':
+                        elif asset_type == 'Bridge' or asset_type == 'Tunnel':  # noqa: PLR1714
                             carried_edges = datadict[aim_id]['GeneralInformation']['RoadID']
                             carried_edges = [int(x) for x in carried_edges]
                             closed_edges += carried_edges
@@ -281,16 +281,16 @@ class TransportationPerformance(ABC):
             json.dump(data, file, indent=2)
 
         # Write closed edges:
-        edge_closure_file = os.path.join(csv_file_dir, self.csv_files['edge_closures'])
-        with open(edge_closure_file, 'w', encoding="utf-8") as file:
+        edge_closure_file = os.path.join(csv_file_dir, self.csv_files['edge_closures'])  # noqa: PTH118
+        with open(edge_closure_file, 'w', encoding="utf-8") as file:  # noqa: PTH123
             # Write each item on a new line
             file.write('uniqueid\n')
             for item in closed_edges:
                 file.write(str(item) + '\n')
 
         return
-    
-    def update_edge_capacity(self, damage_rlz_file, damage_det_file):
+  # noqa: W293
+    def update_edge_capacity(self, damage_rlz_file, damage_det_file):  # noqa: D102
         with Path(damage_rlz_file).open() as file:
             damage_rlz = json.load(file)
         with Path(damage_det_file).open() as file:
@@ -340,7 +340,7 @@ class TransportationPerformance(ABC):
 
 
 
-    def get_graph_network(self, csv_file_dir) -> None:
+    def get_graph_network(self, csv_file_dir) -> None:  # noqa: D102
         # Get edges and nodes from the network inventory
         edges_file = self.network_inventory['edges']
         nodes_file = self.network_inventory['nodes']
@@ -360,18 +360,18 @@ class TransportationPerformance(ABC):
         edges_gpd = edges_gpd.to_crs('EPSG:6500')
         edges_gpd['length'] = edges_gpd['geometry'].apply(lambda x: x.length)
         edges_gpd = edges_gpd.to_crs('EPSG:4326')
-        edges_fils = os.path.join(csv_file_dir, self.csv_files['network_edges'])
+        edges_fils = os.path.join(csv_file_dir, self.csv_files['network_edges'])  # noqa: PTH118
         edges_gpd.to_csv(edges_fils, index=False)
         ## Nodes
         nodes_gpd = nodes_gpd.rename(columns={'nodeID': 'node_id'})
         nodes_gpd['lon'] = nodes_gpd['geometry'].apply(lambda x: x.x)
         nodes_gpd['lat'] = nodes_gpd['geometry'].apply(lambda x: x.y)
-        nodes_file = os.path.join(csv_file_dir, self.csv_files['network_nodes'])
+        nodes_file = os.path.join(csv_file_dir, self.csv_files['network_nodes'])  # noqa: PTH118
         nodes_gpd.to_csv(nodes_file, index=False)
-        return 
+        return  # noqa: W291, PLR1711
     # @abstractmethod
-    def system_performance(self, state) -> None:  # Move the CSV creation here
-        def substep_assignment(nodes_df=None,
+    def system_performance(self, state) -> None:  # Move the CSV creation here  # noqa: ARG002, C901, D102, PLR0915
+        def substep_assignment(nodes_df=None,  # noqa: PLR0913
                                weighted_edges_df=None,
                                od_ss=None,
                                quarter_demand=None,
@@ -386,10 +386,10 @@ class TransportationPerformance(ABC):
                                ss_id=None,
                                alpha_f=0.3,
                                beta_f=3,
-                               two_way_edges=False):
+                               two_way_edges=False):  # noqa: FBT002
 
             open_edges_df = weighted_edges_df.loc[weighted_edges_df['fft'] <
-                                                  36000]
+                                                  36000]  # noqa: PLR2004
 
             net = pdna.Network(nodes_df["x"], nodes_df["y"],
                                open_edges_df["start_nid"],
@@ -397,9 +397,9 @@ class TransportationPerformance(ABC):
                                open_edges_df[["weight"]],
                                twoway=two_way_edges)
 
-            # print('network')  # noqa: T201
+            # print('network')  # noqa: RUF100, T201
             net.set(pd.Series(net.node_ids))
-            # print('net')  # noqa: T201
+            # print('net')  # noqa: RUF100, T201
 
             nodes_origin = od_ss['origin_nid'].to_numpy()
             nodes_destin = od_ss['destin_nid'].to_numpy()
@@ -448,7 +448,7 @@ class TransportationPerformance(ABC):
                     edge_travel_time = edge_travel_time_dict[edge_str]
 
                     if (remaining_time > edge_travel_time) and \
-                       (edge_travel_time < 36000):
+                       (edge_travel_time < 36000):  # noqa: PLR2004
                         # all_paths.append(edge_str)
                         # p_dist += edge_travel_time
                         remaining_time -= edge_travel_time
@@ -511,7 +511,7 @@ class TransportationPerformance(ABC):
                 (1 + alpha_f *
                  (new_edges_df['flow']/new_edges_df['capacity'])**beta_f)
             new_edges_df['t_avg'] = np.where(
-                new_edges_df['t_avg'] > 36000, 36000, new_edges_df['t_avg'])
+                new_edges_df['t_avg'] > 36000, 36000, new_edges_df['t_avg'])  # noqa: PLR2004
             new_edges_df['t_avg'] = new_edges_df['t_avg'].round(2)
 
             return new_edges_df, od_residual_ss_list, trip_info, agents_path
@@ -522,7 +522,7 @@ class TransportationPerformance(ABC):
                            hour=None,
                            scen_nm=None):
             if 'flow' in edges_df.columns:
-                if edges_df.shape[0] < 10:
+                if edges_df.shape[0] < 10:  # noqa: PLR2004
                     edges_df[['uniqueid',
                               'start_nid',
                               'end_nid',
@@ -573,7 +573,7 @@ class TransportationPerformance(ABC):
                 index=False
             )
 
-        def assignment(quarter_counts=6,
+        def assignment(quarter_counts=6,  # noqa: C901, PLR0913
                        substep_counts=15,
                        substep_size=30000,
                        edges_df=None,
@@ -583,7 +583,7 @@ class TransportationPerformance(ABC):
                        scen_nm=None,
                        hour_list=None,
                        quarter_list=None,
-                       cost_factor=None,
+                       cost_factor=None,  # noqa: ARG001
                        closure_hours=None,
                        closed_links=None,
                        agent_time_limit=None,
@@ -591,12 +591,12 @@ class TransportationPerformance(ABC):
                        agents_path=None,
                        alpha_f=0.3,
                        beta_f=4,
-                       two_way_edges=False):
+                       two_way_edges=False):  # noqa: FBT002
             if closure_hours is None:
                 closure_hours = []
 
 
-            # Check if all od pairs has path. If not, 
+            # Check if all od pairs has path. If not,  # noqa: W291
             orig = od_all['origin_nid'].to_numpy()
             dest = od_all['destin_nid'].to_numpy()
             open_edges_df = edges_df[~edges_df['uniqueid'].isin(closed_links['uniqueid'].to_numpy())]
@@ -837,7 +837,7 @@ class TransportationPerformance(ABC):
                                                  'stop_quarter',
                                                  'stop_ssid'])
             # Add the no path OD to the trip info
-            trip_info_no_path = od_no_path.drop(columns=[col for col in od_no_path.columns 
+            trip_info_no_path = od_no_path.drop(columns=[col for col in od_no_path.columns  # noqa: W291
                                                 if col not in ['agent_id', 'origin_nid',
                                                 'destin_nid']])
             trip_info_no_path['travel_time'] = 360000
@@ -928,7 +928,7 @@ class TransportationPerformance(ABC):
         t_od_1 = time.time()
         logging.info('%d sec to read %d OD pairs',
                      t_od_1 - t_od_0, od_all.shape[0])
-        
+  # noqa: W293
         # run residual_demand_assignment
         assignment(edges_df=edges_df,
                    nodes_df=nodes_df,
@@ -1223,7 +1223,7 @@ class TransportationPerformance(ABC):
     #             if 'TransportationNetwork' not in temp:
     #                 raise KeyError(
     #                     'The deterministic result JSON file does not contain TransportationNetwork')
-    #             temp = temp['TransportationNetwork']   
+    #             temp = temp['TransportationNetwork']  # noqa: W291
     #             # If the file contains road information:
     #             if 'Roadway' in temp:
     #                 # Extract road features:

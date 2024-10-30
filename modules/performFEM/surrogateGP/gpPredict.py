@@ -210,7 +210,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
             self.set_XY(X, Y)
 
-        def get_stochastic_variance(X, Y, x, ny):  # noqa: N803
+        def get_stochastic_variance(X, Y, x, ny):  # noqa: C901, N803
             # X_unique, X_idx, indices, counts = np.unique(X, axis=0, return_index=True, return_counts=True, return_inverse=True)
             X_unique, dummy, indices, counts = np.unique(  # noqa: N806
                 X, axis=0, return_index=True, return_counts=True, return_inverse=True
@@ -250,7 +250,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 var_pred = np.exp(log_var_pred)
 
                 if did_normalization:
-                    # Y_normFact = np.var(Y_mean)  # noqa: N806
+                    # Y_normFact = np.var(Y_mean)  # noqa: N806, RUF100
                     Y_normFact = np.mean(var_pred.T[0])  # noqa: N806
                 else:
                     Y_normFact = 1  # noqa: N806
@@ -277,8 +277,8 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                         break
 
                 if old_version:
-                    print("The surrogate model was trained using an older version of the tool. Please retrain the model using this version or use older version.", file=sys.stderr)
-                    exit(-1)
+                    print("The surrogate model was trained using an older version of the tool. Please retrain the model using this version or use older version.", file=sys.stderr)  # noqa: T201
+                    exit(-1)  # noqa: PLR1722
 
                 log_vars = np.atleast_2d(
                     sur['modelInfo'][g_name_sur[ny] + '_Var']['TrainingSamplesY']
@@ -298,7 +298,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 var_pred = np.exp(log_var_pred)
 
                 if did_normalization:
-                    # Y_normFact = np.var(Y)  # noqa: N806
+                    # Y_normFact = np.var(Y)  # noqa: N806, RUF100
                     Y_normFact = np.mean(var_pred.T[0])  # noqa: N806
 
                 else:

@@ -183,7 +183,7 @@ def write_data_to_csvfile(  # noqa: D103
     # Finished writing data
 
 
-def run_TMCMC(  # noqa: N802, PLR0913
+def run_TMCMC(  # noqa: C901, N802, PLR0913
     number_of_samples,
     number_of_chains,
     all_distributions_list,
@@ -266,9 +266,9 @@ def run_TMCMC(  # noqa: N802, PLR0913
     if run_type == 'runningLocal':
 
         processor_count = mp.cpu_count()
-        if processor_count > 32:
+        if processor_count > 32:  # noqa: PLR2004
             processor_count = 8
-        
+  # noqa: W293
         pool = Pool(processes=processor_count)
         write_eval_data_to_logfile(
             logfile,
@@ -278,7 +278,7 @@ def run_TMCMC(  # noqa: N802, PLR0913
             stage_num=stage_number,
             )
         outputs = pool.starmap(runFEM, iterables)
-        
+  # noqa: W293
         # pool does not start
         #mp.set_start_method('forkserver', force=True)
         #processor_count = mp.cpu_count()
@@ -302,7 +302,7 @@ def run_TMCMC(  # noqa: N802, PLR0913
         #        stage_num=stage_number,
         #    )
         #    outputs = pool.starmap(runFEM, iterables)
-            
+  # noqa: W293
         log_likelihoods_list = []
         predictions_list = []
         for output in outputs:

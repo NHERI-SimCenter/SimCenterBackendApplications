@@ -47,7 +47,7 @@ import json
 import os
 import sys
 
-errFileName = os.path.join(os.getcwd(),'workflow.err')  # noqa: N816
+errFileName = os.path.join(os.getcwd(),'workflow.err')  # noqa: N816, PTH109, PTH118
 
 def create_SAM(AIM_file, SAM_file):  # noqa: N802, N803, D103
     #

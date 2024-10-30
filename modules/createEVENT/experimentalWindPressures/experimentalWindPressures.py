@@ -19,7 +19,7 @@ except:  # noqa: E722
 
 from convertWindMat import *  # noqa: F403
 
-errPath = os.path.join(os.getcwd(),'workflow.err')  # noqa: N816
+errPath = os.path.join(os.getcwd(),'workflow.err')  # noqa: N816, PTH109, PTH118
 sys.stderr = open(  # noqa: SIM115, PTH123
     errPath, 'w'
 )  # redirecting stderr (this way we can capture all sorts of python errors)

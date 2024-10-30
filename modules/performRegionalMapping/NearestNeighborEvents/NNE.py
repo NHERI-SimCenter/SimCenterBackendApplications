@@ -38,7 +38,7 @@
 # Tamika Bassman
 #
 
-import argparse
+import argparse  # noqa: I001
 import importlib
 import json
 from pathlib import Path

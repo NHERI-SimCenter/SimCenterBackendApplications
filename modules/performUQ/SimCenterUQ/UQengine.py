@@ -41,7 +41,7 @@ class UQengine:  # noqa: D101
         # if self.os_type.lower().startswith('win'):
         #    self.workflowDriver = "workflow_driver.bat"
 
-    def cleanup_workdir(self):  # noqa: C901, D102
+    def cleanup_workdir(self):  # noqa: C901, D102, RUF100
         # if template dir already contains results.out, give an error
 
         # Cleanup working directory if needed
@@ -80,10 +80,10 @@ class UQengine:  # noqa: D101
             os.remove(del_pkl)  # noqa: PTH107
 
         #try:
-        #    del_errs = glob.glob(os.path.join(self.work_dir, '*err'))  # noqa: PTH118, PTH207
+        #    del_errs = glob.glob(os.path.join(self.work_dir, '*err'))  # noqa: PTH118, PTH207, RUF100
         #    for del_err in del_errs:
-        #        os.remove(del_err)  # noqa: PTH107
-        #except:  # noqa: S110, E722
+        #        os.remove(del_err)  # noqa: PTH107, RUF100
+        #except:  # noqa: E722, RUF100, S110
         #    pass
 
         if glob.glob(os.path.join(self.work_dir, 'templatedir', 'results.out')):  # noqa: PTH118, PTH207
@@ -273,9 +273,9 @@ class UQengine:  # noqa: D101
 
             n_processor = os.cpu_count()
 
-            if n_processor > 32:
+            if n_processor > 32:  # noqa: PLR2004
                 n_processor = 8
-            pool = Pool(n_processor, initializer=initfn, initargs=(seed_val,)) 
+            pool = Pool(n_processor, initializer=initfn, initargs=(seed_val,))  # noqa: W291
 
         else:
             from mpi4py import MPI
@@ -440,7 +440,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):  # noqa: C9
     #     pass
 
 # for creating pool
-def initfn(seed_val):
+def initfn(seed_val):  # noqa: D103
     np.random.seed(seed_val)  # enforcing seeds
 #
 # When sampled X is different from surrogate input X. e.g. we sample ground motion parameters or indices, but we use IM as input of GP

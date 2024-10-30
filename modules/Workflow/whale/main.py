@@ -313,7 +313,7 @@ def create_command(command_list, enforced_python=None):
     return command  # noqa: DOC201, RUF100
 
 
-def run_command(command, app_category=""):  # noqa: C901
+def run_command(command, app_category=""):
     """Short description
 
     Long description
@@ -386,7 +386,7 @@ def run_command(command, app_category=""):  # noqa: C901
                     raise WorkFlowInputError('Analysis Failed at ' + app_category)  # noqa: TRY301
 
             # sy - safe apps should be added below
-            elif ('OpenSeesInput' in str(command)):
+            elif ('OpenSeesInput' in str(command)):  # noqa: RET506
                 if returncode != 0:
                     raise WorkFlowInputError('Analysis Failed at ' + app_category)  # noqa: TRY301
 

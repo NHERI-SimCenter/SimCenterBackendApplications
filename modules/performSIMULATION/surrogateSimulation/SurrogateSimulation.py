@@ -46,7 +46,7 @@ import subprocess
 
 import numpy as np
 
-errFileName = os.path.join(os.getcwd(),'workflow.err')  # noqa: N816
+errFileName = os.path.join(os.getcwd(),'workflow.err')  # noqa: N816, PTH109, PTH118
 sys.stderr = open(errFileName, 'a')  # noqa: SIM115, PTH123
 
 # from simcenter_common import *
@@ -111,7 +111,7 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ARG001, N802, N803
         surrogate_meta_name,
         surrogate_name,
     ]
-    # subprocess.run(command, check=True)  # noqa: S603
+    # subprocess.run(command, check=True)  # noqa: RUF100, S603
 
     try:
         result = subprocess.check_output(  # noqa: S603
@@ -122,11 +122,11 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ARG001, N802, N803
         result = e.output
         returncode = e.returncode
 
-    if not returncode == 0:
-        print(
+    if not returncode == 0:  # noqa: SIM201
+        print(  # noqa: T201
             result,
             file=sys.stderr,
-        )  # noqa: T201
+        )  # noqa: RUF100, T201
 
     # os.system(  # noqa: RUF100, S605
     #    f'{pythonEXE} {surrogatePredictionPath} {params_name} {surrogate_meta_name} {surrogate_name}'
@@ -148,10 +148,10 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ARG001, N802, N803
         #         'Do not select [None] in the FEM tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'
         #     )
         # exit(-1)  # noqa: PLR1722, RUF100
-        print(
+        print(  # noqa: T201
             'Do not select [None] in the FEM tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.',
             file=sys.stderr,
-        )  # noqa: T201
+        )  # noqa: RUF100, T201
         exit(-1)  # noqa: PLR1722
 
 
