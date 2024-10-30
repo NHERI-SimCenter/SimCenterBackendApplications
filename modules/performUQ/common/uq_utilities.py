@@ -246,7 +246,6 @@ class ParallelRunnerMultiprocessing:  # noqa: D101
         elif num_processors > 32:  # noqa: PLR2004
             # this is to get past memory problems when running large number processors in a container
             num_processors = 8
-  # noqa: W293
         return num_processors
 
     def get_pool(self) -> Pool:  # noqa: D102

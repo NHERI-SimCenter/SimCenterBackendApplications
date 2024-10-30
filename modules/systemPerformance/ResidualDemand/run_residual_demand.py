@@ -76,12 +76,18 @@ def select_realizations_to_run(damage_input, run_dir):
         List of realizations to run.
     """
     # Get the available realizations
-    results_files = [f for f in os.listdir(run_dir) if f.startswith('Results_') and f.endswith('.json')]
-    rlzs_available = sorted([
-        int(file.split('_')[1].split('.')[0])
-        for file in results_files
-        if file.split('_')[1].split('.')[0].isnumeric()
-    ])
+    results_files = [
+        f
+        for f in os.listdir(run_dir)
+        if f.startswith('Results_') and f.endswith('.json')
+    ]
+    rlzs_available = sorted(
+        [
+            int(file.split('_')[1].split('.')[0])
+            for file in results_files
+            if file.split('_')[1].split('.')[0].isnumeric()
+        ]
+    )
     # Get the number of realizations
     if damage_input['Type'] == 'SpecificRealization':
         rlz_filter = damage_input['Parameters']['Filter']
@@ -111,6 +117,7 @@ def select_realizations_to_run(damage_input, run_dir):
             raise ValueError(msg)
     return rlzs_to_run
 
+
 def create_congestion_animation(edge_vol_dir, output_file_name):
     """
     Create an animation of congestion over time.
@@ -123,7 +130,9 @@ def create_congestion_animation(edge_vol_dir, output_file_name):
         Name of the output animation file.
     """
     all_frames = sorted(os.listdir(edge_vol_dir))
-    all_frames = [f for f in all_frames if f.startswith('edge_vol_') and f.endswith('.csv')]
+    all_frames = [
+        f for f in all_frames if f.startswith('edge_vol_') and f.endswith('.csv')
+    ]
     times = []
     for ii in range(len(all_frames)):
         hour = all_frames[ii][11:12]
@@ -133,18 +142,30 @@ def create_congestion_animation(edge_vol_dir, output_file_name):
 
         if minute_end == 60:  # noqa: PLR2004
             minute_end = 0
-            hour_end = str(int(hour)+1)
+            hour_end = str(int(hour) + 1)
         else:
             hour_end = hour
-        time_of_day = 'Between ' + hour + ':' + str(minute).zfill(2) + ' and ' + str(int(hour_end)) + ':' + str(minute_end).zfill(2)
+        time_of_day = (
+            'Between '
+            + hour
+            + ':'
+            + str(minute).zfill(2)
+            + ' and '
+            + str(int(hour_end))
+            + ':'
+            + str(minute_end).zfill(2)
+        )
         times.append(time_of_day)
     figure, ax = plt.subplots(figsize=(10, 10))
-    animation = FuncAnimation(figure,
-                          func = animation_function,
-                          frames = np.arange(0, len(all_frames), 1),
-                          fargs=(ax, edge_vol_dir, all_frames, times),
-                          interval = 10)
+    animation = FuncAnimation(
+        figure,
+        func=animation_function,
+        frames=np.arange(0, len(all_frames), 1),
+        fargs=(ax, edge_vol_dir, all_frames, times),
+        interval=10,
+    )
     animation.save(output_file_name, writer='imagemagick', fps=2)
+
 
 def get_highest_congestion(edge_vol_dir, edges_csv):
     """
@@ -163,17 +184,26 @@ def get_highest_congestion(edge_vol_dir, edges_csv):
         DataFrame containing the highest congestion for each edge.
     """
     all_frames = sorted(os.listdir(edge_vol_dir))
-    all_frames = [f for f in all_frames if f.startswith('edge_vol_') and f.endswith('.csv')]
+    all_frames = [
+        f for f in all_frames if f.startswith('edge_vol_') and f.endswith('.csv')
+    ]
     all_edges = pd.read_csv(edges_csv)
     congestion = np.zeros(len(all_edges))
     for ii in range(len(all_frames)):
-        edge_vol = pd.read_csv(edge_vol_dir / all_frames[ii])[['uniqueid', 'vol_tot', 'capacity']]
-        all_edges_vol = all_edges.merge(edge_vol, left_on='uniqueid', right_on='uniqueid', how='left')
-        congestion_i = (all_edges_vol['vol_tot']/all_edges_vol['capacity_x']).fillna(0)
+        edge_vol = pd.read_csv(edge_vol_dir / all_frames[ii])[
+            ['uniqueid', 'vol_tot', 'capacity']
+        ]
+        all_edges_vol = all_edges.merge(
+            edge_vol, left_on='uniqueid', right_on='uniqueid', how='left'
+        )
+        congestion_i = (
+            all_edges_vol['vol_tot'] / all_edges_vol['capacity_x']
+        ).fillna(0)
         congestion = np.maximum(congestion, congestion_i)
     congestion = congestion.to_frame(name='congestion')
     all_edges = all_edges.merge(congestion, left_index=True, right_index=True)
     return all_edges[['id', 'congestion']].groupby('id').max()
+
 
 def animation_function(ii, ax, results_dir, all_frames, times):
     """
@@ -212,8 +242,8 @@ def animation_function(ii, ax, results_dir, all_frames, times):
     gdf.plot(ax=ax, linewidth=gdf.s, color=gdf.color)
     ax.set_title(times[ii])
     minx, miny, maxx, maxy = gdf.total_bounds
-    ax.set_xlim(minx*0.95, maxx*1.05)
-    ax.set_ylim(miny*0.95, maxy*1.05)
+    ax.set_xlim(minx * 0.95, maxx * 1.05)
+    ax.set_ylim(miny * 0.95, maxy * 1.05)
     # Calculate width and height of the bounding box
     width = maxx - minx
     height = maxy - miny
@@ -234,7 +264,10 @@ def animation_function(ii, ax, results_dir, all_frames, times):
     ax.set_xlim(minx, maxx)
     ax.set_ylim(miny, maxy)
 
-    cx.add_basemap(ax, crs=gdf.crs, source=cx.providers.CartoDB.Positron, zoom='auto')
+    cx.add_basemap(
+        ax, crs=gdf.crs, source=cx.providers.CartoDB.Positron, zoom='auto'
+    )
+
 
 def create_delay_agg(od_file_pre, od_file_post):
     """
@@ -262,6 +295,7 @@ def create_delay_agg(od_file_pre, od_file_post):
     damaged_time = {'agent_id': od_df_post_agent_id, 'data': od_df_post_data}
     return undamaged_time, damaged_time
 
+
 def append_to_delay_agg(undamaged_time, damaged_time, trip_info_file):
     """
     Append new delay data to the existing aggregation.
@@ -281,16 +315,22 @@ def append_to_delay_agg(undamaged_time, damaged_time, trip_info_file):
         Updated undamaged_time and damaged_time dictionaries.
     """
     trip_info = pd.read_csv(trip_info_file).set_index('agent_id')
-    undamaged_time_new = trip_info.loc[undamaged_time['agent_id'], 'travel_time_used_undamaged'].to_numpy()
+    undamaged_time_new = trip_info.loc[
+        undamaged_time['agent_id'], 'travel_time_used_undamaged'
+    ].to_numpy()
     undamaged_time_new = undamaged_time_new.reshape((len(undamaged_time_new), 1))
-    undamaged_time['data'] = np.append(undamaged_time['data'], undamaged_time_new, axis=1)
-    damaged_time_new = trip_info.loc[damaged_time['agent_id'], 'travel_time_used_damaged'].to_numpy()
+    undamaged_time['data'] = np.append(
+        undamaged_time['data'], undamaged_time_new, axis=1
+    )
+    damaged_time_new = trip_info.loc[
+        damaged_time['agent_id'], 'travel_time_used_damaged'
+    ].to_numpy()
     damaged_time_new = damaged_time_new.reshape((len(damaged_time_new), 1))
     damaged_time['data'] = np.append(damaged_time['data'], damaged_time_new, axis=1)
     return undamaged_time, damaged_time
 
-def aggregate_delay_results(undamaged_time, damaged_time,
-                            od_file_pre, od_file_post):
+
+def aggregate_delay_results(undamaged_time, damaged_time, od_file_pre, od_file_post):
     """
     Aggregate delay results and save to a CSV file.
 
@@ -314,31 +354,50 @@ def aggregate_delay_results(undamaged_time, damaged_time,
     compare_df['std_time_used_undamaged'] = np.nan
     compare_df['mean_time_used_damaged'] = np.nan
     compare_df['std_time_used_damaged'] = np.nan
-    compare_df.loc[undamaged_time['agent_id'], 'mean_time_used_undamaged'] = \
+    compare_df.loc[undamaged_time['agent_id'], 'mean_time_used_undamaged'] = (
         undamaged_time['data'].mean(axis=1)
-    compare_df.loc[undamaged_time['agent_id'], 'std_time_used_undamaged'] = \
+    )
+    compare_df.loc[undamaged_time['agent_id'], 'std_time_used_undamaged'] = (
         undamaged_time['data'].std(axis=1)
-    compare_df.loc[damaged_time['agent_id'], 'mean_time_used_damaged'] = \
+    )
+    compare_df.loc[damaged_time['agent_id'], 'mean_time_used_damaged'] = (
         damaged_time['data'].mean(axis=1)
-    compare_df.loc[damaged_time['agent_id'], 'std_time_used_damaged'] = \
-        damaged_time['data'].std(axis=1)
+    )
+    compare_df.loc[damaged_time['agent_id'], 'std_time_used_damaged'] = damaged_time[
+        'data'
+    ].std(axis=1)
 
-    inner_agents = od_df_pre.merge(od_df_post, on='agent_id', how='inner')['agent_id'].tolist()
-    indices_in_undamaged = [undamaged_time['agent_id'].index(value) for value in inner_agents if value in undamaged_time['agent_id']]
-    indices_in_damaged = [damaged_time['agent_id'].index(value) for value in inner_agents if value in damaged_time['agent_id']]
-    delay_duration = damaged_time['data'][indices_in_damaged,:] - \
-        undamaged_time['data'][indices_in_undamaged,:]
-    delay_ratio = delay_duration/undamaged_time['data'][indices_in_undamaged,:]
-    delay_df = pd.DataFrame(data={
-        'agent_id': inner_agents,
-        'mean_delay_duration': delay_duration.mean(axis = 1),
-        'mean_delay_ratio': delay_ratio.mean(axis = 1),
-        'std_delay_duration': delay_duration.std(axis = 1),
-        'std_delay_ratio': delay_ratio.std(axis = 1)
-    })
+    inner_agents = od_df_pre.merge(od_df_post, on='agent_id', how='inner')[
+        'agent_id'
+    ].tolist()
+    indices_in_undamaged = [
+        undamaged_time['agent_id'].index(value)
+        for value in inner_agents
+        if value in undamaged_time['agent_id']
+    ]
+    indices_in_damaged = [
+        damaged_time['agent_id'].index(value)
+        for value in inner_agents
+        if value in damaged_time['agent_id']
+    ]
+    delay_duration = (
+        damaged_time['data'][indices_in_damaged, :]
+        - undamaged_time['data'][indices_in_undamaged, :]
+    )
+    delay_ratio = delay_duration / undamaged_time['data'][indices_in_undamaged, :]
+    delay_df = pd.DataFrame(
+        data={
+            'agent_id': inner_agents,
+            'mean_delay_duration': delay_duration.mean(axis=1),
+            'mean_delay_ratio': delay_ratio.mean(axis=1),
+            'std_delay_duration': delay_duration.std(axis=1),
+            'std_delay_ratio': delay_ratio.std(axis=1),
+        }
+    )
 
     compare_df = compare_df.merge(delay_df, on='agent_id', how='left')
     compare_df.to_csv('travel_delay_stats.csv', index=False)
+
 
 def compile_r2d_results_geojson(residual_demand_dir, results_det_file):
     """
@@ -358,9 +417,9 @@ def compile_r2d_results_geojson(residual_demand_dir, results_det_file):
     with open(results_det_file, encoding='utf-8') as f:  # noqa: PTH123
         res_det = json.load(f)
     metadata = {
-            'WorkflowType': 'ResidualDemandSimulation',
-            'Time': datetime.now().strftime('%m-%d-%Y %H:%M:%S'),  # noqa: DTZ005
-        }
+        'WorkflowType': 'ResidualDemandSimulation',
+        'Time': datetime.now().strftime('%m-%d-%Y %H:%M:%S'),  # noqa: DTZ005
+    }
     # create the geojson for R2D visualization
     geojson_result = {
         'type': 'FeatureCollection',
@@ -410,8 +469,11 @@ def compile_r2d_results_geojson(residual_demand_dir, results_det_file):
                 ft.update({'properties': asst_GI})
                 ft['properties'].update(subtypeResult[str(asset_id)]['R2Dres'])
                 geojson_result['features'].append(ft)
-    with open(residual_demand_dir / 'R2D_results.geojson', 'w', encoding='utf-8') as f:  # noqa: PTH123
+    with open(  # noqa: PTH123
+        residual_demand_dir / 'R2D_results.geojson', 'w', encoding='utf-8'
+    ) as f:
         json.dump(geojson_result, f, indent=2)
+
 
 def create_congestion_agg(edge_file):
     """
@@ -429,13 +491,18 @@ def create_congestion_agg(edge_file):
     """
     all_edges = pd.read_csv(edge_file)[['id', 'uniqueid']]
     all_edges = all_edges.groupby('id').count()
-    undamaged_congestion = np.zeros((len(all_edges),0))
-    damaged_congestion = np.zeros((len(all_edges),0))
+    undamaged_congestion = np.zeros((len(all_edges), 0))
+    damaged_congestion = np.zeros((len(all_edges), 0))
     return undamaged_congestion, damaged_congestion
 
-def append_to_congestion_agg(undamaged_congestion, damaged_congestion,
-                              undamaged_edge_vol_dir, damaged_edge_vol_dir,
-                              edges_csv):
+
+def append_to_congestion_agg(
+    undamaged_congestion,
+    damaged_congestion,
+    undamaged_edge_vol_dir,
+    damaged_edge_vol_dir,
+    edges_csv,
+):
     """
     Append new congestion data to the existing aggregation.
 
@@ -457,18 +524,24 @@ def append_to_congestion_agg(undamaged_congestion, damaged_congestion,
     tuple
         Updated undamaged_congestion and damaged_congestion arrays.
     """
-    undamaged_congest = get_highest_congestion(undamaged_edge_vol_dir, edges_csv).sort_index()
-    damaged_congest = get_highest_congestion(damaged_edge_vol_dir,edges_csv).sort_index()
-    undamaged_congestion = np.append(undamaged_congestion,
-                                      undamaged_congest[['congestion']].values,
-                                      axis=1)
-    damaged_congestion = np.append(damaged_congestion,
-                                    damaged_congest[['congestion']].values,
-                                    axis=1)
+    undamaged_congest = get_highest_congestion(
+        undamaged_edge_vol_dir, edges_csv
+    ).sort_index()
+    damaged_congest = get_highest_congestion(
+        damaged_edge_vol_dir, edges_csv
+    ).sort_index()
+    undamaged_congestion = np.append(
+        undamaged_congestion, undamaged_congest[['congestion']].values, axis=1
+    )
+    damaged_congestion = np.append(
+        damaged_congestion, damaged_congest[['congestion']].values, axis=1
+    )
     return undamaged_congestion, damaged_congestion
 
-def aggregate_congestions_results_to_det(undamaged_congestion, damaged_congestion,
-                                            results_det_file, edges_csv):
+
+def aggregate_congestions_results_to_det(
+    undamaged_congestion, damaged_congestion, results_det_file, edges_csv
+):
     """
     Aggregate congestion results and update the detailed results file.
 
@@ -489,29 +562,46 @@ def aggregate_congestions_results_to_det(undamaged_congestion, damaged_congestio
     """
     all_edges = pd.read_csv(edges_csv)[['id', 'uniqueid']]
     all_edges = all_edges.groupby('id').count().sort_index()
-    congestion_increase = (damaged_congestion - undamaged_congestion)
+    congestion_increase = damaged_congestion - undamaged_congestion
     all_edges['mean_increase'] = congestion_increase.mean(axis=1)
     all_edges['std_increase'] = congestion_increase.std(axis=1)
     with Path(results_det_file).open() as f:
         results_det = json.load(f)
-    for asset_id, asset_id_dict in results_det['TransportationNetwork']['Roadway'].items():
+    for asset_id, asset_id_dict in results_det['TransportationNetwork'][
+        'Roadway'
+    ].items():
         asset_id_dict['R2Dres'].update(
-            {'R2Dres_mean_CongestionIncrease': all_edges.loc[int(asset_id)]['mean_increase']}
-                )
+            {
+                'R2Dres_mean_CongestionIncrease': all_edges.loc[int(asset_id)][
+                    'mean_increase'
+                ]
+            }
+        )
         asset_id_dict['R2Dres'].update(
-            {'R2Dres_std_CongestionIncrease': all_edges.loc[int(asset_id)]['std_increase']}
-                )
+            {
+                'R2Dres_std_CongestionIncrease': all_edges.loc[int(asset_id)][
+                    'std_increase'
+                ]
+            }
+        )
     with Path(results_det_file).open('w') as f:
         json.dump(results_det, f)
     # If TransportationNetwork_det.json exists, sync the changes
     results_folder = Path(results_det_file).parent
-    transportation_det_file = results_folder/"TransportationNetwork"/ 'TransportationNetwork_det.json'
+    transportation_det_file = (
+        results_folder / 'TransportationNetwork' / 'TransportationNetwork_det.json'
+    )
     if transportation_det_file.exists():
-        transportation_det = {"TransportationNetwork": results_det['TransportationNetwork']}
+        transportation_det = {
+            'TransportationNetwork': results_det['TransportationNetwork']
+        }
         with transportation_det_file.open('w') as f:
             json.dump(transportation_det, f)
 
-def run_on_undamaged_network(edge_file, node_file, od_file_pre, damage_det_file, config_file_dict):
+
+def run_on_undamaged_network(
+    edge_file, node_file, od_file_pre, damage_det_file, config_file_dict
+):
     """
     Run the simulation on the undamaged network.
 
@@ -540,14 +630,15 @@ def run_on_undamaged_network(edge_file, node_file, od_file_pre, damage_det_file,
 
     residual_demand_simulator = TransportationPerformance(
         assets=assets,
-        csv_files={'network_edges': edge_file,
-                         'network_nodes': node_file,
-                         'edge_closures': None,
-                         'od_pairs': str(od_file_pre)},
+        csv_files={
+            'network_edges': edge_file,
+            'network_nodes': node_file,
+            'edge_closures': None,
+            'od_pairs': str(od_file_pre),
+        },
         capacity_map=config_file_dict['CapacityMap'],
         od_file=od_file_pre,
         hour_list=config_file_dict['HourList'],
-
     )
 
     # run simulation on undamged network
@@ -556,10 +647,20 @@ def run_on_undamaged_network(edge_file, node_file, od_file_pre, damage_det_file,
     residual_demand_simulator.simulation_outputs = Path.cwd()
     residual_demand_simulator.system_performance(state=None)
     if create_animation:
-        create_congestion_animation(Path.cwd() /'edge_vol', Path.cwd() /'congestion.gif')
+        create_congestion_animation(
+            Path.cwd() / 'edge_vol', Path.cwd() / 'congestion.gif'
+        )
 
-def run_one_realization(edge_file, node_file, undamaged_dir, od_file_post, damage_rlz_file,
-                        damage_det_file, config_file_dict):
+
+def run_one_realization(
+    edge_file,
+    node_file,
+    undamaged_dir,
+    od_file_post,
+    damage_rlz_file,
+    damage_det_file,
+    config_file_dict,
+):
     """
     Run the simulation for a single realization.
 
@@ -616,50 +717,71 @@ def run_one_realization(edge_file, node_file, undamaged_dir, od_file_post, damag
     # Create residual demand simulator
     residual_demand_simulator = TransportationPerformance(
         assets=assets,
-        csv_files={'network_edges': edge_file,
-                         'network_nodes': node_file,
-                         'edge_closures': None,
-                         'od_pairs': str(od_file_post)},
+        csv_files={
+            'network_edges': edge_file,
+            'network_nodes': node_file,
+            'edge_closures': None,
+            'od_pairs': str(od_file_post),
+        },
         capacity_map=config_file_dict['CapacityMap'],
         od_file=od_file_post,
         hour_list=config_file_dict['HourList'],
-
     )
     # update the capacity due to damage
-    damaged_edge_file = residual_demand_simulator.update_edge_capacity(damage_rlz_file, damage_det_file)
+    damaged_edge_file = residual_demand_simulator.update_edge_capacity(
+        damage_rlz_file, damage_det_file
+    )
     residual_demand_simulator.csv_files.update({'network_edges': damaged_edge_file})
     # run simulation on damaged network
     Path('damaged').mkdir()
-    Path(Path('damaged')/'trip_info').mkdir()
-    Path(Path('damaged')/'edge_vol').mkdir()
+    Path(Path('damaged') / 'trip_info').mkdir()
+    Path(Path('damaged') / 'edge_vol').mkdir()
     residual_demand_simulator.simulation_outputs = Path.cwd() / 'damaged'
     residual_demand_simulator.system_performance(state=None)
     if create_animation:
-        create_congestion_animation(Path.cwd() / 'damaged'/'edge_vol', Path.cwd() / 'damaged'/'congestion.gif')
+        create_congestion_animation(
+            Path.cwd() / 'damaged' / 'edge_vol',
+            Path.cwd() / 'damaged' / 'congestion.gif',
+        )
 
     # conpute the delay time of each trip
-    undamaged_trip_info = pd.read_csv(undamaged_dir/'trip_info'/'trip_info_simulation_out.csv')
-    damaged_trip_info = pd.read_csv(Path.cwd() / 'damaged'/'trip_info'/'trip_info_simulation_out.csv')
+    undamaged_trip_info = pd.read_csv(
+        undamaged_dir / 'trip_info' / 'trip_info_simulation_out.csv'
+    )
+    damaged_trip_info = pd.read_csv(
+        Path.cwd() / 'damaged' / 'trip_info' / 'trip_info_simulation_out.csv'
+    )
     # trip_info_compare = undamaged_trip_info.merge(damaged_trip_info, on='agent_id', suffixes=('_undamaged', '_damaged'))
     # trip_info_compare['delay_duration'] = trip_info_compare['travel_time_used_damaged'] - \
     #     trip_info_compare['travel_time_used_undamaged']
     # trip_info_compare['delay_ratio'] = trip_info_compare['delay_duration'] / trip_info_compare['travel_time_used_undamaged']
     # trip_info_compare.to_csv('trip_info_compare.csv', index=False)
-    trip_info_compare = undamaged_trip_info.merge(damaged_trip_info, on='agent_id', suffixes=('_undamaged', '_damaged'), how='outer')
-    trip_info_compare['delay_duration'] = trip_info_compare['travel_time_used_damaged'] - \
-        trip_info_compare['travel_time_used_undamaged']
-    trip_info_compare['delay_ratio'] = trip_info_compare['delay_duration'] / trip_info_compare['travel_time_used_undamaged']
+    trip_info_compare = undamaged_trip_info.merge(
+        damaged_trip_info,
+        on='agent_id',
+        suffixes=('_undamaged', '_damaged'),
+        how='outer',
+    )
+    trip_info_compare['delay_duration'] = (
+        trip_info_compare['travel_time_used_damaged']
+        - trip_info_compare['travel_time_used_undamaged']
+    )
+    trip_info_compare['delay_ratio'] = (
+        trip_info_compare['delay_duration']
+        / trip_info_compare['travel_time_used_undamaged']
+    )
     trip_info_compare.to_csv('trip_info_compare.csv', index=False)
     return True
 
+
 def run_residual_demand(  # noqa: C901
-        edge_geojson,
-        node_geojson,
-        od_file_pre,
-        od_file_post,
-        config_file,
-        r2d_run_dir,
-        residual_demand_dir,
+    edge_geojson,
+    node_geojson,
+    od_file_pre,
+    od_file_post,
+    config_file,
+    r2d_run_dir,
+    residual_demand_dir,
 ):
     """
     Run the residual demand simulation.
@@ -711,11 +833,11 @@ def run_residual_demand(  # noqa: C901
                 elif file_path.is_dir():
                     shutil.rmtree(file_path)
             except (OSError, shutil.Error) as e:
-                msg = f"Failed to delete {file_path}. Reason: {e}"
+                msg = f'Failed to delete {file_path}. Reason: {e}'
                 raise RuntimeError(msg) from e
         # raise ValueError(msg)
     else:
-       residual_demand_dir.mkdir()
+        residual_demand_dir.mkdir()
     os.chdir(residual_demand_dir)
 
     # Load the config file
@@ -727,20 +849,23 @@ def run_residual_demand(  # noqa: C901
     edges_gdf['length'] = edges_gdf['geometry'].apply(lambda x: x.length)
     edges_gdf = edges_gdf.to_crs(epsg=4326)
     two_way_edges = config_file_dict['TwoWayEdges']
-    if  two_way_edges:
+    if two_way_edges:
         edges_gdf_copy = edges_gdf.copy()
         edges_gdf_copy['StartNode'] = edges_gdf['EndNode']
         edges_gdf_copy['EndNode'] = edges_gdf['StartNode']
         edges_gdf = pd.concat([edges_gdf, edges_gdf_copy], ignore_index=True)
     edges_gdf = edges_gdf.reset_index()
-    edges_gdf = edges_gdf.rename(columns={'index': 'uniqueid',
-                                          'StartNode': 'start_nid',
-                                          'EndNode': 'end_nid',
-                                          'NumOfLanes': 'lanes',
-                                          'MaxMPH': 'maxspeed',
-                                          })
+    edges_gdf = edges_gdf.rename(
+        columns={
+            'index': 'uniqueid',
+            'StartNode': 'start_nid',
+            'EndNode': 'end_nid',
+            'NumOfLanes': 'lanes',
+            'MaxMPH': 'maxspeed',
+        }
+    )
     # Assume that the capacity for each lane is 1800
-    edges_gdf['capacity'] = edges_gdf['lanes']*1800
+    edges_gdf['capacity'] = edges_gdf['lanes'] * 1800
     edges_gdf['normal_capacity'] = edges_gdf['capacity']
     edges_gdf['normal_maxspeed'] = edges_gdf['maxspeed']
     # edges_gdf['fft'] = edges_gdf['length']/edges_gdf['maxspeed'] * 2.23694
@@ -760,10 +885,13 @@ def run_residual_demand(  # noqa: C901
     undamged_dir_path = residual_demand_dir / 'undamaged'
     undamged_dir_path.mkdir()
     os.chdir(undamged_dir_path)
-    run_on_undamaged_network(residual_demand_dir/'edges.csv',
-                             residual_demand_dir/'nodes.csv',
-                             od_file_pre,
-                             Path(run_dir / 'Results_det.json'), config_file_dict)
+    run_on_undamaged_network(
+        residual_demand_dir / 'edges.csv',
+        residual_demand_dir / 'nodes.csv',
+        od_file_pre,
+        Path(run_dir / 'Results_det.json'),
+        config_file_dict,
+    )
     os.chdir(residual_demand_dir)
 
     if damage_input['Type'] == 'MostlikelyDamageState':
@@ -771,31 +899,52 @@ def run_residual_demand(  # noqa: C901
         rlz = 0
         with Path(run_dir / f'Results_{rlz}.json').open() as f:
             results_rlz = json.load(f)
-        with Path(run_dir/'Results_det.json').open() as f:
+        with Path(run_dir / 'Results_det.json').open() as f:
             results_det = json.load(f)
         for asset_type, asset_type_dict in results_rlz.items():
             for asset_subtype, asset_subtype_dict in asset_type_dict.items():
                 for asset_id, asset_id_dict in asset_subtype_dict.items():
                     damage_dict = asset_id_dict['Damage']
                     for comp in damage_dict:
-                        damage_dict[comp] = int(results_det[asset_type][asset_subtype]\
-                        [asset_id]['R2Dres']['R2Dres_MostLikelyCriticalDamageState'])
+                        damage_dict[comp] = int(
+                            results_det[asset_type][asset_subtype][asset_id][
+                                'R2Dres'
+                            ]['R2Dres_MostLikelyCriticalDamageState']
+                        )
                     if 'Loss' in asset_id_dict:
                         loss_dist = asset_id_dict['Loss']
                         for comp in loss_dist['Repair']['Cost']:
-                            mean_cost_key = next(x for x in results_det[asset_type][asset_subtype]\
-                                [asset_id]['R2Dres'] if x.startswith('R2Dres_mean_RepairCost'))
+                            mean_cost_key = next(
+                                x
+                                for x in results_det[asset_type][asset_subtype][
+                                    asset_id
+                                ]['R2Dres']
+                                if x.startswith('R2Dres_mean_RepairCost')
+                            )
                             # A minmum cost of 0.1 is set to avoid division by zero
-                            loss_dist['Repair']['Cost'][comp] = max(results_det[asset_type][asset_subtype]\
-                            [asset_id]['R2Dres'][mean_cost_key], 0.1)
+                            loss_dist['Repair']['Cost'][comp] = max(
+                                results_det[asset_type][asset_subtype][asset_id][
+                                    'R2Dres'
+                                ][mean_cost_key],
+                                0.1,
+                            )
                         for comp in loss_dist['Repair']['Time']:
-                            mean_time_key = next(x for x in results_det[asset_type][asset_subtype]\
-                                [asset_id]['R2Dres'] if x.startswith('R2Dres_mean_RepairTime'))
+                            mean_time_key = next(
+                                x
+                                for x in results_det[asset_type][asset_subtype][
+                                    asset_id
+                                ]['R2Dres']
+                                if x.startswith('R2Dres_mean_RepairTime')
+                            )
                             # A minmum time of 0.1 is set to avoid division by zero
-                            loss_dist['Repair']['Time'][comp] = max(results_det[asset_type][asset_subtype]\
-                            [asset_id]['R2Dres'][mean_time_key], 0.1)
+                            loss_dist['Repair']['Time'][comp] = max(
+                                results_det[asset_type][asset_subtype][asset_id][
+                                    'R2Dres'
+                                ][mean_time_key],
+                                0.1,
+                            )
         rlz = 'mostlikely'
-        with (run_dir /f'Results_{rlz}.json').open('w') as f:
+        with (run_dir / f'Results_{rlz}.json').open('w') as f:
             json.dump(results_rlz, f)
 
         # Create a directory for the realization
@@ -806,29 +955,45 @@ def run_residual_demand(  # noqa: C901
         undamaged_time, damaged_time = create_delay_agg(od_file_pre, od_file_post)
         undamaged_congestion, damaged_congestion = create_congestion_agg(edges_csv)
         # Run the simulation
-        run_one_realization(residual_demand_dir/'edges.csv', residual_demand_dir/'nodes.csv',
-                            undamged_dir_path, od_file_post, Path(run_dir / f'Results_{rlz}.json'),
-                             Path(run_dir / 'Results_det.json'),
-                            config_file_dict)
+        run_one_realization(
+            residual_demand_dir / 'edges.csv',
+            residual_demand_dir / 'nodes.csv',
+            undamged_dir_path,
+            od_file_post,
+            Path(run_dir / f'Results_{rlz}.json'),
+            Path(run_dir / 'Results_det.json'),
+            config_file_dict,
+        )
         # Append relay and congestion results to the aggregated results
         undamaged_time, damaged_time = append_to_delay_agg(
-                undamaged_time, damaged_time, rlz_run_dir/'trip_info_compare.csv')
+            undamaged_time, damaged_time, rlz_run_dir / 'trip_info_compare.csv'
+        )
         undamaged_edge_vol_dir = undamged_dir_path / 'edge_vol'
-        damaged_edge_vol_dir = rlz_run_dir / 'damaged'/'edge_vol'
+        damaged_edge_vol_dir = rlz_run_dir / 'damaged' / 'edge_vol'
         undamaged_congestion, damaged_congestion = append_to_congestion_agg(
-            undamaged_congestion, damaged_congestion,
-            undamaged_edge_vol_dir, damaged_edge_vol_dir,
-            edges_csv)
+            undamaged_congestion,
+            damaged_congestion,
+            undamaged_edge_vol_dir,
+            damaged_edge_vol_dir,
+            edges_csv,
+        )
 
         # Write the aggregated results to the travel_delay_stats.csv and Results_det.json file
         os.chdir(residual_demand_dir)
-        aggregate_delay_results(undamaged_time, damaged_time, od_file_pre, od_file_post)
-        aggregate_congestions_results_to_det(undamaged_congestion, damaged_congestion,
-                                              Path(run_dir / 'Results_det.json'),
-                                              edges_csv)
+        aggregate_delay_results(
+            undamaged_time, damaged_time, od_file_pre, od_file_post
+        )
+        aggregate_congestions_results_to_det(
+            undamaged_congestion,
+            damaged_congestion,
+            Path(run_dir / 'Results_det.json'),
+            edges_csv,
+        )
 
-    elif damage_input['Type'] == 'SpecificRealization' or \
-            damage_input['Type'] == 'SampleFromRealizations':
+    elif (
+        damage_input['Type'] == 'SpecificRealization'
+        or damage_input['Type'] == 'SampleFromRealizations'
+    ):
         # Get the realizations to run
         rlz_to_run = select_realizations_to_run(damage_input, run_dir)
 
@@ -839,32 +1004,46 @@ def run_residual_demand(  # noqa: C901
         for rlz in rlz_to_run:
             print(f'Running realization {rlz}')  # noqa: T201
             # Create a directory for the realization
-            rlz_run_dir = residual_demand_dir/f'workdir.{rlz}'
+            rlz_run_dir = residual_demand_dir / f'workdir.{rlz}'
             rlz_run_dir.mkdir()
             os.chdir(rlz_run_dir)
 
             # Run the simulation
-            run_one_realization(residual_demand_dir/'edges.csv', residual_demand_dir/'nodes.csv',
-                            undamged_dir_path, od_file_post, Path(run_dir / f'Results_{rlz}.json'),
-                             Path(run_dir / 'Results_det.json'),
-                            config_file_dict)
+            run_one_realization(
+                residual_demand_dir / 'edges.csv',
+                residual_demand_dir / 'nodes.csv',
+                undamged_dir_path,
+                od_file_post,
+                Path(run_dir / f'Results_{rlz}.json'),
+                Path(run_dir / 'Results_det.json'),
+                config_file_dict,
+            )
 
             # Append relay and congestion results to the aggregated results
             undamaged_time, damaged_time = append_to_delay_agg(
-                    undamaged_time, damaged_time, rlz_run_dir/'trip_info_compare.csv')
+                undamaged_time, damaged_time, rlz_run_dir / 'trip_info_compare.csv'
+            )
             undamaged_edge_vol_dir = undamged_dir_path / 'edge_vol'
-            damaged_edge_vol_dir = rlz_run_dir / 'damaged'/'edge_vol'
+            damaged_edge_vol_dir = rlz_run_dir / 'damaged' / 'edge_vol'
             undamaged_congestion, damaged_congestion = append_to_congestion_agg(
-                undamaged_congestion, damaged_congestion,
-                undamaged_edge_vol_dir, damaged_edge_vol_dir,
-                edges_csv)
+                undamaged_congestion,
+                damaged_congestion,
+                undamaged_edge_vol_dir,
+                damaged_edge_vol_dir,
+                edges_csv,
+            )
             print(f'Rrealization {rlz} completed')  # noqa: T201
         # Write the aggregated results to the travel_delay_stats.csv and Results_det.json file
         os.chdir(residual_demand_dir)
-        aggregate_delay_results(undamaged_time, damaged_time, od_file_pre, od_file_post)
-        aggregate_congestions_results_to_det(undamaged_congestion, damaged_congestion,
-                                              Path(run_dir / 'Results_det.json'),
-                                              edges_csv)
+        aggregate_delay_results(
+            undamaged_time, damaged_time, od_file_pre, od_file_post
+        )
+        aggregate_congestions_results_to_det(
+            undamaged_congestion,
+            damaged_congestion,
+            Path(run_dir / 'Results_det.json'),
+            edges_csv,
+        )
     else:
         msg = 'Damage input type not recognized'
         raise ValueError(msg)
@@ -872,8 +1051,9 @@ def run_residual_demand(  # noqa: C901
     if geojson_needed:
         # If run in tool box, compile a geojson for visualization
         # Otherwise, the geojson is compiled in rWHALE
-        compile_r2d_results_geojson(residual_demand_dir,
-                                    Path(run_dir / 'Results_det.json'))
+        compile_r2d_results_geojson(
+            residual_demand_dir, Path(run_dir / 'Results_det.json')
+        )
 
     # f.close()
 
@@ -886,20 +1066,20 @@ if __name__ == '__main__':
         allow_abbrev=False,
     )
 
+    workflowArgParser.add_argument('--edgeFile', help='Edges geojson', required=True)
+
+    workflowArgParser.add_argument('--nodeFile', help='Nodes geojson', required=True)
+
     workflowArgParser.add_argument(
-        '--edgeFile', help='Edges geojson', required=True
+        '--ODFilePre',
+        help='Origin-Destination CSV file before hazard event',
+        required=True,
     )
 
     workflowArgParser.add_argument(
-        '--nodeFile', help='Nodes geojson', required=True
-    )
-
-    workflowArgParser.add_argument(
-        '--ODFilePre', help='Origin-Destination CSV file before hazard event', required=True
-    )
-
-    workflowArgParser.add_argument(
-        '--ODFilePost', help='Origin-Destination CSV file after hazard event', required=True
+        '--ODFilePost',
+        help='Origin-Destination CSV file after hazard event',
+        required=True,
     )
 
     workflowArgParser.add_argument(
@@ -928,11 +1108,11 @@ if __name__ == '__main__':
     wfArgs = workflowArgParser.parse_args()  # noqa: N816
 
     run_residual_demand(
-        edge_geojson = wfArgs.edgeFile,
-        node_geojson = wfArgs.nodeFile,
-        od_file_pre = wfArgs.ODFilePre,
-        od_file_post = wfArgs.ODFilePost,
-        config_file = wfArgs.configFile,
+        edge_geojson=wfArgs.edgeFile,
+        node_geojson=wfArgs.nodeFile,
+        od_file_pre=wfArgs.ODFilePre,
+        od_file_post=wfArgs.ODFilePost,
+        config_file=wfArgs.configFile,
         r2d_run_dir=wfArgs.r2dRunDir,
         residual_demand_dir=wfArgs.residualDemandRunDir,
     )

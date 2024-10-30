@@ -400,7 +400,8 @@ if os.path.exists('./model.tcl'):  # noqa: PTH110
 
 if Target == 'Soil-with-structure':
     copy_file(
-        f'MeshGenerator/models/Soil_with_structure.tcl', f'{meshdir}/model.tcl'  # noqa: F541
+        'MeshGenerator/models/Soil_with_structure.tcl',
+        f'{meshdir}/model.tcl',
     )
 
 # %%

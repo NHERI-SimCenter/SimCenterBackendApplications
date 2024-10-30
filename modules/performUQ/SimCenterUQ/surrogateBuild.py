@@ -83,28 +83,27 @@ try:
     error_tag = False  # global variable
 except:  # noqa: E722
     error_tag = True
-    print('Failed to import module:' + moduleName)  # noqa: T201
+    print('Failed to import module:' + moduleName)  # type: ignore # noqa: T201
 
 
-
-print("Initializing error log file..")  # noqa: T201
-print(f"Current working dir (getcwd): {os.getcwd()}")  # noqa: T201, PTH109
+print('Initializing error log file..')  # noqa: T201
+print(f'Current working dir (getcwd): {os.getcwd()}')  # noqa: T201, PTH109
 
 work_dir_tmp = sys.argv[1].replace(os.sep, '/')
-errFileName = os.path.join(work_dir_tmp,'dakota.err')  # noqa: N816, PTH118
+errFileName = os.path.join(work_dir_tmp, 'dakota.err')  # noqa: N816, PTH118
 
-develop_mode = (len(sys.argv)==8) # a flag for develeopmode  # noqa: PLR2004
+develop_mode = len(sys.argv) == 8  # a flag for develeopmode  # noqa: PLR2004
 if develop_mode:
     # import matplotlib
     # matplotlib.use('TkAgg')
     import matplotlib.pyplot as plt
-    print("Developer mode")  # noqa: T201
+
+    print('Developer mode')  # noqa: T201
 else:
     with open(errFileName, 'w') as f:  # noqa: PTH123
-        f.write("")
+        f.write('')
     sys.stderr = open(errFileName, 'w')  # noqa: SIM115, PTH123
-    print(f"Error file created at: {errFileName}")  # noqa: T201
-
+    print(f'Error file created at: {errFileName}')  # noqa: T201
 
 
 #
@@ -240,7 +239,7 @@ class surrogate(UQengine):  # noqa: D101
             self.global_seed = 42
 
         random.seed(self.global_seed)
-        np.random.seed( self.global_seed)
+        np.random.seed(self.global_seed)
         #
         # EE-UQ
         #
@@ -323,7 +322,7 @@ class surrogate(UQengine):  # noqa: D101
             self.do_parallel = True
 
         if self.do_parallel:
-            self.n_processor, self.pool = self.make_pool( self.global_seed)
+            self.n_processor, self.pool = self.make_pool(self.global_seed)
             self.cal_interval = self.n_processor
         else:
             self.n_processor = 1
@@ -422,10 +421,12 @@ class surrogate(UQengine):  # noqa: D101
             def subsample_XY(self, idx):  # noqa: N802, N803, RUF100
                 if self.Y_metadata is not None:
                     new_meta = self.Y_metadata
-                    new_meta['variance_structure'] = self.Y_metadata['variance_structure'][idx]
+                    new_meta['variance_structure'] = self.Y_metadata[
+                        'variance_structure'
+                    ][idx]
                     self.Y_metadata.update(new_meta)
                     print('metadata_updated')  # noqa: T201
-                self.set_XY(self.X[idx,:], self.Y[idx,:])
+                self.set_XY(self.X[idx, :], self.Y[idx, :])
 
         # Save model information
         if (surrogateJson['method'] == 'Sampling and Simulation') or (
@@ -593,11 +594,11 @@ class surrogate(UQengine):  # noqa: D101
             msg = f'Error running SimCenterUQ - Kernel name <{kernel}> not supported'
             self.exit(msg)
 
-        #if self.do_linear:
+        # if self.do_linear:
         #    kr = kr + GPy.kern.Linear(input_dim=x_dim, ARD=True)
 
         if self.do_mf:
-            kr = emf.kernels.LinearMultiFidelityKernel([kr.copy(), kr.copy()])  # noqa: F821
+            kr = emf.kernels.LinearMultiFidelityKernel([kr.copy(), kr.copy()])  # type: ignore # noqa: F821
 
         return kr
 
@@ -622,13 +623,13 @@ class surrogate(UQengine):  # noqa: D101
 
             # for multi fidelity case
         else:
-            X_list, Y_list = emf.convert_lists_to_array.convert_xy_lists_to_arrays(  # noqa: N806, F821
+            X_list, Y_list = emf.convert_lists_to_array.convert_xy_lists_to_arrays(  # noqa: N806, F821 # type: ignore
                 [X_dummy, X_dummy], [Y_dummy, Y_dummy]
             )
 
-            for i in range(y_dim):  # noqa: B007, F821
-                m_tmp = GPyMultiOutputWrapper(  # noqa: F821
-                    emf.models.GPyLinearMultiFidelityModel(  # noqa: F821
+            for i in range(y_dim):  # type: ignore # noqa: B007, F821
+                m_tmp = GPyMultiOutputWrapper(  # noqa: F821 # type: ignore
+                    emf.models.GPyLinearMultiFidelityModel(  # noqa: F821 # type: ignore
                         X_list, Y_list, kernel=kr.copy(), n_fidelities=2
                     ),
                     2,
@@ -655,16 +656,14 @@ class surrogate(UQengine):  # noqa: D101
         self.m_list = [0] * self.y_dim
         if self.do_linear:
             self.lin_list = [0] * self.y_dim
-  # noqa: W293
         self.m_var_list, self.var_str, self.Y_mean = (
             [0] * self.y_dim,
             [1] * self.y_dim,
             [0] * self.y_dim,
         )
-  # noqa: W293
         # below to facilitate better optimization bounds
-        self.init_noise_var = [None]*y_dim
-        self.init_process_var= [None]*y_dim
+        self.init_noise_var = [None] * y_dim
+        self.init_process_var = [None] * y_dim
 
         for i in range(y_dim):
             self.m_list[i] = self.create_gpy_model(X_dummy, Y_dummy, kr)
@@ -692,7 +691,7 @@ class surrogate(UQengine):  # noqa: D101
                     0,
                 )  # if high-fidelity response is constant - just return constant
             else:  # noqa: RET505
-                X_list = convert_x_list_to_array([X, X])  # noqa: N806, F821
+                X_list = convert_x_list_to_array([X, X])  # type: ignore # noqa: N806, F821
                 X_list_h = X_list[X.shape[0] :]  # noqa: N806
                 return m_tmp.predict(X_list_h)
 
@@ -740,14 +739,15 @@ class surrogate(UQengine):  # noqa: D101
         else:
             Y_lfs = Y_lf  # noqa: N806
 
-
         if self.do_linear:
-            self.linear_list = [True] * X_hf.shape[1] # SY - TEMPORARY
+            self.linear_list = [True] * X_hf.shape[1]  # SY - TEMPORARY
         else:
             self.linear_list = [False] * X_hf.shape[1]  # SY - TEMPORARY
 
-        if sum(self.linear_list)>0:
-            self.lin_list[ny] = LinearRegression().fit(X_hf[:, self.linear_list], Y_hfs)
+        if sum(self.linear_list) > 0:
+            self.lin_list[ny] = LinearRegression().fit(
+                X_hf[:, self.linear_list], Y_hfs
+            )
             y_pred = self.lin_list[ny].predict(X_hf[:, self.linear_list])
             Y_hfs = Y_hfs - y_pred  # noqa: N806
 
@@ -787,7 +787,12 @@ class surrogate(UQengine):  # noqa: D101
             elif n_unique == X_hf.shape[0]:  # no repl
                 # Y_mean=Y_hfs[X_idx]
                 # Y_mean1, nugget_mean1 = self.predictStoMeans(X_new, Y_mean)
-                Y_mean1, nugget_mean1, initial_noise_variance, initial_process_variance = self.predictStoMeans(X_hf, Y_hfs)  # noqa: N806
+                (
+                    Y_mean1,  # noqa: N806
+                    nugget_mean1,
+                    initial_noise_variance,
+                    initial_process_variance,
+                ) = self.predictStoMeans(X_hf, Y_hfs)
 
                 if np.max(nugget_mean1) < 1.0e-10:  # noqa: PLR2004
                     self.set_XY(m_tmp, ny, X_hf, Y_hfs, enforce_hom=True)
@@ -806,7 +811,6 @@ class surrogate(UQengine):  # noqa: D101
                     self.init_noise_var[ny] = initial_noise_variance
                     self.init_process_var[ny] = initial_process_variance
             else:
-
                 # nonunique set - check if nugget is zero
                 Y_mean, Y_var = np.zeros((n_unique, 1)), np.zeros((n_unique, 1))  # noqa: N806
 
@@ -831,9 +835,15 @@ class surrogate(UQengine):  # noqa: D101
                     return m_tmp
 
                 elif self.nugget_opt == 'Heteroscedastic':  # noqa: RET505
-
-                    dummy, dummy, initial_noise_variance, initial_process_variance = self.predictStoMeans(X_hf,  # noqa: PLW0128
-                                                                                                          Y_hfs)  # noqa: N806, RUF100
+                    (
+                        dummy,
+                        dummy,  # noqa: PLW0128
+                        initial_noise_variance,
+                        initial_process_variance,
+                    ) = self.predictStoMeans(
+                        X_hf,
+                        Y_hfs,
+                    )  # noqa: N806, RUF100
                     #
                     # Constructing secondary GP model - can we make use of the "variance of sample variance"
                     #
@@ -891,7 +901,7 @@ class surrogate(UQengine):  # noqa: D101
             (
                 X_list_tmp,  # noqa: N806
                 Y_list_tmp,  # noqa: N806
-            ) = emf.convert_lists_to_array.convert_xy_lists_to_arrays(  # noqa: F821
+            ) = emf.convert_lists_to_array.convert_xy_lists_to_arrays(  # noqa: F821 # type: ignore
                 [X_hf, X_lf], [Y_hfs, Y_lfs]
             )
             m_tmp.set_data(X=X_list_tmp, Y=Y_list_tmp)
@@ -909,26 +919,27 @@ class surrogate(UQengine):  # noqa: D101
 
     def predictStoVars(self, X_repl, Y_var_repl, X_new, Y_mean, counts):  # noqa: ARG002, D102, N802, N803
         my_x_dim = X_repl.shape[1]
-        #kernel_var = GPy.kern.Matern52(
+        # kernel_var = GPy.kern.Matern52(
         #    input_dim=my_x_dim, ARD=True
-        #) + GPy.kern.Linear(input_dim=my_x_dim, ARD=True)
+        # ) + GPy.kern.Linear(input_dim=my_x_dim, ARD=True)
 
-        kernel_var = GPy.kern.Matern52( input_dim=my_x_dim, ARD=True)
+        kernel_var = GPy.kern.Matern52(input_dim=my_x_dim, ARD=True)
         log_vars = np.log(Y_var_repl)
         m_var = GPy.models.GPRegression(
             X_repl, log_vars, kernel_var, normalizer=True, Y_metadata=None
         )
-        #m_var.Gaussian_noise.constrain_bounded(0.2, 2.0, warning=False)
+        # m_var.Gaussian_noise.constrain_bounded(0.2, 2.0, warning=False)
         m_var.Gaussian_noise.constrain_bounded(0.5, 2.0, warning=False)
-        m_var.Gaussian_noise = 1 # initial points
+        m_var.Gaussian_noise = 1  # initial points
 
         for parname in m_var.parameter_names():
             if parname.endswith('lengthscale'):
                 for nx in range(X_repl.shape[1]):
                     myrange = np.max(X_repl, axis=0) - np.min(X_repl, axis=0)
-  # noqa: W293
-                    m_var.Mat52.lengthscale[[nx]].constrain_bounded( myrange[nx]/X_repl.shape[0], myrange[nx]*5,warning=False)
-                    m_var.Mat52.lengthscale[[nx]] = myrange[nx] # initial points
+                    m_var.Mat52.lengthscale[[nx]].constrain_bounded(
+                        myrange[nx] / X_repl.shape[0], myrange[nx] * 5, warning=False
+                    )
+                    m_var.Mat52.lengthscale[[nx]] = myrange[nx]  # initial points
                     # m_var.Gaussian_noise.value = 0.05
                     # m_var.Gaussian_noise.constrain_bounded(0.1/np.var(log_vars), 0.8/np.var(log_vars), warning=False)
                     # m_var.Mat52.lengthscale[[nx]].constrain_bounded(
@@ -941,75 +952,75 @@ class surrogate(UQengine):  # noqa: D101
                     #    myrange[nx] * 100,
                     #    warning=False,
                     # )
-                    #TODO change the kernel  # noqa: TD002, TD004
-        #m_var.optimize(max_f_eval=1000)
-        #m_var.optimize_restarts(
+                    # TODO change the kernel  # noqa: TD002, TD004
+        # m_var.optimize(max_f_eval=1000)
+        # m_var.optimize_restarts(
         #    self.nopt, parallel=self.is_paralle_opt_safe, num_processes=self.n_processor, verbose=False
-        #)
-        print("Calibrating Secondary surrogate")  # noqa: T201
-        m_var = my_optimize_restart(m_var,self.nopt)
+        # )
+        print('Calibrating Secondary surrogate')  # noqa: T201
+        m_var = my_optimize_restart(m_var, self.nopt)
 
-        #print(m_var)  # noqa: RUF100, T201
+        # print(m_var)  # noqa: RUF100, T201
 
         log_var_pred, dum = m_var.predict(X_new)
         var_pred = np.exp(log_var_pred)
 
-        norm_var_str = (var_pred.T[0]/counts) / max(var_pred.T[0]/counts)
+        norm_var_str = (var_pred.T[0] / counts) / max(var_pred.T[0] / counts)
         self.var_norm = 1
         if self.set_normalizer:
             self.var_norm = np.mean(var_pred.T[0])
-            #norm_var_str = (var_pred.T[0]) / np.var(Y_mean)
-            norm_var_str = var_pred.T[0] /  self.var_norm
+            # norm_var_str = (var_pred.T[0]) / np.var(Y_mean)
+            norm_var_str = var_pred.T[0] / self.var_norm
             # if normalization was used..
         else:
             norm_var_str = var_pred.T[0]  # if normalization was not used..
 
-  # noqa: W293
 
         # norm_var_str = (X_new+2)**2/max((X_new+2)**2)
         Y_metadata = {'variance_structure': norm_var_str / counts}  # noqa: N806
 
         if develop_mode:
-
             plt.figure(3)
-            nx=0
-            plt.scatter(X_repl[:, nx], log_vars, alpha=0.1);  # noqa: E703
-            plt.scatter(X_new[:, nx], log_var_pred, alpha=0.1);  # noqa: E703
+            nx = 0
+            plt.scatter(X_repl[:, nx], log_vars, alpha=0.1)
+            plt.scatter(X_new[:, nx], log_var_pred, alpha=0.1)
             plt.show()
-  # noqa: W293
             plt.figure(1)
-            dum1, dum2 = m_var.predict(X_repl)  # noqa: W291
+            dum1, dum2 = m_var.predict(X_repl)
 
-            plt.title("Sto Log-var QoI")
-            plt.scatter(log_vars, dum1,alpha=0.5);  # noqa: E703
-            plt.scatter(log_vars, log_vars,alpha=0.5);  # noqa: E703
-            plt.xlabel("exact"); plt.ylabel("pred"); plt.grid()  # noqa: E702
+            plt.title('Sto Log-var QoI')
+            plt.scatter(log_vars, dum1, alpha=0.5)
+            plt.scatter(log_vars, log_vars, alpha=0.5)
+            plt.xlabel('exact')
+            plt.ylabel('pred')
+            plt.grid()
             print(m_var)  # noqa: T201
             print(m_var.Mat52.lengthscale)  # noqa: T201
-            plt.show();  # noqa: E703
-  # noqa: W293
+            plt.show()
         return Y_metadata, m_var, norm_var_str
 
     def predictStoMeans(self, X, Y):  # noqa: N802, N803, D102
         # under homoscedasticity
         my_x_dim = X.shape[1]
         myrange = np.max(X, axis=0) - np.min(X, axis=0)
-        kernel_mean = GPy.kern.Matern52(input_dim=my_x_dim, ARD=True, lengthscale=myrange)
+        kernel_mean = GPy.kern.Matern52(
+            input_dim=my_x_dim, ARD=True, lengthscale=myrange
+        )
         # kernel_mean = GPy.kern.Matern52(input_dim=my_x_dim, ARD=True) + GPy.kern.Linear(input_dim=my_x_dim, ARD=True)
-        #if self.do_linear and not (self.isEEUQ or self.isWEUQ):
+        # if self.do_linear and not (self.isEEUQ or self.isWEUQ):
         #    kernel_mean = kernel_mean + GPy.kern.Linear(input_dim=my_x_dim, ARD=True)
-        #  # noqa: W291
+        #
         # if sum(self.linear_list)>0:
-        #  # noqa: W291
+        #
         #     lin_tmp = LinearRegression().fit(X[:, self.linear_list], Y)
         #     y_pred = lin_tmp.predict(X[:, self.linear_list])
-        #  # noqa: W291
+        #
         #     # Set GP
-        #  # noqa: W291
+        #
         #     m_mean = GPy.models.GPRegression(
         #         X, Y - y_pred, kernel_mean, normalizer=True, Y_metadata=None
         #     )
-        #  # noqa: W291
+        #
         # else:
         #     m_mean = GPy.models.GPRegression(
         #         X, Y, kernel_mean, normalizer=True, Y_metadata=None
@@ -1018,7 +1029,7 @@ class surrogate(UQengine):  # noqa: D101
             X, Y, kernel_mean, normalizer=True, Y_metadata=None
         )
 
-        '''
+        """
         for parname in m_mean.parameter_names():
             if parname.endswith('lengthscale'):
                 for nx in range(X.shape[1]):
@@ -1053,17 +1064,17 @@ class surrogate(UQengine):  # noqa: D101
                           myrange[nx] * 1,
                           warning=False
                         )
-        '''  # noqa: Q001
+        """
 
         # m_mean.optimize(messages=True, max_f_eval=1000)
         # # m_mean.Gaussian_noise.variance = np.var(Y) # First calibrate parameters
         # m_mean.optimize_restarts(
         #     self.nopt, parallel=self.is_paralle_opt_safe, num_processes=self.n_processor, verbose=True
         # )  # First calibrate parameters
-        print("calibrating tertiary surrogate")  # noqa: T201
-        m_mean = my_optimize_restart(m_mean,self.nopt)
+        print('calibrating tertiary surrogate')  # noqa: T201
+        m_mean = my_optimize_restart(m_mean, self.nopt)
 
-        #m_mean.optimize(messages=True, max_f_eval=1000)
+        # m_mean.optimize(messages=True, max_f_eval=1000)
 
         # if self.do_linear:
 
@@ -1077,22 +1088,27 @@ class surrogate(UQengine):  # noqa: D101
         initial_noise_variance = float(m_mean.Gaussian_noise.variance)
         initial_process_variance = float(m_mean.Mat52.variance)
 
-        #if np.sum(self.linear_list) > 0:
+        # if np.sum(self.linear_list) > 0:
         #    mean_pred = mean_pred + lin_tmp.predict(X[:, self.linear_list])
 
         if develop_mode:
             print(m_mean)  # noqa: T201
-            plt.scatter(X[:, 0], Y,alpha=0.2)
+            plt.scatter(X[:, 0], Y, alpha=0.2)
             plt.plot(X[:, 0], mean_pred, 'rx')
-            plt.errorbar(X[:, 0],mean_pred.T[0],yerr=np.sqrt(mean_var.T)[0],fmt='rx',alpha=0.1);  # noqa: E703
-            plt.title("Sto Log-mean QoI (initial)")
+            plt.errorbar(
+                X[:, 0],
+                mean_pred.T[0],
+                yerr=np.sqrt(mean_var.T)[0],
+                fmt='rx',
+                alpha=0.1,
+            )
+            plt.title('Sto Log-mean QoI (initial)')
             plt.show()
 
             plt.plot(m_mean.Y, mean_pred, 'rx')
-            plt.scatter(m_mean.Y, m_mean.Y,alpha=0.2)
-            plt.title("Sto Log-mean QoI (initial)")
+            plt.scatter(m_mean.Y, m_mean.Y, alpha=0.2)
+            plt.title('Sto Log-mean QoI (initial)')
             plt.show()
-
 
         return mean_pred, mean_var, initial_noise_variance, initial_process_variance
 
@@ -1120,7 +1136,7 @@ class surrogate(UQengine):  # noqa: D101
                     self.n_processor,
                     self.is_paralle_opt_safe,
                     self.init_noise_var[ny],
-                    self.init_process_var[ny]
+                    self.init_process_var[ny],
                 )
                 for ny in range(self.y_dim)
             )
@@ -1132,26 +1148,26 @@ class surrogate(UQengine):  # noqa: D101
 
             # TODO: terminate it gracefully....  # noqa: TD002
             # see https://stackoverflow.com/questions/21104997/keyboard-interrupt-with-pythons-multiprocessing
-  # noqa: W293
             if develop_mode:
                 for ny in range(self.y_dim):
                     print(self.m_list[ny])  # noqa: T201
                     # print(m_tmp.rbf.lengthscale)
-                    tmp = self.m_list[ny].predict(self.m_list[ny].X)[0]  # noqa: W291
-  # noqa: W293
+                    tmp = self.m_list[ny].predict(self.m_list[ny].X)[0]
                     # this one has a noise
-                    plt.title("Original Mean QoI")
+                    plt.title('Original Mean QoI')
                     plt.scatter(self.m_list[ny].Y, tmp, alpha=0.1)
                     plt.scatter(self.m_list[ny].Y, self.m_list[ny].Y, alpha=0.1)
-                    plt.xlabel("exact")
-                    plt.ylabel("pred")
+                    plt.xlabel('exact')
+                    plt.ylabel('pred')
                     plt.show()
 
-                    plt.title("Original Mean QoI")
-                    plt.scatter(self.m_list[ny].X[:,0], tmp, alpha=0.1)
-                    plt.scatter(self.m_list[ny].X[:,0], self.m_list[ny].Y, alpha=0.1)
-                    plt.xlabel("exact")
-                    plt.ylabel("pred")
+                    plt.title('Original Mean QoI')
+                    plt.scatter(self.m_list[ny].X[:, 0], tmp, alpha=0.1)
+                    plt.scatter(
+                        self.m_list[ny].X[:, 0], self.m_list[ny].Y, alpha=0.1
+                    )
+                    plt.xlabel('exact')
+                    plt.ylabel('pred')
                     plt.show()
         else:
             for ny in range(self.y_dim):
@@ -1167,23 +1183,22 @@ class surrogate(UQengine):  # noqa: D101
                     self.n_processor,
                     self.is_paralle_opt_safe,
                     self.init_noise_var[ny],
-                    self.init_process_var[ny]
+                    self.init_process_var[ny],
                 )
                 if msg != '':
                     self.exit(msg)
-        ####
+            ####
             if develop_mode:
                 print(self.m_list[ny])  # noqa: T201
                 # print(m_tmp.rbf.lengthscale)
                 tmp = self.m_list[ny].predict(self.m_list[ny].X)
-                plt.title("Final Mean QoI")
+                plt.title('Final Mean QoI')
                 plt.scatter(self.m_list[ny].Y, tmp[0], alpha=0.1)
                 plt.scatter(self.m_list[ny].Y, self.m_list[ny].Y, alpha=0.1)
-                plt.xlabel("exact")
-                plt.ylabel("pred")
-                plt.show()  # noqa: W291
+                plt.xlabel('exact')
+                plt.ylabel('pred')
+                plt.show()
 
-  # noqa: W293
         # because EE-UQ results are more likely to have huge nugget.
         # if False:
         # if self.isEEUQ:
@@ -1215,9 +1230,6 @@ class surrogate(UQengine):  # noqa: D101
         return Y_preds, Y_pred_vars, Y_pred_vars_w_measures, e2
 
     def train_surrogate(self, t_init):  # noqa: C901, D102, PLR0915
-
-
-
         self.seed = 43
         np.random.seed(43)
 
@@ -1301,7 +1313,6 @@ class surrogate(UQengine):  # noqa: D101
 
         X_hf_tmp = model_hf.sampling(max([model_hf.n_init - model_hf.n_existing, 0]))  # noqa: N806
 
-
         #
         # if X is from a data file & Y is from simulation
         #
@@ -1358,7 +1369,7 @@ class surrogate(UQengine):  # noqa: D101
 
         stoch_idx = []  # noqa: F841
         for i in range(y_dim):
-            print("Setting up QoI {} among {}".format(i+1,y_dim))  # noqa: T201, UP032
+            print('Setting up QoI {} among {}'.format(i + 1, y_dim))  # noqa: T201, UP032
             self.m_list[i] = self.set_XY(
                 self.m_list[i],
                 i,
@@ -1367,7 +1378,6 @@ class surrogate(UQengine):  # noqa: D101
                 self.X_lf,
                 self.Y_lf[:, i][np.newaxis].transpose(),
             )  # log-transform is inside set_XY
-
 
             # check stochastic ?
             # if self.stochastic[i] and not self.do_mf:
@@ -1425,7 +1435,6 @@ class surrogate(UQengine):  # noqa: D101
             #         self.indices_unique = indices_unique_
             #         self.n_unique_hf[ny] = n_unique_hf_
 
-
         #
         # Verification measures
         #
@@ -1447,7 +1456,9 @@ class surrogate(UQengine):  # noqa: D101
             # Initial calibration
 
             # Calibrate self.m_list
-            self.Y_cvs, self.Y_cv_vars, self.Y_cv_var_w_measures, e2 = self.calibrate()
+            self.Y_cvs, self.Y_cv_vars, self.Y_cv_var_w_measures, e2 = (
+                self.calibrate()
+            )
 
             if self.do_logtransform:
                 # self.Y_cv = np.exp(2*self.Y_cvs+self.Y_cv_vars)*(np.exp(self.Y_cv_vars)-1) # in linear space
@@ -1587,78 +1598,128 @@ class surrogate(UQengine):  # noqa: D101
         print(f'3. time = {self.sim_time:.2f} s', flush=True)  # noqa: T201
 
         if develop_mode:
-            print("CV: inbound50")  # noqa: T201
+            print('CV: inbound50')  # noqa: T201
             print(self.inbound50)  # noqa: T201
-            print("CV: max coverage")  # noqa: T201
+            print('CV: max coverage')  # noqa: T201
             print(self.max_coverage)  # noqa: T201
-            print("CV: quantile values")  # noqa: T201
+            print('CV: quantile values')  # noqa: T201
             print(self.quantile_reconst_list)  # noqa: T201
 
-
-            ny = 0;  # noqa: E703
-            nx =0;  # noqa: E703
+            ny = 0
+            nx = 0
             sorted_y_std = np.sqrt(self.Y_cv_var_w_measure[:, ny])
             sorted_y_std0 = np.sqrt(self.Y_cv_var[:, ny])
 
-            plt.errorbar(self.X_hf[:, nx], (self.Y_cv[:, ny]), yerr=sorted_y_std, fmt='x',alpha=50/self.X_hf.shape[0]);  # noqa: E703
-            plt.errorbar(self.X_hf[:, nx], (self.Y_cv[:, ny]), yerr=sorted_y_std0, fmt='x',alpha=50/self.X_hf.shape[0]);  # noqa: E703
-            plt.scatter(self.X_hf[:, nx], (self.Y_hf[:, ny]), c='r',alpha=0.1);  # noqa: E703
-            plt.title("RV={}, QoI={}".format(nx + 1, ny + 1))  # noqa: UP032
+            plt.errorbar(
+                self.X_hf[:, nx],
+                (self.Y_cv[:, ny]),
+                yerr=sorted_y_std,
+                fmt='x',
+                alpha=50 / self.X_hf.shape[0],
+            )
+            plt.errorbar(
+                self.X_hf[:, nx],
+                (self.Y_cv[:, ny]),
+                yerr=sorted_y_std0,
+                fmt='x',
+                alpha=50 / self.X_hf.shape[0],
+            )
+            plt.scatter(self.X_hf[:, nx], (self.Y_hf[:, ny]), c='r', alpha=0.1)
+            plt.title('RV={}, QoI={}'.format(nx + 1, ny + 1))  # noqa: UP032
             plt.show()
 
-            log_Y_cv_sample = np.random.normal(self.Y_cvs[:, ny],np.sqrt(self.Y_cv_var_w_measures[:, ny]))  # noqa: N806, F841
+            log_Y_cv_sample = np.random.normal(  # noqa: F841, N806
+                self.Y_cvs[:, ny], np.sqrt(self.Y_cv_var_w_measures[:, ny])
+            )
 
             ny = 0
-            plt.scatter(self.Y_hf[:, ny], self.Y_cv[:, ny],alpha=0.1);  # noqa: E703
-            plt.errorbar(self.Y_hf[:, ny], self.Y_cv[:, ny], yerr=sorted_y_std, fmt='x',alpha=0.1);  # noqa: E703
-            plt.scatter(self.Y_hf[:, ny], self.Y_hf[:, ny],alpha=0.1);  # noqa: E703
-            plt.title("QoI = {}".format(ny+1))  # noqa: UP032
+            plt.scatter(self.Y_hf[:, ny], self.Y_cv[:, ny], alpha=0.1)
+            plt.errorbar(
+                self.Y_hf[:, ny],
+                self.Y_cv[:, ny],
+                yerr=sorted_y_std,
+                fmt='x',
+                alpha=0.1,
+            )
+            plt.scatter(self.Y_hf[:, ny], self.Y_hf[:, ny], alpha=0.1)
+            plt.title('QoI = {}'.format(ny + 1))  # noqa: UP032
             plt.show()
 
-            plt.scatter(np.log10(self.Y_hf[:, ny]),np.log10((self.Y_cv[:, ny])), alpha=1,marker='x');  # noqa: E703, UP034
-            plt.plot(np.log10(self.Y_hf[:, ny]),np.log10(self.Y_hf[:, ny]),alpha=1,color='r');  # noqa: E703
-            mycor_CV = np.corrcoef(self.Y_hf[:, nx], self.Y_cv[:, ny])[1,0]  # noqa: N806
-            mycor_log_CV = np.corrcoef(np.log(self.Y_hf[:, nx]), np.log(self.Y_cv[:, ny]))[1,0]  # noqa: N806
-            plt.title(f"train CV rho={round(mycor_CV*100)/100} rho_log={round(mycor_log_CV*100)/100}")
-            plt.xlabel("QoI exact");  # noqa: E703, W291
-            plt.ylabel("QoI pred median");  # noqa: E703, W291
+            plt.scatter(
+                np.log10(self.Y_hf[:, ny]),
+                np.log10((self.Y_cv[:, ny])),  # noqa: UP034
+                alpha=1,
+                marker='x',
+            )
+            plt.plot(
+                np.log10(self.Y_hf[:, ny]),
+                np.log10(self.Y_hf[:, ny]),
+                alpha=1,
+                color='r',
+            )
+            mycor_CV = np.corrcoef(self.Y_hf[:, nx], self.Y_cv[:, ny])[1, 0]  # noqa: N806
+            mycor_log_CV = np.corrcoef(  # noqa: N806
+                np.log(self.Y_hf[:, nx]), np.log(self.Y_cv[:, ny])
+            )[1, 0]
+            plt.title(
+                f'train CV rho={round(mycor_CV*100)/100} rho_log={round(mycor_log_CV*100)/100}'
+            )
+            plt.xlabel('QoI exact')
+            plt.ylabel('QoI pred median')
             plt.grid()
             plt.show()
 
-            [a,b] = self.m_list[0].predict(self.m_list[0].X)
+            [a, b] = self.m_list[0].predict(self.m_list[0].X)
 
             if sum(self.linear_list) > 0:
-                a = a + self.lin_list[ny].predict(self.X_hf[:, self.linear_list])[:, 0:1]
+                a = (
+                    a
+                    + self.lin_list[ny].predict(self.X_hf[:, self.linear_list])[
+                        :, 0:1
+                    ]
+                )
             # Don't use b
 
-            plt.scatter(np.log10(self.Y_hf[:, ny]),np.log10(np.exp(a[:, ny])),alpha=1,marker='x');  # noqa: E703
-            plt.plot(np.log10(self.Y_hf[:, ny]),np.log10(self.Y_hf[:, ny]),alpha=1,color='r');  # noqa: E703
-            mycor = np.corrcoef(self.Y_hf[:, ny], np.exp(a[:, ny]))[1,0]
-            mycor_log = np.corrcoef(np.log(self.Y_hf[:, ny]), a[:, ny])[1,0]
-            plt.title(f"train rho={round(mycor*100)/100} rho_log={round(mycor_log*100)/100}")
-            plt.xlabel("QoI exact");  # noqa: E703, W291
-            plt.ylabel("QoI pred median");  # noqa: E703, W291
+            plt.scatter(
+                np.log10(self.Y_hf[:, ny]),
+                np.log10(np.exp(a[:, ny])),
+                alpha=1,
+                marker='x',
+            )
+            plt.plot(
+                np.log10(self.Y_hf[:, ny]),
+                np.log10(self.Y_hf[:, ny]),
+                alpha=1,
+                color='r',
+            )
+            mycor = np.corrcoef(self.Y_hf[:, ny], np.exp(a[:, ny]))[1, 0]
+            mycor_log = np.corrcoef(np.log(self.Y_hf[:, ny]), a[:, ny])[1, 0]
+            plt.title(
+                f'train rho={round(mycor*100)/100} rho_log={round(mycor_log*100)/100}'
+            )
+            plt.xlabel('QoI exact')
+            plt.ylabel('QoI pred median')
             plt.grid()
             plt.show()
 
-            plt.scatter((self.Y_hf[:, ny]),(np.exp(a[:, ny])),alpha=1,marker='x');  # noqa: E703
-            plt.plot((self.Y_hf[:, ny]),(self.Y_hf[:, ny]),alpha=1,color='r');  # noqa: E703
-            mycor = np.corrcoef(self.Y_hf[:, ny], np.exp(a[:, ny]))[1,0]
-            mycor_log = np.corrcoef(np.log(self.Y_hf[:, ny]), a[:, ny])[1,0]
-            plt.title(f"train rho={round(mycor*100)/100} rho_log={round(mycor_log*100)/100}")
-            plt.xlabel("QoI exact");  # noqa: E703
-            plt.ylabel("QoI pred median");  # noqa: E703
+            plt.scatter((self.Y_hf[:, ny]), (np.exp(a[:, ny])), alpha=1, marker='x')
+            plt.plot((self.Y_hf[:, ny]), (self.Y_hf[:, ny]), alpha=1, color='r')
+            mycor = np.corrcoef(self.Y_hf[:, ny], np.exp(a[:, ny]))[1, 0]
+            mycor_log = np.corrcoef(np.log(self.Y_hf[:, ny]), a[:, ny])[1, 0]
+            plt.title(
+                f'train rho={round(mycor*100)/100} rho_log={round(mycor_log*100)/100}'
+            )
+            plt.xlabel('QoI exact')
+            plt.ylabel('QoI pred median')
             plt.grid()
             plt.show()
 
-
-            plt.scatter((self.X_hf[:, nx]), (self.Y_hf[:, ny]), alpha=1, color='r');  # noqa: E703
-            plt.scatter((self.X_hf[:, nx]), (np.exp(a[:, ny])), alpha=1, marker='x');  # noqa: E703
-            plt.xlabel("X");  # noqa: E703
-            plt.ylabel("QoI pred median");  # noqa: E703
+            plt.scatter((self.X_hf[:, nx]), (self.Y_hf[:, ny]), alpha=1, color='r')
+            plt.scatter((self.X_hf[:, nx]), (np.exp(a[:, ny])), alpha=1, marker='x')
+            plt.xlabel('X')
+            plt.ylabel('QoI pred median')
             plt.grid()
             plt.show()
-
 
             # plt.scatter(np.log10(self.Y_hf[:, ny]),np.log10(np.exp(log_Y_cv_sample)), alpha=1,marker='x');
             # plt.plot(np.log10(self.Y_hf[:, ny]),np.log10(self.Y_hf[:, ny]),alpha=1,color='r');
@@ -1669,45 +1730,64 @@ class surrogate(UQengine):  # noqa: D101
             # plt.grid()
             # plt.show()
 
-            X_test = np.genfromtxt(r'C:\Users\SimCenter\Dropbox\SimCenterPC\Stochastic_GP_validation\input_test.csv', delimiter=',')  # noqa: N806
-            Y_test = np.genfromtxt(r'C:\Users\SimCenter\Dropbox\SimCenterPC\Stochastic_GP_validation\output_test.csv', delimiter=',')  # noqa: N806
-            [a,b] = self.m_list[0].predict(X_test)
+            X_test = np.genfromtxt(  # noqa: N806
+                r'C:\Users\SimCenter\Dropbox\SimCenterPC\Stochastic_GP_validation\input_test.csv',
+                delimiter=',',
+            )
+            Y_test = np.genfromtxt(  # noqa: N806
+                r'C:\Users\SimCenter\Dropbox\SimCenterPC\Stochastic_GP_validation\output_test.csv',
+                delimiter=',',
+            )
+            [a, b] = self.m_list[0].predict(X_test)
 
             if sum(self.linear_list) > 0:
-                a = a + self.lin_list[ny].predict(X_test[:, self.linear_list])[:, 0:1]
+                a = (
+                    a
+                    + self.lin_list[ny].predict(X_test[:, self.linear_list])[:, 0:1]
+                )
             # Don't use b
-  # noqa: W293
-            plt.scatter(np.log10(Y_test),np.log10(np.exp(a[:, ny])),alpha=1,marker='x');  # noqa: E703
-            plt.plot(np.log10(Y_test),np.log10(Y_test),alpha=1,color='r');  # noqa: E703
-            mycor_Test = np.corrcoef(Y_test, np.exp(a[:, ny]))[1,0]  # noqa: N806
-            mycor_log_Test = np.corrcoef(np.log(Y_test), a[:, ny])[1,0]  # noqa: N806
-            plt.title(f"test rho={round(mycor_Test*100)/100} rho_log={round(mycor_log_Test*100)/100}")
-            plt.xlabel("QoI exact");  # noqa: E703
-            plt.ylabel("QoI pred median");  # noqa: E703
+            plt.scatter(
+                np.log10(Y_test), np.log10(np.exp(a[:, ny])), alpha=1, marker='x'
+            )
+            plt.plot(np.log10(Y_test), np.log10(Y_test), alpha=1, color='r')
+            mycor_Test = np.corrcoef(Y_test, np.exp(a[:, ny]))[1, 0]  # noqa: N806
+            mycor_log_Test = np.corrcoef(np.log(Y_test), a[:, ny])[1, 0]  # noqa: N806
+            plt.title(
+                f'test rho={round(mycor_Test*100)/100} rho_log={round(mycor_log_Test*100)/100}'
+            )
+            plt.xlabel('QoI exact')
+            plt.ylabel('QoI pred median')
             plt.grid()
             plt.show()
-  # noqa: W293
             #
             # Predict variance
             #
 
             log_var_pred, dum = self.m_var_list[0].predict(X_test)
-            log_Y_var_pred_w_measure = b + np.exp(log_var_pred) * self.m_list[ny].Gaussian_noise.parameters  # noqa: N806
+            log_Y_var_pred_w_measure = (  # noqa: N806
+                b + np.exp(log_var_pred) * self.m_list[ny].Gaussian_noise.parameters
+            )
 
             qualtile_vals = np.arange(0.1, 1, 0.1)
             qualtile_reconst = np.zeros([len(qualtile_vals)])
             for nqu in range(len(qualtile_vals)):
-                Q_b = norm.ppf(qualtile_vals[nqu], loc=a, scale=np.sqrt(log_Y_var_pred_w_measure))  # noqa: N806
-                qualtile_reconst[nqu] = np.sum((np.log(Y_test) < Q_b[:,0])) / Y_test.shape[0]  # noqa: UP034
+                Q_b = norm.ppf(  # noqa: N806
+                    qualtile_vals[nqu],
+                    loc=a,
+                    scale=np.sqrt(log_Y_var_pred_w_measure),
+                )
+                qualtile_reconst[nqu] = (
+                    np.sum((np.log(Y_test) < Q_b[:, 0])) / Y_test.shape[0]  # noqa: UP034
+                )
 
             quant_err = abs(qualtile_reconst - qualtile_vals)
-            print(f"Test: max coverage err: {np.max(quant_err)}")  # noqa: T201
-            print(f"Test: mean coverage err: {np.mean(quant_err)}")  # noqa: T201
-            print("Test: quantile range")  # noqa: T201
+            print(f'Test: max coverage err: {np.max(quant_err)}')  # noqa: T201
+            print(f'Test: mean coverage err: {np.mean(quant_err)}')  # noqa: T201
+            print('Test: quantile range')  # noqa: T201
             print(qualtile_reconst)  # noqa: T201
-            print(f"Corr(log) for CV: {round(mycor_log_CV*100)/100}")  # noqa: T201
-            print(f"Corr(log) for Test: {round(mycor_log_Test*100)/100}")  # noqa: T201
-            print("")  # noqa: T201, FURB105
+            print(f'Corr(log) for CV: {round(mycor_log_CV*100)/100}')  # noqa: T201
+            print(f'Corr(log) for Test: {round(mycor_log_Test*100)/100}')  # noqa: T201
+            print('')  # noqa: T201, FURB105
 
     def verify(self):  # noqa: D102
         Y_cv = self.Y_cv  # noqa: N806
@@ -1789,7 +1869,7 @@ class surrogate(UQengine):  # noqa: D101
         Y = self.Y_hf  # noqa: N806
         model_hf = self.modelInfoHF  # noqa: F841
 
-        self.quantile_reconst_list = np.zeros((self.y_dim,9))
+        self.quantile_reconst_list = np.zeros((self.y_dim, 9))
         self.max_coverage = np.zeros((self.y_dim,))
         self.mean_coverage = np.zeros((self.y_dim,))
         self.inbound50 = np.zeros((self.y_dim,))
@@ -1798,8 +1878,6 @@ class surrogate(UQengine):  # noqa: D101
         if not self.do_mf:
             for ny in range(self.y_dim):
                 if not self.do_logtransform:
-
-
                     #
                     # Interquarltile range
                     #
@@ -1816,23 +1894,26 @@ class surrogate(UQengine):  # noqa: D101
                     )
                     num_in_bound = np.sum((Y[:, ny] > PI_lb) * (Y[:, ny] < PI_ub))
 
-
                     #
                     # coverage range
                     #
 
-                    qualtile_vals = np.arange(0.1,1,0.1)
+                    qualtile_vals = np.arange(0.1, 1, 0.1)
                     qualtile_reconst = np.zeros([len(qualtile_vals)])
                     for nqu in range(len(qualtile_vals)):
-                        Q_b = np.squeeze(norm.ppf(qualtile_vals[nqu], loc=Y_cv[:, ny], scale=np.sqrt(Y_cv_var_w_measure[:, ny])))  # noqa: N806
+                        Q_b = np.squeeze(  # noqa: N806
+                            norm.ppf(
+                                qualtile_vals[nqu],
+                                loc=Y_cv[:, ny],
+                                scale=np.sqrt(Y_cv_var_w_measure[:, ny]),
+                            )
+                        )
 
-                        #print(Y[:, ny])
-                        #print(Q_b)
-                        qualtile_reconst[nqu] = np.sum(Y[:, ny] < Q_b)/Y.shape[0]
+                        # print(Y[:, ny])
+                        # print(Q_b)
+                        qualtile_reconst[nqu] = np.sum(Y[:, ny] < Q_b) / Y.shape[0]
 
                     quant_err = abs(qualtile_reconst - qualtile_vals)
-
-
 
                     norm_residual = (Y[:, ny] - Y_cv[:, ny]) / np.sqrt(
                         Y_cv_var_w_measure[:, ny]
@@ -1865,11 +1946,17 @@ class surrogate(UQengine):  # noqa: D101
                     # coverage range
                     #
 
-                    qualtile_vals = np.arange(0.1,1,0.1)
+                    qualtile_vals = np.arange(0.1, 1, 0.1)
                     qualtile_reconst = np.zeros([len(qualtile_vals)])
                     for nqu in range(len(qualtile_vals)):
-                        Q_b = norm.ppf(qualtile_vals[nqu], loc=log_Y_cv, scale=np.sqrt(log_Y_cv_var_w_measure)).tolist()  # noqa: N806
-                        qualtile_reconst[nqu] = np.sum((np.log(Y[:, ny]) < Q_b))/Y.shape[0]  # noqa: UP034
+                        Q_b = norm.ppf(  # noqa: N806
+                            qualtile_vals[nqu],
+                            loc=log_Y_cv,
+                            scale=np.sqrt(log_Y_cv_var_w_measure),
+                        ).tolist()
+                        qualtile_reconst[nqu] = (
+                            np.sum((np.log(Y[:, ny]) < Q_b)) / Y.shape[0]  # noqa: UP034
+                        )
 
                     quant_err = abs(qualtile_reconst - qualtile_vals)
 
@@ -1882,8 +1969,7 @@ class surrogate(UQengine):  # noqa: D101
                     )
                     stats = cramervonmises(norm_residual, 'norm')
 
-
-                self.quantile_reconst_list[ny,:] = qualtile_reconst
+                self.quantile_reconst_list[ny, :] = qualtile_reconst
                 self.max_coverage[ny] = np.max(quant_err)
                 self.mean_coverage[ny] = np.mean(quant_err)
                 self.inbound50[ny] = num_in_bound / Y.shape[0]
@@ -2030,7 +2116,6 @@ class surrogate(UQengine):  # noqa: D101
         #
         # Save surrogateinfo
         #
-  # noqa: W293
         results = {}
 
         hfJson = {}  # noqa: N806
@@ -2171,7 +2256,9 @@ class surrogate(UQengine):  # noqa: D101
             results['valCorrCoeff'][self.g_name[ny]] = self.corr_val[ny]
             results['valIQratio'][self.g_name[ny]] = self.inbound50[ny]
             results['valPval'][self.g_name[ny]] = self.Gausspvalue[ny]
-            results['valCoverageVals'][self.g_name[ny]] = self.quantile_reconst_list[ny].tolist()
+            results['valCoverageVals'][self.g_name[ny]] = self.quantile_reconst_list[
+                ny
+            ].tolist()
 
             if np.isnan(self.NRMSE_val[ny]) or np.isinf(self.NRMSE_val[ny]):
                 results['valNRMSE'][self.g_name[ny]] = 'null'
@@ -2212,11 +2299,10 @@ class surrogate(UQengine):  # noqa: D101
                 ] = self.m_var_list[ny].Y.flatten().tolist()
             else:
                 results['modelInfo'][self.g_name[ny] + '_Var'] = 0
-  # noqa: W293
             #
             # Save the main model
             #
-            if not self.do_mf:  # noqa: W291
+            if not self.do_mf:
                 results['modelInfo'][self.g_name[ny]] = {}
                 for parname in self.m_list[ny].parameter_names():
                     results['modelInfo'][self.g_name[ny]][parname] = list(
@@ -2226,13 +2312,18 @@ class surrogate(UQengine):  # noqa: D101
             #
             # Save the linear
             #
-            if self.do_linear>0:
+            if self.do_linear > 0:
                 results['modelInfo'][self.g_name[ny] + '_Lin'] = {}
-                results['modelInfo'][self.g_name[ny] + '_Lin']['predictorList'] = [] # TBA
-                results['modelInfo'][self.g_name[ny] + '_Lin']['coef'] = np.squeeze(self.lin_list[ny].coef_).tolist() #  # noqa: PLR2044
-                results['modelInfo'][self.g_name[ny] + '_Lin']['intercept'] = float(self.lin_list[ny].intercept_) #  # noqa: PLR2044
+                results['modelInfo'][self.g_name[ny] + '_Lin'][
+                    'predictorList'
+                ] = []  # TBA
+                results['modelInfo'][self.g_name[ny] + '_Lin']['coef'] = np.squeeze(
+                    self.lin_list[ny].coef_
+                ).tolist()
+                results['modelInfo'][self.g_name[ny] + '_Lin']['intercept'] = float(
+                    self.lin_list[ny].intercept_
+                )
 
-  # noqa: W293
         if self.isEEUQ or self.isWEUQ:
             # read SAM.json
             SAMpath = self.work_dir + '/templatedir/SAM.json'  # noqa: N806
@@ -2551,11 +2642,11 @@ class surrogate(UQengine):  # noqa: D101
                     try:
                         while True:
                             time.sleep(0.5)
-                            if all([r.ready() for r in result]):  # noqa: C419, F821
+                            if all([r.ready() for r in result]):  # type: ignore # noqa: C419, F821
                                 break
                     except KeyboardInterrupt:
-                        pool.terminate()  # noqa: F821
-                        pool.join()  # noqa: F821
+                        pool.terminate()  # type: ignore # noqa: F821
+                        pool.join()  # type: ignore # noqa: F821
 
                 else:
                     IMSEc1 = np.zeros(nc1)  # noqa: N806
@@ -2824,14 +2915,14 @@ class surrogate(UQengine):  # noqa: D101
     def get_cross_validation_err(self):  # noqa: D102
         print('Calculating cross validation errors', flush=True)  # noqa: T201
         time_tmp = time.time()
-        X_hf = self.X_hf # contains separate samples  # noqa: N806
+        X_hf = self.X_hf  # contains separate samples  # noqa: N806
         nsamp = self.X_hf.shape[0]
         ydim = self.Y_hf.shape[1]
 
-        e2 = np.zeros((nsamp,ydim))  # only for unique...
-        Y_pred = np.zeros((nsamp,ydim))  # noqa: N806
-        Y_pred_var = np.zeros((nsamp,ydim))  # noqa: N806
-        Y_pred_var_w_measure = np.zeros((nsamp,ydim))  # noqa: N806
+        e2 = np.zeros((nsamp, ydim))  # only for unique...
+        Y_pred = np.zeros((nsamp, ydim))  # noqa: N806
+        Y_pred_var = np.zeros((nsamp, ydim))  # noqa: N806
+        Y_pred_var_w_measure = np.zeros((nsamp, ydim))  # noqa: N806
         #
         # Efficient cross validation TODO: check if it works for heteroskedacstic
         #
@@ -2852,7 +2943,9 @@ class surrogate(UQengine):  # noqa: D101
                 # works both for stochastic/stochastic
                 nugget_mat = (
                     np.diag(np.squeeze(self.var_str[ny]))
-                    * self.m_list[ny].Gaussian_noise.parameters  # TODO  # noqa: TD002, TD004, TD005
+                    * self.m_list[
+                        ny
+                    ].Gaussian_noise.parameters  # TODO  # noqa: TD002, TD004
                 )
 
                 Rmat = self.m_list[ny].kern.K(Xm)  # noqa: N806
@@ -2879,9 +2972,11 @@ class surrogate(UQengine):  # noqa: D101
                         * self.normVars[ny],
                     )
 
-                if sum(self.linear_list)>0:
-                    Y_pred[:, ny] = Y_pred[:, ny] + self.lin_list[ny].predict(X_hf[:,self.linear_list])[:,0]
-
+                if sum(self.linear_list) > 0:
+                    Y_pred[:, ny] = (
+                        Y_pred[:, ny]
+                        + self.lin_list[ny].predict(X_hf[:, self.linear_list])[:, 0]
+                    )
 
         else:
             Y_hf = self.Y_hf  # noqa: N806
@@ -2989,12 +3084,12 @@ def imse(m_tmp, xcandi, xq, phiqr, i, y_idx, doeIdx='HF'):  # noqa: ARG001, N803
         Y_tmp = np.vstack([Y_hf, np.zeros((1, Y_hf.shape[1]))])  # noqa: N806
         # self.set_XY(m_tmp, X_tmp, Y_tmp, X_lf, Y_lf)
         X_list_tmp, Y_list_tmp = (  # noqa: N806
-            emf.convert_lists_to_array.convert_xy_lists_to_arrays(  # noqa: F821
+            emf.convert_lists_to_array.convert_xy_lists_to_arrays(  # noqa: F821 # type: ignore
                 [X_tmp, X_lf], [Y_tmp, Y_lf]
             )
         )
         m_tmp.set_data(X=X_list_tmp, Y=Y_list_tmp)
-        xq_list = convert_x_list_to_array([xq, np.zeros((0, xq.shape[1]))])  # noqa: F821
+        xq_list = convert_x_list_to_array([xq, np.zeros((0, xq.shape[1]))])  # type: ignore # noqa: F821
         dummy, Yq_var = m_tmp.predict(xq_list)  # noqa: N806
 
     elif doeIdx.startswith('LF'):
@@ -3009,12 +3104,12 @@ def imse(m_tmp, xcandi, xq, phiqr, i, y_idx, doeIdx='HF'):  # noqa: ARG001, N803
         Y_tmp = np.vstack([Y_lf, np.zeros((1, Y_lf.shape[1]))])  # noqa: N806
         # self.set_XY(m_tmp, X_hf, Y_hf, X_tmp, Y_tmp)
         X_list_tmp, Y_list_tmp = (  # noqa: N806
-            emf.convert_lists_to_array.convert_xy_lists_to_arrays(  # noqa: F821
+            emf.convert_lists_to_array.convert_xy_lists_to_arrays(  # noqa: F821 # type: ignore
                 [X_hf, X_tmp], [Y_hf, Y_tmp]
             )
         )
         m_tmp.set_data(X=X_list_tmp, Y=Y_list_tmp)
-        xq_list = convert_x_list_to_array([xq, np.zeros((0, xq.shape[1]))])  # noqa: F821
+        xq_list = convert_x_list_to_array([xq, np.zeros((0, xq.shape[1]))])  # type: ignore # noqa: F821
         dummy, Yq_var = m_tmp.predict(xq_list)  # noqa: N806
     else:
         print(f'doe method <{doeIdx}> is not supported', flush=True)  # noqa: T201
@@ -3215,7 +3310,7 @@ class model_info:  # noqa: D101
         if n > 0:
             X_samples = np.zeros((n, self.x_dim))  # noqa: N806
             # LHS
-            sampler = qmc.LatinHypercube(d=self.x_dim, seed = self.global_seed)
+            sampler = qmc.LatinHypercube(d=self.x_dim, seed=self.global_seed)
             U = sampler.random(n=n)  # noqa: N806
             for nx in range(self.x_dim):
                 if self.xDistTypeArr[nx] == 'U':
@@ -3312,9 +3407,8 @@ def calibrating(  # noqa: C901, D103
     n_processor,
     is_paralle_opt_safe,
     init_noise_var,
-    init_process_var
+    init_process_var,
 ):  # nuggetVal = self.nuggetVal[ny]
-
     np.random.seed(int(ny))
     random.seed(int(ny))
 
@@ -3335,7 +3429,7 @@ def calibrating(  # noqa: C901, D103
             #             myrange = np.max(X, axis=0) - np.min(X, axis=0)
             #             exec('m_tmp.' + parname + '[[nx]] = myrange[nx]')  # noqa: RUF100, S102
 
-            m_tmp[variance_keyword].constrain_bounded(0.05,2,warning=False)
+            m_tmp[variance_keyword].constrain_bounded(0.05, 2, warning=False)
             for parname in m_tmp.parameter_names():
                 if parname.endswith('lengthscale'):
                     for nx in range(X.shape[1]):  # noqa: B007
@@ -3363,13 +3457,11 @@ def calibrating(  # noqa: C901, D103
                         myrange = np.max(X, axis=0) - np.min(X, axis=0)
                         exec('m_tmp.' + parname + '[[nx]] = myrange[nx]')  # noqa: S102
         elif nugget_opt_tmp == 'Heteroscedastic':
-
-            if init_noise_var==None:  # noqa: E711
+            if init_noise_var == None:  # noqa: E711
                 init_noise_var = 1
 
             if init_process_var == None:  # noqa: E711
                 init_process_var = 1
-  # noqa: W293
             X = m_tmp.X  # noqa: N806
 
             for parname in m_tmp.parameter_names():
@@ -3382,18 +3474,16 @@ def calibrating(  # noqa: C901, D103
                             + '[[nx]].constrain_bounded(myrange[nx] / X.shape[0]*10, myrange[nx],warning=False)'
                         )
                         exec(  # noqa: S102
-                            'm_tmp.'
-                            + parname
-                            + '[[nx]] = myrange[nx]*1'
+                            'm_tmp.' + parname + '[[nx]] = myrange[nx]*1'
                         )
 
-                        #m_tmp[parname][nx] = myrange[nx]*0.1
+                        # m_tmp[parname][nx] = myrange[nx]*0.1
                         # m_tmp[parname][nx].constrain_bounded(myrange[nx] / X.shape[0], myrange[nx]*100)
                         # TODO change the kernel  # noqa: TD002, TD004
-  # noqa: W293
-            #m_tmp[variance_keyword].constrain_bounded(0.05/np.mean(m_tmp.Y_metadata['variance_structure']),2/np.mean(m_tmp.Y_metadata['variance_structure']),warning=False)
-            m_tmp.Gaussian_noise.constrain_bounded(0.5*init_noise_var, 2*init_noise_var, warning=False)
-  # noqa: W293
+            # m_tmp[variance_keyword].constrain_bounded(0.05/np.mean(m_tmp.Y_metadata['variance_structure']),2/np.mean(m_tmp.Y_metadata['variance_structure']),warning=False)
+            m_tmp.Gaussian_noise.constrain_bounded(
+                0.5 * init_noise_var, 2 * init_noise_var, warning=False
+            )
         else:
             msg = 'Nugget keyword not identified: ' + nugget_opt_tmp
 
@@ -3426,32 +3516,31 @@ def calibrating(  # noqa: C901, D103
             )
 
     if msg == '':
-        #m_tmp.optimize()
+        # m_tmp.optimize()
         # n=0;
         if not do_mf:
+            # Here
 
-            #Here
+            print('Calibrating final surrogate')  # noqa: T201
+            m_tmp = my_optimize_restart(m_tmp, nopt)
+  # noqa: RUF100, W293
+        # if develop_mode:
+        #     print(m_tmp)
+        #     #print(m_tmp.rbf.lengthscale)
+        #     tmp = m_tmp.predict(m_tmp.X)
+        #     plt.title("Original Mean QoI")
+        #     plt.scatter(m_tmp.Y, tmp[0],alpha=0.1)
+        #     plt.scatter(m_tmp.Y, m_tmp.Y,alpha=0.1)
+        #     plt.xlabel("exact")
+        #     plt.ylabel("pred")
+        #     plt.show()
 
-            print("Calibrating final surrogate")  # noqa: T201
-            m_tmp = my_optimize_restart(m_tmp,nopt)
-  # noqa: W293
-            # if develop_mode:
-            #     print(m_tmp)
-            #     #print(m_tmp.rbf.lengthscale)
-            #     tmp = m_tmp.predict(m_tmp.X)
-            #     plt.title("Original Mean QoI")
-            #     plt.scatter(m_tmp.Y, tmp[0],alpha=0.1)
-            #     plt.scatter(m_tmp.Y, m_tmp.Y,alpha=0.1)
-            #     plt.xlabel("exact")
-            #     plt.ylabel("pred")
-            #     plt.show()
-
-            # m_tmp.optimize_restarts(
-            #     num_restarts=nopt,
-            #     parallel=is_paralle_opt_safe,
-            #     num_processes=n_processor,
-            #     verbose=True,
-            # )
+        # m_tmp.optimize_restarts(
+        #     num_restarts=nopt,
+        #     parallel=is_paralle_opt_safe,
+        #     num_processes=n_processor,
+        #     verbose=True,
+        # )
         else:
             m_tmp.gpy_model.optimize_restarts(
                 num_restarts=nopt,
@@ -3459,7 +3548,7 @@ def calibrating(  # noqa: C901, D103
                 num_processes=n_processor,
                 verbose=False,
             )
-        #print(m_tmp)  # noqa: RUF100, T201
+        # print(m_tmp)  # noqa: RUF100, T201
         # while n+20 <= nopt:
         #     m_tmp.optimize_restarts(num_restarts=20)
         #     n = n+20
@@ -3470,13 +3559,14 @@ def calibrating(  # noqa: C901, D103
 
     return m_tmp, msg, ny
 
-def my_optimize_restart(m,n_opt):  # noqa: D103
+
+def my_optimize_restart(m, n_opt):  # noqa: D103
     init = time.time()
     n_sample = len(m.Y)
     idx = list(range(n_sample))
     n_batch = 700
-    n_cluster = int(np.ceil(len(m.Y)/n_batch))
-    n_batch = np.ceil(n_sample/n_cluster)
+    n_cluster = int(np.ceil(len(m.Y) / n_batch))
+    n_batch = np.ceil(n_sample / n_cluster)
     random.shuffle(idx)
     X_full = m.X  # noqa: N806
     Y_full = m.Y  # noqa: N806
@@ -3485,7 +3575,9 @@ def my_optimize_restart(m,n_opt):  # noqa: D103
     errors = np.zeros((n_cluster,))
     m_list = []
     for nc in range(n_cluster):
-        inside_cluster = idx[int(n_batch*nc):int(np.min([n_batch*(nc+1),n_sample]))]
+        inside_cluster = idx[
+            int(n_batch * nc) : int(np.min([n_batch * (nc + 1), n_sample]))
+        ]
 
         #
         # Testing if this works better for parallel run
@@ -3494,7 +3586,9 @@ def my_optimize_restart(m,n_opt):  # noqa: D103
         def subsample_XY(self, idx):  # noqa: N802, N803, RUF100
             if self.Y_metadata is not None:
                 new_meta = self.Y_metadata
-                new_meta['variance_structure'] = self.Y_metadata['variance_structure'][idx]
+                new_meta['variance_structure'] = self.Y_metadata[
+                    'variance_structure'
+                ][idx]
                 self.Y_metadata.update(new_meta)
                 print('metadata_updated')  # noqa: T201
             self.set_XY(self.X[idx, :], self.Y[idx, :])
@@ -3510,25 +3604,28 @@ def my_optimize_restart(m,n_opt):  # noqa: D103
             self.set_XY(X, Y)
 
         m_subset = m.copy()
-        #m_subset.set_XY2(m_subset.X[inside_cluster,:],m_subset.Y[inside_cluster,:],{""})
+        # m_subset.set_XY2(m_subset.X[inside_cluster,:],m_subset.Y[inside_cluster,:],{""})
         m_subset.subsample_XY(inside_cluster)
-        #m_subset.optimize(max_f_eval=1000)
+        # m_subset.optimize(max_f_eval=1000)
         m_subset.optimize_restarts(n_opt)
-        variance1 =  m_subset.normalizer.std**2
-  # noqa: W293
-        #Option 1
+        variance1 = m_subset.normalizer.std**2
+        # Option 1
         tmp_all = m_subset.predict(X_full)
         errors[nc] = np.linalg.norm(tmp_all[0][:, 0] - Y_full[:, 0])
 
-        #Option 2
+        # Option 2
         m_subset.set_XY2(X_full, Y_full, m.Y_metadata)
         variance2 = m_subset.normalizer.std**2
-  # noqa: W293
-        m_subset.Gaussian_noise.variance = m_subset.Gaussian_noise.variance*variance1/variance2
+        m_subset.Gaussian_noise.variance = (
+            m_subset.Gaussian_noise.variance * variance1 / variance2
+        )
         log_likelihoods[nc] = m_subset.log_likelihood()
-  # noqa: W293
         m_list += [copy.deepcopy(m_subset)]
-        print("  cluster {} among {} : logL {}".format(nc+1, n_cluster, log_likelihoods[nc]))  # noqa: T201, UP032
+        print(  # noqa: T201
+            '  cluster {} among {} : logL {}'.format(  # noqa: UP032
+                nc + 1, n_cluster, log_likelihoods[nc]
+            )
+        )
 
         # import matplotlib.pyplot as plt
         # tmp_all = m_subset.predict(X_full); plt.scatter(tmp_all[0][:, 0], Y_full[:, 0],alpha=0.1); plt.scatter(Y_full[:, 0], Y_full[:, 0],alpha=0.1);  plt.show()
@@ -3536,15 +3633,15 @@ def my_optimize_restart(m,n_opt):  # noqa: D103
 
     # best_cluster = np.argmin(errors) # not capturing skedasticity
     best_cluster = np.argmax(log_likelihoods)
-  # noqa: W293
     m = m_list[best_cluster]
     # m.kern.parameters = kernels[best_cluster][0]
     # m.Gaussian_noise.parameters = kernels[best_cluster][1]
     # m.parameters_changed()
     # tmp = m.predict(X_full[inside_cluster]); plt.scatter(tmp[0][:, 0], Y_full[inside_cluster, 0]); plt.scatter(Y_full[inside_cluster, 0], Y_full[inside_cluster, 0]);  plt.show()
-    print("Elapsed time: {:.2f} s".format(time.time() - init))  # noqa: T201, UP032
+    print('Elapsed time: {:.2f} s'.format(time.time() - init))  # noqa: T201, UP032
 
     return m
+
 
 def set_XY_indi(  # noqa: N802, D103
     m_tmp,
@@ -3556,7 +3653,7 @@ def set_XY_indi(  # noqa: N802, D103
     create_gpy_model,
     do_logtransform,
     predictStoMeans,  # noqa: N803
-    set_normalizer  # noqa: ARG001
+    set_normalizer,  # noqa: ARG001
 ):
     #
     # check if X dimension has changed...
@@ -3583,9 +3680,11 @@ def set_XY_indi(  # noqa: N802, D103
 
     # Y_mean=Y_hfs[X_idx]
     # Y_mean1, nugget_mean1 = self.predictStoMeans(X_new, Y_mean)
-    Y_mean1, nugget_mean1, initial_noise_variance, initial_process_variance = predictStoMeans(X_hf, Y_hfs)  # noqa: N806
+    Y_mean1, nugget_mean1, initial_noise_variance, initial_process_variance = (  # noqa: N806
+        predictStoMeans(X_hf, Y_hfs)
+    )
 
-    Y_metadata, m_var, norm_var_str = self.predictStoVars(  # noqa: F821, N806
+    Y_metadata, m_var, norm_var_str = self.predictStoVars(  # noqa: F821, N806 # type: ignore
         X_hf, (Y_hfs - Y_mean1) ** 2, X_hf, Y_hfs, X_hf.shape[0]
     )
     m_tmp.set_XY2(X_hf, Y_hfs, Y_metadata=Y_metadata)
@@ -3599,7 +3698,18 @@ def set_XY_indi(  # noqa: N802, D103
     normMeans = 0  # noqa: N806
     normVars = 1  # noqa: N806
 
-    return ny, m_tmp, Y_mean, normMeans, normVars, m_var_list, var_str, indices_unique, n_unique_hf
+    return (
+        ny,
+        m_tmp,
+        Y_mean,
+        normMeans,
+        normVars,
+        m_var_list,
+        var_str,
+        indices_unique,
+        n_unique_hf,
+    )
+
 
 def closest_node(x, X, ll):  # noqa: N803, D103
     X = np.asarray(X)  # noqa: N806
@@ -3652,8 +3762,6 @@ def read_txt(text_dir, exit_fun):  # noqa: D103
         X = np.array([X]).transpose()  # noqa: N806
 
     return X
-
-
 
 
 if __name__ == '__main__':

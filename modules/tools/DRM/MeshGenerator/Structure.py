@@ -50,8 +50,12 @@ DRMThickness = np.array(
 )  # thickness of the DRM layers
 numDrmLayers = 1  # number of DRM layers  # noqa: N816
 DRMTotalThickness = DRMThickness * numDrmLayers  # total thickness of the DRM layers
-padLayers = numPMLLayers + numDrmLayers  # number of layers to pad the meshgrid  # noqa: N816
-padThickness = PMLTotalThickness + DRMThickness  # thickness of the padding layers  # noqa: N816
+padLayers = (  # noqa: N816
+    numPMLLayers + numDrmLayers
+)  # number of layers to pad the meshgrid
+padThickness = (  # noqa: N816
+    PMLTotalThickness + DRMThickness
+)  # thickness of the padding layers
 reg_num_cores = 3
 DRM_num_cores = 3
 PML_num_cores = 3

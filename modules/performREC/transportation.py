@@ -66,9 +66,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from scipy.spatial.distance import cdist
 from shapely.wkt import loads
 from brails.utils.geoTools import haversine_dist
-from brails.workflow.TransportationElementHandler import ROADLANES_MAP, ROADSPEED_MAP, calculate_road_capacity
-
-
+from brails.workflow.TransportationElementHandler import (
+    ROADLANES_MAP,
+    ROADSPEED_MAP,
+    calculate_road_capacity,
+)
 
 
 class TransportationPerformance(ABC):  # noqa: B024
@@ -120,12 +122,14 @@ class TransportationPerformance(ABC):  # noqa: B024
         network performance analysis.
     """
 
-    def __init__(self,
-                 assets: Union[list[str], None] = None,  # noqa: UP007
-                 capacity_map: Union[dict[int, float], None] = None,  # noqa: UP007
-                 csv_files: Union[dict[str, str], None] = None,  # noqa: UP007
-                 no_identifier: Union[dict[str, str], None] = None,  # noqa: UP007
-                 network_inventory: Union[dict[str, str], None] = None):  # noqa: UP007
+    def __init__(
+        self,
+        assets: Union[list[str], None] = None,  # noqa: UP007
+        capacity_map: Union[dict[int, float], None] = None,  # noqa: UP007
+        csv_files: Union[dict[str, str], None] = None,  # noqa: UP007
+        no_identifier: Union[dict[str, str], None] = None,  # noqa: UP007
+        network_inventory: Union[dict[str, str], None] = None,  # noqa: UP007
+    ):
         """
         Initialize the TransportationPerformance class with essential data.
 
@@ -146,28 +150,34 @@ class TransportationPerformance(ABC):  # noqa: B024
             # capacity_map = {0: 1, 1: 1, 2: 1, 3: 0.5, 4: 0}
             capacity_map = {0: 1, 1: 1, 2: 1, 3: 0, 4: 0}
         if csv_files is None:
-            csv_files = {'network_edges': 'edges.csv',
-                         'network_nodes': 'nodes.csv',
-                         'edge_closures': 'closed_edges.csv',
-                         'od_pairs': 'od.csv'}
+            csv_files = {
+                'network_edges': 'edges.csv',
+                'network_nodes': 'nodes.csv',
+                'edge_closures': 'closed_edges.csv',
+                'od_pairs': 'od.csv',
+            }
         if no_identifier is None:
-            no_identifier = {'Bridge': 'StructureNumber',
-                             'Roadway': 'TigerOID',
-                             'Tunnel': 'TunnelNumber'}
+            no_identifier = {
+                'Bridge': 'StructureNumber',
+                'Roadway': 'TigerOID',
+                'Tunnel': 'TunnelNumber',
+            }
 
         self.assets = assets
         self.csv_files = csv_files
         self.capacity_map = capacity_map
         self.no_identifier = no_identifier
-        self.attribute_maps = {'lanes': ROADLANES_MAP,
-                               'speed': ROADSPEED_MAP,
-                               'capcity': calculate_road_capacity}
+        self.attribute_maps = {
+            'lanes': ROADLANES_MAP,
+            'speed': ROADSPEED_MAP,
+            'capcity': calculate_road_capacity,
+        }
         self.network_inventory = network_inventory
 
     # @abstractmethod
-    def system_state(self,
-                     initial_state: str,
-                     csv_file_dir: str) -> dict:  # updated_state
+    def system_state(
+        self, initial_state: str, csv_file_dir: str
+    ) -> dict:  # updated_state
         """
         Process given det and damage results file to get updated system state.
 
@@ -213,18 +223,20 @@ class TransportationPerformance(ABC):  # noqa: B024
             dir_path = Path(directory)
 
             # Get a set of files in the directory
-            files_in_directory = {
-                f.name for f in dir_path.iterdir() if f.is_file()}
+            files_in_directory = {f.name for f in dir_path.iterdir() if f.is_file()}
 
             # Check if each file exists in the directory
-            missing_files = [filename for filename in filenames if
-                             filename not in files_in_directory]
+            missing_files = [
+                filename
+                for filename in filenames
+                if filename not in files_in_directory
+            ]
 
             if missing_files:
                 print(f"Missing files: {', '.join(missing_files)}")  # noqa: T201
                 out = False
             else:
-                print("All required files are present.")  # noqa: T201
+                print('All required files are present.')  # noqa: T201
                 out = True
 
             return out
@@ -243,26 +255,30 @@ class TransportationPerformance(ABC):  # noqa: B024
         # 1 denotes fully open and 0 denotes fully closed:
         capacity_dict = {}
         closed_edges = []
-        with Path.open(Path(initial_state), encoding="utf-8") as file:
+        with Path.open(Path(initial_state), encoding='utf-8') as file:
             temp = json.load(file)
             data = temp['TransportationNetwork']
             for asset_type in self.assets:
                 datadict = data[asset_type]
                 for aim_id in datadict:
                     item_id = datadict[aim_id]['GeneralInformation'][
-                        self.no_identifier[asset_type]]
-                    damage_state = int(datadict[aim_id]['R2Dres']
-                                       ['R2Dres_MostLikelyCriticalDamageState'
-                                        ])
+                        self.no_identifier[asset_type]
+                    ]
+                    damage_state = int(
+                        datadict[aim_id]['R2Dres'][
+                            'R2Dres_MostLikelyCriticalDamageState'
+                        ]
+                    )
                     capacity_ratio = self.capacity_map[damage_state]
                     capacity_dict[item_id] = capacity_ratio
-                    datadict[aim_id]['GeneralInformation']['Open'] = \
-                        capacity_ratio
+                    datadict[aim_id]['GeneralInformation']['Open'] = capacity_ratio
                     if capacity_ratio == 0:
                         if asset_type == 'Roadway':
                             closed_edges.append(int(aim_id))
                         elif asset_type == 'Bridge' or asset_type == 'Tunnel':  # noqa: PLR1714
-                            carried_edges = datadict[aim_id]['GeneralInformation']['RoadID']
+                            carried_edges = datadict[aim_id]['GeneralInformation'][
+                                'RoadID'
+                            ]
                             carried_edges = [int(x) for x in carried_edges]
                             closed_edges += carried_edges
 
@@ -271,19 +287,21 @@ class TransportationPerformance(ABC):  # noqa: B024
         detfile_updated = temp[0] + '_updated.' + temp[1]
         detfile_updated = os.path.join(csv_file_dir, detfile_updated)  # noqa: PTH118
 
-        with Path.open(Path(detfile_updated), 'w', encoding="utf-8") as file:
+        with Path.open(Path(detfile_updated), 'w', encoding='utf-8') as file:
             json.dump(data, file, indent=2)
 
         # Write closed edges:
-        edge_closure_file = os.path.join(csv_file_dir, self.csv_files['edge_closures'])  # noqa: PTH118
-        with open(edge_closure_file, 'w', encoding="utf-8") as file:  # noqa: PTH123
+        edge_closure_file = os.path.join(  # noqa: PTH118
+            csv_file_dir, self.csv_files['edge_closures']
+        )
+        with open(edge_closure_file, 'w', encoding='utf-8') as file:  # noqa: PTH123
             # Write each item on a new line
             file.write('uniqueid\n')
             for item in closed_edges:
                 file.write(str(item) + '\n')
 
         return
-  # noqa: W293
+
 
     def get_graph_network(self, csv_file_dir) -> None:  # noqa: D102
         # Get edges and nodes from the network inventory
@@ -294,13 +312,16 @@ class TransportationPerformance(ABC):  # noqa: B024
         # Format edges and nodes for Pandana
         ## Edges
         edges_gpd['id'] = edges_gpd['id'].astype(int)
-        edges_gpd = edges_gpd.rename(columns={'id': 'uniqueid',
-                                              'StartNode': 'start_nid',
-                                              'EndNode': 'end_nid',
-                                              'RoadType': 'type',
-                                              'NumOfLanes': 'lanes',
-                                              'MaxMPH': 'maxspeed'
-                                              })
+        edges_gpd = edges_gpd.rename(
+            columns={
+                'id': 'uniqueid',
+                'StartNode': 'start_nid',
+                'EndNode': 'end_nid',
+                'RoadType': 'type',
+                'NumOfLanes': 'lanes',
+                'MaxMPH': 'maxspeed',
+            }
+        )
         edges_gpd['capacity'] = edges_gpd['lanes'].map(calculate_road_capacity)
         edges_gpd = edges_gpd.to_crs('EPSG:6500')
         edges_gpd['length'] = edges_gpd['geometry'].apply(lambda x: x.length)
@@ -313,33 +334,39 @@ class TransportationPerformance(ABC):  # noqa: B024
         nodes_gpd['lat'] = nodes_gpd['geometry'].apply(lambda x: x.y)
         nodes_file = os.path.join(csv_file_dir, self.csv_files['network_nodes'])  # noqa: PTH118
         nodes_gpd.to_csv(nodes_file, index=False)
-        return  # noqa: W291, PLR1711
+        return  # noqa: PLR1711
+
     # @abstractmethod
-    def system_performance(self, state) -> None:  # Move the CSV creation here  # noqa: ARG002, C901, D102, PLR0915
-        def substep_assignment(nodes_df=None,
-                               weighted_edges_df=None,
-                               od_ss=None,
-                               quarter_demand=None,
-                               assigned_demand=None,
-                               quarter_counts=4,
-                               trip_info=None,
-                               agent_time_limit=0,
-                               sample_interval=1,
-                               agents_path=None,
-                               hour=None,
-                               quarter=None,
-                               ss_id=None,
-                               alpha_f=0.3,
-                               beta_f=3):
+    def system_performance(  # noqa: C901, D102, PLR0915
+        self, state  # noqa: ARG002
+    ) -> None:  # Move the CSV creation here
+        def substep_assignment(
+            nodes_df=None,
+            weighted_edges_df=None,
+            od_ss=None,
+            quarter_demand=None,
+            assigned_demand=None,
+            quarter_counts=4,
+            trip_info=None,
+            agent_time_limit=0,
+            sample_interval=1,
+            agents_path=None,
+            hour=None,
+            quarter=None,
+            ss_id=None,
+            alpha_f=0.3,
+            beta_f=3,
+        ):
+            open_edges_df = weighted_edges_df.loc[weighted_edges_df['fft'] < 36000]  # noqa: PLR2004
 
-            open_edges_df = weighted_edges_df.loc[weighted_edges_df['fft'] <
-                                                  36000]  # noqa: PLR2004
-
-            net = pdna.Network(nodes_df["x"], nodes_df["y"],
-                               open_edges_df["start_nid"],
-                               open_edges_df["end_nid"],
-                               open_edges_df[["weight"]],
-                               twoway=False)
+            net = pdna.Network(
+                nodes_df['x'],
+                nodes_df['y'],
+                open_edges_df['start_nid'],
+                open_edges_df['end_nid'],
+                open_edges_df[['weight']],
+                twoway=False,
+            )
 
             print('network')  # noqa: T201
             net.set(pd.Series(net.node_ids))
@@ -354,8 +381,7 @@ class TransportationPerformance(ABC):  # noqa: B024
             paths = net.shortest_paths(nodes_current, nodes_destin)
 
             # check agent time limit
-            path_lengths = net.shortest_path_lengths(
-                nodes_current, nodes_destin)
+            path_lengths = net.shortest_path_lengths(nodes_current, nodes_destin)
             remove_agent_list = []
             if agent_time_limit is None:
                 pass
@@ -364,12 +390,11 @@ class TransportationPerformance(ABC):  # noqa: B024
                     planned_trip_length = path_lengths[agent_idx]
                     # agent_time_limit[agent_id]
                     trip_length_limit = agent_time_limit
-                    if planned_trip_length > trip_length_limit+0:
+                    if planned_trip_length > trip_length_limit + 0:
                         remove_agent_list.append(agent_id)
 
             edge_travel_time_dict = weighted_edges_df['t_avg'].T.to_dict()
-            edge_current_vehicles = weighted_edges_df['veh_current'].T.to_dict(
-            )
+            edge_current_vehicles = weighted_edges_df['veh_current'].T.to_dict()
             edge_quarter_vol = weighted_edges_df['vol_true'].T.to_dict()
             # edge_length_dict = weighted_edges_df['length'].T.to_dict()
             od_residual_ss_list = []
@@ -384,42 +409,46 @@ class TransportationPerformance(ABC):  # noqa: B024
                     path_i += 1
                     # no need to update trip info
                     continue
-                remaining_time = 3600/quarter_counts + \
-                    agent_current_link_times[path_i]
+                remaining_time = (
+                    3600 / quarter_counts + agent_current_link_times[path_i]
+                )
                 used_time = 0
                 for edge_s, edge_e in zip(path, path[1:]):
-                    edge_str = f"{edge_s}-{edge_e}"
+                    edge_str = f'{edge_s}-{edge_e}'
                     edge_travel_time = edge_travel_time_dict[edge_str]
 
-                    if (remaining_time > edge_travel_time) and \
-                       (edge_travel_time < 36000):  # noqa: PLR2004
+                    if (remaining_time > edge_travel_time) and (
+                        edge_travel_time < 36000  # noqa: PLR2004
+                    ):
                         # all_paths.append(edge_str)
                         # p_dist += edge_travel_time
                         remaining_time -= edge_travel_time
                         used_time += edge_travel_time
-                        edge_quarter_vol[edge_str] += (1 * sample_interval)
+                        edge_quarter_vol[edge_str] += 1 * sample_interval
                         trip_stop = edge_e
 
                         if edge_str == agent_current_links[path_i]:
-                            edge_current_vehicles[edge_str] -= (
-                                1 * sample_interval)
+                            edge_current_vehicles[edge_str] -= 1 * sample_interval
                     else:
                         if edge_str != agent_current_links[path_i]:
-                            edge_current_vehicles[edge_str] += (
-                                1 * sample_interval)
+                            edge_current_vehicles[edge_str] += 1 * sample_interval
                         new_current_link = edge_str
                         new_current_link_time = remaining_time
                         trip_stop = edge_s
                         od_residual_ss_list.append(
-                            [agent_id,
-                             trip_origin,
-                             trip_destin,
-                             trip_stop,
-                             new_current_link,
-                             new_current_link_time])
+                            [
+                                agent_id,
+                                trip_origin,
+                                trip_destin,
+                                trip_stop,
+                                new_current_link,
+                                new_current_link_time,
+                            ]
+                        )
                         break
-                trip_info[(agent_id, trip_origin, trip_destin)
-                          ][0] += 3600/quarter_counts
+                trip_info[(agent_id, trip_origin, trip_destin)][0] += (
+                    3600 / quarter_counts
+                )
                 trip_info[(agent_id, trip_origin, trip_destin)][1] += used_time
                 trip_info[(agent_id, trip_origin, trip_destin)][2] = trip_stop
                 trip_info[(agent_id, trip_origin, trip_destin)][3] = hour
@@ -427,144 +456,168 @@ class TransportationPerformance(ABC):  # noqa: B024
                 trip_info[(agent_id, trip_origin, trip_destin)][5] = ss_id
                 path_i += 1
 
-            new_edges_df = weighted_edges_df[['uniqueid',
-                                              'u',
-                                              'v',
-                                              'start_nid',
-                                              'end_nid',
-                                              'fft',
-                                              'capacity',
-                                              'normal_fft',
-                                              'normal_capacity',
-                                              'length',
-                                              'vol_true',
-                                              'vol_tot',
-                                              'veh_current',
-                                              'geometry']].copy()
+            new_edges_df = weighted_edges_df[
+                [
+                    'uniqueid',
+                    'u',
+                    'v',
+                    'start_nid',
+                    'end_nid',
+                    'fft',
+                    'capacity',
+                    'normal_fft',
+                    'normal_capacity',
+                    'length',
+                    'vol_true',
+                    'vol_tot',
+                    'veh_current',
+                    'geometry',
+                ]
+            ].copy()
             # new_edges_df = new_edges_df.join(edge_volume, how='left')
             # new_edges_df['vol_ss'] = new_edges_df['vol_ss'].fillna(0)
             # new_edges_df['vol_true'] += new_edges_df['vol_ss']
             new_edges_df['vol_true'] = new_edges_df.index.map(edge_quarter_vol)
             new_edges_df['veh_current'] = new_edges_df.index.map(
-                edge_current_vehicles)
+                edge_current_vehicles
+            )
             # new_edges_df['vol_tot'] += new_edges_df['vol_ss']
             new_edges_df['flow'] = (
-                new_edges_df['vol_true']*quarter_demand/assigned_demand) *\
-                quarter_counts
-            new_edges_df['t_avg'] = new_edges_df['fft'] * \
-                (1 + alpha_f *
-                 (new_edges_df['flow']/new_edges_df['capacity'])**beta_f)
+                new_edges_df['vol_true'] * quarter_demand / assigned_demand
+            ) * quarter_counts
+            new_edges_df['t_avg'] = new_edges_df['fft'] * (
+                1
+                + alpha_f
+                * (new_edges_df['flow'] / new_edges_df['capacity']) ** beta_f
+            )
             new_edges_df['t_avg'] = np.where(
-                new_edges_df['t_avg'] > 36000, 36000, new_edges_df['t_avg'])  # noqa: PLR2004
+                new_edges_df['t_avg'] > 36000, 36000, new_edges_df['t_avg']  # noqa: PLR2004
+            )
             new_edges_df['t_avg'] = new_edges_df['t_avg'].round(2)
 
             return new_edges_df, od_residual_ss_list, trip_info, agents_path
 
-        def write_edge_vol(edges_df=None,
-                           simulation_outputs=None,
-                           quarter=None,
-                           hour=None,
-                           scen_nm=None):
+        def write_edge_vol(
+            edges_df=None,
+            simulation_outputs=None,
+            quarter=None,
+            hour=None,
+            scen_nm=None,
+        ):
             if 'flow' in edges_df.columns:
                 if edges_df.shape[0] < 10:  # noqa: PLR2004
-                    edges_df[['uniqueid',
-                              'start_nid',
-                              'end_nid',
-                              'capacity',
-                              'veh_current',
-                              'vol_true',
-                              'vol_tot',
-                              'flow',
-                              't_avg',
-                              'geometry']].to_csv(
-                        f'{simulation_outputs}/edge_vol/edge_vol_hr{hour}_'
-                        f'qt{quarter}_{scen_nm}.csv',
-                        index=False
-                    )
-
-                else:
-                    edges_df.loc[edges_df['vol_true'] > 0, [
-                        'uniqueid',
-                        'start_nid',
-                        'end_nid',
-                        'capacity',
-                        'veh_current',
-                        'vol_true',
-                        'vol_tot',
-                        'flow',
-                        't_avg',
-                        'geometry']
+                    edges_df[
+                        [
+                            'uniqueid',
+                            'start_nid',
+                            'end_nid',
+                            'capacity',
+                            'veh_current',
+                            'vol_true',
+                            'vol_tot',
+                            'flow',
+                            't_avg',
+                            'geometry',
+                        ]
                     ].to_csv(
                         f'{simulation_outputs}/edge_vol/edge_vol_hr{hour}_'
                         f'qt{quarter}_{scen_nm}.csv',
-                        index=False
+                        index=False,
                     )
 
-        def write_final_vol(edges_df=None,
-                            simulation_outputs=None,
-                            quarter=None,
-                            hour=None,
-                            scen_nm=None):
-            edges_df.loc[edges_df['vol_tot'] > 0, [
-                'uniqueid',
-                'start_nid',
-                'end_nid',
-                'vol_tot',
-                'geometry']
+                else:
+                    edges_df.loc[
+                        edges_df['vol_true'] > 0,
+                        [
+                            'uniqueid',
+                            'start_nid',
+                            'end_nid',
+                            'capacity',
+                            'veh_current',
+                            'vol_true',
+                            'vol_tot',
+                            'flow',
+                            't_avg',
+                            'geometry',
+                        ],
+                    ].to_csv(
+                        f'{simulation_outputs}/edge_vol/edge_vol_hr{hour}_'
+                        f'qt{quarter}_{scen_nm}.csv',
+                        index=False,
+                    )
+
+        def write_final_vol(
+            edges_df=None,
+            simulation_outputs=None,
+            quarter=None,
+            hour=None,
+            scen_nm=None,
+        ):
+            edges_df.loc[
+                edges_df['vol_tot'] > 0,
+                ['uniqueid', 'start_nid', 'end_nid', 'vol_tot', 'geometry'],
             ].to_csv(
                 f'{simulation_outputs}/edge_vol/final_edge_vol_hr{hour}_qt'
                 f'{quarter}_{scen_nm}.csv',
-                index=False
+                index=False,
             )
 
-        def assignment(quarter_counts=6,  # noqa: C901, PLR0913
-                       substep_counts=15,
-                       substep_size=30000,
-                       edges_df=None,
-                       nodes_df=None,
-                       od_all=None,
-                       simulation_outputs=None,
-                       scen_nm=None,
-                       hour_list=None,
-                       quarter_list=None,
-                       cost_factor=None,  # noqa: ARG001
-                       closure_hours=None,
-                       closed_links=None,
-                       agent_time_limit=None,
-                       sample_interval=1,
-                       agents_path=None,
-                       alpha_f=0.3,
-                       beta_f=4):
+        def assignment(  # noqa: C901, PLR0913
+            quarter_counts=6,
+            substep_counts=15,
+            substep_size=30000,
+            edges_df=None,
+            nodes_df=None,
+            od_all=None,
+            simulation_outputs=None,
+            scen_nm=None,
+            hour_list=None,
+            quarter_list=None,
+            cost_factor=None,  # noqa: ARG001
+            closure_hours=None,
+            closed_links=None,
+            agent_time_limit=None,
+            sample_interval=1,
+            agents_path=None,
+            alpha_f=0.3,
+            beta_f=4,
+        ):
             if closure_hours is None:
                 closure_hours = []
 
-
-            # Check if all od pairs has path. If not,  # noqa: W291
+            # Check if all od pairs has path. If not,
             orig = od_all['origin_nid'].to_numpy()
             dest = od_all['destin_nid'].to_numpy()
-            open_edges_df = edges_df[~edges_df['uniqueid'].isin(closed_links['uniqueid'].to_numpy())]
-            net = pdna.Network(nodes_df["x"], nodes_df["y"],
-                                open_edges_df["start_nid"],
-                                open_edges_df["end_nid"],
-                                open_edges_df[["fft"]],
-                                twoway=False)
+            open_edges_df = edges_df[
+                ~edges_df['uniqueid'].isin(closed_links['uniqueid'].to_numpy())
+            ]
+            net = pdna.Network(
+                nodes_df['x'],
+                nodes_df['y'],
+                open_edges_df['start_nid'],
+                open_edges_df['end_nid'],
+                open_edges_df[['fft']],
+                twoway=False,
+            )
             paths = net.shortest_paths(orig, dest)
             no_path_ind = [i for i in range(len(paths)) if len(paths[i]) == 0]
             od_no_path = od_all.iloc[no_path_ind].copy()
             od_all = od_all.drop(no_path_ind)
 
             od_all['current_nid'] = od_all['origin_nid']
-            trip_info = {(od.agent_id,
-                          od.origin_nid,
-                          od.destin_nid): [0,
-                                           0,
-                                           od.origin_nid,
-                                           0,
-                                           od.hour,
-                                           od.quarter,
-                                           0,
-                                           0] for od in
-                         od_all.itertuples()}
+            trip_info = {
+                (od.agent_id, od.origin_nid, od.destin_nid): [
+                    0,
+                    0,
+                    od.origin_nid,
+                    0,
+                    od.hour,
+                    od.quarter,
+                    0,
+                    0,
+                ]
+                for od in od_all.itertuples()
+            }
 
             # Quarters and substeps
             # probability of being in each division of hour
@@ -572,7 +625,7 @@ class TransportationPerformance(ABC):  # noqa: B024
                 quarter_counts = 4
             else:
                 quarter_counts = len(quarter_list)
-            quarter_ps = [1/quarter_counts for i in range(quarter_counts)]
+            quarter_ps = [1 / quarter_counts for i in range(quarter_counts)]
             quarter_ids = list(range(quarter_counts))
 
             # initial setup
@@ -587,9 +640,12 @@ class TransportationPerformance(ABC):  # noqa: B024
                     gc.collect()
                     if hour in closure_hours:
                         for row in closed_links.itertuples():
-                            edges_df.loc[(edges_df['uniqueid'] == row.uniqueid),
-                         'capacity'] = 1
-                            edges_df.loc[(edges_df['uniqueid'] == row.uniqueid), 'fft'] = 36000
+                            edges_df.loc[
+                                (edges_df['uniqueid'] == row.uniqueid), 'capacity'
+                            ] = 1
+                            edges_df.loc[
+                                (edges_df['uniqueid'] == row.uniqueid), 'fft'
+                            ] = 36000
                     else:
                         edges_df['capacity'] = edges_df['normal_capacity']
                         edges_df['fft'] = edges_df['normal_fft']
@@ -606,40 +662,49 @@ class TransportationPerformance(ABC):  # noqa: B024
                         pass
                     else:
                         od_quarter_msk = np.random.choice(
-                            quarter_ids, size=od_hour.shape[0], p=quarter_ps)
+                            quarter_ids, size=od_hour.shape[0], p=quarter_ps
+                        )
                         od_hour['quarter'] = od_quarter_msk
 
                     if quarter_list is None:
                         quarter_list = quarter_ids
                     for quarter in quarter_list:
                         # New OD in assignment period
-                        od_quarter = od_hour.loc[od_hour['quarter'] == quarter,
-                                                 ['agent_id',
-                                                  'origin_nid',
-                                                  'destin_nid',
-                                                  'current_nid',
-                                                  'current_link',
-                                                  'current_link_time']]
+                        od_quarter = od_hour.loc[
+                            od_hour['quarter'] == quarter,
+                            [
+                                'agent_id',
+                                'origin_nid',
+                                'destin_nid',
+                                'current_nid',
+                                'current_link',
+                                'current_link_time',
+                            ],
+                        ]
                         # Add resudal OD
-                        od_residual = pd.DataFrame(od_residual_list, columns=[
-                                                   'agent_id',
-                                                   'origin_nid',
-                                                   'destin_nid',
-                                                   'current_nid',
-                                                   'current_link',
-                                                   'current_link_time'])
+                        od_residual = pd.DataFrame(
+                            od_residual_list,
+                            columns=[
+                                'agent_id',
+                                'origin_nid',
+                                'destin_nid',
+                                'current_nid',
+                                'current_link',
+                                'current_link_time',
+                            ],
+                        )
                         od_residual['quarter'] = quarter
                         # Total OD in each assignment period is the combined
                         # of new and residual OD:
                         od_quarter = pd.concat(
-                            [od_quarter, od_residual],
-                            sort=False,
-                            ignore_index=True)
+                            [od_quarter, od_residual], sort=False, ignore_index=True
+                        )
                         # Residual OD is no longer residual after it has been
                         # merged to the quarterly OD:
                         od_residual_list = []
-                        od_quarter = od_quarter[od_quarter['current_nid']
-                                                != od_quarter['destin_nid']]
+                        od_quarter = od_quarter[
+                            od_quarter['current_nid'] != od_quarter['destin_nid']
+                        ]
 
                         # total demand for this quarter, including total and
                         # residual demand:
@@ -649,16 +714,19 @@ class TransportationPerformance(ABC):  # noqa: B024
                         residual_demand = od_residual.shape[0]
                         assigned_demand = 0
 
-                        substep_counts = max(
-                            1, (quarter_demand // substep_size) + 1)
-                        logging.info(f'HR {hour} QT {quarter} has '
-                                     f'{quarter_demand}/{residual_demand} od'
-                                     f's/residuals {substep_counts} substeps')
+                        substep_counts = max(1, (quarter_demand // substep_size) + 1)
+                        logging.info(
+                            f'HR {hour} QT {quarter} has '
+                            f'{quarter_demand}/{residual_demand} od'
+                            f's/residuals {substep_counts} substeps'
+                        )
                         substep_ps = [
-                            1/substep_counts for i in range(substep_counts)]
+                            1 / substep_counts for i in range(substep_counts)
+                        ]
                         substep_ids = list(range(substep_counts))
                         od_substep_msk = np.random.choice(
-                            substep_ids, size=quarter_demand, p=substep_ps)
+                            substep_ids, size=quarter_demand, p=substep_ps
+                        )
                         od_quarter['ss_id'] = od_substep_msk
 
                         # reset volume at each quarter
@@ -668,8 +736,10 @@ class TransportationPerformance(ABC):  # noqa: B024
                             gc.collect()
 
                             time_ss_0 = time.time()
-                            logging.info(f'Hour: {hour}, Quarter: {quarter}, '
-                                         'SS ID: {ss_id}')
+                            logging.info(
+                                f'Hour: {hour}, Quarter: {quarter}, '
+                                'SS ID: {ss_id}'
+                            )
                             od_ss = od_quarter[od_quarter['ss_id'] == ss_id]
                             assigned_demand += od_ss.shape[0]
                             if assigned_demand == 0:
@@ -692,25 +762,28 @@ class TransportationPerformance(ABC):  # noqa: B024
                             # weighted_edges_df['weight'])
 
                             # traffic assignment with truncated path
-                            (edges_df,
-                             od_residual_ss_list,
-                             trip_info,
-                             agents_path) = \
-                                substep_assignment(nodes_df=nodes_df,
-                                                   weighted_edges_df=weighted_edges_df,
-                                                   od_ss=od_ss,
-                                                   quarter_demand=quarter_demand,
-                                                   assigned_demand=assigned_demand,
-                                                   quarter_counts=quarter_counts,
-                                                   trip_info=trip_info,
-                                                   agent_time_limit=agent_time_limit,
-                                                   sample_interval=sample_interval,
-                                                   agents_path=agents_path,
-                                                   hour=hour,
-                                                   quarter=quarter,
-                                                   ss_id=ss_id,
-                                                   alpha_f=alpha_f,
-                                                   beta_f=beta_f)
+                            (
+                                edges_df,
+                                od_residual_ss_list,
+                                trip_info,
+                                agents_path,
+                            ) = substep_assignment(
+                                nodes_df=nodes_df,
+                                weighted_edges_df=weighted_edges_df,
+                                od_ss=od_ss,
+                                quarter_demand=quarter_demand,
+                                assigned_demand=assigned_demand,
+                                quarter_counts=quarter_counts,
+                                trip_info=trip_info,
+                                agent_time_limit=agent_time_limit,
+                                sample_interval=sample_interval,
+                                agents_path=agents_path,
+                                hour=hour,
+                                quarter=quarter,
+                                ss_id=ss_id,
+                                alpha_f=alpha_f,
+                                beta_f=beta_f,
+                            )
 
                             od_residual_list += od_residual_ss_list
                             # write_edge_vol(edges_df=edges_df,
@@ -718,87 +791,118 @@ class TransportationPerformance(ABC):  # noqa: B024
                             #               quarter=quarter,
                             #               hour=hour,
                             #         scen_nm='ss{}_{}'.format(ss_id, scen_nm))
-                            logging.info(f'HR {hour} QT {quarter} SS {ss_id}'
-                                         ' finished, max vol '
-                                         f'{np.max(edges_df["vol_true"])}, '
-                                         f'time {time.time() - time_ss_0}')
+                            logging.info(
+                                f'HR {hour} QT {quarter} SS {ss_id}'
+                                ' finished, max vol '
+                                f'{np.max(edges_df["vol_true"])}, '
+                                f'time {time.time() - time_ss_0}'
+                            )
 
                         # write quarterly results
                         edges_df['vol_tot'] += edges_df['vol_true']
                         if True:  # hour >=16 or (hour==15 and quarter==3):
-                            write_edge_vol(edges_df=edges_df,
-                                           simulation_outputs=simulation_outputs,
-                                           quarter=quarter,
-                                           hour=hour,
-                                           scen_nm=scen_nm)
+                            write_edge_vol(
+                                edges_df=edges_df,
+                                simulation_outputs=simulation_outputs,
+                                quarter=quarter,
+                                hour=hour,
+                                scen_nm=scen_nm,
+                            )
 
                     if hour % 3 == 0:
-                        trip_info_df = pd.DataFrame([[trip_key[0],
-                                                      trip_key[1],
-                                                      trip_key[2],
-                                                      trip_value[0],
-                                                      trip_value[1],
-                                                      trip_value[2],
-                                                      trip_value[3],
-                                                      trip_value[4],
-                                                      trip_value[5]] for
-                                                     trip_key, trip_value in
-                                                     trip_info.items()],
-                                                    columns=['agent_id',
-                                                             'origin_nid',
-                                                             'destin_nid',
-                                                             'travel_time',
-                                                             'travel_time_used',
-                                                             'stop_nid',
-                                                             'stop_hour',
-                                                             'stop_quarter',
-                                                             'stop_ssid'])
-                        trip_info_df.to_csv(simulation_outputs + '/trip_info'
-                                            f'/trip_info_{scen_nm}_hr{hour}'
-                                            '.csv', index=False)
+                        trip_info_df = pd.DataFrame(
+                            [
+                                [
+                                    trip_key[0],
+                                    trip_key[1],
+                                    trip_key[2],
+                                    trip_value[0],
+                                    trip_value[1],
+                                    trip_value[2],
+                                    trip_value[3],
+                                    trip_value[4],
+                                    trip_value[5],
+                                ]
+                                for trip_key, trip_value in trip_info.items()
+                            ],
+                            columns=[
+                                'agent_id',
+                                'origin_nid',
+                                'destin_nid',
+                                'travel_time',
+                                'travel_time_used',
+                                'stop_nid',
+                                'stop_hour',
+                                'stop_quarter',
+                                'stop_ssid',
+                            ],
+                        )
+                        trip_info_df.to_csv(
+                            simulation_outputs + '/trip_info'
+                            f'/trip_info_{scen_nm}_hr{hour}'
+                            '.csv',
+                            index=False,
+                        )
 
             # output individual trip travel time and stop location
 
-            trip_info_df = pd.DataFrame([[trip_key[0],
-                                          trip_key[1],
-                                          trip_key[2],
-                                          trip_value[0],
-                                          trip_value[1],
-                                          trip_value[2],
-                                          trip_value[3],
-                                          trip_value[4],
-                                          trip_value[5]] for trip_key,
-                                         trip_value in trip_info.items()],
-                                        columns=['agent_id',
-                                                 'origin_nid',
-                                                 'destin_nid',
-                                                 'travel_time',
-                                                 'travel_time_used',
-                                                 'stop_nid',
-                                                 'stop_hour',
-                                                 'stop_quarter',
-                                                 'stop_ssid'])
+            trip_info_df = pd.DataFrame(
+                [
+                    [
+                        trip_key[0],
+                        trip_key[1],
+                        trip_key[2],
+                        trip_value[0],
+                        trip_value[1],
+                        trip_value[2],
+                        trip_value[3],
+                        trip_value[4],
+                        trip_value[5],
+                    ]
+                    for trip_key, trip_value in trip_info.items()
+                ],
+                columns=[
+                    'agent_id',
+                    'origin_nid',
+                    'destin_nid',
+                    'travel_time',
+                    'travel_time_used',
+                    'stop_nid',
+                    'stop_hour',
+                    'stop_quarter',
+                    'stop_ssid',
+                ],
+            )
             # Add the no path OD to the trip info
-            trip_info_no_path = od_no_path.drop(columns=[col for col in od_no_path.columns  # noqa: W291
-                                                if col not in ['agent_id', 'origin_nid',
-                                                'destin_nid']])
+            trip_info_no_path = od_no_path.drop(
+                columns=[
+                    col
+                    for col in od_no_path.columns
+                    if col not in ['agent_id', 'origin_nid', 'destin_nid']
+                ]
+            )
             trip_info_no_path['travel_time'] = 360000
             trip_info_no_path['travel_time_used'] = np.nan
             trip_info_no_path['stop_nid'] = np.nan
             trip_info_no_path['stop_hour'] = np.nan
             trip_info_no_path['stop_quarter'] = np.nan
             trip_info_no_path['stop_ssid'] = np.nan
-            trip_info_df = pd.concat([trip_info_df, trip_info_no_path], ignore_index=True)
+            trip_info_df = pd.concat(
+                [trip_info_df, trip_info_no_path], ignore_index=True
+            )
 
-            trip_info_df.to_csv(simulation_outputs +
-                                f'/trip_info/trip_info_{scen_nm}.csv',
-                                index=False)
+            trip_info_df.to_csv(
+                simulation_outputs + f'/trip_info/trip_info_{scen_nm}.csv',
+                index=False,
+            )
 
-            write_final_vol(edges_df=edges_df,
-                            simulation_outputs=simulation_outputs,
-                            quarter=quarter,
-                            hour=hour,
-                            scen_nm=scen_nm)
+            write_final_vol(
+                edges_df=edges_df,
+                simulation_outputs=simulation_outputs,
+                quarter=quarter,
+                hour=hour,
+                scen_nm=scen_nm,
+            )
 
         network_edges = self.csv_filenames[0]
         network_nodes = self.csv_filenames[1]
@@ -815,21 +919,36 @@ class TransportationPerformance(ABC):  # noqa: B024
         # edges_df = edges_df[["uniqueid", "geometry", "osmid", "length", "type",
         #                      "lanes", "maxspeed", "fft", "capacity",
         #                      "start_nid", "end_nid"]]
-        edges_df = edges_df[["uniqueid", "geometry", "length", "type",
-                             "lanes", "maxspeed", "capacity",
-                             "start_nid", "end_nid"]]
+        edges_df = edges_df[
+            [
+                'uniqueid',
+                'geometry',
+                'length',
+                'type',
+                'lanes',
+                'maxspeed',
+                'capacity',
+                'start_nid',
+                'end_nid',
+            ]
+        ]
         edges_df = gpd.GeoDataFrame(
-            edges_df, crs='epsg:4326', geometry=edges_df['geometry'].map(
-                loads))
+            edges_df, crs='epsg:4326', geometry=edges_df['geometry'].map(loads)
+        )
         # pay attention to the unit conversion, lenth is in meters, maxspeed is mph
         # fft is in seconds
-        edges_df['fft'] = edges_df['length']/edges_df['maxspeed']*2.23694
-        edges_df = edges_df.sort_values(by='fft', ascending=False).\
-            drop_duplicates(subset=['start_nid', 'end_nid'], keep='first')
-        edges_df['edge_str'] = edges_df['start_nid'].astype(
-            'str') + '-' + edges_df['end_nid'].astype('str')
+        edges_df['fft'] = edges_df['length'] / edges_df['maxspeed'] * 2.23694
+        edges_df = edges_df.sort_values(by='fft', ascending=False).drop_duplicates(
+            subset=['start_nid', 'end_nid'], keep='first'
+        )
+        edges_df['edge_str'] = (
+            edges_df['start_nid'].astype('str')
+            + '-'
+            + edges_df['end_nid'].astype('str')
+        )
         edges_df['capacity'] = np.where(
-            edges_df['capacity'] < 1, 950, edges_df['capacity'])
+            edges_df['capacity'] < 1, 950, edges_df['capacity']
+        )
         edges_df['normal_capacity'] = edges_df['capacity']
         edges_df['normal_fft'] = edges_df['fft']
         edges_df['t_avg'] = edges_df['fft']
@@ -839,8 +958,7 @@ class TransportationPerformance(ABC):  # noqa: B024
         # closure locations
         closed_links = pd.read_csv(closed_edges_file)
         for row in closed_links.itertuples():
-            edges_df.loc[(edges_df['uniqueid'] == row.uniqueid),
-                         'capacity'] = 1
+            edges_df.loc[(edges_df['uniqueid'] == row.uniqueid), 'capacity'] = 1
             edges_df.loc[(edges_df['uniqueid'] == row.uniqueid), 'fft'] = 36000
         # output closed file for visualization
         # edges_df.loc[edges_df['fft'] == 36000, ['uniqueid',
@@ -864,29 +982,30 @@ class TransportationPerformance(ABC):  # noqa: B024
         t_od_0 = time.time()
         od_all = pd.read_csv(demand_file)
         t_od_1 = time.time()
-        logging.info('%d sec to read %d OD pairs',
-                     t_od_1 - t_od_0, od_all.shape[0])
-  # noqa: W293
+        logging.info('%d sec to read %d OD pairs', t_od_1 - t_od_0, od_all.shape[0])
         # run residual_demand_assignment
-        assignment(edges_df=edges_df,
-                   nodes_df=nodes_df,
-                   od_all=od_all,
-                   simulation_outputs=simulation_outputs,
-                   scen_nm=scen_nm,
-                   hour_list=hour_list,
-                   quarter_list=quarter_list,
-                   closure_hours=closure_hours,
-                   closed_links=closed_links)
+        assignment(
+            edges_df=edges_df,
+            nodes_df=nodes_df,
+            od_all=od_all,
+            simulation_outputs=simulation_outputs,
+            scen_nm=scen_nm,
+            hour_list=hour_list,
+            quarter_list=quarter_list,
+            closure_hours=closure_hours,
+            closed_links=closed_links,
+        )
 
     # @abstractmethod
-    def update_od_file(self,
-                       old_nodes: str,
-                       old_det: str,
-                       new_nodes: str,
-                       new_det: str,
-                       od: str,
-                       origin_ids: list[int]
-                       ) -> pd.DataFrame:
+    def update_od_file(
+        self,
+        old_nodes: str,
+        old_det: str,
+        new_nodes: str,
+        new_det: str,
+        od: str,
+        origin_ids: list[int],
+    ) -> pd.DataFrame:
         """
         Update origin-destination (OD) file from changes in population data.
 
@@ -942,11 +1061,12 @@ class TransportationPerformance(ABC):  # noqa: B024
             - The OD file should have the columns `agent_id`, `origin_nid`,
                 `destin_nid`, `hour`, and `quarter`.
         """
+
         # Extract the building information from the det file and convert it to
         # a pandas dataframe
         def extract_building_from_det(det):
             # Open the det file
-            with Path.open(det, encoding="utf-8") as file:
+            with Path.open(det, encoding='utf-8') as file:
                 # Return the JSON object as a dictionary
                 json_data = json.load(file)
 
@@ -956,12 +1076,14 @@ class TransportationPerformance(ABC):  # noqa: B024
 
             for aim_id, info in json_data['Buildings']['Building'].items():
                 general_info = info.get('GeneralInformation', {})
-                extracted_data.append({
-                    'AIM_id': aim_id,
-                    'Latitude': general_info.get('Latitude'),
-                    'Longitude': general_info.get('Longitude'),
-                    'Population': general_info.get('Population')
-                })
+                extracted_data.append(
+                    {
+                        'AIM_id': aim_id,
+                        'Latitude': general_info.get('Latitude'),
+                        'Longitude': general_info.get('Longitude'),
+                        'Population': general_info.get('Population'),
+                    }
+                )
 
             return pd.DataFrame(extracted_data)
 
@@ -969,25 +1091,39 @@ class TransportationPerformance(ABC):  # noqa: B024
         # node
         def closest_neighbour(building_df, nodes_df):
             # Find the nearest road network node to each building
-            nodes_xy = np.array([nodes_df['lat'].to_numpy(),
-                                 nodes_df['lon'].to_numpy()]).transpose()
-            building_df['closest_node'] = building_df.apply(lambda x: cdist(
-                [(x['Latitude'], x['Longitude'])], nodes_xy).argmin(), axis=1)
+            nodes_xy = np.array(
+                [nodes_df['lat'].to_numpy(), nodes_df['lon'].to_numpy()]
+            ).transpose()
+            building_df['closest_node'] = building_df.apply(
+                lambda x: cdist(
+                    [(x['Latitude'], x['Longitude'])], nodes_xy
+                ).argmin(),
+                axis=1,
+            )
 
             # Merge the road network and building dataframes
-            merged_df = nodes_df.merge(building_df,
-                                       left_on='node_id',
-                                       right_on='closest_node',
-                                       how='left')
+            merged_df = nodes_df.merge(
+                building_df, left_on='node_id', right_on='closest_node', how='left'
+            )
             merged_df = merged_df.drop(
-                columns=['AIM_id', 'Latitude', 'Longitude', 'closest_node'])
+                columns=['AIM_id', 'Latitude', 'Longitude', 'closest_node']
+            )
             merged_df = merged_df.fillna(0)
 
             # Aggregate population of  neareast buildings to the road network
             # node
-            updated_nodes_df = merged_df.groupby('node_id').agg(
-                {'lon': 'first', 'lat': 'first', 'geometry': 'first',
-                 'Population': 'sum'}).reset_index()
+            updated_nodes_df = (
+                merged_df.groupby('node_id')
+                .agg(
+                    {
+                        'lon': 'first',
+                        'lat': 'first',
+                        'geometry': 'first',
+                        'Population': 'sum',
+                    }
+                )
+                .reset_index()
+            )
 
             return updated_nodes_df  # noqa: RET504
 
@@ -1013,8 +1149,9 @@ class TransportationPerformance(ABC):  # noqa: B024
         # Calculate the population changes at each node (assuming that
         # population will only increase at each node)
         population_change_df = old_nodes_df.copy()
-        population_change_df['Population Change'] = new_nodes_df['Population']\
-            - old_nodes_df['Population']
+        population_change_df['Population Change'] = (
+            new_nodes_df['Population'] - old_nodes_df['Population']
+        )
         population_change_df['Population Change'].astype(int)
         # Randomly generate the trips that start at one of the connections
         # between Alameda Island and Oakland, and end at the nodes where
@@ -1034,13 +1171,16 @@ class TransportationPerformance(ABC):  # noqa: B024
                     hour = np.random.randint(5, 24)
                     quarter = np.random.randint(0, 5)
                     # Append to od dataframe
-                    od_df = od_df.append({
-                        'agent_id': 0,
-                        'origin_nid': origin_nid,
-                        'destin_nid': destin_nid,
-                        'hour': hour,
-                        'quarter': quarter
-                    }, ignore_index=True)
+                    od_df = od_df.append(
+                        {
+                            'agent_id': 0,
+                            'origin_nid': origin_nid,
+                            'destin_nid': destin_nid,
+                            'hour': hour,
+                            'quarter': quarter,
+                        },
+                        ignore_index=True,
+                    )
         od_df.to_csv('updated_od.csv')
         return od_df
 
@@ -1160,7 +1300,7 @@ class TransportationPerformance(ABC):  # noqa: B024
     #             if 'TransportationNetwork' not in temp:
     #                 raise KeyError(
     #                     'The deterministic result JSON file does not contain TransportationNetwork')
-    #             temp = temp['TransportationNetwork']  # noqa: W291
+    #             temp = temp['TransportationNetwork']
     #             # If the file contains road information:
     #             if 'Roadway' in temp:
     #                 # Extract road features:

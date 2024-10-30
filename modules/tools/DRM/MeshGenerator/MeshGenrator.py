@@ -153,7 +153,9 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):  # noqa: C901, N802, D103, PLR091
     DRMTotalThickness = (  # noqa: N806
         DRMThickness * numDrmLayers
     )  # total thickness of the DRM layers
-    padLayers = numPMLLayers + numDrmLayers  # number of layers to pad the meshgrid  # noqa: N806, F841
+    padLayers = (  # noqa: F841, N806
+        numPMLLayers + numDrmLayers
+    )  # number of layers to pad the meshgrid
     padThickness = (  # noqa: N806, F841
         PMLTotalThickness + DRMThickness
     )  # thickness of the padding layers

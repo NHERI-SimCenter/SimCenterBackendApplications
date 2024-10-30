@@ -46,7 +46,7 @@ import subprocess
 
 import numpy as np
 
-errFileName = os.path.join(os.getcwd(),'workflow.err')  # noqa: N816, PTH109, PTH118
+errFileName = os.path.join(os.getcwd(), 'workflow.err')  # noqa: N816, PTH109, PTH118
 sys.stderr = open(errFileName, 'a')  # noqa: SIM115, PTH123
 
 # from simcenter_common import *

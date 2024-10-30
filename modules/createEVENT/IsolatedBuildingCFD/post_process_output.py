@@ -411,7 +411,9 @@ if __name__ == '__main__':
         storyLoads[:, 3 * i + 3] = moments[:, i, 2]
 
     np.savetxt(
-        os.path.join(load_output_path, 'storyLoad.txt'), storyLoads, delimiter='\t'  # noqa: PTH118
+        os.path.join(load_output_path, 'storyLoad.txt'),  # noqa: PTH118
+        storyLoads,
+        delimiter='\t',
     )
 
     # Write base loads
@@ -436,7 +438,9 @@ if __name__ == '__main__':
         baseLoads[:, 4:7] = moments
 
         np.savetxt(
-            os.path.join(load_output_path, 'baseLoad.txt'), baseLoads, delimiter='\t'  # noqa: PTH118
+            os.path.join(load_output_path, 'baseLoad.txt'),  # noqa: PTH118
+            baseLoads,
+            delimiter='\t',
         )
 
     # Write base loads

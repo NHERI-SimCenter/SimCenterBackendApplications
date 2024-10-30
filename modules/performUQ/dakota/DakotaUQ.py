@@ -138,7 +138,7 @@ def main(args):  # noqa: C901, D103
             returncode = 0
         except subprocess.CalledProcessError as e:
             result = e.output
-            #print('RUNNING DAKOTA ERROR: ', result)  # noqa: RUF100, T201
+            # print('RUNNING DAKOTA ERROR: ', result)  # noqa: RUF100, T201
             returncode = e.returncode  # noqa: F841
             run_success = False
 
@@ -149,50 +149,55 @@ def main(args):  # noqa: C901, D103
         checkOutFile = os.path.exists(dakotaOutFile)  # noqa: PTH110, N806
         checkTabFile = os.path.exists(dakotaTabFile)  # noqa: F841, N806, PTH110
 
-
-        checkErrSize=-1  # noqa: N806
-        if checkErrFile>0:
+        checkErrSize = -1  # noqa: N806
+        if checkErrFile > 0:
             checkErrSize = os.path.getsize(dakotaErrFile)  # noqa: F841, N806, PTH202
-  # noqa: W293
         if checkOutFile == False and checkErrFile == 0:  # noqa: E712
-
             with open(dakotaErrFile, 'a') as file:  # noqa: PTH123
                 file.write(result.decode('utf-8'))
         else:
             pass
 
-
         if not run_success:
-  # noqa: RUF100, W293
-            display_err = "\nERROR. Dakota did not run. dakota.err not created."
-                                #  # noqa: PLR2044, RUF100
+            # noqa: RUF100, W293
+            display_err = '\nERROR. Dakota did not run. dakota.err not created.'
+            #  # noqa: PLR2044, RUF100
 
             # First see if dakota.err is created
             with open(dakotaErrFile, 'r') as file:  # noqa: PTH123, UP015
                 dakota_err = file.read()
 
-            display_err = "\nERROR. Workflow did not run: " + dakota_err
-
+            display_err = '\nERROR. Workflow did not run: ' + dakota_err
 
             # Second, see if workflow.err is found
             if 'workdir.' in dakota_err:
+                display_err = '\nERROR. Workflow did not run: ' + dakota_err
 
-                display_err = "\nERROR. Workflow did not run: " + dakota_err
-
-                start_index = dakota_err.find("workdir.") + len("workdir.")
-                end_index = dakota_err.find("\\", start_index)
+                start_index = dakota_err.find('workdir.') + len('workdir.')
+                end_index = dakota_err.find('\\', start_index)
                 workdir_no = dakota_err[start_index:end_index]
 
-                workflow_err_path = os.path.join(os.getcwd(),f'workdir.{workdir_no}/workflow.err')  # noqa: PTH109, PTH118
+                workflow_err_path = os.path.join(  # noqa: PTH118
+                    os.getcwd(), f'workdir.{workdir_no}/workflow.err'  # noqa: PTH109
+                )
                 if os.path.isfile(workflow_err_path):  # noqa: N806, PTH110, PTH113, RUF100
                     with open(workflow_err_path, 'r') as file:  # noqa: PTH123, UP015
                         workflow_err = file.read()
 
-                    if not workflow_err=="":  # noqa: SIM201
-                        display_err = str("\nERROR running the workflow: \n" + workflow_err + "\n Check out more in " +  str(os.path.dirname(workflow_err_path)).replace('\\','/'))  # noqa: PTH120
+                    if not workflow_err == '':  # noqa: SIM201
+                        display_err = str(
+                            '\nERROR running the workflow: \n'
+                            + workflow_err
+                            + '\n Check out more in '
+                            + str(os.path.dirname(workflow_err_path)).replace(  # noqa: PTH120
+                                '\\', '/'
+                            )
+                        )
 
             print(display_err)  # noqa: T201
-            exit(0) # sy - this could be -1 like any other tools. But if it is 0, quoFEM,EE,WE,Hydro will highlight the error messages in "red" by using the parser in UI. To use this parser in UI, we need to make UI believe that the analysis is successful. Something that needs improvment # noqa: PLR1722
+            exit(  # noqa: PLR1722
+                0
+            )  # sy - this could be -1 like any other tools. But if it is 0, quoFEM,EE,WE,Hydro will highlight the error messages in "red" by using the parser in UI. To use this parser in UI, we need to make UI believe that the analysis is successful. Something that needs improvment
 
 
 if __name__ == '__main__':
