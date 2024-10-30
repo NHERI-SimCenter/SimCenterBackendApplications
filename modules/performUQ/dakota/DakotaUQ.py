@@ -142,14 +142,20 @@ def main(args):  # noqa: C901, D103
             returncode = e.returncode  # noqa: F841
             run_success = False
 
-        dakotaErrFile = os.path.join(os.getcwd(), 'dakota.err')  # noqa: PTH109, PTH118, N806
-        dakotaOutFile = os.path.join(os.getcwd(), 'dakota.out')  # noqa: PTH109, PTH118, N806
-        dakotaTabFile = os.path.join(os.getcwd(), 'dakotaTab.out')  # noqa: PTH109, PTH118, N806
-        checkErrFile = os.path.getsize(dakotaErrFile)  # noqa: PTH202, N806
+        dakotaErrFile = os.path.join(cwd, 'dakota.err')  # noqa: PTH109, PTH118, N806 
+        dakotaOutFile = os.path.join(cwd, 'dakota.out')  # noqa: PTH109, PTH118, N806
+        dakotaTabFile = os.path.join(cwd, 'dakotaTab.out')  # noqa: PTH109, PTH118, N806
+        checkErrFile = os.path.exists(dakotaErrFile)  # noqa: PTH110, N806
         checkOutFile = os.path.exists(dakotaOutFile)  # noqa: PTH110, N806
         checkTabFile = os.path.exists(dakotaTabFile)  # noqa: F841, N806, PTH110
 
+
+        checkErrSize=-1
+        if checkErrFile>0:
+            checkErrSize = os.path.getsize(dakotaErrFile)  # noqa: PTH202, N806
+        
         if checkOutFile == False and checkErrFile == 0:  # noqa: E712
+
             with open(dakotaErrFile, 'a') as file:  # noqa: PTH123
                 file.write(result.decode('utf-8'))
         else:
