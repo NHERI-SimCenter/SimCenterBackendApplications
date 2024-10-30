@@ -1243,11 +1243,11 @@
           {
         "Name": "Pyrecodes",
         "ExecutablePath": "applications/performREC/pyrecodes/run_pyrecodes.py",
-        "ApplicationSpecificInputs": [	
-          {
-            "id": "mainFile",
-            "type": "path",
-            "description": "Path to pyrecodes mainFile."
+        "ApplicationSpecificInputs": [
+		  {
+            "id": "Realization",
+            "type": "string",
+            "description": "Realizations."
           },
           {
             "id": "systemConfigFile",
