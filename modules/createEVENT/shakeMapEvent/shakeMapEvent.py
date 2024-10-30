@@ -37,22 +37,22 @@
 # Stevan Gavrilovic
 #
 
-import argparse
+import argparse  # noqa: I001
 import xml.etree.ElementTree as ET
 import geopandas as gpd
 from shapely.geometry import Point
 from pathlib import Path
 
 
-def create_shakemap_event(eventDirectory, eventPath, IMTypes):  # noqa: D103
-    IMTypesList = eval(IMTypes)
+def create_shakemap_event(eventDirectory, eventPath, IMTypes):  # noqa: D103, N803
+    IMTypesList = eval(IMTypes)  # noqa: S307, N806
 
-    print('Creating shakemap event')
+    print('Creating shakemap event')  # noqa: T201
 
     xml_file_path = Path(eventDirectory) / eventPath / 'grid.xml'
 
     # Parse the XML file
-    tree = ET.parse(xml_file_path)
+    tree = ET.parse(xml_file_path)  # noqa: S314
     root = tree.getroot()
 
     # Find the grid_data element
@@ -90,13 +90,13 @@ def create_shakemap_event(eventDirectory, eventPath, IMTypes):  # noqa: D103
     gdf = gpd.GeoDataFrame(attributes, geometry=points, crs='EPSG:4326')
 
     # Display the first few rows
-    print('Saving shakemap to gpkg')
+    print('Saving shakemap to gpkg')  # noqa: T201
 
     # Save as a GeoPackage file
     gdf_path = Path(eventDirectory) / 'EventGrid.gpkg'
     gdf.to_file(gdf_path, driver='GPKG')
 
-    return
+    return  # noqa: PLR1711
 
 
 if __name__ == '__main__':

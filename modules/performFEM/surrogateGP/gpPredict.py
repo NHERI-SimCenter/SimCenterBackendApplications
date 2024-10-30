@@ -210,7 +210,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
             self.set_XY(X, Y)
 
-        def get_stochastic_variance(X, Y, x, ny):  # noqa: N803
+        def get_stochastic_variance(X, Y, x, ny):  # noqa: C901, N803
             # X_unique, X_idx, indices, counts = np.unique(X, axis=0, return_index=True, return_counts=True, return_inverse=True)
             X_unique, dummy, indices, counts = np.unique(  # noqa: N806
                 X, axis=0, return_index=True, return_counts=True, return_inverse=True
@@ -250,13 +250,13 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 var_pred = np.exp(log_var_pred)
 
                 if did_normalization:
-                    # Y_normFact = np.var(Y_mean)  # noqa: N806
+                    # Y_normFact = np.var(Y_mean)  # noqa: N806, RUF100
                     Y_normFact = np.mean(var_pred.T[0])  # noqa: N806
                 else:
                     Y_normFact = 1  # noqa: N806
 
                 norm_var_str = (
-                        (var_pred.T[0]) / Y_normFact
+                    (var_pred.T[0]) / Y_normFact
                 )  # if normalization was used..
 
                 log_var_pred_x, dum = m_var.predict(x)
@@ -272,13 +272,16 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 #
                 old_version = False
                 for key, val in sur['modelInfo'][g_name_sur[ny] + '_Var'].items():  # noqa: B007, PERF102
-                    if "sum" in key:
+                    if 'sum' in key:
                         old_version = True
                         break
 
                 if old_version:
-                    print("The surrogate model was trained using an older version of the tool. Please retrain the model using this version or use older version.", file=sys.stderr)
-                    exit(-1)
+                    print(  # noqa: T201
+                        'The surrogate model was trained using an older version of the tool. Please retrain the model using this version or use older version.',
+                        file=sys.stderr,
+                    )
+                    exit(-1)  # noqa: PLR1722
 
                 log_vars = np.atleast_2d(
                     sur['modelInfo'][g_name_sur[ny] + '_Var']['TrainingSamplesY']
@@ -298,14 +301,14 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 var_pred = np.exp(log_var_pred)
 
                 if did_normalization:
-                    # Y_normFact = np.var(Y)  # noqa: N806
+                    # Y_normFact = np.var(Y)  # noqa: N806, RUF100
                     Y_normFact = np.mean(var_pred.T[0])  # noqa: N806
 
                 else:
                     Y_normFact = 1  # noqa: N806
 
                 norm_var_str = (
-                        (var_pred.T[0]) / Y_normFact
+                    (var_pred.T[0]) / Y_normFact
                 )  # if normalization was used..
 
                 log_var_pred_x, dum = m_var.predict(x)
@@ -347,12 +350,12 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 continue
 
             if (
-                    not name_values[1]
-                            .replace('.', '', 1)
-                            .replace('e', '', 1)
-                            .replace('-', '', 2)
-                            .replace('+', '', 1)
-                            .isdigit()
+                not name_values[1]
+                .replace('.', '', 1)
+                .replace('e', '', 1)
+                .replace('-', '', 2)
+                .replace('+', '', 1)
+                .isdigit()
             ):
                 # surrogate model does not accept discrete
                 continue
@@ -478,7 +481,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             s = [str(rv_name_sur[id]) for id in missing_ids]  # noqa: A001
 
             if first_eeuq_found and all(
-                    [missingEDP.endswith('-2') for missingEDP in s]  # noqa: C419
+                [missingEDP.endswith('-2') for missingEDP in s]  # noqa: C419
             ):
                 msg = 'ground motion dimension does not match with that of the training'
                 # for i in range(len(s)):
@@ -537,8 +540,12 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         lin_list = []
         for ny in range(ng_sur):
             tmp_lin = LinearRegression()
-            tmp_lin.coef_ = np.array(sur['modelInfo'][g_name_sur[ny] + '_Lin']['coef'])
-            tmp_lin.intercept_ = np.array(sur['modelInfo'][g_name_sur[ny] + '_Lin']['intercept'])
+            tmp_lin.coef_ = np.array(
+                sur['modelInfo'][g_name_sur[ny] + '_Lin']['coef']
+            )
+            tmp_lin.intercept_ = np.array(
+                sur['modelInfo'][g_name_sur[ny] + '_Lin']['intercept']
+            )
             lin_list += [tmp_lin]
     else:
         did_linear = False
@@ -582,9 +589,9 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     exec('m_list[ny].' + key + '= np.array(val)')  # noqa: S102
 
                 nugget_var_list[ny] = (
-                        m_list[ny].Gaussian_noise.parameters
-                        * nugget_var_pred
-                        * Y_normFact
+                    m_list[ny].Gaussian_noise.parameters
+                    * nugget_var_pred
+                    * Y_normFact
                 )
 
             else:
@@ -612,8 +619,8 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         for ny in range(ng_sur):
             Y_normFact = np.var(Y[:, ny])  # noqa: N806
             nugget_var_list[ny] = (
-                    m_list[ny].gpy_model['mixed_noise.Gaussian_noise.variance']
-                    * Y_normFact
+                m_list[ny].gpy_model['mixed_noise.Gaussian_noise.variance']
+                * Y_normFact
             )
 
     # read param in file and sort input
@@ -757,7 +764,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 templatedirFolder = os.path.join(os.getcwd(), 'templatedir_SIM')  # noqa: PTH109, PTH118, N806
 
                 if (
-                        (isEEUQ or isWEUQ) and nsamp == 1
+                    (isEEUQ or isWEUQ) and nsamp == 1
                 ):  # because stochastic ground motion generation uses folder number when generating random seed.............
                     current_dir_i = os.path.join(  # noqa: PTH118
                         os.getcwd(),  # noqa: PTH109
@@ -853,15 +860,15 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
                 if isEEUQ or isWEUQ:
                     if (
-                            os_type.lower().startswith('win')
-                            and run_type.lower() == 'runninglocal'
+                        os_type.lower().startswith('win')
+                        and run_type.lower() == 'runninglocal'
                     ):
                         workflowDriver = 'sc_driver.bat'  # noqa: N806
                     else:
                         workflowDriver = 'sc_driver'  # noqa: N806
                 elif (
-                        os_type.lower().startswith('win')
-                        and run_type.lower() == 'runninglocal'
+                    os_type.lower().startswith('win')
+                    and run_type.lower() == 'runninglocal'
                 ):
                     workflowDriver = 'driver.bat'  # noqa: N806
                 else:
@@ -889,9 +896,9 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
             elif when_inaccurate == 'continue':
                 msg2 = (
-                        msg0
-                        + msg1[ns]
-                        + '- CONTINUE [Warning: results may not be accurate]\n'
+                    msg0
+                    + msg1[ns]
+                    + '- CONTINUE [Warning: results may not be accurate]\n'
                 )
                 error_warning(msg2)
 
@@ -902,8 +909,8 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
         else:
             msg3 = (
-                    msg0
-                    + f'Prediction error level of output {idx[ns]} is {np.max(error_ratio2[ns]) * 100:.2f}%\n'
+                msg0
+                + f'Prediction error level of output {idx[ns]} is {np.max(error_ratio2[ns]) * 100:.2f}%\n'
             )
             error_warning(msg3)
 
@@ -1016,7 +1023,7 @@ def predict(m, X, did_mf):  # noqa: N803, D103
         # TODO change below to noiseless  # noqa: TD002, TD004
         X_list = convert_x_list_to_array([X, X])  # noqa: N806
         X_list_l = X_list[: X.shape[0]]  # noqa: N806, F841
-        X_list_h = X_list[X.shape[0]:]  # noqa: N806
+        X_list_h = X_list[X.shape[0] :]  # noqa: N806
         return m.predict(X_list_h)
 
 

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-  # noqa: INP001, D100, UP009
 # Copyright (c) 2016-2017, The Regents of the University of California (Regents).
 # All rights reserved.
 #
@@ -43,7 +43,7 @@
 # pressure on predicted set of probes.
 #
 
-import sys
+import sys  # noqa: I001
 import os
 import subprocess
 import json
@@ -52,7 +52,7 @@ import shutil
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+import matplotlib.gridspec as gridspec  # noqa: PLR0402
 from scipy import signal
 from scipy.interpolate import interp1d
 from scipy.interpolate import UnivariateSpline
@@ -64,7 +64,7 @@ import argparse
 import re
 
 
-def read_bin_forces(fileName):
+def read_bin_forces(fileName):  # noqa: C901, N803
     """
     Reads binData measured at the center of each bin.
 
@@ -72,38 +72,38 @@ def read_bin_forces(fileName):
     bin heights, time, and the forces and moments vector on the bins for each
     time step.
 
-    """
+    """  # noqa: D401
     forces = []
     moments = []
     time = []
     nbins = 0
 
-    with open(fileName, 'r') as f:
+    with open(fileName, 'r') as f:  # noqa: PTH123, UP015
         for line in f:
             if line.startswith('#'):
                 # Read the origin where the force are integrated
                 if line.startswith('# bins'):
-                    line = line.replace('# bins', '')
-                    line = line.replace(':', '')
-                    line = line.split()
+                    line = line.replace('# bins', '')  # noqa: PLW2901
+                    line = line.replace(':', '')  # noqa: PLW2901
+                    line = line.split()  # noqa: PLW2901
                     nbins = int(line[0])
                     coords = np.zeros((nbins, 3))
                 elif line.startswith('# x co-ords'):
-                    line = line.replace('# x co-ords', '')
-                    line = line.replace(':', '')
-                    line = line.split()
+                    line = line.replace('# x co-ords', '')  # noqa: PLW2901
+                    line = line.replace(':', '')  # noqa: PLW2901
+                    line = line.split()  # noqa: PLW2901
                     for i in range(nbins):
                         coords[i, 0] = line[i]
                 elif line.startswith('# y co-ords'):
-                    line = line.replace('# y co-ords', '')
-                    line = line.replace(':', '')
-                    line = line.split()
+                    line = line.replace('# y co-ords', '')  # noqa: PLW2901
+                    line = line.replace(':', '')  # noqa: PLW2901
+                    line = line.split()  # noqa: PLW2901
                     for i in range(nbins):
                         coords[i, 1] = line[i]
                 elif line.startswith('# z co-ords'):
-                    line = line.replace('# z co-ords', '')
-                    line = line.replace(':', '')
-                    line = line.split()
+                    line = line.replace('# z co-ords', '')  # noqa: PLW2901
+                    line = line.replace(':', '')  # noqa: PLW2901
+                    line = line.split()  # noqa: PLW2901
                     for i in range(nbins):
                         coords[i, 2] = line[i]
                 else:
@@ -111,9 +111,9 @@ def read_bin_forces(fileName):
 
             # Read only the pressure part
             else:
-                line = line.replace('(', '')
-                line = line.replace(')', '')
-                line = line.split()
+                line = line.replace('(', '')  # noqa: PLW2901
+                line = line.replace(')', '')  # noqa: PLW2901
+                line = line.split()  # noqa: PLW2901
                 time.append(float(line[0]))
                 story_force = np.zeros((nbins, 3))
                 story_moments = np.zeros((nbins, 3))
@@ -139,26 +139,26 @@ def read_bin_forces(fileName):
     return coords, time, forces, moments
 
 
-def read_forces(fileName):
+def read_forces(fileName):  # noqa: N803
     """
     Reads force data integrated over a surface from OpenFOAM file and returns
     origin(center of rotation), time, and the forces and moments vector for
     each time step.
 
-    """
+    """  # noqa: D205, D401
     origin = np.zeros(3)
     forces = []
     moments = []
     time = []
 
-    with open(fileName, 'r') as f:
+    with open(fileName, 'r') as f:  # noqa: PTH123, UP015
         for line in f:
             if line.startswith('#'):
                 # Read the origin where the force are integrated
                 if line.startswith('# CofR'):
-                    line = line.replace('(', '')
-                    line = line.replace(')', '')
-                    line = line.split()
+                    line = line.replace('(', '')  # noqa: PLW2901
+                    line = line.replace(')', '')  # noqa: PLW2901
+                    line = line.split()  # noqa: PLW2901
                     origin[0] = line[3]  # x-coordinate
                     origin[1] = line[4]  # y-coordinate
                     origin[2] = line[5]  # z-coordinate
@@ -167,9 +167,9 @@ def read_forces(fileName):
             # Read only the pressure part of force and moments.
             # Viscous and porous are ignored
             else:
-                line = line.replace('(', '')
-                line = line.replace(')', '')
-                line = line.split()
+                line = line.replace('(', '')  # noqa: PLW2901
+                line = line.replace(')', '')  # noqa: PLW2901
+                line = line.split()  # noqa: PLW2901
                 time.append(float(line[0]))
                 forces.append([float(line[1]), float(line[2]), float(line[3])])
                 moments.append(
@@ -183,7 +183,7 @@ def read_forces(fileName):
     return origin, time, forces, moments
 
 
-def readPressureProbes(fileName):
+def readPressureProbes(fileName):  # noqa: N802, N803
     """
     Created on Wed May 16 14:31:42 2018
 
@@ -191,23 +191,23 @@ def readPressureProbes(fileName):
     for each time step.
 
     @author: Abiy
-    """
+    """  # noqa: D400, D401
     probes = []
     p = []
     time = []
 
-    with open(fileName, 'r') as f:
+    with open(fileName, 'r') as f:  # noqa: PTH123, UP015
         for line in f:
             if line.startswith('#'):
                 if line.startswith('# Probe'):
-                    line = line.replace('(', '')
-                    line = line.replace(')', '')
-                    line = line.split()
+                    line = line.replace('(', '')  # noqa: PLW2901
+                    line = line.replace(')', '')  # noqa: PLW2901
+                    line = line.split()  # noqa: PLW2901
                     probes.append([float(line[3]), float(line[4]), float(line[5])])
                 else:
                     continue
             else:
-                line = line.split()
+                line = line.split()  # noqa: PLW2901
                 time.append(float(line[0]))
                 p_probe_i = np.zeros([len(probes)])
                 for i in range(len(probes)):
@@ -236,7 +236,7 @@ def read_pressure_data(file_names):
     -------
     time, pressure
         Returns the pressure time and pressure data of the connected file.
-    """
+    """  # noqa: D205, D401, D404
     no_files = len(file_names)
     connected_time = []  # Connected array of time
     connected_p = []  # connected array of pressure.
@@ -258,7 +258,7 @@ def read_pressure_data(file_names):
                 index = np.where(time2 > time1[-1])[0][0]
                 # index += 1
 
-            except:
+            except:  # noqa: E722
                 # sys.exit('Fatal Error!: the pressure filese have time gap')
                 index = 0  # Joint them even if they have a time gap
 
@@ -266,7 +266,7 @@ def read_pressure_data(file_names):
             connected_p = np.concatenate((connected_p, p2[index:]))
 
         time1 = time2
-        p1 = p2
+        p1 = p2  # noqa: F841
     return probes, connected_time, connected_p
 
 
@@ -275,7 +275,7 @@ class PressureData:
     A class that holds a pressure data and performs the following operations:
             - mean and rms pressure coefficients
             - peak pressure coefficients
-    """
+    """  # noqa: D205, D400
 
     def __init__(
         self, path, u_ref=0.0, rho=1.25, p_ref=0.0, start_time=None, end_time=None
@@ -296,17 +296,17 @@ class PressureData:
         self.dt = np.mean(np.diff(self.time))
         self.probe_count = np.shape(self.probes)[0]
 
-    def read_cfd_data(self):
-        if os.path.isdir(self.path):
-            print('Reading from path : %s' % (self.path))
+    def read_cfd_data(self):  # noqa: D102
+        if os.path.isdir(self.path):  # noqa: PTH112
+            print('Reading from path : %s' % (self.path))  # noqa: T201, UP031
             time_names = os.listdir(self.path)
-            sorted_index = np.argsort(np.float_(time_names)).tolist()
+            sorted_index = np.argsort(np.float_(time_names)).tolist()  # noqa: NPY201
             # print(sorted_index)
             # print("\tTime directories: %s" %(time_names))
             file_names = []
 
             for i in range(len(sorted_index)):
-                file_name = os.path.join(self.path, time_names[sorted_index[i]], 'p')
+                file_name = os.path.join(self.path, time_names[sorted_index[i]], 'p')  # noqa: PTH118
                 file_names.append(file_name)
 
             # print(file_names)
@@ -319,27 +319,27 @@ class PressureData:
 
             # self.p = np.transpose(self.p) # OpenFOAM gives p/rho
         else:
-            print('Cannot find the file path: %s' % (self.path))
+            print('Cannot find the file path: %s' % (self.path))  # noqa: T201, UP031
 
-    def set_time(self):
-        if self.start_time != None:
+    def set_time(self):  # noqa: D102
+        if self.start_time != None:  # noqa: E711
             start_index = int(np.argmax(self.time > self.start_time))
             self.time = self.time[start_index:]
             # self.cp = self.cp[:,start_index:]
             try:
                 self.p = self.p[:, start_index:]
                 self.cp = self.cp[:, start_index:]
-            except:
+            except:  # noqa: S110, E722
                 pass
 
-        if self.end_time != None:
+        if self.end_time != None:  # noqa: E711
             end_index = int(np.argmax(self.time > self.end_time))
             self.time = self.time[:end_index]
             # self.cp = self.cp[:,:end_index]
             try:
                 self.p = self.p[:, :end_index]
                 self.cp = self.cp[:, :end_index]
-            except:
+            except:  # noqa: S110, E722
                 pass
 
 
@@ -361,13 +361,13 @@ if __name__ == '__main__':
     case_path = arguments.case
     # case_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD"
 
-    print('Case full path: ', case_path)
+    print('Case full path: ', case_path)  # noqa: T201
 
     # Read JSON data
-    json_path = os.path.join(
+    json_path = os.path.join(  # noqa: PTH118
         case_path, 'constant', 'simCenter', 'input', 'IsolatedBuildingCFD.json'
     )
-    with open(json_path) as json_file:
+    with open(json_path) as json_file:  # noqa: PTH123
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -375,19 +375,19 @@ if __name__ == '__main__':
     wc_data = json_data['windCharacteristics']
     duration = json_data['numericalSetup']['duration']
 
-    load_output_path = os.path.join(
+    load_output_path = os.path.join(  # noqa: PTH118
         case_path, 'constant', 'simCenter', 'output', 'windLoads'
     )
 
     # Check if it exists and remove files
-    if os.path.exists(load_output_path):
+    if os.path.exists(load_output_path):  # noqa: PTH110
         shutil.rmtree(load_output_path)
 
     # Create new path
     Path(load_output_path).mkdir(parents=True, exist_ok=True)
 
     # Read and write the story forces
-    force_file_name = os.path.join(
+    force_file_name = os.path.join(  # noqa: PTH118
         case_path, 'postProcessing', 'storyForces', '0', 'forces_bins.dat'
     )
     origin, time, forces, moments = read_bin_forces(force_file_name)
@@ -396,12 +396,12 @@ if __name__ == '__main__':
     forces = forces[start_time:, :, :]
     moments = moments[start_time:, :, :]
 
-    print(force_file_name)
+    print(force_file_name)  # noqa: T201
 
     num_times = len(time)
     num_stories = rm_data['numStories']
 
-    storyLoads = np.zeros((num_times, num_stories * 3 + 1))
+    storyLoads = np.zeros((num_times, num_stories * 3 + 1))  # noqa: N816
 
     storyLoads[:, 0] = time
 
@@ -411,12 +411,14 @@ if __name__ == '__main__':
         storyLoads[:, 3 * i + 3] = moments[:, i, 2]
 
     np.savetxt(
-        os.path.join(load_output_path, 'storyLoad.txt'), storyLoads, delimiter='\t'
+        os.path.join(load_output_path, 'storyLoad.txt'),  # noqa: PTH118
+        storyLoads,
+        delimiter='\t',
     )
 
     # Write base loads
     if rm_data['monitorBaseLoad']:
-        force_file_name = os.path.join(
+        force_file_name = os.path.join(  # noqa: PTH118
             case_path, 'postProcessing', 'baseForces', '0', 'forces.dat'
         )
         origin, time, forces, moments = read_forces(force_file_name)
@@ -425,34 +427,36 @@ if __name__ == '__main__':
         forces = forces[start_time:, :]
         moments = moments[start_time:, :]
 
-        print(force_file_name)
+        print(force_file_name)  # noqa: T201
 
         num_times = len(time)
 
-        baseLoads = np.zeros((num_times, 3 * 2 + 1))
+        baseLoads = np.zeros((num_times, 3 * 2 + 1))  # noqa: N816
 
         baseLoads[:, 0] = time
         baseLoads[:, 1:4] = forces
         baseLoads[:, 4:7] = moments
 
         np.savetxt(
-            os.path.join(load_output_path, 'baseLoad.txt'), baseLoads, delimiter='\t'
+            os.path.join(load_output_path, 'baseLoad.txt'),  # noqa: PTH118
+            baseLoads,
+            delimiter='\t',
         )
 
     # Write base loads
     if rm_data['monitorSurfacePressure']:
         p_file_name = ''
         if rm_data['importPressureSamplingPoints']:
-            p_file_name = os.path.join(
+            p_file_name = os.path.join(  # noqa: PTH118
                 case_path, 'postProcessing', 'importedPressureSamplingPoints'
             )
         else:
-            p_file_name = os.path.join(
+            p_file_name = os.path.join(  # noqa: PTH118
                 case_path, 'postProcessing', 'generatedPressureSamplingPoints'
             )
 
         wind_speed = wc_data['referenceWindSpeed']
-        print(p_file_name)
+        print(p_file_name)  # noqa: T201
 
         cfd_p = PressureData(
             p_file_name,
@@ -465,13 +469,13 @@ if __name__ == '__main__':
 
         num_times = len(cfd_p.time)
 
-        pressureData = np.zeros((num_times, cfd_p.probe_count + 1))
+        pressureData = np.zeros((num_times, cfd_p.probe_count + 1))  # noqa: N816
 
         pressureData[:, 0] = cfd_p.time
         pressureData[:, 1:] = np.transpose(cfd_p.cp)
 
         np.savetxt(
-            os.path.join(load_output_path, 'pressureData.txt'),
+            os.path.join(load_output_path, 'pressureData.txt'),  # noqa: PTH118
             pressureData,
             delimiter='\t',
         )

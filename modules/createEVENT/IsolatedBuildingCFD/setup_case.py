@@ -1248,10 +1248,10 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
 
     monitor_vtk_planes = rm_data['monitorVTKPlane']
     vtk_planes = rm_data['vtkPlanes']
-    
-    # Need to change this for      
+  # noqa: W293
+    # Need to change this for  # noqa: W291
     max_delta_t = 10*time_step
-    
+  # noqa: W293
     #Write 10 times
     write_frequency = 10.0
     write_interval_time = duration / write_frequency
@@ -1322,21 +1322,21 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
         added_part = '    #includeFunc  baseForces\n'
         dict_lines.insert(start_index, added_part)
 
-    #Write VTK sampling sampling points 
+    #Write VTK sampling sampling points  # noqa: W291
     if monitor_vtk_planes:
         added_part = ""
         for pln in vtk_planes:
             added_part += "    #includeFunc  {}\n".format(pln["name"])
         dict_lines.insert(start_index, added_part)
-    
+  # noqa: W293
 
 
     #Write edited dict to file
     write_file_name = case_path + "/system/controlDict"
-    
+  # noqa: W293
     if os.path.exists(write_file_name):
         os.remove(write_file_name)
-    
+  # noqa: W293
     output_file = open(write_file_name, "w+")
     for line in dict_lines:
         output_file.write(line)
@@ -1994,7 +1994,7 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
-    rm_data = json_data["resultMonitoring"]   
+    rm_data = json_data["resultMonitoring"]  # noqa: W291
     ns_data = json_data["numericalSetup"]
     solver_type = ns_data['solverType']
     time_step = ns_data['timeStep']
@@ -2004,9 +2004,9 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):
     write_interval = rm_data['vtkWriteInterval']
 
     if rm_data['monitorVTKPlane'] == False:
-        return 
-    
-    if len(vtk_planes)==0: 
+        return  # noqa: W291
+  # noqa: W293
+    if len(vtk_planes)==0:  # noqa: W291
         return
 
     #Write dict files for wind profiles
@@ -2016,38 +2016,38 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):
 
         dict_lines = dict_file.readlines()
         dict_file.close()
-        
-        #Write writeControl 
-        start_index = foam.find_keyword_line(dict_lines, "writeControl") 
+  # noqa: W293
+        #Write writeControl  # noqa: W291
+        start_index = foam.find_keyword_line(dict_lines, "writeControl")  # noqa: W291
         if solver_type=="pimpleFoam":
             dict_lines[start_index] = "    writeControl \t{};\n".format("adjustableRunTime")
         else:
-            dict_lines[start_index] = "    writeControl \t{};\n".format("timeStep")  
+            dict_lines[start_index] = "    writeControl \t{};\n".format("timeStep")  # noqa: W291
 
         #Write writeInterval
-        start_index = foam.find_keyword_line(dict_lines, "writeInterval")     
+        start_index = foam.find_keyword_line(dict_lines, "writeInterval")  # noqa: W291
         if solver_type=="pimpleFoam":
             dict_lines[start_index] = "    writeInterval \t{:.6f};\n".format(write_interval*time_step)
         else:
             dict_lines[start_index] = "    writeInterval \t{};\n".format(write_interval)
 
-        #Write start and end time for the section  
+        #Write start and end time for the section  # noqa: W291
         start_time = pln['startTime']
         end_time = pln['endTime']
-        start_index = foam.find_keyword_line(dict_lines, "timeStart") 
-        dict_lines[start_index] = "    timeStart \t\t{:.6f};\n".format(start_time)   
+        start_index = foam.find_keyword_line(dict_lines, "timeStart")  # noqa: W291
+        dict_lines[start_index] = "    timeStart \t\t{:.6f};\n".format(start_time)  # noqa: W291
 
-        start_index = foam.find_keyword_line(dict_lines, "timeEnd") 
-        dict_lines[start_index] = "    timeEnd \t\t{:.6f};\n".format(end_time)   
+        start_index = foam.find_keyword_line(dict_lines, "timeEnd")  # noqa: W291
+        dict_lines[start_index] = "    timeEnd \t\t{:.6f};\n".format(end_time)  # noqa: W291
 
-        #Write name of the profile 
+        #Write name of the profile  # noqa: W291
         name = pln["name"]
-        start_index = foam.find_keyword_line(dict_lines, "planeName") 
-        dict_lines[start_index] = "{}\n".format(name) 
+        start_index = foam.find_keyword_line(dict_lines, "planeName")  # noqa: W291
+        dict_lines[start_index] = "{}\n".format(name)  # noqa: W291
 
-        #Write field type 
+        #Write field type  # noqa: W291
         field_type = pln["field"]
-        start_index = foam.find_keyword_line(dict_lines, "fields") 
+        start_index = foam.find_keyword_line(dict_lines, "fields")  # noqa: W291
 
         if field_type=="Velocity":
             dict_lines[start_index] = "    fields \t\t({});\n".format("U")
@@ -2061,31 +2061,31 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):
 
         normal_axis = pln["normalAxis"]
 
-        start_index = foam.find_keyword_line(dict_lines, "point")    
+        start_index = foam.find_keyword_line(dict_lines, "point")  # noqa: W291
         dict_lines[start_index] = "\t    point\t\t({:.6f} {:.6f} {:.6f});\n".format(point_x, point_y, point_z)
 
-        start_index = foam.find_keyword_line(dict_lines, "normal")  
-        if normal_axis=="X":  
+        start_index = foam.find_keyword_line(dict_lines, "normal")  # noqa: W291
+        if normal_axis=="X":  # noqa: W291
             dict_lines[start_index] = "\t    normal\t\t({} {} {});\n".format(1, 0, 0)
-        if normal_axis=="Y":  
+        if normal_axis=="Y":  # noqa: W291
             dict_lines[start_index] = "\t    normal\t\t({} {} {});\n".format(0, 1, 0)
-        if normal_axis=="Z":  
+        if normal_axis=="Z":  # noqa: W291
             dict_lines[start_index] = "\t    normal\t\t({} {} {});\n".format(0, 0, 1)
 
         #Write edited dict to file
         write_file_name = case_path + "/system/" + name
-        
+  # noqa: W293
         if os.path.exists(write_file_name):
             os.remove(write_file_name)
-        
+  # noqa: W293
         output_file = open(write_file_name, "w+")
         for line in dict_lines:
             output_file.write(line)
         output_file.close()
 
 
-if __name__ == '__main__':    
-    
+if __name__ == '__main__':  # noqa: W291
+  # noqa: W293
 =======
 if __name__ == '__main__':
 >>>>>>> upstream/master
@@ -2174,6 +2174,6 @@ if __name__ == '__main__':
 <<<<<<< HEAD
 
 
-    
+  # noqa: W293
 =======
 >>>>>>> upstream/master
