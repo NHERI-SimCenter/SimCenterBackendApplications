@@ -257,7 +257,13 @@ class TMCMC:
         proposal_covariance = _get_scaled_proposal_covariance(
             samples, weights, scale_factor
         )
-        cholesky_lower_triangular_matrix = np.linalg.cholesky(proposal_covariance)
+        try:
+            cholesky_lower_triangular_matrix = np.linalg.cholesky(
+                proposal_covariance
+            )
+        except np.linalg.LinAlgError as exc:
+            msg = f'Cholesky decomposition failed: {exc}'
+            raise RuntimeError(msg) from exc
 
         new_samples = np.zeros_like(samples)
         new_log_likelihoods = np.zeros_like(log_likelihoods)
