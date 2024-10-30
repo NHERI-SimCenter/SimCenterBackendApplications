@@ -8,9 +8,7 @@ import time
 
 import numpy as np
 from scipy.stats import lognorm, norm
-
-errFileName = 'workflow.err'  # noqa: N816
-sys.stderr = open(errFileName, 'a')  # noqa: SIM115, PTH123
+from sklearn.linear_model import LinearRegression
 
 try:
     moduleName = 'GPy'  # noqa: N816
@@ -21,7 +19,6 @@ except:  # noqa: E722
         file=sys.stderr,
     )
     exit(-1)  # noqa: PLR1722
-
 
 try:
     moduleName = 'GPy'  # noqa: N816
@@ -44,11 +41,11 @@ except:  # noqa: E722
     )
     exit(-1)  # noqa: PLR1722
 
+
 # from emukit.multi_fidelity.convert_lists_to_array import convert_x_list_to_array, convert_xy_lists_to_arrays
 
 
 def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa: C901, D103, PLR0912, PLR0915
-
     global error_file  # noqa: PLW0602
 
     os_type = sys.platform.lower()
@@ -233,9 +230,10 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 if (np.max(Y_var) / np.var(Y_mean) < 1.0e-10) and len(idx_repl) > 0:  # noqa: PLR2004
                     return np.ones((X.shape[0], 1))
 
-                kernel_var = GPy.kern.Matern52(
-                    input_dim=nrv_sur, ARD=True
-                ) + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
+                # kernel_var = GPy.kern.Matern52(
+                #    input_dim=nrv_sur, ARD=True
+                # ) + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
+                kernel_var = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True)
                 log_vars = np.log(Y_var[idx_repl])
                 m_var = GPy.models.GPRegression(
                     X_unique[idx_repl, :],
@@ -252,12 +250,13 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 var_pred = np.exp(log_var_pred)
 
                 if did_normalization:
-                    Y_normFact = np.var(Y_mean)  # noqa: N806
+                    # Y_normFact = np.var(Y_mean)  # noqa: N806
+                    Y_normFact = np.mean(var_pred.T[0])  # noqa: N806
                 else:
                     Y_normFact = 1  # noqa: N806
 
                 norm_var_str = (
-                    (var_pred.T[0]) / Y_normFact
+                        (var_pred.T[0]) / Y_normFact
                 )  # if normalization was used..
 
                 log_var_pred_x, dum = m_var.predict(x)
@@ -268,12 +267,25 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 Y_mean = Y  # noqa: N806
                 indices = range(Y.shape[0])
 
-                kernel_var = GPy.kern.Matern52(
-                    input_dim=nrv_sur, ARD=True
-                ) + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
+                #
+                # check if we have an old example file - to be deleted in the future
+                #
+                old_version = False
+                for key, val in sur['modelInfo'][g_name_sur[ny] + '_Var'].items():  # noqa: B007, PERF102
+                    if "sum" in key:
+                        old_version = True
+                        break
+
+                if old_version:
+                    print("The surrogate model was trained using an older version of the tool. Please retrain the model using this version or use older version.", file=sys.stderr)
+                    exit(-1)
+
                 log_vars = np.atleast_2d(
                     sur['modelInfo'][g_name_sur[ny] + '_Var']['TrainingSamplesY']
                 ).T
+
+                kernel_var = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True)
+
                 m_var = GPy.models.GPRegression(
                     X, log_vars, kernel_var, normalizer=True, Y_metadata=None
                 )
@@ -286,12 +298,14 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 var_pred = np.exp(log_var_pred)
 
                 if did_normalization:
-                    Y_normFact = np.var(Y)  # noqa: N806
+                    # Y_normFact = np.var(Y)  # noqa: N806
+                    Y_normFact = np.mean(var_pred.T[0])  # noqa: N806
+
                 else:
                     Y_normFact = 1  # noqa: N806
 
                 norm_var_str = (
-                    (var_pred.T[0]) / Y_normFact
+                        (var_pred.T[0]) / Y_normFact
                 )  # if normalization was used..
 
                 log_var_pred_x, dum = m_var.predict(x)
@@ -333,12 +347,12 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 continue
 
             if (
-                not name_values[1]
-                .replace('.', '', 1)
-                .replace('e', '', 1)
-                .replace('-', '', 2)
-                .replace('+', '', 1)
-                .isdigit()
+                    not name_values[1]
+                            .replace('.', '', 1)
+                            .replace('e', '', 1)
+                            .replace('-', '', 2)
+                            .replace('+', '', 1)
+                            .isdigit()
             ):
                 # surrogate model does not accept discrete
                 continue
@@ -464,7 +478,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             s = [str(rv_name_sur[id]) for id in missing_ids]  # noqa: A001
 
             if first_eeuq_found and all(
-                [missingEDP.endswith('-2') for missingEDP in s]  # noqa: C419
+                    [missingEDP.endswith('-2') for missingEDP in s]  # noqa: C419
             ):
                 msg = 'ground motion dimension does not match with that of the training'
                 # for i in range(len(s)):
@@ -517,10 +531,27 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         kr = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True)
 
     if sur['doLinear']:
-        kr = kr + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
+        # kr = kr + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
+        did_linear = True
+        lin_index = [True] * nrv
+        lin_list = []
+        for ny in range(ng_sur):
+            tmp_lin = LinearRegression()
+            tmp_lin.coef_ = np.array(sur['modelInfo'][g_name_sur[ny] + '_Lin']['coef'])
+            tmp_lin.intercept_ = np.array(sur['modelInfo'][g_name_sur[ny] + '_Lin']['intercept'])
+            lin_list += [tmp_lin]
+    else:
+        did_linear = False
+
+    # preprocessing..
 
     if did_logtransform:
         Y = np.log(Y)  # noqa: N806
+
+    if did_linear:
+        for ny in range(ng_sur):
+            y_lin_pred = lin_list[ny].predict(X[:, lin_index])
+            Y[:, ny] = Y[:, ny] - y_lin_pred
 
     kg = kr
     m_list = list()  # noqa: C408
@@ -551,9 +582,9 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     exec('m_list[ny].' + key + '= np.array(val)')  # noqa: S102
 
                 nugget_var_list[ny] = (
-                    m_list[ny].Gaussian_noise.parameters
-                    * nugget_var_pred
-                    * Y_normFact
+                        m_list[ny].Gaussian_noise.parameters
+                        * nugget_var_pred
+                        * Y_normFact
                 )
 
             else:
@@ -581,68 +612,9 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         for ny in range(ng_sur):
             Y_normFact = np.var(Y[:, ny])  # noqa: N806
             nugget_var_list[ny] = (
-                m_list[ny].gpy_model['mixed_noise.Gaussian_noise.variance']
-                * Y_normFact
+                    m_list[ny].gpy_model['mixed_noise.Gaussian_noise.variance']
+                    * Y_normFact
             )
-
-    # if did_stochastic:
-    #
-    #     kg = kr
-    #     m_list = list()
-    #     nugget_var_list = [0]*ng_sur
-    #     for ny in range(ng_sur):
-    #
-    #         m_list = m_list + [GPy.models.GPRegression(X, Y[:, ny][np.newaxis].transpose(), kernel=kg.copy(),normalizer=did_normalization)]
-    #         X_unique, Y_mean, norm_var_str, counts, nugget_var_pred, Y_normFact = get_stochastic_variance(X, Y[:,ny][np.newaxis].T, rv_val,ny)
-    #         Y_metadata = {'variance_structure': norm_var_str / counts}
-    #         m_list[ny].set_XY2(X_unique, Y_mean, Y_metadata=Y_metadata)
-    #         for key, val in sur["modelInfo"][g_name_sur[ny]].items():
-    #             exec('m_list[ny].' + key + '= np.array(val)')
-    #
-    #         nugget_var_list[ny] = m_list[ny].Gaussian_noise.parameters * nugget_var_pred * Y_normFact
-    #
-    #
-    # elif not did_mf:
-    #     kg = kr
-    #     m_list = list()
-    #     for ny in range(ng_sur):
-    #         m_list = m_list + [GPy.models.GPRegression(X, Y[:, ny][np.newaxis].transpose(), kernel=kg.copy(),normalizer=True)]
-    #         for key, val in sur["modelInfo"][g_name_sur[ny]].items():
-    #             exec('m_list[ny].' + key + '= np.array(val)')
-    #
-    #         Y_normFact = np.var(Y[:, ny])
-    #         nugget_var_list[ny] = m_list[ny].Gaussian_noise.parameters * Y_normFact
-    #
-    # else:
-    #     with open(surrogate_dir, "rb") as file:
-    #         m_list=pickle.load(file)
-    #
-    #     for ny in range(ng_sur):
-    #         Y_normFact = np.var(Y[:, ny])
-    #         nugget_var_list[ny] = m_list[ny].gpy_model["mixed_noise.Gaussian_noise.variance"]* Y_normFact
-
-    # to read:::
-    # kern_name='Mat52'
-    # did_logtransform=True
-
-    # at ui
-
-    # f = open(work_dir + '/templatedir/dakota.json')
-    # inp = json.load(f)
-    # f.close()
-
-    # try:
-    #     f = open(surrogate_dir, 'rb')
-    # except OSError:
-    #     msg = 'Could not open/read surrogate model from: ' + surrogate_dir + '\n'
-    #     print(msg)
-    #     error_file.write(msg)
-    #     error_file.close()
-    #     file_object.write(msg0+msg)
-    #     file_object.close()
-    #     exit(-1)
-    # with f:
-    #     m_list = pickle.load(f)
 
     # read param in file and sort input
     y_dim = len(m_list)
@@ -675,6 +647,11 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             )  # noiseless
             y_pred_median_tmp = np.squeeze(y_pred_median_tmp)
             y_pred_var_tmp_tmp = np.squeeze(y_pred_var_tmp_tmp)
+
+            if did_linear:
+                y_lin_pred = lin_list[ny].predict(rv_val[:, lin_index])
+                y_pred_median_tmp = y_pred_median_tmp + y_lin_pred
+
         y_pred_var_tmp[:, ny] = y_pred_var_tmp_tmp
         y_pred_var_m_tmp[:, ny] = y_pred_var_tmp_tmp + np.squeeze(
             nugget_var_list[ny]
@@ -780,7 +757,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 templatedirFolder = os.path.join(os.getcwd(), 'templatedir_SIM')  # noqa: PTH109, PTH118, N806
 
                 if (
-                    (isEEUQ or isWEUQ) and nsamp == 1
+                        (isEEUQ or isWEUQ) and nsamp == 1
                 ):  # because stochastic ground motion generation uses folder number when generating random seed.............
                     current_dir_i = os.path.join(  # noqa: PTH118
                         os.getcwd(),  # noqa: PTH109
@@ -876,15 +853,15 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
                 if isEEUQ or isWEUQ:
                     if (
-                        os_type.lower().startswith('win')
-                        and run_type.lower() == 'runninglocal'
+                            os_type.lower().startswith('win')
+                            and run_type.lower() == 'runninglocal'
                     ):
                         workflowDriver = 'sc_driver.bat'  # noqa: N806
                     else:
                         workflowDriver = 'sc_driver'  # noqa: N806
                 elif (
-                    os_type.lower().startswith('win')
-                    and run_type.lower() == 'runninglocal'
+                        os_type.lower().startswith('win')
+                        and run_type.lower() == 'runninglocal'
                 ):
                     workflowDriver = 'driver.bat'  # noqa: N806
                 else:
@@ -912,9 +889,9 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
             elif when_inaccurate == 'continue':
                 msg2 = (
-                    msg0
-                    + msg1[ns]
-                    + '- CONTINUE [Warning: results may not be accurate]\n'
+                        msg0
+                        + msg1[ns]
+                        + '- CONTINUE [Warning: results may not be accurate]\n'
                 )
                 error_warning(msg2)
 
@@ -925,8 +902,8 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
         else:
             msg3 = (
-                msg0
-                + f'Prediction error level of output {idx[ns]} is {np.max(error_ratio2[ns]) * 100:.2f}%\n'
+                    msg0
+                    + f'Prediction error level of output {idx[ns]} is {np.max(error_ratio2[ns]) * 100:.2f}%\n'
             )
             error_warning(msg3)
 
@@ -1039,7 +1016,7 @@ def predict(m, X, did_mf):  # noqa: N803, D103
         # TODO change below to noiseless  # noqa: TD002, TD004
         X_list = convert_x_list_to_array([X, X])  # noqa: N806
         X_list_l = X_list[: X.shape[0]]  # noqa: N806, F841
-        X_list_h = X_list[X.shape[0] :]  # noqa: N806
+        X_list_h = X_list[X.shape[0]:]  # noqa: N806
         return m.predict(X_list_h)
 
 
