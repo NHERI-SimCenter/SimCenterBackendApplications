@@ -112,6 +112,16 @@ def select_realizations_to_run(damage_input, run_dir):
     return rlzs_to_run
 
 def create_congestion_animation(edge_vol_dir, output_file_name):
+    """
+    Create an animation of congestion over time.
+
+    Parameters
+    ----------
+    edge_vol_dir : str
+        Directory containing edge volume CSV files.
+    output_file_name : str
+        Name of the output animation file.
+    """
     all_frames = sorted(os.listdir(edge_vol_dir))
     all_frames = [f for f in all_frames if f.startswith('edge_vol_') and f.endswith('.csv')]
     times = []
@@ -137,6 +147,21 @@ def create_congestion_animation(edge_vol_dir, output_file_name):
     animation.save(output_file_name, writer='imagemagick', fps=2)
 
 def get_highest_congestion(edge_vol_dir, edges_csv):
+    """
+    Calculate the highest congestion for each edge over time.
+
+    Parameters
+    ----------
+    edge_vol_dir : str
+        Directory containing edge volume CSV files.
+    edges_csv : str
+        Path to the CSV file containing edge information.
+
+    Returns
+    -------
+    DataFrame
+        DataFrame containing the highest congestion for each edge.
+    """
     all_frames = sorted(os.listdir(edge_vol_dir))
     all_frames = [f for f in all_frames if f.startswith('edge_vol_') and f.endswith('.csv')]
     all_edges = pd.read_csv(edges_csv)
@@ -151,6 +176,22 @@ def get_highest_congestion(edge_vol_dir, edges_csv):
     return all_edges[['id', 'congestion']].groupby('id').max()
 
 def animation_function(ii, ax, results_dir, all_frames, times):
+    """
+    Update the plot for each frame in the animation.
+
+    Parameters
+    ----------
+    ii : int
+        The current frame index.
+    ax : matplotlib.axes.Axes
+        The axes to plot on.
+    results_dir : str
+        Directory containing the results CSV files.
+    all_frames : list
+        List of all frame filenames.
+    times : list
+        List of time labels for each frame.
+    """
     ax.clear()
 
     results_df = pd.read_csv(results_dir / all_frames[ii])
@@ -196,6 +237,21 @@ def animation_function(ii, ax, results_dir, all_frames, times):
     cx.add_basemap(ax, crs=gdf.crs, source=cx.providers.CartoDB.Positron, zoom='auto')
 
 def create_delay_agg(od_file_pre, od_file_post):
+    """
+    Create initial delay aggregation data structures.
+
+    Parameters
+    ----------
+    od_file_pre : str
+        Path to the CSV file containing pre-event origin-destination data.
+    od_file_post : str
+        Path to the CSV file containing post-event origin-destination data.
+
+    Returns
+    -------
+    tuple
+        A tuple containing two dictionaries: undamaged_time and damaged_time.
+    """
     od_df_pre = pd.read_csv(od_file_pre)
     od_df_pre_agent_id = od_df_pre['agent_id'].tolist()
     od_df_pre_data = np.zeros((len(od_df_pre), 0))
@@ -207,6 +263,23 @@ def create_delay_agg(od_file_pre, od_file_post):
     return undamaged_time, damaged_time
 
 def append_to_delay_agg(undamaged_time, damaged_time, trip_info_file):
+    """
+    Append new delay data to the existing aggregation.
+
+    Parameters
+    ----------
+    undamaged_time : dict
+        Dictionary containing undamaged travel times.
+    damaged_time : dict
+        Dictionary containing damaged travel times.
+    trip_info_file : str
+        Path to the CSV file containing trip information.
+
+    Returns
+    -------
+    tuple
+        Updated undamaged_time and damaged_time dictionaries.
+    """
     trip_info = pd.read_csv(trip_info_file).set_index('agent_id')
     undamaged_time_new = trip_info.loc[undamaged_time['agent_id'], 'travel_time_used_undamaged'].to_numpy()
     undamaged_time_new = undamaged_time_new.reshape((len(undamaged_time_new), 1))
@@ -218,6 +291,20 @@ def append_to_delay_agg(undamaged_time, damaged_time, trip_info_file):
 
 def aggregate_delay_results(undamaged_time, damaged_time,
                             od_file_pre, od_file_post):
+    """
+    Aggregate delay results and save to a CSV file.
+
+    Parameters
+    ----------
+    undamaged_time : dict
+        Dictionary containing undamaged travel times.
+    damaged_time : dict
+        Dictionary containing damaged travel times.
+    od_file_pre : str
+        Path to the CSV file containing pre-event origin-destination data.
+    od_file_post : str
+        Path to the CSV file containing post-event origin-destination data.
+    """
     od_df_pre = pd.read_csv(od_file_pre)
     od_df_post = pd.read_csv(od_file_post)[['agent_id']]
     compare_df = od_df_pre.merge(od_df_post, on='agent_id', how='outer')
@@ -254,6 +341,20 @@ def aggregate_delay_results(undamaged_time, damaged_time,
     compare_df.to_csv('travel_delay_stats.csv', index=False)
 
 def compile_r2d_results_geojson(residual_demand_dir, results_det_file):
+    """
+    Compile the R2D results into a GeoJSON file for visualization.
+
+    Parameters
+    ----------
+    residual_demand_dir : str
+        Directory where the residual demand results are stored.
+    results_det_file : str
+        Path to the JSON file containing detailed results.
+
+    Returns
+    -------
+    None
+    """
     with open(results_det_file, encoding='utf-8') as f:  # noqa: PTH123
         res_det = json.load(f)
     metadata = {
@@ -313,6 +414,19 @@ def compile_r2d_results_geojson(residual_demand_dir, results_det_file):
         json.dump(geojson_result, f, indent=2)
 
 def create_congestion_agg(edge_file):
+    """
+    Create initial congestion aggregation data structures.
+
+    Parameters
+    ----------
+    edge_file : str
+        Path to the CSV file containing edge information.
+
+    Returns
+    -------
+    tuple
+        A tuple containing two numpy arrays: undamaged_congestion and damaged_congestion.
+    """
     all_edges = pd.read_csv(edge_file)[['id', 'uniqueid']]
     all_edges = all_edges.groupby('id').count()
     undamaged_congestion = np.zeros((len(all_edges),0))
@@ -322,6 +436,27 @@ def create_congestion_agg(edge_file):
 def append_to_congestion_agg(undamaged_congestion, damaged_congestion,
                               undamaged_edge_vol_dir, damaged_edge_vol_dir,
                               edges_csv):
+    """
+    Append new congestion data to the existing aggregation.
+
+    Parameters
+    ----------
+    undamaged_congestion : numpy.ndarray
+        Array containing undamaged congestion data.
+    damaged_congestion : numpy.ndarray
+        Array containing damaged congestion data.
+    undamaged_edge_vol_dir : str
+        Directory containing undamaged edge volume CSV files.
+    damaged_edge_vol_dir : str
+        Directory containing damaged edge volume CSV files.
+    edges_csv : str
+        Path to the CSV file containing edge information.
+
+    Returns
+    -------
+    tuple
+        Updated undamaged_congestion and damaged_congestion arrays.
+    """
     undamaged_congest = get_highest_congestion(undamaged_edge_vol_dir, edges_csv).sort_index()
     damaged_congest = get_highest_congestion(damaged_edge_vol_dir,edges_csv).sort_index()
     undamaged_congestion = np.append(undamaged_congestion,
@@ -334,6 +469,24 @@ def append_to_congestion_agg(undamaged_congestion, damaged_congestion,
 
 def aggregate_congestions_results_to_det(undamaged_congestion, damaged_congestion,
                                             results_det_file, edges_csv):
+    """
+    Aggregate congestion results and update the detailed results file.
+
+    Parameters
+    ----------
+    undamaged_congestion : numpy.ndarray
+        Array containing undamaged congestion data.
+    damaged_congestion : numpy.ndarray
+        Array containing damaged congestion data.
+    results_det_file : str
+        Path to the JSON file containing detailed results.
+    edges_csv : str
+        Path to the CSV file containing edge information.
+
+    Returns
+    -------
+    None
+    """
     all_edges = pd.read_csv(edges_csv)[['id', 'uniqueid']]
     all_edges = all_edges.groupby('id').count().sort_index()
     congestion_increase = (damaged_congestion - undamaged_congestion)
@@ -359,7 +512,26 @@ def aggregate_congestions_results_to_det(undamaged_congestion, damaged_congestio
             json.dump(transportation_det, f)
 
 def run_on_undamaged_network(edge_file, node_file, od_file_pre, damage_det_file, config_file_dict):
+    """
+    Run the simulation on the undamaged network.
 
+    Parameters
+    ----------
+    edge_file : str
+        Path to the CSV file containing edge information.
+    node_file : str
+        Path to the CSV file containing node information.
+    od_file_pre : str
+        Path to the CSV file containing pre-event origin-destination data.
+    damage_det_file : str
+        Path to the JSON file containing detailed damage information.
+    config_file_dict : dict
+        Dictionary containing configuration parameters.
+
+    Returns
+    -------
+    None
+    """
     with Path(damage_det_file).open() as f:
         damage_det = json.load(f)
     assets = list(damage_det['TransportationNetwork'].keys())
@@ -388,7 +560,31 @@ def run_on_undamaged_network(edge_file, node_file, od_file_pre, damage_det_file,
 
 def run_one_realization(edge_file, node_file, undamaged_dir, od_file_post, damage_rlz_file,
                         damage_det_file, config_file_dict):
+    """
+    Run the simulation for a single realization.
 
+    Parameters
+    ----------
+    edge_file : str
+        Path to the CSV file containing edge information.
+    node_file : str
+        Path to the CSV file containing node information.
+    undamaged_dir : str
+        Directory containing undamaged network simulation results.
+    od_file_post : str
+        Path to the CSV file containing post-event origin-destination data.
+    damage_rlz_file : str
+        Path to the JSON file containing damage realization information.
+    damage_det_file : str
+        Path to the JSON file containing detailed damage information.
+    config_file_dict : dict
+        Dictionary containing configuration parameters.
+
+    Returns
+    -------
+    bool
+        True if the simulation runs successfully.
+    """
     with Path(damage_rlz_file).open() as f:
         damage_rlz = json.load(f)
 
@@ -456,7 +652,7 @@ def run_one_realization(edge_file, node_file, undamaged_dir, od_file_post, damag
     trip_info_compare.to_csv('trip_info_compare.csv', index=False)
     return True
 
-def run_residual_demand(
+def run_residual_demand(  # noqa: C901
         edge_geojson,
         node_geojson,
         od_file_pre,
@@ -465,6 +661,30 @@ def run_residual_demand(
         r2d_run_dir,
         residual_demand_dir,
 ):
+    """
+    Run the residual demand simulation.
+
+    Parameters
+    ----------
+    edge_geojson : str
+        Path to the edges GeoJSON file.
+    node_geojson : str
+        Path to the nodes GeoJSON file.
+    od_file_pre : str
+        Path to the pre-event origin-destination CSV file.
+    od_file_post : str
+        Path to the post-event origin-destination CSV file.
+    config_file : str
+        Path to the configuration JSON file.
+    r2d_run_dir : str
+        Directory containing the R2D run results.
+    residual_demand_dir : str
+        Directory to store the residual demand results.
+
+    Returns
+    -------
+    None
+    """
     if r2d_run_dir is None:
         run_dir = Path.cwd()
     else:
@@ -478,11 +698,6 @@ def run_residual_demand(
         geojson_needed = True
         residual_demand_dir = Path(residual_demand_dir)
 
-    # log_file = residual_demand_dir / 'run_residual_demand.log'
-    # f = open(log_file, 'w')
-    # sys.stdout = f
-    # logging.basicConfig(filename=log_file, level=logging.DEBUG)
-    # logging.info('Running Residual Demand')
     if residual_demand_dir.exists():
         msg = 'ResidualDemand directory already exists'
         # Remove all the files and subfolders
@@ -657,7 +872,7 @@ def run_residual_demand(
     if geojson_needed:
         # If run in tool box, compile a geojson for visualization
         # Otherwise, the geojson is compiled in rWHALE
-        compile_r2d_results_geojson(residual_demand_dir, 
+        compile_r2d_results_geojson(residual_demand_dir,
                                     Path(run_dir / 'Results_det.json'))
 
     # f.close()
