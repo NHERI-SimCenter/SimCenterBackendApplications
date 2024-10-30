@@ -3,6 +3,7 @@
 import math
 
 import numpy as np
+from scipy.optimize import root_scalar
 from scipy.special import logsumexp
 
 
@@ -22,8 +23,7 @@ def _calculate_weights_warm_start(
         np.ndarray: The calculated weights.
     """
     log_weights = beta * (current_loglikelihoods - previous_loglikelihoods)
-    log_sum_weights = logsumexp(log_weights)
-    normalized_log_weights = log_weights - log_sum_weights
+    normalized_log_weights = log_weights - np.max(log_weights)
     normalized_weights = np.exp(normalized_log_weights)
     weights = normalized_weights / np.sum(normalized_weights)
     return weights  # noqa: RET504
@@ -73,8 +73,7 @@ def _calculate_weights(beta_increment, log_likelihoods):
         np.ndarray: The calculated weights.
     """
     log_weights = beta_increment * log_likelihoods
-    log_sum_weights = logsumexp(log_weights)
-    normalized_log_weights = log_weights - log_sum_weights
+    normalized_log_weights = log_weights - np.max(log_weights)
     normalized_weights = np.exp(normalized_log_weights)
     weights = normalized_weights / np.sum(normalized_weights)
     return weights  # noqa: RET504
@@ -100,7 +99,7 @@ def _calculate_log_evidence(beta_increment, log_likelihoods):
 
 def _increment_beta(log_likelihoods, beta, threshold_cov=1):
     """
-    Increment the beta value based on the coefficient of variation of weights.
+    Attempt to increment beta using optimization. If optimization fails, fall back to trial-and-error.
 
     Args:
         log_likelihoods (np.ndarray): The log-likelihood values.
@@ -111,15 +110,42 @@ def _increment_beta(log_likelihoods, beta, threshold_cov=1):
     -------
         float: The new beta value.
     """
-    if beta >= 1:
-        return 1
+
+    def cov_objective(beta_increment):
+        weights = _calculate_weights(beta_increment, log_likelihoods)
+        cov_weights = np.nanstd(weights) / np.nanmean(weights)
+        return cov_weights - threshold_cov
+
+    # print(f'{cov_objective(0) = }, {cov_objective(1 - beta) = }')
+    # Check if optimization method is feasible
+    if np.sign(cov_objective(0)) == np.sign(cov_objective(1 - beta)):
+        # If signs are the same, set beta to its maximum possible value of 1
+        # print('Optimization not feasible. Setting beta to 1.0')
+        # wts = _calculate_weights(1 - beta, log_likelihoods)
+        # print(f'cov_weights at new beta = {np.nanstd(wts) / np.nanmean(wts)}')
+        return 1.0
+
+    # Try optimization method first
+    result = root_scalar(cov_objective, bracket=[0, 1 - beta], method='bisect')
+
+    if result.converged:
+        # If optimization succeeds, calculate the new beta
+        new_beta = min(beta + result.root, 1)
+        # wts = _calculate_weights(result.root, log_likelihoods)
+        # print(f'cov_weights at new beta = {np.nanstd(wts) / np.nanmean(wts)}')
+        return new_beta  # noqa: RET504
+
+    # Fallback to trial-and-error approach if optimization fails
+    # print('Optimization failed. Fallback to trial-and-error approach.')
     beta_increment = 1 - beta
     weights = _calculate_weights(beta_increment, log_likelihoods)
     cov_weights = np.nanstd(weights) / np.nanmean(weights)
+
     while cov_weights > threshold_cov:
         beta_increment = 0.99 * beta_increment
         weights = _calculate_weights(beta_increment, log_likelihoods)
         cov_weights = np.nanstd(weights) / np.nanmean(weights)
+
     proposed_beta = beta + beta_increment
     new_beta = min(proposed_beta, 1)
     return new_beta  # noqa: RET504
@@ -164,7 +190,7 @@ class TMCMC:
         threshold_cov=1,
         num_steps=1,
         thinning_factor=10,
-        adapt_frequency=100,
+        adapt_frequency=50,
     ):
         """
         Initialize the TMCMC class.
@@ -185,7 +211,11 @@ class TMCMC:
         self.thinning_factor = thinning_factor
         self.adapt_frequency = adapt_frequency
 
-    def _run_one_stage(
+    @staticmethod
+    def _generate_error_message(size):
+        return f'Expected a single value, but got {size} values.'
+
+    def _run_one_stage(  # noqa: C901
         self,
         samples,
         log_likelihoods,
@@ -219,6 +249,7 @@ class TMCMC:
         -------
             tuple: A tuple containing the new samples, new log-likelihoods, new log-target density values, new beta, and log evidence.
         """
+        # new_beta = _increment_beta(log_likelihoods, beta)
         new_beta = _increment_beta(log_likelihoods, beta)
         log_evidence = _calculate_log_evidence(new_beta - beta, log_likelihoods)
         weights = _calculate_weights(new_beta - beta, log_likelihoods)
@@ -226,6 +257,13 @@ class TMCMC:
         proposal_covariance = _get_scaled_proposal_covariance(
             samples, weights, scale_factor
         )
+        try:
+            cholesky_lower_triangular_matrix = np.linalg.cholesky(
+                proposal_covariance
+            )
+        except np.linalg.LinAlgError as exc:
+            msg = f'Cholesky decomposition failed: {exc}'
+            raise RuntimeError(msg) from exc
 
         new_samples = np.zeros_like(samples)
         new_log_likelihoods = np.zeros_like(log_likelihoods)
@@ -239,13 +277,15 @@ class TMCMC:
         num_accepts = 0
         n_adapt = 1
         step_count = 0
+        num_steps = self.num_steps
+        # print(f'{new_beta = }, {do_thinning = }, {num_steps = }')
         for k in range(burn_in_steps + num_samples):
-            # print(f'{k=}')
             index = rng.choice(num_samples, p=weights.flatten())
             if k >= burn_in_steps:
                 if new_beta == 1 or do_thinning:
-                    self.num_steps = self.num_steps * self.thinning_factor
-            for _ in range(self.num_steps):
+                    num_steps = self.num_steps * self.thinning_factor
+            # print(f'{new_beta = }, {do_thinning = }, {num_steps = }')
+            for _ in range(num_steps):
                 step_count += 1
                 if step_count % self.adapt_frequency == 0:
                     acceptance_rate = num_accepts / self.adapt_frequency
@@ -258,10 +298,18 @@ class TMCMC:
                     proposal_covariance = _get_scaled_proposal_covariance(
                         current_samples, weights, scale_factor
                     )
+                    cholesky_lower_triangular_matrix = np.linalg.cholesky(
+                        proposal_covariance
+                    )
 
-                proposed_state = rng.multivariate_normal(
-                    current_samples[index, :], proposal_covariance
+                standard_normal_samples = rng.standard_normal(
+                    size=current_samples.shape[1]
+                )
+                proposed_state = (
+                    current_samples[index, :]
+                    + cholesky_lower_triangular_matrix @ standard_normal_samples
                 ).reshape(1, -1)
+
                 log_likelihood_at_proposed_state = log_likelihood_function(
                     proposed_state
                 )
@@ -277,9 +325,25 @@ class TMCMC:
                 if accept:
                     num_accepts += 1
                     current_samples[index, :] = proposed_state
-                    current_log_likelihoods[index] = log_likelihood_at_proposed_state
+                    # current_log_likelihoods[index] = log_likelihood_at_proposed_state
+                    if log_likelihood_at_proposed_state.size != 1:
+                        msg = self._generate_error_message(
+                            log_likelihood_at_proposed_state.size
+                        )
+                        raise ValueError(msg)
+                    current_log_likelihoods[index] = (
+                        log_likelihood_at_proposed_state.item()
+                    )
+                    # current_log_target_density_values[index] = (
+                    #     log_target_density_at_proposed_state
+                    # )
+                    if log_target_density_at_proposed_state.size != 1:
+                        msg = self._generate_error_message(
+                            log_target_density_at_proposed_state.size
+                        )
+                        raise ValueError(msg)
                     current_log_target_density_values[index] = (
-                        log_target_density_at_proposed_state
+                        log_target_density_at_proposed_state.item()
                     )
                     if k >= burn_in_steps:
                         weights = _calculate_weights(
@@ -334,6 +398,7 @@ class TMCMC:
         self.scale_factor = 2.4 / np.sqrt(self.num_dimensions)
         while betas_dict[stage_num] < 1:
             # print(f'Stage {stage_num}')
+            # print(f'Beta: {betas_dict[stage_num]}')
             (
                 new_samples,
                 new_log_likelihoods,
@@ -367,3 +432,72 @@ class TMCMC:
             log_target_density_values_dict,
             log_evidence_dict,
         )
+
+
+if __name__ == '__main__':
+    import numpy as np
+    from scipy import stats
+
+    # Define log-likelihood function (2D Gaussian)
+    def _log_likelihood_approximation_function(samples):
+        # Assuming a Gaussian log-likelihood with mean (0, 0) and covariance identity
+        return -0.5 * np.sum((samples - 10) ** 2, axis=1)
+
+    # Define log-posterior function (assume same as log-likelihood for this simple case)
+    def _log_target_density_approximation_function(samples, log_likelihoods):  # noqa: ARG001
+        return log_likelihoods  # In this simple case, they are the same
+
+    # Initialize the TMCMC sampler
+    tmcmc_sampler = TMCMC(
+        _log_likelihood_approximation_function,
+        _log_target_density_approximation_function,
+        threshold_cov=1,
+        num_steps=1,
+        thinning_factor=5,
+        adapt_frequency=50,
+    )
+
+    # Initial parameters
+    num_samples = 2000  # Number of samples
+    num_dimensions = 2  # Dimensionality of the target distribution
+    rng = np.random.default_rng(42)  # Random number generator
+
+    # Start with some random samples
+    initial_samples = rng.normal(size=(num_samples, num_dimensions))
+    initial_log_likelihoods = _log_likelihood_approximation_function(initial_samples)
+    initial_log_target_density_values = initial_log_likelihoods
+
+    # Dictionaries to store results for each stage
+    samples_dict = {0: initial_samples}
+    betas_dict = {0: 0.0}  # Start with beta=0 (prior importance)
+    log_likelihoods_dict = {0: initial_log_likelihoods}
+    log_target_density_values_dict = {0: initial_log_target_density_values}
+    log_evidence_dict = {0: 0}
+
+    # Run TMCMC
+    stage_num = 0
+    (
+        samples_dict,
+        betas_dict,
+        log_likelihoods_dict,
+        log_target_density_values_dict,
+        log_evidence_dict,
+    ) = tmcmc_sampler.run(
+        samples_dict,
+        betas_dict,
+        log_likelihoods_dict,
+        log_target_density_values_dict,
+        log_evidence_dict,
+        rng,
+        stage_num,
+        num_burn_in=100,
+    )
+
+    # Display results
+    final_stage_num = max(samples_dict.keys())
+    print(  # noqa: T201
+        f'Final samples (stage {final_stage_num}): \n{samples_dict[final_stage_num]}'
+    )
+    print(f'Betas: {betas_dict.values()}')  # noqa: T201
+    print(f'Log-evidence values: {log_evidence_dict.values()}')  # noqa: T201
+    print(f'Total log-evidence: {sum(log_evidence_dict.values())}')  # noqa: T201
