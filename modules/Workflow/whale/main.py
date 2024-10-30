@@ -399,7 +399,7 @@ def run_command(command, app_category=''):
             sys.exit(-20)
 
         except:  # noqa: E722
-            # if for whatever reason the function inside "try" failes, move on without checking error
+            # if for whatever reason the function inside "try" fails, move on without checking error
             return str(result), 0
 
         return result, returncode

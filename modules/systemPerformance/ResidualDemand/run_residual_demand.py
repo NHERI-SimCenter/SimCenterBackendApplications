@@ -936,7 +936,7 @@ def run_residual_demand(  # noqa: C901
                                 ]['R2Dres']
                                 if x.startswith('R2Dres_mean_RepairTime')
                             )
-                            # A minmum time of 0.1 is set to avoid division by zero
+                            # A minimum time of 0.1 is set to avoid division by zero
                             loss_dist['Repair']['Time'][comp] = max(
                                 results_det[asset_type][asset_subtype][asset_id][
                                     'R2Dres'
