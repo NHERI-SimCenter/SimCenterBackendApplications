@@ -68,7 +68,7 @@ def loglikelihood_function(residual, error_variance_sample):  # noqa: D103
     return ll
 
 
-def main(input_args):  # noqa: D103
+def main(input_args):  # noqa: C901, D103
     # Initialize analysis
     working_directory = Path(input_args[0]).resolve()
     template_directory = Path(input_args[1]).resolve()  # noqa: F841
