@@ -133,7 +133,7 @@ def _increment_beta(log_likelihoods, beta, threshold_cov=1):
         new_beta = min(beta + result.root, 1)
         # wts = _calculate_weights(result.root, log_likelihoods)
         # print(f'cov_weights at new beta = {np.nanstd(wts) / np.nanmean(wts)}')
-        return new_beta
+        return new_beta  # noqa: RET504
 
     # Fallback to trial-and-error approach if optimization fails
     # print('Optimization failed. Fallback to trial-and-error approach.')
@@ -215,7 +215,7 @@ class TMCMC:
     def _generate_error_message(size):
         return f'Expected a single value, but got {size} values.'
 
-    def _run_one_stage(
+    def _run_one_stage(  # noqa: C901
         self,
         samples,
         log_likelihoods,
@@ -444,7 +444,7 @@ if __name__ == '__main__':
         return -0.5 * np.sum((samples - 10) ** 2, axis=1)
 
     # Define log-posterior function (assume same as log-likelihood for this simple case)
-    def _log_target_density_approximation_function(samples, log_likelihoods):
+    def _log_target_density_approximation_function(samples, log_likelihoods):  # noqa: ARG001
         return log_likelihoods  # In this simple case, they are the same
 
     # Initialize the TMCMC sampler
@@ -495,9 +495,9 @@ if __name__ == '__main__':
 
     # Display results
     final_stage_num = max(samples_dict.keys())
-    print(
+    print(  # noqa: T201
         f'Final samples (stage {final_stage_num}): \n{samples_dict[final_stage_num]}'
     )
-    print(f'Betas: {betas_dict.values()}')
-    print(f'Log-evidence values: {log_evidence_dict.values()}')
-    print(f'Total log-evidence: {sum(log_evidence_dict.values())}')
+    print(f'Betas: {betas_dict.values()}')  # noqa: T201
+    print(f'Log-evidence values: {log_evidence_dict.values()}')  # noqa: T201
+    print(f'Total log-evidence: {sum(log_evidence_dict.values())}')  # noqa: T201

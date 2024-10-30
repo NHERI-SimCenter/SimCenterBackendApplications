@@ -222,12 +222,13 @@ class ParallelRunnerMultiprocessing:  # noqa: D101
 
     def get_num_processors(self) -> int:  # noqa: D102
         num_processors = os.cpu_count()
+        max_num_processors = 32  # max number of processors to use in multiprocessing when running locally
         if num_processors is None:
             num_processors = 1
         elif num_processors < 1:
             msg = f'Number of processes must be at least 1. Got {num_processors}.'
             raise ValueError(msg)
-        elif num_processors > 32:
+        elif num_processors > max_num_processors:
             # this is to get past memory problems when running large number processors in a container
             num_processors = 8
 
