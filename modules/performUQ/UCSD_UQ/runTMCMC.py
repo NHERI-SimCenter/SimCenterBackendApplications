@@ -265,8 +265,11 @@ def run_TMCMC(  # noqa: C901, N802, PLR0913
     # Evaluate log-likelihood at current samples Sm
     if run_type == 'runningLocal':
         processor_count = mp.cpu_count()
-        if processor_count > 32:  # noqa: PLR2004
+
+        max_num_processes = 32  # noqa: PLR2004 max number of processes to use for multiprocessing when running locally
+        if processor_count > max_num_processes:
             processor_count = 8
+
         pool = Pool(processes=processor_count)
         write_eval_data_to_logfile(
             logfile,
@@ -276,6 +279,7 @@ def run_TMCMC(  # noqa: C901, N802, PLR0913
             stage_num=stage_number,
         )
         outputs = pool.starmap(runFEM, iterables)
+
         # pool does not start
         # mp.set_start_method('forkserver', force=True)
         # processor_count = mp.cpu_count()
@@ -299,6 +303,7 @@ def run_TMCMC(  # noqa: C901, N802, PLR0913
         #        stage_num=stage_number,
         #    )
         #    outputs = pool.starmap(runFEM, iterables)
+
         log_likelihoods_list = []
         predictions_list = []
         for output in outputs:
