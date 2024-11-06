@@ -861,13 +861,13 @@ class Workflow:
         # Check to ensure the applications key is provided in the input
         if app_in == None:  # noqa: E711
             return
-            err = "Need to provide the 'Application' key in " + app_type
+            err = "Need to provide the 'Application' key in " + app_type #TODO ANYONE: DELETE THIS. USELESS! (ADDED BY SINA)
             raise WorkFlowInputError(err)
 
         # Check to see if the app type is in the application registry
         app_type_obj = self.app_registry.get(app_type)
 
-        if app_in == None:  # noqa: E711
+        if app_in == None:  # noqa: E711 #TODO ANYONE: DELETE THIS. USELESS! (ADDED BY SINA)
             return
 
         if app_in == 'None':
@@ -884,7 +884,7 @@ class Workflow:
                 + app_in
             )
             print('Error', app_in)  # noqa: T201
-            raise WorkFlowInputError(err)
+            raise WorkFlowInputError(err) #TODO ANYONE: DELETE THIS. USELESS!(ADDED BY SINA)
 
         appData = app_dict['ApplicationData']  # noqa: N806
         #
@@ -1613,8 +1613,8 @@ class Workflow:
         # Every other path will be relative to the Run Directory (result dir)
         os.chdir(self.run_dir)
         # Check if system performance is requested
-        if 'RecoverySimulation' in self.workflow_apps:
-            performance_app = self.workflow_apps['RecoverySimulation']
+        if 'Recovery' in self.workflow_apps:
+            performance_app = self.workflow_apps['Recovery']
         else:
             log_msg(
                 'No Recovery application to run.',
@@ -1625,7 +1625,7 @@ class Workflow:
 
         if performance_app.rel_path is None:
             log_msg(
-                'No Performance application to run.',
+                'No Recovery application to run.',
                 prepend_timestamp=False,
             )
             log_div()
@@ -1648,6 +1648,22 @@ class Workflow:
             #     prepend_timestamp=False,
             # )
             # app_command_list.append('--par')
+
+
+        app_command_list.append('--input')
+        app_command_list.append(self.input_file)
+
+        with open(self.input_file, "rt") as f:
+            input_file = json.load(f)
+
+        if "WaterDistributionNetwork" in input_file["Applications"]["Assets"]:
+            wdn_apps = input_file["Applications"]["Assets"]["WaterDistributionNetwork"]
+            if wdn_apps["Application"] == "INP_FILE":
+                inp_file_name = wdn_apps["ApplicationData"]["inpFile"]
+                inp_file_name = resolve_path(inp_file_name, self.reference_dir)
+
+                app_command_list.append('--INPFile')
+                app_command_list.append(inp_file_name)
 
         command = create_command(app_command_list)
 
@@ -2244,7 +2260,7 @@ class Workflow:
                 try:
                     if command.startswith('python'):
                         if platform.system() == 'Windows':
-                            driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                            driver_script += 'if %errorlevel% neq 0 exit /b -1 \n' #TODO ANYONE: This variable is not defined. Check This please. (Added by Sina)
                         else:
                             pass
 
