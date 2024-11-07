@@ -39,12 +39,20 @@ def select_realizations_to_run(damage_input, run_dir):
     if damage_input['Type'] == 'SpecificRealization':
         rlz_filter = damage_input['Parameters']['Filter']
         rlzs_requested = []
+
+        if "," not in rlz_filter:
+            rlz_filter = rlz_filter + ","
+
         for rlzs in rlz_filter.split(','):
+            if rlzs == '':
+                continue
+
             if '-' in rlzs:
                 rlzs_low, rlzs_high = rlzs.split('-')
                 rlzs_requested += list(range(int(rlzs_low), int(rlzs_high) + 1))
             else:
                 rlzs_requested.append(int(rlzs))
+
         rlzs_requested = np.array(rlzs_requested)
         rlzs_in_available = np.in1d(rlzs_requested, rlzs_available)  # noqa: NPY201
         if rlzs_in_available.sum() != 0:
@@ -62,6 +70,7 @@ def select_realizations_to_run(damage_input, run_dir):
         else:
             msg = 'Sample size is larger than the number of available realizations'
             raise ValueError(msg)
+
     return rlzs_to_run
 def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
     """
@@ -311,7 +320,8 @@ def run_pyrecodes(  # noqa: C901
         component_library,
         locality_geojson,
         rewet_inp_file,
-        r2d_run_dir
+        r2d_run_dir,
+        realization
 ):
     """
     Run pyrecodes simulation.
@@ -359,10 +369,42 @@ def run_pyrecodes(  # noqa: C901
     system_config = modify_system_config_conent(system_config, locality_geojson,
                                                 run_dir)
 
-    # Modify the DamageInput part of the system configuration
-    with Path(main_file).open() as f:
-        main_file_dict = json.load(f)
+    # Check the realziation value
+    if realization is None:
+        raise RuntimeError("Realization is not provided")
+    elif type(realization) is not str:
+        raise RuntimeError(f"Realization text type must be string: {type(realization)}.")
+
+    # Sina: Main_File is optional. If not provided, one is made by the code.
+    # Required for the workflow app widget run.
+    if main_file is not None:
+        # Modify the DamageInput part of the system configuration
+        with Path(main_file).open() as f:
+            main_file_dict = json.load(f)
+    else:
+        main_file_dict = {
+            "ComponentLibrary":{
+                "ComponentLibraryCreatorClassName": "JSONComponentLibraryCreator",
+                "ComponentLibraryCreatorFileName": "json_component_library_creator",
+                "ComponentLibraryFile": f"{component_library}"
+                },
+            "DamageInput": {
+                "Parameters": {
+                    "Filter": realization
+				},
+                "Type": "SpecificRealization"
+            },
+            "System":{
+                "SystemClassName": "BuiltEnvironment",
+                "SystemConfigurationFile": f"{system_config_file}",
+                "SystemCreatorClassName": "ConcreteSystemCreator",
+                "SystemCreatorFileName": "concrete_system_creator",
+                "SystemFileName": "built_environment"
+                }
+            }
+
     damage_input = main_file_dict['DamageInput']
+
     if damage_input['Type'] == 'MostlikelyDamageState':
         # Create a Results_rlz.json file for the most likely damage state
         rlz = 0
@@ -918,7 +960,12 @@ if __name__ == '__main__':
     )
 
     workflowArgParser.add_argument(
-        '--mainFile', help='Pyrecodes main file', required=True
+        '--input', required=True,
+        help='R2D JSON input file.',
+    )
+
+    workflowArgParser.add_argument(
+        '--mainFile', help='Pyrecodes main file', required=False
     )
 
     workflowArgParser.add_argument(
@@ -936,7 +983,7 @@ if __name__ == '__main__':
     )
 
     workflowArgParser.add_argument(
-        '--rewetINPFile',
+        '--INPFile',
         default=None,
         help='Geojson defining the locality of the assets',
     )
@@ -969,11 +1016,58 @@ if __name__ == '__main__':
     # Calling the main workflow method and passing the parsed arguments
     # numPROC = int(wfArgs.numP)
 
+    json_input_file_path = Path(wfArgs.input)
+    json_input_file_path =json_input_file_path.resolve()
+
+    with open(json_input_file_path, "rt") as f:
+        json_input = json.load(f)
+
+    dl_assets = json_input["Applications"]["DL"]
+
+    realization = None
+
+    realization_asset_types = ""
+    for asset_types in dl_assets:
+        cur_application = dl_assets[asset_types]
+        if "Application" not in cur_application:
+            continue
+        if "ApplicationData" not in cur_application:
+            continue
+        cur_application_data = cur_application.get("ApplicationData")
+        cur_realization = cur_application_data.get("Realizations")
+
+        if cur_realization is None:
+            continue
+        elif type(cur_realization) is not int:
+            try:
+                cur_realization = int(cur_realization)
+            except:
+                try:
+                    cur_realization = int(float(cur_realization))
+                except:
+                    raise RuntimeError(f"The realziation for {asset_types} is not an integer: {cur_realization}")
+
+        realization_asset_types += asset_types + " "
+        if realization is None:
+            realization = cur_realization
+        elif cur_realization < realization:
+            realization = cur_realization
+
+        print(f"The smallest realziation accross {realization_asset_types}is {realization}.")
+
+        if realization < 0:
+            raise ValueError(f"Realization should be more than 0: realziation = {realization}")
+
+        realization_text = ""
+        for i in range(realization):
+            realization_text += f"{i+1},"
+
     run_pyrecodes(
         main_file=wfArgs.mainFile,
         system_config_file=wfArgs.systemConfigFile,
         component_library=wfArgs.componentLibraryFile,
         locality_geojson=wfArgs.localityGeojsonFile,
-        rewet_inp_file=wfArgs.rewetINPFile,
+        rewet_inp_file=wfArgs.INPFile,
         r2d_run_dir=wfArgs.r2dRunDir,
+        realization=realization_text
     )
