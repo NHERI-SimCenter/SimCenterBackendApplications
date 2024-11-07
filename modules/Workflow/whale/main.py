@@ -313,7 +313,7 @@ def create_command(command_list, enforced_python=None):
     return command  # noqa: DOC201, RUF100
 
 
-def run_command(command, app_category=""):  # noqa: C901
+def run_command(command, app_category=''):
     """Short description
 
     Long description
@@ -380,13 +380,12 @@ def run_command(command, app_category=""):  # noqa: C901
         #
 
         try:
-
-            if (platform.system() == 'Windows') and ('python.exe' in str(command)):
-                if returncode != 0:
-                    raise WorkFlowInputError('Analysis Failed at ' + app_category)  # noqa: TRY301
+            # if (platform.system() == 'Windows') and ('python.exe' in str(command)):
+            if returncode != 0:
+                raise WorkFlowInputError('Analysis Failed at ' + app_category)  # noqa: TRY301
 
             # sy - safe apps should be added below
-            elif ('OpenSeesInput' in str(command)):
+            elif 'OpenSeesInput' in str(command):  # noqa: RET506
                 if returncode != 0:
                     raise WorkFlowInputError('Analysis Failed at ' + app_category)  # noqa: TRY301
 
@@ -394,13 +393,13 @@ def run_command(command, app_category=""):  # noqa: C901
 
         except WorkFlowInputError as e:
             # this will catch the error
-            print(str(e).replace('\'',''))  # noqa: T201
-            print("         =====================================")  # noqa: T201
+            print(str(e).replace("'", ''))  # noqa: T201
+            print('         =====================================')  # noqa: T201
             print(str(result))  # noqa: T201
             sys.exit(-20)
 
         except:  # noqa: E722
-            # if for whatever reason the function inside "try" failes, move on without checking error
+            # if for whatever reason the function inside "try" fails, move on without checking error
             return str(result), 0
 
         return result, returncode
@@ -1307,7 +1306,7 @@ class Workflow:
                     prepend_blank_space=False,
                 )
 
-                result, returncode = run_command(command,"Asset Creater")
+                result, returncode = run_command(command, 'Asset Creater')
 
                 # Check if the command was completed successfully
                 if returncode != 0:
@@ -1546,7 +1545,15 @@ class Workflow:
 
         # Check if system performance is requested
         if 'SystemPerformance' in self.workflow_apps:
-            performance_app = self.workflow_apps['SystemPerformance'][asset_type]
+            if asset_type in self.workflow_apps['SystemPerformance']:
+                performance_app = self.workflow_apps['SystemPerformance'][asset_type]
+            else:
+                log_msg(
+                    f'No Performance application to run for asset type: {asset_type}.',
+                    prepend_timestamp=False,
+                )
+                log_div()
+                return False
         else:
             log_msg(
                 f'No Performance application to run for asset type: {asset_type}.',
@@ -1597,7 +1604,7 @@ class Workflow:
             prepend_blank_space=False,
         )
 
-        result, returncode = run_command(command,"Performance Assessment")
+        result, returncode = run_command(command, 'Performance Assessment')
         log_msg(
             f'\n{result}\n',
             prepend_timestamp=False,
@@ -1742,7 +1749,7 @@ class Workflow:
                 prepend_blank_space=False,
             )
 
-            result, returncode = run_command(command,"Hazard Event")
+            result, returncode = run_command(command, 'Hazard Event')
 
             log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
             log_msg(
@@ -1805,7 +1812,7 @@ class Workflow:
                 prepend_blank_space=False,
             )
 
-            result, returncode = run_command(command, "Recovery")
+            result, returncode = run_command(command, 'Recovery')
 
             log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
             log_msg(
@@ -1888,7 +1895,7 @@ class Workflow:
             )
 
         else:
-            result, returncode = run_command(command,"Hazard-Asset Mapping (HTA)")
+            result, returncode = run_command(command, 'Hazard-Asset Mapping (HTA)')
 
             log_msg(
                 'Output: ' + str(returncode),
@@ -2128,7 +2135,9 @@ class Workflow:
                                 prepend_blank_space=False,
                             )
 
-                            result, returncode = run_command(command,f'{app_type} - at the initial setup (getRV)')
+                            result, returncode = run_command(
+                                command, f'{app_type} - at the initial setup (getRV)'
+                            )
 
                             log_msg(
                                 'Output: ' + str(returncode),
@@ -2538,7 +2547,7 @@ class Workflow:
                 prepend_blank_space=False,
             )
 
-            result, returncode = run_command(command, "Response Simulator")
+            result, returncode = run_command(command, 'Response Simulator')
 
             if self.run_type in ['run', 'runningLocal']:
                 log_msg(
@@ -2615,7 +2624,7 @@ class Workflow:
             app_path=self.app_dir_local  # noqa: F821
         )
         command = create_command(app_command_list)
-        result, returncode = run_command(command,"Performance assessment")
+        result, returncode = run_command(command, 'Performance assessment')
 
     def estimate_losses(  # noqa: C901
         self,
@@ -2708,7 +2717,7 @@ class Workflow:
                         prepend_blank_space=False,
                     )
 
-                    result, returncode = run_command(command,"Damage and loss")
+                    result, returncode = run_command(command, 'Damage and loss')
 
                     log_msg(result, prepend_timestamp=False)
 
@@ -2759,7 +2768,7 @@ class Workflow:
                     prepend_blank_space=False,
                 )
 
-                result, returncode = run_command(command,"Damage and loss")
+                result, returncode = run_command(command, 'Damage and loss')
 
                 log_msg(result, prepend_timestamp=False)
 
@@ -2902,7 +2911,7 @@ class Workflow:
             prepend_blank_space=False,
         )
 
-        result, returncode = run_command(command,"Performance Assessment")
+        result, returncode = run_command(command, 'Performance Assessment')
 
         log_msg(result, prepend_timestamp=False)
 

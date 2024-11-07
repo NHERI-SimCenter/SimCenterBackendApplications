@@ -7,6 +7,7 @@ affiliation: University of California, San Diego, *SimCenter, University of Cali
 import json
 import shlex
 import sys
+import traceback
 from pathlib import Path
 
 path_to_common_uq = Path(__file__).parent.parent / 'common'
@@ -64,10 +65,11 @@ def main(input_args):  # noqa: D103
     # Try running the main_function and catch any exceptions
     try:
         main_function(command_list)
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001
         # Write the exception message to the .err file
         with err_file.open('a') as f:
-            f.write(f'ERROR: {e!s}\n')
+            f.write('ERROR: An exception occurred:\n')
+            f.write(f'{traceback.format_exc()}\n')
 
 
 # ======================================================================================================================

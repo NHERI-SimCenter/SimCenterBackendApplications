@@ -20,7 +20,7 @@ if quoFEM_RV_models not in sys.modules:
     import quoFEM_RV_models
 
 
-def _copytree(src, dst, symlinks=False, ignore=None):  # noqa: FBT002
+def _copytree(src, dst, symlinks=False, ignore=None) -> str:  # noqa: FBT002
     if not os.path.exists(dst):  # noqa: PTH110
         os.makedirs(dst)  # noqa: PTH103
     for item in os.listdir(src):
@@ -41,7 +41,7 @@ def _copytree(src, dst, symlinks=False, ignore=None):  # noqa: FBT002
     return '0'
 
 
-def _append_msg_in_out_file(msg, out_file_name: str = 'ops.out'):
+def _append_msg_in_out_file(msg, out_file_name: str = 'ops.out') -> str:
     if glob.glob(out_file_name):  # noqa: PTH207
         with open(out_file_name) as text_file:  # noqa: PTH123
             error_FEM = text_file.read()  # noqa: N806
@@ -93,21 +93,13 @@ class SimCenterWorkflowDriver:  # noqa: D101
     def _check_size_of_sample(self, sample_values: NDArray) -> None:
         num_samples = len(sample_values)
         if num_samples > 1:
-            msg = (
-                f'Do one simulation at a time. There were {num_samples}       '
-                '          samples provided in the sample value'
-                f' {sample_values}.'
-            )
+            msg = f'Do one simulation at a time. There were {num_samples} samples provided in the sample value {sample_values}.'
             raise ModelEvaluationError(msg)
 
         for i in range(num_samples):
             num_values_in_each_sample = len(sample_values[i])
             if num_values_in_each_sample != self.num_rv:
-                msg = (
-                    f'Expected {self.num_rv} values in each sample, found     '
-                    f'                {num_values_in_each_sample} in'
-                    f' {sample_values}.'
-                )
+                msg = f'Expected {self.num_rv} values in each sample, found {num_values_in_each_sample} in {sample_values}.'
                 raise ModelEvaluationError(msg)
 
     def _create_workdir(self, simulation_number: int) -> str:
@@ -117,22 +109,19 @@ class SimCenterWorkflowDriver:  # noqa: D101
         )
         if os.path.exists(workdir):  # noqa: PTH110
             for root, dirs, files in os.walk(workdir):
-                for file in files:
-                    try:
+                try:
+                    for file in files:
                         os.chmod(os.path.join(root, file), 0o777)  # noqa: S103, PTH101, PTH118
                         os.unlink(os.path.join(root, file))  # noqa: PTH108, PTH118
-                    except:  # noqa: PERF203, E722
-                        msg = f'Could not remove file {file} from {workdir}.'
-                        raise ModelEvaluationError(msg)  # noqa: B904
-                for dir in dirs:  # noqa: A001
-                    try:
-                        shutil.rmtree(os.path.join(root, dir))  # noqa: PTH118
-                    except:  # noqa: PERF203, E722
-                        msg = (
-                            f'Could not remove directory {dir}                '
-                            f'             from {workdir}.'
-                        )
-                        raise ModelEvaluationError(msg)  # noqa: B904
+                except Exception as ex:
+                    msg = f'Could not remove file {file} from {workdir}.'
+                    raise ModelEvaluationError(msg) from ex
+                try:
+                    for directory in dirs:
+                        shutil.rmtree(os.path.join(root, directory))  # noqa: PTH118
+                except Exception as ex:
+                    msg = f'Could not remove directory {directory} from {workdir}.'
+                    raise ModelEvaluationError(msg) from ex
 
         for src_dir in self.list_of_dir_names_to_copy_files_from:
             src = os.path.join(self.full_path_of_tmpSimCenter_dir, src_dir)  # noqa: PTH118
@@ -149,27 +138,21 @@ class SimCenterWorkflowDriver:  # noqa: D101
         try:
             with open(os.path.join(workdir, 'params.in'), 'w') as f:  # noqa: PTH118, PTH123
                 f.write('\n'.join(list_of_strings_to_write))
-        except Exception as ex:  # noqa: BLE001
-            raise ModelEvaluationError(  # noqa: B904, TRY003
-                'Failed to create params.in file in                        '  # noqa: EM102
-                f' {workdir}. The following error occurred: \n{ex}'
-            )
+        except Exception as exc:
+            msg = f'Failed to create params.in file in {workdir}. The following error occurred: \n{exc}'
+            raise ModelEvaluationError(msg) from exc
 
     def _execute_driver_file(self, workdir: str) -> None:
         command = (
-            f'{os.path.join(workdir, self.driver_filename)}                   '  # noqa: PTH118
-            '   1> model_eval.log 2>&1'
+            f'{os.path.join(workdir, self.driver_filename)} 1> model_eval.log 2>&1'  # noqa: PTH118
         )
         os.chdir(workdir)
         completed_process = subprocess.run(command, shell=True, check=False)  # noqa: S602
         try:
             completed_process.check_returncode()
         except subprocess.CalledProcessError as ex:
-            returnStringList = ['Failed to run the model.']  # noqa: N806
-            returnStringList.append(
-                'The command to run the model was                            '
-                f'         {ex.cmd}'
-            )
+            returnStringList = [f'Failed to run the model in {workdir}.']  # noqa: N806
+            returnStringList.append(f'The command to run the model was {ex.cmd}')
             returnStringList.append(f'The return code was {ex.returncode}')
             returnStringList.append(f'The following error occurred: \n{ex}')
             raise ModelEvaluationError('\n\n'.join(returnStringList))  # noqa: B904
@@ -178,27 +161,23 @@ class SimCenterWorkflowDriver:  # noqa: D101
         if glob.glob('results.out'):  # noqa: PTH207
             outputs = np.loadtxt('results.out', dtype=float).flatten()
         else:
-            msg = f"Error running FEM: 'results.out' missing at {workdir}\n"
+            msg = f"Error running FEM: 'results.out' missing in {workdir}\n"
             msg = _append_msg_in_out_file(msg, out_file_name='ops.out')
             raise ModelEvaluationError(msg)
 
         if outputs.shape[0] == 0:
-            msg = "Error running FEM: 'results.out' is empty\n"
+            msg = f"Error running FEM: in {workdir}, 'results.out' is empty\n"
             msg = _append_msg_in_out_file(msg, out_file_name='ops.out')
             raise ModelEvaluationError(msg)
 
         if outputs.shape[0] != self.length_of_results:
-            msg = (
-                "Error running FEM: 'results.out' contains                "
-                f' {outputs.shape[0]} values, expected to get                '
-                f' {self.length_of_results} values\n'
-            )
+            msg = f"Error running FEM: in {workdir}, 'results.out' contains {outputs.shape[0]} values, expected to get {self.length_of_results} values\n"
             msg = _append_msg_in_out_file(msg, out_file_name='ops.out')
             raise ModelEvaluationError(msg)
 
         if not self.ignore_nans:
             if np.isnan(np.sum(outputs)):
-                msg = f'Error running FEM: Response value in {workdir} is NaN'
+                msg = f"Error running FEM: 'results.out' in {workdir} contains NaN"
                 raise ModelEvaluationError(msg)
 
         return outputs
@@ -214,15 +193,22 @@ class SimCenterWorkflowDriver:  # noqa: D101
             self._create_params_file(sample_values, workdir)
             self._execute_driver_file(workdir)
             outputs = self._read_outputs_from_results_file(workdir)
-        except Exception:  # noqa: BLE001
+        except ModelEvaluationError as model_err:
+            # Custom error handling for ModelEvaluationError
+            msg = f'\nIn workdir: {workdir}\n' f'Error: {model_err!s}\n'
+            raise ModelEvaluationError(msg) from model_err
+        except Exception as exc:
+            # Catch all other exceptions, show full traceback and message
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            outputs = (
-                f'\nSimulation number: {simulation_number}\n'  # noqa: ISC003
-                + f'Samples values: {sample_values}\n'
-            )
-            outputs += ''.join(
+            formatted_traceback = ''.join(
                 traceback.format_exception(exc_type, exc_value, exc_traceback)
             )
+            msg = (
+                f'\nIn workdir: {workdir}\n'
+                f'Encountered an error:\n{exc}\n\n'
+                f'Traceback:\n{formatted_traceback}'
+            )
+            raise RuntimeError(msg) from exc  # Chain RuntimeError with traceback
         finally:
             os.chdir(self.full_path_of_tmpSimCenter_dir)
         return outputs
@@ -236,17 +222,19 @@ class ParallelRunnerMultiprocessing:  # noqa: D101
 
     def get_num_processors(self) -> int:  # noqa: D102
         num_processors = os.cpu_count()
+        max_num_processors = 32  # max number of processors to use in multiprocessing when running locally
         if num_processors is None:
             num_processors = 1
         elif num_processors < 1:
+
             raise ValueError(  # noqa: TRY003
                 'Number of processes must be at least 1.                     '  # noqa: EM102
                 f'         Got {num_processors}'
             )
-        elif num_processors > 32:
+        elif num_processors > max_num_processors: 
             # this is to get past memory problems when running large number processors in a container
             num_processors = 8
-        
+
         return num_processors
 
     def get_pool(self) -> Pool:  # noqa: D102
@@ -262,12 +250,22 @@ def make_ERADist_object(name, opt, val) -> ERADist:  # noqa: N802, D103
 
 
 def create_one_marginal_distribution(rv_data) -> ERADist:  # noqa: D103
-    string = (
-        f'quoFEM_RV_models.{rv_data["distribution"]}'  # noqa: ISC003
-        + f'{rv_data["inputType"]}.model_validate({rv_data})'
-    )
-    rv = eval(string)  # noqa: S307
-    return make_ERADist_object(name=rv.ERAName, opt=rv.ERAOpt, val=rv.ERAVal)
+    try:
+        # Access the distribution and input type dynamically without eval
+        distribution_model = getattr(
+            quoFEM_RV_models, rv_data['distribution'] + rv_data['inputType']
+        )
+        rv = distribution_model.model_validate(rv_data)
+
+        # Create the ERADist object
+        return make_ERADist_object(name=rv.ERAName, opt=rv.ERAOpt, val=rv.ERAVal)
+
+    except AttributeError as e:
+        msg = f'Invalid distribution or input type: {e}'
+        raise AttributeError(msg) from e
+    except TypeError as e:
+        msg = f'model_validate does not accept the provided rv_data: {e}'
+        raise TypeError(msg) from e
 
 
 def make_list_of_marginal_distributions(  # noqa: D103
