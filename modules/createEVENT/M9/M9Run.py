@@ -38,8 +38,8 @@ if __name__ == '__main__':
         '-o', '--output', help='number of realizations', required=False
     )
     parser.add_argument('-a', '--API', help='API FLAG', required=False)
-    parser.add_argument("--username", help="username", required=False)
-    parser.add_argument("--password", help="password", required=False)
+    parser.add_argument('--username', help='username', required=False)
+    parser.add_argument('--password', help='password', required=False)
     args = parser.parse_args()
 
     if args.lat:
@@ -54,7 +54,6 @@ if __name__ == '__main__':
         information['grid_type'] = args.gridType
     if args.API in ['true', 1, 'True', 'TRUE']:
         information['APIFLAG'] = True
-
 
     #
     # go get the motions
