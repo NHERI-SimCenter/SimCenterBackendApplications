@@ -310,7 +310,7 @@ int createDriver(int argc, const char **argv) {
   std::ifstream modelFile(mainScript);
   std::string line;
   while (std::getline(modelFile, line)) {
-      std::cout << line << std::endl; // Print line to console
+      // std::cout << line << std::endl; // Print line to console
       templateFile << line << std::endl; // Write line to template file
   }
   templateFile.close();

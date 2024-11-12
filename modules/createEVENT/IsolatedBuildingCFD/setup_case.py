@@ -1986,7 +1986,6 @@ def write_boundary_data_files(input_json_path, case_path):
         foam.write_foam_field(wind_profiles[:, 8:17], bd_path + 'L')
 
 
-<<<<<<< HEAD
 def write_vtk_plane_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
@@ -2086,9 +2085,6 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):
 
 if __name__ == '__main__':  # noqa: W291
   # noqa: W293
-=======
-if __name__ == '__main__':
->>>>>>> upstream/master
     input_args = sys.argv
 
     # Set filenames
@@ -2135,18 +2131,9 @@ if __name__ == '__main__':
     # Write results to be monitored
     write_base_forces_file(input_json_path, template_dict_path, case_path)
     write_story_forces_file(input_json_path, template_dict_path, case_path)
-<<<<<<< HEAD
     write_generated_pressure_probes_file(input_json_path, template_dict_path, case_path)
     write_imported_pressure_probes_file(input_json_path, template_dict_path, case_path)
     write_vtk_plane_file(input_json_path, template_dict_path, case_path)
-=======
-    write_generated_pressure_probes_file(
-        input_json_path, template_dict_path, case_path
-    )
-    write_imported_pressure_probes_file(
-        input_json_path, template_dict_path, case_path
-    )
->>>>>>> upstream/master
 
     # Write fvSolution dict
     write_fvSolution_file(input_json_path, template_dict_path, case_path)
@@ -2171,9 +2158,3 @@ if __name__ == '__main__':
 
     # Write TInf files
     write_boundary_data_files(input_json_path, case_path)
-<<<<<<< HEAD
-
-
-  # noqa: W293
-=======
->>>>>>> upstream/master
