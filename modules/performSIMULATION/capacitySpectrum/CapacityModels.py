@@ -88,6 +88,7 @@ def convert_story_rise(structureType, stories):  # noqa: N803
         rise = None
 
     else:
+        rise = None
         # First, check if we have valid story information
         try:
             stories = int(stories)
@@ -340,7 +341,7 @@ class HAZUS_cao_peterson_2006(capacity_model_base):
             self.Dy = self.capacity_data[self.design_level][self.HAZUS_type]['Dy']
             self.Ay = self.capacity_data[self.design_level][self.HAZUS_type]['Ay']
         except KeyError:
-            msg = f'No capacity data for {self.HAZUS_type} and {self.design_level}'
+            msg = f'No capacity data for build class {self.HAZUS_type} and design level {self.design_level}'
             raise KeyError(msg)  # noqa: B904
         self.cao_peterson_2006 = cao_peterson_2006(
             self.Dy, self.Ay, self.Du, self.Au, dD
