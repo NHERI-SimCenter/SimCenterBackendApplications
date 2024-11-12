@@ -321,7 +321,8 @@ def find_neighbors(  # noqa: C901, D103
                 for col in grid_df.columns
                 if col not in ['geometry', 'Longitude', 'Latitude']
             ]
-            event_count = len(im_columns)
+            # event_count = len(im_columns)
+            event_count = 1
 
             # for each neighbor
             for sample_j, nbr in enumerate(nbr_samples):
@@ -332,26 +333,28 @@ def find_neighbors(  # noqa: C901, D103
                 nbr_index = ind_list[nbr]
 
                 # For GIS files, create a new CSV file
-                csv_filename = f'Site_{sample_j}.csv'
+                csv_filename = f'Site_{nbr_index}.csv'
 
                 csv_path = event_dir / csv_filename
 
-                # Create a CSV file with data from the GIS file
-                # Use actual data from the GIS file if available, otherwise use dummy data
-                im_columns = [
-                    col
-                    for col in grid_df.columns
-                    if col not in ['geometry', 'Longitude', 'Latitude']
-                ]
+                if not csv_path.exists():
 
-                im_data = pd.DataFrame(
-                    {
-                        col: [grid_df.iloc[nbr_index][col]] * event_count
-                        for col in im_columns
-                    }
-                )
+                    # Create a CSV file with data from the GIS file
+                    # Use actual data from the GIS file if available, otherwise use dummy data
+                    im_columns = [
+                        col
+                        for col in grid_df.columns
+                        if col not in ['geometry', 'Longitude', 'Latitude']
+                    ]
 
-                im_data.to_csv(csv_path, index=False)
+                    im_data = pd.DataFrame(
+                        {
+                            col: [grid_df.iloc[nbr_index][col]] * event_count
+                            for col in im_columns
+                        }
+                    )
+
+                    im_data.to_csv(csv_path, index=False)
                 # save the collection file name and the IM row id
                 event_list.append(csv_filename + f'x{event_j}')
 
