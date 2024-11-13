@@ -868,6 +868,8 @@ def run_residual_demand(  # noqa: C901
     edges_gdf['capacity'] = edges_gdf['lanes'] * 1800
     edges_gdf['normal_capacity'] = edges_gdf['capacity']
     edges_gdf['normal_maxspeed'] = edges_gdf['maxspeed']
+    edges_gdf['start_nid'] = edges_gdf['start_nid'].astype(int)
+    edges_gdf['end_nid'] = edges_gdf['end_nid'].astype(int)
     # edges_gdf['fft'] = edges_gdf['length']/edges_gdf['maxspeed'] * 2.23694
     edges_gdf.to_csv('edges.csv', index=False)
     nodes_gdf = gpd.read_file(node_geojson)

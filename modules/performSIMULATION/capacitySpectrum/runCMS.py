@@ -97,10 +97,8 @@ def find_performance_point(cap_x, cap_y, dem_x, dem_y, dd=0.001):
     elif dem_y_interp[0] < cap_y_interp[0]:
         perf_x = 0.001  # x_interp[0]
         perf_y = 0.001  # cap_y_interp[0]
-    # except IndexError as err:
-    #   print('No performance point found; curves do not intersect.')
-    #   print('IndexError: ')
-    #   print(err)
+    else:
+      print('No performance point found; curves do not intersect.')
 
     return perf_x, perf_y
 
