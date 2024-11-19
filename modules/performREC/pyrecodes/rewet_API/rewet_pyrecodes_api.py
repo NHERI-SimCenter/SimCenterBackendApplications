@@ -476,28 +476,82 @@ class REWETPyReCoDes:
 
         demand_node_name_list = [key for key, val in self.nodes.items()]
 
-        kmeans = KMeans(
-            n_clusters=len(demand_node_coordinate_list),
-            init=demand_node_coordinate_list,
-            n_init=1,
-            random_state=0,
-        )
+        if len(demand_node_coordinate_list) <= len(self.building_coordinates):
+            kmeans = KMeans(
+                n_clusters=len(demand_node_coordinate_list),
+                init=demand_node_coordinate_list,
+                n_init=1,
+                random_state=0,
+            )
 
-        kmeans.fit(self.building_coordinates)
+            kmeans.fit(self.building_coordinates)
 
-        labels = kmeans.labels_
-        labels = labels.tolist()
+            labels = kmeans.labels_
+            labels = labels.tolist()
 
-        for group_i in range(len(demand_node_coordinate_list)):
-            node_name = demand_node_name_list[group_i]
-            for building_l in range(len(labels)):
-                cur_node_l = labels[building_l]
-                if group_i == cur_node_l:
-                    if node_name not in self.demand_node_to_building:
-                        self.demand_node_to_building[node_name] = []
+            for group_i in range(len(demand_node_coordinate_list)):
+                node_name = demand_node_name_list[group_i]
+                for building_l in range(len(labels)):
+                    cur_node_l = labels[building_l]
+                    if group_i == cur_node_l:
+                        if node_name not in self.demand_node_to_building:
+                            self.demand_node_to_building[node_name] = []
 
-                    building_id = building_id_list[building_l]
-                    self.demand_node_to_building[node_name].append(building_id)
+                        building_id = building_id_list[building_l]
+                        self.demand_node_to_building[node_name].append(building_id)
+        else:
+
+            building_to_node_map = {}
+
+            kmeans = KMeans(
+                n_clusters=len(self.building_coordinates),
+                init=self.building_coordinates,
+                n_init=1,
+                random_state=0,
+            )
+
+            kmeans.fit(demand_node_coordinate_list)
+
+            labels = kmeans.labels_
+            labels = labels.tolist()
+
+            for node_i in range(len(labels)):
+                # node_name = demand_node_name_list[node_i]
+                cur_building_i = labels[node_i]
+                # cur_building_id = building_id_list[cur_building_i]
+                if cur_building_i not in building_to_node_map:
+                    building_to_node_map[cur_building_i] = []
+
+                building_to_node_map[cur_building_i].append(node_i)
+
+            for cur_building_i in building_to_node_map:
+                serving_nodes_i_list = building_to_node_map[cur_building_i]
+
+                if len(serving_nodes_i_list) > 1:
+                    distance_list = []
+                    building_coord = self.building_coordinates[cur_building_i]
+                    for node_i in serving_nodes_i_list:
+                        node_coord = demand_node_coordinate_list[node_i]
+                        dist = ((node_coord[0]-building_coord[0]) ** 2
+                                + (node_coord[1]-building_coord[1]) ** 2 ) ** 0.5
+
+                        distance_list.append(dist)
+
+                    sorted_distance_list = distance_list.copy()
+                    minimum_value = sorted_distance_list[0]
+                    index_min_value = distance_list.index(minimum_value)
+                    closest_node_i = serving_nodes_i_list[index_min_value]
+                    building_to_node_map[cur_building_i] = [closest_node_i]
+                    serving_nodes_i_list = building_to_node_map[cur_building_i]
+
+                node_i = serving_nodes_i_list[0]
+                node_name = demand_node_name_list[node_i]
+                building_id = building_id_list[cur_building_i]
+                if node_name not in self.demand_node_to_building:
+                    self.demand_node_to_building[node_name] = []
+                self.demand_node_to_building[node_name].append(building_id)
+
+
 
         for node_name in self.demand_node_to_building:
             building_name_list = self.demand_node_to_building[node_name]

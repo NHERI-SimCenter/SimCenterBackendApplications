@@ -1,2 +1,0 @@
-simcenter_add_python_script(SCRIPT damage_convertor.py)
-simcenter_add_python_script(SCRIPT rewet_pyrecodes_api.py)

@@ -167,7 +167,7 @@ def main(  # noqa: C901, D103
             'UQ',
             'DL',
             'SystemPerformance',
-            'RecoverySimulation',
+            'Recovery',
         ],
         reference_dir=reference_dir,
         working_dir=working_dir,
