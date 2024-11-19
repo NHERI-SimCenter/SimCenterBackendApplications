@@ -576,7 +576,7 @@ class runPLoM:
             if self.run_type.lower() == 'runninglocal':
                 self.n_processor = os.cpu_count()
                 # curtailing n_processor for docker containers running at TACC HPC
-                if self.n_processor > 32:
+                if self.n_processor > 32:  # noqa: PLR2004
                     self.n_processor = 8
                 from multiprocessing import Pool
 

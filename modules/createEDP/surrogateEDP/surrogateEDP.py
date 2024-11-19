@@ -10,7 +10,8 @@ else:
 import argparse
 import json
 
-errPath = os.path.join(os.getcwd(),'workflow.err')  # noqa: N816
+errPath = os.path.join(os.getcwd(), 'workflow.err')  # noqa: N816, PTH109, PTH118
+
 
 def write_RV(AIM_input_path, EDP_input_path, EDP_type):  # noqa: ARG001, N802, N803, D103
     # load the AIM file

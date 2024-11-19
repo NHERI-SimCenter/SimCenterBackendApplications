@@ -56,8 +56,8 @@ def create_SAM(  # noqa: N802, D103, C901
     current_building_id = AIM['GeneralInformation']['AIM_id']
     database_path = AIM['Modeling']['buildingDatabase']
     with open(  # noqa: PTH123, UP015
-        os.path.join('..', '..', '..', '..', 'input_data', database_path),
-        'r',  # noqa: PTH118
+        os.path.join('..', '..', '..', '..', 'input_data', database_path),  # noqa: PTH118
+        'r',  # noqa: PTH118, RUF100
     ) as f:
         json_string = f.read()
         database = json.loads(json_string)

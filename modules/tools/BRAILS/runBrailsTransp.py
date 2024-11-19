@@ -72,6 +72,7 @@ def runBrails(  # noqa: N802, D103
     minimumHAZUS,  # noqa: N803
     maxRoadLength,  # noqa: N803
     lengthUnit,  # noqa: N803
+    saveTrafficSimulationAttr,  # noqa: N803
 ):
     # Initialize TranspInventoryGenerator:
     invGenerator = TranspInventoryGenerator(  # noqa: N806
@@ -83,7 +84,8 @@ def runBrails(  # noqa: N802, D103
 
     # Combine and format the generated inventory to SimCenter transportation network inventory json format
     invGenerator.combineAndFormat_HWY(
-        minimumHAZUS=minimumHAZUS, maxRoadLength=maxRoadLength, lengthUnit=lengthUnit
+        minimumHAZUS=minimumHAZUS, maxRoadLength=maxRoadLength, lengthUnit=lengthUnit,
+        connectivity=saveTrafficSimulationAttr
     )
 
 
@@ -99,6 +101,7 @@ def main(args):  # noqa: D103
     )
     parser.add_argument('--maxRoadLength', default=100, type=float)
     parser.add_argument('--lengthUnit', default='m', type=str)
+    parser.add_argument('--saveTrafficSimulationAttr', default=False, type=str2bool, nargs='?', const=True)
 
     args = parser.parse_args(args)
 
@@ -115,6 +118,7 @@ def main(args):  # noqa: D103
         args.minimumHAZUS,
         args.maxRoadLength,
         args.lengthUnit,
+        args.saveTrafficSimulationAttr,
     )
 
     log_msg('BRAILS successfully generated the requested transportation inventory')
