@@ -207,18 +207,6 @@ def modify_system_config_rewet_distribution(system_config, inp_file, rlz_run_dir
             distribution_model['Parameters']['Temp_folder'] = str(rlz_run_dir / 'rewet_temp')
     return system_config
 
-def modify_system_config_residual_demand_distribution(system_config, input_data_dir, rlz_run_dir):
-    resources_config = system_config['Resources']
-    for resouces in resources_config.values():
-        distribution_model = resouces['DistributionModel']
-        if distribution_model['ClassName'] == 'ResidualDemandTrafficDistributionModel':
-            distribution_model['Parameters']['EdgeFile'] = str(input_data_dir / distribution_model['Parameters']['EdgeFile'])
-            distribution_model['Parameters']['NodeFile'] = str(input_data_dir / distribution_model['Parameters']['NodeFile'])
-            distribution_model['Parameters']['ODFilePre'] = str(input_data_dir / distribution_model['Parameters']['ODFilePre'])
-            if not (rlz_run_dir / 'residual_demand_results').exists():
-                (rlz_run_dir / 'residual_demand_results').mkdir()
-            distribution_model['Parameters']['ResultsFolder'] = str(rlz_run_dir / 'residual_demand_results')
-    return system_config
 
 def modify_main_file(main_file_dict, component_library, run_dir):
     """
@@ -341,7 +329,6 @@ def run_pyrecodes(  # noqa: C901
         locality_geojson,
         rewet_inp_file,
         r2d_run_dir,
-        input_data_dir,
         realization
 ):
     """
@@ -360,13 +347,6 @@ def run_pyrecodes(  # noqa: C901
         run_dir = Path.cwd()
     else:
         run_dir = Path(r2d_run_dir)
-
-    if input_data_dir is not None:
-        input_data_dir = Path(input_data_dir)
-    else:
-        input_data_dir = run_dir / 'input_data'
-    if not Path(input_data_dir).exists():
-        raise RuntimeError(f"Input data directory {input_data_dir} does not exist.")
 
     # Make a dir for RecoverySimulation
     if (run_dir / 'RecoverySimulation').exists():
@@ -476,8 +456,6 @@ def run_pyrecodes(  # noqa: C901
 
         # Modify the file pathes in the REWETDistributionModel part of the system configuration
         system_config = modify_system_config_rewet_distribution(system_config, rewet_inp_file, rlz_run_dir)
-        # Modify the file pathes in the ResidualDemandTrafficDistributionModel part of the system configuration
-        system_config = modify_system_config_residual_demand_distribution(system_config, input_data_dir, rlz_run_dir)
         # Write the modified system configuration to a file
         with Path('SystemConfiguration.json').open('w') as f:
             json.dump(system_config, f)
@@ -545,7 +523,6 @@ def run_pyrecodes(  # noqa: C901
 
             # Modify the file pathes in the REWETDistributionModel part of the system configuration
             system_config = modify_system_config_rewet_distribution(system_config, rewet_inp_file, rlz_run_dir)
-            system_config = modify_system_config_residual_demand_distribution(system_config, input_data_dir, rlz_run_dir)
             # Write the modified system configuration to a file
             with Path('SystemConfiguration.json').open('w') as f:
                 json.dump(system_config, f)
@@ -1023,13 +1000,6 @@ if __name__ == '__main__':
         default=None,
         help='R2D run directory containing the results',
     )
-
-    workflowArgParser.add_argument(
-        '--inputDataDir',
-        default=None,
-        help='R2D input data directory',
-    )
-
     # Below are for future parallelization
     workflowArgParser.add_argument(
         '--parallelType',
@@ -1110,6 +1080,5 @@ if __name__ == '__main__':
         locality_geojson=wfArgs.localityGeojsonFile,
         rewet_inp_file=wfArgs.INPFile,
         r2d_run_dir=wfArgs.r2dRunDir,
-        input_data_dir=wfArgs.inputDataDir,
         realization=realization_text
     )

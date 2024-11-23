@@ -846,7 +846,8 @@ def run_residual_demand(  # noqa: C901
 
     # Prepare edges and nodes files
     edges_gdf = gpd.read_file(edge_geojson).to_crs(epsg=6500)
-    edges_gdf['length'] = edges_gdf['geometry'].apply(lambda x: x.length)
+    if 'length' not in edges_gdf.columns:
+        edges_gdf['length'] = edges_gdf['geometry'].apply(lambda x: x.length)
     edges_gdf = edges_gdf.to_crs(epsg=4326)
     two_way_edges = config_file_dict['TwoWayEdges']
     if two_way_edges:
