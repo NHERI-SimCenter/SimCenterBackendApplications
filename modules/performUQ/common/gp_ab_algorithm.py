@@ -352,22 +352,6 @@ class GP_AB_Algorithm:
         )
         return loocv_measure  # noqa: RET504
 
-    def calibrate_gp(self, model_parameters, model_outputs):
-        """
-        Calibrate the Gaussian Process (GP) model using the given parameters and outputs.
-
-        Args:
-            model_parameters (np.ndarray): The model parameters.
-            model_outputs (np.ndarray): The model outputs.
-        """
-        latent_outputs = self.current_pca.project_to_latent_space(model_outputs)
-        self.num_pca_components_list.append(np.shape(latent_outputs)[1])
-        self.current_gp_model = GaussianProcessModel(
-            self.input_dimension, self.num_pca_components_list[-1], ARD=True
-        )
-        self.current_gp_model.fit(model_parameters, latent_outputs)
-        self.num_recalibration_experiments = self.num_experiments[-1]
-
     def run_iteration(self, k):
         """
         Run a single iteration of the GP-AB Algorithm.
