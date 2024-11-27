@@ -65,13 +65,39 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from scipy.spatial.distance import cdist
 from shapely.wkt import loads
-from brails.utils.geoTools import haversine_dist
-from brails.workflow.TransportationElementHandler import (
-    ROADLANES_MAP,
-    ROADSPEED_MAP,
-    calculate_road_capacity,
-)
+# from brails.utils.geoTools import haversine_dist
+# from brails.workflow.TransportationElementHandler import (
+#     ROADLANES_MAP,
+#     ROADSPEED_MAP,
+#     calculate_road_capacity,
+# )
 
+## The below functions are mannually copied from brails to avoid importing brails
+
+ROADLANES_MAP = {'S1100': 4, "S1200": 2, "S1400": 1, "S1500": 1, "S1630": 1,
+                 "S1640": 1, "S1710": 1, "S1720": 1, "S1730": 1, "S1740": 1,
+                 "S1750": 1, "S1780": 1, "S1810": 1, "S1820": 1, "S1830": 1}
+
+ROADSPEED_MAP = {'S1100': 70, "S1200": 55, "S1400": 25, "S1500": 25,
+                 "S1630": 25, "S1640": 25, "S1710": 25, "S1720": 25,
+                 "S1730": 25, "S1740": 10, "S1750": 10, "S1780": 10,
+                 "S1810": 10, "S1820": 10, "S1830": 10}
+def calculate_road_capacity(nlanes: int,
+                            traffic_volume_per_lane: int = 1800
+                            ) -> int:
+    """
+    Calculate road capacity from number of lanes & traffic volume/lane.
+
+    Parameters__
+    nlanes (int): The number of lanes on the road.
+    traffic_volume_per_lane (int, optional): The traffic volume
+        capacity per lane. Default is 1800 vehicles.
+
+    Returns__
+    int: The total road capacity, which is the product of the number
+        of lanes and the traffic volume per lane.
+    """
+    return nlanes * traffic_volume_per_lane
 
 class TransportationPerformance(ABC):  # noqa: B024
     """
