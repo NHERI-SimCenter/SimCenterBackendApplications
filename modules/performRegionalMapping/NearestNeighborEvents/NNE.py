@@ -152,9 +152,10 @@ def find_neighbors(  # noqa: C901, D103
                 asset_data = json.load(f)
 
             asset_loc = asset_data['GeneralInformation']['location']
-            AIM_df.iloc[count]['Longitude'] = asset_loc['longitude']
-            AIM_df.iloc[count]['Latitude'] = asset_loc['latitude']
-            AIM_df.iloc[count]['file'] = asset['file']
+            AIM_id = AIM_df.index[count]
+            AIM_df.loc[AIM_id,'Longitude'] = asset_loc['longitude']
+            AIM_df.loc[AIM_id,'Latitude'] = asset_loc['latitude']
+            AIM_df.loc[AIM_id,'file'] = asset['file']
             count = count + 1
 
     # store building locations in Y
