@@ -65,13 +65,39 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from scipy.spatial.distance import cdist
 from shapely.wkt import loads
-from brails.utils.geoTools import haversine_dist
-from brails.workflow.TransportationElementHandler import (
-    ROADLANES_MAP,
-    ROADSPEED_MAP,
-    calculate_road_capacity,
-)
+# from brails.utils.geoTools import haversine_dist
+# from brails.workflow.TransportationElementHandler import (
+#     ROADLANES_MAP,
+#     ROADSPEED_MAP,
+#     calculate_road_capacity,
+# )
 
+## The below functions are mannually copied from brails to avoid importing brails
+
+ROADLANES_MAP = {'S1100': 4, "S1200": 2, "S1400": 1, "S1500": 1, "S1630": 1,
+                 "S1640": 1, "S1710": 1, "S1720": 1, "S1730": 1, "S1740": 1,
+                 "S1750": 1, "S1780": 1, "S1810": 1, "S1820": 1, "S1830": 1}
+
+ROADSPEED_MAP = {'S1100': 70, "S1200": 55, "S1400": 25, "S1500": 25,
+                 "S1630": 25, "S1640": 25, "S1710": 25, "S1720": 25,
+                 "S1730": 25, "S1740": 10, "S1750": 10, "S1780": 10,
+                 "S1810": 10, "S1820": 10, "S1830": 10}
+def calculate_road_capacity(nlanes: int,
+                            traffic_volume_per_lane: int = 1800
+                            ) -> int:
+    """
+    Calculate road capacity from number of lanes & traffic volume/lane.
+
+    Parameters__
+    nlanes (int): The number of lanes on the road.
+    traffic_volume_per_lane (int, optional): The traffic volume
+        capacity per lane. Default is 1800 vehicles.
+
+    Returns__
+    int: The total road capacity, which is the product of the number
+        of lanes and the traffic volume per lane.
+    """
+    return nlanes * traffic_volume_per_lane
 
 class TransportationPerformance(ABC):  # noqa: B024
     """
@@ -412,7 +438,8 @@ class TransportationPerformance(ABC):  # noqa: B024
         beta_f=3,
         two_way_edges=False,  # noqa: FBT002
     ):
-        open_edges_df = weighted_edges_df.loc[weighted_edges_df['fft'] < 36000]  # noqa: PLR2004
+        # open_edges_df = weighted_edges_df.loc[weighted_edges_df['fft'] < 36000]  # noqa: PLR2004
+        open_edges_df = weighted_edges_df
 
         net = pdna.Network(
             nodes_df['x'],
@@ -652,6 +679,7 @@ class TransportationPerformance(ABC):  # noqa: B024
             open_edges_df[['fft']],
             twoway=two_way_edges,
         )
+        net.set(pd.Series(net.node_ids))
         paths = net.shortest_paths(orig, dest)
         no_path_ind = [i for i in range(len(paths)) if len(paths[i]) == 0]
         od_no_path = od_all.iloc[no_path_ind].copy()
@@ -857,7 +885,6 @@ class TransportationPerformance(ABC):  # noqa: B024
                             hour=hour,
                             scen_nm=scen_nm,
                         )
-        # output individual trip travel time and stop location
 
         trip_info_df = pd.DataFrame(
             [
@@ -886,6 +913,9 @@ class TransportationPerformance(ABC):  # noqa: B024
                 'stop_ssid',
             ],
         )
+        # If there are trips incompleted mark them as np.nan
+        incomplete_trips_agent_id = [x[0] for x in od_residual_list]
+        trip_info_df.loc[trip_info_df.agent_id.isin(incomplete_trips_agent_id),'travel_time_used'] = 'inf'
         # Add the no path OD to the trip info
         trip_info_no_path = od_no_path.drop(
             columns=[
@@ -895,7 +925,7 @@ class TransportationPerformance(ABC):  # noqa: B024
             ]
         )
         trip_info_no_path['travel_time'] = 360000
-        trip_info_no_path['travel_time_used'] = np.nan
+        trip_info_no_path['travel_time_used'] = 'inf'
         trip_info_no_path['stop_nid'] = np.nan
         trip_info_no_path['stop_hour'] = np.nan
         trip_info_no_path['stop_quarter'] = np.nan

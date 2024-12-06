@@ -553,6 +553,11 @@
         ]
       },
       {
+        "Name": "MPMEvent",
+        "ExecutablePath": "applications/createEVENT/MPMEvent/MPMEvent.py",
+        "ApplicationSpecificInputs": []
+      },
+      {
         "Name": "StochasticWave",
         "ExecutablePath": "applications/createEVENT/stochasticWave/StochasticWave.py",
         "ApplicationSpecificInputs": []
