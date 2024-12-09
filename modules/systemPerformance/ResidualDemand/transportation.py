@@ -1308,6 +1308,7 @@ class pyrecodes_residual_demand(TransportationPerformance):
         self.nodes_df = nodes_gdf
 
         self.od_pre_file = od_pre_file
+        self.current_r2d_dict = None
         self.hour_list = hour_list
         self.results_dir = results_dir
         self.two_way_edges = two_way_edges
@@ -1315,12 +1316,19 @@ class pyrecodes_residual_demand(TransportationPerformance):
     def simulate(
         self,
         r2d_dict
-    ):  
+    ):
         def update_edges(edges, r2d_dict):
             return edges
-        
-        od_matrix = self.compute_od(r2d_dict)
-        
+
+        if self.current_r2d_dict is None:
+            od_matrix = pd.read_csv(self.od_pre_file)
+        else:
+            od_matrix = self.compute_od(r2d_dict)
+
+        self.current_r2d_dict = r2d_dict.copy() #TODO: check if this is necessary
+        self.current_od = od_matrix
+
+
         edges_df = update_edges(self.edges_df, r2d_dict)
 
         # closed_links is simulated as normal links with very high fft
@@ -1338,10 +1346,81 @@ class pyrecodes_residual_demand(TransportationPerformance):
             save_edge_vol = False
         )
         return trip_info_df
-    
+
     def compute_od(self, r2d_dict):
-        od_matrix = pd.read_csv(self.od_pre_file)
-        return od_matrix
+        # Extract the building information from the det file and convert it to a pandas dataframe
+        def extract_building_from_det(det):
+            # Extract the required information and convert it to a pandas dataframe
+            extracted_data = []
+
+            for aim_id, info in det['Buildings']['Building'].items():
+                general_info = info.get('GeneralInformation', {})
+                extracted_data.append({
+                    'AIM_id': aim_id,
+                    'Latitude': general_info.get('Latitude'),
+                    'Longitude': general_info.get('Longitude'),
+                    'Population': general_info.get('Population')
+                })
+            extracted_df = pd.DataFrame(extracted_data)
+            return gpd.GeoDataFrame(extracted_df, geometry=gpd.points_from_xy(extracted_df.Longitude, extracted_df.Latitude), crs='epsg:4326')
+
+        # Aggregate the population in buildings to the closest road network node
+        def closest_neighbour(building_df, nodes_df):
+            # Find the nearest road network node to each building
+            merged_df = building_df.sjoin_nearest(nodes_df, how = 'left')
+            merged_df = merged_df.drop(columns=['AIM_id', 'Latitude', 'Longitude', 'index_right'])
+            merged_df = merged_df.fillna(0)
+
+            # Aggregate the population of the neareast buildings to the road network node
+            return merged_df.groupby('node_id').agg({'x': 'first', 'y': 'first', 'geometry': 'first', 'Population': 'sum'}).reset_index()
+
+        # Function to add the population information to the nodes file
+        def find_population(nodes, det):
+            # Extract the building information from the det file and convert it to a pandas dataframe
+            building_df = extract_building_from_det(det)
+            # Aggregate the population in buildings to the closest road network node
+            updated_nodes_df = closest_neighbour(building_df, nodes)
+
+            return updated_nodes_df  # noqa: RET504
+        # old od
+        od_matrix = self.current_od
+
+        trips_starting_at_nodes = od_matrix.reset_index()[['origin_nid', 'index']].groupby(
+            'origin_nid').agg(list).to_dict()['index']
+        trips_ending_at_nodes = od_matrix.reset_index()[['destin_nid', 'index']].groupby(
+            'destin_nid').agg(list).to_dict()['index']
+        # old population at each node
+        old_population = find_population(self.nodes_df, self.r2d_dict_last)
+        # new population at each node
+        new_population = find_population(self.nodes_df, r2d_dict)
+        # For debug use:
+        damaged_nodes = np.random.choice(new_population.index, 50)
+        new_population.loc[damaged_nodes, 'Population'] = 0
+        population_change = new_population['Population'] - old_population['Population']
+        # population change percentage at each node
+        trips_index_set = set()
+        for i in old_population.index:
+            node_id = old_population.loc[i, 'node_id']
+            # The population did not change, the OD starting and ending at this node does not change
+            if population_change[i] == 0:
+                trips_index_set = trips_index_set.union(set(trips_starting_at_nodes.get(node_id, [])))
+                trips_index_set = trips_index_set.union(set(trips_ending_at_nodes.get(node_id, [])))
+            # If the population changed and if the original OD starting and ending at this node is zero,
+            # Generate new OD starting and ending at this node. This is considered impossible in this
+            # implementation as new population can only be generated at nodes with non-zero pre-event population
+            elif old_population.loc[i, 'Population'] == 0:
+                print(f'Warning: New population generated at node {node_id}, which had zero pre-event population')
+            # If the population changed and if the original OD starting and ending at this node is not zero,
+            # Modify the trips starting and ending at this node according to the population change percentage
+            else:
+                change_percentage = population_change[i] / old_population.loc[i, 'Population']
+                origin_trips = trips_starting_at_nodes.get(node_id, [])
+                origin_trips = np.random.choice(origin_trips, int(len(origin_trips) * (1+change_percentage)), replace=False)
+                destin_trips = trips_ending_at_nodes.get(node_id, [])
+                destin_trips = np.random.choice(destin_trips, int(len(destin_trips) * (1+change_percentage)), replace=False)
+                trips_index_set = trips_index_set.union(set(origin_trips)).union(set(destin_trips))
+        trips_index_set = sorted(trips_index_set)
+        return od_matrix.loc[trips_index_set, :]
 
     # def get_graph_network(self,
     #                       det_file_path: str,
