@@ -160,6 +160,8 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ARG00
     merged = gpd.GeoDataFrame.sjoin(
         gdf_roi, gdf_sites, how='inner', predicate='contains'
     )
+    # Sometimes, the same site is contained in multiple polygons, so we need to remove duplicates
+    merged = merged.drop_duplicates(subset = ['index'], keep='first')
     merged = merged.set_index('index_right').sort_index().drop(columns=['geometry'])
     gdf_sites = pandas.merge(gdf_sites, merged, on='index', how='left')
     gdf_sites.drop(columns=['geometry', 'index'], inplace=True)  # noqa: PD002
