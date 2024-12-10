@@ -285,12 +285,12 @@
         "ApplicationSpecificInputs": [
           {
             "id": "Directory",
-            "type": "path",
+            "type": "string",
             "description": "Path to file containing folder of shake maps"
           },
           {
             "id": "EventPath",
-            "type": "string",
+            "type": "path",
             "description": "Path to the shake map event"
           },
           {
@@ -551,6 +551,11 @@
             "description": "Remote directory hosting ClaymoreUW MPM assets (e.g. geometries, checkpoints, motion-paths) for the application for any user to access on the HPC system."
           }
         ]
+      },
+      {
+        "Name": "MPMEvent",
+        "ExecutablePath": "applications/createEVENT/MPMEvent/MPMEvent.py",
+        "ApplicationSpecificInputs": []
       },
       {
         "Name": "StochasticWave",

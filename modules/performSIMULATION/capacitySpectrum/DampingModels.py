@@ -256,6 +256,8 @@ class HAZUS_cao_peterson_2006(damping_model_base):
                 f'The base model {self.base_model} does not have a useful'
                 'get_kappa method.'
             )
+        if Dp <= 0 or Ap <= 0:
+            return beta_elastic
         Du = self.capacity.Du  # noqa: N806
         Ax = self.capacity.Ax  # noqa: N806
         B = self.capacity.B  # noqa: N806
