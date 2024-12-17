@@ -108,10 +108,15 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
             periods = im_info['Periods']
             periods = [float(i) for i in periods]
             im_info['Periods'] = periods
-        if im_info['Type'] == 'Vector' and 'PGV' in im_info.keys():  # noqa: SIM118
-            PGV_info = im_info.pop('PGV')  # noqa: N806
-            im_info.update({'PGV': PGV_info})
-            event_info['IntensityMeasure'] = im_info
+        # Reorder the IMs
+        if im_info['Type'] == 'Vector':
+            new_im_info = {}
+            desired_order = ['PGA', 'SA', 'PGV', 'DS575H', 'DS595H']
+            for key in desired_order:
+                if key in im_info:
+                    im_info_i = im_info.pop(key)
+                    new_im_info.update({key: im_info_i})
+            event_info['IntensityMeasure'] = new_im_info
 
         if (
             opensha_flag

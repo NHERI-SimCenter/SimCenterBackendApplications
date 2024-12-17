@@ -99,3 +99,5 @@ fmkTest.sh
 .coverage
 
 applications.*
+modules/performREC/pyrecodes/pyrecodes_rename/*
+modules/performREC/pyrecodes/residual_demand_traffic_simulator/projects/*
