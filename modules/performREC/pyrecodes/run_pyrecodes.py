@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import shutil
 
 # Add the path to the pyrecodes package
-sys.path.append('/Users/jinyanzhao/Desktop/SimCenterBuild/r2d_pyrecodes')
+# sys.path.append('/Users/jinyanzhao/Desktop/SimCenterBuild/r2d_pyrecodes')
 import pyrecodes
 import pyrecodes.main
 from pyrecodes.geovisualizer.r2d_geovisualizer import R2D_GeoVisualizer

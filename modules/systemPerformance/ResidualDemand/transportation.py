@@ -1390,7 +1390,7 @@ class pyrecodes_residual_demand(TransportationPerformance):
         trips_ending_at_nodes = od_matrix.reset_index()[['destin_nid', 'index']].groupby(
             'destin_nid').agg(list).to_dict()['index']
         # old population at each node
-        old_population = find_population(self.nodes_df, self.r2d_dict_last)
+        old_population = find_population(self.nodes_df, self.current_r2d_dict)
         # new population at each node
         new_population = find_population(self.nodes_df, r2d_dict)
         # For debug use:
