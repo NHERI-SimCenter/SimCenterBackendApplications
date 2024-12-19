@@ -1367,13 +1367,15 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
         added_part = '    #includeFunc  baseForces\n'
         dict_lines.insert(start_index, added_part)
 
-    #Write VTK sampling sampling points  # noqa: W291
+    #Write VTK sampling points  # noqa: W291
     if monitor_vtk_planes:
         added_part = ""
         for pln in vtk_planes:
             added_part += "    #includeFunc  {}\n".format(pln["name"])
         dict_lines.insert(start_index, added_part)
-  # noqa: W293
+
+    #Write component sampling points  # noqa: W291
+
 
 
     #Write edited dict to file
