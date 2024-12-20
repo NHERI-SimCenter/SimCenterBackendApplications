@@ -215,6 +215,8 @@ def modify_system_config_residual_demand_distribution(system_config, input_data_
             distribution_model['Parameters']['EdgeFile'] = str(input_data_dir / distribution_model['Parameters']['EdgeFile'])
             distribution_model['Parameters']['NodeFile'] = str(input_data_dir / distribution_model['Parameters']['NodeFile'])
             distribution_model['Parameters']['ODFilePre'] = str(input_data_dir / distribution_model['Parameters']['ODFilePre'])
+            distribution_model['Parameters']['CapacityRuleset'] = str(input_data_dir / distribution_model['Parameters']['CapacityRuleset'])
+            distribution_model['Parameters']['DemandRuleset'] = str(input_data_dir / distribution_model['Parameters']['DemandRuleset'])
             if not (rlz_run_dir / 'residual_demand_results').exists():
                 (rlz_run_dir / 'residual_demand_results').mkdir()
             distribution_model['Parameters']['ResultsFolder'] = str(rlz_run_dir / 'residual_demand_results')
