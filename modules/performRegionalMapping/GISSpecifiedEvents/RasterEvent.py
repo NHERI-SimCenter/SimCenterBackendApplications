@@ -37,29 +37,29 @@
 # Stevan Gavrilovic
 #
 
-import argparse
-import json, csv
+import argparse  # noqa: I001
+import json, csv  # noqa: E401
 from pathlib import Path
 import rasterio
 import pyproj
 from rasterio.transform import rowcol
 
 
-def sample_raster_at_latlon(src, lat, lon):
+def sample_raster_at_latlon(src, lat, lon):  # noqa: D103
     # Get the row and column indices in the raster
     row, col = rowcol(src.transform, lon, lat)  # Note the order: lon, lat
 
     # Ensure the indices are within the bounds of the raster
     if row < 0 or row >= src.height or col < 0 or col >= src.width:
-        raise IndexError('Transformed coordinates are out of raster bounds')
+        raise IndexError('Transformed coordinates are out of raster bounds')  # noqa: EM101, TRY003
 
     # Read the raster value at the given row and column
     raster_value = src.read(1)[row, col]
 
-    return raster_value
+    return raster_value  # noqa: RET504
 
 
-def create_event(asset_file, event_grid_file):  # noqa: C901, N803, D103
+def create_event(asset_file, event_grid_file):  # noqa: C901, D103, N803, RUF100
     # read the event grid data file
     event_grid_path = Path(event_grid_file).resolve()
     event_dir = event_grid_path.parent
@@ -90,7 +90,7 @@ def create_event(asset_file, event_grid_file):  # noqa: C901, N803, D103
         asset_file_path = asset['file']
 
         # Load the corresponding file for each asset
-        with open(asset_file_path, encoding='utf-8') as asset_file:
+        with open(asset_file_path, encoding='utf-8') as asset_file:  # noqa: PTH123, PLR1704
             # Load the asset data
             asset_data = json.load(asset_file)
 
@@ -122,7 +122,7 @@ def create_event(asset_file, event_grid_file):  # noqa: C901, N803, D103
                     data_final.append([file_name, lat, lon])
 
                     csv_save_path = event_dir / f'Site_{asset_id}.csv'
-                    with open(csv_save_path, 'w', newline='') as file:
+                    with open(csv_save_path, 'w', newline='') as file:  # noqa: PTH123
                         # Create a CSV writer object
                         writer = csv.writer(file)
 
@@ -143,9 +143,9 @@ def create_event(asset_file, event_grid_file):  # noqa: C901, N803, D103
                         json.dump(asset_data, f, indent=2)
 
                 except IndexError as e:
-                    print(f'Error for asset ID {asset_id}: {e}')
+                    print(f'Error for asset ID {asset_id}: {e}')  # noqa: T201
             else:
-                print(f'Asset ID: {asset_id} is outside the raster bounds')
+                print(f'Asset ID: {asset_id} is outside the raster bounds')  # noqa: T201
 
         # # save the event dictionary to the BIM
         # asset_data['Events'] = [{}]
@@ -157,12 +157,12 @@ def create_event(asset_file, event_grid_file):  # noqa: C901, N803, D103
         #     # "type": "SimCenterEvents"
         # }
 
-        # with open(asset_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
+        # with open(asset_file, 'w', encoding='utf-8') as f:  # noqa: PTH123, RUF100
         #     json.dump(asset_data, f, indent=2)
 
     # Save the final event grid
     csv_save_path = event_dir / 'EventGrid.csv'
-    with open(csv_save_path, 'w', newline='') as file:
+    with open(csv_save_path, 'w', newline='') as file:  # noqa: PTH123
         # Create a CSV writer object
         writer = csv.writer(file)
 

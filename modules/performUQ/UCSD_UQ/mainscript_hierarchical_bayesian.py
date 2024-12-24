@@ -68,7 +68,7 @@ def loglikelihood_function(residual, error_variance_sample):  # noqa: D103
     return ll
 
 
-def main(input_args):  # noqa: D103
+def main(input_args):  # noqa: C901, D103
     # Initialize analysis
     working_directory = Path(input_args[0]).resolve()
     template_directory = Path(input_args[1]).resolve()  # noqa: F841
@@ -78,24 +78,38 @@ def main(input_args):  # noqa: D103
 
     # input_file_full_path = template_directory / input_file
 
-    with open(input_file, encoding='utf-8') as f:  # noqa: PTH123
-        inputs = json.load(f)
+    try:
+        with open(input_file, encoding='utf-8') as f:  # noqa: PTH123
+            inputs = json.load(f)
 
-    uq_inputs = inputs['UQ']
-    rv_inputs = inputs['randomVariables']
-    edp_inputs = inputs['EDP']
+        uq_inputs = inputs['UQ']
+        rv_inputs = inputs['randomVariables']
+        edp_inputs = inputs['EDP']
+    except FileNotFoundError as fnf_error:
+        msg = f"Input file '{input_file}' not found. Please check the file path."
+        raise FileNotFoundError(msg) from fnf_error
+    except json.JSONDecodeError as json_error:
+        msg = f"Error decoding JSON from file '{input_file}'. Ensure the file contains valid JSON."
+        raise ValueError(msg) from json_error
+    except KeyError as key_error:
+        msg = f'Missing required key in JSON data: {key_error}. Please check the input file format.'
+        raise KeyError(msg) from key_error
 
-    (
-        parallel_pool,
-        function_to_evaluate,
-        joint_distribution,
-        num_rv,
-        num_edp,
-        list_of_model_evaluation_functions,
-        list_of_datasets,
-        list_of_dataset_lengths,
-        restart_file,
-    ) = preprocess_hierarchical_bayesian.preprocess_arguments(input_args)
+    try:
+        (
+            parallel_pool,
+            function_to_evaluate,
+            joint_distribution,
+            num_rv,
+            num_edp,
+            list_of_model_evaluation_functions,
+            list_of_datasets,
+            list_of_dataset_lengths,
+            restart_file,
+        ) = preprocess_hierarchical_bayesian.preprocess_arguments(input_args)
+    except Exception as e:
+        msg = "Error during the preprocessing of arguments in 'preprocess_hierarchical_bayesian'."
+        raise RuntimeError(msg) from e
     transformation_function = joint_distribution.u_to_x
 
     prior_inverse_gamma_parameters = uq_utilities.InverseGammaParameters(

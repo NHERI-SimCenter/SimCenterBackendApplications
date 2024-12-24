@@ -1,4 +1,4 @@
-from mpi4py import MPI  # noqa: INP001, D100
+from mpi4py import MPI  # noqa: D100
 from mpi4py.futures import MPIPoolExecutor
 
 

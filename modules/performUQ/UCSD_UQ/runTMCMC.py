@@ -183,7 +183,7 @@ def write_data_to_csvfile(  # noqa: D103
     # Finished writing data
 
 
-def run_TMCMC(  # noqa: N802, PLR0913
+def run_TMCMC(  # noqa: C901, N802, PLR0913
     number_of_samples,
     number_of_chains,
     all_distributions_list,
@@ -265,6 +265,11 @@ def run_TMCMC(  # noqa: N802, PLR0913
     # Evaluate log-likelihood at current samples Sm
     if run_type == 'runningLocal':
         processor_count = mp.cpu_count()
+
+        max_num_processes = 32  # noqa: PLR2004 max number of processes to use for multiprocessing when running locally
+        if processor_count > max_num_processes:
+            processor_count = 8
+
         pool = Pool(processes=processor_count)
         write_eval_data_to_logfile(
             logfile,
@@ -274,13 +279,38 @@ def run_TMCMC(  # noqa: N802, PLR0913
             stage_num=stage_number,
         )
         outputs = pool.starmap(runFEM, iterables)
+
+        # pool does not start
+        # mp.set_start_method('forkserver', force=True)
+        # processor_count = mp.cpu_count()
+        # with mp.Pool(processes=processor_count) as pool:
+        #    write_eval_data_to_logfile(
+        #        logfile,
+        #        parallelize_MCMC,
+        #        run_type,
+        #        proc_count=processor_count,
+        #        stage_num=stage_number,
+        #    )
+        #    outputs = pool.starmap(runFEM, iterables)
+
+        # mp.set_start_method('spawn')
+        # with mp.Pool(processes=processor_count) as pool:
+        #    write_eval_data_to_logfile(
+        #        logfile,
+        #        parallelize_MCMC,
+        #        run_type,
+        #        proc_count=processor_count,
+        #        stage_num=stage_number,
+        #    )
+        #    outputs = pool.starmap(runFEM, iterables)
+
         log_likelihoods_list = []
         predictions_list = []
         for output in outputs:
             log_likelihoods_list.append(output[0])
             predictions_list.append(output[1])
     else:
-        from mpi4py.futures import MPIPoolExecutor
+        from mpi4py.futures import MPIPoolExecutor # type: ignore  # noqa: I001
 
         executor = MPIPoolExecutor(max_workers=MPI_size)
         write_eval_data_to_logfile(

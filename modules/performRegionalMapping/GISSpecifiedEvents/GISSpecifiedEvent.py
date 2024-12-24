@@ -37,14 +37,14 @@
 # Stevan Gavrilovic
 #
 
-import argparse
+import argparse  # noqa: I001
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
 from RasterEvent import create_event as create_raster_event
 
 
-def is_raster_file(filename):
+def is_raster_file(filename):  # noqa: D103
     # Define a set of common raster file extensions
     raster_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif'}
 
@@ -55,29 +55,29 @@ def is_raster_file(filename):
     return file_path.suffix.lower() in raster_extensions
 
 
-def is_xml_file(filename):
+def is_xml_file(filename):  # noqa: D103
     # Check if the file has an .xml extension
     if not filename.lower().endswith('.xml'):
         return False
 
     # Try to parse the file as XML
     try:
-        ET.parse(filename)
-        return True
+        ET.parse(filename)  # noqa: S314
+        return True  # noqa: TRY300
     except ET.ParseError:
         return False
 
 
-def create_event(asset_file: str, event_grid_file: str):  # noqa: C901, N803, D103
+def create_event(asset_file: str, event_grid_file: str):  # noqa: C901, D103, N803, RUF100
     if is_raster_file(event_grid_file):
         return create_raster_event(asset_file, event_grid_file)
-    elif is_xml_file(event_grid_file):
+    elif is_xml_file(event_grid_file):  # noqa: RET505
         # Here you would call a function to handle XML files
         # For now, we'll just raise a NotImplementedError
-        raise NotImplementedError('XML file handling is not yet implemented.')
+        raise NotImplementedError('XML file handling is not yet implemented.')  # noqa: EM101
     else:
-        raise ValueError(
-            f'{event_grid_file} is not a raster. Only rasters are currently supported.'
+        raise ValueError(  # noqa: TRY003
+            f'{event_grid_file} is not a raster. Only rasters are currently supported.'  # noqa: EM102
         )
 
 

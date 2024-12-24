@@ -97,10 +97,8 @@ def find_performance_point(cap_x, cap_y, dem_x, dem_y, dd=0.001):
     elif dem_y_interp[0] < cap_y_interp[0]:
         perf_x = 0.001  # x_interp[0]
         perf_y = 0.001  # cap_y_interp[0]
-    # except IndexError as err:
-    #   print('No performance point found; curves do not intersect.')
-    #   print('IndexError: ')
-    #   print(err)
+    else:
+      print('No performance point found; curves do not intersect.')
 
     return perf_x, perf_y
 
@@ -398,11 +396,35 @@ def write_RV(AIM_input_path, EVENT_input_path):  # noqa: C901, N802, N803, D103
 
     EDP_output = np.concatenate([index, EDP_output], axis=1)  # noqa: N806
 
+    # Concatenate the original IM to CMS in case some (e.g., PGD) are needed
+    EDP_output = np.concatenate([EDP_output, IM_samples], axis = 1)
+    # prepare the header
+    header_out = ['1-PFA-0-0', '1-PRD-1-1']
+    for h_label in header:
+        # remove leading and trailing whitespace
+        h_label = h_label.strip()  # noqa: PLW2901
+
+        # convert suffixes to the loc-dir format used by the SimCenter
+        if h_label.endswith('_h'):  # horizontal
+            header_out.append(f'1-{h_label[:-2]}-1-1')
+
+        elif h_label.endswith('_v'):  # vertical
+            header_out.append(f'1-{h_label[:-2]}-1-3')
+
+        elif h_label.endswith('_x'):  # x direction
+            header_out.append(f'1-{h_label[:-2]}-1-1')
+
+        elif h_label.endswith('_y'):  # y direction
+            header_out.append(f'1-{h_label[:-2]}-1-2')
+
+        else:  # if none of the above is given, default to 1-1
+            header_out.append(f'1-{h_label.strip()}-1-1')
+
+
     working_dir = Path(PurePath(EVENT_input_path).parent)
     # working_dir = posixpath.dirname(EVENT_input_path)
 
-    # prepare the header
-    header_out = ['1-PFA-0-0', '1-PRD-1-1']
+    
 
     np.savetxt(
         working_dir / 'response.csv',
