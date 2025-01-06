@@ -40,7 +40,6 @@ def main(args):  # noqa: D103
         st = os.stat(driverFile)  # noqa: PTH116
         os.chmod(driverFile, st.st_mode | stat.S_IEXEC)  # noqa: PTH101
         driverFile = './' + driverFile  # noqa: N806
-        print('WORKFLOW: ' + driverFile)  # noqa: T201
 
         command = (
             f'"{pythonCommand}" "{mainScript}" "{tmpSimCenterDir}"'
