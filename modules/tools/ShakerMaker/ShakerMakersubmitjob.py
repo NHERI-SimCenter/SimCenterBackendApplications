@@ -204,18 +204,18 @@ if job_info.status == 'QUEUED':
     print('please wait for the job to finish')  # noqa: T201
     print('you can check the job status through the designsafe portal')  # noqa: T201
 if job_info.status == 'STAGING_INPUTS':
-    print('Job is staging inputs')
-    print('This can take several hours')
-    print('please wait for the job to finish')
-    print('you can check the job status through the designsafe portal')
+    print('Job is staging inputs')  # noqa: T201
+    print('This can take several hours')  # noqa: T201
+    print('please wait for the job to finish')  # noqa: T201
+    print('you can check the job status through the designsafe portal')  # noqa: T201
 if job_info.status == 'RUNNING':
     print('Job is running')  # noqa: T201
     print('This can take several hours')  # noqa: T201
     print('please wait for the job to finish')  # noqa: T201
     print('you can check the job status through the designsafe portal')  # noqa: T201
 if job_info.status == 'BLOCKED':
-    print('Job is blocked for now')
-    print('Please wait for the job to be staged')
-    print('This can take several hours')
-    print('you can check the job status through the designsafe portal')
+    print('Job is blocked for now')  # noqa: T201
+    print('Please wait for the job to be staged')  # noqa: T201
+    print('This can take several hours')  # noqa: T201
+    print('you can check the job status through the designsafe portal')  # noqa: T201
 # %%

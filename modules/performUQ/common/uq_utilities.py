@@ -226,9 +226,12 @@ class ParallelRunnerMultiprocessing:  # noqa: D101
         if num_processors is None:
             num_processors = 1
         elif num_processors < 1:
-            msg = f'Number of processes must be at least 1. Got {num_processors}.'
-            raise ValueError(msg)
-        elif num_processors > max_num_processors:
+
+            raise ValueError(  # noqa: TRY003
+                'Number of processes must be at least 1.                     '  # noqa: EM102
+                f'         Got {num_processors}'
+            )
+        elif num_processors > max_num_processors: 
             # this is to get past memory problems when running large number processors in a container
             num_processors = 8
 

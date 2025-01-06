@@ -265,7 +265,8 @@ def run_TMCMC(  # noqa: C901, N802, PLR0913
     # Evaluate log-likelihood at current samples Sm
     if run_type == 'runningLocal':
         processor_count = mp.cpu_count()
-        max_num_processes = 32  # max number of processes to use for multiprocessing when running locally
+
+        max_num_processes = 32  # noqa: PLR2004 max number of processes to use for multiprocessing when running locally
         if processor_count > max_num_processes:
             processor_count = 8
 
@@ -309,7 +310,7 @@ def run_TMCMC(  # noqa: C901, N802, PLR0913
             log_likelihoods_list.append(output[0])
             predictions_list.append(output[1])
     else:
-        from mpi4py.futures import MPIPoolExecutor
+        from mpi4py.futures import MPIPoolExecutor # type: ignore  # noqa: I001
 
         executor = MPIPoolExecutor(max_workers=MPI_size)
         write_eval_data_to_logfile(
