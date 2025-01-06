@@ -295,6 +295,7 @@ class PressureData:
         self.x = self.probes[:, 0]
         self.dt = np.mean(np.diff(self.time))
         self.probe_count = np.shape(self.probes)[0]
+        self.calculate_all()
 
     def read_cfd_data(self):  # noqa: D102
         if os.path.isdir(self.path):  # noqa: PTH112
@@ -341,6 +342,68 @@ class PressureData:
                 self.cp = self.cp[:, :end_index]
             except:  # noqa: S110, E722
                 pass
+            
+    def lieblin_blue(x):
+        """
+        Performs Lieblin Blue fitted peak values for a time series in 'x'.
+        If the time series cannot be divided into 10 equal segments the remaining 
+        part is discarded.
+        """
+    
+        #Coefficient used for the Lieblein Blue fit
+        a = [ 0.222867,  0.162308,  0.133845, 0.112868, 0.095636, 0.080618, 0.066988, 0.054193, 0.041748, 0.028929]
+        b = [-0.347830, -0.091158, -0.019210, 0.022179, 0.048671, 0.066064, 0.077021, 0.082771, 0.083552, 0.077940]
+    
+        n_seg = 10 #Number of segments
+    
+        #Min and max of each segment
+        x_max = np.zeros(n_seg)
+        x_min = np.zeros(n_seg)
+    
+        #Number of time steps per each segment
+        n_per_seg = int(np.rint(len(x)/n_seg))
+    
+        #Calculate the min and max of each segment.
+        for i in range(n_seg):
+            x_max[i] = np.amax(x[i*n_per_seg:(i+1)*n_per_seg])
+            x_min[i] = np.amin(x[i*n_per_seg:(i+1)*n_per_seg])
+    
+        x_max = np.sort(x_max)      #sort in assending order
+        x_min = -np.sort(-x_min)    #sort in decending order
+    
+    
+        #Calculate the mode and dispertions
+        u_max = np.dot(a,x_max)
+        u_min = np.dot(a,x_min)
+        d_max = np.dot(b,x_max)
+        d_min = np.dot(b,x_min)
+    
+    
+        #Calculate the peak based on Gambel distribution.
+        x_peak_gb_max = u_max + d_max*np.log(n_seg)
+        x_peak_gb_min = u_min + d_min*np.log(n_seg)
+    
+        #Calculate the stable peak using Lieblein Blue method.
+        x_peak_lb_max = x_peak_gb_max + 0.5772*d_max
+        x_peak_lb_min = x_peak_gb_min + 0.5772*d_min
+    
+        return x_peak_lb_max, x_peak_lb_min
+    
+    def calculate_all(self):
+        
+        self.cp_mean = np.mean(self.cp, axis=1) 
+        self.cp_rms = np.std(self.cp, axis=1) 
+        self.cp_neg_peak = np.zeros(self.probe_count)
+        self.cp_pos_peak = np.zeros(self.probe_count)
+        
+        for i in range(self.probe_count):
+            self.cp_pos_peak[i], self.cp_neg_peak[i] = self.lieblin_blue(self.cp[i,:])
+            
+        self.cp_abs_peak = np.maximum(np.abs(self.cp_pos_peak), np.abs(self.cp_neg_peak))
+
+            
+            
+
 
 
 if __name__ == '__main__':
@@ -443,7 +506,7 @@ if __name__ == '__main__':
             delimiter='\t',
         )
 
-    # Write base loads
+    # Write pressure 
     if rm_data['monitorSurfacePressure']:
         p_file_name = ''
         if rm_data['importPressureSamplingPoints']:
@@ -479,3 +542,92 @@ if __name__ == '__main__':
             pressureData,
             delimiter='\t',
         )
+        
+    
+    compt_probes_path = os.path.join(case_path, 'postProcessing', 
+                                     'componentPressureSamplingPoints')
+        
+    if compt_probes_path.exists():
+        
+        geom_data = json_data['GeometricData']
+        
+        geom_scale = 1.0/float(geom_data['geometricScale'])
+        time_scale = 1.0/float(wc_data['timeScale'])
+        velocity_scale = 1.0/float(wc_data['velocityScale'])
+        air_density = wc_data['airDensity']
+        kinematic_viscosity = wc_data['kinematicViscosity']
+
+        wind_speed = wc_data['referenceWindSpeed']
+
+        cfd_p = PressureData(
+            compt_probes_path,
+            u_ref=wind_speed,
+            rho=air_density,
+            p_ref=0.0,
+            start_time=duration*0.1,
+            end_time=None,
+        )
+
+        num_times = len(cfd_p.time)
+
+        pressureData = np.zeros((num_times, cfd_p.probe_count + 1))  # noqa: N816
+
+        pressureData[:, 0] = cfd_p.time
+        pressureData[:, 1:] = np.transpose(cfd_p.cp)
+        
+        areas_path = case_path + '/constant/geometry/components/probe_areas.txt'
+        indexes_path = case_path + '/constant/geometry/components/probe_indexes.txt'
+
+        areas = np.loadtxt(areas_path)
+        indexes = np.loadtxt(indexes_path)
+        
+        fs_wind_speed = wind_speed/velocity_scale
+        
+        dyn_p = 0.5*air_density*(fs_wind_speed**2.0)
+                
+        peak_p = cfd_p.cp_abs_peak*dyn_p
+        
+        
+        compt_pressures = []
+        start_index = 0  # Initialize starting index
+        compt_forces = []
+
+        for end_index in indexes:
+            # Extract group of areas and pressures
+            element_areas = areas[start_index:end_index]
+            element_pressures = peak_p[start_index:end_index]
+    
+            element_force = np.sum(element_pressures * element_areas)
+
+
+            # Calculate weighted pressure and total area
+            weighted_pressure = np.sum(element_pressures * element_areas)
+            total_area = np.sum(element_areas)
+    
+            # Calculate area-averaged pressure (handle divide-by-zero case)
+            compt_pressure = weighted_pressure / total_area if total_area > 0 else 0.0
+    
+            compt_pressures.append(compt_pressure)
+            start_index = end_index  # Update start index for the next group
+    
+            compt_forces.append(element_force)
+        
+        
+        np.savetxt(
+            os.path.join(load_output_path, 'componentPeakPressureData.txt'),  # noqa: PTH118
+            compt_pressures,
+            delimiter='\t',
+        )
+        
+        np.savetxt(
+            os.path.join(load_output_path, 'componentPeakForceData.txt'),  # noqa: PTH118
+            compt_forces,
+            delimiter='\t',
+        )
+        
+        np.savetxt(
+            os.path.join(load_output_path, 'rawComponentCpData.txt'),  # noqa: PTH118
+            pressureData,
+            delimiter='\t',
+        )
+        

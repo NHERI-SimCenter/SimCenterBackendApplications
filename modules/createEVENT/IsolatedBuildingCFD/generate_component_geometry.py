@@ -45,7 +45,7 @@ from stl import mesh
 # from scipy.spatial import Delaunay
 from scipy.spatial import Voronoi
 # import matplotlib.pyplot as plt
-# from shapely.geometry import Polygon, LineString, MultiLineString
+from shapely.geometry import Polygon, LineString, MultiLineString
 
 
 def modify_controlDict_file(case_path):  # noqa: N802, D103
@@ -167,9 +167,13 @@ def create_component_geometry(input_json_path, compt_json_path, template_dict_pa
 
     geom_data = iso_json_data['GeometricData']
     scale = 1.0/geom_data['geometricScale']
+    wind_dxn = 0.0
     thickness = 0.02*scale*geom_data["buildingWidth"]
     compts = compt_json_data['components']
     
+    if compt_json_data['considerWindDirection']:
+        wind_dxn = geom_data['windDirection']
+
     block_meshes = []
     block_names = []
     probe_points = []
@@ -183,11 +187,11 @@ def create_component_geometry(input_json_path, compt_json_path, template_dict_pa
         
         for geom_i in geoms:
             if geom_i["shape"] == "circle":
-                mesh_obj, points, areas = make_circular_component_geometry(sampling_density, thickness, scale, compt_i["componentId"], geom_i, case_path)
+                mesh_obj, points, areas = make_circular_component_geometry(wind_dxn, sampling_density, thickness, scale, compt_i["componentId"], geom_i, case_path)
             elif geom_i["shape"] == "polygon":
-                mesh_obj, points, areas = make_polygon_component_geometry(sampling_density,thickness, scale, compt_i["componentId"], geom_i, case_path)
+                mesh_obj, points, areas = make_polygon_component_geometry(wind_dxn, sampling_density,thickness, scale, compt_i["componentId"], geom_i, case_path)
             elif geom_i["shape"] == "rectangle":
-                mesh_obj, points, areas = make_rectangular_component_geometry(sampling_density,thickness, scale, compt_i["componentId"], geom_i, case_path)
+                mesh_obj, points, areas = make_rectangular_component_geometry(wind_dxn, sampling_density,thickness, scale, compt_i["componentId"], geom_i, case_path)
             
             block_meshes.append(mesh_obj)
             block_names.append("component_" + str(compt_i["componentId"]) + "_geometry_" + str(geom_i["geometryId"]))
@@ -197,9 +201,21 @@ def create_component_geometry(input_json_path, compt_json_path, template_dict_pa
     # Save the STL file
     stl_file_name = case_path + '/constant/geometry/components/components_geometry.stl'
     points_file_name = case_path + '/constant/geometry/components/probe_points.txt'
+    indexes_file_name = case_path + '/constant/geometry/components/probe_indexes.txt'
     areas_file_name = case_path + '/constant/geometry/components/probe_areas.txt'
-    
+
     combine_and_write_named_stl(block_meshes=block_meshes,block_names=block_names, output_file=stl_file_name)
+    
+    n_elements = len(probe_points)
+    compt_end_indx = [0]*n_elements
+
+    for i in range(n_elements):
+        if i == 0:
+            compt_end_indx[i] = len(probe_points[i])
+        else:
+            compt_end_indx[i] = compt_end_indx[i-1] + len(probe_points[i])
+        
+    np.savetxt(indexes_file_name, compt_end_indx, fmt='%d', delimiter='\t')
 
     points = np.array([point for sublist in probe_points for point in sublist])
     areas  = np.array([area for sublist in probe_areas for area in sublist])
@@ -249,7 +265,95 @@ def rotate_to_normal(vertices, normal):
     return np.dot(vertices, rotation_matrix.T)
 
 
-def make_circular_component_geometry(sampling_density, thickness, geom_scale, compt_id, geom_json, case_path): 
+def rotation_matrix_z(angle_deg):
+    """
+    Generate a rotation matrix for rotating points around the Z-axis.
+
+    Parameters:
+        angle_deg (float): The rotation angle in degrees.
+
+    Returns:
+        np.ndarray: The 3x3 rotation matrix for Z-axis rotation.
+    """
+    angle_rad = np.radians(angle_deg)
+    return np.array([
+        [np.cos(angle_rad), -np.sin(angle_rad), 0],
+        [np.sin(angle_rad), np.cos(angle_rad), 0],
+        [0, 0, 1],
+    ])
+
+
+def bounding_rectangle_3d(points):
+    """
+    Calculates the bounding rectangle of a 3D polygon on its plane.
+
+    Parameters:
+        points (np.ndarray): A NumPy array of shape (n, 3), where n is the number of points.
+
+    Returns:
+        np.ndarray: A NumPy array of shape (4, 3) containing the vertices of the bounding rectangle in 3D.
+    """
+    # Step 1: Calculate the normal of the polygon's plane
+    centroid = np.mean(points, axis=0)
+    normal = np.cross(points[1] - points[0], points[2] - points[0])
+    normal = normal / np.linalg.norm(normal)  # Normalize the normal
+
+    # Step 2: Find two orthogonal vectors on the plane
+    arbitrary_vector = np.array([1, 0, 0]) if normal[0] == 0 else np.array([0, 1, 0])
+    plane_x = np.cross(normal, arbitrary_vector)
+    plane_x = plane_x / np.linalg.norm(plane_x)  # Normalize
+    plane_y = np.cross(normal, plane_x)  # Orthogonal to both normal and plane_x
+
+    # Step 3: Project points onto the 2D plane defined by (plane_x, plane_y)
+    projected_points = np.dot(points - centroid, np.column_stack((plane_x, plane_y)))
+
+    # Step 4: Compute the 2D bounding box
+    min_x, min_y = np.min(projected_points, axis=0)
+    max_x, max_y = np.max(projected_points, axis=0)
+
+    # Step 5: Map the bounding box back to 3D
+    rectangle_2d = np.array([
+        [min_x, min_y],
+        [max_x, min_y],
+        [max_x, max_y],
+        [min_x, max_y]
+    ])
+    bounding_rectangle_3d = np.dot(rectangle_2d, np.column_stack((plane_x, plane_y)).T) + centroid
+
+    return bounding_rectangle_3d
+
+def calculate_spacing(points, density):
+    """
+    Calculate the spacing of grid points based on the smallest non-zero dimension of a bounding box.
+
+    Parameters:
+        bbox_min (tuple or list): The minimum coordinates of the bounding box (x_min, y_min, z_min).
+        bbox_max (tuple or list): The maximum coordinates of the bounding box (x_max, y_max, z_max).
+        density (int): The number of grid points along the smallest non-zero dimension.
+
+    Returns:
+        float: The calculated spacing for the grid points.
+    """
+    
+    tolerance = 1.0e-6
+    
+    # Step 1: Get the bounding rectangle in 3D
+    bounding_rectangle = bounding_rectangle_3d(points)
+
+    # Step 2: Calculate the edge lengths of the bounding rectangle
+    edge1_length = np.linalg.norm(bounding_rectangle[1] - bounding_rectangle[0])
+    edge2_length = np.linalg.norm(bounding_rectangle[2] - bounding_rectangle[1])
+
+    # Step 3: Find the smallest non-zero dimension
+    dimensions = np.array([edge1_length, edge2_length])
+    smallest_dimension = np.min(dimensions[dimensions > tolerance])
+    
+    # Calculate the spacing
+    spacing = smallest_dimension/density
+    
+    return spacing
+
+def make_circular_component_geometry(wind_dxn, sampling_density, thickness, geom_scale, compt_id, geom_json, case_path): 
 
     radius = geom_json["radius"]
     origin = np.array(geom_json["origin"])
@@ -265,14 +369,15 @@ def make_circular_component_geometry(sampling_density, thickness, geom_scale, co
 
     # Scale the points
     points = scale_vertices(points, global_origin, geom_scale) 
-
+    
+    
+    #Account wind direction    
+    rot_matrix = rotation_matrix_z(wind_dxn)
+    points = np.dot(points, rot_matrix.T)
 
     bbox_vertices, bbox_min, bbox_max = compute_bounding_box(points)
-    
-    
-    bbox_dim = np.linalg.norm(bbox_max - bbox_min) 
-    
-    spacing = bbox_dim/sampling_density   
+        
+    spacing = calculate_spacing(points, sampling_density)   
 
     # Compute normal and basis
     normal = calculate_normal(points)
@@ -287,11 +392,6 @@ def make_circular_component_geometry(sampling_density, thickness, geom_scale, co
     
     probe_points = np.array(probe_points)
     
-    
-    # probe_file_name = case_path + '/constant/geometry/components/probes_component_{}_geometry_{}.txt'.format(compt_id, geom_id)
-    # areas_file_name = case_path + '/constant/geometry/components/areas_component_{}_geometry_{}.txt'.format(compt_id, geom_id)
-    
-    # write_points_to_file(probes_final, probe_file_name)
 
     # Generate the Voronoi diagram and clip it
     clipped_edges, probe_areas = create_voronoi_cells_3d(probe_points, normal, points[0], points)
@@ -321,17 +421,13 @@ def make_circular_component_geometry(sampling_density, thickness, geom_scale, co
     disk_mesh = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
     for i, f in enumerate(faces):
         disk_mesh.vectors[i] = f
-
-    # # Save the STL file
-    # stl_file_name = case_path + '/constant/geometry/components/component_{}_geometry_{}.stl'.format(compt_id, geom_id)
+        
     
-    # fmt = mesh.stl.Mode.ASCII  # ASCII format
-    # disk_mesh.save(stl_file_name, mode=fmt)
     
     return disk_mesh, probe_points, probe_areas
 
 
-def make_polygon_component_geometry(sampling_density, thickness, geom_scale, compt_id, geom_json, case_path): 
+def make_polygon_component_geometry(wind_dxn, sampling_density, thickness, geom_scale, compt_id, geom_json, case_path): 
     
     """
     Generate an extruded geometry from a planar polygon and save as an STL file.
@@ -346,13 +442,14 @@ def make_polygon_component_geometry(sampling_density, thickness, geom_scale, com
     # Scale vertices
     points = scale_vertices(points, global_origin, geom_scale)
 
+    #Account wind direction    
+    rot_matrix = rotation_matrix_z(wind_dxn)
+    points = np.dot(points, rot_matrix.T)
 
     bbox_vertices, bbox_min, bbox_max = compute_bounding_box(points)
     
     
-    bbox_dim = np.linalg.norm(bbox_max - bbox_min) 
-    
-    spacing = bbox_dim/sampling_density   
+    spacing = calculate_spacing(points, sampling_density)   
 
 
     # Compute normal and basis
@@ -373,12 +470,7 @@ def make_polygon_component_geometry(sampling_density, thickness, geom_scale, com
 
     # Plot the result
     # plot_voronoi_3d(clipped_edges, probes_final, points)
-    
-    # probe_file_name = case_path + '/constant/geometry/components/probes_component_{}_geometry_{}.txt'.format(compt_id, geom_id)
-    # areas_file_name = case_path + '/constant/geometry/components/areas_component_{}_geometry_{}.txt'.format(compt_id, geom_id)
-    
-    # write_points_to_file(probes_final, probe_file_name)
-    # write_areas_to_file(cell_areas, areas_file_name)
+
 
     faces = []
     # Sidewalls
@@ -400,15 +492,13 @@ def make_polygon_component_geometry(sampling_density, thickness, geom_scale, com
     for i, triangle in enumerate(faces):
         extruded_mesh.vectors[i] = triangle
 
-    # # Save the STL file
-    # stl_file_name = f"{case_path}/constant/geometry/components/component_{compt_id}_geometry_{geom_id}.stl"
-    # extruded_mesh.save(stl_file_name, mode=mesh.stl.Mode.ASCII)
     
     return extruded_mesh, probe_points, probe_areas
 
 
 
-def make_rectangular_component_geometry(sampling_density, thickness, geom_scale, compt_id, geom_json, case_path): 
+def make_rectangular_component_geometry(wind_dxn, sampling_density, thickness, geom_scale, compt_id, geom_json, case_path): 
+    
     width = geom_json["width"]  # Rectangle width
     height = geom_json["height"]  # Rectangle height
     origin = np.array(geom_json["origin"])
@@ -420,10 +510,10 @@ def make_rectangular_component_geometry(sampling_density, thickness, geom_scale,
     half_width = width / 2
     half_height = height / 2
     points = np.array([
-        [ -half_height, -half_width, 0],
-        [ -half_height, half_width, 0],
-        [half_height, half_width,  0],
-        [half_height, -half_width,  0]
+        [-half_width, -half_height,  0],
+        [ half_width, -half_height, 0],
+        [half_width, half_height, 0],
+        [-half_width, half_height, 0]
     ])
 
     # Rotate the rectangle points to align with the normal vector
@@ -432,12 +522,13 @@ def make_rectangular_component_geometry(sampling_density, thickness, geom_scale,
     # Scale the points
     points = scale_vertices(points, global_origin, geom_scale)
     
+    #Account wind direction    
+    rot_matrix = rotation_matrix_z(wind_dxn)
+    points = np.dot(points, rot_matrix.T)
+    
     bbox_vertices, bbox_min, bbox_max = compute_bounding_box(points)
     
-    
-    bbox_dim = np.linalg.norm(bbox_max - bbox_min) 
-    
-    spacing = bbox_dim/sampling_density   
+    spacing = calculate_spacing(points, sampling_density)   
 
     # Compute normal and basis
     normal = calculate_normal(points)
@@ -451,16 +542,10 @@ def make_rectangular_component_geometry(sampling_density, thickness, geom_scale,
             probe_points.append(probes_orig[i])
     
     probe_points = np.array(probe_points)
-    
-    # probe_file_name = case_path + '/constant/geometry/components/probes_component_{}_geometry_{}.txt'.format(compt_id, geom_id)
-    # areas_file_name = case_path + '/constant/geometry/components/areas_component_{}_geometry_{}.txt'.format(compt_id, geom_id)
-
-    # write_points_to_file(probes_final, probe_file_name)
 
     # Generate the Voronoi diagram and clip it
     clipped_edges, probe_areas = create_voronoi_cells_3d(probe_points, normal, points[0], points)
     
-    # write_areas_to_file(cell_areas, areas_file_name)
  
     # Plot the result
     # plot_voronoi_3d(clipped_edges, probes_final, points)
@@ -484,12 +569,6 @@ def make_rectangular_component_geometry(sampling_density, thickness, geom_scale,
     rectangle_mesh = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
     for i, f in enumerate(faces):
         rectangle_mesh.vectors[i] = f
-
-    # # Save the STL file
-    # stl_file_name = case_path + '/constant/geometry/components/component_{}_geometry_{}.stl'.format(compt_id, geom_id)
-    
-    # fmt = mesh.stl.Mode.ASCII  # ASCII format
-    # rectangle_mesh.save(stl_file_name, mode=fmt)
     
     
     return rectangle_mesh, probe_points, probe_areas
@@ -585,10 +664,12 @@ def generate_grid_on_plane_with_bounding_box(base_point, normal, bbox_min, bbox_
                     
     u_coords = np.linspace(uv_min[0], uv_max[0], npoints_u, endpoint=True)
     v_coords = np.linspace(uv_min[1], uv_max[1], npoints_v, endpoint=True)
-    
+
     # Adjust coordinates to ensure they are symmetric around the center
     u_offset = (uv_center[0] - (u_coords[0] + u_coords[-1]) / 2)
     v_offset = (uv_center[1] - (v_coords[0] + v_coords[-1]) / 2)
+    
+    
     u_coords += u_offset
     v_coords += v_offset
 
@@ -918,11 +999,11 @@ if __name__ == '__main__':
     # # Set filenames
     # input_json_path = sys.argv[1]
     # compt_json_path = sys.argv[2]
-    # case_path = sys.argv[3]
-    # template_dict_path = sys.argv[2]
+    # template_dict_path = sys.argv[3]
+    # case_path = sys.argv[4]
 
     input_json_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD\\constant\\simCenter\\input\\"
-    compt_json_path = "C:\\Users\\fanta\\SimCenter\\WBS_Items\\PBWE\\CC_Pressure_EDP_Example_CAARC_V1.json"
+    compt_json_path = "C:\\Users\\fanta\\SimCenter\\WBS_Items\\PBWE\\CC_Pressure_EDP_Example_TPU_V1.json"
     template_dict_path = "C:\\Users\\fanta\\SimCenter\\SourceCode\\NHERI-SimCenter\\SimCenterBackendApplications\\modules\\createEVENT\\IsolatedBuildingCFD\\templateOF10Dicts\\"
     case_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD"
 
