@@ -114,8 +114,8 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
             desired_order = ['PGA', 'SA', 'PGV', 'DS575H', 'DS595H']
             for key in desired_order:
                 if key in im_info:
-                    im_info_i = im_info.pop(key)
-                    new_im_info.update({key: im_info_i})
+                    new_im_info.update({key: im_info[key]})
+            new_im_info.update({"Type": "Vector"})
             event_info['IntensityMeasure'] = new_im_info
 
         if (
