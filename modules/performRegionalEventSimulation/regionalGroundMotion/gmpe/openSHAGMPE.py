@@ -492,11 +492,12 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
             T3 = 0.0  # noqa: N806
             r1 = width * np.cos(dip * np.pi / 180.0)
             r2 = 3 * r1
-            if rX <= r1:
-                rXr1 = rX / r1  # noqa: N806
-                T3 = self.H1 + self.H2 * rXr1 + self.H3 * rXr1 * rXr1  # noqa: N806
-            elif rX <= r2:
-                T3 = 1 - (rX - r1) / (r2 - r1)  # noqa: N806
+            if r1 != 0:
+                if rX <= r1:
+                    rXr1 = rX / r1  # noqa: N806
+                    T3 = self.H1 + self.H2 * rXr1 + self.H3 * rXr1 * rXr1  # noqa: N806
+                elif rX <= r2:
+                    T3 = 1 - (rX - r1) / (r2 - r1)  # noqa: N806
             T4 = 1 - (zTop * zTop) / 100.0  # noqa: N806
             T5 = 1.0 if rJB == 0.0 else 1 - rJB / 30.0  # noqa: N806
             f4 = self.a13 * T1 * T2 * T3 * T4 * T5
@@ -968,7 +969,10 @@ class campbell_bozorgnia_2014:  # noqa: D101
         if rX >= 0.0 and Mw > 5.5 and zTop <= 16.66:  # noqa: PLR2004
             r1 = width * np.cos(np.radians(dip))
             r2 = 62.0 * Mw - 350.0
-            rXr1 = rX / r1  # noqa: N806
+            if r1 != 0:
+                rXr1 = rX / r1  # noqa: N806
+            else:
+                rXr1 = 0.0 # This will never be used  # noqa: N806
             rXr2r1 = (rX - r1) / (r2 - r1)  # noqa: N806
             f1_rX = self.h1 + self.h2 * rXr1 + self.h3 * (rXr1 * rXr1)  # noqa: N806
             f2_rX = self.H4 + self.h5 * (rXr2r1) + self.h6 * rXr2r1 * rXr2r1  # noqa: N806
