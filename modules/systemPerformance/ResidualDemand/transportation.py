@@ -85,6 +85,8 @@ ROADSPEED_MAP = {'S1100': 70, "S1200": 55, "S1400": 25, "S1500": 25,
                  "S1630": 25, "S1640": 25, "S1710": 25, "S1720": 25,
                  "S1730": 25, "S1740": 10, "S1750": 10, "S1780": 10,
                  "S1810": 10, "S1820": 10, "S1830": 10}
+
+METER_PER_SECOND_TO_MILES_PER_HOUR = 2.23694
 def calculate_road_capacity(nlanes: int,
                             traffic_volume_per_lane: int = 1800
                             ) -> int:
@@ -1088,9 +1090,9 @@ class TransportationPerformance(ABC):  # noqa: B024
         )
         # pay attention to the unit conversion, length is in meters, maxspeed is mph
         # fft is in seconds
-        edges_df['fft'] = edges_df['length'] / edges_df['maxspeed'] * 2.23694
+        edges_df['fft'] = edges_df['length'] / edges_df['maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR
         edges_df['normal_fft'] = (
-            edges_df['length'] / edges_df['normal_maxspeed'] * 2.23694
+            edges_df['length'] / edges_df['normal_maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR
         )
         edges_df = edges_df.sort_values(by='fft', ascending=False).drop_duplicates(
             subset=['start_nid', 'end_nid'], keep='first'
@@ -1391,9 +1393,9 @@ class pyrecodes_residual_demand(TransportationPerformance):
         nodes_gdf['y'] = nodes_gdf['geometry'].apply(lambda x: x.y)
         nodes_gdf['x'] = nodes_gdf['geometry'].apply(lambda x: x.x)
 
-        edges_gdf['fft'] = edges_gdf['length'] / edges_gdf['maxspeed'] * 2.23694
+        edges_gdf['fft'] = edges_gdf['length'] / edges_gdf['maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR
         edges_gdf['normal_fft'] = (
-            edges_gdf['length'] / edges_gdf['normal_maxspeed'] * 2.23694
+            edges_gdf['length'] / edges_gdf['normal_maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR
         )
         edges_gdf = edges_gdf.sort_values(by='fft', ascending=False).drop_duplicates(
             subset=['start_nid', 'end_nid'], keep='first'
@@ -1463,7 +1465,7 @@ class pyrecodes_residual_demand(TransportationPerformance):
         if self.initial_r2d_dict is None:
             od_matrix = pd.read_csv(self.od_pre_file)
             self.initial_od = od_matrix
-            self.initial_r2d_dict = r2d_dict.copy() #TODO: check if this is necessary  # noqa: TD002
+            self.initial_r2d_dict = copy.deepcopy(r2d_dict)
         else:
             od_matrix = self.demand_ruleset.update_od(self.initial_od,
                                                       self.nodes_df,
@@ -1474,9 +1476,9 @@ class pyrecodes_residual_demand(TransportationPerformance):
         edges_df = self.capacity_ruleset.update_edges(edges_df, r2d_dict)
         edges_df = edges_df.reset_index().set_index('edge_str')
 
-        edges_df['fft'] = edges_df['length'] / edges_df['maxspeed'] * 2.23694
+        edges_df['fft'] = edges_df['length'] / edges_df['maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR
         edges_df['normal_fft'] = (
-            edges_df['length'] / edges_df['normal_maxspeed'] * 2.23694
+            edges_df['length'] / edges_df['normal_maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR
         )
         edges_df['t_avg'] = edges_df['fft']
 
