@@ -64,7 +64,7 @@ class REWETPyReCoDes:
     # RESULT_DIR = './rewet_result'
     # INPUT_FILE_DIR = './'
 
-    def __init__(self, state: dict, inp_file_path, result_dir='./rewet_result', temp_dir='./'):
+    def __init__(self, state: dict, resource_name: str, inp_file_path: str, result_dir='./rewet_result', temp_dir='./'):
         self.wn = None
         self._clean_wn = None
         self.asset_information = {}
@@ -83,6 +83,9 @@ class REWETPyReCoDes:
         self.inp_file_path = inp_file_path
         self.result_dir = result_dir
         self.temp_dir = temp_dir
+
+        # Nikola: added this attribute - needed to get demand from the state dict
+        self.resource_name = resource_name
 
         # Sina
         # Nikola
@@ -273,6 +276,8 @@ class REWETPyReCoDes:
 
         for building_id, each_building in building_state.items():
             population = each_building['GeneralInformation']['Population']
+            # Nikola: I added water demand here, so we can get it from the state dict and update node demand directly
+            water_demand = self.get_building_demand(each_building)
             population_ratio = each_building.get('population_ratio', None)
 
             if population_ratio is not None:
@@ -286,8 +291,12 @@ class REWETPyReCoDes:
             cur_building['population_ratio'] = ratio
             cur_building['initial_population'] = population
             cur_building['population'] = population
+            cur_building['initial_demand'] = water_demand
 
             self.buildings[building_id] = cur_building
+
+    def get_building_demand(self, building):
+        return building['GeneralInformation']['OperationDemand'].get(self.resource_name, 0) + building['GeneralInformation']['RecoveryDemand'].get(self.resource_name, 0)
 
     def update_state_with_damages(self, damage, damage_time, state):  # noqa: ARG002
         """
@@ -476,82 +485,28 @@ class REWETPyReCoDes:
 
         demand_node_name_list = [key for key, val in self.nodes.items()]
 
-        if len(demand_node_coordinate_list) <= len(self.building_coordinates):
-            kmeans = KMeans(
-                n_clusters=len(demand_node_coordinate_list),
-                init=demand_node_coordinate_list,
-                n_init=1,
-                random_state=0,
-            )
+        kmeans = KMeans(
+            n_clusters=len(demand_node_coordinate_list),
+            init=demand_node_coordinate_list,
+            n_init=1,
+            random_state=0,
+        )
 
-            kmeans.fit(self.building_coordinates)
+        kmeans.fit(self.building_coordinates)
 
-            labels = kmeans.labels_
-            labels = labels.tolist()
+        labels = kmeans.labels_
+        labels = labels.tolist()
 
-            for group_i in range(len(demand_node_coordinate_list)):
-                node_name = demand_node_name_list[group_i]
-                for building_l in range(len(labels)):
-                    cur_node_l = labels[building_l]
-                    if group_i == cur_node_l:
-                        if node_name not in self.demand_node_to_building:
-                            self.demand_node_to_building[node_name] = []
+        for group_i in range(len(demand_node_coordinate_list)):
+            node_name = demand_node_name_list[group_i]
+            for building_l in range(len(labels)):
+                cur_node_l = labels[building_l]
+                if group_i == cur_node_l:
+                    if node_name not in self.demand_node_to_building:
+                        self.demand_node_to_building[node_name] = []
 
-                        building_id = building_id_list[building_l]
-                        self.demand_node_to_building[node_name].append(building_id)
-        else:
-
-            building_to_node_map = {}
-
-            kmeans = KMeans(
-                n_clusters=len(self.building_coordinates),
-                init=self.building_coordinates,
-                n_init=1,
-                random_state=0,
-            )
-
-            kmeans.fit(demand_node_coordinate_list)
-
-            labels = kmeans.labels_
-            labels = labels.tolist()
-
-            for node_i in range(len(labels)):
-                # node_name = demand_node_name_list[node_i]
-                cur_building_i = labels[node_i]
-                # cur_building_id = building_id_list[cur_building_i]
-                if cur_building_i not in building_to_node_map:
-                    building_to_node_map[cur_building_i] = []
-
-                building_to_node_map[cur_building_i].append(node_i)
-
-            for cur_building_i in building_to_node_map:
-                serving_nodes_i_list = building_to_node_map[cur_building_i]
-
-                if len(serving_nodes_i_list) > 1:
-                    distance_list = []
-                    building_coord = self.building_coordinates[cur_building_i]
-                    for node_i in serving_nodes_i_list:
-                        node_coord = demand_node_coordinate_list[node_i]
-                        dist = ((node_coord[0]-building_coord[0]) ** 2
-                                + (node_coord[1]-building_coord[1]) ** 2 ) ** 0.5
-
-                        distance_list.append(dist)
-
-                    sorted_distance_list = distance_list.copy()
-                    minimum_value = sorted_distance_list[0]
-                    index_min_value = distance_list.index(minimum_value)
-                    closest_node_i = serving_nodes_i_list[index_min_value]
-                    building_to_node_map[cur_building_i] = [closest_node_i]
-                    serving_nodes_i_list = building_to_node_map[cur_building_i]
-
-                node_i = serving_nodes_i_list[0]
-                node_name = demand_node_name_list[node_i]
-                building_id = building_id_list[cur_building_i]
-                if node_name not in self.demand_node_to_building:
-                    self.demand_node_to_building[node_name] = []
-                self.demand_node_to_building[node_name].append(building_id)
-
-
+                    building_id = building_id_list[building_l]
+                    self.demand_node_to_building[node_name].append(building_id)
 
         for node_name in self.demand_node_to_building:
             building_name_list = self.demand_node_to_building[node_name]
@@ -563,7 +518,9 @@ class REWETPyReCoDes:
             total_initial_population = sum(population_list)
 
             cur_node = self.nodes[node_name]
-            initial_node_demand = cur_node['initial_demand']
+            # Nikola: I introduce here a new method to calculate water demand based on the 
+            initial_node_demand = self.get_node_demand(building_name_list)
+            # initial_node_demand = cur_node['initial_demand']
 
             if initial_node_demand == 0 and total_initial_population > 0:
                 Warning(  # noqa: PLW0133
@@ -591,18 +548,40 @@ class REWETPyReCoDes:
 
             self.nodes[node_name]['initial_node_demand'] = initial_node_demand
 
-            for bldg_id in building_name_list:
-                pop = self.buildings[bldg_id]['initial_population']
+            # Nikola - why do we need this? It seems like a reverse calculation of the above code.
+            # for bldg_id in building_name_list:
+            #     pop = self.buildings[bldg_id]['initial_population']
 
-                if total_initial_population != 0:
-                    cur_bldg_initial_demand = (
-                        pop / total_initial_population * initial_node_demand
-                    )
-                else:
-                    cur_bldg_initial_demand = None
+            #     if total_initial_population != 0:
+            #         cur_bldg_initial_demand = (
+            #             pop / total_initial_population * initial_node_demand
+            #         )
+            #     else:
+            #         cur_bldg_initial_demand = None
 
-                self.buildings[bldg_id]['initial_demand'] = cur_bldg_initial_demand
+            #     self.buildings[bldg_id]['initial_demand'] = cur_bldg_initial_demand
 
+    # Nikola: new method to get the demand of a node based on the buildings connected to it
+    def get_node_demand(self, building_name_list):
+        """
+        Calculate the water demand of a node based on the buildings connected to it.
+
+        Parameters
+        ----------
+        building_name_list : list
+            List of building names connected to the node.
+
+        Returns
+        -------
+        float
+            The total water demand of the node.
+
+        """
+        demand = 0
+        for building_name in building_name_list:
+            demand += self.buildings[building_name]['initial_demand']
+        return demand
+    
     def save_damage(self, state, current_time):
         """
         Convert and save the dmaages that are set before.
@@ -843,13 +822,15 @@ class REWETPyReCoDes:
             node_new_demand = 0
 
             for bldg_id in building_name_list:
-                cur_bldg_initial_demand = self.buildings[bldg_id]['initial_demand']
+                # Nikola: We take the demand directly from the buidling general information, not based on population ratio.
+                # cur_bldg_initial_demand = self.buildings[bldg_id]['initial_demand']
 
-                cur_bldg_deamnd_ratio = building[bldg_id]['GeneralInformation'][
-                    'Population_Ratio'
-                ]
+                # cur_bldg_deamnd_ratio = building[bldg_id]['GeneralInformation'][
+                #     'Population_Ratio'
+                # ]
 
-                cur_bldg_new_deamnd = cur_bldg_deamnd_ratio * cur_bldg_initial_demand
+                # cur_bldg_new_deamnd = cur_bldg_deamnd_ratio * cur_bldg_initial_demand
+                cur_bldg_new_deamnd = self.get_building_demand(building[bldg_id])
 
                 self.buildings[bldg_id]['current_demand'] = cur_bldg_new_deamnd
 
