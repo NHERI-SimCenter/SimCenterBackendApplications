@@ -63,7 +63,7 @@ def read_json_file(file_addr):
     """
     file_addr = Path(file_addr).resolve()
     if not file_addr.exists():
-        raise ValueError('INPUT WHALE FILE is not found.', file_addr)  # noqa: EM101, TRY003
+        raise ValueError('INPUT FILE is not found.', file_addr)  # noqa: EM101, TRY003
 
     with file_addr.open('rt') as f:
         data = json.load(f)

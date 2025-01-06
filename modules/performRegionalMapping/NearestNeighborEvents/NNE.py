@@ -56,28 +56,28 @@ def find_neighbors(  # noqa: C901, D103
     neighbors,
     filter_label,
     seed,
-    doParallel,  # noqa: N803
+    do_parallel,
 ):
     # check if running parallel
-    numP = 1  # noqa: N806
-    procID = 0  # noqa: N806
-    runParallel = False  # noqa: N806
+    num_processes = 1
+    process_id = 0
+    run_parallel = False
 
-    if doParallel == 'True':
+    if do_parallel == 'True':
         mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
             from mpi4py import MPI
 
-            runParallel = True  # noqa: N806
+            run_parallel = True
             comm = MPI.COMM_WORLD
-            numP = comm.Get_size()  # noqa: N806
-            procID = comm.Get_rank()  # noqa: N806
-            if numP < 2:  # noqa: PLR2004
-                doParallel = 'False'  # noqa: N806
-                runParallel = False  # noqa: N806
-                numP = 1  # noqa: N806
-                procID = 0  # noqa: N806
+            num_processes = comm.Get_size()
+            process_id = comm.Get_rank()
+            if num_processes < 2:  # noqa: PLR2004
+                do_parallel = 'False'
+                run_parallel = False
+                num_processes = 1
+                process_id = 0
 
     # read the event grid data file
     event_grid_path = Path(event_grid_file).resolve()
@@ -91,10 +91,10 @@ def find_neighbors(  # noqa: C901, D103
         # Existing code for CSV files
         grid_df = pd.read_csv(event_dir / event_grid_file, header=0)
 
-        # store the locations of the grid points in X
-        lat_E = grid_df['Latitude']  # noqa: N806
-        lon_E = grid_df['Longitude']  # noqa: N806
-        X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])  # noqa: N806
+        # store the locations of the grid points in grid_locations
+        lat_e = grid_df['Latitude']
+        lon_e = grid_df['Longitude']
+        grid_locations = np.array([[lo, la] for lo, la in zip(lon_e, lat_e)])
 
         if filter_label == '':
             grid_extra_keys = list(
@@ -113,10 +113,10 @@ def find_neighbors(  # noqa: C901, D103
         gdf['Longitude'] = gdf.geometry.x
         gdf['Latitude'] = gdf.geometry.y
 
-        # store the locations of the grid points in X
-        lat_E = gdf['Latitude']  # noqa: N806
-        lon_E = gdf['Longitude']  # noqa: N806
-        X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])  # noqa: N806
+        # store the locations of the grid points in grid_locations
+        lat_e = gdf['Latitude']
+        lon_e = gdf['Longitude']
+        grid_locations = np.array([[lo, la] for lo, la in zip(lon_e, lat_e)])
 
         if filter_label == '':
             grid_extra_keys = list(
@@ -128,12 +128,12 @@ def find_neighbors(  # noqa: C901, D103
 
     # prepare the tree for the nearest neighbor search
     if filter_label != '' or len(grid_extra_keys) > 0:
-        neighbors_to_get = min(neighbors * 10, len(lon_E))
+        neighbors_to_get = min(neighbors * 10, len(lon_e))
     else:
         neighbors_to_get = neighbors
 
     nbrs = NearestNeighbors(n_neighbors=neighbors_to_get, algorithm='ball_tree').fit(
-        X
+        grid_locations
     )
 
     # load the building data file
@@ -141,33 +141,34 @@ def find_neighbors(  # noqa: C901, D103
         asset_dict = json.load(f)
 
     # prepare a dataframe that holds asset filenames and locations
-    AIM_df = pd.DataFrame(  # noqa: N806
+    aim_df = pd.DataFrame(
         columns=['Latitude', 'Longitude', 'file'], index=np.arange(len(asset_dict))
     )
 
     count = 0
     for i, asset in enumerate(asset_dict):
-        if runParallel == False or (i % numP) == procID:  # noqa: E712
+        if run_parallel == False or (i % num_processes) == process_id:  # noqa: E712
             with open(asset['file'], encoding='utf-8') as f:  # noqa: PTH123
                 asset_data = json.load(f)
 
             asset_loc = asset_data['GeneralInformation']['location']
-            AIM_df.iloc[count]['Longitude'] = asset_loc['longitude']
-            AIM_df.iloc[count]['Latitude'] = asset_loc['latitude']
-            AIM_df.iloc[count]['file'] = asset['file']
+            aim_id = aim_df.index[count]
+            aim_df.loc[aim_id, 'Longitude'] = asset_loc['longitude']
+            aim_df.loc[aim_id, 'Latitude'] = asset_loc['latitude']
+            aim_df.loc[aim_id, 'file'] = asset['file']
             count = count + 1
 
-    # store building locations in Y
-    Y = np.array(  # noqa: N806
+    # store building locations in bldg_locations
+    bldg_locations = np.array(
         [
             [lo, la]
-            for lo, la in zip(AIM_df['Longitude'], AIM_df['Latitude'])
+            for lo, la in zip(aim_df['Longitude'], aim_df['Latitude'])
             if not np.isnan(lo) and not np.isnan(la)
         ]
     )
 
     # collect the neighbor indices and distances for every building
-    distances, indices = nbrs.kneighbors(Y)
+    distances, indices = nbrs.kneighbors(bldg_locations)
     distances = distances + 1e-20
 
     # initialize the random generator
@@ -179,11 +180,12 @@ def find_neighbors(  # noqa: C901, D103
     count = 0
 
     # iterate through the buildings and store the selected events in the AIM
-    for asset_i, (AIM_id, dist_list, ind_list) in enumerate(  # noqa: B007, N806
-        zip(AIM_df.index, distances, indices)
+    for asset_i, (aim_id, dist_list, ind_list) in enumerate(  # noqa: B007
+        zip(aim_df.index, distances, indices)
     ):
         # open the AIM file
-        asst_file = AIM_df.iloc[AIM_id]['file']
+        aim_index_id = aim_df.index[aim_id]
+        asst_file = aim_df.loc[aim_index_id, 'file']
 
         with open(asst_file, encoding='utf-8') as f:  # noqa: PTH123
             asset_data = json.load(f)
@@ -338,7 +340,6 @@ def find_neighbors(  # noqa: C901, D103
                 csv_path = event_dir / csv_filename
 
                 if not csv_path.exists():
-
                     # Create a CSV file with data from the GIS file
                     # Use actual data from the GIS file if available, otherwise use dummy data
                     im_columns = [
