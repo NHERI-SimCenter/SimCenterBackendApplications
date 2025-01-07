@@ -47,7 +47,15 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 import geopandas as gpd
+from pyproj import CRS
 
+def load_sc_geojson(file_path):
+    # Read the GeoJSON into a dictionary
+    with Path(file_path).open() as f:
+        geojson_data = json.load(f)
+    crs = CRS.from_user_input(geojson_data['crs']['properties']['name'])
+    # Create a GeoDataFrame from the GeoJSON
+    return gpd.GeoDataFrame.from_features(geojson_data['features'], crs=crs)
 
 def find_neighbors(  # noqa: C901, D103
     asset_file,
@@ -99,6 +107,21 @@ def find_neighbors(  # noqa: C901, D103
         if filter_label == '':
             grid_extra_keys = list(
                 grid_df.drop(['GP_file', 'Longitude', 'Latitude'], axis=1).columns
+            )
+    if file_extension == '.geojson':
+        # Read the geojson file
+        gdf = load_sc_geojson(event_dir / event_grid_file)
+
+        # Ensure the GIS file is in a geographic coordinate system
+        if not gdf.crs.is_geographic:
+            gdf = gdf.to_crs(epsg=4326)
+
+        lat_e = gdf['geometry'].apply(lambda pt: pt.y)
+        lon_e = gdf['geometry'].apply(lambda pt: pt.x)
+        grid_locations = np.array([[lo, la] for lo, la in zip(lon_e, lat_e)])
+        if filter_label == '':
+            grid_extra_keys = list(
+                gdf.drop(['geometry'], axis=1).columns
             )
 
     else:
@@ -312,6 +335,47 @@ def find_neighbors(  # noqa: C901, D103
                     ] * e
 
                 scale_list = np.ones(len(event_list))
+        if file_extension == '.geojson':
+            # collect the list of events and scale factors
+            event_list = []
+            scale_list = []
+            # for each neighbor
+            columns = [x for x in gdf.columns if x != 'geometry']
+            event_count = len(gdf[columns[0]].iloc[0])
+            for sample_j, nbr in enumerate(nbr_samples):
+                # make sure we resample events if samples > event_count
+                event_j = sample_j % event_count
+
+                # get the index of the nth neighbor
+                nbr_index = ind_list[nbr]
+
+                # if the grid has ground motion records...
+                if event_type == 'timeHistory':
+                    # load the file for the selected grid point
+                    event_collection_file = grid_df.iloc[nbr_index]['GP_file']
+                    event_df = pd.read_csv(
+                        event_dir / event_collection_file, header=0
+                    )
+
+                    # append the GM record name to the event list
+                    event_list.append(event_df.iloc[event_j, 0])
+
+                    # append the scale factor (or 1.0) to the scale list
+                    if len(event_df.columns) > 1:
+                        scale_list.append(float(event_df.iloc[event_j, 1]))
+                    else:
+                        scale_list.append(1.0)
+
+                # if the grid has intensity measures
+                elif event_type == 'intensityMeasure':
+                    # save the collection file name and the IM row id
+                    im_columns = grid_df.columns
+                    event_list.append(
+                        grid_df.iloc[nbr_index]['GP_file'] + f'x{event_j}'
+                    )
+
+                    # IM collections are not scaled
+                    scale_list.append(1.0)
         else:
             event_list = []
             scale_list = []
