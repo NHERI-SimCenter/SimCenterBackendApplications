@@ -1132,7 +1132,7 @@ def export_im(  # noqa: C901, D103, PLR0912
                 # Loop over all intensity measures
                 for cur_im_tag in range(len(csvHeader)):
                     if (csvHeader[cur_im_tag].startswith('SA')) or (
-                        csvHeader[cur_im_tag] in ['PGA', 'PGV']
+                        csvHeader[cur_im_tag] in ['PGA', 'PGV', 'DS575H', 'DS595H']
                     ):
                         df.update(
                             {
@@ -1177,7 +1177,7 @@ def export_im(  # noqa: C901, D103, PLR0912
                 for col in df.columns:
                     if (
                         (not col.startswith('SA'))
-                        and (col not in ['PGA', 'PGV', 'PGD_h', 'PGD_v'])
+                        and (col not in ['PGA', 'PGV','DS575H', 'DS595H','PGD_h', 'PGD_v'])
                         and (col not in gf_im_list)
                     ):
                         colToDrop.append(col)  # noqa: PERF401
