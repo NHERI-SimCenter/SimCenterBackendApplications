@@ -92,15 +92,14 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
     # Add the component recovery time to the Results_rlz.json file
     with Path(rwhale_run_dir / f'Results_{rlz}.json').open() as f:
         results_rlz = json.load(f)
-    all_recovery_time = list(system.resilience_calculators[1].\
-        component_recovery_times.values())
+    all_recovery_time = system.resilience_calculators[1].component_recovery_times
     for ind, comp in enumerate(system.components):
         if getattr(comp, 'r2d_comp', False) is True:
             asset_type = comp.asset_type
             asset_subtype = comp.asset_subtype
             asset_id = comp.general_information['AIM_id']
             results_rlz[asset_type][asset_subtype][asset_id]['Recovery'] = {
-                'Time': all_recovery_time[ind]
+                'Time': next(iter(all_recovery_time[ind].values()))
             }
     # Write the results to a file in the current realization workdir
     with (Path(f'Results_{rlz}.json')).open('w') as f:

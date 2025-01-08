@@ -1,0 +1,4 @@
+simcenter_add_python_script(SCRIPT damage_convertor.py)
+simcenter_add_python_script(SCRIPT __init__.py)
+simcenter_add_python_script(SCRIPT rewet_pyrecodes_api.py)
+# add_subdirectory(rewet_result)
