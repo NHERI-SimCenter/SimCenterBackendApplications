@@ -159,7 +159,12 @@ def bradley_correlation_2011(IM, T=None, flag_Ds=True):  # noqa: FBT002, C901, N
         if flag_Ds:
             return 0.843
         else:  # noqa: RET505
-            return None
+            return 1.000
+    elif IM == 'Ds575':
+        if flag_Ds:
+            return 1.000
+        else:  # noqa: RET505
+            return 0.843
     elif IM == 'Sa':
         if flag_Ds:
             if T < 0.09:  # noqa: PLR2004
