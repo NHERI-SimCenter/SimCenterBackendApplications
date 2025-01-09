@@ -423,7 +423,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             os.path.dirname(  # noqa: PTH120
                 os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
             ),
-            'createEVENT',
+            'common',
             'groundMotionIM',
             'IntensityMeasureComputer.py',
         )
