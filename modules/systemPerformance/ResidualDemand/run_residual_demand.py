@@ -39,6 +39,7 @@
 import argparse
 import json
 import logging
+import math
 import os
 import shutil
 import sys
@@ -198,7 +199,7 @@ def get_highest_congestion(edge_vol_dir, edges_csv):
         )
         congestion_i = (
             all_edges_vol['vol_tot'] / all_edges_vol['capacity_x']
-        ).fillna(0)
+        ).astype(float).fillna(0)
         congestion = np.maximum(congestion, congestion_i)
     congestion = congestion.to_frame(name='congestion')
     all_edges = all_edges.merge(congestion, left_index=True, right_index=True)
@@ -661,6 +662,7 @@ def run_on_undamaged_network(
         capacity_map=config_file_dict['CapacityMap'],
         od_file=od_file_pre,
         hour_list=config_file_dict['HourList'],
+        tmp_dir=Path.cwd(),
     )
 
     # run simulation on undamged network
@@ -748,6 +750,7 @@ def run_one_realization(
         capacity_map=config_file_dict['CapacityMap'],
         od_file=od_file_post,
         hour_list=config_file_dict['HourList'],
+        tmp_dir=Path.cwd(),
     )
     # update the capacity due to damage
     damaged_edge_file = residual_demand_simulator.update_edge_capacity(
@@ -792,7 +795,7 @@ def run_one_realization(
         trip_info_compare['delay_duration']
         / trip_info_compare['travel_time_used_undamaged']
     )
-    trip_info_compare = trip_info_compare.replace([np.inf, -np.inf], 'inf')
+    trip_info_compare = trip_info_compare.replace([np.inf, -np.inf], math.inf)
     trip_info_compare.to_csv('trip_info_compare.csv', index=False)
     return True
 

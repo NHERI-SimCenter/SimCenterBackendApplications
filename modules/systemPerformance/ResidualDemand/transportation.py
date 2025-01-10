@@ -52,6 +52,7 @@ import sys
 import time
 import copy
 import importlib
+import math
 from collections import defaultdict
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -163,6 +164,7 @@ class TransportationPerformance(ABC):  # noqa: B024
         two_way_edges=False,  # noqa: FBT002
         od_file=None,
         hour_list=[],  # noqa: B006
+        tmp_dir=None,
     ):  # noqa: B006, RUF100, UP007
         """
         Initialize the TransportationPerformance class with essential data.
@@ -210,6 +212,7 @@ class TransportationPerformance(ABC):  # noqa: B024
         self.two_way_edges = two_way_edges
         self.od_file = od_file
         self.hour_list = hour_list
+        self.tmp_dir = tmp_dir
 
     # @abstractmethod
     def system_state(
@@ -758,14 +761,35 @@ class TransportationPerformance(ABC):  # noqa: B024
         open_edges_df = edges_df[
             ~edges_df['uniqueid'].isin(closed_links['uniqueid'].to_numpy())
         ]
-        net = pdna.Network(
-            nodes_df['x'],
-            nodes_df['y'],
-            open_edges_df['start_nid'],
-            open_edges_df['end_nid'],
-            open_edges_df[['fft']],
-            twoway=two_way_edges,
-        )
+        # Redirect the output from pdna to a tmp file and then delete the file
+        if self.tmp_dir is not None:
+            output_file = Path(self.tmp_dir) / 'pandana_stdout.txt'
+            original_stdout_fd = sys.stdout.fileno()
+            with Path.open(output_file, 'w') as file:
+                os.dup2(file.fileno(), original_stdout_fd)
+                net = pdna.Network(
+                    nodes_df['x'],
+                    nodes_df['y'],
+                    open_edges_df['start_nid'],
+                    open_edges_df['end_nid'],
+                    open_edges_df[['fft']],
+                    twoway=two_way_edges,
+                )
+                # The file is automatically closed when exiting the with block
+                # `sys.stdout` is automatically restored to its original state because
+                # we duplicated the original descriptor to `stdout`.
+            if getattr(self, 'save_pandana', True):
+                Path.unlink(output_file)
+        else:
+            net = pdna.Network(
+                    nodes_df['x'],
+                    nodes_df['y'],
+                    open_edges_df['start_nid'],
+                    open_edges_df['end_nid'],
+                    open_edges_df[['fft']],
+                    twoway=two_way_edges,
+                )
+
         net.set(pd.Series(net.node_ids))
         paths = net.shortest_paths(orig, dest)
         no_path_ind = [i for i in range(len(paths)) if len(paths[i]) == 0]
@@ -1002,7 +1026,7 @@ class TransportationPerformance(ABC):  # noqa: B024
         )
         # If there are trips incompleted mark them as np.nan
         incomplete_trips_agent_id = [x[0] for x in od_residual_list]
-        trip_info_df.loc[trip_info_df.agent_id.isin(incomplete_trips_agent_id),'travel_time_used'] = 'inf'
+        trip_info_df.loc[trip_info_df.agent_id.isin(incomplete_trips_agent_id),'travel_time_used'] = math.inf
         # Add the no path OD to the trip info
         trip_info_no_path = od_no_path.drop(
             columns=[
@@ -1012,7 +1036,7 @@ class TransportationPerformance(ABC):  # noqa: B024
             ]
         )
         trip_info_no_path['travel_time'] = 360000
-        trip_info_no_path['travel_time_used'] = 'inf'
+        trip_info_no_path['travel_time_used'] = math.inf
         trip_info_no_path['stop_nid'] = np.nan
         trip_info_no_path['stop_hour'] = np.nan
         trip_info_no_path['stop_quarter'] = np.nan
@@ -1360,6 +1384,9 @@ class pyrecodes_residual_demand(TransportationPerformance):
         demand_ruleset_script,
         two_way_edges=False,  # noqa: FBT002
     ):
+        # Default not save pandana output
+        self.tmp_dir = Path.cwd()
+        self.save_pandana = False
         # Prepare edges and nodes files
         edges_gdf = gpd.read_file(edges_file)
         if 'length' not in edges_gdf.columns:
@@ -1397,18 +1424,9 @@ class pyrecodes_residual_demand(TransportationPerformance):
         edges_gdf['normal_fft'] = (
             edges_gdf['length'] / edges_gdf['normal_maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR
         )
-        edges_gdf = edges_gdf.sort_values(by='fft', ascending=False).drop_duplicates(
-            subset=['start_nid', 'end_nid'], keep='first'
-        )
-        edges_gdf['edge_str'] = (
-            edges_gdf['start_nid'].astype('str')
-            + '-'
-            + edges_gdf['end_nid'].astype('str')
-        )
         edges_gdf['t_avg'] = edges_gdf['fft']
         edges_gdf['u'] = edges_gdf['start_nid']
         edges_gdf['v'] = edges_gdf['end_nid']
-        edges_gdf = edges_gdf.set_index('edge_str')
 
         # delete geometry columns to save memory however, traffic assignment need to be updated accordingly
         # edges_gdf = edges_gdf.drop(columns=['geometry'])
@@ -1472,15 +1490,25 @@ class pyrecodes_residual_demand(TransportationPerformance):
                                                       self.initial_r2d_dict,
                                                       r2d_dict)
 
-        edges_df = self.edges_df.reset_index().set_index('id')
+        edges_df = self.edges_df.set_index('id')
         edges_df = self.capacity_ruleset.update_edges(edges_df, r2d_dict)
-        edges_df = edges_df.reset_index().set_index('edge_str')
 
-        edges_df['fft'] = edges_df['length'] / edges_df['maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR
+        edges_df['fft'] = edges_df['length'] / edges_df['maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR # Nikola: Labeled the number.
         edges_df['normal_fft'] = (
             edges_df['length'] / edges_df['normal_maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR
         )
         edges_df['t_avg'] = edges_df['fft']
+
+        edges_df = edges_df.sort_values(by='fft', ascending=False).drop_duplicates(
+            subset=['start_nid', 'end_nid'], keep='first'
+        )
+
+        edges_df['edge_str'] = (
+            edges_df['start_nid'].astype('str')
+            + '-'
+            + edges_df['end_nid'].astype('str')
+        )
+        edges_df = edges_df.reset_index().set_index('edge_str')
 
         # closed_links is simulated as normal links with very high fft
         closed_links = pd.DataFrame([], columns=['uniqueid'])
