@@ -246,6 +246,7 @@ class surrogate(UQengine):  # noqa: D101
         # TODO: multihazards?  # noqa: TD002
         self.isEEUQ = False
         self.isWEUQ = False
+        self.isHydroUQ = False
         if dakotaJson['Applications'].get('Events') != None:  # noqa: E711
             Evt = dakotaJson['Applications']['Events']  # noqa: N806
             if Evt[0].get('EventClassification') != None:  # noqa: E711
@@ -253,6 +254,8 @@ class surrogate(UQengine):  # noqa: D101
                     self.isEEUQ = True
                 elif Evt[0]['EventClassification'] == 'Wind':
                     self.isWEUQ = True
+                elif Evt[0]['EventClassification'] == 'Hydro' or Evt[0]['EventClassification'] == 'Water':
+                    self.isHydroUQ = True
 
         self.rv_name_ee = []
         if surrogateJson.get('IntensityMeasure') != None and self.isEEUQ:  # noqa: E711
@@ -270,7 +273,7 @@ class surrogate(UQengine):  # noqa: D101
             self.IntensityMeasure = {}
             self.unitInfo = {}
 
-        if self.isEEUQ or self.isWEUQ:
+        if self.isEEUQ or self.isWEUQ or self.isHydroUQ:
             self.checkWorkflow(dakotaJson)
         #
         #  common for all surrogate options
@@ -1007,7 +1010,7 @@ class surrogate(UQengine):  # noqa: D101
             input_dim=my_x_dim, ARD=True, lengthscale=myrange
         )
         # kernel_mean = GPy.kern.Matern52(input_dim=my_x_dim, ARD=True) + GPy.kern.Linear(input_dim=my_x_dim, ARD=True)
-        # if self.do_linear and not (self.isEEUQ or self.isWEUQ):
+        # if self.do_linear and not (self.isEEUQ or self.isWEUQ or self.isHydroUQ):
         #    kernel_mean = kernel_mean + GPy.kern.Linear(input_dim=my_x_dim, ARD=True)
         #
         # if sum(self.linear_list)>0:
@@ -2144,6 +2147,7 @@ class surrogate(UQengine):  # noqa: D101
         results['doNormalization'] = self.set_normalizer
         results['isEEUQ'] = self.isEEUQ
         results['isWEUQ'] = self.isWEUQ
+        results['isHydroUQ'] = self.isHydroUQ
 
         if self.isEEUQ:
             if len(self.IM_names) > 0:
@@ -2324,7 +2328,7 @@ class surrogate(UQengine):  # noqa: D101
                     self.lin_list[ny].intercept_
                 )
 
-        if self.isEEUQ or self.isWEUQ:
+        if self.isEEUQ or self.isWEUQ or self.isHydroUQ:
             # read SAM.json
             SAMpath = self.work_dir + '/templatedir/SAM.json'  # noqa: N806
             try:

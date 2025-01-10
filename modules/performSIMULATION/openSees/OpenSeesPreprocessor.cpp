@@ -653,7 +653,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
     const char *eventType = json_string_value(json_object_get(event,"type"));
 
     bool seismicEventType = true;
-    if (strcmp(eventType,"Wind") == 0 || strcmp(eventType,"Hydro") == 0) {
+    if (strcmp(eventType,"Wind") == 0 || (strcmp(eventType,"Hydro") == 0 || strcmp(eventType,"Water") == 0)) {
       seismicEventType = false;
     }
     
@@ -996,13 +996,15 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
   if (strcmp(eventType,"Seismic") == 0 ||
       strcmp(eventType,"Wind") == 0    ||
       strcmp(eventType,"timeHistory") == 0    ||      
-      strcmp(eventType,"Hydro") == 0      ) {
+      strcmp(eventType,"Hydro") == 0   ||   
+      strcmp(eventType,"Water") == 0) {
     analysisType = 1;
 
 
-    if ((strcmp(eventType,"Wind") == 0) || (strcmp(eventType,"Hydro") == 0))
+    if ((strcmp(eventType,"Wind") == 0) || ((strcmp(eventType,"Hydro") == 0) || (strcmp(eventType,"Water") == 0))) {
       analysisType = 2;
-
+    }
+    
     json_t*numStepJO = json_object_get(event,"numSteps");
     json_t*dtJO = json_object_get(event,"dT");
     if (dtJO == NULL || numStepJO == NULL) {
