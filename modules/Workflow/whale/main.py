@@ -53,6 +53,8 @@
 
 """  # noqa: D404
 
+
+
 import argparse
 import importlib
 import json
@@ -61,14 +63,33 @@ import platform
 import posixpath
 import pprint
 import shlex
-import shutil
 import subprocess
 import sys
 import warnings
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path, PurePath
+import pkg_resources
 
+# check python
+
+python_path= sys.executable
+a = platform.uname()
+if a.system == "Darwin" and (not a.machine=='x86_64'):
+    raise ValueError(f"Python version mismatch. Please update the python following the installation instruction. Current python {python_path} is based on machine={a.machine}, but we need the one for x86_64")
+    exit(-2)
+
+# checking if nheri-simcenter is installed
+if not ('nheri-simcenter' in [p.project_name for p in pkg_resources.working_set]):
+    if (platform.system() == 'Windows'):
+        raise ValueError(f"Essential python package (nheri-simcenter) is not installed. Please go to file-preference and press reset to initalize the python path.")
+        exit(-2)
+    else:
+        raise ValueError(f"Essential python package (nheri-simcenter) is not installed. Please follow the installation instruction or run: {python_path} -m pip3 install nheri-simcenter")
+        exit(-2)
+
+            
+import shutil
 import numpy as np
 import pandas as pd
 import shapely.geometry
@@ -95,7 +116,6 @@ def str2bool(v):  # noqa: D103
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')  # noqa: EM101, TRY003
-
 
 class Options:  # noqa: D101
     def __init__(self):
