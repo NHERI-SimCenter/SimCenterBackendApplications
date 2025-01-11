@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3  # noqa: EXE001, D100
 
 # -*- coding: utf-8 -*-
 # Copyright (c) 2016-2017, The Regents of the University of California (Regents).

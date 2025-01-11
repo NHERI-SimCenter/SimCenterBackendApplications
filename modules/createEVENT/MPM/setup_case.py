@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3  # noqa: EXE001, D100
 """This script writes BC and initial condition, and setups the OpenFoam case
 directory.
 
