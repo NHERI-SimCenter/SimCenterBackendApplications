@@ -1,2 +1,3 @@
 simcenter_add_python_script(SCRIPT StochasticWave.py)
 simcenter_add_python_script(SCRIPT StochasticWaveLoadsJONSWAP.py)
+simcenter_add_python_script(SCRIPT Jonswap.py)

@@ -173,7 +173,6 @@ class GM_Simulator:  # noqa: D101
         self.set_num_simu(num_simu)
         self.parse_correlation_info(correlation_info, im_info)
         self.set_im_raw(im_raw, im_list)
-        self.cross_check_im_correlation()
 
     def set_sites(self, site_info):  # noqa: D102
         # set sites
@@ -234,6 +233,7 @@ class GM_Simulator:  # noqa: D101
         self.im_name_list = im_list
         # set IM size
         self.num_im = len(self.im_name_list)
+        self.cross_check_im_correlation()
 
     def get_ln_im(self):  # noqa: D102
         ln_im = []
@@ -303,9 +303,9 @@ class GM_Simulator:  # noqa: D101
         # inter-event model
         if correlation_info.get('InterEvent', None):
             self.inter_cm = correlation_info['InterEvent']
-        elif correlation_info.get('SaInterEvent', None):
+        elif correlation_info.get('IntraEventCorr', None):
             # back compatibility
-            self.inter_cm = correlation_info['SaInterEvent']
+            self.inter_cm = correlation_info['IntraEventCorr']
         else:
             print(  # noqa: T201
                 'GM_Simulator: no inter-event correlation information not found - results will be uncorrelated motions.'
@@ -313,9 +313,9 @@ class GM_Simulator:  # noqa: D101
         # intra-event model
         if correlation_info.get('IntraEvent', None):
             self.intra_cm = correlation_info['IntraEvent']
-        if correlation_info.get('SaIntraEvent', None):
+        if correlation_info.get('IntraEventCorr', None):
             # back compatibility
-            self.intra_cm = correlation_info['SaIntraEvent']
+            self.intra_cm = correlation_info['IntraEventCorr']
         else:
             print(  # noqa: T201
                 'GM_Simulator: no intra-event correlation information not found - results will be uncorrelated motions.'
@@ -323,13 +323,13 @@ class GM_Simulator:  # noqa: D101
 
     def cross_check_im_correlation(self):  # noqa: C901, D102
         # because each correlation model only applies to certain intensity measure
-        # so hear we check if the correlation models are applicable for the required intensity measures
+        # so here we check if the correlation models are applicable for the required intensity measures
         self.im_cm_inter_flag = True
         self.im_cm_intra_flag = True
         if type(self.inter_cm) == dict:  # noqa: E721
             for cur_im in self.im_type_list:
                 avail_im_inter_cm = IM_CORR_INTER.get(self.inter_cm[cur_im])
-                if cur_im not in avail_im_inter_cm:
+                if (avail_im_inter_cm is None) or (cur_im not in avail_im_inter_cm):
                     print(  # noqa: T201
                         f'GM_Simulator.cross_check_im_correlation: warning - {cur_im} is not available in {self.inter_cm}'
                     )
@@ -571,6 +571,7 @@ class GM_Simulator_hdf5(GM_Simulator):  # noqa: D101
         self.im_name_list = im_list
         self.num_im = len(im_list)
         self.im_data = im_raw
+        self.cross_check_im_correlation()
 
     def get_ln_im(self):  # noqa: D102
         ln_im = []

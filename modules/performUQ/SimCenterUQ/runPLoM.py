@@ -368,7 +368,7 @@ class runPLoM:
             os.path.dirname(  # noqa: PTH120
                 os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
             ),
-            'createEVENT',
+            'common',
             'groundMotionIM',
             'IntensityMeasureComputer.py',
         )
