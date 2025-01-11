@@ -1,4 +1,4 @@
-#!/usr/bin/env python3  # noqa: D100
+#!/usr/bin/env python3  # noqa: EXE001, D100
 
 import argparse
 import json
@@ -12,6 +12,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
 
 class FloorForces:  # noqa: D101
     def __init__(self):
@@ -109,24 +110,26 @@ def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
         bim = json.load(BIMFile)
     return int(bim['GeneralInformation']['stories'])
 
+
 def GetExecutableFile(BIMFilePath):  # noqa: N802, N803, D103
     filePath = BIMFilePath  # noqa: N806
     with open(filePath, encoding='utf-8') as file:  # noqa: PTH123
         evt = json.load(file)
     file.close  # noqa: B018
-    
-    executableNameKey = 'executableFile'
-    executablePathKey = executableNameKey + 'Path'
-    
+
+    executableNameKey = 'executableFile'  # noqa: N806
+    executablePathKey = executableNameKey + 'Path'  # noqa: N806
+
     for event in evt['Events']:
-        executableName = event[executableNameKey]
-        executablePath = event[executablePathKey]
-        
-        return os.path.join(executablePath, executableName)
-    
-    defaultExecutablePath = f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: ISC003, PTH120
-    defaultExecutableName = 'osu_lwf.exe'
+        executableName = event[executableNameKey]  # noqa: N806
+        executablePath = event[executablePathKey]  # noqa: N806
+
+        return os.path.join(executablePath, executableName)  # noqa: PTH118
+
+    defaultExecutablePath = f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: N806, PTH120
+    defaultExecutableName = 'osu_lwf.exe'  # noqa: N806
     return defaultExecutablePath + defaultExecutableName
+
 
 def GetSceneFile(BIMFilePath):  # noqa: N802, N803, D103
     filePath = BIMFilePath  # noqa: N806
@@ -134,18 +137,18 @@ def GetSceneFile(BIMFilePath):  # noqa: N802, N803, D103
         evt = json.load(file)
     file.close  # noqa: B018
 
-    fileNameKey = 'configFile' 
-    filePathKey = fileNameKey + 'Path'
-    
+    fileNameKey = 'configFile'  # noqa: N806
+    filePathKey = fileNameKey + 'Path'  # noqa: N806
+
     for event in evt['Events']:
-        fileName = event[fileNameKey]
-        filePath = event[filePathKey]
-        
-        return os.path.join(filePath, fileName)
-    
-    defaultScriptPath = f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: ISC003, PTH120
-    defaultScriptName = 'scene.json'
-    return defaultScriptPath + defaultScriptName 
+        fileName = event[fileNameKey]  # noqa: N806
+        filePath = event[filePathKey]  # noqa: N806
+
+        return os.path.join(filePath, fileName)  # noqa: PTH118
+
+    defaultScriptPath = f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: N806, PTH120
+    defaultScriptName = 'scene.json'  # noqa: N806
+    return defaultScriptPath + defaultScriptName
 
 
 def GetTimer(BIMFilePath):  # noqa: N802, N803, D103
@@ -153,21 +156,21 @@ def GetTimer(BIMFilePath):  # noqa: N802, N803, D103
     with open(filePath, encoding='utf-8') as file:  # noqa: PTH123
         evt = json.load(file)
     file.close  # noqa: B018
-    
-    timerKey = 'maxMinutes'
+
+    timerKey = 'maxMinutes'  # noqa: N806
 
     for event in evt['Events']:
         timer = event[timerKey]
-        maxSeconds = timer * 60
-        return maxSeconds
-    
+        maxSeconds = timer * 60  # noqa: N806
+        return maxSeconds  # noqa: RET504
+
     return 0
 
 
-def main():  # noqa: D103
+def main():
     """
     Entry point to generate event file using MPMEvent.
-    """
+    """  # noqa: D200
     return 0
 
 
@@ -203,16 +206,15 @@ if __name__ == '__main__':
 
     # Get json of filenameAIM
     executableName = GetExecutableFile(arguments.filenameAIM)  # noqa: N816
-    scriptName = GetSceneFile(arguments.filenameAIM)  # noqa: N816        
+    scriptName = GetSceneFile(arguments.filenameAIM)  # noqa: N816
     maxSeconds = GetTimer(arguments.filenameAIM)  # noqa: N816
-    
+
     if arguments.getRV == True:  # noqa: E712
         print('RVs requested')  # noqa: T201
         # Read the number of floors
         floorsCount = GetFloorsCount(arguments.filenameAIM)  # noqa: N816
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
 
-        
         result = subprocess.run(  # noqa: S603
             [  # noqa: S607
                 'timeout',
@@ -220,7 +222,7 @@ if __name__ == '__main__':
                 executableName,
                 '-f',
                 scriptName,
-                # f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: ISC003, PTH120
+                # f'{os.path.realpath(os.path.dirname(__file__))}'
                 # + '/taichi_script.py',
             ],
             stdout=subprocess.PIPE,
@@ -239,12 +241,12 @@ if __name__ == '__main__':
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
         result = subprocess.run(  # noqa: S603
             [  # noqa: S607
-               'timeout',
+                'timeout',
                 str(maxSeconds),
                 executableName,
                 '-f',
                 scriptName,
-                # f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: ISC003, PTH120
+                # f'{os.path.realpath(os.path.dirname(__file__))}'
                 # + '/taichi_script.py',
             ],
             stdout=subprocess.PIPE,
