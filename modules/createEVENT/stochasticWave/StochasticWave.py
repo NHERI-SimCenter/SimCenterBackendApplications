@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3  # noqa: EXE001, D100
 
 """Generate the event file using Stochastic Waves."""
 
