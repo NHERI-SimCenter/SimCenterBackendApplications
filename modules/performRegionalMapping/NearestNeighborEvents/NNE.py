@@ -108,7 +108,7 @@ def find_neighbors(  # noqa: C901, D103
             grid_extra_keys = list(
                 grid_df.drop(['GP_file', 'Longitude', 'Latitude'], axis=1).columns
             )
-    if file_extension == '.geojson':
+    elif file_extension == '.geojson':
         # Read the geojson file
         gdf = load_sc_geojson(event_dir / event_grid_file)
 
@@ -342,6 +342,10 @@ def find_neighbors(  # noqa: C901, D103
             # for each neighbor
             columns = [x for x in gdf.columns if x != 'geometry']
             event_count = len(gdf[columns[0]].iloc[0])
+            if columns[0] == 'TH_file':
+                event_type = 'timeHistory'
+            else:
+                event_type = 'intensityMeasure'
             for sample_j, nbr in enumerate(nbr_samples):
                 # make sure we resample events if samples > event_count
                 event_j = sample_j % event_count
@@ -369,9 +373,10 @@ def find_neighbors(  # noqa: C901, D103
                 # if the grid has intensity measures
                 elif event_type == 'intensityMeasure':
                     # save the collection file name and the IM row id
-                    im_columns = grid_df.columns
+                    im_columns = gdf.columns
+                    im_list = [x[event_j] for x in gdf.iloc[nbr_index][im_columns]]
                     event_list.append(
-                        grid_df.iloc[nbr_index]['GP_file'] + f'x{event_j}'
+                        gdf.iloc[nbr_index]['GP_file'] + f'x{event_j}'
                     )
 
                     # IM collections are not scaled
