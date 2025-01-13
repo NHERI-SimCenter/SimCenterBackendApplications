@@ -1397,7 +1397,7 @@ class pyrecodes_residual_demand(TransportationPerformance):
         two_way_edges=False,  # noqa: FBT002
     ):
         # Default not save pandana output
-        self.tmp_dir = None
+        self.tmp_dir = Path.cwd()
         self.save_pandana = False
         # Prepare edges and nodes files
         edges_gdf = gpd.read_file(edges_file)
