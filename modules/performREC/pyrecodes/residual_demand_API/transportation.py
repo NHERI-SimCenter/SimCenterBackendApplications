@@ -354,10 +354,13 @@ class TransportationPerformance(ABC):  # noqa: B024
         orig_maxspeed = edges['maxspeed'].to_dict()
         new_capacity = edges['capacity'].apply(lambda x: [x]).to_dict()
         new_maxspeed = edges['maxspeed'].apply(lambda x: [x]).to_dict()
+        closed_links_roads_id = []
         for asset_type in self.assets:
             for asset_id, asset_id_dict in transportation_damage[asset_type].items():
                 critical_ds = int(max(list(asset_id_dict['Damage'].values())))
                 capacity_ratio = self.capacity_map[asset_type][str(critical_ds)]
+                if capacity_ratio == 0:
+                    closed_links_roads_id.append(asset_id)
                 if asset_type == 'Roadway':
                     road_ids = [int(asset_id)]
                 else:
@@ -388,12 +391,16 @@ class TransportationPerformance(ABC):  # noqa: B024
         edges = edges.rename(
             columns={'capacity_y': 'capacity', 'maxspeed_y': 'maxspeed'}
         )
+        closed_links = edges[edges.index.isin(closed_links_roads_id)]
         edges['capacity'] = edges['capacity'].apply(lambda x: 1 if x == 0 else x)
         edges['maxspeed'] = edges['maxspeed'].apply(lambda x: 0.001 if x == 0 else x)
         damged_edges_file = Path.cwd() / 'damaged_edges.csv'
+        closed_links_file = Path.cwd() / 'closed_edges.csv'
         edges = edges.reset_index().rename(columns={'index': 'id'})
+        closed_links = closed_links.reset_index().rename(columns={'index': 'id'})
         edges.to_csv(damged_edges_file, index=False)
-        return damged_edges_file
+        closed_links.to_csv(closed_links_file, index=False)
+        return damged_edges_file, closed_links_file
 
     def get_graph_network(self, csv_file_dir) -> None:  # noqa: D102
         # Get edges and nodes from the network inventory
@@ -794,7 +801,7 @@ class TransportationPerformance(ABC):  # noqa: B024
         paths = net.shortest_paths(orig, dest)
         no_path_ind = [i for i in range(len(paths)) if len(paths[i]) == 0]
         od_no_path = od_all.iloc[no_path_ind].copy()
-        od_all = od_all.drop(no_path_ind)
+        od_all = od_all.drop(od_no_path.index)
 
         od_all['current_nid'] = od_all['origin_nid']
         trip_info = {
@@ -831,6 +838,8 @@ class TransportationPerformance(ABC):  # noqa: B024
             for hour in hour_list:
                 gc.collect()
                 if hour in closure_hours:
+                    # Note this is not used now as the closed links are dropped from
+                    # the road network
                     for row in closed_links.itertuples():
                         edges_df.loc[
                             (edges_df['uniqueid'] == row.uniqueid), 'capacity'
@@ -946,6 +955,9 @@ class TransportationPerformance(ABC):  # noqa: B024
                         # edges_df['is_highway'])
                         # 10 yen per 100 m --> 0.1 yen per m
                         weighted_edges_df['weight'] = edges_df['t_avg']
+                        open_edges_df = weighted_edges_df[
+                            ~weighted_edges_df['uniqueid'].isin(closed_links['uniqueid'].to_numpy())
+                        ]
                         # weighted_edges_df['weight'] = np.where(
                         # weighted_edges_df['weight']<0.1, 0.1,
                         # weighted_edges_df['weight'])
@@ -957,7 +969,7 @@ class TransportationPerformance(ABC):  # noqa: B024
                             agents_path,
                         ) = self.substep_assignment(
                             nodes_df=nodes_df,
-                            weighted_edges_df=weighted_edges_df,
+                            weighted_edges_df=open_edges_df,
                             od_ss=od_ss,
                             quarter_demand=quarter_demand,
                             assigned_demand=assigned_demand,
@@ -1385,7 +1397,7 @@ class pyrecodes_residual_demand(TransportationPerformance):
         two_way_edges=False,  # noqa: FBT002
     ):
         # Default not save pandana output
-        self.tmp_dir = Path.cwd()
+        self.tmp_dir = None
         self.save_pandana = False
         # Prepare edges and nodes files
         edges_gdf = gpd.read_file(edges_file)
@@ -1464,6 +1476,8 @@ class pyrecodes_residual_demand(TransportationPerformance):
             raise Exception(msg)  # noqa: TRY002
         self.demand_ruleset = demand_ruleset
 
+        self.simulate_time = 0
+
 
 
     def simulate(
@@ -1490,8 +1504,9 @@ class pyrecodes_residual_demand(TransportationPerformance):
                                                       self.initial_r2d_dict,
                                                       r2d_dict)
 
-        edges_df = self.edges_df.set_index('id')
-        edges_df = self.capacity_ruleset.update_edges(edges_df, r2d_dict)
+        edges_df = self.edges_df.copy()
+        edges_df = edges_df.set_index('id')
+        edges_df, closed_links = self.capacity_ruleset.update_edges(edges_df, r2d_dict)
 
         edges_df['fft'] = edges_df['length'] / edges_df['maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR # Nikola: Labeled the number.
         edges_df['normal_fft'] = (
@@ -1510,8 +1525,10 @@ class pyrecodes_residual_demand(TransportationPerformance):
         )
         edges_df = edges_df.reset_index().set_index('edge_str')
 
-        # closed_links is simulated as normal links with very high fft
-        closed_links = pd.DataFrame([], columns=['uniqueid'])
+
+        self.simulate_time += 1
+        # edges_df.to_csv(os.path.join('/Users/jinyanzhao/Desktop/tempSave/nikola/residual_demand_debug', f'edges_df_{self.simulate_time}.csv'))
+        # self.nodes_df.to_csv(os.path.join('/Users/jinyanzhao/Desktop/tempSave/nikola/residual_demand_debug', f'nodes_df_{self.simulate_time}.csv'))
         trip_info_df = self.assignment(
             edges_df = edges_df,
             nodes_df=self.nodes_df,

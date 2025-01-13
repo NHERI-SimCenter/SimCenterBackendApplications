@@ -753,10 +753,11 @@ def run_one_realization(
         tmp_dir=Path.cwd(),
     )
     # update the capacity due to damage
-    damaged_edge_file = residual_demand_simulator.update_edge_capacity(
+    damaged_edge_file, closed_edge_file = residual_demand_simulator.update_edge_capacity(
         damage_rlz_file, damage_det_file
     )
     residual_demand_simulator.csv_files.update({'network_edges': damaged_edge_file})
+    residual_demand_simulator.csv_files.update({'edge_closures': closed_edge_file})
     # run simulation on damaged network
     Path('damaged').mkdir()
     Path(Path('damaged') / 'trip_info').mkdir()
