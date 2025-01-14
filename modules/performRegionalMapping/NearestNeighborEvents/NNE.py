@@ -109,10 +109,10 @@ def find_neighbors(  # noqa: C901, D103
                 grid_df.drop(['GP_file', 'Longitude', 'Latitude'], axis=1).columns
             )
     elif file_extension == '.geojson':
-        # Read the geojson file
+        # Read the simcenter geojson file
         gdf = load_sc_geojson(event_dir / event_grid_file)
 
-        # Ensure the GIS file is in a geographic coordinate system
+        # Ensure the geojson file is in a geographic coordinate system
         if not gdf.crs.is_geographic:
             gdf = gdf.to_crs(epsg=4326)
 
@@ -120,10 +120,30 @@ def find_neighbors(  # noqa: C901, D103
         lon_e = gdf['geometry'].apply(lambda pt: pt.x)
         grid_locations = np.array([[lo, la] for lo, la in zip(lon_e, lat_e)])
         if filter_label == '':
-            grid_extra_keys = list(
-                gdf.drop(['geometry'], axis=1).columns
-            )
+            grid_extra_keys = []
+            for key in gdf.columns:
+                if key.startswith('filter_'):
+                    grid_extra_keys.append(key)
 
+        hazard_columns = gdf.columns
+        hazard_columns = hazard_columns.drop(['geometry', *grid_extra_keys])
+        # Get the number of events as the length of the first column, first row
+        event_count = len(gdf[hazard_columns[0]].iloc[0])
+        # check if all rows and all columns have the same number of events
+        for col in hazard_columns:
+            for i in range(len(gdf)):
+                if len(gdf[col].iloc[i]) != event_count:
+                    msg = 'Each grid point must have the same number of events for each hazard input field.'
+                    f'The grid point {i} have a different number of events for the hazard input field {col}.'
+                    f'The number of events for the first grid point of field {col} is {event_count}.'
+                    raise ValueError(
+                        msg
+                    )
+
+        if hazard_columns[0] == 'TH_file':
+            event_type = 'timeHistory'
+        else:
+            event_type = 'intensityMeasure'
     else:
         # Else assume GIS files - works will all gis files that geopandas supports
         gdf = gpd.read_file(event_dir / event_grid_file)
@@ -335,17 +355,10 @@ def find_neighbors(  # noqa: C901, D103
                     ] * e
 
                 scale_list = np.ones(len(event_list))
-        if file_extension == '.geojson':
+        elif file_extension == '.geojson':
             # collect the list of events and scale factors
             event_list = []
             scale_list = []
-            # for each neighbor
-            columns = [x for x in gdf.columns if x != 'geometry']
-            event_count = len(gdf[columns[0]].iloc[0])
-            if columns[0] == 'TH_file':
-                event_type = 'timeHistory'
-            else:
-                event_type = 'intensityMeasure'
             for sample_j, nbr in enumerate(nbr_samples):
                 # make sure we resample events if samples > event_count
                 event_j = sample_j % event_count
@@ -372,11 +385,10 @@ def find_neighbors(  # noqa: C901, D103
 
                 # if the grid has intensity measures
                 elif event_type == 'intensityMeasure':
-                    # save the collection file name and the IM row id
-                    im_columns = gdf.columns
-                    im_list = [x[event_j] for x in gdf.iloc[nbr_index][im_columns]]
+                    im_data_j = gdf.iloc[nbr_index][hazard_columns].to_numpy()
+                    im_list = [x[event_j] for x in im_data_j]
                     event_list.append(
-                        gdf.iloc[nbr_index]['GP_file'] + f'x{event_j}'
+                       im_list
                     )
 
                     # IM collections are not scaled
@@ -433,33 +445,58 @@ def find_neighbors(  # noqa: C901, D103
 
         # prepare a dictionary of events
         event_list_json = []
-        for e_i, event in enumerate(event_list):
-            # event_list_json.append({
-            #    #"EventClassification": "Earthquake",
-            #    "fileName": f'{event}x{e_i:05d}',
-            #    "factor": scale_list[e_i],
-            #    #"type": event_type
-            #    })
-            event_list_json.append([f'{event}x{e_i:05d}', scale_list[e_i]])
+        if file_extension == '.geojson':
+            for e_i, event in enumerate(event_list):
+                event_list_json.append([*event, scale_list[e_i]])
+        else:
+            for e_i, event in enumerate(event_list):
+                # event_list_json.append({
+                #    #"EventClassification": "Earthquake",
+                #    "fileName": f'{event}x{e_i:05d}',
+                #    "factor": scale_list[e_i],
+                #    #"type": event_type
+                #    })
+                event_list_json.append([f'{event}x{e_i:05d}', scale_list[e_i]])
 
         # save the event dictionary to the AIM
         # TODO: we assume there is only one event  # noqa: TD002
         # handling multiple events will require more sophisticated inputs
 
-        if 'Events' not in asset_data:
-            asset_data['Events'] = [{}]
-        elif len(asset_data['Events']) == 0:
-            asset_data['Events'].append({})
-
-        asset_data['Events'][0].update(
-            {
-                # "EventClassification": "Earthquake",
-                'EventFolderPath': str(event_dir),
-                'Events': event_list_json,
-                'type': event_type,
-                # "type": "SimCenterEvents"
-            }
-        )
+        if file_extension == '.geojson':
+            # asset_data['Events'] is a list of sequential events, e.g., earthquake 1, earthquake 2, etc.
+            # asset_data['Events'][0] is a list of event grids in the first event, e.g., shaking grid, liquefaction grid, etc.
+            if 'Events' not in asset_data:
+                asset_data['Events'] = [[]]
+            elif len(asset_data['Events']) == 0:
+                asset_data['Events'].append([])
+            new_grid = {
+                    # "EventClassification": "Earthquake",
+                    'EventFolderPath': str(event_dir),
+                    'Events': event_list_json,
+                    'type': event_type,
+                    # "type": "SimCenterEvents"
+                }
+            if event_type == 'intensityMeasure':
+                asset_data['Events'][0].update(
+                    {
+                        'IMTypes': hazard_columns.tolist()
+                    }
+                )
+            asset_data['Events'][0].append(new_grid)
+        else: # For backward compatibility
+            if 'Events' not in asset_data:
+                asset_data['Events'] = [{}]
+            elif len(asset_data['Events']) == 0:
+                asset_data['Events'].append({})
+            asset_data['Events'][0].update(
+                {
+                    # "EventClassification": "Earthquake",
+                    'EventFolderPath': str(event_dir),
+                    'Events': event_list_json,
+                    'type': event_type,
+                    # "type": "SimCenterEvents"
+                }
+            )
 
         with open(asst_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
             json.dump(asset_data, f, indent=2)
