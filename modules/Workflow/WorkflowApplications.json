@@ -1024,6 +1024,10 @@
         "ExecutablePath": "applications/performSIMULATION/capacitySpectrum/runCMS.py"
       },
       {
+        "Name": "CapacitySpectrumMethod2",
+        "ExecutablePath": "applications/performSIMULATION/capacitySpectrum/runCMS2.py"
+      },	
+      {
         "Name": "SurrogateSimulation",
         "ExecutablePath": "applications/performSIMULATION/surrogateSimulation/SurrogateSimulation.py"
       },

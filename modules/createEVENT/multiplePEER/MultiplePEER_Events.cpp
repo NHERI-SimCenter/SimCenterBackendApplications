@@ -190,9 +190,8 @@ int main(int argc, char **argv)
               const char * name = json_string_value(json_object_get(theEvent,"name"));
 
               if (strcmp(eventName, name) == 0) {
-          addEvent(name, value);
-          
-          i = json_array_size(events);
+		addEvent(name, value);
+		i = json_array_size(events);
               }
             }
           }
@@ -342,6 +341,7 @@ int createSimCenterEvent(json_t *peerEvent) {
   json_t *peerRecord = 0;
   int index;
 
+
   // loop over this array of PEER events, creating a timeSeries and pattern for the event
   double dT =0.0;
   int numPoints =0;
@@ -464,6 +464,7 @@ int createSimCenterEvent(json_t *peerEvent) {
     // now we have all the data, fill in the events timeSeries and pattern objects
     //
 
+    
     json_object_set(timeseriesObj,"type",json_string("Value"));
     json_object_set(patternObj,"type",json_string("UniformAcceleration"));
     json_object_set(patternObj,"dof",json_integer(dirn));
@@ -473,6 +474,7 @@ int createSimCenterEvent(json_t *peerEvent) {
     json_object_set(timeseriesObj,"numSteps",json_integer(numPoints));
     json_object_set(timeseriesObj,"data",dataArray);
 
+    
     //
     // append the timeSeries and pattern objects to SimCenter timeSeries and pattern array
     //
@@ -496,6 +498,13 @@ int createSimCenterEvent(json_t *peerEvent) {
   json_object_set(eventObj,"timeSeries",timeSeriesArray);
   json_object_set(eventObj,"pattern", patternArray);
 
+  // add magnitude
+  json_t *metadata = json_object_get(peerEvent,"metadata");
+  if (metadata != NULL) {
+    json_t *mag = json_object_get(metadata,"Magnitude");
+    json_object_set(eventObj,"magnitude", mag);
+  }
+  
   //
   // now the EVENT needs to be added to an Events array in the actual SimCenterEvent
   //  as each SimCenterEvent can be used by itself, we create this Events array  and place in the output obj

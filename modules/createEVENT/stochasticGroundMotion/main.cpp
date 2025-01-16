@@ -54,6 +54,7 @@ int main(int argc, char** argv) {
     // rv_seed_description.emplace("lowerbound", 0);
     // rv_seed_description.emplace("upperbound", 1);
     // rv_seed_description.emplace("variableClass", "Uncertain");
+    
     auto rv_seed_description = json::object({{"distribution", "Uniform"},
                                  {"name", "StochasticSeed"},
                                  {"value", "RV.StochasticSeed"},
@@ -119,6 +120,7 @@ int main(int argc, char** argv) {
 
 
         auto invIt = *it;
+	
         // Enumerate all keys
         for (auto item : invIt.items())
           {
@@ -136,7 +138,8 @@ int main(int argc, char** argv) {
 
             std::cout<< " seed: " << mySeed << std::endl;
             std::cout<< model_name << std::endl;
-            
+            double myMoment = 0;
+	    
             // Vlachos et al (2018) model
             if (model_name == "VlachosSiteSpecificEQ") {
 
@@ -144,7 +147,7 @@ int main(int argc, char** argv) {
                 // Protecting the model
                 //
 
-                double myMoment = it->at("momentMagnitude");
+                myMoment = it->at("momentMagnitude");
                 double myR = it->at("ruptureDist");
                 bool modelProtected = it->at("protectModel");
 
@@ -164,6 +167,7 @@ int main(int argc, char** argv) {
               eq_generator = std::make_shared<EQGenerator>(
                   inputs.get_model_name(), it->at("momentMagnitude"),
                   it->at("ruptureDist"), it->at("vs30"), mySeed); // May need to update smelt not to cut of seed numbers
+	      
             } else if (model_name == "DabaghiDerKiureghianNFGM") {
               //eq_generator = std::make_shared<EQGenerator>(
               //    inputs.get_model_name(), it->at("faultType"),
@@ -171,6 +175,7 @@ int main(int argc, char** argv) {
               //    it->at("depthToRupt"), it->at("ruptureDist"), it->at("vs30"),
               //    it->at("sOrD"), it->at("thetaOrPhi"), it->at("truncate"),
               //    inputs.get_seed());
+	      
               eq_generator = std::make_shared<EQGenerator>(
                  inputs.get_model_name(), it->at("faultType"),
                  it->at("simulationType"), it->at("momentMagnitude"),
@@ -178,6 +183,7 @@ int main(int argc, char** argv) {
                  it->at("sOrD"), it->at("thetaOrPhi"), it->at("truncate"),
                  mySeed);
             } else {
+	      
               throwError( "ERROR: In main() of StochasticGroundMotion: Earthquake model name either incorrect or not supported, please check inputs\n");    
 
               // throw std::runtime_error(
@@ -185,7 +191,8 @@ int main(int argc, char** argv) {
               //     "name either incorrect or not supported, please check "
               //     "inputs\n");	    
             }
-          } else {
+	} else {
+	  
       	  const auto clock_time = std::chrono::time_point<std::chrono::system_clock>{};
       	  const auto current_time = std::chrono::system_clock::now();
 
@@ -232,6 +239,7 @@ int main(int argc, char** argv) {
              {"Data", "Time history generated using " +
                           inputs.get_model_name() + " model"},
              {"numSteps", event_data.at("numSteps")},
+             {"magnitude", it->at("momentMagnitude")},	 
              {"timeSeries", json::array({event_data.at("timeSeries")[0]})},
              {"pattern", json::array({event_data.at("pattern")[0]})}});
 

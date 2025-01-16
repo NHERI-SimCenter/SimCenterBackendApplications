@@ -621,7 +621,7 @@ def get_unit_factor(unit_in, unit_out):  # noqa: D103
     return unit_factor  # noqa: RET504
 
 
-def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):  # noqa: C901, N803, D103
+def computeIM(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):  # noqa: C901, N803, D103
     # load AIM file
     try:
         with open(AIM_file, encoding='utf-8') as f:  # noqa: PTH123
@@ -902,7 +902,7 @@ if __name__ == '__main__':
 
     # run and return
     sys.exit(
-        main(
+        computeIM(
             args.filenameAIM,
             args.filenameEVENT,
             args.filenameIM,
