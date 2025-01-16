@@ -17,7 +17,8 @@ except:  # noqa: E722
 
 from convertWindMat import *  # noqa: F403
 
-errPath = os.path.join(os.getcwd(),'workflow.err')  # noqa: N816
+errPath = os.path.join(os.getcwd(), 'workflow.err')  # noqa: N816, PTH109, PTH118
+
 
 def main(aimName, evtName, getRV):  # noqa: C901, N803, D103, PLR0915
     # THIS IS PERFORMED ONLY ONCE with open(aimName, 'r', encoding='utf-8') as f:

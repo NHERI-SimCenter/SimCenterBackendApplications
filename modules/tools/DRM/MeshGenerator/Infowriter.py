@@ -1,4 +1,4 @@
-def infowriter(info, meshdir):
+def infowriter(info, meshdir):  # noqa: INP001, D100
     """
     Write the information dictionary to a tcl file.
 
@@ -17,14 +17,14 @@ def infowriter(info, meshdir):
     # ============================================================================
     # Create a tcl file
     # ============================================================================
-    f = open(f'{meshdir}/Modelinfo.tcl', 'w')
-    f.write(f'wipe\n')
+    f = open(f'{meshdir}/Modelinfo.tcl', 'w')  # noqa: SIM115, PTH123
+    f.write(f'wipe\n')  # noqa: F541
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
-    f.write(f'# Cores Information\n')
+    f.write(f'# Cores Information\n')  # noqa: F541
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
     f.write(f"set regcores       {info['regcores']}\n")
     f.write(f"set pmlcores       {info['pmlcores']}\n")
@@ -33,11 +33,11 @@ def infowriter(info, meshdir):
     f.write(f"set AnalysisType   {info['AnalysisType']}\n")
 
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
-    f.write(f'# Model Information\n')
+    f.write(f'# Model Information\n')  # noqa: F541
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
     f.write(f"set StructureType     \"{info['StructureType']}\"\n")
     f.write(f"set NStory            {info['NStory']}\n")
@@ -52,11 +52,11 @@ def infowriter(info, meshdir):
     f.write(f"set SectionType       {info['SectionType']}\n")
     f.write(f"set HaveStructure     \"{info['HaveStructure']}\"\n")
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
-    f.write(f'# Soil Information\n')
+    f.write(f'# Soil Information\n')  # noqa: F541
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
     f.write(f"set dx                {info['dx']}\n")
     f.write(f"set dy                {info['dy']}\n")
@@ -75,11 +75,11 @@ def infowriter(info, meshdir):
     f.write(f"set ny                {info['ny']}\n")
     f.write(f"set nz                {info['nz']}\n")
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
-    f.write(f'# PML information\n')
+    f.write(f'# PML information\n')  # noqa: F541
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
     f.write(f"set AbsorbingElements \"{info['AbsorbingElements']}\"\n")
     f.write(f"set numpmllayers      {info['numpmllayers']}\n")
@@ -91,20 +91,20 @@ def infowriter(info, meshdir):
     f.write(f"set Absorbing_rayleigh_alpha {info['Absorbing_rayleigh_alpha']}\n")
     f.write(f"set Absorbing_rayleigh_beta {info['Absorbing_rayleigh_beta']}\n")
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
-    f.write(f'# General information\n')
+    f.write(f'# General information\n')  # noqa: F541
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
     f.write(f"set meshdir           \"{info['meshdir']}\"\n")
     f.write(f"set outputdir         \"{info['outputdir']}\"\n")
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
-    f.write(f'# Embedding foundation\n')
+    f.write(f'# Embedding foundation\n')  # noqa: F541
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
     f.write(f"set EmbeddingFoundation \"{info['EmbeddingFoundation']}\"\n")
     info2 = info['EmbeddedFoundation']
@@ -112,46 +112,46 @@ def infowriter(info, meshdir):
         f"set EmbeddedFoundation [dict create xmax {info2['xmax']} xmin {info2['xmin']} ymax {info2['ymax']} ymin {info2['ymin']} zmax {info2['zmax']} zmin {info2['zmin']}]\n"
     )
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
-    f.write(f'# Fondation information\n')
+    f.write(f'# Fondation information\n')  # noqa: F541
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
     f.write(f"set HaveFoundation \"{info['HaveFoundation']}\"\n")
     f.write('set foundationBlocks {}\n')
-    for i, block in enumerate(info['foundationBlocks']):
+    for i, block in enumerate(info['foundationBlocks']):  # noqa: B007
         f.write(
             f"lappend foundationBlocks [dict create matTag {block['matTag']} xmax {block['xmax']} xmin {block['xmin']} ymax {block['ymax']} ymin {block['ymin']} zmax {block['zmax']} zmin {block['zmin']} Xmeshsize {block['Xmeshsize']} Ymeshsize {block['Ymeshsize']} Zmeshsize {block['Zmeshsize']}]\n"
         )
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
-    f.write(f'# Piles information\n')
+    f.write(f'# Piles information\n')  # noqa: F541
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
     f.write(f"set HavePiles \"{info['HavePiles']}\"\n")
     f.write('set pilelist {}\n')
-    for i, pile in enumerate(info['pilelist']):
+    for i, pile in enumerate(info['pilelist']):  # noqa: B007
         f.write(
             f"lappend pilelist [dict create xtop {pile['xtop']} ytop {pile['ytop']} ztop {pile['ztop']} xbottom {pile['xbottom']} ybottom {pile['ybottom']} zbottom {pile['zbottom']} numberofElements {pile['numberofElements']}]\n"
         )
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
-    f.write(f'# cells and nodes information\n')
+    f.write(f'# cells and nodes information\n')  # noqa: F541
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
     f.write(f"set soilfoundation_num_cells {info['soilfoundation_num_cells']}\n")
     f.write(f"set soilfoundation_num_nodes {info['soilfoundation_num_points']}\n")
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
-    f.write(f'# DRM information\n')
+    f.write(f'# DRM information\n')  # noqa: F541
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
     f.write(f"set DRMFile           \"{info['DRMFile']}\"\n")
     f.write(
@@ -181,25 +181,25 @@ def infowriter(info, meshdir):
         f"set DRM_Location \"{info['DRMinformation']['DRM_Location'].lower()}\"\n"
     )
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
-    f.write(f'# Analysis information\n')
+    f.write(f'# Analysis information\n')  # noqa: F541
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
     f.write(f"set Analysis_dt {info['AnalysisInfo']['dt']}\n")
     f.write(f"set Analysis_duration {info['AnalysisInfo']['t_final']}\n")
     f.write(f"set Analysis_record_dt {info['AnalysisInfo']['recording_dt']}\n")
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
-    f.write(f'# material information\n')
+    f.write(f'# material information\n')  # noqa: F541
     f.write(
-        f'# ============================================================================\n'
+        f'# ============================================================================\n'  # noqa: F541
     )
     f.write(f"set Vs {info['MaterialInfo']['Vs']}\n")
     f.write(f"set rho {info['MaterialInfo']['rho']}\n")
     f.write(f"set nu {info['MaterialInfo']['nu']}\n")
     f.close()
 
-    return None
+    return None  # noqa: RET501, PLR1711

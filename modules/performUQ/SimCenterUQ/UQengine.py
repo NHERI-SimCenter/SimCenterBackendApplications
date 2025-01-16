@@ -41,7 +41,7 @@ class UQengine:  # noqa: D101
         # if self.os_type.lower().startswith('win'):
         #    self.workflowDriver = "workflow_driver.bat"
 
-    def cleanup_workdir(self):  # noqa: C901, D102
+    def cleanup_workdir(self):  # noqa: C901, D102, RUF100
         # if template dir already contains results.out, give an error
 
         # Cleanup working directory if needed
@@ -79,12 +79,12 @@ class UQengine:  # noqa: D101
         for del_pkl in del_pkls:
             os.remove(del_pkl)  # noqa: PTH107
 
-        try:
-            del_errs = glob.glob(os.path.join(self.work_dir, '*err'))  # noqa: PTH118, PTH207
-            for del_err in del_errs:
-                os.remove(del_err)  # noqa: PTH107
-        except:  # noqa: S110, E722
-            pass
+        # try:
+        #    del_errs = glob.glob(os.path.join(self.work_dir, '*err'))  # noqa: PTH118, PTH207, RUF100
+        #    for del_err in del_errs:
+        #        os.remove(del_err)  # noqa: PTH107, RUF100
+        # except:  # noqa: E722, RUF100, S110
+        #    pass
 
         if glob.glob(os.path.join(self.work_dir, 'templatedir', 'results.out')):  # noqa: PTH118, PTH207
             try:
@@ -126,7 +126,7 @@ class UQengine:  # noqa: D101
                     runIdx,
                 )
                 if Y_tmp.shape[0] != self.y_dim:
-                    msg = f'model output <results.out> in sample {ns} contains {Y_tmp.shape[0]} value(s) while the number of QoIs specified is {y_dim}'  # noqa: F821
+                    msg = f'model output <results.out> in sample {ns} contains {Y_tmp.shape[0]} value(s) while the number of QoIs specified is {y_dim}'  # type: ignore # noqa: F821
 
                     self.exit(msg)
                 Y[ns, :] = Y_tmp
@@ -218,7 +218,7 @@ class UQengine:  # noqa: D101
             os.path.dirname(  # noqa: PTH120
                 os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
             ),
-            'createEVENT',
+            'common',
             'groundMotionIM',
             'IntensityMeasureComputer.py',
         )
@@ -271,11 +271,14 @@ class UQengine:  # noqa: D101
             from multiprocessing import Pool
 
             n_processor = os.cpu_count()
-            pool = Pool(n_processor, initializer=initfn, initargs=(seed_val,)) 
+
+            if n_processor > 32:  # noqa: PLR2004
+                n_processor = 8
+            pool = Pool(n_processor, initializer=initfn, initargs=(seed_val,))
 
         else:
-            from mpi4py import MPI
-            from mpi4py.futures import MPIPoolExecutor
+            from mpi4py import MPI # type: ignore  # noqa: I001
+            from mpi4py.futures import MPIPoolExecutor # type: ignore
 
             self.world = MPI.COMM_WORLD
             n_processor = self.world.Get_size()
@@ -435,9 +438,12 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):  # noqa: C9
     # def makePool(self):
     #     pass
 
+
 # for creating pool
-def initfn(seed_val):
+def initfn(seed_val):  # noqa: D103
     np.random.seed(seed_val)  # enforcing seeds
+
+
 #
 # When sampled X is different from surrogate input X. e.g. we sample ground motion parameters or indices, but we use IM as input of GP
 #

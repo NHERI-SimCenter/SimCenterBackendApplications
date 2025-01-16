@@ -37,22 +37,27 @@
 # Stevan Gavrilovic
 #
 
-import argparse
+import argparse  # noqa: I001
 import xml.etree.ElementTree as ET
 import geopandas as gpd
 from shapely.geometry import Point
 from pathlib import Path
 
 
-def create_shakemap_event(eventDirectory, eventPath, IMTypes):  # noqa: D103
-    IMTypesList = eval(IMTypes)
+class IntensityMeasureTypeError(Exception):
+    def __init__(self, im_type):
+        super().__init__(f'Intensity measure type {im_type} not found in grid data')
 
-    print('Creating shakemap event')
 
-    xml_file_path = Path(eventDirectory) / eventPath / 'grid.xml'
+def create_shakemap_event(eventDirectory, eventPath, IMTypes):  # noqa: D103, N803
+    IMTypesList = eval(IMTypes)  # noqa: S307, N806
+
+    print('Creating shakemap event')  # noqa: T201
+
+    xml_file_path = Path(eventPath) / 'grid.xml'
 
     # Parse the XML file
-    tree = ET.parse(xml_file_path)
+    tree = ET.parse(xml_file_path)  # noqa: S314
     root = tree.getroot()
 
     # Find the grid_data element
@@ -62,6 +67,19 @@ def create_shakemap_event(eventDirectory, eventPath, IMTypes):  # noqa: D103
     points = []
     attributes = []
 
+    # Get the attribute_mapping
+    namespace = {'ns': 'http://earthquake.usgs.gov/eqcenter/shakemap'}
+    grid_fields = {}
+    for grid_field in root.findall('ns:grid_field', namespace):
+        index = grid_field.get('index')
+        name = grid_field.get('name')
+        units = grid_field.get('units')
+        grid_fields[name] = {'index': index, 'units': units}
+    attribute_mapping = {}
+    for im_type in ['PGA', 'PGV', 'MMI', 'PSA03', 'PSA10', 'PSA30']:
+        if im_type not in grid_fields:
+            raise IntensityMeasureTypeError(im_type)
+        attribute_mapping[im_type] = int(grid_fields[im_type]['index']) - 1
     # Parse the grid data
     for line in grid_data.text.strip().split('\n'):
         values = line.split()
@@ -71,15 +89,6 @@ def create_shakemap_event(eventDirectory, eventPath, IMTypes):  # noqa: D103
 
         # Store only the specified attributes
         attr = {}
-        attribute_mapping = {
-            'PGA': 2,
-            'PGV': 3,
-            'MMI': 4,
-            'PSA03': 5,
-            'PSA10': 6,
-            'PSA30': 7,
-        }
-
         for im_type in IMTypesList:
             if im_type in attribute_mapping:
                 attr[im_type] = float(values[attribute_mapping[im_type]])
@@ -89,14 +98,24 @@ def create_shakemap_event(eventDirectory, eventPath, IMTypes):  # noqa: D103
     # Create GeoDataFrame
     gdf = gpd.GeoDataFrame(attributes, geometry=points, crs='EPSG:4326')
 
+    if 'PGA' in gdf.columns:
+        gdf['PGA'] = gdf['PGA'] / 100 # convert from pct g to g
+
+    if 'PSA03' in gdf.columns:
+        gdf['PSA03'] = gdf['PSA03'] / 100 # convert from pct g to g
+        gdf = gdf.rename(columns={'PSA03': 'SA_0.3'})
+    if 'PSA10' in gdf.columns:
+        gdf['PSA10'] = gdf['PSA10'] / 100 # convert from pct g to g
+        gdf = gdf.rename(columns={'PSA10': 'SA_1.0'})
+
     # Display the first few rows
-    print('Saving shakemap to gpkg')
+    print('Saving shakemap to gpkg')  # noqa: T201
 
     # Save as a GeoPackage file
-    gdf_path = Path(eventDirectory) / 'EventGrid.gpkg'
+    gdf_path = Path(eventPath) / 'EventGrid.gpkg'
     gdf.to_file(gdf_path, driver='GPKG')
 
-    return
+    return  # noqa: PLR1711
 
 
 if __name__ == '__main__':

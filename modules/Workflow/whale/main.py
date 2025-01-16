@@ -53,6 +53,8 @@
 
 """  # noqa: D404
 
+
+
 import argparse
 import importlib
 import json
@@ -61,14 +63,33 @@ import platform
 import posixpath
 import pprint
 import shlex
-import shutil
 import subprocess
 import sys
 import warnings
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path, PurePath
+import pkg_resources
 
+# check python
+
+python_path= sys.executable
+a = platform.uname()
+if a.system == "Darwin" and (not a.machine=='x86_64'):
+    raise ValueError(f"Python version mismatch. Please update the python following the installation instruction. Current python {python_path} is based on machine={a.machine}, but we need the one for x86_64")
+    exit(-2)
+
+# checking if nheri-simcenter is installed
+if not ('nheri-simcenter' in [p.project_name for p in pkg_resources.working_set]):
+    if (platform.system() == 'Windows'):
+        raise ValueError(f"Essential python package (nheri-simcenter) is not installed. Please go to file-preference and press reset to initalize the python path.")
+        exit(-2)
+    else:
+        raise ValueError(f"Essential python package (nheri-simcenter) is not installed. Please follow the installation instruction or run: {python_path} -m pip3 install nheri-simcenter")
+        exit(-2)
+
+            
+import shutil
 import numpy as np
 import pandas as pd
 import shapely.geometry
@@ -95,7 +116,6 @@ def str2bool(v):  # noqa: D103
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')  # noqa: EM101, TRY003
-
 
 class Options:  # noqa: D101
     def __init__(self):
@@ -313,7 +333,7 @@ def create_command(command_list, enforced_python=None):
     return command  # noqa: DOC201, RUF100
 
 
-def run_command(command, app_category=""):  # noqa: C901
+def run_command(command, app_category=''):
     """Short description
 
     Long description
@@ -380,13 +400,12 @@ def run_command(command, app_category=""):  # noqa: C901
         #
 
         try:
-
-            if (platform.system() == 'Windows') and ('python.exe' in str(command)):
-                if returncode != 0:
-                    raise WorkFlowInputError('Analysis Failed at ' + app_category)  # noqa: TRY301
+            # if (platform.system() == 'Windows') and ('python.exe' in str(command)):
+            if returncode != 0:
+                raise WorkFlowInputError('Analysis Failed at ' + app_category)  # noqa: TRY301
 
             # sy - safe apps should be added below
-            elif ('OpenSeesInput' in str(command)):
+            elif 'OpenSeesInput' in str(command):  # noqa: RET506
                 if returncode != 0:
                     raise WorkFlowInputError('Analysis Failed at ' + app_category)  # noqa: TRY301
 
@@ -394,13 +413,13 @@ def run_command(command, app_category=""):  # noqa: C901
 
         except WorkFlowInputError as e:
             # this will catch the error
-            print(str(e).replace('\'',''))  # noqa: T201
-            print("         =====================================")  # noqa: T201
+            print(str(e).replace("'", ''))  # noqa: T201
+            print('         =====================================')  # noqa: T201
             print(str(result))  # noqa: T201
             sys.exit(-20)
 
         except:  # noqa: E722
-            # if for whatever reason the function inside "try" failes, move on without checking error
+            # if for whatever reason the function inside "try" fails, move on without checking error
             return str(result), 0
 
         return result, returncode
@@ -1307,7 +1326,7 @@ class Workflow:
                     prepend_blank_space=False,
                 )
 
-                result, returncode = run_command(command,"Asset Creater")
+                result, returncode = run_command(command, 'Asset Creater')
 
                 # Check if the command was completed successfully
                 if returncode != 0:
@@ -1546,7 +1565,15 @@ class Workflow:
 
         # Check if system performance is requested
         if 'SystemPerformance' in self.workflow_apps:
-            performance_app = self.workflow_apps['SystemPerformance'][asset_type]
+            if asset_type in self.workflow_apps['SystemPerformance']:
+                performance_app = self.workflow_apps['SystemPerformance'][asset_type]
+            else:
+                log_msg(
+                    f'No Performance application to run for asset type: {asset_type}.',
+                    prepend_timestamp=False,
+                )
+                log_div()
+                return False
         else:
             log_msg(
                 f'No Performance application to run for asset type: {asset_type}.',
@@ -1597,7 +1624,7 @@ class Workflow:
             prepend_blank_space=False,
         )
 
-        result, returncode = run_command(command,"Performance Assessment")
+        result, returncode = run_command(command, 'Performance Assessment')
         log_msg(
             f'\n{result}\n',
             prepend_timestamp=False,
@@ -1661,7 +1688,7 @@ class Workflow:
                 prepend_blank_space=False,
             )
 
-            result, returncode = run_command(command,"Hazard Event")
+            result, returncode = run_command(command, 'Hazard Event')
 
             log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
             log_msg(
@@ -1724,7 +1751,7 @@ class Workflow:
                 prepend_blank_space=False,
             )
 
-            result, returncode = run_command(command, "Recovery")
+            result, returncode = run_command(command, 'Recovery')
 
             log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
             log_msg(
@@ -1807,7 +1834,7 @@ class Workflow:
             )
 
         else:
-            result, returncode = run_command(command,"Hazard-Asset Mapping (HTA)")
+            result, returncode = run_command(command, 'Hazard-Asset Mapping (HTA)')
 
             log_msg(
                 'Output: ' + str(returncode),
@@ -2047,7 +2074,9 @@ class Workflow:
                                 prepend_blank_space=False,
                             )
 
-                            result, returncode = run_command(command,f'{app_type} - at the initial setup (getRV)')
+                            result, returncode = run_command(
+                                command, f'{app_type} - at the initial setup (getRV)'
+                            )
 
                             log_msg(
                                 'Output: ' + str(returncode),
@@ -2457,7 +2486,7 @@ class Workflow:
                 prepend_blank_space=False,
             )
 
-            result, returncode = run_command(command, "Response Simulator")
+            result, returncode = run_command(command, 'Response Simulator')
 
             if self.run_type in ['run', 'runningLocal']:
                 log_msg(
@@ -2534,7 +2563,7 @@ class Workflow:
             app_path=self.app_dir_local  # noqa: F821
         )
         command = create_command(app_command_list)
-        result, returncode = run_command(command,"Performance assessment")
+        result, returncode = run_command(command, 'Performance assessment')
 
     def estimate_losses(  # noqa: C901
         self,
@@ -2627,7 +2656,7 @@ class Workflow:
                         prepend_blank_space=False,
                     )
 
-                    result, returncode = run_command(command,"Damage and loss")
+                    result, returncode = run_command(command, 'Damage and loss')
 
                     log_msg(result, prepend_timestamp=False)
 
@@ -2678,7 +2707,7 @@ class Workflow:
                     prepend_blank_space=False,
                 )
 
-                result, returncode = run_command(command,"Damage and loss")
+                result, returncode = run_command(command, 'Damage and loss')
 
                 log_msg(result, prepend_timestamp=False)
 
@@ -2821,7 +2850,7 @@ class Workflow:
             prepend_blank_space=False,
         )
 
-        result, returncode = run_command(command,"Performance Assessment")
+        result, returncode = run_command(command, 'Performance Assessment')
 
         log_msg(result, prepend_timestamp=False)
 

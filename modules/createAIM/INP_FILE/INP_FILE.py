@@ -1,4 +1,4 @@
-import argparse  # noqa: D100, INP001
+import argparse  # noqa: INP001, D100
 import importlib
 import json
 import os
@@ -8,8 +8,7 @@ import sys
 import warnings
 
 import geopandas as gpd
-
-# import momepy
+import momepy
 import numpy as np
 import pandas as pd
 import shapely
@@ -180,10 +179,10 @@ class lineAIMGenerator(generalAIMGenerator):  # noqa: D101
         # Convert find connectivity and add start_node, end_node attributes
         edges = self.gdf
         datacrs = edges.crs
-        graph = momepy.gdf_to_nx(edges.to_crs('epsg:6500'), approach='primal')  # noqa: F821
+        graph = momepy.gdf_to_nx(edges.to_crs('epsg:6500'), approach='primal')
         with warnings.catch_warnings():  # Suppress the warning of disconnected components in the graph
             warnings.simplefilter('ignore')
-            nodes, edges, sw = momepy.nx_to_gdf(  # noqa: F821
+            nodes, edges, sw = momepy.nx_to_gdf(
                 graph, points=True, lines=True, spatial_weights=True
             )
         # edges = edges.set_index('ind')
@@ -241,9 +240,9 @@ class lineAIMGenerator(generalAIMGenerator):  # noqa: D101
         self.gdf = edges
 
 
-def split_and_select_components(input_config):  # noqa: C901, D103
+def split_and_select_components(input_config, asset_source_file):  # noqa: C901, D103
     component_dict = dict()  # noqa: C408
-    asset_source_file = input_config['assetSourceFile']
+    # asset_source_file = input_config['assetSourceFile']
     with open(asset_source_file, encoding='utf-8') as f:  # noqa: PTH123
         source_data = json.load(f)
     crs = source_data['crs']
@@ -304,7 +303,7 @@ def init_workdir(component_dict, outDir):  # noqa: N803, D103
     return component_dir
 
 
-def create_asset_files(output_file, asset_type, input_file, doParallel):  # noqa: C901, N803, D103
+def create_asset_files(output_file, asset_source_file, asset_type, input_file, doParallel):  # noqa: C901, N803, D103
     # check if running parallel
     numP = 1  # noqa: N806
     procID = 0  # noqa: N806
@@ -334,7 +333,7 @@ def create_asset_files(output_file, asset_type, input_file, doParallel):  # noqa
     ]
     # if input_config.get("Roadway", None):
     #     roadSegLength = float(input_config['Roadway'].get('maxRoadLength_m', "100000"))
-    component_dict = split_and_select_components(input_config)
+    component_dict = split_and_select_components(input_config, asset_source_file)
     component_dir = init_workdir(component_dict, outDir)  # noqa: F841
     assets_array = []
     for component_type, component_data in component_dict.items():
@@ -400,6 +399,7 @@ def create_asset_files(output_file, asset_type, input_file, doParallel):  # noqa
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--assetFile')
+    parser.add_argument('--assetSourceFile')
     parser.add_argument('--assetType')
     parser.add_argument('--inputJsonFile')
     parser.add_argument('--doParallel', default='False')
@@ -411,7 +411,11 @@ if __name__ == '__main__':
     if args.getRV:
         sys.exit(
             create_asset_files(
-                args.assetFile, args.assetType, args.inputJsonFile, args.doParallel
+                args.assetFile,
+                args.assetSourceFile,
+                args.assetType,
+                args.inputJsonFile,
+                args.doParallel
             )
         )
     else:

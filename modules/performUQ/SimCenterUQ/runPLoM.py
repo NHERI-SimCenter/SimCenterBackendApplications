@@ -368,7 +368,7 @@ class runPLoM:
             os.path.dirname(  # noqa: PTH120
                 os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
             ),
-            'createEVENT',
+            'common',
             'groundMotionIM',
             'IntensityMeasureComputer.py',
         )
@@ -575,6 +575,9 @@ class runPLoM:
         try:
             if self.run_type.lower() == 'runninglocal':
                 self.n_processor = os.cpu_count()
+                # curtailing n_processor for docker containers running at TACC HPC
+                if self.n_processor > 32:  # noqa: PLR2004
+                    self.n_processor = 8
                 from multiprocessing import Pool
 
                 self.pool = Pool(self.n_processor)
