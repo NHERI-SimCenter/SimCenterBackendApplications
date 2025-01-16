@@ -180,7 +180,7 @@ def modify_system_config_conent(system_config, input_data_dir, rwhale_run_dir):
                     rwhale_run_dir / 'Results_det.json')
     return system_config
 
-def modify_system_config_rewet_distribution(system_config, inp_file, rlz_run_dir):
+def modify_system_config_rewet_distribution(system_config, input_data_dir, rlz_run_dir):
     """
     Modify the system configuration to update the INP file path for REWETDistributionModel.
 
@@ -200,7 +200,7 @@ def modify_system_config_rewet_distribution(system_config, inp_file, rlz_run_dir
     for resouces in resources_config.values():
         distribution_model = resouces['DistributionModel']
         if distribution_model['ClassName'] == 'REWETDistributionModel':
-            distribution_model['Parameters']['INPFile'] = inp_file
+            distribution_model['Parameters']['INPFile'] = str(input_data_dir / distribution_model['Parameters']['INPFile'])
             if not (rlz_run_dir / 'rewet_results').exists():
                 (rlz_run_dir / 'rewet_results').mkdir()
             if not (rlz_run_dir / 'rewet_temp').exists():
@@ -342,7 +342,6 @@ def run_pyrecodes(  # noqa: C901
         main_file,
         system_config_file,
         component_library,
-        rewet_inp_file,
         r2d_run_dir,
         input_data_dir,
         realization
@@ -471,7 +470,7 @@ def run_pyrecodes(  # noqa: C901
                 json.dump(results_rlz, f)
 
             # Modify the file pathes in the REWETDistributionModel part of the system configuration
-            system_config = modify_system_config_rewet_distribution(system_config, rewet_inp_file, rlz_run_dir)
+            system_config = modify_system_config_rewet_distribution(system_config, input_data_dir, rlz_run_dir)
             system_config = modify_system_config_residual_demand_distribution(system_config, input_data_dir, rlz_run_dir)
             # Write the modified system configuration to a file
             with Path('SystemConfiguration.json').open('w') as f:
@@ -535,12 +534,6 @@ if __name__ == '__main__':
 
     workflowArgParser.add_argument(
         '--localityGeojsonFile',
-        default=None,
-        help='Geojson defining the locality of the assets',
-    )
-
-    workflowArgParser.add_argument(
-        '--INPFile',
         default=None,
         help='Geojson defining the locality of the assets',
     )
@@ -634,7 +627,6 @@ if __name__ == '__main__':
         main_file=wfArgs.mainFile,
         system_config_file=wfArgs.systemConfigFile,
         component_library=wfArgs.componentLibraryFile,
-        rewet_inp_file=wfArgs.INPFile,
         r2d_run_dir=wfArgs.r2dRunDir,
         input_data_dir=wfArgs.inputDataDir,
         realization=realization_text
