@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3  # noqa: EXE001
 
 """
 Plot the JONSWAP spectrum for a given sea state and generate wave time series based on the Jonswap spectrum
