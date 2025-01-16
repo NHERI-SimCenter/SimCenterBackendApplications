@@ -89,7 +89,7 @@ except:  # noqa: E722
 print('Initializing error log file..')  # noqa: T201
 print(f'Current working dir (getcwd): {os.getcwd()}')  # noqa: T201, PTH109
 
-#errFileName = os.path.join(os.getcwd(),'dakota.err')  # noqa: N816
+# errFileName = os.path.join(os.getcwd(),'dakota.err')
 work_dir_tmp = sys.argv[1].replace(os.sep, '/')
 errFileName = os.path.join(work_dir_tmp, 'dakota.err')  # noqa: N816, PTH118
 
@@ -254,7 +254,10 @@ class surrogate(UQengine):  # noqa: D101
                     self.isEEUQ = True
                 elif Evt[0]['EventClassification'] == 'Wind':
                     self.isWEUQ = True
-                elif Evt[0]['EventClassification'] == 'Hydro' or Evt[0]['EventClassification'] == 'Water':
+                elif (
+                    Evt[0]['EventClassification'] == 'Hydro'
+                    or Evt[0]['EventClassification'] == 'Water'
+                ):
                     self.isHydroUQ = True
 
         self.rv_name_ee = []
@@ -939,15 +942,16 @@ class surrogate(UQengine):  # noqa: D101
             if parname.endswith('lengthscale'):
                 for nx in range(X_repl.shape[1]):
                     myrange = np.max(X_repl, axis=0) - np.min(X_repl, axis=0)
-                    lb = myrange[nx]/X_repl.shape[0]
-                    ub = myrange[nx]*5
-                    if lb>=ub:
+                    lb = myrange[nx] / X_repl.shape[0]
+                    ub = myrange[nx] * 5
+                    if lb >= ub:
                         lb = 0
 
-                    
-                    m_var.Mat52.lengthscale[[nx]].constrain_bounded( lb, ub, warning=False)
-                    m_var.Mat52.lengthscale[[nx]] = myrange[nx] # initial points
-                    
+                    m_var.Mat52.lengthscale[[nx]].constrain_bounded(
+                        lb, ub, warning=False
+                    )
+                    m_var.Mat52.lengthscale[[nx]] = myrange[nx]  # initial points
+
                     # m_var.Gaussian_noise.value = 0.05
                     # m_var.Gaussian_noise.constrain_bounded(0.1/np.var(log_vars), 0.8/np.var(log_vars), warning=False)
                     # m_var.Mat52.lengthscale[[nx]].constrain_bounded(
@@ -982,7 +986,6 @@ class surrogate(UQengine):  # noqa: D101
             # if normalization was used..
         else:
             norm_var_str = var_pred.T[0]  # if normalization was not used..
-
 
         # norm_var_str = (X_new+2)**2/max((X_new+2)**2)
         Y_metadata = {'variance_structure': norm_var_str / counts}  # noqa: N806
@@ -3441,11 +3444,11 @@ def calibrating(  # noqa: C901, D103
             m_tmp[variance_keyword].constrain_bounded(0.05, 2, warning=False)
             for parname in m_tmp.parameter_names():
                 if parname.endswith('lengthscale'):
-                    for nx in range(X.shape[1]):  # noqa: B007
-                        myrange = np.max(X, axis=0) - np.min(X, axis=0)  # noqa: F841
+                    for nx in range(X.shape[1]):
+                        myrange = np.max(X, axis=0) - np.min(X, axis=0)
                         lb = myrange[nx]
-                        ub = myrange[nx] / X.shape[0]*10
-                        if lb>=ub:
+                        ub = myrange[nx] / X.shape[0] * 10
+                        if lb >= ub:
                             lb = 0
 
                         exec(  # noqa: S102
@@ -3480,13 +3483,13 @@ def calibrating(  # noqa: C901, D103
 
             for parname in m_tmp.parameter_names():
                 if parname.endswith('lengthscale'):
-                    for nx in range(X.shape[1]):  # noqa: B007
-                        myrange = np.max(X, axis=0) - np.min(X, axis=0)  # noqa: F841
-                        lb = myrange[nx] / X.shape[0]*10
+                    for nx in range(X.shape[1]):
+                        myrange = np.max(X, axis=0) - np.min(X, axis=0)
+                        lb = myrange[nx] / X.shape[0] * 10
                         ub = myrange[nx]
-                        if lb>=ub:
+                        if lb >= ub:
                             lb = 0
-                            
+
                         exec(  # noqa: S102
                             'm_tmp.'
                             + parname
@@ -3542,7 +3545,7 @@ def calibrating(  # noqa: C901, D103
 
             print('Calibrating final surrogate')  # noqa: T201
             m_tmp = my_optimize_restart(m_tmp, nopt)
-  # noqa: RUF100, W293
+        # noqa: RUF100, W293
         # if develop_mode:
         #     print(m_tmp)
         #     #print(m_tmp.rbf.lengthscale)
