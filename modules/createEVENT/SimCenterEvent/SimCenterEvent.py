@@ -74,8 +74,128 @@ def write_RV(AIM_file, EVENT_file):  # noqa: N802, N803, D103
     # get the location of the event input files
     # TODO: assuming a single event for now  # noqa: TD002
     aim_event_input = aim_file['Events'][0]
-    data_dir = Path(aim_event_input['EventFolderPath'])
 
+    if 'SimCenterEvent' in aim_event_input:
+        simcenter_event = aim_event_input['SimCenterEvent']
+        data_dir = Path(simcenter_event['EventFolderPath'])
+        # Get the number of realizations
+        if 'intensityMeasure' in simcenter_event:
+            num_of_realizations = len(simcenter_event['intensityMeasure']['Events'][0])
+            if 'timeHistory' in simcenter_event:
+                if num_of_realizations != len(simcenter_event['timeHistory']['Events'][0]):
+                    msg = 'Number of realizations in intensityMeasure and timeHistory do not match'
+                    raise ValueError(msg)
+        elif 'timeHistory' in simcenter_event:
+            num_of_realizations = len(simcenter_event['timeHistory']['Events'][0])
+        else:
+            msg = 'No intensityMeasure or timeHistory in SimCenterEvent'
+            raise ValueError(msg)
+
+        # currently assume only intensityMeasure or timeHistory
+        if 'intensityMeasure' in simcenter_event:
+            event_type = 'intensityMeasure'
+        elif 'timeHistory' in simcenter_event:
+            event_type = 'timeHistory'
+        else:
+            msg = 'No intensityMeasure or timeHistory in SimCenterEvent'
+            raise ValueError(msg)
+
+        event_file = {'randomVariables': [], 'Events': []}
+        if num_of_realizations > 1:
+            # if there is more than one event then we need random variables
+
+            # initialize the randomVariables part of the EVENT file
+            if event_type == 'intensityMeasure':
+                event_file['randomVariables'].append(
+                    {
+                        'distribution': 'discrete_design_set_string',
+                        'name': 'eventID',
+                        'value': 'RV.eventID',
+                        'elements': ['event_' + str(i) for i in range(num_of_realizations)],
+                    }
+                )
+
+                # initialize the Events part of the EVENT file
+                event_file['Events'].append(
+                    {
+                    'type': event_type,
+                    'event_id': 'RV.eventID',
+                    'unitScaleFactor': f_scale_units,
+                    'units': input_unit_bases,
+                    'values': simcenter_event[event_type]['Events'],
+                    'labels': simcenter_event[event_type]['Labels'],
+                    }
+                )
+            elif event_type == 'timeHistory':
+                event_file['randomVariables'].append(
+                    {
+                        'distribution': 'discrete_design_set_string',
+                        'name': 'eventID',
+                        'value': 'RV.eventID',
+                        'elements': [],
+                    }
+                )
+
+                # initialize the Events part of the EVENT file
+                event_file['Events'].append(
+                    {
+                        # 'type': 'Seismic', I am pretty sure we are not using this now
+                        # or we are using it incorrectly, so I removed it for the time being
+                        # and replaced it with the information that is actually used
+                        'type': aim_event_input['type'],
+                        'event_id': 'RV.eventID',
+                        'unitScaleFactor': f_scale_units,
+                        'units': input_unit_bases,
+                        'data_dir': str(data_dir),
+                    }
+                )
+
+                # collect the filenames
+                RV_elements = simcenter_event[event_type]['Events'][0]  # noqa: N806
+                # for event in events:
+                #    #if event['EventClassification'] in ['Earthquake', 'Hurricane',
+                #    #                                    'Flood']:
+                #    #RV_elements.append(event['fileName'])
+                #    RV_elements.append(event[0])
+
+                # and add them to the list of randomVariables
+                event_file['randomVariables'][0]['elements'] = RV_elements
+
+                # if time histories are used, then load the first event
+                # TODO: this is needed by some other code that should be fixed and this  # noqa: TD002
+                #  part should be removed.
+                event_file['Events'][0].update({'scale_factors': simcenter_event[event_type]['ScaleFactors']})
+                event_file['Events'][0].update(
+                    load_record(simcenter_event[event_type]['Events'][0][0], data_dir, empty=num_of_realizations > 1)
+                )
+                # , event_class = event_class))
+
+        else:
+            # if there is only one event, then we do not need random variables
+
+            # initialize the Events part of the EVENT file
+            # The events are now two dimensiontal list. The first dimension is sequence of events
+            # The second dimension is different grid in the same event
+
+            event_file['Events'].append(
+                {
+                    # 'type': 'Seismic',
+                    'type': event_type,
+                    'event_id': simcenter_event[event_type]['Events'][0][0],
+                    'unitScaleFactor': f_scale_units,
+                    'units': input_unit_bases,
+                    'data_dir': str(data_dir),
+                }
+            )
+
+
+        # save the EVENT dictionary to a json file
+        with open(EVENT_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
+            json.dump(event_file, f, indent=2)
+
+        return
+    # Below are for backward compatibility
+    data_dir = Path(aim_event_input['EventFolderPath'])
     # get the list of events assigned to this asset
     events = aim_event_input['Events']
 
