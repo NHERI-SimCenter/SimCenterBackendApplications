@@ -200,7 +200,9 @@ def find_neighbors(  # noqa: C901, D103
             # handling multiple events will require more sophisticated inputs
             if 'Events' not in asset_data:
                 asset_data['Events'] = [{'SimCenterEvent':{
-                    'EventFolderPath': str(event_dir)
+                    'EventFolderPath': str(event_dir),
+                    'Values': [],
+                    'Labels': [],
                 }}]
             if filter_label != '':
                 # soil type of building
@@ -253,59 +255,77 @@ def find_neighbors(  # noqa: C901, D103
             dist_list = 1.0 / (dist_list**2.0)  # noqa: PLW2901
             weights = np.array(dist_list) / np.sum(dist_list)
 
+            # Create one grid for each hazard input field
+            label_list = asset_data['Events'][0]['SimCenterEvent']['Labels']
+            label_list += list(hazard_columns)
+
             # get the pre-defined number of samples for each neighbor
             nbr_samples = np.where(rng.multinomial(1, weights, samples) == 1)[1]
 
+            values_list = asset_data['Events'][0]['SimCenterEvent']['Values']
+            for sample_j, nbr in enumerate(nbr_samples):
+                # make sure we resample events if samples > event_count
+                event_j = sample_j % event_count
 
-            # Create one grid for each hazard input field
-            for hazard_column in hazard_columns:
-                            # If the column name ends with '_file', it is a time history file
-                if hazard_column.endswith('_file'):
-                    column_type = 'timeHistory'
-                    if column_type not in asset_data['Events'][0]['SimCenterEvent']:
-                        asset_data['Events'][0]['SimCenterEvent'][column_type] = {
-                            'Events': [],
-                            'ScaleFactors': [],
-                            'Labels': [],
-                        }
-                else:
-                    column_type = 'intensityMeasure'
-                    if column_type not in asset_data['Events'][0]['SimCenterEvent']:
-                        asset_data['Events'][0]['SimCenterEvent'][column_type] = {
-                            'Events': [],
-                            'Labels': [],
-                        }
-                value_list = []
-                scale_list = []
-                for sample_j, nbr in enumerate(nbr_samples):
-                    # make sure we resample events if samples > event_count
-                    event_j = sample_j % event_count
+                # get the index of the nth neighbor
+                nbr_index = ind_list[nbr]
+                if sample_j >= len(values_list):
+                    values_list.append([])
+                value_i = values_list[sample_j]
+                for hazard_column in hazard_columns:
+                    value_i.append(gdf.iloc[nbr_index][hazard_column][event_j])
+            asset_data['Events'][0]['SimCenterEvent']['Values'] = values_list
+            asset_data['Events'][0]['SimCenterEvent']['Labels'] = label_list
 
-                    # get the index of the nth neighbor
-                    nbr_index = ind_list[nbr]
-                    # if the grid has ground motion records...
-                    if column_type == 'timeHistory':
-                        # load the file for the selected grid point
-                        event_collection_file = gdf.iloc[nbr_index]['GP_file']
-                        event_df = pd.read_csv(
-                            event_dir / event_collection_file, header=0
-                        )
+            # Below are for future use when multiple event applications can be used
+            # for hazard_column in hazard_columns:
+            #                 # If the column name ends with '_file', it is a time history file
+            #     if hazard_column.endswith('_file'):
+            #         column_type = 'timeHistory'
+            #         if column_type not in asset_data['Events'][0]['SimCenterEvent']:
+            #             asset_data['Events'][0]['SimCenterEvent'][column_type] = {
+            #                 'Events': [],
+            #                 'ScaleFactors': [],
+            #                 'Labels': [],
+            #             }
+            #     else:
+            #         column_type = 'intensityMeasure'
+            #         if column_type not in asset_data['Events'][0]['SimCenterEvent']:
+            #             asset_data['Events'][0]['SimCenterEvent'][column_type] = {
+            #                 'Events': [],
+            #                 'Labels': [],
+            #             }
+            #     value_list = []
+            #     scale_list = []
+            #     for sample_j, nbr in enumerate(nbr_samples):
+            #         # make sure we resample events if samples > event_count
+            #         event_j = sample_j % event_count
 
-                        # append the GM record name to the event list
-                        value_list.append(event_df.iloc[event_j, 0])
+            #         # get the index of the nth neighbor
+            #         nbr_index = ind_list[nbr]
+            #         # if the grid has ground motion records...
+            #         if column_type == 'timeHistory':
+            #             # load the file for the selected grid point
+            #             event_collection_file = gdf.iloc[nbr_index]['GP_file']
+            #             event_df = pd.read_csv(
+            #                 event_dir / event_collection_file, header=0
+            #             )
 
-                        # append the scale factor (or 1.0) to the scale list
-                        if len(event_df.columns) > 1:
-                            scale_list.append(float(event_df.iloc[event_j, 1]))
-                        else:
-                            scale_list.append(1.0)
+            #             # append the GM record name to the event list
+            #             value_list.append(event_df.iloc[event_j, 0])
 
-                    # if the grid has intensity measures
-                    elif column_type == 'intensityMeasure':
-                        im_data_j = gdf.iloc[nbr_index][hazard_column]
-                        value_list.append(im_data_j[event_j])
-                asset_data['Events'][0]['SimCenterEvent'][column_type]['Events'].append(value_list)
-                asset_data['Events'][0]['SimCenterEvent'][column_type]['Labels'].append(hazard_column)
+            #             # append the scale factor (or 1.0) to the scale list
+            #             if len(event_df.columns) > 1:
+            #                 scale_list.append(float(event_df.iloc[event_j, 1]))
+            #             else:
+            #                 scale_list.append(1.0)
+
+            #         # if the grid has intensity measures
+            #         elif column_type == 'intensityMeasure':
+            #             im_data_j = gdf.iloc[nbr_index][hazard_column]
+            #             value_list.append(im_data_j[event_j])
+            #     asset_data['Events'][0]['SimCenterEvent'][column_type]['Events'].append(value_list)
+            #     asset_data['Events'][0]['SimCenterEvent'][column_type]['Labels'].append(hazard_column)
 
             with open(asst_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
                 json.dump(asset_data, f, indent=2)
