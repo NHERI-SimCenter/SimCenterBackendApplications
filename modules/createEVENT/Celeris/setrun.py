@@ -68,7 +68,7 @@ def main():  # noqa: C901, D103
     # run = None
     # time.sleep(1)
     # print("Warm start")
-    run = Evolve(solver=solver, maxsteps=20000, saveimg=False)
+    run = Evolve(solver=solver, maxsteps=12000, saveimg=False)
 
     # run.Evolve_Headless() # Faster , no visualization
 
