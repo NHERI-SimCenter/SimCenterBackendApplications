@@ -1,13 +1,32 @@
 #!/usr/bin/env python3
 
 """
-This script generates an EVENT.json file using the Celeris EVT.
+This script generates an EVENT.json file using the Celeris EVT using CelerisAi (Python and Taichi Lang).
 
-No license was provided with the initial Celeris_TL_v1 codebase (dropbox),
-so tentatively we assume all rights are reserved by the original authors.
-
-Permission for respectful distribution related to the SimCenter's mission
+Permission for respectful distribution, modification, and training related to the SimCenter's mission
 was granted by Patrick Lynett and Willington Renteria on 2024-9-25.
+
+MIT License
+
+Copyright (c) 2024 WILLINGTON RENTERIA
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 """  # noqa: D404
 
 import argparse
@@ -23,8 +42,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-subprocess.run([sys.executable, '-m', 'pip', 'install', 'taichi'], check=False)  # noqa: S603
-import taichi as ti  # noqa: E402
+# Check if taichi is installed before importing taichi
+try:
+    import taichi as ti
+except ImportError:
+    print('Taichi is not installed. Please install it using "pip install taichi".')  # noqa: T201
+    print()  # noqa: T201
+    subprocess.run([sys.executable, '-m', 'pip', 'install', 'taichi'], check=False)  # noqa: S603
+    try:
+        import taichi as ti
+    except ImportError:
+        print('Taichi installation failed. Please install it manually.')  # noqa: T201
+        sys.exit(1)
+    print('Taichi is installed successfully.')  # noqa: T201
+    print()  # noqa: T201
 
 
 class FloorForces:  # noqa: D101
@@ -229,7 +260,7 @@ def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
     return int(bim['GeneralInformation']['stories'])
 
 
-def GetTaichiScript(BIMFilePath):  # noqa: N802, N803, D103
+def GetCelerisScript(BIMFilePath):  # noqa: N802, N803, D103
     filePath = BIMFilePath  # noqa: N806
     with open(filePath, encoding='utf-8') as file:  # noqa: PTH123
         evt = json.load(file)
@@ -286,7 +317,7 @@ if __name__ == '__main__':
     # import subprocess
 
     # Get json of filenameAIM
-    scriptName = GetTaichiScript(arguments.filenameAIM)  # noqa: N816
+    scriptName = GetCelerisScript(arguments.filenameAIM)  # noqa: N816
 
     if arguments.getRV == True:  # noqa: E712
         print('RVs requested')  # noqa: T201
