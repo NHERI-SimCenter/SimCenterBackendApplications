@@ -1,7 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3  # noqa: EXE001
 
 """
-This script generates an EVENT.json file using the Celeris EVT using CelerisAi (Python and Taichi Lang).
+Author: Justin Bonus, 2024
+
+This script generates an EVENT.json file using the Celeris EVT to run CelerisAi (Python and Taichi Lang).
 
 Permission for respectful distribution, modification, and training related to the SimCenter's mission
 was granted by Patrick Lynett and Willington Renteria on 2024-9-25.
