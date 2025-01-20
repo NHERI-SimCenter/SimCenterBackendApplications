@@ -193,7 +193,7 @@ def NumericalFlux(aplus, aminus, Fplus, Fminus, Udifference):  # noqa: N802, N80
 
 @ti.func
 def ScalarAntiDissipation(uplus, uminus, aplus, aminus, epsilon):  # noqa: N802, D103
-    R = 0.0  # Defaul return if none of the conditions are met  # noqa: N806
+    R = 0.0  # Default return if none of the conditions are met  # noqa: N806
     if aplus != 0.0 and aminus != 0.0:
         if ti.abs(uplus) >= ti.abs(uminus):
             Fr = ti.abs(uplus) / aplus  # noqa: N806

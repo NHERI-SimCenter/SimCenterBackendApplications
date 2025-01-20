@@ -114,7 +114,7 @@ class Solver:  # noqa: D101
         self.predictedGradients = (
             self.domain.states()
         )  # stores d(state)/dt values found in the predictor step
-        self.dU_by_dt = self.domain.states()  # stores d(state)/dt values output from Pass3 calls - Posible can be replaced by self.predictedGradients
+        self.dU_by_dt = self.domain.states()  # stores d(state)/dt values output from Pass3 calls - Possible can be replaced by self.predictedGradients
 
         # Bouss
         self.predictedF_G_star = (
@@ -1004,7 +1004,7 @@ class Solver:  # noqa: D101
             # HNear_vec neighbours [hN,hE,hS,hW]
             self.Hnear[i, j] = [h_north, h_east, h_south, h_west]
 
-            # To avoid unnecesary computations
+            # To avoid unnecessary computations
             h_cut = self.delta
             if h_here <= h_cut:
                 if (
