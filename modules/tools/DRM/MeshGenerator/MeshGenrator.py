@@ -14,7 +14,7 @@ def partition_with_pilebox(messh, numcores, pileboxinfo, tol=1e-6):  # noqa: C90
         partition(messh, numcores)
         return
 
-    # seperate the core of the pilebox
+    # separate the core of the pilebox
     mesh = messh.copy()
     eps = 1e-6
     # check if the xmin,xmax, ymin ymax ,zmin zmax is exist in the infokeys
@@ -262,7 +262,7 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):  # noqa: C901, N802, D103, PLR091
         np.ones(mesh.n_cells, dtype=np.int8) * info['RegularDomain']
     )
     # =============================================================================
-    # sperate embedding layer
+    # separate embedding layer
     # =============================================================================
     if HaveEmbeddingFoundation == 'YES':
         cube = pv.Cube(
@@ -377,7 +377,7 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):  # noqa: C901, N802, D103, PLR091
     # print("Havepilebox:",pileboxinfo["Havepilebox"])
 
     # =============================================================================
-    # sperate PML layer
+    # separate PML layer
     # =============================================================================
     xmin = x.min() + PMLTotalThickness[0]
     xmax = x.max() - PMLTotalThickness[0]
@@ -768,7 +768,7 @@ def DRM_PML_Foundation_Meshgenrator(meshinfo):  # noqa: C901, N802, D103, PLR091
         selected['SelectedPoints'].view(bool),
         include_cells=False,
     )
-    print(f'number of sp constriants: {pts.n_points*9}')  # noqa: T201
+    print(f'number of sp constraints: {pts.n_points*9}')  # noqa: T201
 
     # f = h5py.File('./DRMloadSmall.h5drm', 'r')
     if DRMinformation['DRM_Location'].lower() == 'local':

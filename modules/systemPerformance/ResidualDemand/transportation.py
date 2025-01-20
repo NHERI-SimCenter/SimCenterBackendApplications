@@ -72,7 +72,7 @@ from shapely.wkt import loads
 #     calculate_road_capacity,
 # )
 
-## The below functions are mannually copied from brails to avoid importing brails
+## The below functions are manually copied from brails to avoid importing brails
 
 ROADLANES_MAP = {'S1100': 4, "S1200": 2, "S1400": 1, "S1500": 1, "S1630": 1,
                  "S1640": 1, "S1710": 1, "S1720": 1, "S1730": 1, "S1740": 1,
