@@ -22,7 +22,7 @@ class Evolve:  # noqa: D101
         boundary_conditions=None,  # noqa: ARG002
         solver=None,
         maxsteps=1000,
-        outdir=None,  # noqa: ARG002
+        outdir=None,
         saveimg=False,  # noqa: FBT002
         vmin=-1.5,
         vmax=1.5,
@@ -41,7 +41,12 @@ class Evolve:  # noqa: D101
             shape=(self.solver.nx, self.solver.ny),
         )
         self.ocean = ti.Vector.field(3, dtype=ti.f16, shape=16)  # noqa: F405
+        self.land = ti.Vector.field(3, dtype=ti.f16, shape=16)  # noqa: F405
         self.colormap_ocean = 'Blues_r'
+        self.colormap_land = 'terrain'
+        self.outdir = outdir
+        if self.outdir:
+            os.makedirs(self.outdir, exist_ok=True)  # noqa: PTH103
 
     def Evolve_0(self):  # noqa: N802, D102
         self.solver.fill_bottom_field()
@@ -203,6 +208,7 @@ class Evolve:  # noqa: D101
                 )
                 if self.solver.outdir:
                     state = self.solver.State.to_numpy()
+                    self.outdir = self.solver.outdir
                     np.save(f'{self.outdir}/state_{int(i)}.npy', state)  # noqa: F405
 
     @ti.func  # noqa: F405
@@ -228,23 +234,47 @@ class Evolve:  # noqa: D101
                 )
 
     @ti.kernel  # noqa: F405
-    def InitColors(self, arr: ti.types.ndarray(dtype=ti.f16, ndim=2)):  # noqa: N802, D102, F405
+    def InitColors(  # noqa: N802, D102
+        self,
+        ocean_arr: ti.types.ndarray(dtype=ti.f16, ndim=2),  # noqa: F405
+        land_arr: ti.types.ndarray(dtype=ti.f16, ndim=2),  # noqa: F405
+    ):
         for i in self.ocean:
-            self.ocean[i].x = arr[i, 0]
-            self.ocean[i].y = arr[i, 1]
-            self.ocean[i].z = arr[i, 2]
+            self.ocean[i].x = ocean_arr[i, 0]
+            self.ocean[i].y = ocean_arr[i, 1]
+            self.ocean[i].z = ocean_arr[i, 2]
+        for i in self.land:
+            self.land[i].x = land_arr[i, 0]
+            self.land[i].y = land_arr[i, 1]
+            self.land[i].z = land_arr[i, 2]
 
     @ti.kernel  # noqa: F405
     def painting_h(self):  # noqa: D102
         num_colors = self.ocean.shape[0]
         step = 1.0 / num_colors
+
         for i, j in ti.ndrange(self.solver.nx, self.solver.ny):  # noqa: F405
             flow = (
                 self.solver.State[i, j][0] - self.solver.Bottom[2, i, j]
             )  # only water
+            # land = max(0.0, self.solver.Bottom[2, i, j])  # only positive topo
             land = max(0.0, self.solver.Bottom[2, i, j])  # only positive topo
-            water_col = flow / self.solver.base_depth  # Water column normalized
-            land_elevation = land / self.solver.maxtopo  # Topo normalized
+            # land = self.solver.Bottom[2,i,j]
+            # if (self.solver.Bottom[2, :, :].min() < 0) and (land == 0.0):
+
+            # if (self.solver.maxtopo < self.solver.base_depth):
+            #     land_datum = self.solver.base_depth - self.solver.maxtopo
+            # elif (self.solver.maxtopo >= self.solver.base_depth):
+            #     land_datum = self.solver.maxtopo - self.solver.base_depth
+
+            # land -= min(self.solver.maxtopo, self.solver.base_depth)
+            approximate_wave_to_depth_breaking_ratio = 0.85  # 0.77
+            water_col = ti.pow(flow, 1 / 3) / (  # noqa: F405
+                self.solver.base_depth / approximate_wave_to_depth_breaking_ratio
+            )  # Water column normalized
+            # land_elevation = land / (land_datum)  # Topo normalized
+            land_elevation = land
+            # land_elevation = (land + self.solver.base_depth) / (self.solver.maxtopo + self.solver.base_depth)  # Topo normalized
             index = int(water_col / step)  # which color interval we're in
             index = ti.min(  # noqa: F405
                 index, num_colors - 2
@@ -252,18 +282,41 @@ class Evolve:  # noqa: D101
             t = (
                 water_col - index * step
             ) / step  # fractional position between the colors
+            sand_capillary_height = 0.01
             if flow > 0.0:  # Water area
                 self.image[i, j] = (
                     self.ocean[index] * (1 - t) + self.ocean[index + 1] * t
                 )
-            elif -0.25 < flow < 0:  # noqa: PLR2004
+                continue
+            if sand_capillary_height < flow < 0.0:
                 self.image[i, j] = ti.Vector(  # noqa: F405
                     [0.8039, 0.7921, 0.7372]
                 )  # Wet Sand
-            else:
-                self.image[i, j] = ti.Vector(  # noqa: F405
-                    [0.6 + land_elevation * 0.4, 0.4 + land_elevation * 0.3, 0.25]
-                )
+                continue
+
+            # print(self.solver.maxtopo)
+            # print(self.solver.base_depth)
+            land_shift = abs(self.solver.maxtopo) / abs(  # noqa: F841
+                self.solver.base_depth - self.solver.maxtopo
+            )
+            land_step = abs(self.solver.maxtopo) / self.land.shape[0]
+            land_index = abs(
+                int((land_elevation) / land_step)
+            )  # which color interval we're in
+            land_index = max(
+                0, min(land_index + 0.0 * self.land.shape[0], self.land.shape[0] - 2)
+            )  # clamp index to avoid out-of-bounds
+            land_t = (
+                land_elevation - land_index * land_step
+            ) / land_step  # fractional position between the colors
+            self.image[i, j] = (
+                self.land[land_index] * (1 - land_t)
+                + self.land[land_index + 1] * land_t
+            )
+            # ti.Vector(
+            # [0.6 + land_elevation * 0.4, 0.4 + land_elevation * 0.3, 0.25]
+            # )
+            continue
 
     @ti.kernel  # noqa: F405
     def painting_eta(self):  # noqa: D102
@@ -276,7 +329,8 @@ class Evolve:  # noqa: D101
             wave = self.solver.State[i, j][0]
             wave = (wave - self.vmin) / (self.vmax - self.vmin)
             land = max(0.0, self.solver.Bottom[2, i, j])  # only positive topo
-            land_elevation = land / self.solver.maxtopo  # Topo normalized
+            land_elevation = land
+            # land_elevation = land / self.solver.maxtopo  # Topo normalized
             index = int(wave / step)  # which color interval we're in
             index = ti.min(  # noqa: F405
                 index, num_colors - 2
@@ -288,14 +342,34 @@ class Evolve:  # noqa: D101
                 self.image[i, j] = (
                     self.ocean[index] * (1 - t) + self.ocean[index + 1] * t
                 )
-            elif -0.25 < flow < 0:  # noqa: PLR2004
+                continue
+            if -0.25 < flow < 0:  # noqa: PLR2004
                 self.image[i, j] = ti.Vector(  # noqa: F405
                     [0.8039, 0.7921, 0.7372]
                 )  # Wet Sand
-            else:
-                self.image[i, j] = ti.Vector(  # noqa: F405
-                    [0.6 + land_elevation * 0.4, 0.4 + land_elevation * 0.3, 0.25]
-                )
+                continue
+            # print(self.solver.maxtopo)
+            # print(self.solver.base_depth)
+            land_shift = abs(self.solver.maxtopo) / abs(  # noqa: F841
+                self.solver.base_depth - self.solver.maxtopo
+            )
+            land_step = (abs(self.solver.maxtopo) / 1) / self.land.shape[0]
+            land_index = abs(
+                int((land_elevation) / land_step)
+            )  # which color interval we're in
+            land_index = max(
+                0, min(land_index + 0.0 * self.land.shape[0], self.land.shape[0] - 2)
+            )  # clamp index to avoid out-of-bounds
+            land_t = (
+                land_elevation - land_index * land_step
+            ) / land_step  # fractional position between the colors
+            self.image[i, j] = (
+                self.land[land_index] * (1 - land_t)
+                + self.land[land_index + 1] * land_t
+            )
+            # ti.Vector(
+            # [0.6 + land_elevation * 0.4, 0.4 + land_elevation * 0.3, 0.25]
+            # )
 
     @ti.kernel  # noqa: F405
     def painting_vor(self):  # noqa: D102
@@ -333,8 +407,11 @@ class Evolve:  # noqa: D101
             vor = (v_right - v) / self.solver.dx - (u_up - u) / self.solver.dy
 
             vor = (vor - self.vmin) / (self.vmax - self.vmin)
-            land = max(0.0, B)  # only positive topo
-            land_elevation = land / self.solver.maxtopo  # Topo normalized
+            # land = max(0.0, B)  # only positive topo
+            land = B
+            # land_elevation = land / self.solver.maxtopo  # Topo normalized
+            # land_elevation = land
+            land_elevation = abs(land - self.solver.base_depth)
             index = int(vor / step)  # which color interval we're in
             index = ti.min(  # noqa: F405
                 index, num_colors - 2
@@ -344,14 +421,29 @@ class Evolve:  # noqa: D101
                 self.image[i, j] = (
                     self.ocean[index] * (1 - t) + self.ocean[index + 1] * t
                 )
-            elif -0.25 < h < 0:  # noqa: PLR2004
+                continue
+            if -0.25 < h < 0:  # noqa: PLR2004
                 self.image[i, j] = ti.Vector(  # noqa: F405
                     [0.8039, 0.7921, 0.7372]
                 )  # Wet Sand
-            else:
-                self.image[i, j] = ti.Vector(  # noqa: F405
-                    [0.6 + land_elevation * 0.4, 0.4 + land_elevation * 0.3, 0.25]
-                )
+                continue
+            land_shift = abs(self.solver.maxtopo) / abs(  # noqa: F841
+                self.solver.base_depth - self.solver.maxtopo
+            )
+            land_step = (abs(self.solver.maxtopo) / 1) / self.land.shape[0]
+            land_index = abs(
+                int((land_elevation) / land_step)
+            )  # which color interval we're in
+            land_index = max(
+                0, min(land_index + 0.0 * self.land.shape[0], self.land.shape[0] - 2)
+            )  # clamp index to avoid out-of-bounds
+            land_t = (
+                land_elevation - land_index * land_step
+            ) / land_step  # fractional position between the colors
+            self.image[i, j] = (
+                self.land[land_index] * (1 - land_t)
+                + self.land[land_index + 1] * land_t
+            )
 
     @ti.kernel  # noqa: F405
     def paint(self):  # noqa: D102
@@ -382,6 +474,7 @@ class Evolve:  # noqa: D101
         vmax=None,
         variable='h',
         cmapWater='Blues_r',  # noqa: N803
+        cmapLand='terrain',  # noqa: N803
         showSediment=False,  # noqa: FBT002, N803
     ):
         if vmin != None:  # noqa: E711
@@ -417,18 +510,21 @@ class Evolve:  # noqa: D101
         if showSediment:
             cmap = celeris_matplotlib(  # noqa: F405
                 water=cmapWater,
+                land=cmapLand,
                 sediment='afmhot_r',
                 SedTrans=self.solver.useSedTransModel,
             )
         else:
-            cmap = celeris_matplotlib(water=cmapWater)  # noqa: F405, F841
+            cmap = celeris_matplotlib(water=cmapWater, land=cmapLand)  # noqa: F405, F841
         # cmap = celeris_waves()
         # cmap = celeris_matplotlib(water='Blues_r',sediment='afmhot_r', SedTrans=self.useSedTransModel )
 
         self.Evolve_0()
         # Set colors - using the matplotlib colormapsand convert these into Taichi tensors
         numpy_ocean = ColorsfromMPL(cmapWater)  # noqa: F405
-        self.InitColors(numpy_ocean)
+        numpy_land = ColorsfromMPL(cmapLand)  # noqa: F405
+
+        self.InitColors(ocean_arr=numpy_ocean, land_arr=numpy_land)
 
         start_time = time.time()
 
@@ -456,12 +552,16 @@ class Evolve:  # noqa: D101
                 )  # using the Taichi tensors to render the image
             self.Evolve_Steps(i)
 
-            if i == 1:
+            self.buffer_step = 1
+            self.render_step = 10
+            self.image_step = 100
+            self.state_step = 1000
+
+            if i == self.buffer_step:
                 start_time = (
                     time.time() - 0.00001
                 )  # reset the "start" time as there is overhead before loop starts, and add small shift to prevent float divide by zero
-
-            if i == 1 or (i % 100) == 0:
+            if i == self.buffer_step or (i % self.image_step) == 0:
                 compTime = time.time() - start_time  # noqa: N806
                 print(  # noqa: T201
                     f'Current Simulation time: {self.dt*i:2.2f}s at step: {i}-- Ratio:{(self.dt*i)/compTime:2.2f}--CompTime:{compTime:2.2f}'
@@ -469,60 +569,75 @@ class Evolve:  # noqa: D101
                 frame = int(i)
                 frame_filename = f'frame_{frame}.png'
                 frame_path = os.path.join(base_frame_dir, frame_filename)  # noqa: PTH118
+
                 frame_paths.append(frame_path)
                 if self.saveimg:
                     if use_ggui:
                         window.save_image(frame_path)
                     else:
-                        tools.imwrite(self.solver.pixel.to_numpy(), frame_path)
+                        # picture = self.image.to_numpy() * 255.0
+                        tools.imwrite(self.image.to_numpy(), frame_path)
 
-                # if self.saveimg and not use_ggui:
-                #     try:
-                #         window.show(frame_path)
-                #     except Exception as e:
-                #         print(f"Error showing frame: {e},  fallback to tools.imwrite...")
-                #         try:
-                #             tools.imwrite(self.solver.pixel.to_numpy(), frame_path)
-                #             frame_paths.append(frame_path)
-                #         except Exception as e:
-                #             print(f"Error writing frame with tools.imwrite: {e}")
-                #     else:
-                #         frame_paths.append(frame_path)
-                # elif self.saveimg and use_ggui:
-                #     try:
-                #         tools.imwrite(self.solver.pixel.to_numpy(), frame_path)
-                #         frame_paths.append(frame_path)
-                #     except Exception as e:
-                #         print(f"Error writing frame with tools.imwrite: {e}")
-                # elif not use_ggui and not self.saveimg:
-                #     window.show()
-                # else:
-                #     print("WARNING - No output method selected, frame not saved or displayed...")
-                # if not use_ggui:
-                #     continue
+                    # if self.saveimg and not use_ggui:
+                    #     try:
+                    #         window.show(frame_path)
+                    #     except Exception as e:
+                    #         print(f"Error showing frame: {e},  fallback to tools.imwrite...")
+                    #         try:
+                    #             tools.imwrite(self.solver.pixel.to_numpy(), frame_path)
+                    #             frame_paths.append(frame_path)
+                    #         except Exception as e:
+                    #             print(f"Error writing frame with tools.imwrite: {e}")
+                    #     else:
+                    #         frame_paths.append(frame_path)
+                    # elif self.saveimg and use_ggui:
+                    #     try:
+                    #         tools.imwrite(self.solver.pixel.to_numpy(), frame_path)
+                    #         frame_paths.append(frame_path)
+                    #     except Exception as e:
+                    #         print(f"Error writing frame with tools.imwrite: {e}")
+                    # elif not use_ggui and not self.saveimg:
+                    #     window.show()
+                    # else:
+                    #     print("WARNING - No output method selected, frame not saved or displayed...")
+                    # if not use_ggui:
+                    #     continue
+            if i == self.buffer_step or (i % self.state_step) == 0:
+                if self.saveimg:
+                    # window.show()
+                    if self.solver.outdir and not self.outdir:
+                        self.outdir = self.solver.outdir
+                        os.makedirs(self.outdir, exist_ok=True)  # noqa: PTH103
 
-                # window.show()
-                if self.solver.outdir:
-                    state = self.solver.State.to_numpy()
-                    np.save(f'{self.outdir}/state_{int(i)}.npy', state)  # noqa: F405
+                    if self.outdir:
+                        state = self.solver.State.to_numpy()
+                        np.save(f'{self.outdir}/state_{int(i)}.npy', state)  # noqa: F405
+
             # Show window in the right position (after save image) for GGUI systems
-            if i % 5 == 0:
+            if i % self.render_step == 0:
                 # Improve the performance.The visualization is done only every 5 timesteps
                 window.show()
 
             if i > self.maxsteps:
-                if frame_paths:  # Check if there are frames to create a GIF
-                    gif_filename = 'video.gif'
-                    gif_path = os.path.join(base_frame_dir, gif_filename)  # noqa: PTH118
-                    try:
-                        with imageio.get_writer(
-                            gif_path, mode='I', duration=0.1
-                        ) as writer:
-                            for frame_path in frame_paths:
-                                image = imageio.imread(frame_path)
-                                writer.append_data(image)
-                        print(f'GIF created at {gif_path}')  # noqa: T201
-                    except Exception as e:  # noqa: BLE001
-                        print(f'Error creating GIF: {e}')  # noqa: T201
+                if self.saveimg:
+                    print('Creating GIF...')  # noqa: T201
+                    if frame_paths:  # Check if there are frames to create a GIF
+                        print(  # noqa: T201
+                            'Stitching frames ',
+                            str(len(frame_paths)),
+                            ' together...',
+                        )
+                        gif_filename = 'video.gif'
+                        gif_path = os.path.join(base_frame_dir, gif_filename)  # noqa: PTH118
+                        try:
+                            with imageio.get_writer(
+                                gif_path, mode='I', duration=0.1
+                            ) as writer:
+                                for frame_path in frame_paths:
+                                    image = imageio.imread(frame_path)
+                                    writer.append_data(image)
+                            print(f'GIF created at {gif_path}')  # noqa: T201
+                        except Exception as e:  # noqa: BLE001
+                            print(f'Error creating GIF: {e}')  # noqa: T201
                 break
             i = i + 1

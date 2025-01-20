@@ -203,10 +203,11 @@ class Solver:  # noqa: D101
         self.whiteWaterDecayRate = whiteWaterDecayRate
         self.whiteWaterDispersion = whiteWaterDispersion
         self.delta_breaking = delta_breaking
-        self.theta = theta
+        self.theta = theta  # Mixing parameter between upwind and centered (1-upwind, 2-centered), typically 1.5
         self.delta = ti.min(0.005, self.base_depth / 5000.0)
         self.epsilon = ti.pow(self.delta, 2)
         self.g = self.domain.g
+        self.water_density = 1000.0
         self.dt = self.domain.dt()
         self.isManning = self.domain.isManning
         self.friction = self.domain.friction
@@ -311,6 +312,12 @@ class Solver:  # noqa: D101
             else:
                 self.useBreakingModel = useBreakingModel
 
+            if checjson('showBreaking', self.bc.configfile) == 1:
+                self.showBreaking = int(self.bc.configfile['showBreaking'])
+
+            if not self.useBreakingModel:
+                self.showBreaking = 0
+
             if checjson('T_star_coef', self.bc.configfile) == 1:
                 # defines length of time until breaking becomes fully developed
                 self.T_star_coef = float(self.bc.configfile['T_star_coef'])
@@ -358,7 +365,10 @@ class Solver:  # noqa: D101
                     self.sediment.rhorat = float(self.bc.configfile['sedC1_denrat'])
                 # Sediment parameters must be computed
                 self.sediment.Shields = 1.0 / (
-                    (self.sediment.rhorat - 1.0) * 9.81 * self.sediment.d50 / 1000.0
+                    (self.sediment.rhorat - 1.0)
+                    * self.g
+                    * self.sediment.d50
+                    / 1000.0
                 )
                 self.sediment.C_erosion = self.sediment.psi * ti.pow(
                     self.sediment.d50 / 1000.0, -0.2
@@ -366,7 +376,7 @@ class Solver:  # noqa: D101
                 self.sediment.C_settling = ti.sqrt(
                     4.0
                     / 3.0
-                    * 9.81
+                    * self.g
                     * self.sediment.d50
                     / 1000.0
                     / 0.2
@@ -446,8 +456,15 @@ class Solver:  # noqa: D101
         return result
 
     @ti.func
-    def SolitaryWave(self, x0, y0, theta, x, y, t, d_here):  # noqa: N802, D102
-        amp = self.bc.amplitude
+    def SolitaryWave(self, x0, y0, theta, x, y, t, d_here, amp=0.0):  # noqa: N802, D102
+        if amp == 0.0:
+            amp = self.bc.amplitude
+
+        # if T == 0.0:
+        #     T = self.bc.period
+        #     if self.bc.period <= 0.0:
+        #         T = 2.0 * self.pi * ti.sqrt(ti.abs(amp) / (self.g * d_here))
+
         xloc = x - x0
         yloc = y - y0
         k = ti.sqrt(0.75 * ti.abs(amp) / ti.pow(d_here, 3.0))
@@ -462,12 +479,24 @@ class Solver:  # noqa: D101
     @ti.kernel
     def BoundaryPass(self, time: ti.f32, txState: ti.template()):  # noqa: C901, N802, N803, D102, PLR0915
         # for i,j in txState:
+        # make enum for bc type
+        BOUNDARY_TYPE_SOLID = 0  # noqa: N806
+        BOUNDARY_TYPE_SPONGE = 1  # noqa: N806
+        BOUNDARY_TYPE_SINE = 2  # noqa: N806
+        BOUNDARY_TYPE_DAM = 3  # noqa: N806, F841
+
+        WAVE_TYPE_SINE = 2  # noqa: N806
+        WAVE_TYPE_SOLITARY = 3  # noqa: N806
+
         for i, j in ti.ndrange((0, self.nx), (0, self.ny)):
             BCState = txState[i, j]  # noqa: N806
             BCState_Sed = self.State_Sed[i, j].x  # noqa: N806
             BCState_Sed = ti.max(BCState_Sed, 0.0)  # noqa: N806
             ### SPONGE LAYERS
-            if self.bcWest == 1 and i <= 2 + self.bc.BoundaryWidth:
+            if (
+                self.bcWest == BOUNDARY_TYPE_SPONGE
+                and i <= 2 + self.bc.BoundaryWidth
+            ):
                 gamma = ti.pow(
                     0.5
                     * (
@@ -483,7 +512,10 @@ class Solver:  # noqa: D101
                 )
                 BCState = txState[i, j] * self.precision(gamma)  # noqa: N806
                 BCState_Sed = 0.0  # noqa: N806
-            if self.bcEast == 1 and i >= self.nx - (self.bc.BoundaryWidth) - 1:
+            if (
+                self.bcEast == BOUNDARY_TYPE_SPONGE
+                and i >= self.nx - (self.bc.BoundaryWidth) - 1
+            ):
                 gamma = ti.pow(
                     0.5
                     * (
@@ -501,7 +533,10 @@ class Solver:  # noqa: D101
                 )
                 BCState = txState[i, j] * self.precision(gamma)  # noqa: N806
                 BCState_Sed = 0.0  # noqa: N806
-            if self.bcSouth == 1 and j <= 2 + self.bc.BoundaryWidth:
+            if (
+                self.bcSouth == BOUNDARY_TYPE_SPONGE
+                and j <= 2 + self.bc.BoundaryWidth
+            ):
                 gamma = ti.pow(
                     0.5
                     * (
@@ -517,7 +552,10 @@ class Solver:  # noqa: D101
                 )
                 BCState = txState[i, j] * self.precision(gamma)  # noqa: N806
                 BCState_Sed = 0.0  # noqa: N806
-            if self.bcNorth == 1 and j >= self.ny - self.bc.BoundaryWidth - 1:
+            if (
+                self.bcNorth == BOUNDARY_TYPE_SPONGE
+                and j >= self.ny - self.bc.BoundaryWidth - 1
+            ):
                 gamma = ti.pow(
                     0.5
                     * (
@@ -536,7 +574,10 @@ class Solver:  # noqa: D101
                 BCState = txState[i, j] * self.precision(gamma)  # noqa: N806
                 BCState_Sed = 0.0  # noqa: N806
             ### SOLID WALLS
-            if self.bcWest <= 1:
+            if (
+                self.bcWest == BOUNDARY_TYPE_SOLID  # noqa: PLR1714
+                or self.bcWest == BOUNDARY_TYPE_SPONGE
+            ):
                 if i <= 1:
                     BCState[0] = txState[self.BCShift - i, j][0]
                     BCState[1] = -txState[self.BCShift - i, j][1]
@@ -546,7 +587,10 @@ class Solver:  # noqa: D101
                 elif i == 2:  # noqa: PLR2004
                     BCState[1] = 0.0
                     BCState_Sed = 0.0  # noqa: N806
-            if self.bcEast <= 1:
+            if (
+                self.bcEast == BOUNDARY_TYPE_SOLID  # noqa: PLR1714
+                or self.bcEast == BOUNDARY_TYPE_SPONGE
+            ):
                 if i >= self.nx - 2:
                     BCState[0] = txState[self.R_x - i, j][0]
                     BCState[1] = -txState[self.R_x - i, j][1]
@@ -556,7 +600,10 @@ class Solver:  # noqa: D101
                 elif i == self.nx - 3:
                     BCState[1] = 0.0
                     BCState_Sed = 0.0  # noqa: N806
-            if self.bcSouth <= 1:
+            if (
+                self.bcSouth == BOUNDARY_TYPE_SOLID  # noqa: PLR1714
+                or self.bcSouth == BOUNDARY_TYPE_SPONGE
+            ):
                 if j <= 1:
                     BCState[0] = txState[i, self.BCShift - j][0]
                     BCState[1] = txState[i, self.BCShift - j][1]
@@ -566,7 +613,10 @@ class Solver:  # noqa: D101
                 elif j == 2:  # noqa: PLR2004
                     BCState[2] = 0.0
                     BCState_Sed = 0.0  # noqa: N806
-            if self.bcNorth <= 1:
+            if (
+                self.bcNorth == BOUNDARY_TYPE_SOLID  # noqa: PLR1714
+                or self.bcNorth == BOUNDARY_TYPE_SPONGE
+            ):
                 if j >= self.ny - 2:
                     BCState[0] = txState[i, self.R_y - j][0]
                     BCState[1] = txState[i, self.R_y - j][1]
@@ -577,8 +627,8 @@ class Solver:  # noqa: D101
                     BCState[2] = 0.0
                     BCState_Sed = 0.0  # noqa: N806
             ### INCOMING WALLS
-            if self.bcWest == 2 and i <= 2:  # noqa: PLR2004
-                if self.bc.WaveType <= 2:  # noqa: PLR2004
+            if self.bcWest == BOUNDARY_TYPE_SINE and i <= 2:  # noqa: PLR2004
+                if self.bc.WaveType <= WAVE_TYPE_SINE:
                     B_here = -self.base_depth  # noqa: N806
                     d_here = ti.max(0, -B_here)
                     x = i * self.dx
@@ -597,19 +647,29 @@ class Solver:  # noqa: D101
                         self.precision,
                     )
                     BCState_Sed = 0.0  # noqa: N806
-                elif self.bc.WaveType == 3:  # noqa: PLR2004
-                    d_here = max(0, self.nSL - self.Bottom[2, i, j])
-                    x0 = -10.0 * self.base_depth
+                elif self.bc.WaveType == WAVE_TYPE_SOLITARY:
+                    d_here = max(0, self.wSL - self.Bottom[2, i, j])
+                    celerity = ti.sqrt(self.g * (self.bc.amplitude + abs(d_here)))
+                    development_length = celerity * self.bc.period / 1.5
+                    # development_length = max(development_length, 10.0 * self.base_depth)
+                    development_length = max(
+                        development_length,
+                        ti.sqrt(self.g * abs(self.base_depth))
+                        * self.bc.period
+                        / 1.5,
+                    )
+                    x0 = -1.0 * abs(development_length)
+                    y0 = 0.0
                     eta, hu, hv = self.SolitaryWave(
-                        x0, 0.0, 0.0, i * self.dx, j * self.dy, time, d_here
+                        x0, y0, 0.0, i * self.dx, j * self.dy, time, d_here
                     )
                     BCState = ti.Vector(  # noqa: N806
                         [eta + self.wSL, hu, hv, 0.0], self.precision
                     )
                     BCState_Sed = 0.0  # noqa: N806
 
-            if self.bcEast == 2 and i >= self.nx - 3:  # noqa: PLR2004
-                if self.bc.WaveType <= 2:  # noqa: PLR2004
+            if self.bcEast == BOUNDARY_TYPE_SINE and i >= self.nx - 3:
+                if self.bc.WaveType <= WAVE_TYPE_SINE:
                     B_here = -self.base_depth  # noqa: N806
                     d_here = ti.max(0, -B_here)
                     x = i * self.dx
@@ -628,9 +688,18 @@ class Solver:  # noqa: D101
                         self.precision,
                     )
                     BCState_Sed = 0.0  # noqa: N806
-                elif self.bc.WaveType == 3:  # noqa: PLR2004
-                    d_here = max(0, self.nSL - self.Bottom[2, i, j])
-                    x0 = self.nx * self.dx + 10.0 * self.base_depth
+                elif self.bc.WaveType == WAVE_TYPE_SOLITARY:
+                    d_here = max(0, self.eSL - self.Bottom[2, i, j])
+                    celerity = ti.sqrt(self.g * (self.bc.amplitude + abs(d_here)))
+                    development_length = celerity * self.bc.period / 1.5
+                    # development_length = max(development_length, 10.0 * self.base_depth)
+                    development_length = max(
+                        development_length,
+                        ti.sqrt(self.g * abs(self.base_depth))
+                        * self.bc.period
+                        / 1.5,
+                    )
+                    x0 = self.nx * self.dx + abs(development_length)
                     y0 = 0.0
                     theta = -3.1415
                     eta, hu, hv = self.SolitaryWave(
@@ -641,8 +710,8 @@ class Solver:  # noqa: D101
                     )
                     BCState_Sed = 0.0  # noqa: N806
 
-            if self.bcSouth == 2 and j <= 2:  # noqa: PLR2004
-                if self.bc.WaveType <= 2:  # noqa: PLR2004
+            if self.bcSouth == BOUNDARY_TYPE_SINE and j <= 2:  # noqa: PLR2004
+                if self.bc.WaveType <= WAVE_TYPE_SINE:
                     B_here = -self.base_depth  # noqa: N806
                     d_here = ti.max(0, -B_here)
                     x = i * self.dx
@@ -661,10 +730,19 @@ class Solver:  # noqa: D101
                         self.precision,
                     )
                     BCState_Sed = 0.0  # noqa: N806
-                elif self.bc.WaveType == 3:  # noqa: PLR2004
-                    d_here = max(0, self.nSL - self.Bottom[2, i, j])
+                elif self.bc.WaveType == WAVE_TYPE_SOLITARY:
+                    d_here = max(0, self.sSL - self.Bottom[2, i, j])
+                    celerity = ti.sqrt(self.g * (self.bc.amplitude + abs(d_here)))
+                    development_length = celerity * self.bc.period / 1.5
+                    # development_length = max(development_length, 10.0 * self.base_depth)
+                    development_length = max(
+                        development_length,
+                        ti.sqrt(self.g * abs(self.base_depth))
+                        * self.bc.period
+                        / 1.5,
+                    )
                     x0 = 0.0
-                    y0 = -10.0 * self.base_depth
+                    y0 = -1.0 * abs(development_length)
                     theta = 3.1415 / 2.0
                     eta, hu, hv = self.SolitaryWave(
                         x0, y0, theta, i * self.dx, j * self.dy, time, d_here
@@ -674,8 +752,8 @@ class Solver:  # noqa: D101
                     )
                     BCState_Sed = 0.0  # noqa: N806
 
-            if self.bcNorth == 2 and j >= self.ny - 3:  # noqa: PLR2004
-                if self.bc.WaveType <= 2:  # noqa: PLR2004
+            if self.bcNorth == BOUNDARY_TYPE_SINE and j >= self.ny - 3:
+                if self.bc.WaveType <= WAVE_TYPE_SINE:
                     B_here = -self.base_depth  # noqa: N806
                     d_here = ti.max(0, -B_here)
                     x = i * self.dx
@@ -695,13 +773,23 @@ class Solver:  # noqa: D101
                     )
                     BCState_Sed = 0.0  # noqa: N806
                 # Solitary Waves
-                elif self.bc.WaveType == 3:  # noqa: PLR2004
+                elif self.bc.WaveType == WAVE_TYPE_SOLITARY:
                     d_here = max(0, self.nSL - self.Bottom[2, i, j])
-                    y0 = self.ny * self.dy + 10.0 * self.base_depth
+                    celerity = ti.sqrt(self.g * (self.bc.amplitude + abs(d_here)))
+                    development_length = celerity * self.bc.period / 1.5
+                    # development_length = max(development_length, 10.0 * self.base_depth)
+                    development_length = max(
+                        development_length,
+                        ti.sqrt(self.g * abs(self.base_depth))
+                        * self.bc.period
+                        / 1.5,
+                    )
+                    x0 = 0.0
+                    y0 = self.ny * self.dy + abs(development_length)
                     theta = -3.1415 / 2.0
                     # SolitaryWave(x0 , y0 , theta , x , y , t , d_here):
                     eta, hu, hv = self.SolitaryWave(
-                        0.0, y0, theta, i * self.dx, j * self.dy, time, d_here
+                        x0, y0, theta, i * self.dx, j * self.dy, time, d_here
                     )
                     BCState = ti.Vector(  # noqa: N806
                         [eta + self.nSL, hu, hv, 0.0], self.precision
@@ -1018,6 +1106,18 @@ class Solver:  # noqa: D101
             maxInundatedDepth = max(  # noqa: N806
                 (h[0] + h[1] + h[2] + h[3]) / 4, self.Auxiliary[i, j][0]
             )
+            maxVelocityU = max(  # noqa: N806
+                (output_u[0] + output_u[1] + output_u[2] + output_u[3]) / 4,
+                self.Auxiliary[i, j][1],
+            )
+            maxVelocityV = max(  # noqa: N806
+                (output_v[0] + output_v[1] + output_v[2] + output_v[3]) / 4,
+                self.Auxiliary[i, j][2],
+            )
+            maxVelocityC = max(  # noqa: N806
+                (output_c[0] + output_c[1] + output_c[2] + output_c[3]) / 4,
+                self.Auxiliary[i, j][3],
+            )
 
             # Write H, U, V, C vector fields
             self.H[i, j] = h
@@ -1025,7 +1125,8 @@ class Solver:  # noqa: D101
             self.V[i, j] = output_v
             self.C[i, j] = output_c
             self.Auxiliary[i, j] = ti.Vector(
-                [maxInundatedDepth, 0.0, 0.0, 0.0], self.precision
+                [maxInundatedDepth, maxVelocityU, maxVelocityV, maxVelocityC],
+                self.precision,
             )
 
     @ti.kernel

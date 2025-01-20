@@ -36,11 +36,16 @@ class Topodata:  # noqa: D101
     def z(self):  # noqa: D102
         if self.datatype == 'xyz':
             if self.path != None:  # noqa: E711
+                if self.filename == None:  # noqa: E711
+                    self.filename = 'test_curve.xyz'
                 return np.loadtxt(os.path.join(self.path, self.filename))  # noqa: PTH118
             return np.loadtxt(self.filename)
-        if self.datatype == 'celeris':
-            bathy = np.loadtxt(os.path.join(self.path, 'bathy.txt'))  # noqa: PTH118
-            return bathy * -1
+        if self.datatype == 'celeris' or self.datatype == 'txt':  # noqa: PLR1714
+            if self.path != None:  # noqa: E711
+                if self.filename == None:  # noqa: E711
+                    self.filename = 'bathy.txt'
+                bathy = np.loadtxt(os.path.join(self.path, self.filename))  # noqa: PTH118
+                return bathy * -1
         return 'No supported format'
 
 
@@ -49,7 +54,7 @@ class BoundaryConditions:
     0: solid wall  ; 1: Sponge   ; 2:SineWaves   ; 3:DamBreak
     """  # noqa: D200, D400
 
-    def __init__(
+    def __init__(  # noqa: C901
         self,
         celeris=True,  # noqa: FBT002
         precision=ti.f32,
@@ -59,8 +64,10 @@ class BoundaryConditions:
         West=None,  # noqa: N803
         WaveType=-1,  # noqa: N803
         Amplitude=0.5,  # noqa: N803
+        Period=10.0,  # noqa: N803
         path='./scratch',
-        filename='waves.txt',
+        configfile='config.json',
+        wavefile='waves.txt',
         BoundaryWidth=20,  # noqa: N803
         init_eta=5,
         sine_wave=[0, 0, 0, 0],  # noqa: B006
@@ -77,13 +84,21 @@ class BoundaryConditions:
         self.W_data = None
         self.init_eta = init_eta
         self.amplitude = Amplitude
+        self.period = Period
         self.path = path
         self.configfile = None
         self.celeris = celeris
+        self.wavefile = None
         if self.celeris == True:  # noqa: E712
-            filename = 'waves.txt'
-            with open(os.path.join(self.path, 'config.json')) as uf:  # noqa: PTH118, PTH123
+            filename = wavefile
+            with open(os.path.join(self.path, configfile)) as uf:  # noqa: PTH118, PTH123
                 self.configfile = json.load(uf)
+            if checjson('WaveType', self.configfile) == 1:
+                self.WaveType = int(self.configfile['WaveType'])
+            if checjson('amplitude', self.configfile) == 1:
+                self.amplitude = float(self.configfile['amplitude'])
+            if checjson('period', self.configfile) == 1:
+                self.period = float(self.configfile['period'])
             if checjson('BoundaryWidth', self.configfile) == 1:
                 self.BoundaryWidth = int(self.configfile['BoundaryWidth'])
             else:
@@ -112,6 +127,7 @@ class BoundaryConditions:
             self.East = East
 
         if self.WaveType == -1:
+            self.wavefile = wavefile  # Just a string filename without a path, not a json object as for self.configfile
             self.filename = os.path.join(path, filename)  # noqa: PTH118
 
     def Sponge(self, width=None):  # noqa: N802, D102
@@ -128,8 +144,9 @@ class BoundaryConditions:
 
     def load_data(self):  # noqa: D102
         if self.WaveType == -1:
-            with open(self.filename) as wavefile:  # noqa: PTH123
-                for line in wavefile:
+            self.filename = os.path.join(self.path, self.wavefile)  # noqa: PTH118
+            with open(self.filename) as wf:  # noqa: PTH123
+                for line in wf:
                     if 'NumberOfWaves' in line:
                         self.N_data = int(line.split()[1])
             temp = np.loadtxt(self.filename, skiprows=3, dtype=ti2np(self.precision))
@@ -162,6 +179,8 @@ class Domain:  # noqa: D101
         y2=0.0,
         Nx=1,  # noqa: N803
         Ny=1,  # noqa: N803
+        path='./scratch',
+        configfile='config.json',
         topodata=None,
         north_sl=0.0,
         south_sl=0.0,
@@ -187,10 +206,11 @@ class Domain:  # noqa: D101
         self.west_sl = west_sl
         self.seaLevel = 0.0
         self.g = 9.80665
+        self.path = path
         self.configfile = None
         self.Boundary_shift = BoundaryShift
-        if self.topodata.datatype == 'celeris':
-            with open(os.path.join(self.topodata.path, 'config.json')) as uf:  # noqa: PTH118, PTH123
+        if self.topodata.datatype == 'celeris' or self.topodata.datatype == 'txt':  # noqa: PLR1714
+            with open(os.path.join(self.path, configfile)) as uf:  # noqa: PTH118, PTH123
                 self.configfile = json.load(uf)
             if checjson('WIDTH', self.configfile) == 1:
                 self.Nx = int(self.configfile['WIDTH'])
@@ -224,6 +244,57 @@ class Domain:  # noqa: D101
                 self.isManning = int(self.configfile['isManning'])
             else:
                 self.isManning = isManning
+            if checjson('boundary_shift', self.configfile) == 1:
+                self.Boundary_shift = int(self.configfile['boundary_shift'])
+
+            # Sea level is not a constant, it is a time series, but we can set the initial value here
+            # Allow for north, south, east, and west sea levels to be different from each other
+            # TODO: interpolate between the four corners to get the sea level at each exterior grid-line points  # noqa: TD002
+            # TODO: interpolate between NWSE sea levels to get the sea level at each grid point  # noqa: TD002
+            # TODO: interpolate between exterior grid-line sea levels and interior topography to get the sea level at each grid point  # noqa: TD002
+            if checjson('seaLevel', self.configfile) == 1:
+                self.seaLevel = float(self.configfile['seaLevel'])
+            elif checjson('sea_level', self.configfile) == 1:
+                self.seaLevel = float(self.configfile['sea_level'])
+            else:
+                self.seaLevel = 0.0
+
+            if checjson('north_seaLevel', self.configfile) == 1:
+                self.north_sl = float(self.configfile['north_seaLevel'])
+            elif checjson('north_sl', self.configfile) == 1:
+                self.north_sl = float(self.configfile['north_sl'])
+            elif checjson('north_sea_level', self.configfile) == 1:
+                self.north_sl = float(self.configfile['north_sea_level'])
+            else:
+                self.north_sl = self.seaLevel
+
+            if checjson('south_seaLevel', self.configfile) == 1:
+                self.south_sl = float(self.configfile['south_seaLevel'])
+            elif checjson('south_sl', self.configfile) == 1:
+                self.south_sl = float(self.configfile['south_sl'])
+            elif checjson('south_sea_level', self.configfile) == 1:
+                self.south_sl = float(self.configfile['south_sea_level'])
+            else:
+                self.south_sl = self.seaLevel
+
+            if checjson('east_seaLevel', self.configfile) == 1:
+                self.east_sl = float(self.configfile['east_seaLevel'])
+            elif checjson('east_sl', self.configfile) == 1:
+                self.east_sl = float(self.configfile['east_sl'])
+            elif checjson('east_sea_level', self.configfile) == 1:
+                self.east_sl = float(self.configfile['east_sea_level'])
+            else:
+                self.east_sl = self.seaLevel
+
+            if checjson('west_seaLevel', self.configfile) == 1:
+                self.west_sl = float(self.configfile['west_seaLevel'])
+            elif checjson('west_sl', self.configfile) == 1:
+                self.west_sl = float(self.configfile['west_sl'])
+            elif checjson('west_sea_level', self.configfile) == 1:
+                self.west_sl = float(self.configfile['west_sea_level'])
+            else:
+                self.west_sl = self.seaLevel
+
         if self.topodata.datatype == 'xyz':
             self.dy = (self.y2 - self.y1) / self.Ny
             self.dx = (self.x2 - self.x1) / self.Nx
@@ -235,7 +306,7 @@ class Domain:  # noqa: D101
         self.pixels = ti.field(float, shape=(self.Nx, self.Ny))
 
     def topofield(self):  # noqa: D102
-        if self.topodata.datatype == 'celeris':
+        if self.topodata.datatype == 'celeris' or self.topodata.datatype == 'txt':  # noqa: PLR1714
             x_out, y_out = np.meshgrid(
                 np.arange(0.0, self.Nx * self.dx, self.dx),
                 np.arange(0, self.Ny * self.dy, self.dy),

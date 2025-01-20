@@ -1,4 +1,4 @@
-#!/usr/bin/env python3  # noqa: EXE001
+#!/usr/bin/env python3
 
 """
 This script generates an EVENT.json file using the Celeris EVT using CelerisAi (Python and Taichi Lang).
@@ -319,6 +319,30 @@ if __name__ == '__main__':
     # Get json of filenameAIM
     scriptName = GetCelerisScript(arguments.filenameAIM)  # noqa: N816
 
+    filePath = arguments.filenameAIM  # noqa: N816
+    with open(filePath, encoding='utf-8') as file:  # noqa: PTH123
+        evt = json.load(file)
+    file.close  # noqa: B018
+
+    configFilename = 'config.json'  # noqa: N816
+    bathymetryFilename = 'bathymetry.txt'  # noqa: N816
+    waveFilename = 'wave.txt'  # noqa: N816
+    caseDirectory = './examples/CrescentCity'  # noqa: N816
+
+    for event in evt['Events']:
+        # Redesign the input structure in backend CelerisAi later.
+        # For now assume waveFile, bathymetryFile, configFile, etc. are in the same directory.
+        caseDirectory = event['configFilePath']  # noqa: N816
+        configFilename = event['configFile']  # noqa: N816
+        bathymetryFilename = event['bathymetryFile']  # noqa: N816
+        waveFilename = event['waveFile']  # noqa: N816
+
+    print('Running Celeris with script:', scriptName)  # noqa: T201
+    print('Running Celeris with directory:', caseDirectory)  # noqa: T201
+    print('Running Celeris with config file:', configFilename)  # noqa: T201
+    print('Running Celeris with bathymetry:', bathymetryFilename)  # noqa: T201
+    print('Running Celeris with waves:', waveFilename)  # noqa: T201
+
     if arguments.getRV == True:  # noqa: E712
         print('RVs requested')  # noqa: T201
         # Read the number of floors
@@ -327,8 +351,16 @@ if __name__ == '__main__':
 
         result = subprocess.run(  # noqa: S603
             [  # noqa: S607
-                'ti',
+                'python3',
                 scriptName,
+                '-d',
+                caseDirectory,
+                '-f',
+                configFilename,
+                '-b',
+                bathymetryFilename,
+                '-w',
+                waveFilename,
                 # f'{os.path.realpath(os.path.dirname(__file__))}'
                 # + '/taichi_script.py',
             ],
@@ -348,8 +380,16 @@ if __name__ == '__main__':
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
         result = subprocess.run(  # noqa: S603
             [  # noqa: S607
-                'ti',
+                'python3',
                 scriptName,
+                '-d',
+                caseDirectory,
+                '-f',
+                configFilename,
+                '-b',
+                bathymetryFilename,
+                '-w',
+                waveFilename,
                 # f'{os.path.realpath(os.path.dirname(__file__))}'
                 # + '/taichi_script.py',
             ],
