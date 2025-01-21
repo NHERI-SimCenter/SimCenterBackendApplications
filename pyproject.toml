@@ -1,7 +1,14 @@
 [tool.ruff]
 line-length = 85
-# Example Taichi programs for users to test are held here until formal examples are made/documented for HydroUQ, etc. Don't need to lint/format - JustinBonus
-extend-exclude = ["modules/createEVENT/TaichiEvent"]
+
+# There was a conversation last week about whether ruff is safe enough to use for auto-fixing files, waiting for a decision on that.
+# Excluding regionalGroundMotion and capacitySpectrum from ruff, as they are not passing and preventing other PRs from getting ruff feedback.
+#
+# Quick fix: Repeat the following 3-4 times per directory until ruff is happy:
+# $ ruff check --no-cache --fix ; ruff check --no-cache --add-noqa ; ruff format --no-cache
+#
+# - JustinBonus, 2025-01-20
+extend-exclude = ["modules/createEVENT/TaichiEvent", "modules/performRegionalEventSimulation/regionalGroundMotion", "modules/performSIMULATION/capacitySpectrum"]
 
 [tool.ruff.lint]
 # Enable all known categories
@@ -9,8 +16,24 @@ select = ["ALL"]
 ignore = ["ANN", "D211", "D212", "Q000", "Q003", "COM812", "D203", "ISC001", "E501", "ERA001", "PGH003", "FIX002", "TD003", "S101", "N801", "S311", "G004", "SIM102", "SIM108", "NPY002", "F401"]
 preview = false
 
+# Excluding specific non-passing files from ruff, they are preventing all new PRs from getting ruff feedback.
+# I would lint-format them myself, but I don't want to risk breaking other people's code.
+# Workflow/whale/main.py in particular should be re-included as quickly as possible. - JustinBonus, 2025-01-20
 [tool.ruff.lint.per-file-ignores]
 "*.ipynb" = ["ALL"]
+"modules/Workflow/whale/main.py" = ["ALL"]
+"modules/createAIM/INP_FILE/INP_FILE.py" = ["ALL"]
+"modules/createEVENT/IsolatedBuildingCFD/setup_case.py" = ["ALL"]
+"modules/createEVENT/shakeMapEvent/shakeMapEvent.py" = ["ALL"]
+"modules/performREC/transportation.py" = ["ALL"]
+"modules/systemPerformance/REWET/REWET_Wrapper.py" = ["ALL"]
+"modules/systemPerformance/ResidualDemand/run_residual_demand.py" = ["ALL"]
+"modules/systemPerformance/ResidualDemand/transportation.py" = ["ALL"]
+"modules/tools/BRAILS/runBrailsTransp.py" = ["ALL"]
+"modules/performUQ/SimCenterUQ/UQengine.py" = ["ALL"]
+"modules/performUQ/UCSD_UQ/runTMCMC.py" = ["ALL"]
+"modules/performUQ/common/uq_utilities.py" = ["ALL"]
+"modules/performUQ/dakota/DakotaUQ.py" = ["ALL"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
