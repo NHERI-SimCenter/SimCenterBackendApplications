@@ -67,6 +67,8 @@ for:
        - pip install conan==1.60.1
        - conan user
        - conan remote add simcenter https://nherisimcenter.jfrog.io/artifactory/api/conan/simcenter
+       - brew update
+       - brew install libomp
 
     install:
        - uname
