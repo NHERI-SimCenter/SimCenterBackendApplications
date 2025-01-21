@@ -8,6 +8,40 @@ image:
 stack: python 3.9
 
 for:
+  # macOS 
+  -
+    matrix:
+      only:
+        - image: macOS
+
+    clone_folder: ~/SimCenter
+
+    init:
+       - export PATH="$HOME/Qt/5.15.2/clang_64/bin:$HOME/venv3.9/bin:$PATH"
+       - python3 -m pip install --upgrade pip
+       - pip install conan==1.60.1
+       - conan user
+       - conan remote add simcenter https://nherisimcenter.jfrog.io/artifactory/api/conan/simcenter
+
+    install:
+       - uname
+       - rm -rf SimCenterBackendApplications
+       - git clone https://github.com/JustinBonus/SimCenterBackendApplications.git       
+
+    build_script:
+
+       # build SimCenterBackendApplications
+       - cd SimCenterBackendApplications
+       - chmod 'u+x' makeEXE.sh
+       - ./makeEXE.sh
+       - cd ..
+
+    test_script:
+       - qmake --version
+       - gcc --version
+       - python --version
+       - python3 --version
+
   # Visual Studio 2019
   -
   
@@ -53,42 +87,6 @@ for:
     test_script:
       - cmd: python --version
       
-  # macOS 
-  -
-    matrix:
-      only:
-        - image: macOS
-
-    clone_folder: ~/SimCenter
-
-    init:
-       - export PATH="$HOME/Qt/5.15.2/clang_64/bin:$HOME/venv3.9/bin:$PATH"
-       - python3 -m pip install --upgrade pip
-       - pip install conan==1.60.1
-       - conan user
-       - conan remote add simcenter https://nherisimcenter.jfrog.io/artifactory/api/conan/simcenter
-       - brew update
-       - brew install libomp
-
-    install:
-       - uname
-       - rm -rf SimCenterBackendApplications
-       - git clone https://github.com/JustinBonus/SimCenterBackendApplications.git       
-
-    build_script:
-
-       # build SimCenterBackendApplications
-       - cd SimCenterBackendApplications
-       - chmod 'u+x' makeEXE.sh
-       - ./makeEXE.sh
-       - cd ..
-
-    test_script:
-       - qmake --version
-       - gcc --version
-       - python --version
-       - python3 --version
-
   # Ubuntu1804 
   -
     matrix:
