@@ -547,9 +547,10 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 	}
 	else if (inp.femAppName.compare("unknown") == 0) {
 		//*ERROR*
-		std::string errMsg = "FEM simulation model is unknown.";
-		theErrorFile.write(errMsg);
-		return;
+		//std::string errMsg = "FEM simulation model is unknown.";
+		//theErrorFile.write(errMsg);
+		//return;
+		//EE-UQ and other apps don't use fem app name
 	}
 
 	//
