@@ -822,7 +822,7 @@ class REWETPyReCoDes:
             node_new_demand = 0
 
             for bldg_id in building_name_list:
-                # Nikola: We take the demand directly from the buidling general information, not based on population ratio.
+                # Nikola: We take the demand directly from the building general information, not based on population ratio.
                 # cur_bldg_initial_demand = self.buildings[bldg_id]['initial_demand']
 
                 # cur_bldg_deamnd_ratio = building[bldg_id]['GeneralInformation'][
