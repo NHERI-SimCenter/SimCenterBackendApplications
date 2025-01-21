@@ -82,7 +82,7 @@ if a.system == "Darwin" and (not a.machine=='x86_64'):
 # checking if nheri-simcenter is installed
 if not ('nheri-simcenter' in [p.project_name for p in pkg_resources.working_set]):
     if (platform.system() == 'Windows'):
-        raise ValueError(f"Essential python package (nheri-simcenter) is not installed. Please go to file-preference and press reset to initalize the python path.")
+        raise ValueError(f"Essential python package (nheri-simcenter) is not installed. Please go to file-preference and press reset to initialize the python path.")
         exit(-2)
     else:
         raise ValueError(f"Essential python package (nheri-simcenter) is not installed. Please follow the installation instruction or run: {python_path} -m pip3 install nheri-simcenter")

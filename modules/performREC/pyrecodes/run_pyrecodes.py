@@ -127,18 +127,18 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
     if 'PotableWater' in system_config['Resources']:
         resources_to_plot.append('PotableWater')
         units_to_plot.append(system_config['Resources']['PotableWater'].get('Unit', 'unit_PotableWater'))
-    for recource, unit in zip(resources_to_plot, units_to_plot):
-        y_axis_label = f'{recource} {unit} | {system.resilience_calculators[0].scope}'
+    for resource, unit in zip(resources_to_plot, units_to_plot):
+        y_axis_label = f'{resource} {unit} | {system.resilience_calculators[0].scope}'
         x_axis_label = 'Time step [day]'
         axis_object = plotter_object.setup_lor_plot_fig(x_axis_label, y_axis_label)
         time_range = system.time_step+1
         time_steps_before_event = 10
-        plotter_object.plot_single_resource(list(range(-time_steps_before_event, time_range)), system.resilience_calculators[0].system_supply[recource][:time_range],
-                                        system.resilience_calculators[0].system_demand[recource][:time_range],
-                                        system.resilience_calculators[0].system_consumption[recource][:time_range], axis_object, warmup=time_steps_before_event,
+        plotter_object.plot_single_resource(list(range(-time_steps_before_event, time_range)), system.resilience_calculators[0].system_supply[resource][:time_range],
+                                        system.resilience_calculators[0].system_demand[resource][:time_range],
+                                        system.resilience_calculators[0].system_consumption[resource][:time_range], axis_object, warmup=time_steps_before_event,
                                         show = False
                                         )
-        plotter_object.save_current_figure(savename = f'{recource}_supply_demand_consumption.png')
+        plotter_object.save_current_figure(savename = f'{resource}_supply_demand_consumption.png')
     return True
 
 def modify_system_config_conent(system_config, input_data_dir, rwhale_run_dir):
@@ -197,8 +197,8 @@ def modify_system_config_rewet_distribution(system_config, input_data_dir, rlz_r
         The modified system configuration dictionary.
     """
     resources_config = system_config['Resources']
-    for resouces in resources_config.values():
-        distribution_model = resouces['DistributionModel']
+    for resources in resources_config.values():
+        distribution_model = resources['DistributionModel']
         if distribution_model['ClassName'] == 'REWETDistributionModel':
             distribution_model['Parameters']['INPFile'] = str(input_data_dir / distribution_model['Parameters']['INPFile'])
             if not (rlz_run_dir / 'rewet_results').exists():
@@ -211,8 +211,8 @@ def modify_system_config_rewet_distribution(system_config, input_data_dir, rlz_r
 
 def modify_system_config_residual_demand_distribution(system_config, input_data_dir, rlz_run_dir):
     resources_config = system_config['Resources']
-    for resouces in resources_config.values():
-        distribution_model = resouces['DistributionModel']
+    for resources in resources_config.values():
+        distribution_model = resources['DistributionModel']
         if distribution_model['ClassName'] == 'ResidualDemandTrafficDistributionModel':
             distribution_model['Parameters']['EdgeFile'] = str(input_data_dir / distribution_model['Parameters']['EdgeFile'])
             distribution_model['Parameters']['NodeFile'] = str(input_data_dir / distribution_model['Parameters']['NodeFile'])
@@ -395,7 +395,7 @@ def run_pyrecodes(  # noqa: C901
     with Path(system_config_file).open() as f:
         system_config = json.load(f)
 
-    # Modify the file pathes in the Content part of the system configuration
+    # Modify the file paths in the Content part of the system configuration
     system_config = modify_system_config_conent(system_config, input_data_dir,
                                                 run_dir)
 
@@ -406,7 +406,7 @@ def run_pyrecodes(  # noqa: C901
         with Path(main_file).open() as f:
             main_file_dict = json.load(f)
     else:
-        # Check the realziation value
+        # Check the realization value
         if realization is None:
             raise RuntimeError("Realization is not provided")
         elif type(realization) is not str:
@@ -461,15 +461,15 @@ def run_pyrecodes(  # noqa: C901
                         if 'Loss' in asset_id_dict:
                             loss_dist = asset_id_dict['Loss']
                             for comp in loss_dist['Repair']['Cost']:
-                                # A minmum cost of 0.00001 is set to avoid division by zero
+                                # A minimum cost of 0.00001 is set to avoid division by zero
                                 loss_dist['Repair']['Cost'][comp] = max(loss_dist['Repair']['Cost'][comp], 0.00001)
                             for comp in loss_dist['Repair']['Time']:
-                                # A minmum time of 0.00001 is set to avoid division by zero
+                                # A minimum time of 0.00001 is set to avoid division by zero
                                 loss_dist['Repair']['Time'][comp] = max(loss_dist['Repair']['Time'][comp], 0.00001)
             with Path(run_dir / f'Results_{rlz}.json').open('w') as f:
                 json.dump(results_rlz, f)
 
-            # Modify the file pathes in the REWETDistributionModel part of the system configuration
+            # Modify the file paths in the REWETDistributionModel part of the system configuration
             system_config = modify_system_config_rewet_distribution(system_config, input_data_dir, rlz_run_dir)
             system_config = modify_system_config_residual_demand_distribution(system_config, input_data_dir, rlz_run_dir)
             # Write the modified system configuration to a file
@@ -603,7 +603,7 @@ if __name__ == '__main__':
                     try:
                         cur_realization = int(float(cur_realization))
                     except:
-                        raise RuntimeError(f"The realziation for {asset_types} is not an integer: {cur_realization}")
+                        raise RuntimeError(f"The realization for {asset_types} is not an integer: {cur_realization}")
 
             realization_asset_types += asset_types + " "
             if realization is None:
@@ -611,10 +611,10 @@ if __name__ == '__main__':
             elif cur_realization < realization:
                 realization = cur_realization
 
-            print(f"The smallest realziation accross {realization_asset_types}is {realization}.")
+            print(f"The smallest realization across {realization_asset_types}is {realization}.")
 
             if realization < 0:
-                raise ValueError(f"Realization should be more than 0: realziation = {realization}")
+                raise ValueError(f"Realization should be more than 0: realization = {realization}")
 
             realization_text = ""
             for i in range(realization):

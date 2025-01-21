@@ -174,7 +174,7 @@ addVartoModelInfoFile $ModelInfoFile "numberOfProcessors" $np $pid 0
 # create the structure model
 # ============================================================================
 #  structure model will be built on the pid=0 processor all 
-#  other processors will be used for the for fundation, soil, DRM, and PML elements
+#  other processors will be used for the for foundation, soil, DRM, and PML elements
 if {$pid==0} { 
     
     if {$HaveStructure == "YES"} {
@@ -224,7 +224,7 @@ addVartoModelInfoFile $ModelInfoFile  "StructureMaxEleTag"  $StructureMaxEleTag 
 
 
 # ============================================================================
-# bulding regular elements
+# building regular elements
 # ============================================================================
 model BasicBuilder -ndm 3 -ndf 3
 # set Vs          200.0
@@ -520,7 +520,7 @@ if {$HaveStructure == "YES" } {
 }
 barrier
 # ============================================================================
-# bulding PML layer
+# building PML layer
 # ============================================================================
 if {$pid == 0} {
     if {$HaveAbsorbingElements == "YES"} {

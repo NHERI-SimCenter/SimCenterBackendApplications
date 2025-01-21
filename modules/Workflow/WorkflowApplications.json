@@ -573,6 +573,11 @@
         "ApplicationSpecificInputs": []
       },
       {
+        "Name": "Celeris",
+        "ExecutablePath": "applications/createEVENT/Celeris/Celeris.py",
+        "ApplicationSpecificInputs": []
+      },
+      {
         "Name": "GeoClawOpenFOAM",
         "ExecutablePath": "applications/createEVENT/GeoClawOpenFOAM/GeoClawOpenFOAM.py",
         "ApplicationSpecificInputs": [

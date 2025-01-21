@@ -951,7 +951,7 @@ def run_residual_demand(  # noqa: C901
                                 ]['R2Dres']
                                 if x.startswith('R2Dres_mean_RepairCost')
                             )
-                            # A minmum cost of 0.1 is set to avoid division by zero
+                            # A minimum cost of 0.1 is set to avoid division by zero
                             loss_dist['Repair']['Cost'][comp] = max(
                                 results_det[asset_type][asset_subtype][asset_id][
                                     'R2Dres'
