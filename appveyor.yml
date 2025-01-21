@@ -1,8 +1,8 @@
 version: 25.01.{build}
 
 image:
-  - Visual Studio 2019
   - macOS
+  - Visual Studio 2019
   - Ubuntu1804
 
 stack: python 3.9
