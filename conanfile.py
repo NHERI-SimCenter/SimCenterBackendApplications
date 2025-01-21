@@ -34,7 +34,7 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
         'nlopt/2.7.1',
         'boost/1.72.0',
         'kissfft/131.1.0',
-        'openblas/0.3.24',  # noqa: E501
+        'openblas/0.3.24',
     ]
 
     # Custom attributes for Bincrafters recipe conventions
