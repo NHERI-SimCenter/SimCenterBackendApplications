@@ -48,8 +48,11 @@ import gc
 import os
 import json
 import logging
+import sys
 import time
 import copy
+import importlib
+import math
 from collections import defaultdict
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -65,6 +68,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from scipy.spatial.distance import cdist
 from shapely.wkt import loads
+import warnings
 # from brails.utils.geoTools import haversine_dist
 # from brails.workflow.TransportationElementHandler import (
 #     ROADLANES_MAP,
@@ -82,6 +86,8 @@ ROADSPEED_MAP = {'S1100': 70, "S1200": 55, "S1400": 25, "S1500": 25,
                  "S1630": 25, "S1640": 25, "S1710": 25, "S1720": 25,
                  "S1730": 25, "S1740": 10, "S1750": 10, "S1780": 10,
                  "S1810": 10, "S1820": 10, "S1830": 10}
+
+METER_PER_SECOND_TO_MILES_PER_HOUR = 2.23694
 def calculate_road_capacity(nlanes: int,
                             traffic_volume_per_lane: int = 1800
                             ) -> int:
@@ -158,6 +164,7 @@ class TransportationPerformance(ABC):  # noqa: B024
         two_way_edges=False,  # noqa: FBT002
         od_file=None,
         hour_list=[],  # noqa: B006
+        tmp_dir=None,
     ):  # noqa: B006, RUF100, UP007
         """
         Initialize the TransportationPerformance class with essential data.
@@ -205,6 +212,7 @@ class TransportationPerformance(ABC):  # noqa: B024
         self.two_way_edges = two_way_edges
         self.od_file = od_file
         self.hour_list = hour_list
+        self.tmp_dir = tmp_dir
 
     # @abstractmethod
     def system_state(
@@ -346,10 +354,13 @@ class TransportationPerformance(ABC):  # noqa: B024
         orig_maxspeed = edges['maxspeed'].to_dict()
         new_capacity = edges['capacity'].apply(lambda x: [x]).to_dict()
         new_maxspeed = edges['maxspeed'].apply(lambda x: [x]).to_dict()
+        closed_links_roads_id = []
         for asset_type in self.assets:
             for asset_id, asset_id_dict in transportation_damage[asset_type].items():
                 critical_ds = int(max(list(asset_id_dict['Damage'].values())))
                 capacity_ratio = self.capacity_map[asset_type][str(critical_ds)]
+                if capacity_ratio == 0:
+                    closed_links_roads_id.append(asset_id)
                 if asset_type == 'Roadway':
                     road_ids = [int(asset_id)]
                 else:
@@ -380,12 +391,16 @@ class TransportationPerformance(ABC):  # noqa: B024
         edges = edges.rename(
             columns={'capacity_y': 'capacity', 'maxspeed_y': 'maxspeed'}
         )
+        closed_links = edges[edges.index.isin(closed_links_roads_id)]
         edges['capacity'] = edges['capacity'].apply(lambda x: 1 if x == 0 else x)
         edges['maxspeed'] = edges['maxspeed'].apply(lambda x: 0.001 if x == 0 else x)
         damged_edges_file = Path.cwd() / 'damaged_edges.csv'
+        closed_links_file = Path.cwd() / 'closed_edges.csv'
         edges = edges.reset_index().rename(columns={'index': 'id'})
+        closed_links = closed_links.reset_index().rename(columns={'index': 'id'})
         edges.to_csv(damged_edges_file, index=False)
-        return damged_edges_file
+        closed_links.to_csv(closed_links_file, index=False)
+        return damged_edges_file, closed_links_file
 
     def get_graph_network(self, csv_file_dir) -> None:  # noqa: D102
         # Get edges and nodes from the network inventory
@@ -418,7 +433,7 @@ class TransportationPerformance(ABC):  # noqa: B024
         nodes_gpd['lat'] = nodes_gpd['geometry'].apply(lambda x: x.y)
         nodes_file = os.path.join(csv_file_dir, self.csv_files['network_nodes'])  # noqa: PTH118
         nodes_gpd.to_csv(nodes_file, index=False)
-        return  # noqa: PLR1711
+
     def substep_assignment(  # noqa: PLR0913
         self,
         nodes_df=None,
@@ -438,7 +453,32 @@ class TransportationPerformance(ABC):  # noqa: B024
         beta_f=3,
         two_way_edges=False,  # noqa: FBT002
     ):
-        # open_edges_df = weighted_edges_df.loc[weighted_edges_df['fft'] < 36000]  # noqa: PLR2004
+        """
+        Perform substep assignment for transportation network simulation.
+
+        Args:
+            nodes_df (pd.DataFrame): DataFrame containing node information.
+            weighted_edges_df (pd.DataFrame): DataFrame containing edge information with weights.
+            od_ss (pd.DataFrame): DataFrame containing origin-destination pairs for the substep.
+            quarter_demand (int): Total demand for the quarter.
+            assigned_demand (int): Demand assigned in the current substep.
+            quarter_counts (int): Number of quarters in the simulation.
+            trip_info (dict): Dictionary containing trip information.
+            agent_time_limit (int): Time limit for agents.
+            sample_interval (int): Sampling interval.
+            agents_path (str): Path to agent data.
+            hour (int): Current hour of the simulation.
+            quarter (int): Current quarter of the simulation.
+            ss_id (int): Substep ID.
+            alpha_f (float): Alpha factor for travel time calculation.
+            beta_f (float): Beta factor for travel time calculation.
+            two_way_edges (bool): Flag indicating if edges are two-way.
+
+        Returns
+        -------
+            tuple: Updated edges DataFrame, residual OD list, trip information, and agent paths.
+        """
+        # open_edges_df = weighted_edges_df.loc[weighted_edges_df['fft'] < 36000]
         open_edges_df = weighted_edges_df
 
         net = pdna.Network(
@@ -583,6 +623,20 @@ class TransportationPerformance(ABC):  # noqa: B024
         hour=None,
         scen_nm=None,
     ):
+        """
+        Write edge volume data to a CSV file.
+
+            Args:
+                edges_df (pd.DataFrame): DataFrame containing edge information.
+                simulation_outputs (str): Directory to save the output files.
+                quarter (int): Current quarter of the simulation.
+                hour (int): Current hour of the simulation.
+                scen_nm (str): Scenario name for the simulation.
+
+        Returns
+        -------
+                None
+        """
         if 'flow' in edges_df.columns:
             if edges_df.shape[0] < 10:  # noqa: PLR2004
                 edges_df[
@@ -631,6 +685,20 @@ class TransportationPerformance(ABC):  # noqa: B024
         hour=None,
         scen_nm=None,
     ):
+        """
+        Write the final volume data to a CSV file.
+
+            Args:
+                edges_df (pd.DataFrame): DataFrame containing edge information.
+                simulation_outputs (str): Directory to save the output files.
+                quarter (int): Current quarter of the simulation.
+                hour (int): Current hour of the simulation.
+                scen_nm (str): Scenario name for the simulation.
+
+        Returns
+        -------
+                None
+        """
         edges_df.loc[
             edges_df['vol_tot'] > 0,
             ['uniqueid', 'start_nid', 'end_nid', 'vol_tot', 'geometry'],
@@ -651,7 +719,7 @@ class TransportationPerformance(ABC):  # noqa: B024
         scen_nm=None,
         hour_list=None,
         quarter_list=None,
-        cost_factor=None,  # noqa: ARG001
+        cost_factor=None,  # noqa: ARG002
         closure_hours=None,
         closed_links=None,
         agent_time_limit=None,
@@ -660,8 +728,37 @@ class TransportationPerformance(ABC):  # noqa: B024
         alpha_f=0.3,
         beta_f=4,
         two_way_edges=False,  # noqa: FBT002
-        save_edge_vol=True,
+        save_edge_vol=True,  # noqa: FBT002
     ):
+        """
+        Perform traffic assignment for the transportation network simulation.
+
+        Args:
+            quarter_counts (int): Number of quarters in the simulation.
+            substep_counts (int): Number of substeps in the simulation.
+            substep_size (int): Size of each substep.
+            edges_df (pd.DataFrame): DataFrame containing edge information.
+            nodes_df (pd.DataFrame): DataFrame containing node information.
+            od_all (pd.DataFrame): DataFrame containing origin-destination pairs.
+            simulation_outputs (str): Directory to save the output files.
+            scen_nm (str): Scenario name for the simulation.
+            hour_list (list): List of hours in the simulation.
+            quarter_list (list): List of quarters in the simulation.
+            cost_factor (float): Cost factor for travel time calculation.
+            closure_hours (list): List of hours when closures occur.
+            closed_links (pd.DataFrame): DataFrame containing closed links.
+            agent_time_limit (int): Time limit for agents.
+            sample_interval (int): Sampling interval.
+            agents_path (str): Path to agent data.
+            alpha_f (float): Alpha factor for travel time calculation.
+            beta_f (float): Beta factor for travel time calculation.
+            two_way_edges (bool): Flag indicating if edges are two-way.
+            save_edge_vol (bool): Flag indicating if edge volume should be saved.
+
+        Returns
+        -------
+            pd.DataFrame: DataFrame containing trip information.
+        """
         if closure_hours is None:
             closure_hours = []
 
@@ -671,19 +768,40 @@ class TransportationPerformance(ABC):  # noqa: B024
         open_edges_df = edges_df[
             ~edges_df['uniqueid'].isin(closed_links['uniqueid'].to_numpy())
         ]
-        net = pdna.Network(
-            nodes_df['x'],
-            nodes_df['y'],
-            open_edges_df['start_nid'],
-            open_edges_df['end_nid'],
-            open_edges_df[['fft']],
-            twoway=two_way_edges,
-        )
+        # Redirect the output from pdna to a tmp file and then delete the file
+        if self.tmp_dir is not None:
+            output_file = Path(self.tmp_dir) / 'pandana_stdout.txt'
+            original_stdout_fd = sys.stdout.fileno()
+            with Path.open(output_file, 'w') as file:
+                os.dup2(file.fileno(), original_stdout_fd)
+                net = pdna.Network(
+                    nodes_df['x'],
+                    nodes_df['y'],
+                    open_edges_df['start_nid'],
+                    open_edges_df['end_nid'],
+                    open_edges_df[['fft']],
+                    twoway=two_way_edges,
+                )
+                # The file is automatically closed when exiting the with block
+                # `sys.stdout` is automatically restored to its original state because
+                # we duplicated the original descriptor to `stdout`.
+            if getattr(self, 'save_pandana', True):
+                Path.unlink(output_file)
+        else:
+            net = pdna.Network(
+                    nodes_df['x'],
+                    nodes_df['y'],
+                    open_edges_df['start_nid'],
+                    open_edges_df['end_nid'],
+                    open_edges_df[['fft']],
+                    twoway=two_way_edges,
+                )
+
         net.set(pd.Series(net.node_ids))
         paths = net.shortest_paths(orig, dest)
         no_path_ind = [i for i in range(len(paths)) if len(paths[i]) == 0]
         od_no_path = od_all.iloc[no_path_ind].copy()
-        od_all = od_all.drop(no_path_ind)
+        od_all = od_all.drop(od_no_path.index)
 
         od_all['current_nid'] = od_all['origin_nid']
         trip_info = {
@@ -720,6 +838,8 @@ class TransportationPerformance(ABC):  # noqa: B024
             for hour in hour_list:
                 gc.collect()
                 if hour in closure_hours:
+                    # Note this is not used now as the closed links are dropped from
+                    # the road network
                     for row in closed_links.itertuples():
                         edges_df.loc[
                             (edges_df['uniqueid'] == row.uniqueid), 'capacity'
@@ -835,6 +955,9 @@ class TransportationPerformance(ABC):  # noqa: B024
                         # edges_df['is_highway'])
                         # 10 yen per 100 m --> 0.1 yen per m
                         weighted_edges_df['weight'] = edges_df['t_avg']
+                        open_edges_df = weighted_edges_df[
+                            ~weighted_edges_df['uniqueid'].isin(closed_links['uniqueid'].to_numpy())
+                        ]
                         # weighted_edges_df['weight'] = np.where(
                         # weighted_edges_df['weight']<0.1, 0.1,
                         # weighted_edges_df['weight'])
@@ -846,7 +969,7 @@ class TransportationPerformance(ABC):  # noqa: B024
                             agents_path,
                         ) = self.substep_assignment(
                             nodes_df=nodes_df,
-                            weighted_edges_df=weighted_edges_df,
+                            weighted_edges_df=open_edges_df,
                             od_ss=od_ss,
                             quarter_demand=quarter_demand,
                             assigned_demand=assigned_demand,
@@ -915,7 +1038,7 @@ class TransportationPerformance(ABC):  # noqa: B024
         )
         # If there are trips incompleted mark them as np.nan
         incomplete_trips_agent_id = [x[0] for x in od_residual_list]
-        trip_info_df.loc[trip_info_df.agent_id.isin(incomplete_trips_agent_id),'travel_time_used'] = 'inf'
+        trip_info_df.loc[trip_info_df.agent_id.isin(incomplete_trips_agent_id),'travel_time_used'] = math.inf
         # Add the no path OD to the trip info
         trip_info_no_path = od_no_path.drop(
             columns=[
@@ -925,7 +1048,7 @@ class TransportationPerformance(ABC):  # noqa: B024
             ]
         )
         trip_info_no_path['travel_time'] = 360000
-        trip_info_no_path['travel_time_used'] = 'inf'
+        trip_info_no_path['travel_time_used'] = math.inf
         trip_info_no_path['stop_nid'] = np.nan
         trip_info_no_path['stop_hour'] = np.nan
         trip_info_no_path['stop_quarter'] = np.nan
@@ -948,10 +1071,23 @@ class TransportationPerformance(ABC):  # noqa: B024
                 )
         return trip_info_df
     # @abstractmethod
-    def system_performance(  # noqa: C901, D102, PLR0915
+    def system_performance(
         self, state  # noqa: ARG002
     ) -> None:  # Move the CSV creation here
+        """
+        Compute or update the performance of the transportation system.
 
+            This method processes the current state of the transportation network,
+            reads necessary CSV files, and performs traffic assignment to evaluate
+            system performance.
+
+            Args:
+                state: The current state of the transportation network.
+
+        Returns
+        -------
+                None
+        """
         network_edges = self.csv_files['network_edges']
         network_nodes = self.csv_files['network_nodes']
         closed_edges_file = self.csv_files['edge_closures']
@@ -990,9 +1126,9 @@ class TransportationPerformance(ABC):  # noqa: B024
         )
         # pay attention to the unit conversion, length is in meters, maxspeed is mph
         # fft is in seconds
-        edges_df['fft'] = edges_df['length'] / edges_df['maxspeed'] * 2.23694
+        edges_df['fft'] = edges_df['length'] / edges_df['maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR
         edges_df['normal_fft'] = (
-            edges_df['length'] / edges_df['normal_maxspeed'] * 2.23694
+            edges_df['length'] / edges_df['normal_maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR
         )
         edges_df = edges_df.sort_values(by='fft', ascending=False).drop_duplicates(
             subset=['start_nid', 'end_nid'], keep='first'
@@ -1238,9 +1374,17 @@ class TransportationPerformance(ABC):  # noqa: B024
                     )
         od_df.to_csv('updated_od.csv')
         return od_df
-    
+
 
 class pyrecodes_residual_demand(TransportationPerformance):
+    """
+    A class to simulate transportation networks in pyrecodes.
+
+    This class extends the TransportationPerformance abstract base class and
+    implements methods to simulate and analyze the performance of transportation
+    networks at pyrecodes recovery time steps.
+    """
+
     def __init__(
         self,
         edges_file,
@@ -1248,13 +1392,19 @@ class pyrecodes_residual_demand(TransportationPerformance):
         od_pre_file,
         hour_list,
         results_dir,
-        two_way_edges=False
+        capacity_ruleset_script,
+        demand_ruleset_script,
+        two_way_edges=False,  # noqa: FBT002
     ):
+        # Default not save pandana output
+        self.tmp_dir = Path.cwd()
+        self.save_pandana = False
         # Prepare edges and nodes files
-        edges_gdf = gpd.read_file(edges_file).to_crs(epsg=6500)
+        edges_gdf = gpd.read_file(edges_file)
         if 'length' not in edges_gdf.columns:
+            edges_gdf = edges_gdf.to_crs(epsg=6500)
             edges_gdf['length'] = edges_gdf['geometry'].apply(lambda x: x.length)
-        edges_gdf = edges_gdf.to_crs(epsg=4326)
+            edges_gdf = edges_gdf.to_crs(epsg=4326)
         if two_way_edges:
             edges_gdf_copy = edges_gdf.copy()
             edges_gdf_copy['StartNode'] = edges_gdf['EndNode']
@@ -1282,49 +1432,103 @@ class pyrecodes_residual_demand(TransportationPerformance):
         nodes_gdf['y'] = nodes_gdf['geometry'].apply(lambda x: x.y)
         nodes_gdf['x'] = nodes_gdf['geometry'].apply(lambda x: x.x)
 
-        edges_gdf['fft'] = edges_gdf['length'] / edges_gdf['maxspeed'] * 2.23694
+        edges_gdf['fft'] = edges_gdf['length'] / edges_gdf['maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR
         edges_gdf['normal_fft'] = (
-            edges_gdf['length'] / edges_gdf['normal_maxspeed'] * 2.23694
-        )
-        edges_gdf = edges_gdf.sort_values(by='fft', ascending=False).drop_duplicates(
-            subset=['start_nid', 'end_nid'], keep='first'
-        )
-        edges_gdf['edge_str'] = (
-            edges_gdf['start_nid'].astype('str')
-            + '-'
-            + edges_gdf['end_nid'].astype('str')
+            edges_gdf['length'] / edges_gdf['normal_maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR
         )
         edges_gdf['t_avg'] = edges_gdf['fft']
         edges_gdf['u'] = edges_gdf['start_nid']
         edges_gdf['v'] = edges_gdf['end_nid']
-        edges_gdf = edges_gdf.set_index('edge_str')
 
         # delete geometry columns to save memory however, traffic assignment need to be updated accordingly
         # edges_gdf = edges_gdf.drop(columns=['geometry'])
         # nodes_gdf = nodes_gdf.drop(columns=['geometry'])
 
-
+        # This edges_df is the initial undamaged network
         self.edges_df = edges_gdf
         self.nodes_df = nodes_gdf
 
         self.od_pre_file = od_pre_file
+        self.initial_r2d_dict = None
         self.hour_list = hour_list
         self.results_dir = results_dir
         self.two_way_edges = two_way_edges
-        # If needed run on undamaged network here
+
+        # import update_edges from capacity_ruleset_script
+        module_name = Path(capacity_ruleset_script).stem
+        spec = importlib.util.spec_from_file_location(module_name, capacity_ruleset_script)
+        capacity_ruleset = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = capacity_ruleset
+        spec.loader.exec_module(capacity_ruleset)
+        if not hasattr(capacity_ruleset, 'update_edges'):
+            msg = f"Function 'update_edges' should exist in {capacity_ruleset_script}."
+            raise Exception(msg)  # noqa: TRY002
+        self.capacity_ruleset = capacity_ruleset
+
+        # import update_od from demand_ruleset_script
+        module_name = Path(demand_ruleset_script).stem
+        spec = importlib.util.spec_from_file_location(module_name, demand_ruleset_script)
+        demand_ruleset = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = demand_ruleset
+        spec.loader.exec_module(demand_ruleset)
+        if not hasattr(demand_ruleset, 'update_od'):
+            msg = f"Function 'update_od' should exist in {capacity_ruleset_script}."
+            raise Exception(msg)  # noqa: TRY002
+        self.demand_ruleset = demand_ruleset
+
+        self.simulate_time = 0
+
+
+
     def simulate(
         self,
         r2d_dict
-    ):  
-        def update_edges(edges, r2d_dict):
-            return edges
-        
-        od_matrix = self.compute_od(r2d_dict)
-        
-        edges_df = update_edges(self.edges_df, r2d_dict)
+    ):
+        """
+        Simulate the transportation network performance.
 
-        # closed_links is simulated as normal links with very high fft
-        closed_links = pd.DataFrame([], columns=['uniqueid'])
+        Args:
+            r2d_dict (dict): Dictionary containing the status of all asset at a certain time step.
+
+        Returns
+        -------
+            pd.DataFrame: DataFrame containing trip information.
+        """
+        if self.initial_r2d_dict is None:
+            od_matrix = pd.read_csv(self.od_pre_file)
+            self.initial_od = od_matrix
+            self.initial_r2d_dict = copy.deepcopy(r2d_dict)
+        else:
+            od_matrix = self.demand_ruleset.update_od(self.initial_od,
+                                                      self.nodes_df,
+                                                      self.initial_r2d_dict,
+                                                      r2d_dict)
+
+        edges_df = self.edges_df.copy()
+        edges_df = edges_df.set_index('id')
+        edges_df, closed_links = self.capacity_ruleset.update_edges(edges_df, r2d_dict)
+
+        edges_df['fft'] = edges_df['length'] / edges_df['maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR # Nikola: Labeled the number.
+        edges_df['normal_fft'] = (
+            edges_df['length'] / edges_df['normal_maxspeed'] * METER_PER_SECOND_TO_MILES_PER_HOUR
+        )
+        edges_df['t_avg'] = edges_df['fft']
+
+        edges_df = edges_df.sort_values(by='fft', ascending=False).drop_duplicates(
+            subset=['start_nid', 'end_nid'], keep='first'
+        )
+
+        edges_df['edge_str'] = (
+            edges_df['start_nid'].astype('str')
+            + '-'
+            + edges_df['end_nid'].astype('str')
+        )
+        edges_df = edges_df.reset_index().set_index('edge_str')
+
+
+        self.simulate_time += 1
+        # edges_df.to_csv(os.path.join('/Users/jinyanzhao/Desktop/tempSave/nikola/residual_demand_debug', f'edges_df_{self.simulate_time}.csv'))
+        # self.nodes_df.to_csv(os.path.join('/Users/jinyanzhao/Desktop/tempSave/nikola/residual_demand_debug', f'nodes_df_{self.simulate_time}.csv'))
         trip_info_df = self.assignment(
             edges_df = edges_df,
             nodes_df=self.nodes_df,
@@ -1337,11 +1541,8 @@ class pyrecodes_residual_demand(TransportationPerformance):
             two_way_edges=self.two_way_edges,
             save_edge_vol = False
         )
-        return trip_info_df
-    
-    def compute_od(self, r2d_dict):
-        od_matrix = pd.read_csv(self.od_pre_file)
-        return od_matrix
+        return trip_info_df  # noqa: RET504
+
 
     # def get_graph_network(self,
     #                       det_file_path: str,
