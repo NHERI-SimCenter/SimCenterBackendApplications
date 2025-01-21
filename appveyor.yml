@@ -44,7 +44,7 @@ for:
       - cmd: mkdir build
       - cmd: cd build
       - cmd: conan install .. --build missing
-      - cmd: cmake .. -G "Visual Studio 16 2019" -DBLAS_LIBRARIES="C:/Program Files (x86)/Intel/oneAPI/mkl/latest/lib/intel64/mkl_intel_lp64.lib;C:/Program Files (x86)/Intel/oneAPI/mkl/latest/lib/intel64/mkl_sequential.lib;C:/Program Files (x86)/Intel/oneAPI/mkl/latest/lib/intel64/mkl_core.lib" -DLAPACK_LIBRARIES="C:/Program Files (x86)/Intel/oneAPI/mkl/latest/lib/intel64/mkl_intel_lp64.lib;C:/Program Files (x86)/Intel/oneAPI/mkl/latest/lib/intel64/mkl_sequential.lib;C:/Program Files (x86)/Intel/oneAPI/mkl/latest/lib/intel64/mkl_core.lib"
+      - cmd: cmake .. -G "Visual Studio 16 2019" -DCMAKE_VERBOSE_MAKEFILE=ON --debug-find --log-level=VERBOSE
       - cmd: cmake --build . --config Release
       - cmd: cmake --install .
       - cmd: cd ..
