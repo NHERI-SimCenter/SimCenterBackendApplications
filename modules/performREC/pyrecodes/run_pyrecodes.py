@@ -197,8 +197,8 @@ def modify_system_config_rewet_distribution(system_config, input_data_dir, rlz_r
         The modified system configuration dictionary.
     """
     resources_config = system_config['Resources']
-    for resouces in resources_config.values():
-        distribution_model = resouces['DistributionModel']
+    for resources in resources_config.values():
+        distribution_model = resources['DistributionModel']
         if distribution_model['ClassName'] == 'REWETDistributionModel':
             distribution_model['Parameters']['INPFile'] = str(input_data_dir / distribution_model['Parameters']['INPFile'])
             if not (rlz_run_dir / 'rewet_results').exists():
@@ -211,8 +211,8 @@ def modify_system_config_rewet_distribution(system_config, input_data_dir, rlz_r
 
 def modify_system_config_residual_demand_distribution(system_config, input_data_dir, rlz_run_dir):
     resources_config = system_config['Resources']
-    for resouces in resources_config.values():
-        distribution_model = resouces['DistributionModel']
+    for resources in resources_config.values():
+        distribution_model = resources['DistributionModel']
         if distribution_model['ClassName'] == 'ResidualDemandTrafficDistributionModel':
             distribution_model['Parameters']['EdgeFile'] = str(input_data_dir / distribution_model['Parameters']['EdgeFile'])
             distribution_model['Parameters']['NodeFile'] = str(input_data_dir / distribution_model['Parameters']['NodeFile'])
@@ -406,7 +406,7 @@ def run_pyrecodes(  # noqa: C901
         with Path(main_file).open() as f:
             main_file_dict = json.load(f)
     else:
-        # Check the realziation value
+        # Check the realization value
         if realization is None:
             raise RuntimeError("Realization is not provided")
         elif type(realization) is not str:
@@ -603,7 +603,7 @@ if __name__ == '__main__':
                     try:
                         cur_realization = int(float(cur_realization))
                     except:
-                        raise RuntimeError(f"The realziation for {asset_types} is not an integer: {cur_realization}")
+                        raise RuntimeError(f"The realization for {asset_types} is not an integer: {cur_realization}")
 
             realization_asset_types += asset_types + " "
             if realization is None:
@@ -611,10 +611,10 @@ if __name__ == '__main__':
             elif cur_realization < realization:
                 realization = cur_realization
 
-            print(f"The smallest realziation accross {realization_asset_types}is {realization}.")
+            print(f"The smallest realization across {realization_asset_types}is {realization}.")
 
             if realization < 0:
-                raise ValueError(f"Realization should be more than 0: realziation = {realization}")
+                raise ValueError(f"Realization should be more than 0: realization = {realization}")
 
             realization_text = ""
             for i in range(realization):
