@@ -1,4 +1,4 @@
-version: 24.09.{build}
+version: 25.01.{build}
 
 image:
   - Visual Studio 2019
@@ -8,6 +8,51 @@ image:
 stack: python 3.9
 
 for:
+  # Visual Studio 2019
+  -
+  
+    matrix:
+      only:
+        - image: Visual Studio 2022
+
+    clone_folder: c:\projects\SimCenter
+
+    init:
+       - cmd: set PYTHON=C:\PYTHON38-x64
+       - cmd: set PYTHONNET_PYDLL=%PYTHON%\python3.9.dll
+       - cmd: set QT=C:\Qt\5.15.2\msvc2019_64\bin
+       - cmd: set PATH=%PYTHON%;%PYTHON%\Scripts;%QT%;%PATH%
+       - cmd: call "C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+       - cmd: pip.exe install conan==1.60.1
+       - cmd: conan user
+       - cmd: conan profile new default --detect
+       - cmd: conan profile show default
+       - cmd: conan profile update settings.compiler="Visual Studio" default
+       - cmd: conan profile update settings.compiler.version="17" default
+       - cmd: conan remote add simcenter https://nherisimcenter.jfrog.io/artifactory/api/conan/simcenter                     
+       - cmd: echo %PATH%
+
+    install:
+       - cmd: rm -rf SimCenterBackendApplications
+       - cmd: git clone https://github.com/JustinBonus/SimCenterBackendApplications.git
+       - cmd: dir
+
+    build_script:
+      # build simcenter backend
+      - cmd: dir
+      - cmd: cd SimCenterBackendApplications
+      - cmd: mkdir build
+      - cmd: cd build
+      - cmd: conan install .. --build missing
+      - cmd: cmake .. -G "Visual Studio 17 2019"
+      - cmd: cmake --build . --config Release
+      - cmd: cmake --install .
+      - cmd: cd ..
+      - cmd: cd ..
+
+    test_script:
+      -cmd: python --version
+
   # macOS 
   -
     matrix:
@@ -77,48 +122,3 @@ for:
        - gcc --version
        - python --version
        - python3 --version
-
-  # Visual Studio 2019
-  -
-  
-    matrix:
-      only:
-        - image: Visual Studio 2019
-
-    clone_folder: c:\projects\SimCenter
-
-    init:
-       - cmd: set PYTHON=C:\PYTHON38-x64
-       - cmd: set PYTHONNET_PYDLL=%PYTHON%\python3.9.dll
-       - cmd: set QT=C:\Qt\5.15.2\msvc2019_64\bin
-       - cmd: set PATH=%PYTHON%;%PYTHON%\Scripts;%QT%;%PATH%
-       - cmd: call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
-       - cmd: pip.exe install conan==1.60.1
-       - cmd: conan user
-       - cmd: conan profile new default --detect
-       - cmd: conan profile show default
-       - cmd: conan profile update settings.compiler="Visual Studio" default
-       - cmd: conan profile update settings.compiler.version="16" default
-       - cmd: conan remote add simcenter https://nherisimcenter.jfrog.io/artifactory/api/conan/simcenter                     
-       - cmd: echo %PATH%
-
-    install:
-       - cmd: rm -rf SimCenterBackendApplications
-       - cmd: git clone https://github.com/JustinBonus/SimCenterBackendApplications.git
-       - cmd: dir
-
-    build_script:
-      # build simcenter backend
-      - cmd: dir
-      - cmd: cd SimCenterBackendApplications
-      - cmd: mkdir build
-      - cmd: cd build
-      - cmd: conan install .. --build missing
-      - cmd: cmake .. -G "Visual Studio 16 2019"
-      - cmd: cmake --build . --config Release
-      - cmd: cmake --install .
-      - cmd: cd ..
-      - cmd: cd ..
-
-    test_script:
-      -cmd: python --version
