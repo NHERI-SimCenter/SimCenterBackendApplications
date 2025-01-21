@@ -50,7 +50,7 @@ max-bool-expr=5
 quote-style = "single"
 
 # Again, excluded until they are reviewed and fixed. - JustinBonus, 2025-01-20
-[tool.ruff.format.per-file-ignores]
+[tool.ruff.format.exclude]
 "modules/Workflow/whale/main.py" = ["ALL"]
 "modules/createAIM/INP_FILE/INP_FILE.py" = ["ALL"]
 "modules/createEVENT/IsolatedBuildingCFD/setup_case.py" = ["ALL"]
