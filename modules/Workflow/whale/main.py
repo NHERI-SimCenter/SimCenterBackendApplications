@@ -1673,6 +1673,8 @@ class Workflow:
         )
 
         app_command_list += ['--input', self.input_file]
+        app_command_list += ['--r2dRunDir', self.run_dir]
+        app_command_list += ['--inputDataDir', self.reference_dir]        
 
         if self.parType == 'parSETUP':
             pass
