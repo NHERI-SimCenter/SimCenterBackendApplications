@@ -1672,6 +1672,8 @@ class Workflow:
             app_path=self.app_dir_local
         )
 
+        app_command_list += ['--input', self.input_file]
+
         if self.parType == 'parSETUP':
             pass
             # log_msg(
@@ -1679,22 +1681,6 @@ class Workflow:
             #     prepend_timestamp=False,
             # )
             # app_command_list.append('--par')
-
-
-        app_command_list.append('--input')
-        app_command_list.append(self.input_file)
-
-        with open(self.input_file, "rt") as f:
-            input_file = json.load(f)
-
-        if "WaterDistributionNetwork" in input_file["Applications"]["Assets"]:
-            wdn_apps = input_file["Applications"]["Assets"]["WaterDistributionNetwork"]
-            if wdn_apps["Application"] == "INP_FILE":
-                inp_file_name = wdn_apps["ApplicationData"]["inpFile"]
-                inp_file_name = resolve_path(inp_file_name, self.reference_dir)
-
-                app_command_list.append('--INPFile')
-                app_command_list.append(inp_file_name)
 
         command = create_command(app_command_list)
 

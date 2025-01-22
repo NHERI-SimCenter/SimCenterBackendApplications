@@ -1,8 +1,5 @@
 simcenter_add_python_script(SCRIPT __init__.py)
-simcenter_add_python_script(SCRIPT constants.py)
-simcenter_add_python_script(SCRIPT main.py)
 simcenter_add_python_script(SCRIPT run_pyrecodes.py)
-simcenter_add_python_script(SCRIPT utilities.py)
 add_subdirectory(rewet_API)
 add_subdirectory(residual_demand_API)
 # add_subdirectory(rewet_result)

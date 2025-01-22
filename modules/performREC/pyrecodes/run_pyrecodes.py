@@ -366,7 +366,7 @@ def run_pyrecodes(  # noqa: C901
     if input_data_dir is not None:
         input_data_dir = Path(input_data_dir)
     else:
-        input_data_dir = run_dir / 'input_data'
+        input_data_dir = Path(os.getcwd()).parent / 'input_data'
     if not Path(input_data_dir).exists():
         raise RuntimeError(f"Input data directory {input_data_dir} does not exist.")
 

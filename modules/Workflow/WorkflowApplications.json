@@ -1315,9 +1315,9 @@
         "ExecutablePath": "applications/performREC/pyrecodes/run_pyrecodes.py",
         "ApplicationSpecificInputs": [
           {
-            "id": "Realization",
-            "type": "string",
-            "description": "Realizations."
+            "id": "mainFile",
+            "type": "path",
+            "description": "Path to pyrecodes main file."
           },
           {
             "id": "systemConfigFile",
@@ -1328,16 +1328,6 @@
             "id": "componentLibraryFile",
             "type": "path",
             "description": "Path to pyrecodes component library file."
-          },
-          {
-            "id": "localityGeojsonFile",
-            "type": "path",
-            "description": "Path to the geojson file that defines locality (Optional)."
-          },
-          {
-            "id": "INPFile",
-            "type": "path",
-            "description": "Path to INPfile."
           },
           {
             "id": "r2dRunDir",
