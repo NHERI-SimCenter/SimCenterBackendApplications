@@ -58,13 +58,21 @@ def modify_controlDict_file(case_path):  # noqa: N802, D103
 
 
     # Function Objects ##############################
-
     # Find function object location
     start_index = foam.find_keyword_line(dict_lines, 'functions') + 2
 
-    # Write story loads functionObjects
-    added_part = '    #includeFunc  componentPressureSamplingPoints\n'
-    dict_lines.insert(start_index, added_part)
+    # Write story loads functionObjects if it does exist
+    
+    line_exists = False
+    for line in dict_lines:
+        if "componentPressureSamplingPoints" in line:
+            line_exists = True
+            continue
+
+
+    if line_exists == False:
+        added_part = '    #includeFunc  componentPressureSamplingPoints\n'
+        dict_lines.insert(start_index, added_part)
 
     #Write edited dict to file
     write_file_name = case_path + "/system/controlDict"
@@ -184,7 +192,8 @@ def create_component_geometry(input_json_path, compt_json_path, template_dict_pa
         geoms = compt_i["geometries"]
         sampling_density = compt_i["samplingDensity"]
         mesh_obj = []
-        
+        # print(compt_i["componentId"])
+
         for geom_i in geoms:
             if geom_i["shape"] == "circle":
                 mesh_obj, points, areas = make_circular_component_geometry(wind_dxn, sampling_density, thickness, scale, compt_i["componentId"], geom_i, case_path)
@@ -219,6 +228,11 @@ def create_component_geometry(input_json_path, compt_json_path, template_dict_pa
 
     points = np.array([point for sublist in probe_points for point in sublist])
     areas  = np.array([area for sublist in probe_areas for area in sublist])
+    
+    
+    #Scale the points by a little amount to keep them in the domain.
+    scale_factor = 1.0001
+    points = points*scale_factor
 
     write_points_to_file(points, points_file_name)
     write_areas_to_file(areas, areas_file_name)
@@ -231,6 +245,8 @@ def create_component_geometry(input_json_path, compt_json_path, template_dict_pa
         case_path)
     
     modify_controlDict_file(case_path)
+    
+    print("Created Component Geometry!")
 
 def rotate_to_normal(vertices, normal):
     """
@@ -882,9 +898,6 @@ def combine_and_write_named_stl(block_meshes, block_names, output_file):
                 out_file.write("  endfacet\n")
             
             out_file.write(f"endsolid {block_name}\n")  # End the block for the current solid
-        
-    print(f"Merged STL file written to: {output_file}")
-
 
 
 def create_voronoi_cells_3d(points, plane_normal, plane_point, clip_polygon, offset_distance=0.5):
@@ -1002,10 +1015,10 @@ if __name__ == '__main__':
     # template_dict_path = sys.argv[3]
     # case_path = sys.argv[4]
 
-    input_json_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD\\constant\\simCenter\\input\\"
+    input_json_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD_PBE\\constant\\simCenter\\input\\"
     compt_json_path = "C:\\Users\\fanta\\SimCenter\\WBS_Items\\PBWE\\CC_Pressure_EDP_Example_TPU_V1.json"
     template_dict_path = "C:\\Users\\fanta\\SimCenter\\SourceCode\\NHERI-SimCenter\\SimCenterBackendApplications\\modules\\createEVENT\\IsolatedBuildingCFD\\templateOF10Dicts\\"
-    case_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD"
+    case_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD_PBE"
 
     # Write the component's geometry
     create_component_geometry(input_json_path, compt_json_path, template_dict_path, case_path)
