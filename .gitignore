@@ -99,3 +99,6 @@ fmkTest.sh
 .coverage
 
 applications.*
+
+#Abiy 
+modules/performUQ/SimCenterUQ/CMakeLists.txt
