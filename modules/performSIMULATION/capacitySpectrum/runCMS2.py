@@ -230,6 +230,19 @@ def determine_response(AIM_input_path, EVENT_input_path, EDP_input_path):  # noq
         AIM_in = json.load(f)  # noqa: N806
     applications = AIM_in['Applications']
 
+    # Table 5-1 in Hazus, convert to inches
+    general_info = AIM_in['GeneralInformation']
+    if general_info.get('RoofHeight', None) is not None:
+        roof_height = general_info['RoofHeight']
+    elif general_info.get('height', None) is not None:
+        roof_height = general_info['height']        
+    else:
+        roof_height = capacity_model.get_hazus_roof_height() * 12  # KUANSHI UNITS
+
+    num_stories = general_info['NumberOfStories']
+
+    units = general_info.get('units',None)
+    
     # get the simulation application
     SIM_input = applications['Simulation']  # noqa: N806
     if SIM_input['Application'] != 'CapacitySpectrumMethod2':
@@ -265,112 +278,161 @@ def determine_response(AIM_input_path, EVENT_input_path, EDP_input_path):  # noq
     im_units=dict()
     ampScaled=False
     
-    units = AIM_in['GeneralInformation'].get('units',None)
+    # convert to in/sec
+    f_scale_im_user_to_cms, f_scale_edp_cms_to_user = find_unit_scale_factor(AIM_in)
+
+    #
+    # get spectrum values
+    #
 
     time_series_dict = load_records(EVENT_in, ampScaled)
     im_computer = IntensityMeasureComputer(time_hist_dict=time_series_dict, units=units, ampScaled=ampScaled)
     periods=[0.3, 1.0]
     im_computer.compute_response_spectrum(periods=periods, im_units=im_units)
+
     print(im_computer.intensity_measures)
+
+    response_accel=im_computer.intensity_measures.get('AccelerationSpectrum', None)
+
+    # set initial responses to 0, done in case accel not provide for all dirn.
+    #  - dimension 2: 1 = x dir, 2 = y dir
+    pga = [0,0]
+    drift_ratio1 = [0,0]
+    roof_sa1 = [0,0]
+    roof_disp1 = [0,0]
     
-    pga = .2
-    sa_03 = .2
-    sa_10 = .21
+    #
+    # compute X dirn response 
+    #
+    
+    accel_x = response_accel.get('accel_x', None)
+    if accel_x == None:
+        accel_x = response_accel.get('dirn1', None)
+
+        if accel_x is not None:
+
+            # demand model
+            demand_model_name = SIM_input_data['DemandModel']['Name']
+            if demand_model_name in ['HAZUS', 'HAZUS_lin_chang_2003']:
+                demand_model = getattr(DemandModels, demand_model_name)(Mw)
+                
+            # capacity model
+            capacity_model_name = SIM_input_data['CapacityModel']['Name']
+            if capacity_model_name == 'HAZUS_cao_peterson_2006':
+                capacity_model = CapacityModels.HAZUS_cao_peterson_2006(
+                    general_info=AIM_in['GeneralInformation']
+                )
+
+            # damping model
+            damping_model_name = SIM_input_data['DampingModel']['Name']
+            if damping_model_name == 'HAZUS_cao_peterson_2006':
+                damping_model = DampingModels.HAZUS_cao_peterson_2006(
+                    demand_model, capacity_model
+                )
+
+            pga[0] = 0.0
+            saX_03 = accel_x[0]
+            saX_10 = accel_x[1]
+            
+            demand_model.set_IMs(saX_03, saX_10)
+            demand_model.set_Tavb(damping_model)
+            demand_model.set_beta_tvd(damping_model)
+            
+            # iterate to get sd and sa
+            perf_sdX, perf_saX = run_csm(
+                demand_model, capacity_model, damping_model, tol, max_iter, 0
+            )
+
+            drift_ratioX = perf_sdX / capacity_model.get_hazus_alpha2() / roof_height
+            drift_ratio1[0] = drift_ratioX
+            roof_sa1[0] = perf_saX
+            roof_disp1[0] = drift_ratioX*roof_height
+
+    #
+    # now y (or 2) dirn response
+    #
+    
+    accel_y = response_accel.get('accel_y', None)
+    if accel_y == None:
         
-    # open EDP file
-    # open the event file and get the list of events
-    with open(EDP_input_path, encoding='utf-8') as f:  # noqa: PTH123
-        EDP_in = json.load(f)  # noqa: N806
-    
-    # convert to in/sec
-    
-    f_scale_im_user_to_cms, f_scale_edp_cms_to_user = find_unit_scale_factor(AIM_in)
+        accel_y = response_accel.get('dirn2', None)
 
-    # the first column is Spectrum Acceleration, the second column is Spectrum Displacement
-    EDP_output = np.zeros([1,2])
+        if accel_y is not None:
+            
+            pga[1] = 0.0            
+            saY_03 = accel_y[0]
+            saY_10 = accel_y[1]
 
-    # demand model
-    demand_model_name = SIM_input_data['DemandModel']['Name']
-    if demand_model_name in ['HAZUS', 'HAZUS_lin_chang_2003']:
-        demand_model = getattr(DemandModels, demand_model_name)(Mw)
+            # demand model
+            demand_model_name = SIM_input_data['DemandModel']['Name']
+            if demand_model_name in ['HAZUS', 'HAZUS_lin_chang_2003']:
+                demand_model = getattr(DemandModels, demand_model_name)(Mw)
+                
+            # capacity model
+            capacity_model_name = SIM_input_data['CapacityModel']['Name']
+            if capacity_model_name == 'HAZUS_cao_peterson_2006':
+                capacity_model = CapacityModels.HAZUS_cao_peterson_2006(
+                    general_info=AIM_in['GeneralInformation']
+                )
 
-    # capacity model
-    capacity_model_name = SIM_input_data['CapacityModel']['Name']
-    if capacity_model_name == 'HAZUS_cao_peterson_2006':
-        capacity_model = CapacityModels.HAZUS_cao_peterson_2006(
-            general_info=AIM_in['GeneralInformation']
-        )
-
-    # damping model
-    damping_model_name = SIM_input_data['DampingModel']['Name']
-    if damping_model_name == 'HAZUS_cao_peterson_2006':
-        damping_model = DampingModels.HAZUS_cao_peterson_2006(
-            demand_model, capacity_model
-        )
-
-    demand_model.set_IMs(sa_03, sa_10)
-    demand_model.set_Tavb(damping_model)
-    demand_model.set_beta_tvd(damping_model)
-    
-    # if (damping_model_name == 'HAZUS_cao_peterson_2006'
-    #     and capacity_model_name == 'HAZUS_cao_peterson_2006'):
-    #     damping_model.set_HAZUS_bldg_type(capacity_model.get_hazus_bldg_type())
-
-    # iterate to get sd and sa
-    perf_sd, perf_sa = run_csm(
-        demand_model, capacity_model, damping_model, tol, max_iter, 0
-    )
-    
-    EDP_output[0, 0] = perf_sa
-
-    # Table 5-1 in Hazus, convert to inches
-    general_info = AIM_in['GeneralInformation']
-    if general_info.get('RoofHeight', None) is not None:
-        roof_height = general_info['RoofHeight']
-    elif general_info.get('height', None) is not None:
-        roof_height = general_info['height']        
-    else:
-        roof_height = capacity_model.get_hazus_roof_height() * 12
-
-    num_stories = general_info['NumberOfStories']
-
-    drift_ratio = perf_sd / capacity_model.get_hazus_alpha2() / roof_height
-    EDP_output[0, 1] = drift_ratio
-
-    roof_sa = perf_sa
-    roof_disp = drift_ratio*roof_height
-    
-    ### Convert EDPs to the units defined in the AIM file
-    print(EDP_in)
-    print(EDP_output)
-
+            # damping model
+            damping_model_name = SIM_input_data['DampingModel']['Name']
+            if damping_model_name == 'HAZUS_cao_peterson_2006':
+                damping_model = DampingModels.HAZUS_cao_peterson_2006(
+                    demand_model, capacity_model
+                )
+                
+            demand_model.set_IMs(saY_03, saY_10)
+            demand_model.set_Tavb(damping_model)
+            demand_model.set_beta_tvd(damping_model)
+            
+            # iterate to get sd and sa
+            perf_sdY, perf_saY = run_csm(
+                demand_model, capacity_model, damping_model, tol, max_iter, 0
+            )
+            
+            drift_ratio1[1] = perf_sdY / capacity_model.get_hazus_alpha2() / roof_height
+            roof_sa1[1] = perf_saY
+            roof_disp1[1] = drift_ratio1[1]*roof_height                
+            
     #
     # store the IM(s) in the EDPs
     #
 
-    print(num_stories)
+    # open EDP file
+    
+    with open(EDP_input_path, encoding='utf-8') as f:  # noqa: PTH123
+        EDP_in = json.load(f)  # noqa: N806
+    
+
+    # update EDP
+    
     for edp_item in EDP_in['EngineeringDemandParameters'][0]['responses']:
+
+        dofs = edp_item['dofs']
         
         if edp_item['type'] == 'max_abs_acceleration':
+            
             floor = edp_item['floor']
             if isinstance(floor,str):
                 floor = int(floor)
                 
-            if floor == num_stories:            
-                edp_item['scalar_data'] = [roof_sa]
+            if floor == num_stories:
+                edp_item['scalar_data'] =[roof_sa1[i-1] for i in dofs]
+
             elif floor == 0:
-                edp_item['scalar_data'] = [pga]            
+                edp_item['scalar_data'] = [pga[i-1] for i in dofs]
             else:
-                edp_item['scalar_data'] = [0.0]                
+                edp_item['scalar_data'] = [0.0 for i in dofs]
 
         elif edp_item['type'] == 'max_roof_drift':
-            edp_item['scalar_data'] = [drift_ratio]
+            edp_item['scalar_data'] = [drift_ratio1[i-1] for i in dofs]
 
         elif edp_item['type'] == 'max_drift':
-            edp_item['scalar_data'] = [drift_ratio]
+            edp_item['scalar_data'] = [drift_ratio1[i-1] for i in dofs]
 
         else:
-            edp_item['scalar_data'] = [0.0]            
+            edp_item['scalar_data'] = [0.0 for i in dofs]            
 
     #
     # write EDP file and results.out
