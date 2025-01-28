@@ -84,5 +84,6 @@ if __name__ == '__main__':
         forces = []
         for i in range(floorsCount):  # noqa: B007
             forces.append(FloorForces())  # noqa: PERF401
+        
         # write the event file
         writeEVENT(forces, arguments.filenameEVENT)
