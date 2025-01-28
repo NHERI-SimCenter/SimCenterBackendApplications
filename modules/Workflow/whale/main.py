@@ -53,6 +53,8 @@
 
 """  # noqa: D404
 
+
+
 import argparse
 import importlib
 import json
@@ -61,14 +63,33 @@ import platform
 import posixpath
 import pprint
 import shlex
-import shutil
 import subprocess
 import sys
 import warnings
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path, PurePath
+import pkg_resources
 
+# check python
+
+python_path= sys.executable
+a = platform.uname()
+if a.system == "Darwin" and (not a.machine=='x86_64'):
+    raise ValueError(f"Python version mismatch. Please update the python following the installation instruction. Current python {python_path} is based on machine={a.machine}, but we need the one for x86_64")
+    exit(-2)
+
+# checking if nheri-simcenter is installed
+if not ('nheri-simcenter' in [p.project_name for p in pkg_resources.working_set]):
+    if (platform.system() == 'Windows'):
+        raise ValueError(f"Essential python package (nheri-simcenter) is not installed. Please go to file-preference and press reset to initialize the python path.")
+        exit(-2)
+    else:
+        raise ValueError(f"Essential python package (nheri-simcenter) is not installed. Please follow the installation instruction or run: {python_path} -m pip3 install nheri-simcenter")
+        exit(-2)
+
+            
+import shutil
 import numpy as np
 import pandas as pd
 import shapely.geometry
@@ -95,7 +116,6 @@ def str2bool(v):  # noqa: D103
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')  # noqa: EM101, TRY003
-
 
 class Options:  # noqa: D101
     def __init__(self):
@@ -864,13 +884,13 @@ class Workflow:
         # Check to ensure the applications key is provided in the input
         if app_in == None:  # noqa: E711
             return
-            err = "Need to provide the 'Application' key in " + app_type
+            err = "Need to provide the 'Application' key in " + app_type #TODO ANYONE: DELETE THIS. USELESS! (ADDED BY SINA)
             raise WorkFlowInputError(err)
 
         # Check to see if the app type is in the application registry
         app_type_obj = self.app_registry.get(app_type)
 
-        if app_in == None:  # noqa: E711
+        if app_in == None:  # noqa: E711 #TODO ANYONE: DELETE THIS. USELESS! (ADDED BY SINA)
             return
 
         if app_in == 'None':
@@ -887,7 +907,7 @@ class Workflow:
                 + app_in
             )
             print('Error', app_in)  # noqa: T201
-            raise WorkFlowInputError(err)
+            raise WorkFlowInputError(err) #TODO ANYONE: DELETE THIS. USELESS!(ADDED BY SINA)
 
         appData = app_dict['ApplicationData']  # noqa: N806
         #
@@ -1619,6 +1639,75 @@ class Workflow:
         log_div()
         return True
 
+    def perform_recovery_simulation(self):
+        # Make sure that we are in the run directory before we run recovery
+        # Every other path will be relative to the Run Directory (result dir)
+        os.chdir(self.run_dir)
+        # Check if system performance is requested
+        if 'Recovery' in self.workflow_apps:
+            performance_app = self.workflow_apps['Recovery']
+        else:
+            log_msg(
+                'No Recovery application to run.',
+                prepend_timestamp=False,
+            )
+            log_div()
+            return False
+
+        if performance_app.rel_path is None:
+            log_msg(
+                'No Recovery application to run.',
+                prepend_timestamp=False,
+            )
+            log_div()
+            return False
+
+        log_msg(
+            'Performing Recovery Application',
+            prepend_timestamp=False,
+        )
+        log_div()
+
+        app_command_list = performance_app.get_command_list(
+            app_path=self.app_dir_local
+        )
+
+        app_command_list += ['--input', self.input_file]
+        app_command_list += ['--r2dRunDir', self.run_dir]
+        app_command_list += ['--inputDataDir', self.reference_dir]        
+
+        if self.parType == 'parSETUP':
+            pass
+            # log_msg(
+            #     '\nParallel settings for Recovery Simulation',
+            #     prepend_timestamp=False,
+            # )
+            # app_command_list.append('--par')
+
+        command = create_command(app_command_list)
+
+        log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
+        log_msg(
+            f'\n{command}\n',
+            prepend_timestamp=False,
+            prepend_blank_space=False,
+        )
+
+        result, returncode = run_command(command)
+        log_msg(
+            f'\n{result}\n',
+            prepend_timestamp=False,
+            prepend_blank_space=False,
+        )
+
+        log_msg(
+            'Recover Simulation Application Completed',
+            prepend_timestamp=False,
+        )
+
+        log_div()
+        return True
+
     def perform_regional_event(self):
         """Run an application to simulate a regional-scale hazard event.
 
@@ -2192,7 +2281,7 @@ class Workflow:
                 try:
                     if command.startswith('python'):
                         if platform.system() == 'Windows':
-                            driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'  # noqa: F821, F841
+                            driver_script += 'if %errorlevel% neq 0 exit /b -1 \n' #TODO ANYONE: This variable is not defined. Check This please. (Added by Sina)
                         else:
                             pass
 

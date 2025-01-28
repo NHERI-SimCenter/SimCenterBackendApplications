@@ -32,12 +32,12 @@ def M9(information):  # noqa: N802
     print(files)  # noqa: T201
 
     # changing realizations order
-    # indicies = list(range(maxnumSiteGM));
+    # indices = list(range(maxnumSiteGM));
     Realizations = ['032']  # noqa: N806
-    indicies = [0]
+    indices = [0]
     if randomFLag:
-        np.random.shuffle(indicies)
-    indicies = indicies[:numSiteGM]
+        np.random.shuffle(indices)
+    indices = indices[:numSiteGM]
 
     username = os.getlogin()
     print(f'Username: {username}')  # noqa: T201
@@ -67,7 +67,7 @@ def M9(information):  # noqa: N802
     ]  # if the APIFLAG is True, we use M9 API to get the motion data
 
     if not (APIFLAG):
-        for i in indicies:
+        for i in indices:
             for _, site in gdf.iterrows():
                 # find the first Letter of the site name
                 site_name = site['Station Name']

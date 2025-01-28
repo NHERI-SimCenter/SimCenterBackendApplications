@@ -230,7 +230,7 @@ def GetTaichiScript(BIMFilePath):  # noqa: N802, N803, D103
         evt = json.load(file)
     file.close  # noqa: B018
 
-    fileNameKey = 'interfaceSurface' 
+    fileNameKey = 'simulationScript' 
     filePathKey = fileNameKey + 'Path'
     
     for event in evt['Events']:

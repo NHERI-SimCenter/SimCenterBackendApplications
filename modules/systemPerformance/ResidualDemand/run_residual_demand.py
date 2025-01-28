@@ -39,6 +39,7 @@
 import argparse
 import json
 import logging
+import math
 import os
 import shutil
 import sys
@@ -198,7 +199,7 @@ def get_highest_congestion(edge_vol_dir, edges_csv):
         )
         congestion_i = (
             all_edges_vol['vol_tot'] / all_edges_vol['capacity_x']
-        ).fillna(0)
+        ).astype(float).fillna(0)
         congestion = np.maximum(congestion, congestion_i)
     congestion = congestion.to_frame(name='congestion')
     all_edges = all_edges.merge(congestion, left_index=True, right_index=True)
@@ -357,15 +358,26 @@ def aggregate_delay_results(undamaged_time, damaged_time, od_file_pre, od_file_p
     compare_df.loc[undamaged_time['agent_id'], 'mean_time_used_undamaged'] = (
         undamaged_time['data'].mean(axis=1)
     )
-    compare_df.loc[undamaged_time['agent_id'], 'std_time_used_undamaged'] = (
-        undamaged_time['data'].std(axis=1)
-    )
+
     compare_df.loc[damaged_time['agent_id'], 'mean_time_used_damaged'] = (
         damaged_time['data'].mean(axis=1)
     )
-    compare_df.loc[damaged_time['agent_id'], 'std_time_used_damaged'] = damaged_time[
-        'data'
-    ].std(axis=1)
+
+    std_time_used_undamaged = np.zeros(len(undamaged_time['agent_id']))
+    rows_with_inf = np.any(np.isinf(undamaged_time['data']), axis=1)
+    std_time_used_undamaged[rows_with_inf] = np.nan
+    std_time_used_undamaged[~rows_with_inf] = undamaged_time['data'][~rows_with_inf].std(
+        axis=1
+    )
+    compare_df.loc[undamaged_time['agent_id'], 'std_time_used_undamaged'] = std_time_used_undamaged
+
+    std_time_used_damaged = np.zeros(len(damaged_time['agent_id']))
+    rows_with_inf = np.any(np.isinf(damaged_time['data']), axis=1)
+    std_time_used_damaged[rows_with_inf] = np.nan
+    std_time_used_damaged[~rows_with_inf] = damaged_time['data'][~rows_with_inf].std(
+        axis=1
+    )
+    compare_df.loc[damaged_time['agent_id'], 'std_time_used_damaged'] = std_time_used_damaged
 
     inner_agents = od_df_pre.merge(od_df_post, on='agent_id', how='inner')[
         'agent_id'
@@ -385,13 +397,24 @@ def aggregate_delay_results(undamaged_time, damaged_time, od_file_pre, od_file_p
         - undamaged_time['data'][indices_in_undamaged, :]
     )
     delay_ratio = delay_duration / undamaged_time['data'][indices_in_undamaged, :]
+
+    std_delay_duration = np.zeros(len(inner_agents))
+    rows_with_inf = np.any(np.isinf(delay_duration), axis=1)
+    std_delay_duration[rows_with_inf] = np.nan
+    std_delay_duration[~rows_with_inf] = delay_duration[~rows_with_inf].std(axis=1)
+
+    std_delay_ratio = np.zeros(len(inner_agents))
+    rows_with_inf = np.any(np.isinf(delay_ratio), axis=1)
+    std_delay_ratio[rows_with_inf] = np.nan
+    std_delay_ratio[~rows_with_inf] = delay_ratio[~rows_with_inf].std(axis=1)
+
     delay_df = pd.DataFrame(
         data={
             'agent_id': inner_agents,
             'mean_delay_duration': delay_duration.mean(axis=1),
             'mean_delay_ratio': delay_ratio.mean(axis=1),
-            'std_delay_duration': delay_duration.std(axis=1),
-            'std_delay_ratio': delay_ratio.std(axis=1),
+            'std_delay_duration': std_delay_duration,
+            'std_delay_ratio': std_delay_ratio,
         }
     )
 
@@ -639,6 +662,7 @@ def run_on_undamaged_network(
         capacity_map=config_file_dict['CapacityMap'],
         od_file=od_file_pre,
         hour_list=config_file_dict['HourList'],
+        tmp_dir=Path.cwd(),
     )
 
     # run simulation on undamged network
@@ -726,12 +750,14 @@ def run_one_realization(
         capacity_map=config_file_dict['CapacityMap'],
         od_file=od_file_post,
         hour_list=config_file_dict['HourList'],
+        tmp_dir=Path.cwd(),
     )
     # update the capacity due to damage
-    damaged_edge_file = residual_demand_simulator.update_edge_capacity(
+    damaged_edge_file, closed_edge_file = residual_demand_simulator.update_edge_capacity(
         damage_rlz_file, damage_det_file
     )
     residual_demand_simulator.csv_files.update({'network_edges': damaged_edge_file})
+    residual_demand_simulator.csv_files.update({'edge_closures': closed_edge_file})
     # run simulation on damaged network
     Path('damaged').mkdir()
     Path(Path('damaged') / 'trip_info').mkdir()
@@ -770,6 +796,7 @@ def run_one_realization(
         trip_info_compare['delay_duration']
         / trip_info_compare['travel_time_used_undamaged']
     )
+    trip_info_compare = trip_info_compare.replace([np.inf, -np.inf], math.inf)
     trip_info_compare.to_csv('trip_info_compare.csv', index=False)
     return True
 
@@ -846,7 +873,8 @@ def run_residual_demand(  # noqa: C901
 
     # Prepare edges and nodes files
     edges_gdf = gpd.read_file(edge_geojson).to_crs(epsg=6500)
-    edges_gdf['length'] = edges_gdf['geometry'].apply(lambda x: x.length)
+    if 'length' not in edges_gdf.columns:
+        edges_gdf['length'] = edges_gdf['geometry'].apply(lambda x: x.length)
     edges_gdf = edges_gdf.to_crs(epsg=4326)
     two_way_edges = config_file_dict['TwoWayEdges']
     if two_way_edges:
@@ -868,6 +896,8 @@ def run_residual_demand(  # noqa: C901
     edges_gdf['capacity'] = edges_gdf['lanes'] * 1800
     edges_gdf['normal_capacity'] = edges_gdf['capacity']
     edges_gdf['normal_maxspeed'] = edges_gdf['maxspeed']
+    edges_gdf['start_nid'] = edges_gdf['start_nid'].astype(int)
+    edges_gdf['end_nid'] = edges_gdf['end_nid'].astype(int)
     # edges_gdf['fft'] = edges_gdf['length']/edges_gdf['maxspeed'] * 2.23694
     edges_gdf.to_csv('edges.csv', index=False)
     nodes_gdf = gpd.read_file(node_geojson)
@@ -921,7 +951,7 @@ def run_residual_demand(  # noqa: C901
                                 ]['R2Dres']
                                 if x.startswith('R2Dres_mean_RepairCost')
                             )
-                            # A minmum cost of 0.1 is set to avoid division by zero
+                            # A minimum cost of 0.1 is set to avoid division by zero
                             loss_dist['Repair']['Cost'][comp] = max(
                                 results_det[asset_type][asset_subtype][asset_id][
                                     'R2Dres'

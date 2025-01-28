@@ -301,8 +301,7 @@ def main(  # noqa: C901, D103
     #
     # add recovery
     #
-
-    # WF.perform_recovery_simulation(asset_files.keys())
+    WF.perform_recovery_simulation()
 
     WF.compile_r2d_results_geojson(asset_files)
 

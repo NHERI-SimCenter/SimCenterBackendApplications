@@ -260,7 +260,7 @@ def read_pressure_data(file_names):
                 # index += 1
 
             except:  # noqa: E722
-                # sys.exit('Fatal Error!: the pressure filese have time gap')
+                # sys.exit('Fatal Error!: the pressure files have time gap')
                 index = 0  # Joint them even if they have a time gap
 
             connected_time = np.concatenate((connected_time, time2[index:]))

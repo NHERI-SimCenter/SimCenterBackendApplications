@@ -181,7 +181,7 @@ def get_dl_file_name(run_dir, dl_file_path, scn_number):
     return file_path, file_dir
 
 
-def set_settings_data(input_json, rewet_input_data):
+def set_settings_data(input_json, rewet_input_data, input_dir):
     """
     Set REWET-style input settings data.
 
@@ -192,6 +192,9 @@ def set_settings_data(input_json, rewet_input_data):
     rewet_input_data : TYPE
         DESCRIPTION.
 
+    input_dir: Path
+        Input directory path.
+
     Returns
     -------
     None.
@@ -200,11 +203,11 @@ def set_settings_data(input_json, rewet_input_data):
     policy_file_name = input_json['SystemPerformance']['WaterDistributionNetwork'][
         'Policy Definition'
     ]
-    policy_file_path = input_json['SystemPerformance']['WaterDistributionNetwork'][
-        'Policy DefinitionPath'
-    ]
+    #policy_file_path = input_json['SystemPerformance']['WaterDistributionNetwork'][
+        #'Policy DefinitionPath'
+    #]
 
-    policy_config_file = Path(policy_file_path) / Path(policy_file_name)
+    policy_config_file = Path(input_dir) / Path(policy_file_name)
 
     rewet_input_data['settings']['RUN_TIME'] = input_json['SystemPerformance'][
         'WaterDistributionNetwork'
@@ -453,7 +456,23 @@ if __name__ == '__main__':
         help='if specified, uses all CPUS. 2 or more CPUs are not available, it will revert back to serial run.',
     )
 
+    arg_parser.add_argument(
+        '--assetSourceFile',
+        help='Asset GeoJSOn File Path.',
+    )
+
+    arg_parser.add_argument(
+        '--inputDir',
+        help='Input Directory Path.',
+    )
+
     parser_data = arg_parser.parse_args()
+
+    sc_geojson = parser_data.assetSourceFile
+    sc_geojson = Path(sc_geojson)
+
+    input_dir = parser_data.inputDir
+    input_dir = Path(input_dir)
 
     # Setting parallel or serial settings
 
@@ -489,7 +508,7 @@ if __name__ == '__main__':
     rewet_input_data['settings'] = {}
 
     rwhale_input_data = preprocessorIO.read_json_file(parser_data.input)
-    set_settings_data(rwhale_input_data, rewet_input_data)
+    set_settings_data(rwhale_input_data, rewet_input_data, input_dir)
     event_time = rwhale_input_data['SystemPerformance']['WaterDistributionNetwork'][
         'eventTime'
     ]
@@ -498,12 +517,14 @@ if __name__ == '__main__':
     water_asset_data = rwhale_input_data['Applications']['Assets'][
         'WaterDistributionNetwork'
     ]
-    inp_file_addr = water_asset_data['ApplicationData']['inpFile']
-    if '{Current_Dir}' in inp_file_addr:
-        inp_file_addr = inp_file_addr.replace('{Current_Dir}', '.')
-    sc_geojson = rwhale_input_data['Applications']['Assets'][
-        'WaterDistributionNetwork'
-    ]['ApplicationData']['assetSourceFile']
+    inp_file_name = water_asset_data['ApplicationData']['inpFile']
+    inp_file_addr = input_dir / inp_file_name
+
+    #if '{Current_Dir}' in inp_file_addr:
+        #inp_file_addr = inp_file_addr.replace('{Current_Dir}', '.')
+    #sc_geojson = rwhale_input_data['Applications']['Assets'][
+        #'WaterDistributionNetwork'
+    #]['ApplicationData']['assetSourceFile']
 
     run_dir = cur_dir
     number_of_realization = rwhale_input_data['Applications']['DL'][
