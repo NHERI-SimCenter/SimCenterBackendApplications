@@ -875,6 +875,11 @@
         "ApplicationSpecificInputs": []
       },
       {
+        "Name": "ComponentAndCladdingWindEDP",
+        "ExecutablePath": "applications/createEDP/componentAndCladdingWindEDP/ComponentAndCladdingWindEDP",
+        "ApplicationSpecificInputs": []
+      },
+      {
         "Name": "StandardEDP",
         "ExecutablePath": "applications/createEDP/standardEDP/StandardEDP",
         "ApplicationSpecificInputs": []
@@ -1039,6 +1044,10 @@
       {
         "Name": "SurrogateRegionalPy",
         "ExecutablePath": "applications/performSIMULATION/surrogateRegionalPy/SurrogateRegionalPy.py"
+      },      
+      {
+        "Name": "WindLoadSimulation",
+        "ExecutablePath": "applications/performSIMULATION/windLoadSimulation/WindLoadSimulation.py"
       },
       {
         "Name": "MultiModel-FEA",

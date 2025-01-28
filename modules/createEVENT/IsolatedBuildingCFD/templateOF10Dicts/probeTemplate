@@ -13,6 +13,7 @@ Description
 
 type            probes;
 libs            ("libsampling.so");
+interpolationScheme cellPoint;
 writeControl    timeStep;
 writeInterval   10;
 
