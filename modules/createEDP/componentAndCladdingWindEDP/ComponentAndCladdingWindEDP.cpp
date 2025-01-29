@@ -316,6 +316,67 @@ int main(int argc, char ** argv) {
     json_object_set(rootEDP, "EngineeringDemandParameters", eventArray);
 
     json_dump_file(rootEDP, filenameEDP, 0);
+    
+  } else {
+    
+    // fill in EDP with the data
+
+    // 
+    // Open the EDP JSON file
+    //
+    
+    FILE *file = fopen(filenameEDP, "r");
+    if (!file) {
+        std::cerr << "Error: Could not open file " << filenameEDP << std::endl;
+        return -1;
+    }
+
+    // Parse the JSON file
+    json_error_t error;
+    json_t *rootEDP = json_loadf(file, 0, &error);
+    fclose(file); // Close the file after parsing
+
+    if (!rootEDP) {
+        std::cerr << "Error: Failed to parse JSON - " << error.text << " at line " << error.line << std::endl;
+        return -1;
+    }
+
+    // Check if the root is a JSON object
+    if (!json_is_object(rootEDP)) {
+        std::cerr << "Error: Root element is not a JSON object!" << std::endl;
+        json_decref(rootEDP);
+        return -1;
+    }
+    
+    // get loads array in first array element of EngineeringDemandParameters
+    json_t *edpArray = json_object_get(rootEDP, "EngineeringDemandParameters");
+    if (!json_is_array(edpArray)) {
+        std::cerr << "Error: EngineeringDemandParameters is not an array!" << std::endl;
+        json_decref(rootEDP);
+        return -1;
+    }
+    
+    json_t *firstEDP = json_array_get(edpArray, 0);
+    json_t *loads = json_object_get(firstEDP, "loads");
+    if (!json_is_array(loads)) {
+        std::cerr << "Error: responses is not an array!" << std::endl;
+        json_decref(rootEDP);
+        return -1;
+    }
+
+    // now loop over load entries putting in values
+    for (size_t j = 0; j < json_array_size(loads); j++) {
+      json_t *load = json_array_get(loads, j);
+      json_t *scalarData = json_object_get(load, "scalar_data");
+      if (!json_is_array(scalarData)) {
+	std::cerr << "Error: scalar_data is not an array!" << std::endl;
+	continue;
+      }
+      // Add 1 to the "scalar_data" array
+      json_array_append_new(scalarData, json_integer(1));
+    }
+    json_dump_file(rootEDP, filenameEDP, 0);
   }
+
   return 0;
 }
