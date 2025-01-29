@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <vector>
 #include <cmath>
 using namespace std;
 #include <jansson.h>  // for Json
@@ -353,29 +354,22 @@ int main(int argc, char ** argv) {
     json_t* mainJsonAIM  = json_load_file(filenameAIM, 0, & error);
     json_t* evtObj = json_object_get(mainJsonAIM, "Event");
 
-    std::string casePath = json_string_value(json_object_get(evtObj, "caseDirectoryPath")) + "/constant/simCenter/output/windLoads/";
+    std::string casePath = std::string(json_string_value(json_object_get(evtObj, "caseDirectoryPath"))) + "/constant/simCenter/output/windLoads";
 
 
-    // Read values from multiple files
-    std::vector<std::pair<std::string, std::vector<double>*>> files = {
-        {casePath + "/meanP", new std::vector<double>()},
-        {casePath + "/rmsP", new std::vector<double>()},
-        {casePath + "/peakP", new std::vector<double>()},
-        {casePath + "/meanF", new std::vector<double>()},
-        {casePath + "/rmsF", new std::vector<double>()},
-        {casePath + "/peakF", new std::vector<double>()}
-    };
+   // Reading data from files
+    std::vector<std::string> fileNames = {"meanP", "rmsP", "peakP", "meanF", "rmsF", "peakF"};
+    std::vector<std::vector<double>> dataArrays(6);
     
-
-    for (auto &fileEntry : files) {
-        std::ifstream file(fileEntry.first);
+    for (size_t i = 0; i < fileNames.size(); i++) {
+        std::ifstream file(casePath + "/" + fileNames[i]);
         if (!file) {
-            std::cerr << "Error: Could not open file " << fileEntry.first << std::endl;
+            std::cerr << "Error: Could not open file " << fileNames[i] << std::endl;
             continue;
         }
         std::string line;
         while (std::getline(file, line)) {
-            fileEntry.second->push_back(std::stod(line));
+            dataArrays[i].push_back(std::stod(line));
         }
         file.close();
     }
@@ -397,6 +391,8 @@ int main(int argc, char ** argv) {
     }
 
     // now loop over load entries putting in values
+
+    int count  = 0;
     for (size_t j = 0; j < json_array_size(loads); j++) {
       json_t *load = json_array_get(loads, j);
       json_t *scalarData = json_object_get(load, "scalar_data");
@@ -410,23 +406,25 @@ int main(int argc, char ** argv) {
       // Add 1 to the "scalar_data" array
 
       if(json_string_value(loadType)=="mean_pressure"){
-        json_array_append_new(scalarData, json_real(files[0].second));
+        json_array_append_new(scalarData, json_real(dataArrays[0][count]));
       }
       else if(json_string_value(loadType)=="rms_pressure"){
-        json_array_append_new(scalarData, json_real(files[1].second));
+        json_array_append_new(scalarData, json_real(dataArrays[1][count]));
       }
       else if(json_string_value(loadType)=="peak_pressure"){
-        json_array_append_new(scalarData, json_real(files[2].second));
+        json_array_append_new(scalarData, json_real(dataArrays[2][count]));
       }
       else if(json_string_value(loadType)=="mean_force"){
-        json_array_append_new(scalarData, json_real(files[3].second));
+        json_array_append_new(scalarData, json_real(dataArrays[3][count]));
       }
       else if(json_string_value(loadType)=="rms_force"){
-        json_array_append_new(scalarData, json_real(files[4].second));
+        json_array_append_new(scalarData, json_real(dataArrays[4][count]));
       }
       else if(json_string_value(loadType)=="peak_force"){
-        json_array_append_new(scalarData, json_real(files[5].second));
+        json_array_append_new(scalarData, json_real(dataArrays[5][count]));
       }
+
+      count ++ ;
     }
 
     json_dump_file(rootEDP, filenameEDP, 0);
