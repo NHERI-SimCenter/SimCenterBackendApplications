@@ -313,7 +313,7 @@ def create_command(command_list, enforced_python=None):
     return command  # noqa: DOC201, RUF100
 
 
-def run_command(command):
+def run_command(command, app_category=''):
     """Short description
 
     Long description
@@ -375,11 +375,32 @@ def run_command(command):
         if returncode != 0:
             log_error(f'return code: {returncode}')
 
-        # if platform.system() == 'Windows':
-        #     return result.decode(sys.stdout.encoding), returncode
-        # else:
-        #     #print(result, returncode)
-        #     return str(result), returncode
+        #
+        # sy - error checking trial 2 : only for windows and python & additional try statement
+        #
+
+        try:
+            # if (platform.system() == 'Windows') and ('python.exe' in str(command)):
+            if returncode != 0:
+                raise WorkFlowInputError('Analysis Failed at ' + app_category)  # noqa: TRY301
+
+            # sy - safe apps should be added below
+            elif 'OpenSeesInput' in str(command):  # noqa: RET506
+                if returncode != 0:
+                    raise WorkFlowInputError('Analysis Failed at ' + app_category)  # noqa: TRY301
+
+            return str(result), returncode
+
+        except WorkFlowInputError as e:
+            # this will catch the error
+            print(str(e).replace("'", ''))  # noqa: T201
+            print('         =====================================')  # noqa: T201
+            print(str(result))  # noqa: T201
+            sys.exit(-20)
+
+        except:  # noqa: E722
+            # if for whatever reason the function inside "try" fails, move on without checking error
+            return str(result), 0
 
         return result, returncode
 
@@ -1285,7 +1306,7 @@ class Workflow:
                     prepend_blank_space=False,
                 )
 
-                result, returncode = run_command(command)
+                result, returncode = run_command(command, 'Asset Creater')
 
                 # Check if the command was completed successfully
                 if returncode != 0:
@@ -1507,27 +1528,41 @@ class Workflow:
         return assetFilesList  # noqa: DOC201, RUF100
 
     def perform_system_performance_assessment(self, asset_type):
-        """For an asset type run the system level performance assessment application
+        """Run the system level performance assessment application.
 
-        Longer description
+        For an asset type run the system level performance assessment
+        application.
 
         Parameters
         ----------
         asset_type: string
            Asset type to run perform system assessment of
 
-        """  # noqa: D400
-        if 'SystemPerformance' in self.workflow_apps.keys():  # noqa: SIM118
-            performance_app = self.workflow_apps['SystemPerformance'][asset_type]
+        """
+        # Make sure that we are in the run directory before we run REWET
+        # Every other path will be relative to the Run Directory (result dir)
+        os.chdir(self.run_dir)
+
+        # Check if system performance is requested
+        if 'SystemPerformance' in self.workflow_apps:
+            if asset_type in self.workflow_apps['SystemPerformance']:
+                performance_app = self.workflow_apps['SystemPerformance'][asset_type]
+            else:
+                log_msg(
+                    f'No Performance application to run for asset type: {asset_type}.',
+                    prepend_timestamp=False,
+                )
+                log_div()
+                return False
         else:
             log_msg(
                 f'No Performance application to run for asset type: {asset_type}.',
                 prepend_timestamp=False,
             )
             log_div()
-            return False  # noqa: DOC201, RUF100
+            return False
 
-        if performance_app.rel_path == None:  # noqa: E711
+        if performance_app.rel_path is None:
             log_msg(
                 f'No Performance application to run for asset type: {asset_type}.',
                 prepend_timestamp=False,
@@ -1536,8 +1571,7 @@ class Workflow:
             return False
 
         log_msg(
-            'Performing System Performance Application for asset type: '
-            + asset_type,
+            f'Performing System Performance Application for asset type: {asset_type}',
             prepend_timestamp=False,
         )
         log_div()
@@ -1550,18 +1584,13 @@ class Workflow:
         # defaults added to a system performance app are asset_type, input_dir and running_parallel (default False)
         #
 
-        # app_command_list.append('--asset_type')
-        # app_command_list.append(asset_type)
         app_command_list.append('--input')
         app_command_list.append(self.input_file)
-        # app_command_list.append('--working_dir')
-        # app_command_list.append(self.working_dir)
 
         # Sina added this part for parallel run in REWET
         if self.parType == 'parSETUP':
             log_msg(
-                '\nParallel settings for System Performance for asset type:'
-                + asset_type,
+                f'\nParallel settings for System Performance for asset type:{asset_type}',
                 prepend_timestamp=False,
             )
             app_command_list.append('--par')
@@ -1575,7 +1604,7 @@ class Workflow:
             prepend_blank_space=False,
         )
 
-        result, returncode = run_command(command)
+        result, returncode = run_command(command, 'Performance Assessment')
         log_msg(
             f'\n{result}\n',
             prepend_timestamp=False,
@@ -1583,33 +1612,9 @@ class Workflow:
         )
 
         log_msg(
-            'System Performance Application Completed for asset type: ' + asset_type,
+            f'System Performance Application Completed for asset type: {asset_type}',
             prepend_timestamp=False,
         )
-
-        #  end of Sina's odifications for parallel run
-
-        # if (self.parType == 'parSETUP'):
-
-        #     log_msg('\nWriting System Performance application for asset type:' + asset_type, prepend_timestamp=False)
-        #     self.parCommandFile.write("\n# Writing System Performance application for asset type:" + asset_type +"\n")
-
-        #     if performance_app.runsParallel == False:
-        #         self.parCommandFile.write(command + "\n")
-        #     else:
-        #         self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + " --running_parallel True\n")
-
-        # else:
-
-        #     log_msg('\n{}\n'.format(command), prepend_timestamp=False,
-        #             prepend_blank_space=False)
-
-        #     result, returncode = run_command(command)
-
-        #     log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
-        #     log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
-
-        #     log_msg('System Performance Application Completed for asset type: ' + asset_type, prepend_timestamp=False)
 
         log_div()
         return True
@@ -1663,7 +1668,7 @@ class Workflow:
                 prepend_blank_space=False,
             )
 
-            result, returncode = run_command(command)
+            result, returncode = run_command(command, 'Hazard Event')
 
             log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
             log_msg(
@@ -1726,7 +1731,7 @@ class Workflow:
                 prepend_blank_space=False,
             )
 
-            result, returncode = run_command(command)
+            result, returncode = run_command(command, 'Recovery')
 
             log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
             log_msg(
@@ -1809,7 +1814,7 @@ class Workflow:
             )
 
         else:
-            result, returncode = run_command(command)
+            result, returncode = run_command(command, 'Hazard-Asset Mapping (HTA)')
 
             log_msg(
                 'Output: ' + str(returncode),
@@ -2049,7 +2054,9 @@ class Workflow:
                                 prepend_blank_space=False,
                             )
 
-                            result, returncode = run_command(command)
+                            result, returncode = run_command(
+                                command, f'{app_type} - at the initial setup (getRV)'
+                            )
 
                             log_msg(
                                 'Output: ' + str(returncode),
@@ -2091,7 +2098,7 @@ class Workflow:
                             prepend_blank_space=False,
                         )
 
-                        result, returncode = run_command(command)
+                        result, returncode = run_command(command, app_type)
 
                         log_msg(
                             'Output: ' + str(returncode),
@@ -2166,7 +2173,7 @@ class Workflow:
                     prepend_blank_space=False,
                 )
 
-                result, returncode = run_command(command)
+                result, returncode = run_command(command, app_type)
 
                 log_msg(
                     'Output: ' + str(returncode),
@@ -2179,15 +2186,18 @@ class Workflow:
                     prepend_blank_space=False,
                 )
 
-                # sy - trying adding exit command
-                # if platform.system() == 'Windows':
-                #    with open("driver.bat","r", encoding="utf-8") as f:
-                #        lines = f.readlines()
-                #    #lines.append(r'if %errorlevel% neq 0 exit /b -1')
-                #    with open("driver.bat","w", encoding="utf-8") as f:
-                #        f.writelines(lines)
-                # else:
-                #    pass
+                # sy - error checking trial 2
+                #      This time, (1) we do it only for python; (2) added try statement
+
+                try:
+                    if command.startswith('python'):
+                        if platform.system() == 'Windows':
+                            driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'  # noqa: F821, F841
+                        else:
+                            pass
+
+                except:  # noqa: S110, E722
+                    pass
 
                 log_msg(
                     'Successfully Created Driver File for Workflow.',
@@ -2251,7 +2261,7 @@ class Workflow:
 
             # print('FMK- gather command:', command)
 
-            result, returncode = run_command(command)
+            result, returncode = run_command(command, ' Gathering workflow inputs')
 
             log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
             log_msg(
@@ -2344,13 +2354,25 @@ class Workflow:
 
                     driver_script += create_command(command_list) + '\n'
 
-                # sy - trying adding exit command
+                # sy - error checking trial 2
+                #      This time, (1) we do it only for python; (2) added try statement
 
-                # if platform.system() == 'Windows':
-                #   #driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
-                #   pass
-                # else:
-                #   pass
+                # try:
+                if 'python' in command_list[0].lower():
+                    if platform.system() == 'Windows':
+                        driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                    else:
+                        pass
+                elif (
+                    'stochasticgm' in command_list[0].lower()
+                ):  # This function follows our standard
+                    if platform.system() == 'Windows':
+                        driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                    else:
+                        pass
+
+                # except:
+                #    pass
 
             # log_msg('Workflow driver script:', prepend_timestamp=False)
             # log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False, prepend_blank_space=False)
@@ -2444,7 +2466,7 @@ class Workflow:
                 prepend_blank_space=False,
             )
 
-            result, returncode = run_command(command)
+            result, returncode = run_command(command, 'Response Simulator')
 
             if self.run_type in ['run', 'runningLocal']:
                 log_msg(
@@ -2521,7 +2543,7 @@ class Workflow:
             app_path=self.app_dir_local  # noqa: F821
         )
         command = create_command(app_command_list)
-        result, returncode = run_command(command)
+        result, returncode = run_command(command, 'Performance assessment')
 
     def estimate_losses(  # noqa: C901
         self,
@@ -2614,7 +2636,7 @@ class Workflow:
                         prepend_blank_space=False,
                     )
 
-                    result, returncode = run_command(command)
+                    result, returncode = run_command(command, 'Damage and loss')
 
                     log_msg(result, prepend_timestamp=False)
 
@@ -2665,7 +2687,7 @@ class Workflow:
                     prepend_blank_space=False,
                 )
 
-                result, returncode = run_command(command)
+                result, returncode = run_command(command, 'Damage and loss')
 
                 log_msg(result, prepend_timestamp=False)
 
@@ -2808,7 +2830,7 @@ class Workflow:
             prepend_blank_space=False,
         )
 
-        result, returncode = run_command(command)
+        result, returncode = run_command(command, 'Performance Assessment')
 
         log_msg(result, prepend_timestamp=False)
 
@@ -2870,7 +2892,7 @@ class Workflow:
                 bldg_dir = Path(os.path.dirname(asst_data[a_i]['file'])).resolve()  # noqa: PTH120
                 main_dir = bldg_dir
                 assetTypeHierarchy = [bldg_dir.name]  # noqa: N806
-                while main_dir.parent.name != self.run_dir.name:
+                while main_dir.parent.name != 'Results':
                     main_dir = bldg_dir.parent
                     assetTypeHierarchy = [main_dir.name] + assetTypeHierarchy  # noqa: N806, RUF005
 

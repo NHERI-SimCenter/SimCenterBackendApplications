@@ -16,11 +16,11 @@ int main(int argc, char **argv) {
     #If requesting random variables run getUncertainty
     #Otherwise, Run Opensees 
     if "--getRV" in args:
-        getUncertaintyCommand = '"{}/OpenSeesPreprocessor" {} {} {} {}'.format(scriptDir, bimName, samName, evtName, simName)
+        getUncertaintyCommand = '"{}/OpenSeesPreprocessor" {} {} {} {} 1> ops.out 2>&1'.format(scriptDir, bimName, samName, evtName, simName)
         subprocess.Popen(getUncertaintyCommand, shell=True).wait()
     else:
         #Run preprocessor
-        preprocessorCommand = '"{}/OpenSeesPreprocessor" {} {} {} {} {} example.tcl'.format(scriptDir, bimName, samName, evtName, edpName, simName)
+        preprocessorCommand = '"{}/OpenSeesPreprocessor" {} {} {} {} {} example.tcl 1> ops.out 2>&1'.format(scriptDir, bimName, samName, evtName, edpName, simName)
         subprocess.Popen(preprocessorCommand, shell=True).wait()
         
         #Run OpenSees

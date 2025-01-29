@@ -406,7 +406,7 @@ utilities::JsonObject stochastic::DabaghiDerKiureghian::generate(
         }
       }
 
-      // Baseline correct trunacted non-pulse-like motions
+      // Baseline correct truncated non-pulse-like motions
       for (unsigned int i = 0; i < num_sims_nopulse_; ++i) {
         for (unsigned int j = 0; j < num_realizations_; ++j) {
           baseline_correct_time_history(nopulse_motions_comp1[i][j], gfactor,
@@ -787,7 +787,7 @@ void stochastic::DabaghiDerKiureghian::transform_parameters_from_normal_space(
                        params_fitted1_(17), params_fitted2_(17),
                        params_fitted3_(17), params_lower_bound_(17));
 
-    // Calculate depth_to_rupture compenent 2
+    // Calculate depth_to_rupture component 2
     beta_dist =
         Factory<stochastic::Distribution, double, double>::instance()->create(
             "BetaDist", std::move(params_fitted1_(18)),
@@ -1203,7 +1203,7 @@ double stochastic::DabaghiDerKiureghian::calc_time_to_intensity(
 std::vector<double> stochastic::DabaghiDerKiureghian::calc_linear_filter(
     unsigned int num_steps, const Eigen::VectorXd& filter_params, double t01,
     double tmid, double t99) const {
-  // Mininum frequency in Hz
+  // Minimum frequency in Hz
   double min_freq = 0.3;
   std::vector<double> filter_func(num_steps);
   // Frequency at tmid, in Hz  
@@ -1458,7 +1458,7 @@ void stochastic::DabaghiDerKiureghian::baseline_correct_time_history(
     std::vector<double>& time_history, double gfactor,
     unsigned int order) const {
 
-  // Calculate velocity and displacment time histories
+  // Calculate velocity and displacement time histories
   std::vector<double> vel_series(time_history.size());
   std::vector<double> disp_series(time_history.size());
 

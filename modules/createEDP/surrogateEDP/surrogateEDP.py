@@ -10,6 +10,8 @@ else:
 import argparse
 import json
 
+errPath = os.path.join(os.getcwd(), 'workflow.err')  # noqa: N816, PTH109, PTH118
+
 
 def write_RV(AIM_input_path, EDP_input_path, EDP_type):  # noqa: ARG001, N802, N803, D103
     # load the AIM file
@@ -24,7 +26,7 @@ def write_RV(AIM_input_path, EDP_input_path, EDP_type):  # noqa: ARG001, N802, N
         root_AIM['Applications']['Modeling']['Application']
         != 'SurrogateGPBuildingModel'
     ):
-        with open('../workflow.err', 'w') as f:  # noqa: PTH123
+        with open(errPath, 'w') as f:  # noqa: PTH123
             f.write(
                 'Do not select [None] in the EDP tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'
             )

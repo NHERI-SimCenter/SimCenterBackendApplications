@@ -1,4 +1,4 @@
-#  # noqa: INP001
+#  # noqa: INP001, EXE002
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -222,7 +222,8 @@ FoamFile
                     if heightfilename != [None]:
                         heightfilename = ', '.join(
                             hydroutil.extract_element_from_json(
-                                data, ['Events', 'OSUMovingWallHeight_' + patchname]
+                                data,
+                                ['Events', 'OSUMovingWallHeight_' + patchname],
                             )
                         )
                         heightfilepath = os.path.join(fipath, heightfilename)  # noqa: PTH118
@@ -265,7 +266,8 @@ FoamFile
                     if heightfilename != [None]:
                         heightfilename = ', '.join(
                             hydroutil.extract_element_from_json(
-                                data, ['Events', 'MovingWallHeight_' + patchname]
+                                data,
+                                ['Events', 'MovingWallHeight_' + patchname],
                             )
                         )
                         heightfilepath = os.path.join(fipath, heightfilename)  # noqa: PTH118
@@ -480,7 +482,13 @@ FoamFile
         fileID.close()
 
     #############################################################
-    def OSUwavemakerText(self, fipath, dispfilepath, heightfilepath, numMovWall):  # noqa: ARG002, C901, N802, N803
+    def OSUwavemakerText(  # noqa: C901, N802
+        self,
+        fipath,
+        dispfilepath,
+        heightfilepath,
+        numMovWall,  # noqa: ARG002, N803
+    ):
         """Creates the wavemaker text file for the OSU moving wall
 
         Arguments:
@@ -562,7 +570,13 @@ FoamFile
             fileID.write(')\n);')
 
     #############################################################
-    def GenwavemakerText(self, fipath, dispfilepath, heightfilepath, numMovWall):  # noqa: ARG002, C901, N802, N803
+    def GenwavemakerText(  # noqa: C901, N802
+        self,
+        fipath,
+        dispfilepath,
+        heightfilepath,
+        numMovWall,  # noqa: ARG002, N803
+    ):
         """Creates the wavemaker text file for a general moving wall
 
         Arguments:

@@ -1,4 +1,4 @@
-import argparse  # noqa: INP001, D100
+import argparse  # noqa: D100, INP001
 import importlib
 import json
 import os
@@ -8,7 +8,8 @@ import sys
 import warnings
 
 import geopandas as gpd
-import momepy
+
+# import momepy
 import numpy as np
 import pandas as pd
 import shapely
@@ -179,10 +180,10 @@ class lineAIMGenerator(generalAIMGenerator):  # noqa: D101
         # Convert find connectivity and add start_node, end_node attributes
         edges = self.gdf
         datacrs = edges.crs
-        graph = momepy.gdf_to_nx(edges.to_crs('epsg:6500'), approach='primal')
+        graph = momepy.gdf_to_nx(edges.to_crs('epsg:6500'), approach='primal')  # noqa: F821
         with warnings.catch_warnings():  # Suppress the warning of disconnected components in the graph
             warnings.simplefilter('ignore')
-            nodes, edges, sw = momepy.nx_to_gdf(
+            nodes, edges, sw = momepy.nx_to_gdf(  # noqa: F821
                 graph, points=True, lines=True, spatial_weights=True
             )
         # edges = edges.set_index('ind')

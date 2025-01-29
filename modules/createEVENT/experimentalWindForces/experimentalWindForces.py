@@ -1,5 +1,6 @@
 import json  # noqa: INP001, D100
 import os
+import sys
 import time
 
 try:
@@ -15,6 +16,8 @@ except:  # noqa: E722
     error_tag = True
 
 from convertWindMat import *  # noqa: F403
+
+errPath = os.path.join(os.getcwd(), 'workflow.err')  # noqa: N816, PTH109, PTH118
 
 
 def main(aimName, evtName, getRV):  # noqa: C901, N803, D103, PLR0915
@@ -647,7 +650,7 @@ def simulation_gaussian(  # noqa: D103, PLR0913
 
 def err_exit(msg):  # noqa: D103
     print(msg)  # noqa: T201
-    with open('../workflow.err', 'w') as f:  # noqa: PTH123
+    with open(errPath, 'w') as f:  # noqa: PTH123
         f.write(msg)
     exit(-1)  # noqa: PLR1722
 
@@ -656,19 +659,19 @@ if __name__ == '__main__':
     # parseWindMatFile("Forces_ANG000_phase1.mat", "Forces_ANG000_phase1.json")
     # parseWindMatFile("TargetSpectra_ANG000_phase1.mat", "TargetSpectra_ANG000_phase1.json")
 
-    inputArgs = sys.argv  # noqa: N816, F405
+    inputArgs = sys.argv  # noqa: N816
 
     # set filenames
-    aimName = sys.argv[2]  # noqa: N816, F405
-    evtName = sys.argv[4]  # noqa: N816, F405
+    aimName = sys.argv[2]  # noqa: N816
+    evtName = sys.argv[4]  # noqa: N816
 
     getRV = False  # noqa: N816
-    for myarg in sys.argv:  # noqa: F405
+    for myarg in sys.argv:
         if myarg == '--getRV':
             getRV = True  # noqa: N816
 
     if error_tag and getRV:
-        with open('../workflow.err', 'w') as f:  # noqa: PTH123
+        with open(errPath, 'w') as f:  # noqa: PTH123
             print('Failed to import module ' + moduleName)  # noqa: T201
             f.write(
                 'Failed to import module '
@@ -686,7 +689,7 @@ if __name__ == '__main__':
         import traceback
 
         if getRV:
-            with open('../workflow.err', 'w') as f:  # noqa: PTH123
+            with open(errPath, 'w') as f:  # noqa: PTH123
                 f.write(
                     'Failed in wind load generator preprocessor:'
                     + str(err)

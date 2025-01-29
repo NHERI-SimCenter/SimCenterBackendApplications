@@ -1,0 +1,34 @@
+{
+    "dt": 0.1,
+    "nfft": 1024,
+    "dk": 0.1,
+    "tmin":0,
+    "tmax": 10,
+    "dh": 0.1,
+    "dv_rec": 0.1,
+    "dv_src": 0.1,
+    "layers":[
+        {"Layer Name":"Layer1",          "Thickness":10, "Vp":2000, "Vs":1000, "Density":2000, "Qp": 100, "Qs": 50},
+        {"Layer Name":"Layer2",          "Thickness":20, "Vp":2500, "Vs":1200, "Density":2200, "Qp": 150, "Qs": 75},
+        {"Layer Name":"Layer3",          "Thickness":30, "Vp":3000, "Vs":1500, "Density":2400, "Qp": 200, "Qs": 100},
+        {"Layer Name":"Half Space Layer","Thickness":0,  "Vp":3500, "Vs":1800, "Density":2600, "Qp": 250, "Qs": 125}
+    ],
+    "station_type": "Single",
+    "station_info": [
+        {"Latitude": -33.5, "Longitude": -70.5, "Depth": 5},
+        {"Latitude": -33.6, "Longitude": -70.6, "Depth": 1}
+    ],
+    "fault_type": "Database",
+    "fault_info": {
+        "Country": "Chile",
+        "Fault": "Sanramon",
+        "Magnitude": "6.7",
+        "Fault Type": "bl",
+        "Realization": 1
+    },
+    "System": "Frontera",
+    "Queue": "normal",
+    "Number of Nodes": 40,
+    "Cores per Node": 50,
+    "Max Run Time": "04:00:00"
+}

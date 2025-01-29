@@ -10,6 +10,12 @@
 #include <filesystem>
 #include <algorithm>
 #include <regex>
+#include <cstdio> // for freopen
+#include <cstdlib> // for exit
+#include <stdexcept>
+#include <exception>
+#include <csignal>
+
 
 int getEDP(json_t *edp, std::vector<std::string> &edpList);
 int getRV(json_t *edp, std::vector<std::string> &rvList);
@@ -33,7 +39,62 @@ std::string appendModelIndexToStem(int modelIndex, std::string filename) {
     return filename;
 }
 
-int main(int argc, const char **argv) {
+
+void writeFile(const std::string& inFilename, const std::string& outFilename, const std::vector<std::string>& varToChange) {
+    std::ifstream inFile(inFilename);
+    if (!inFile.is_open()) {
+        throw std::runtime_error("Failed to open input file: " + inFilename);
+    }
+
+    // Use a temporary file for output
+    std::string tempFilename = outFilename + ".tmp";
+    std::ofstream outFile(tempFilename);
+    if (!outFile.is_open()) {
+        throw std::runtime_error("Failed to open temporary output file: " + tempFilename);
+    }
+
+    std::string line;
+    while (std::getline(inFile, line)) {
+        std::string equalTo = "=";
+        std::size_t found = line.find(equalTo);
+        if (found != std::string::npos) {
+            std::string varNameWithSpaces = line.substr(0, found);
+            std::string varName(varNameWithSpaces);
+            varName.erase(std::remove_if(varName.begin(), varName.end(), ::isspace), varName.end());
+
+            // Check if varName is in the input string list
+            if (std::find(varToChange.begin(), varToChange.end(), varName) != varToChange.end()) {
+                outFile << varNameWithSpaces << " = \"RV." << varName << "\"\n";
+            } else {
+                // Not there, write current line
+                outFile << line << "\n";
+            }
+        } else {
+            // Just copy line to output
+            outFile << line << "\n";
+        }
+    }
+
+    // Check if the output stream is in a good state
+    if (!outFile.good()) {
+        throw std::runtime_error("Failed to write to output file: " + tempFilename);
+    }
+
+    // Close files
+    inFile.close();
+    outFile.close();
+
+    // Replace the original file with the temporary file
+    std::remove(outFilename.c_str());
+    std::rename(tempFilename.c_str(), outFilename.c_str());
+}
+
+
+
+
+
+//int main(int argc, const char **argv) {
+int createDriver(int argc, const char **argv) {
   
   if (argc < 5) {
     std::cerr << "createOpenSeesPyDriver:: expecting 4 inputs\n";
@@ -115,12 +176,20 @@ int main(int argc, const char **argv) {
     workflowDriver.append(std::string(".bat"));
   
   std::ofstream workflowDriverFile(workflowDriver, std::ios::binary);
-  
+
   if (!workflowDriverFile.is_open()) {
     std::cerr << "createOpenSeesPyDriver:: could not create workflow driver file: " << workflowDriver << "\n";
     exit(802); // no random variables is allowed
   }
 
+  // put in shebang fow linux
+  bool isWindows = (osType.compare("Windows") == 0);
+  bool isRunningLocal = (runType.compare("runningLocal") == 0);
+  if (!(isWindows && isRunningLocal)) {
+    workflowDriverFile << "#!/bin/bash\n";
+  }  
+
+  
   std::string dpreproCommand;
   std::string openSeesCommand;
   std::string pythonCommand;
@@ -192,12 +261,33 @@ int main(int argc, const char **argv) {
   const char *postprocessScript =  json_string_value(json_object_get(fem, "postprocessScript"));
   std::string parametersScript =  json_string_value(json_object_get(fem, "parametersScript"));
 
+  //
+  // sy - moving special copy from frontend to backend
+  //
+
+  std::string inputString(parametersScript);
+  writeFile(inputString,inputString,rvList);
+
   std::string parametersScriptTemplate = "tmpSimCenter.params";
   if (strcmp(parametersScript.c_str(),"") != 0) { // if parametersScript name is provided
     if (modelIndex > 0) {
       parametersScriptTemplate = appendModelIndexToStem(modelIndex, parametersScriptTemplate);
     }
-    std::filesystem::copy_file(parametersScript, parametersScriptTemplate);
+    try {
+        std::filesystem::copy_file(parametersScript, parametersScriptTemplate);
+        std::cout << "File copied successfully from " 
+                  << parametersScript << " to " 
+                  << parametersScriptTemplate << std::endl;
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Error copying file: " << e.what() << std::endl;
+        std::cerr << "Source: " << e.path1() << ", Destination: " << e.path2() << std::endl;
+        exit(-1);
+    } catch (const std::exception& e) {
+        std::cerr << "An unexpected error occurred: " << e.what() << std::endl;
+        exit(-1);
+    }
+
+
   } else {
     for(std::vector<std::string>::iterator itRV = rvList.begin(); itRV != rvList.end(); ++itRV) {
       std::string nm = *itRV;
@@ -218,14 +308,14 @@ int main(int argc, const char **argv) {
   }  
   std::string mainScript = json_string_value(femScript);
   std::ifstream modelFile(mainScript);
-  while (!modelFile.eof()) {
-    std::string line;
-    std::getline(modelFile, line);
-    templateFile << line << std::endl;
+  std::string line;
+  while (std::getline(modelFile, line)) {
+      // std::cout << line << std::endl; // Print line to console
+      templateFile << line << std::endl; // Write line to template file
   }
   templateFile.close();
+  if (strcmp(parametersScript.c_str(),"") == 0) {
 
-  if (strcmp(parametersScript.c_str(),"") == 0) {	
     // workflowDriverFile << moveCommand << mainScript << " tmpSimCenter.script \n";
     workflowDriverFile << dpreproCommand << "  params.in " << mainScriptTemplate << " " << mainScript << "\n";
   } else {
@@ -268,7 +358,42 @@ int main(int argc, const char **argv) {
   //
   // done
   //
+  std::cerr << "The run was successful" << std::endl;
+
+
+
 
   exit(0);
 }
 
+void signalHandler(int signal) {
+    std::cerr << "Caught signal: " << signal << std::endl;
+    exit(signal);
+}
+
+void setupSignalHandlers() {
+    std::signal(SIGSEGV, signalHandler);
+}
+
+void redirectCerrToFile() {
+    if (freopen("FEMpreprocessor.err", "w", stderr) == nullptr) {
+        std::cerr << "Failed to redirect stderr to error.log" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
+
+int main(int argc, const char **argv) {
+   // to redirect the file
+    redirectCerrToFile();
+    setupSignalHandlers();
+
+    try {
+        createDriver(argc, argv); // Pass arguments to the main logic function
+    } catch (const std::exception& e) {
+        std::cerr << "Caught exception in main: " << e.what() << std::endl;
+    }
+
+    return 0;
+
+}

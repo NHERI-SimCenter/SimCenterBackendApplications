@@ -1,5 +1,6 @@
 import json  # noqa: INP001, D100
 import os
+import sys
 import time
 
 try:
@@ -7,8 +8,6 @@ try:
     import numpy as np
 
     moduleName = 'scipy'  # noqa: N816
-    import os
-
     from scipy import interpolate
     from scipy.interpolate import interp1d
     from scipy.signal import butter, csd, lfilter, windows
@@ -20,17 +19,17 @@ except:  # noqa: E722
 
 from convertWindMat import *  # noqa: F403
 
-errPath = './workflow.err'  # error file name  # noqa: N816
-sys.stderr = open(  # noqa: SIM115, PTH123, F405
+errPath = os.path.join(os.getcwd(), 'workflow.err')  # noqa: N816, PTH109, PTH118
+sys.stderr = open(  # noqa: SIM115, PTH123
     errPath, 'w'
 )  # redirecting stderr (this way we can capture all sorts of python errors)
 
 
 def err_exit(msg):  # noqa: D103
     print('Failed in wind load generator: ' + msg)  # display in stdout  # noqa: T201
-    print(
+    print(  # noqa: T201
         'Failed in wind load generator: ' + msg,
-        file=sys.stderr,  # noqa: F405
+        file=sys.stderr,
     )  # display in stderr
     exit(-1)  # exit with non-zero exit code  # noqa: PLR1722
 
@@ -300,7 +299,7 @@ def main(aimName, evtName, getRV):  # noqa: C901, N803, D103, PLR0915
                 try:
                     self.pool.shutdown()  # noqa: F405
                 except Exception:  # noqa: BLE001
-                    sys.exit()  # noqa: F405
+                    sys.exit()
 
             my_cdf_vects = np.zeros((1000, tap))
             my_cdf_x_range = np.zeros((2, tap))
@@ -487,7 +486,7 @@ def main(aimName, evtName, getRV):  # noqa: C901, N803, D103, PLR0915
             try:
                 self.pool.shutdown()  # noqa: F405
             except Exception:  # noqa: BLE001
-                sys.exit()  # noqa: F405
+                sys.exit()
 
         Cp_nongauss_kernel = np.zeros((tap, CP_sim.shape[2], len(seeds)))  # noqa: N806
         Cp_nongauss_kernel[:, :, 0] = np.array(result_objs)
@@ -834,7 +833,7 @@ def perform_POD(s_target, f_target, ncomp, l_mo, pool):  # noqa: N802, D103
         try:
             self.pool.shutdown()  # noqa: F405
         except Exception:  # noqa: BLE001
-            sys.exit()  # noqa: F405
+            sys.exit()
 
     for ii in range(SpeN):
         D_all = result_objs[ii][0]  # noqa: N806
@@ -952,14 +951,14 @@ def simulation_gaussian(  # noqa: D103, PLR0913
 
 
 if __name__ == '__main__':
-    inputArgs = sys.argv  # noqa: N816, F405
+    inputArgs = sys.argv  # noqa: N816
 
     # set filenames
-    aimName = sys.argv[2]  # noqa: N816, F405
-    evtName = sys.argv[4]  # noqa: N816, F405
+    aimName = sys.argv[2]  # noqa: N816
+    evtName = sys.argv[4]  # noqa: N816
 
     getRV = False  # noqa: N816
-    for myarg in sys.argv:  # noqa: F405
+    for myarg in sys.argv:
         if (myarg == '--getRV') or (myarg == 'getRV'):  # noqa: PLR1714
             getRV = True  # noqa: N816
 

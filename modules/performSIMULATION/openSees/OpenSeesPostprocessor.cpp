@@ -31,6 +31,9 @@ int main(int argc, char **argv)
 }
 
 
+
+
+
 OpenSeesPostprocessor::OpenSeesPostprocessor()
   :filenameEDP(0), filenameAIM(0), filenameSAM(0)
 {
@@ -184,9 +187,15 @@ OpenSeesPostprocessor::processEDPs(){
 	// open file
 	ifstream myfile;
 	myfile.open (fileName);
+
 	double tmp;
 	
 	if (myfile.is_open()) {
+
+	  if (myfile.peek() == std::ifstream::traits_type::eof()) {
+	    std::cout<< "The OpenSees simulation was not successful";
+	    exit(-1);
+  	}
 	  
 	  // read first 2 rows of useless data
 	  for (int ii=0; ii<2; ii++)
@@ -233,6 +242,13 @@ OpenSeesPostprocessor::processEDPs(){
 	double tmp;
 	
 	if (myfile.is_open()) {
+
+	  if (myfile.peek() == std::ifstream::traits_type::eof()) {
+		    std::cout<< "The OpenSees simulation was not successful";
+		    exit(-1);
+	  }
+
+
 	  
 	  for (int jj=0; jj<numDOFs; jj++) {
 	    myfile >> tmp;
@@ -272,6 +288,12 @@ OpenSeesPostprocessor::processEDPs(){
 	double tmp;
 	
 	if (myfile.is_open()) {
+
+
+	  if (myfile.peek() == std::ifstream::traits_type::eof()) {
+	    std::cout<< "The OpenSees simulation was not successful";
+	    exit(-1);
+  	}	
 	  
 	  // read first 2 rows of useless data
 	  for (int ii=0; ii<2; ii++)
@@ -318,6 +340,12 @@ OpenSeesPostprocessor::processEDPs(){
 	  
 	  absValue = 0.0;
 	  if (myfile.is_open()) {
+
+		  if (myfile.peek() == std::ifstream::traits_type::eof()) {
+			    std::cout<< "The OpenSees simulation was not successful";
+			    exit(-1);
+		  }
+	  	
 	    myfile >> absMin >> absMax >> absValue;
 	    myfile.close();
 	  } 
