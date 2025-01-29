@@ -5,11 +5,13 @@ It includes classes and functions for performing Gaussian Process modeling,
 Principal Component Analysis, and various convergence metrics.
 """
 
+import argparse
 import importlib
 import json
 import os
 import sys
 import time
+import traceback
 from functools import partial
 from pathlib import Path
 from typing import Literal
@@ -549,27 +551,6 @@ class GP_AB_Algorithm:
         # print('Results written to file')
 
 
-def main(input_arguments):
-    """
-    Run the GP-AB Algorithm.
-
-    Args:
-        input_arguments (InputArguments): The input arguments for the algorithm.
-    """
-    gp_ab = GP_AB_Algorithm(*preprocess(input_arguments))
-    inputs, outputs, num_initial_doe_samples = gp_ab.run_initial_doe(
-        num_initial_doe_per_dim=2
-    )
-    gp_ab.inputs = inputs
-    gp_ab.outputs = outputs
-    gp_ab.num_experiments.append(num_initial_doe_samples)
-    iteration = 0
-    while not gp_ab.terminate:
-        gp_ab.terminate, gp_ab.results = gp_ab.run_iteration(iteration)
-        gp_ab.write_results()
-        iteration += 1
-
-
 def read_inputs(input_json_file):
     """
     Read and parse the input JSON file.
@@ -584,28 +565,12 @@ def read_inputs(input_json_file):
     with Path(input_json_file).open(encoding='utf-8') as f:
         inputs = json.load(f)
 
-    # application_inputs = inputs["Applications"]
-    # uq_inputs = inputs["UQ"]
-    # rv_inputs = inputs["randomVariables"]
-    # correlation_matrix_inputs = inputs["correlationMatrix"]
-    # edp_inputs = inputs["EDP"]
-
     input_data = common_datamodels.Model.model_validate(inputs)
     uq_inputs = input_data.UQ
     rv_inputs = input_data.randomVariables
     correlation_matrix_inputs = input_data.correlationMatrix
     edp_inputs = inputs['EDP']
     application_inputs = input_data.Applications
-
-    # application_inputs = common_datamodels.Applications.model_validate(
-    #     inputs["Applications"]
-    # )
-    # uq_inputs = GP_AB_UQData.model_validate(inputs["UQ"])
-    # rv_inputs = inputs["randomVariables"]
-    # correlation_matrix_inputs = common_datamodels.CorrelationMatrix.from_list(
-    #     inputs["correlationMatrix"]
-    # )
-    # edp_inputs = common_datamodels.EDP(inputs["EDP"])
 
     return (
         uq_inputs,
@@ -635,14 +600,12 @@ def preprocess(input_arguments):
         application_inputs,
     ) = read_inputs(input_arguments.input_json_file)
 
-    data_file = (
-        uq_inputs.calibration_data_path / uq_inputs.calibration_data_file_name
-    )
+    data_file = uq_inputs.calDataFilePath / uq_inputs.calDataFile
     with data_file.open() as f:
         data = np.genfromtxt(f, delimiter=',')
 
-    log_likelihood_file_name = uq_inputs.log_likelihood_file_name
-    log_likelihood_path = uq_inputs.log_likelihood_path
+    log_likelihood_file_name = uq_inputs.logLikelihoodFile
+    log_likelihood_path = uq_inputs.logLikelihoodPath
     log_likelihood_function = log_likelihood
     if log_likelihood_file_name:
         sys.path.append(str(log_likelihood_path))
@@ -661,7 +624,7 @@ def preprocess(input_arguments):
     # Prior logpdf function
     prior_pdf_function = joint_distribution.pdf
 
-    main_script_path = str(application_inputs.FEM.ApplicationData.MS_Path)
+    main_script_path = str(input_arguments.path_to_template_directory)
 
     model = uq_utilities.get_default_model(
         list_of_rv_data=rv_inputs,
@@ -735,16 +698,97 @@ class InputArguments(pydantic.BaseModel):
     model_config = pydantic.ConfigDict(revalidate_instances='always')
 
 
+def run_gp_ab_algorithm(input_arguments):
+    """
+    Run the GP-AB Algorithm.
+
+    Args:
+        input_arguments (InputArguments): The input arguments for the algorithm.
+    """
+    gp_ab = GP_AB_Algorithm(*preprocess(input_arguments))
+    inputs, outputs, num_initial_doe_samples = gp_ab.run_initial_doe(
+        num_initial_doe_per_dim=2
+    )
+    gp_ab.inputs = inputs
+    gp_ab.outputs = outputs
+    gp_ab.num_experiments.append(num_initial_doe_samples)
+    iteration = 0
+    while not gp_ab.terminate:
+        gp_ab.terminate, gp_ab.results = gp_ab.run_iteration(iteration)
+        gp_ab.write_results()
+        iteration += 1
+
+
+def parse_arguments(args=None):
+    """
+    Parse command-line arguments.
+
+    Args:
+        args (list, optional): List of arguments to parse (for function calls).
+                               If None, arguments are taken from `sys.argv`.
+
+    Returns
+    -------
+        dict: Parsed arguments in dictionary form.
+    """
+    parser = argparse.ArgumentParser(
+        description='Run the GP-AB Algorithm with the specified arguments.'
+    )
+    parser.add_argument(
+        'path_to_working_directory',
+        type=Path,
+        help='Absolute path to the working directory.',
+    )
+    parser.add_argument(
+        'path_to_template_directory',
+        type=Path,
+        help='Absolute path to the template directory.',
+    )
+    parser.add_argument(
+        'run_type',
+        choices=['runningLocal', 'runningRemote'],
+        help='Type of run (local or remote).',
+    )
+    parser.add_argument(
+        'driver_file_name', type=Path, help='Name of the driver file.'
+    )
+    parser.add_argument(
+        'input_json_file', type=Path, help='Name of the input JSON file.'
+    )
+
+    return vars(parser.parse_args(args))  # Returns arguments as a dictionary
+
+
+def main(command_args=None):
+    """
+    Run the GP-AB Algorithm.
+
+    Args:
+        command_args (list, optional): A list of command-line arguments.
+                                       If None, uses `sys.argv[1:]`.
+    """
+    try:
+        # Parse arguments (either from function call or command line)
+        args = parse_arguments(command_args)
+
+        # Change to the working directory
+        os.chdir(args['path_to_working_directory'])
+
+        # Validate input arguments
+        input_arguments = InputArguments.model_validate(args)
+
+        # Run the GP-AB Algorithm
+        run_gp_ab_algorithm(input_arguments)
+
+    except Exception as e:
+        err_msg = f'ERROR: An exception occurred:\n{traceback.format_exc()}\n'
+        sys.stderr.write(err_msg)
+        raise RuntimeError(err_msg) from e
+
+
 if __name__ == '__main__':
-    this = Path(__file__).resolve()
-    os.chdir('/Users/aakash/Documents/quoFEM/LocalWorkDir/tmp.SimCenter')
-    args = {
-        'path_to_working_directory': Path(sys.argv[1]).resolve(),
-        'path_to_template_directory': Path(sys.argv[2]).resolve(),
-        'run_type': sys.argv[3],
-        'driver_file_name': Path(sys.argv[4]).resolve(),
-        'input_json_file': Path(sys.argv[5]).resolve(),
-    }
-    input_arguments = InputArguments.model_validate(args)
-    main(input_arguments)
-    os.chdir(this.parent)
+    try:
+        main(sys.argv[1:])  # Runs with command-line arguments
+    except Exception as e:  # noqa: BLE001
+        print(f'Error: {e}', file=sys.stderr)  # noqa: T201
+        sys.exit(1)
