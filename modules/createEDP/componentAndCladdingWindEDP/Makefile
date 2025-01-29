@@ -2,9 +2,9 @@ include ../../Makefile.inc
 
 all:  ComponentAndCladdingEDP
 
-StandardWindEDP.o : ComponentAndCladdingEDP.cpp
+ComponentAndCladdingEDP.o : ComponentAndCladdingEDP.cpp
 
-StandardWindEDP: ComponentAndCladdingEDP.o
+ComponentAndCladdingEDP: ComponentAndCladdingEDP.o
 	$(CXX) $(LDFLAGS) -o ComponentAndCladdingEDP ComponentAndCladdingEDP.o $(LDLIBS)
 
 clean:

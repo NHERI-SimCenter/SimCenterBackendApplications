@@ -100,7 +100,7 @@
         "Name": "INP_FILE",
         "ExecutablePath": "applications/createAIM/INP_FILE/INP_FILE.py",
         "ApplicationSpecificInputs": [
-			{
+          {
             "id": "assetSourceFile",
             "type": "path",
             "description": "path to asset database file"
@@ -573,6 +573,11 @@
         "ApplicationSpecificInputs": []
       },
       {
+        "Name": "Celeris",
+        "ExecutablePath": "applications/createEVENT/Celeris/Celeris.py",
+        "ApplicationSpecificInputs": []
+      },
+      {
         "Name": "GeoClawOpenFOAM",
         "ExecutablePath": "applications/createEVENT/GeoClawOpenFOAM/GeoClawOpenFOAM.py",
         "ApplicationSpecificInputs": [
@@ -870,6 +875,11 @@
         "ApplicationSpecificInputs": []
       },
       {
+        "Name": "ComponentAndCladdingWindEDP",
+        "ExecutablePath": "applications/createEDP/componentAndCladdingWindEDP/ComponentAndCladdingWindEDP",
+        "ApplicationSpecificInputs": []
+      },
+      {
         "Name": "StandardEDP",
         "ExecutablePath": "applications/createEDP/standardEDP/StandardEDP",
         "ApplicationSpecificInputs": []
@@ -1024,12 +1034,20 @@
         "ExecutablePath": "applications/performSIMULATION/capacitySpectrum/runCMS.py"
       },
       {
+        "Name": "CapacitySpectrumMethod2",
+        "ExecutablePath": "applications/performSIMULATION/capacitySpectrum/runCMS2.py"
+      },	
+      {
         "Name": "SurrogateSimulation",
         "ExecutablePath": "applications/performSIMULATION/surrogateSimulation/SurrogateSimulation.py"
       },
       {
         "Name": "SurrogateRegionalPy",
         "ExecutablePath": "applications/performSIMULATION/surrogateRegionalPy/SurrogateRegionalPy.py"
+      },      
+      {
+        "Name": "WindLoadSimulation",
+        "ExecutablePath": "applications/performSIMULATION/windLoadSimulation/WindLoadSimulation.py"
       },
       {
         "Name": "MultiModel-FEA",
@@ -1224,8 +1242,19 @@
     "Applications": [
       {
         "Name": "REWETRecovery",
-        "ExecutablePath": "applications/systemPerformance/REWEt/REWET_Wrapper.py",
-        "ApplicationSpecificInputs": []
+        "ExecutablePath": "applications/systemPerformance/REWET/REWET_Wrapper.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "assetSourceFile",
+            "type": "path",
+            "description": "path to asset database file"
+          },
+          {
+            "id": "inputDir",
+            "type": "path",
+            "description": "path to input directory"
+          }
+        ]
       },
       {
         "Name": "ResidualDemand",
@@ -1260,32 +1289,6 @@
       }
     ]
   },
-    "SystemPerformanceApplications":{
-	"API": {
-	    "Inputs": [
-	    ],
-	    "Outputs": [
-	    ]
-	},
-	"Applications": [
-	    {
-		"Name": "REWETRecovery",
-		"ExecutablePath": "applications/systemPerformance/REWET/REWET_Wrapper.py",
-		"ApplicationSpecificInputs": [
-		{
-			"id": "assetSourceFile",
-			"type": "path",
-			"description": "path to asset database file"
-        },
-		{
-			"id": "inputDir",
-			"type": "path",
-			"description": "path to input directory"
-        }
-		]
-	    }
-	]
-    },
   "PerformanceApplications": {
     "API": {
       "Inputs": [],
@@ -1305,6 +1308,59 @@
             "id": "riskParametersPath",
             "type": "string",
             "description": "Path to the risk parameters json file ."
+          }
+        ]
+      }
+    ]
+  },
+  "RecoveryApplications": {
+    "API": {
+      "Inputs": [],
+      "Outputs": []
+    },
+    "Applications": [
+      {
+        "Name": "Pyrecodes",
+        "ExecutablePath": "applications/performREC/pyrecodes/run_pyrecodes.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "mainFile",
+            "type": "path",
+            "description": "Path to pyrecodes main file."
+          },
+          {
+            "id": "systemConfigFile",
+            "type": "path",
+            "description": "Path to pyrecodes system configuration file."
+          },
+          {
+            "id": "componentLibraryFile",
+            "type": "path",
+            "description": "Path to pyrecodes component library file."
+          },
+          {
+            "id": "r2dRunDir",
+            "type": "path",
+            "description": "R2D run directory containing the results.",
+            "default": "seqRUN"
+          },
+          {
+            "id": "parallelType",
+            "type": "string",
+            "description": "How parallel runs: options seqRUN, parSETUP, parRUN.",
+            "default": "mpiexec"
+          },
+          {
+            "id": "mpiexec",
+            "type": "string",
+            "description": "How mpi runs, e.g. ibrun, mpirun, mpiexec.",
+            "default": "mpiexec"
+          },
+          {
+            "id": "numP",
+            "type": "string",
+            "description": "If parallel, how many jobs to start with mpiexec option.",
+            "default": 8
           }
         ]
       }

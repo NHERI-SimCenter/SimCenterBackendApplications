@@ -935,7 +935,7 @@ class TransportationPerformance(ABC):  # noqa: B024
         edges_df = gpd.GeoDataFrame(
             edges_df, crs='epsg:4326', geometry=edges_df['geometry'].map(loads)
         )
-        # pay attention to the unit conversion, lenth is in meters, maxspeed is mph
+        # pay attention to the unit conversion, length is in meters, maxspeed is mph
         # fft is in seconds
         edges_df['fft'] = edges_df['length'] / edges_df['maxspeed'] * 2.23694
         edges_df = edges_df.sort_values(by='fft', ascending=False).drop_duplicates(

@@ -39,6 +39,7 @@
 import argparse
 import json
 import logging
+import math
 import os
 import shutil
 import sys
@@ -198,7 +199,7 @@ def get_highest_congestion(edge_vol_dir, edges_csv):
         )
         congestion_i = (
             all_edges_vol['vol_tot'] / all_edges_vol['capacity_x']
-        ).fillna(0)
+        ).astype(float).fillna(0)
         congestion = np.maximum(congestion, congestion_i)
     congestion = congestion.to_frame(name='congestion')
     all_edges = all_edges.merge(congestion, left_index=True, right_index=True)
@@ -661,6 +662,7 @@ def run_on_undamaged_network(
         capacity_map=config_file_dict['CapacityMap'],
         od_file=od_file_pre,
         hour_list=config_file_dict['HourList'],
+        tmp_dir=Path.cwd(),
     )
 
     # run simulation on undamged network
@@ -748,12 +750,14 @@ def run_one_realization(
         capacity_map=config_file_dict['CapacityMap'],
         od_file=od_file_post,
         hour_list=config_file_dict['HourList'],
+        tmp_dir=Path.cwd(),
     )
     # update the capacity due to damage
-    damaged_edge_file = residual_demand_simulator.update_edge_capacity(
+    damaged_edge_file, closed_edge_file = residual_demand_simulator.update_edge_capacity(
         damage_rlz_file, damage_det_file
     )
     residual_demand_simulator.csv_files.update({'network_edges': damaged_edge_file})
+    residual_demand_simulator.csv_files.update({'edge_closures': closed_edge_file})
     # run simulation on damaged network
     Path('damaged').mkdir()
     Path(Path('damaged') / 'trip_info').mkdir()
@@ -792,7 +796,7 @@ def run_one_realization(
         trip_info_compare['delay_duration']
         / trip_info_compare['travel_time_used_undamaged']
     )
-    trip_info_compare = trip_info_compare.replace([np.inf, -np.inf], 'inf')
+    trip_info_compare = trip_info_compare.replace([np.inf, -np.inf], math.inf)
     trip_info_compare.to_csv('trip_info_compare.csv', index=False)
     return True
 
@@ -869,7 +873,8 @@ def run_residual_demand(  # noqa: C901
 
     # Prepare edges and nodes files
     edges_gdf = gpd.read_file(edge_geojson).to_crs(epsg=6500)
-    edges_gdf['length'] = edges_gdf['geometry'].apply(lambda x: x.length)
+    if 'length' not in edges_gdf.columns:
+        edges_gdf['length'] = edges_gdf['geometry'].apply(lambda x: x.length)
     edges_gdf = edges_gdf.to_crs(epsg=4326)
     two_way_edges = config_file_dict['TwoWayEdges']
     if two_way_edges:
@@ -946,7 +951,7 @@ def run_residual_demand(  # noqa: C901
                                 ]['R2Dres']
                                 if x.startswith('R2Dres_mean_RepairCost')
                             )
-                            # A minmum cost of 0.1 is set to avoid division by zero
+                            # A minimum cost of 0.1 is set to avoid division by zero
                             loss_dist['Repair']['Cost'][comp] = max(
                                 results_det[asset_type][asset_subtype][asset_id][
                                     'R2Dres'

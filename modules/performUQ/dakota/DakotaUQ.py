@@ -197,7 +197,7 @@ def main(args):  # noqa: C901, D103
             print(display_err)  # noqa: T201
             exit(  # noqa: PLR1722
                 0
-            )  # sy - this could be -1 like any other tools. But if it is 0, quoFEM,EE,WE,Hydro will highlight the error messages in "red" by using the parser in UI. To use this parser in UI, we need to make UI believe that the analysis is successful. Something that needs improvment
+            )  # sy - this could be -1 like any other tools. But if it is 0, quoFEM,EE,WE,Hydro will highlight the error messages in "red" by using the parser in UI. To use this parser in UI, we need to make UI believe that the analysis is successful. Something that needs improvement
 
 
 if __name__ == '__main__':

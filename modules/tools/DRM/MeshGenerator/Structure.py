@@ -113,7 +113,7 @@ meshplotdir = OutputDir + '/meshplots'
 if not os.path.exists(meshplotdir):  # noqa: PTH110
     os.makedirs(meshplotdir)  # noqa: PTH103
 # =============================================================================
-# buiding an structure mesh
+# building a structure mesh
 # =============================================================================
 embededDepth = {  # noqa: N816
     'xmax': 20,
@@ -209,7 +209,7 @@ def partition(mesh, numcores):  # noqa: D103
 
 
 def partition_with_pilebox(messh, numcores, pileboxinfo, tol=1e-6):  # noqa: D103
-    # seperate the core of the pilebox
+    # separate the core of the pilebox
     mesh = messh.copy()
     eps = 1e-6
     # check if the xmin,xmax, ymin ymax ,zmin zmax is exist in the infokeys
@@ -312,7 +312,7 @@ x, y, z = np.meshgrid(x, y, z, indexing='ij')
 
 mesh = pv.StructuredGrid(x, y, z)
 # =============================================================================
-# sperate embedding layer
+# separate embedding layer
 # =============================================================================
 cube = pv.Cube(
     bounds=[
@@ -396,7 +396,7 @@ pileboxinfo['zmax'] = foundationbounds[5]
 mesh = mesh.merge(foundation, merge_points=False, tolerance=1e-6, progress_bar=True)
 # %%
 # =============================================================================
-# sperate PML layer
+# separate PML layer
 # =============================================================================
 xmin = x.min() + PMLTotalThickness[0]
 xmax = x.max() - PMLTotalThickness[0]
@@ -744,7 +744,7 @@ pts = mesh.extract_points(
     selected['SelectedPoints'].view(bool),
     include_cells=False,
 )
-print(f'number of sp constriants: {pts.n_points*9}')  # noqa: T201
+print(f'number of sp constraints: {pts.n_points*9}')  # noqa: T201
 
 
 import h5py  # noqa: E402
@@ -808,7 +808,7 @@ mesh.save(os.path.join(OutputDir, 'mesh.vtk'), binary=True)  # noqa: PTH118
 
 
 # %%
-# chek for each element that the nodes go counter clockwise and first the below surface nodes and then the above surface nodes
+# check for each element that the nodes go counter clockwise and first the below surface nodes and then the above surface nodes
 # def iscounterclockwise(points):
 #     # points = np.array(points)
 #     points = points - points.mean(axis=0)

@@ -10,6 +10,9 @@ import numpy as np
 from scipy.stats import lognorm, norm
 from sklearn.linear_model import LinearRegression
 
+errFileName = os.path.join(os.getcwd(), 'workflow.err')  # noqa: N816, PTH109, PTH118
+sys.stderr = open(errFileName, 'a')  # noqa: SIM115, PTH123
+
 try:
     moduleName = 'GPy'  # noqa: N816
     import GPy as GPy  # noqa: PLC0414
@@ -91,8 +94,9 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
     isEEUQ = sur.get('isEEUQ', False)  # noqa: N806
     isWEUQ = sur.get('isWEUQ', False)  # noqa: N806
+    isHydroUQ = sur.get('isHydroUQ', False)  # noqa: N806
 
-    if isEEUQ or isWEUQ:
+    if isEEUQ or isWEUQ or isHydroUQ:
         dakota_path = 'sc_scInput.json'
     else:
         dakota_path = input_json
@@ -109,7 +113,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             pass
 
     try:
-        if isEEUQ or isWEUQ:
+        if isEEUQ or isWEUQ or isHydroUQ:
             inp_fem = inp_tmp['Applications']['Modeling']
         else:
             inp_fem = inp_tmp['FEM']
@@ -423,7 +427,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             os.path.dirname(  # noqa: PTH120
                 os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
             ),
-            'createEVENT',
+            'common',
             'groundMotionIM',
             'IntensityMeasureComputer.py',
         )
@@ -764,7 +768,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 templatedirFolder = os.path.join(os.getcwd(), 'templatedir_SIM')  # noqa: PTH109, PTH118, N806
 
                 if (
-                    (isEEUQ or isWEUQ) and nsamp == 1
+                    (isEEUQ or isWEUQ or isHydroUQ) and nsamp == 1
                 ):  # because stochastic ground motion generation uses folder number when generating random seed.............
                     current_dir_i = os.path.join(  # noqa: PTH118
                         os.getcwd(),  # noqa: PTH109
@@ -782,7 +786,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                         msg = 'Error running FEM: ' + str(ex)
 
                 # change directory, create params.in
-                if isEEUQ or isWEUQ:
+                if isEEUQ or isWEUQ or isHydroUQ:
                     shutil.copyfile(
                         os.path.join(os.getcwd(), 'params.in'),  # noqa: PTH109, PTH118
                         os.path.join(current_dir_i, 'params.in'),  # noqa: PTH118
@@ -858,7 +862,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
                 # run workflowDriver
 
-                if isEEUQ or isWEUQ:
+                if isEEUQ or isWEUQ or isHydroUQ:
                     if (
                         os_type.lower().startswith('win')
                         and run_type.lower() == 'runninglocal'

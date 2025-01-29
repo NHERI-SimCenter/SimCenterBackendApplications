@@ -510,12 +510,9 @@ class IM_Calculator:  # noqa: D101
 
 def collect_multi_im_res(res_dict):  # noqa: C901, D103
     res_list = []
-    if 'PGA' in res_dict.keys():  # noqa: SIM118
-        res_list.append(res_dict['PGA'])
-    if 'SA' in res_dict.keys():  # noqa: SIM118
-        res_list.append(res_dict['SA'])
-    if 'PGV' in res_dict.keys():  # noqa: SIM118
-        res_list.append(res_dict['PGV'])
+    for im_type in ['PGA', 'SA', 'PGV', 'DS575H', 'DS595H']:
+        if im_type in res_dict:
+            res_list.append(res_dict[im_type])  # noqa: PERF401
     res = dict()  # noqa: C408
     num_res = len(res_list)
     if num_res == 0:
@@ -616,6 +613,38 @@ def collect_multi_im_res_hdf5(res_list, im_list):  # noqa: D103
                     for x in res_list['PGV']['GroundMotions']
                 ]
             )
+        if im.startswith('DS595H'):
+            collected_mean[:, i] = np.array(
+                [x['lnDS595H']['Mean'][0] for x in res_list['DS595H']['GroundMotions']]
+            )
+            collected_interStd[:, i] = np.array(
+                [
+                    x['lnDS595H']['InterEvStdDev'][0]
+                    for x in res_list['DS595H']['GroundMotions']
+                ]
+            )
+            collected_intraStd[:, i] = np.array(
+                [
+                    x['lnDS595H']['IntraEvStdDev'][0]
+                    for x in res_list['DS595H']['GroundMotions']
+                ]
+            )
+        if im.startswith('DS575H'):
+            collected_mean[:, i] = np.array(
+                [x['DS575H']['Mean'][0] for x in res_list['DS575H']['GroundMotions']]
+            )
+            collected_interStd[:, i] = np.array(
+                [
+                    x['DS575H']['InterEvStdDev'][0]
+                    for x in res_list['DS575H']['GroundMotions']
+                ]
+            )
+            collected_intraStd[:, i] = np.array(
+                [
+                    x['DS575H']['IntraEvStdDev'][0]
+                    for x in res_list['DS575H']['GroundMotions']
+                ]
+            )
     res.update({'Mean': collected_mean})
     res.update({'InterEvStdDev': collected_interStd})
     res.update({'IntraEvStdDev': collected_intraStd})
@@ -625,11 +654,11 @@ def collect_multi_im_res_hdf5(res_list, im_list):  # noqa: D103
 
 def get_im_dict(im_info):  # noqa: D103
     if im_info.get('Type', None) == 'Vector':
-        im_dict = im_info.copy()
-        im_dict.pop('Type')
-        if 'PGV' in im_dict.keys():  # noqa: SIM118
-            PGV_dict = im_dict.pop('PGV')  # noqa: N806
-            im_dict.update({'PGV': PGV_dict})
+        im_dict = {}
+        desired_order = ['PGA', 'SA', 'PGV', 'DS575H', 'DS595H']
+        for key in desired_order:
+            if key in im_info:
+                im_dict.update({key: im_info[key]})
     else:
         # back compatibility
         im_dict = {im_info.get('Type'): im_info.copy()}
@@ -735,6 +764,11 @@ def compute_im(  # noqa: C901, D103
             im_list.append(f'SA({cur_period!s})')  # noqa: PERF401
     if 'PGV' in im_info.keys() or im_info.get('Type', None) == 'PGV':  # noqa: SIM118
         im_list.append('PGV')
+    if 'DS575H' in im_info.keys() or im_info.get('Type', None) == 'DS575H':  # noqa: SIM118
+        im_list.append('DS575H')
+    if 'DS595H' in im_info.keys() or im_info.get('Type', None) == 'DS595H':  # noqa: SIM118
+        im_list.append('DS595H')
+
     # Stations
     station_list = [
         {
@@ -805,6 +839,8 @@ def compute_im(  # noqa: C901, D103
                 im_calculator.BSSA = openSHAGMPE.boore_etal_2014()
             if gmpe == 'Campbell & Bozorgnia (2014)':
                 im_calculator.CB = openSHAGMPE.campbell_bozorgnia_2014()
+            # if gmpe == 'Afshari & Stewart (2016)':
+            #     im_calculator.AS2016 = SignificantDurationModel.afshari_stewart_ds_2016()
         # for i in tqdm(range(len(scenarios.keys())), desc=f"Evaluate GMPEs for {len(scenarios.keys())} scenarios"):
         # Initialize an hdf5 file for IMmeanStd
         if os.path.exists(filename):  # noqa: PTH110
@@ -1096,7 +1132,7 @@ def export_im(  # noqa: C901, D103, PLR0912
                 # Loop over all intensity measures
                 for cur_im_tag in range(len(csvHeader)):
                     if (csvHeader[cur_im_tag].startswith('SA')) or (
-                        csvHeader[cur_im_tag] in ['PGA', 'PGV']
+                        csvHeader[cur_im_tag] in ['PGA', 'PGV', 'DS575H', 'DS595H']
                     ):
                         df.update(
                             {
@@ -1141,7 +1177,7 @@ def export_im(  # noqa: C901, D103, PLR0912
                 for col in df.columns:
                     if (
                         (not col.startswith('SA'))
-                        and (col not in ['PGA', 'PGV', 'PGD_h', 'PGD_v'])
+                        and (col not in ['PGA', 'PGV','DS575H', 'DS595H','PGD_h', 'PGD_v'])
                         and (col not in gf_im_list)
                     ):
                         colToDrop.append(col)  # noqa: PERF401
