@@ -127,6 +127,13 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
     if 'PotableWater' in system_config['Resources']:
         resources_to_plot.append('PotableWater')
         units_to_plot.append(system_config['Resources']['PotableWater'].get('Unit', 'unit_PotableWater'))
+
+    print(f'Resources to plot {resources_to_plot}')
+
+    plotter_object.save_supply_demand_consumption(system, resources_to_plot)
+    #    plotter_object.save_component_recovery_progress(system.components[:20])
+
+    
     for resource, unit in zip(resources_to_plot, units_to_plot):
         y_axis_label = f'{resource} {unit} | {system.resilience_calculators[0].scope}'
         x_axis_label = 'Time step [day]'
@@ -139,6 +146,12 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
                                         show = False
                                         )
         plotter_object.save_current_figure(savename = f'{resource}_supply_demand_consumption.png')
+        
+        plotter_object.save_supply_demand_consumption(system, [resource])
+    
+    
+    print("MADE IT HERE")
+    
     return True
 
 def modify_system_config_conent(system_config, input_data_dir, rwhale_run_dir):
