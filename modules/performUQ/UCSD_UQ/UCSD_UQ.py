@@ -30,26 +30,28 @@ def main(args):  # noqa: D103
         else:
             pythonCommand = 'python3'  # noqa: N806
 
-        mainScriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N806
-        mainScript = os.path.join(mainScriptDir, 'mainscript.py')  # noqa: PTH118, N806
-        templateDir = os.getcwd()  # noqa: PTH109, N806
-        tmpSimCenterDir = str(Path(templateDir).parents[0])  # noqa: N806
-
         # Change permission of driver file
         os.chmod(driverFile, stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)  # noqa: PTH101
         st = os.stat(driverFile)  # noqa: PTH116
         os.chmod(driverFile, st.st_mode | stat.S_IEXEC)  # noqa: PTH101
         driverFile = './' + driverFile  # noqa: N806
 
+        template_dir = Path.cwd()
+        tmp_simcenter_dir = template_dir.parent
+
+        main_script_dir = Path(__file__).parent
+        main_script = main_script_dir / 'mainscript.py'
+
         command = (
-            f'"{pythonCommand}" "{mainScript}" "{tmpSimCenterDir}"'
-            f' "{templateDir}" {runType} {driverFile} {workflowInput}'
+            f'"{pythonCommand}" "{main_script!s}" "{tmp_simcenter_dir!s}"'
+            f' "{template_dir!s}" {runType} {driverFile} {workflowInput}'
         )
+
         print(command)  # noqa: T201
 
         command_list = shlex.split(command)
 
-        err_file = Path(tmpSimCenterDir) / 'UCSD_UQ.err'
+        err_file = tmp_simcenter_dir / 'UCSD_UQ.err'
         err_file.touch()
 
         try:
