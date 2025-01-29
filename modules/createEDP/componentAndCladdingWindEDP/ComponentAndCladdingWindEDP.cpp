@@ -3,9 +3,11 @@
 #include <string.h>
 #include <string>
 #include <fstream>
+#include <sstream>
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <cstring>
 using namespace std;
 #include <jansson.h>  // for Json
 
@@ -354,22 +356,26 @@ int main(int argc, char ** argv) {
     json_t* mainJsonAIM  = json_load_file(filenameAIM, 0, & error);
     json_t* evtObj = json_object_get(mainJsonAIM, "Event");
 
-    std::string casePath = std::string(json_string_value(json_object_get(evtObj, "caseDirectoryPath"))) + "/constant/simCenter/output/windLoads";
+    // std::string casePath = std::string(json_string_value(json_object_get(evtObj, "caseDirectoryPath"))) + "/constant/simCenter/output/windLoads";
 
 
    // Reading data from files
-    std::vector<std::string> fileNames = {"meanP", "rmsP", "peakP", "meanF", "rmsF", "peakF"};
+    std::vector<std::string> fileNames = {"peakP.csv", "peakP.csv", "peakP.csv", "peakP.csv", "peakP.csv", "peakP.csv"};
     std::vector<std::vector<double>> dataArrays(6);
     
     for (size_t i = 0; i < fileNames.size(); i++) {
-        std::ifstream file(casePath + "/" + fileNames[i]);
+        std::ifstream file(fileNames[i]);
         if (!file) {
             std::cerr << "Error: Could not open file " << fileNames[i] << std::endl;
             continue;
         }
         std::string line;
+	std::string token;
         while (std::getline(file, line)) {
-            dataArrays[i].push_back(std::stod(line));
+	  std::stringstream ss(line);
+	  while (std::getline(ss, token, ',')) {
+	    dataArrays[i].push_back(std::stod(token)); // Convert to double
+	  }
         }
         file.close();
     }
@@ -394,6 +400,7 @@ int main(int argc, char ** argv) {
 
     int count  = 0;
     for (size_t j = 0; j < json_array_size(loads); j++) {
+      
       json_t *load = json_array_get(loads, j);
       json_t *scalarData = json_object_get(load, "scalar_data");
       json_t *loadType = json_object_get(load, "type");
@@ -405,22 +412,22 @@ int main(int argc, char ** argv) {
 
       // Add 1 to the "scalar_data" array
 
-      if(json_string_value(loadType)=="mean_pressure"){
+      if(strcmp(json_string_value(loadType),"mean_pressure")){
         json_array_append_new(scalarData, json_real(dataArrays[0][count]));
       }
-      else if(json_string_value(loadType)=="rms_pressure"){
+      else if(strcmp(json_string_value(loadType),"rms_pressure")){
         json_array_append_new(scalarData, json_real(dataArrays[1][count]));
       }
-      else if(json_string_value(loadType)=="peak_pressure"){
+	else if(strcmp(json_string_value(loadType),"peak_pressure")){
         json_array_append_new(scalarData, json_real(dataArrays[2][count]));
       }
-      else if(json_string_value(loadType)=="mean_force"){
+	else if(strcmp(json_string_value(loadType),"mean_force")){
         json_array_append_new(scalarData, json_real(dataArrays[3][count]));
       }
-      else if(json_string_value(loadType)=="rms_force"){
+	else if(strcmp(json_string_value(loadType),"rms_force")){
         json_array_append_new(scalarData, json_real(dataArrays[4][count]));
       }
-      else if(json_string_value(loadType)=="peak_force"){
+	else if(strcmp(json_string_value(loadType),"peak_force")){
         json_array_append_new(scalarData, json_real(dataArrays[5][count]));
       }
 
