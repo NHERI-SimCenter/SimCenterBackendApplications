@@ -6,6 +6,8 @@ This module generates space-filling designs.
 
 from __future__ import annotations
 
+from typing import Optional
+
 import numpy as np
 from pydantic import BaseModel, PositiveInt
 from scipy.stats import qmc
@@ -24,7 +26,7 @@ class LatinHypercubeSampling(BaseModel, validate_assignment=True):
 
     n_samples: PositiveInt
     n_dimensions: PositiveInt
-    seed: PositiveInt | None = None
+    seed: Optional[PositiveInt] = None  # noqa: UP007
 
     def generate(self, domain=None):
         """
