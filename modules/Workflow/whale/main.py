@@ -756,6 +756,7 @@ class Workflow:
             'Buildings',
             'WaterDistributionNetwork',
             'TransportationNetwork',
+            'PowerNetwork'
         ]
         self.asset_registry = dict([(a, dict()) for a in self.asset_type_list])  # noqa: C404, C408
 
