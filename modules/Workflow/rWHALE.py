@@ -220,7 +220,11 @@ def main(  # noqa: C901, D103
         # Sometimes multiple asset types need to be analyzed together, e.g., pipelines and nodes in a water network
         run_asset_type = asset_type
 
-        if asset_type == 'Buildings' or asset_type == 'TransportationNetwork':  # noqa: PLR1714
+        if asset_type in ('Buildings',
+                          'TransportationNetwork',
+                          'PowerNetwork',
+                          ):
+            # These asset types are already set (i.e., run_asset_type = asset_type)
             pass
         elif asset_type == 'WaterNetworkNodes':
             continue  # Run the nodes with the pipelines, i.e., the water distribution network
@@ -266,6 +270,7 @@ def main(  # noqa: C901, D103
             asset_type == 'Buildings'  # noqa: PLR1714
             or asset_type == 'TransportationNetwork'
             or asset_type == 'WaterDistributionNetwork'
+            or asset_type == 'PowerNetwork'
         ):
             WF.aggregate_results(asst_data=asst_data, asset_type=asset_type)
 

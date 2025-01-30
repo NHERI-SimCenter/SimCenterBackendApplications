@@ -3,8 +3,11 @@
 #include <string.h>
 #include <string>
 #include <fstream>
+#include <sstream>
 #include <iostream>
+#include <vector>
 #include <cmath>
+#include <cstring>
 using namespace std;
 #include <jansson.h>  // for Json
 
@@ -317,7 +320,9 @@ int main(int argc, char ** argv) {
 
     json_dump_file(rootEDP, filenameEDP, 0);
     
-  } else {
+  } 
+  else 
+  {
     
     // fill in EDP with the data
 
@@ -348,6 +353,33 @@ int main(int argc, char ** argv) {
         return -1;
     }
     
+    json_t* mainJsonAIM  = json_load_file(filenameAIM, 0, & error);
+    json_t* evtObj = json_object_get(mainJsonAIM, "Event");
+
+    // std::string casePath = std::string(json_string_value(json_object_get(evtObj, "caseDirectoryPath"))) + "/constant/simCenter/output/windLoads";
+
+
+   // Reading data from files
+    std::vector<std::string> fileNames = {"peakP.csv", "peakP.csv", "peakP.csv", "peakP.csv", "peakP.csv", "peakP.csv"};
+    std::vector<std::vector<double>> dataArrays(6);
+    
+    for (size_t i = 0; i < fileNames.size(); i++) {
+        std::ifstream file(fileNames[i]);
+        if (!file) {
+            std::cerr << "Error: Could not open file " << fileNames[i] << std::endl;
+            continue;
+        }
+        std::string line;
+	std::string token;
+        while (std::getline(file, line)) {
+	  std::stringstream ss(line);
+	  while (std::getline(ss, token, ',')) {
+	    dataArrays[i].push_back(std::stod(token)); // Convert to double
+	  }
+        }
+        file.close();
+    }
+
     // get loads array in first array element of EngineeringDemandParameters
     json_t *edpArray = json_object_get(rootEDP, "EngineeringDemandParameters");
     if (!json_is_array(edpArray)) {
@@ -365,16 +397,43 @@ int main(int argc, char ** argv) {
     }
 
     // now loop over load entries putting in values
+
+    int count  = 0;
     for (size_t j = 0; j < json_array_size(loads); j++) {
+      
       json_t *load = json_array_get(loads, j);
       json_t *scalarData = json_object_get(load, "scalar_data");
+      json_t *loadType = json_object_get(load, "type");
+
       if (!json_is_array(scalarData)) {
-	std::cerr << "Error: scalar_data is not an array!" << std::endl;
-	continue;
+        std::cerr << "Error: scalar_data is not an array!" << std::endl;
+        continue;
       }
+
       // Add 1 to the "scalar_data" array
-      json_array_append_new(scalarData, json_integer(1));
+
+      if(strcmp(json_string_value(loadType),"mean_pressure")){
+        json_array_append_new(scalarData, json_real(dataArrays[0][count]));
+      }
+      else if(strcmp(json_string_value(loadType),"rms_pressure")){
+        json_array_append_new(scalarData, json_real(dataArrays[1][count]));
+      }
+	else if(strcmp(json_string_value(loadType),"peak_pressure")){
+        json_array_append_new(scalarData, json_real(dataArrays[2][count]));
+      }
+	else if(strcmp(json_string_value(loadType),"mean_force")){
+        json_array_append_new(scalarData, json_real(dataArrays[3][count]));
+      }
+	else if(strcmp(json_string_value(loadType),"rms_force")){
+        json_array_append_new(scalarData, json_real(dataArrays[4][count]));
+      }
+	else if(strcmp(json_string_value(loadType),"peak_force")){
+        json_array_append_new(scalarData, json_real(dataArrays[5][count]));
+      }
+
+      count ++ ;
     }
+
     json_dump_file(rootEDP, filenameEDP, 0);
   }
 

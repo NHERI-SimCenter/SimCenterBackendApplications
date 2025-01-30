@@ -46,6 +46,7 @@ int main(int argc, const char **argv)
       	}
       }
     }
+
     responsesArray = json_object_get(value1,"userSpecificResponses");  
     if (responsesArray != NULL) {
       json_array_foreach(responsesArray, index2, value2) {
@@ -59,6 +60,20 @@ int main(int argc, const char **argv)
 	}
       }
     }
+
+    responsesArray = json_object_get(value1,"loads");  
+    if (responsesArray != NULL) {
+      json_array_foreach(responsesArray, index2, value2) {
+      	json_t *sType = json_object_get(value2,"scalar_data");
+      	int numValues = json_array_size(sType);
+      	for (int i=0; i<numValues; i++) {
+      	  double value = json_number_value(json_array_get(sType,i));
+      	  printf("%f ", value);
+      	  fOut << value << " ";
+      	  numEDP++;
+      	}
+      }
+    }        
   }
 
   printf("NUM_EDP= %d\n",numEDP);
