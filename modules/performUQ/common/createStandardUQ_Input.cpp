@@ -150,9 +150,6 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
 int
 gatherEDP(json_t *rootINPUT, std::string &edpFile){
 
-
-  // std::cerr << "creareStandardUQINput:: gatherRV\n";
-  
   //
   // get rootEPDs
   //
@@ -204,13 +201,13 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
           for (int i=0; i<numEvents; i++) {
             
             json_t *event = json_array_get(fileEDPs,i);
-            json_t *eventEDPs = json_object_get(event,"responses");
-            int numResponses = json_array_size(eventEDPs);
 
             //
-            // loop over all edp for the event
+            // loop over all edp for the event in respnses
             //
-            
+	    
+            json_t *eventEDPs = json_object_get(event,"responses");
+            int numResponses = json_array_size(eventEDPs);
             for (int j=0; j<numResponses; j++) {
               
               json_t *eventEDP = json_array_get(eventEDPs,j);
@@ -225,35 +222,35 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
                 edpAcronym = "PFA";
                 floor = json_string_value(json_object_get(eventEDP,"floor"));
                 known = true;
-                    } else if (strcmp(edpEngType,"rms_acceleration") == 0) {
+	      } else if (strcmp(edpEngType,"rms_acceleration") == 0) {
                 edpAcronym = "RMSA";
                 floor = json_string_value(json_object_get(eventEDP,"floor"));
                 known = true;		
-                    } else if	(strcmp(edpEngType,"max_drift") == 0) {
+	      } else if	(strcmp(edpEngType,"max_drift") == 0) {
                 edpAcronym = "PID";
                 floor = json_string_value(json_object_get(eventEDP,"floor2"));
                 known = true;
-                    } else if	(strcmp(edpEngType,"residual_disp") == 0) {
+	      } else if	(strcmp(edpEngType,"residual_disp") == 0) {
                 edpAcronym = "RD";
                 floor = json_string_value(json_object_get(eventEDP,"floor"));
                 known = true;
-                    } else if (strcmp(edpEngType,"max_pressure") == 0) {
+	      } else if (strcmp(edpEngType,"max_pressure") == 0) {
                 edpAcronym = "PSP";
                 floor = json_string_value(json_object_get(eventEDP,"floor2"));
                 known = true;
-                    } else if (strcmp(edpEngType,"max_rel_disp") == 0) {
+	      } else if (strcmp(edpEngType,"max_rel_disp") == 0) {
                 edpAcronym = "PFD";
                 floor = json_string_value(json_object_get(eventEDP,"floor"));
                 known = true;
-                    } else if (strcmp(edpEngType,"max_roof_drift") == 0) {
+	      } else if (strcmp(edpEngType,"max_roof_drift") == 0) {
                 edpAcronym = "PRD";
                 floor = "1";
                 known = true;		
-                    } else if (strcmp(edpEngType,"peak_wind_gust_speed") == 0) {
+	      } else if (strcmp(edpEngType,"peak_wind_gust_speed") == 0) {
                 edpAcronym = "PWS";
                 floor = json_string_value(json_object_get(eventEDP,"floor"));
                 known = true;
-                    } else {
+	      } else {
                 edpName = edpEngType;
                 // edpList.push_back(newEDP);
               }
@@ -291,8 +288,78 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
                 json_object_set(newEDP, "name", json_string(edpName.c_str()));
                 json_array_append(rootEDPs, newEDP);	   
               }
-            }
-          }
+            } // end looping over edp in "responses"
+
+	    //
+	    // now loop over ones in "loads"
+	    //
+	    
+            json_t *loadEDPs = json_object_get(event,"loads");
+            numResponses = json_array_size(loadEDPs);
+            for (int j=0; j<numResponses; j++) {
+              
+              json_t *eventEDP = json_array_get(loadEDPs,j);
+              const char *edpEngType = json_string_value(json_object_get(eventEDP,"type"));
+              bool known = false;
+              std::string edpAcronym("");
+              std::string edpName("");
+              const char *name = NULL;
+              // std::cerr << "writeResponse: type: " << edpEngType << " " << j << " " << numResponses << "\n";
+              // based on edp do something
+              if (strcmp(edpEngType,"peak_pressure") == 0) {
+                edpAcronym = "PP";
+                name = json_string_value(json_object_get(eventEDP,"name"));
+                known = true;
+	      } else if (strcmp(edpEngType,"mean_pressure") == 0) {
+                edpAcronym = "MP";
+                name = json_string_value(json_object_get(eventEDP,"name"));
+                known = true;		
+	      } else if	(strcmp(edpEngType,"rms_pressure") == 0) {
+                edpAcronym = "RP";
+                name = json_string_value(json_object_get(eventEDP,"name"));
+                known = true;
+              } else if (strcmp(edpEngType,"peak_force") == 0) {
+                edpAcronym = "PF";
+                name = json_string_value(json_object_get(eventEDP,"name"));
+                known = true;
+	      } else if (strcmp(edpEngType,"mean_force") == 0) {
+                edpAcronym = "MF";
+                name = json_string_value(json_object_get(eventEDP,"name"));
+                known = true;		
+	      } else if	(strcmp(edpEngType,"rms_force") == 0) {
+                edpAcronym = "RF";
+                name = json_string_value(json_object_get(eventEDP,"name"));
+                known = true;		
+	      } else {
+                edpName = edpEngType;
+                // edpList.push_back(newEDP);
+              }
+              
+              if (known == true) {
+		edpName = std::string(std::to_string(i+1)) + std::string("-")
+		  + edpAcronym
+		  + std::string("-")
+		  + std::string(name);
+		
+		// edpList.push_back(newEDP);
+		// add new EDP
+		json_t *newEDP = json_object();
+		json_object_set(newEDP, "length", json_integer(1));
+		json_object_set(newEDP, "type", json_string("scalar"));
+		json_object_set(newEDP, "name", json_string(edpName.c_str()));
+                
+		json_array_append(rootEDPs, newEDP);	      
+	      } else {
+	      
+                // add new EDP as defined by users
+                json_t *newEDP = json_object();
+                json_object_set(newEDP, "length", json_integer(1));
+                json_object_set(newEDP, "type", json_string("scalar"));
+                json_object_set(newEDP, "name", json_string(edpName.c_str()));
+                json_array_append(rootEDPs, newEDP);	   
+	      }
+	    } // end looping over edp in "loads"
+	  }
         } else {
           
           // standard EDP
@@ -307,7 +374,6 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
   if (createdNew == true)
     json_object_set(rootINPUT,"EDP", rootEDPs);
       
-
   return 0;
 }
 
