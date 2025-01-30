@@ -270,6 +270,52 @@ def read_pressure_data(file_names):
         p1 = p2  # noqa: F841
     return probes, connected_time, connected_p
 
+def lieblin_blue(x):
+        """
+        Performs Lieblin Blue fitted peak values for a time series in 'x'.
+        If the time series cannot be divided into 10 equal segments the remaining 
+        part is discarded.
+        """
+    
+        #Coefficient used for the Lieblein Blue fit
+        a = [ 0.222867,  0.162308,  0.133845, 0.112868, 0.095636, 0.080618, 0.066988, 0.054193, 0.041748, 0.028929]
+        b = [-0.347830, -0.091158, -0.019210, 0.022179, 0.048671, 0.066064, 0.077021, 0.082771, 0.083552, 0.077940]
+    
+        n_seg = 10 #Number of segments
+    
+        #Min and max of each segment
+        x_max = np.zeros(n_seg)
+        x_min = np.zeros(n_seg)
+    
+        #Number of time steps per each segment
+        n_per_seg = int(np.rint(len(x)/n_seg))
+    
+        #Calculate the min and max of each segment.
+        for i in range(n_seg):
+            x_max[i] = np.amax(x[i*n_per_seg:(i+1)*n_per_seg])
+            x_min[i] = np.amin(x[i*n_per_seg:(i+1)*n_per_seg])
+    
+        x_max = np.sort(x_max)      #sort in ascending order
+        x_min = -np.sort(-x_min)    #sort in ascending order
+    
+    
+        #Calculate the mode and dispersions
+        u_max = np.dot(a,x_max)
+        u_min = np.dot(a,x_min)
+        d_max = np.dot(b,x_max)
+        d_min = np.dot(b,x_min)
+    
+    
+        #Calculate the peak based on Gambel distribution.
+        x_peak_gb_max = u_max + d_max*np.log(n_seg)
+        x_peak_gb_min = u_min + d_min*np.log(n_seg)
+    
+        #Calculate the stable peak using Lieblein Blue method.
+        x_peak_lb_max = x_peak_gb_max + 0.5772*d_max
+        x_peak_lb_min = x_peak_gb_min + 0.5772*d_min
+    
+        return x_peak_lb_max, x_peak_lb_min
+
 
 class PressureData:
     """
@@ -575,15 +621,15 @@ if __name__ == '__main__':
             rho=air_density,
             p_ref=0.0,
             start_time=duration*0.1,
-            end_time=None,
+            end_time=None
         )
 
         num_times = len(cfd_p.time)
 
-        pressureData = np.zeros((num_times, cfd_p.probe_count + 1))  # noqa: N816
+        pData = np.zeros((num_times, cfd_p.probe_count + 1))  # noqa: N816
 
-        pressureData[:, 0] = cfd_p.time
-        pressureData[:, 1:] = np.transpose(cfd_p.cp)
+        pData[:, 0] = cfd_p.time
+        pData[:, 1:] = np.transpose(cfd_p.cp)
         
         areas_path = case_path + '/constant/geometry/components/probe_areas.txt'
         indexes_path = case_path + '/constant/geometry/components/probe_indexes.txt'
@@ -595,13 +641,14 @@ if __name__ == '__main__':
         
         dyn_p = 0.5*air_density*(fs_wind_speed**2.0)
                 
-        peak_p = cfd_p.cp_abs_peak*dyn_p
+        p_data = cfd_p.cp*dyn_p
         
         compt_pressures = []
         start_index = 0  # Initialize starting index
         compt_forces = []
         
         compt_json_path = "C:\\Users\\fanta\\SimCenter\\WBS_Items\\PBWE\\CC_Pressure_EDP_Example_TPU_V1.json"
+
         with open(compt_json_path, encoding='utf-8') as json_file:
             compt_json_data = json.load(json_file)
         
@@ -609,16 +656,9 @@ if __name__ == '__main__':
 
         count = 0
 
-        export_json = {}
-        
-        wind_speeds = np.random.normal(fs_wind_speed, 0.1*fs_wind_speed, 100)        
-        n_wind_speeds = np.shape(wind_speeds)[0]
 
-        compt_pressures_export = [] #np.zeros((len(compts), n_wind_speeds))
-        compt_forces_export = []
-        cmpt_ids = []
-        export_json["windSpeeds"] = wind_speeds.tolist()
-        
+        compt_load_export = [] #np.zeros((len(compts), n_wind_speeds))
+        cmpt_ids = []        
 
         #Write stl files for each component
         for compt_i in compts:
@@ -634,8 +674,12 @@ if __name__ == '__main__':
                 end_index = indexes[count]
                 # Extract group of areas and pressures
                 element_areas = areas[start_index:end_index]
-                element_pressures = peak_p[start_index:end_index]
+                element_pressures = p_data[start_index:end_index]            
+                print(np.shape(element_pressures))
+                print(np.shape(element_areas))
+
                 element_force = np.sum(element_pressures * element_areas)
+
 
                 # Calculate weighted pressure and total area
                 weighted_pressure = np.sum(element_pressures * element_areas)
@@ -657,20 +701,20 @@ if __name__ == '__main__':
             pressure = np.sum(np.array(geoms_p)*np.array(geoms_a))/area
             force = np.sum(np.array(geoms_f)*np.array(geoms_a))/area
             
-            compt_pressures_export.append(pressure*(wind_speeds/fs_wind_speed)**2.0)
-            compt_forces_export.append(force*(wind_speeds/fs_wind_speed)**2.0)
+            compt_pressures_export.append(pressure)
+            compt_forces_export.append(force)
 
-            export_json["componentId"] = {"forces": force, "pressure": pressure, "area":area}
+            # export_json["componentId"] = {"forces": force, "pressure": pressure, "area":area}
 
 
             compt_pressures.append(pressure)
             compt_forces.append(force)
 
     
-        json_output_file = os.path.join(load_output_path, 'componentExportData.json')
+        # json_output_file = os.path.join(load_output_path, 'componentExportData.json')
     
-        with open(json_output_file, 'w') as jsonfile:
-            json.dump(export_json, jsonfile, indent=4)
+        # with open(json_output_file, 'w') as jsonfile:
+        #     json.dump(export_json, jsonfile, indent=4)
             
             
         p_output_file = os.path.join(load_output_path, 'componentPeakPressurePBE.csv')
