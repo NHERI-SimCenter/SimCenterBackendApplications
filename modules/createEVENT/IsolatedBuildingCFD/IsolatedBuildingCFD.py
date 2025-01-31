@@ -243,20 +243,50 @@ def ReadBIM(BIMFilePath):
             return [forcesOutputName, int(bim["GeneralInformation"]["stories"]), float(bim["Events"][0]["start"]), 1.0, 1.0]
 
 
-import json
-import os
 
+def scale_csv_values(filename, factor):
+    """Checks if a CSV file exists, reads its numerical data, scales it, and rewrites the file."""
+    
+    # Check if file exists
+    if not os.path.exists(filename):
+        print(f"IsolatedBuildingCFD no File '{filename}' exists - no edp forces and pressures to scale.")
+        return
+    
+    try:
+        # Read the file
+        with open(filename, 'r') as file:
+            lines = file.readlines()
+        
+        # Process each line and multiply numbers
+        new_lines = []
+        for line in lines:
+            numbers = line.strip().split(',')  # Split numbers by comma
+            scaled_numbers = [str(float(num) * factor) for num in numbers]  # Multiply each by scaling factor
+            new_lines.append(",".join(scaled_numbers))  # Join numbers back into a line
+        
+        # Write back to the same file
+        with open(filename, 'w') as file:
+            file.write("\n".join(new_lines) + "\n")  # Ensure newline at end
+        
+        print(f"IsolatedBuildingCFD Updated '{filename}' with scaling factor {factor}.")
+    
+    except ValueError:
+        print(f"IsolatedBuildingCFD::scale_csv_values Error: Invalid data in '{filename}', expected only numbers.")
+    except Exception as e:
+        print(f"IsolatedBuildingCFD::scale_csv_values Error Unexpected error: {e}")
+
+        
 def scale_event(filename_aim, filename_event):
     """ Scales event factor in a JSON event file based on AIM file parameters. """
 
     # Check if AIM file exists
     if not os.path.exists(filename_aim):
-        print(f"Error: AIM file '{filename_aim}' does not exist.")
+        print(f"ERROR: IsolatedBuildingCFD::scale_event AIM file '{filename_aim}' does not exist.")
         return
     
     # Check if Event file exists
     if not os.path.exists(filename_event):
-        print(f"Error: Event file '{filename_event}' does not exist.")
+        print(f"ERROR: IsolatedBuildingCFD::scale_event Event file '{filename_event}' does not exist.")
         return
 
     try:
@@ -287,10 +317,8 @@ def scale_event(filename_aim, filename_event):
 
                 scaling_factor = event["windCharacteristics"]["windSpeedScalingFactor"]
 
-                print(f'scaling_factor {scaling_factor}')
-                
-
                 if scaling_factor != 1.0:
+                    
                     # Open event file and modify scale factor
                     with open(filename_event, 'r') as event_file:
                         event_data = json.load(event_file)
@@ -304,18 +332,23 @@ def scale_event(filename_aim, filename_event):
 
                     # Modify or add 'factor' in the event
                     if "factor" in event_0:
-                        event_0["factor"] *= scaling_factor  # Multiply existing value
+                        event_0["factor"] *= scaling_factor*scaling_factor  # Multiply existing value
                     else:
-                        event_0["factor"] = scaling_factor  # Set new value
+                        event_0["factor"] = scaling_factor*scaling_factor  # Set new value
 
                     # Write the updated data back to the same file
                     with open(filename_event, 'w') as event_file:
                         json.dump(event_data, event_file, indent=2)
 
-                    print(f"Updated event factor in '{filename_event}' with scaling factor {scaling_factor}.")
+                    scale_csv_values('componentLoads.csv', scaling_factor*scaling_factor)
+                    
+                    print(f"IsolatedBuildingCFD Updated event factor in '{filename_event}' with scaling factor {scaling_factor}.")
+
+
+                    
     
     except (json.JSONDecodeError, IOError) as e:
-        print(f"Error processing files: {e}")
+        print(f"Error IsolatedBuilldingCFD::scale_event processing files: {e}")
 
         
 
