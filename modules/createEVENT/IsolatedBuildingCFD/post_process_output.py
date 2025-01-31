@@ -678,7 +678,7 @@ if __name__ == '__main__':
                 print(np.shape(element_pressures))
                 print(np.shape(element_areas))
 
-                element_force = np.sum(element_pressures * element_areas)
+                element_force = np.sum(element_pressures * element_areas, axis=1)
 
 
                 # Calculate weighted pressure and total area
