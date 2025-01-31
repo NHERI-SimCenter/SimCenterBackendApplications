@@ -241,6 +241,82 @@ def ReadBIM(BIMFilePath):
             return [forcesOutputName, int(bim["GeneralInformation"]["stories"]), float(bim["Events"][0]["start"]), float(bim["Events"][0]["LengthScale"]), float(bim["Events"][0]["VelocityScale"])]
         else:
             return [forcesOutputName, int(bim["GeneralInformation"]["stories"]), float(bim["Events"][0]["start"]), 1.0, 1.0]
+
+
+import json
+import os
+
+def scale_event(filename_aim, filename_event):
+    """ Scales event factor in a JSON event file based on AIM file parameters. """
+
+    # Check if AIM file exists
+    if not os.path.exists(filename_aim):
+        print(f"Error: AIM file '{filename_aim}' does not exist.")
+        return
+    
+    # Check if Event file exists
+    if not os.path.exists(filename_event):
+        print(f"Error: Event file '{filename_event}' does not exist.")
+        return
+
+    try:
+        # Load AIM file
+        with open(filename_aim, 'r') as input_file:
+            bim = json.load(input_file)
+
+        # Validate AIM structure
+        if "Events" not in bim or not isinstance(bim["Events"], list) or not bim["Events"]:
+            print(f"Error: 'Events' key is missing or invalid in '{filename_aim}'.")
+            return
+        
+        event = bim["Events"][0]
+
+        # Validate event type key
+        if "type" not in event:
+            print("Error: Missing 'type' key in event data.")
+            return
+        
+        event_type = event["type"]
+
+        print(f'event_type {event_type}')
+        # Check for 'IsolatedBuildingCFD' event type
+        if event_type == "IsolatedBuildingCFD":
+            
+            # Validate 'windCharacteristics' structure
+            if "windCharacteristics" in event and "windSpeedScalingFactor" in event["windCharacteristics"]:
+
+                scaling_factor = event["windCharacteristics"]["windSpeedScalingFactor"]
+
+                print(f'scaling_factor {scaling_factor}')
+                
+
+                if scaling_factor != 1.0:
+                    # Open event file and modify scale factor
+                    with open(filename_event, 'r') as event_file:
+                        event_data = json.load(event_file)
+
+                    # Validate event structure
+                    if "Events" not in event_data or not isinstance(event_data["Events"], list) or not event_data["Events"]:
+                        print(f"Error: 'Events' key is missing or invalid in '{filename_event}'.")
+                        return
+                
+                    event_0 = event_data["Events"][0]
+
+                    # Modify or add 'factor' in the event
+                    if "factor" in event_0:
+                        event_0["factor"] *= scaling_factor  # Multiply existing value
+                    else:
+                        event_0["factor"] = scaling_factor  # Set new value
+
+                    # Write the updated data back to the same file
+                    with open(filename_event, 'w') as event_file:
+                        json.dump(event_data, event_file, indent=2)
+
+                    print(f"Updated event factor in '{filename_event}' with scaling factor {scaling_factor}.")
+    
+    except (json.JSONDecodeError, IOError) as e:
+        print(f"Error processing files: {e}")
+
         
 
 if __name__ == "__main__":
@@ -252,6 +328,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Get EVENT file from OpenFOAM output")
     parser.add_argument('-c', '--case', help="OpenFOAM case directory", required=False)
     parser.add_argument('-b', '--bim', help= "path to BIM file", required=False)
+    parser.add_argument('--filenameAIM', help= "path to BIM file", required=False)
+    parser.add_argument('--filenameEVENT', help= "path to EVENT file", required=False)        
+    parser.add_argument("--getRV", action="store_true", help="used to get random variable, if not multiply EVENT by gs")
+    
 
     #parsing arguments
     arguments, unknowns = parser.parse_known_args()
@@ -259,4 +339,11 @@ if __name__ == "__main__":
     # [forcesOutputName, floors, startTime, lengthScale, velocityScale] = ReadBIM(arguments.bim)
 
     # GetOpenFOAMEvent(arguments.case, forcesOutputName, floors, startTime, lengthScale, velocityScale)
+
+    if not arguments.getRV:
+
+        scale_event(filename_aim = arguments.filenameAIM, filename_event = arguments.filenameEVENT)
+
         
+        
+    
