@@ -149,9 +149,6 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
         
         plotter_object.save_supply_demand_consumption(system, [resource])
     
-    
-    print("MADE IT HERE")
-    
     return True
 
 def modify_system_config_conent(system_config, input_data_dir, rwhale_run_dir):
