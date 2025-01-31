@@ -32,7 +32,8 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
         'jsonformoderncpp/3.7.0',
         'nanoflann/1.3.2',
         'nlopt/2.7.1',
-        'kissfft/131.1.0'
+        'kissfft/131.1.0',
+        'boost/1.72.0'
     ]
 
 
