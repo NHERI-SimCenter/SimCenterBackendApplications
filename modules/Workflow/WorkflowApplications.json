@@ -1329,12 +1329,12 @@
             "description": "Path to pyrecodes main file."
           },
           {
-            "id": "systemConfigFile",
+            "id": "SystemConfigurationFile",
             "type": "path",
             "description": "Path to pyrecodes system configuration file."
           },
           {
-            "id": "componentLibraryFile",
+            "id": "ComponentLibraryFile",
             "type": "path",
             "description": "Path to pyrecodes component library file."
           },
