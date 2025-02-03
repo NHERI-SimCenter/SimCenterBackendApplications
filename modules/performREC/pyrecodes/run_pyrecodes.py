@@ -148,6 +148,10 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
         plotter_object.save_current_figure(savename = f'{resource}_supply_demand_consumption.png')
         
         plotter_object.save_supply_demand_consumption(system, [resource])
+
+        plotter_object.save_component_recovery_progress(system.components)
+    
+    print("MADE IT HERE")
     
     return True
 
