@@ -539,11 +539,11 @@ if __name__ == '__main__':
     )
 
     workflowArgParser.add_argument(
-        '--systemConfigFile', help='Pyrecodes system configuration file', required=True
+        '--SystemConfigurationFile', help='Pyrecodes system configuration file', required=True
     )
 
     workflowArgParser.add_argument(
-        '--componentLibraryFile', help='Pyrecodes component library file', required=True
+        '--ComponentLibraryFile', help='Pyrecodes component library file', required=True
     )
 
     workflowArgParser.add_argument(
@@ -639,8 +639,8 @@ if __name__ == '__main__':
 
     run_pyrecodes(
         main_file=wfArgs.mainFile,
-        system_config_file=wfArgs.systemConfigFile,
-        component_library=wfArgs.componentLibraryFile,
+        system_config_file=wfArgs.SystemConfigurationFile,
+        component_library=wfArgs.ComponentLibraryFile,
         r2d_run_dir=wfArgs.r2dRunDir,
         input_data_dir=wfArgs.inputDataDir,
         realization=realization_text
