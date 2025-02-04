@@ -52,12 +52,12 @@ import pandas as pd
 from pelicun.base import convert_to_MultiIndex, pelicun_path
 from plotly import graph_objects as go
 from plotly.subplots import make_subplots
-from scipy.stats import norm
+from scipy.stats import norm, weibull_min
 
 # start_time = time.time()
 
 
-def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103
+def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103, PLR0912
     if create_zip == '1':
         output_path = output_path[:-4]
 
@@ -138,6 +138,16 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
                             scale=comp_data.loc[(LS, 'Theta_1')],  # noqa: RUF031, RUF100
                         )
                     )
+                elif comp_data.loc[(LS, 'Family')] == 'multilinear_CDF':
+                    cdf_x = comp_data.loc[(LS, 'Theta_0')].split('|')[0].split(',')
+                    d_min_i = float(cdf_x[0])
+                    d_max_i = float(cdf_x[-1])
+                elif comp_data.loc[(LS, 'Family')] == 'weibull':
+                    d_min_i, d_max_i = weibull_min.ppf(
+                        [p_min, p_max],
+                        comp_data.loc[(LS, 'Theta_1')],
+                        scale=comp_data.loc[(LS, 'Theta_0')],
+                    )
                 else:
                     continue
 
@@ -162,6 +172,18 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
                         loc=np.log(comp_data.loc[(LS, 'Theta_0')]),  # noqa: RUF031, RUF100
                         scale=comp_data.loc[(LS, 'Theta_1')],  # noqa: RUF031, RUF100
                     )
+                elif comp_data.loc[(LS, 'Family')] == 'multilinear_CDF':
+                    cdf_x, cdf_y = [
+                        np.array(vals.split(','), dtype=float)
+                        for vals in comp_data.loc[(LS, 'Theta_0')].split('|')
+                    ]
+                    cdf_vals = np.interp(x=demand_vals, xp=cdf_x, fp=cdf_y)
+                elif comp_data.loc[(LS, 'Family')] == 'weibull':
+                    cdf_vals = weibull_min.cdf(
+                        demand_vals,
+                        comp_data.loc[(LS, 'Theta_1')],
+                        scale=comp_data.loc[(LS, 'Theta_0')],
+                    )
                 else:
                     continue
 
@@ -170,7 +192,9 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
                         x=demand_vals,
                         y=cdf_vals,
                         mode='lines',
-                        line=dict(width=3, color=colors[LS_count][i_ls]),  # noqa: C408
+                        line=dict(  # noqa: C408
+                            width=3, color=colors[LS_count][i_ls]
+                        ),
                         name=LS,
                     ),
                     row=1,
@@ -194,118 +218,182 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
                 col=1,
             )
 
-        table_vals = []
+        generate_table = True
 
         for LS in limit_states:  # noqa: N806
-            if (
-                np.all(  # noqa: E712
-                    pd.isna(
-                        comp_data[LS][
-                            ['Theta_0', 'Family', 'Theta_1', 'DamageStateWeights']
-                        ].values
+            if comp_data.loc[(LS, 'Family')] == 'multilinear_CDF':
+                generate_table = False
+
+
+        if generate_table:
+        
+            table_vals = []
+
+            for LS in limit_states:  # noqa: N806
+
+                comp_data_dict = comp_data[LS].to_dict()
+
+                if pd.isna(comp_data_dict.get('Family')):
+                    continue
+
+                comp_data_vals = [
+                    LS,
+                    comp_data_dict.get('Theta_0'),
+                    comp_data_dict.get('Family'),
+                    comp_data_dict.get('Theta_1', 'N/A'),
+                    comp_data_dict.get('DemageStateWeights', None),
+                ]
+
+                # For weibull, replace parameters with median and dispersion stats
+                if comp_data_vals[2] == 'weibull':
+                    lambda_, kappa = comp_data_vals[1], comp_data_vals[3]
+                    comp_data_vals[1] = round(
+                        weibull_min.median(kappa, scale=lambda_), 2
                     )
-                )
-                == False
-            ):
-                table_vals.append(  # noqa: PERF401
-                    np.insert(
-                        comp_data[LS][
-                            ['Theta_0', 'Family', 'Theta_1', 'DamageStateWeights']
-                        ].values,
-                        0,
-                        LS,
+                    comp_data_vals[3] = round(
+                        weibull_min.std(kappa, scale=lambda_)
+                        / weibull_min.mean(kappa, scale=lambda_),
+                        2,
                     )
-                )
 
-        table_vals = np.array(table_vals).T
+                table_vals.append(comp_data_vals)
 
-        ds_list = []
-        ds_i = 1
-        for dsw in table_vals[-1]:
-            if pd.isna(dsw) == True:  # noqa: E712
-                ds_list.append(f'DS{ds_i}')
-                ds_i += 1
+            table_vals = np.array(table_vals).T
 
-            else:
-                w_list = dsw.split('|')
-                ds_list.append(
-                    '<br>'.join(
-                        [
-                            f'DS{ds_i + i} ({100.0 * float(w):.0f}%)'
-                            for i, w in enumerate(w_list)
-                        ]
+            ds_list = []
+            ds_i = 1
+            for damage_state_weights in table_vals[-1]:
+                if pd.isna(damage_state_weights):
+                    ds_list.append(f'DS{ds_i}')
+                    ds_i += 1
+
+                else:
+                    weight_list = damage_state_weights.split('|')
+                    ds_list.append(
+                        '<br>'.join(
+                            [
+                                f'DS{ds_i + i} ({100.0 * float(weight):.0f}%)'
+                                for i, weight in enumerate(weight_list)
+                            ]
+                        )
                     )
-                )
-                ds_i += len(w_list)
+                    ds_i += len(weight_list)
 
-        for i in range(1, 5):
-            table_vals[-i] = table_vals[-i - 1]
-        table_vals[1] = np.array(ds_list)
+            for i in range(1, 5):
+                table_vals[-i] = table_vals[-i - 1]
+            table_vals[1] = np.array(ds_list)
 
-        font_size = 16
-        if ds_i > 8:  # noqa: PLR2004
-            font_size = 8.5
+            font_size = 16
+            if ds_i > 8:  # noqa: PLR2004
+                font_size = 8.5
 
-        fig.add_trace(
-            go.Table(
-                columnwidth=[50, 70, 65, 95, 80],
-                header=dict(  # noqa: C408
-                    values=[
-                        '<b>Limit<br>State</b>',
-                        '<b>Damage State(s)</b>',
-                        '<b> Median<br>Capacity</b>',
-                        '<b>  Capacity<br>Distribution</b>',
-                        '<b>  Capacity<br>Dispersion</b>',
-                    ],
-                    align=['center', 'left', 'center', 'center', 'center'],
-                    fill=dict(color='rgb(200,200,200)'),  # noqa: C408
-                    line=dict(color='black'),  # noqa: C408
-                    font=dict(color='black', size=16),  # noqa: C408
+            fig.add_trace(
+                go.Table(
+                    columnwidth=[50, 70, 65, 95, 80],
+                    header=dict(  # noqa: C408
+                        values=[
+                            '<b>Limit<br>State</b>',
+                            '<b>Damage State(s)</b>',
+                            '<b> Median<br>Capacity</b>',
+                            '<b>  Capacity<br>Distribution</b>',
+                            '<b>  Capacity<br>Dispersion</b>',
+                        ],
+                        align=['center', 'left', 'center', 'center', 'center'],
+                        fill=dict(color='rgb(200,200,200)'),  # noqa: C408
+                        line=dict(color='black'),  # noqa: C408
+                        font=dict(color='black', size=16),  # noqa: C408
+                    ),
+                    cells=dict(  # noqa: C408
+                        values=table_vals,
+                        height=30,
+                        align=['center', 'left', 'center', 'center', 'center'],
+                        fill=dict(color='rgba(0,0,0,0)'),  # noqa: C408
+                        line=dict(color='black'),  # noqa: C408
+                        font=dict(color='black', size=font_size),  # noqa: C408
+                    ),
                 ),
-                cells=dict(  # noqa: C408
-                    values=table_vals,
-                    height=30,
-                    align=['center', 'left', 'center', 'center', 'center'],
-                    fill=dict(color='rgba(0,0,0,0)'),  # noqa: C408
-                    line=dict(color='black'),  # noqa: C408
-                    font=dict(color='black', size=font_size),  # noqa: C408
-                ),
-            ),
-            row=1,
-            col=2,
-        )
+                row=1,
+                col=2,
+            )
 
-        x_loc = 0.4928
-        y_loc = 0.697 + 0.123
-        ds_offset = 0.086
-        info_font_size = 10
-
-        if ds_i > 8:  # noqa: PLR2004
             x_loc = 0.4928
-            y_loc = 0.705 + 0.123
-            ds_offset = 0.0455
-            info_font_size = 9
+            y_loc = 0.697 + 0.123
+            ds_offset = 0.086
+            info_font_size = 10
 
-        for i_ls, ds_desc in enumerate(ds_list):
-            if comp_meta != None:  # noqa: E711
-                ls_meta = comp_meta['LimitStates'][f'LS{i_ls + 1}']
+            if ds_i > 8:  # noqa: PLR2004
+                x_loc = 0.4928
+                y_loc = 0.705 + 0.123
+                ds_offset = 0.0455
+                info_font_size = 9
 
-                y_loc = y_loc - 0.123
+            for i_ls, ds_desc in enumerate(ds_list):
+                if comp_meta != None:  # noqa: E711
+                    ls_meta = comp_meta['LimitStates'][f'LS{i_ls + 1}']
 
-                if '<br>' in ds_desc:
-                    ds_vals = ds_desc.split('<br>')
+                    y_loc = y_loc - 0.123
 
-                    for i_ds, ds_name in enumerate(ds_vals):  # noqa: B007
-                        ds_id = list(ls_meta.keys())[i_ds]
+                    if '<br>' in ds_desc:
+                        ds_vals = ds_desc.split('<br>')
 
-                        if ls_meta[ds_id].get('Description', False) != False:  # noqa: E712
+                        for i_ds, ds_name in enumerate(ds_vals):  # noqa: B007
+                            ds_id = list(ls_meta.keys())[i_ds]
+
+                            if ls_meta[ds_id].get('Description', False) is not False:
+                                ds_description = '<br>'.join(
+                                    wrap(ls_meta[ds_id]['Description'], width=70)
+                                )
+                            else:
+                                ds_description = ''
+
+                            if (
+                                ls_meta[ds_id].get('RepairAction', False)
+                                is not False
+                            ):
+                                ds_repair = '<br>'.join(
+                                    wrap(ls_meta[ds_id]['RepairAction'], width=70)
+                                )
+                            else:
+                                ds_repair = ''
+
+                            if ds_repair != '':
+                                ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
+                            else:
+                                ds_text = f'<b>{ds_id}</b><br>{ds_description}'
+
+                            y_loc_ds = y_loc - 0.018 - i_ds * ds_offset
+
+                            fig.add_annotation(
+                                text='<b>*</b>',
+                                hovertext=ds_text,
+                                xref='paper',
+                                yref='paper',
+                                axref='pixel',
+                                ayref='pixel',
+                                xanchor='left',
+                                yanchor='bottom',
+                                font=dict(size=info_font_size),  # noqa: C408
+                                showarrow=False,
+                                ax=0,
+                                ay=0,
+                                x=x_loc,
+                                y=y_loc_ds,
+                            )
+
+                        y_loc = y_loc_ds - 0.008
+
+                    else:
+                        # assuming a single Damage State
+                        ds_id = list(ls_meta.keys())[0]  # noqa: RUF015
+
+                        if ls_meta[ds_id].get('Description', False) is not False:
                             ds_description = '<br>'.join(
                                 wrap(ls_meta[ds_id]['Description'], width=70)
                             )
                         else:
                             ds_description = ''
 
-                        if ls_meta[ds_id].get('RepairAction', False) != False:  # noqa: E712
+                        if ls_meta[ds_id].get('RepairAction', False) is not False:
                             ds_repair = '<br>'.join(
                                 wrap(ls_meta[ds_id]['RepairAction'], width=70)
                             )
@@ -316,8 +404,6 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
                             ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
                         else:
                             ds_text = f'<b>{ds_id}</b><br>{ds_description}'
-
-                        y_loc_ds = y_loc - 0.018 - i_ds * ds_offset
 
                         fig.add_annotation(
                             text='<b>*</b>',
@@ -333,50 +419,8 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
                             ax=0,
                             ay=0,
                             x=x_loc,
-                            y=y_loc_ds,
+                            y=y_loc,
                         )
-
-                    y_loc = y_loc_ds - 0.008
-
-                else:
-                    # assuming a single Damage State
-                    ds_id = list(ls_meta.keys())[0]  # noqa: RUF015
-
-                    if ls_meta[ds_id].get('Description', False) != False:  # noqa: E712
-                        ds_description = '<br>'.join(
-                            wrap(ls_meta[ds_id]['Description'], width=70)
-                        )
-                    else:
-                        ds_description = ''
-
-                    if ls_meta[ds_id].get('RepairAction', False) != False:  # noqa: E712
-                        ds_repair = '<br>'.join(
-                            wrap(ls_meta[ds_id]['RepairAction'], width=70)
-                        )
-                    else:
-                        ds_repair = ''
-
-                    if ds_repair != '':
-                        ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
-                    else:
-                        ds_text = f'<b>{ds_id}</b><br>{ds_description}'
-
-                    fig.add_annotation(
-                        text='<b>*</b>',
-                        hovertext=ds_text,
-                        xref='paper',
-                        yref='paper',
-                        axref='pixel',
-                        ayref='pixel',
-                        xanchor='left',
-                        yanchor='bottom',
-                        font=dict(size=info_font_size),  # noqa: C408
-                        showarrow=False,
-                        ax=0,
-                        ay=0,
-                        x=x_loc,
-                        y=y_loc,
-                    )
 
         shared_ax_props = dict(  # noqa: C408
             showgrid=True,
@@ -428,7 +472,8 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
     print('Successfully generated component vulnerability figures.')  # noqa: T201
 
 
-def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103, PLR0912, PLR0915
+def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, PLR0912, PLR0915
+    """Generate repair parameter plots."""
     # TODO:  # noqa: TD002
     # change limit_states names
 
@@ -513,7 +558,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
                         comp_data_LS[optional_label] = None
 
                 # if any of the fields above is set
-                if np.all(pd.isna(comp_data_LS[fields].values)) == False:  # noqa: E712
+                if not np.all(pd.isna(comp_data_LS[fields].values)):
                     # Then we assume that is valuable information that needs to be
                     # shown in the table while the other fields will show 'null'
                     table_vals.append(np.insert(comp_data_LS[fields].values, 0, LS))
@@ -528,7 +573,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
             for ds_i, val in enumerate(table_vals[1]):
                 if '|' in str(val):
                     table_vals[1][ds_i] = 'varies'
-                elif pd.isna(val) == True:  # noqa: E712
+                elif pd.isna(val):
                     table_vals[1][ds_i] = 'N/A'
                 else:
                     conseq_val = float(val)
@@ -543,13 +588,13 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
 
             # round dispersion parameters to 2 digits
             table_vals[-1] = [
-                f'{float(sig):.2f}' if pd.isna(sig) == False else 'N/A'  # noqa: E712
+                f'{float(sig):.2f}' if not pd.isna(sig) else 'N/A'
                 for sig in table_vals[-1]
             ]
 
             # replace missing distribution labels with N/A
             table_vals[-2] = [
-                family if pd.isna(family) == False else 'N/A'  # noqa: E712
+                family if not pd.isna(family) else 'N/A'
                 for family in table_vals[-2]
             ]
 
@@ -560,7 +605,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
                 lots_of_ds = False
 
             # set the font size
-            font_size = 16 if lots_of_ds == False else 11  # noqa: E712
+            font_size = 16 if not lots_of_ds else 11
 
             # create the table
 
@@ -587,7 +632,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
                     ),
                     cells=dict(  # noqa: C408
                         values=table_vals,
-                        height=30 if lots_of_ds == False else 19,  # noqa: E712
+                        height=30 if not lots_of_ds else 19,  # noqa: E712
                         align=cell_alignment,
                         fill=dict(color='rgba(0,0,0,0)'),  # noqa: C408
                         line=dict(color='black'),  # noqa: C408
@@ -647,13 +692,13 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
                     q_max = 1.0
 
                 # anchor locations for annotations providing DS information
-                x_loc = 0.533 if lots_of_ds == False else 0.535  # noqa: E712
-                y_space = 0.088 if lots_of_ds == False else 0.0543  # noqa: E712
-                y_loc = 0.784 + y_space if lots_of_ds == False else 0.786 + y_space  # noqa: E712
-                info_font_size = 10 if lots_of_ds == False else 9  # noqa: E712
+                x_loc = 0.533 if not lots_of_ds else 0.535
+                y_space = 0.088 if not lots_of_ds else 0.0543
+                y_loc = 0.784 + y_space if not lots_of_ds else 0.786 + y_space
+                info_font_size = 10 if not lots_of_ds else 9
 
                 # x anchor for annotations providing median function data
-                x_loc_func = 0.697 if lots_of_ds == False else 0.689  # noqa: E712
+                x_loc_func = 0.697 if not lots_of_ds else 0.689
 
                 need_x_axis = False
 
@@ -711,7 +756,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
 
                     # check if dispersion is prescribed for this consequence
                     dispersion = model_params[3][ds_i]
-                    if (pd.isna(dispersion) == False) and (dispersion != 'N/A'):  # noqa: E712
+                    if not pd.isna(dispersion) and dispersion != 'N/A':
                         dispersion = float(dispersion)
 
                         if model_params[2][ds_i] == 'normal':
@@ -923,7 +968,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
                 gridcolor='rgb(220,220,220)',
             )
 
-            quantity_unit = comp_data.loc[('Quantity', 'Unit')]
+            quantity_unit = comp_data.loc['Quantity', 'Unit']
             if quantity_unit in ['unitless', '1 EA', '1 ea']:
                 quantity_unit = '-'
             elif quantity_unit.split()[0] == '1':
@@ -945,13 +990,15 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D103,
                 plot_bgcolor='rgba(0,0,0,0)',
                 # legend on to allow turning DSs off
                 showlegend=True,
-                xaxis1=dict(
-                    title_text=f'Damage Quantity [{quantity_unit}]',
-                    range=[q_min, q_max],
-                    **shared_ax_props,
-                )
-                if need_x_axis == True  # noqa: E712
-                else dict(showgrid=False, showticklabels=False),  # noqa: C408
+                xaxis1=(
+                    dict(
+                        title_text=f'Damage Quantity [{quantity_unit}]',
+                        range=[q_min, q_max],
+                        **shared_ax_props,
+                    )
+                    if need_x_axis
+                    else dict(showgrid=False, showticklabels=False)  # noqa: C408
+                ),
                 yaxis1=dict(
                     title_text=f'{c_type} [{dv_unit}]',
                     rangemode='tozero',
