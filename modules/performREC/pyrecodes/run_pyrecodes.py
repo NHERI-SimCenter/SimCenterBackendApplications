@@ -148,6 +148,10 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
         plotter_object.save_current_figure(savename = f'{resource}_supply_demand_consumption.png')
         
         plotter_object.save_supply_demand_consumption(system, [resource])
+
+        plotter_object.save_component_recovery_progress(system.components)
+    
+    print("MADE IT HERE")
     
     return True
 
@@ -535,11 +539,11 @@ if __name__ == '__main__':
     )
 
     workflowArgParser.add_argument(
-        '--systemConfigFile', help='Pyrecodes system configuration file', required=True
+        '--SystemConfigurationFile', help='Pyrecodes system configuration file', required=True
     )
 
     workflowArgParser.add_argument(
-        '--componentLibraryFile', help='Pyrecodes component library file', required=True
+        '--ComponentLibraryFile', help='Pyrecodes component library file', required=True
     )
 
     workflowArgParser.add_argument(
@@ -635,8 +639,8 @@ if __name__ == '__main__':
 
     run_pyrecodes(
         main_file=wfArgs.mainFile,
-        system_config_file=wfArgs.systemConfigFile,
-        component_library=wfArgs.componentLibraryFile,
+        system_config_file=wfArgs.SystemConfigurationFile,
+        component_library=wfArgs.ComponentLibraryFile,
         r2d_run_dir=wfArgs.r2dRunDir,
         input_data_dir=wfArgs.inputDataDir,
         realization=realization_text
