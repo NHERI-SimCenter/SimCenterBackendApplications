@@ -49,6 +49,7 @@ import CapacityModels
 import DampingModels
 import DemandModels
 import numpy as np
+import pandas as pd
 
 # import the common constants and methods
 this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
@@ -121,39 +122,59 @@ def find_unit_scale_factor(aim):
         KeyError: If 'units' or 'RegionalEvent' are not defined in the AIM file.
     """
     general_info = aim['GeneralInformation']
-    if general_info.get('units', None) is None:
+    if aim['GeneralInformation'].get('units', None) is None:
         msg = 'No units defined in the AIM file'
         raise KeyError(msg)
-    units = general_info['units']
-    length_units = units.get('length', None)
-    time_units = units.get('time', None)
-    if length_units == 'in':
-        length_units='inch'
+
+    length_unit = aim['GeneralInformation']['units'].get('length', None)
+    time_unit = aim['GeneralInformation']['units'].get('time', None)
+
+    if length_unit is None:
+        msg = 'No length units defined in the AIM file'
+        raise KeyError(msg)
+
+    if time_unit is None:
+        msg = 'No time units defined in the AIM file'
+        raise KeyError(msg)
+
+    if length_unit == 'in':
+        length_unit='inch'
 
     f_scale_im_user_to_cms = {}
-    f_time_in = getattr(simcenter_common, time_units, None)
-    f_length_in = getattr(simcenter_common, length_units, None)
+    f_time_in = getattr(simcenter_common, time_unit, None)
+    f_length_in = getattr(simcenter_common, length_unit, None)
     
+    # ground motion accelerations are expected to use "g" unit
     gm_units={"SA_0.3":"g","SA_1.0":"g"}
     
     for name, unit in gm_units.items():
         unit_type = None
-        print(name, unit)
+        #print(name, unit)
+        
         for base_unit_type, unit_set in simcenter_common.unit_types.items():
             if unit in unit_set:
                 unit_type = base_unit_type
-        # If the input event unit is acceleration, convert to g
+
         if unit_type == 'acceleration':
-            f_in = f_length_in / f_time_in**2.0
-            f_out = 1 / simcenter_common.g
-            f_scale_im_user_to_cms[name] = f_in * f_out
+            if unit == "g":
+                f_in = f_length_in / f_time_in**2.0
+                f_out = 1 / simcenter_common.g
+                f_scale_im_user_to_cms[name] = f_in * f_out
+            else:
+                msg=f"Unexpected internal unit: {unit}"
+                raise ValueError(msg)
         else:
             f_scale_im_user_to_cms[name] = 1
+
     f_scale_edp_cms_to_user = {}
     f_scale_edp_cms_to_user['1-SA-1-1'] = simcenter_common.g / (
         f_length_in / f_time_in**2.0
     )
     f_scale_edp_cms_to_user['1-PRD-1-1'] = simcenter_common.inch / f_length_in
+
+    #print(f'length:{length_unit}, time:{time_unit}, scale_in:{f_in}, scale_out:{f_out}')
+    #print(f'scale_total:{f_scale_im_user_to_cms}')
+    #print(f'scale_back:{f_scale_edp_cms_to_user}')
 
     return f_scale_im_user_to_cms, f_scale_edp_cms_to_user
 
@@ -178,7 +199,13 @@ def run_csm(demand_model, capacity_model, damping_model, tol, max_iter, im_i):
         ValueError: If the analysis does not converge within the maximum number of iterations.
     """
     beta_eff = damping_model.get_beta_elastic()
+    beta_eff = 5
     beta_d = beta_eff
+
+    capacity_data = {
+        'iterations':[
+        ]
+    }
 
     # Track convergence
     iter_sd = []  # intermediate predictions of Sd @ PP
@@ -187,12 +214,28 @@ def run_csm(demand_model, capacity_model, damping_model, tol, max_iter, im_i):
     for i in range(max_iter):
         # Calc demand spectrum
         dem_sd, dem_sa = demand_model.get_reduced_demand(beta_eff)
+
         # create capacity curve
         cap_sd, cap_sa = capacity_model.get_capacity_curve(dem_sd[-1])
+
         # Calc intersection (PP)
         perf_sd, perf_sa = find_performance_point(cap_sd, cap_sa, dem_sd, dem_sa)
         iter_sd.append(perf_sd)
         iter_sa.append(perf_sa)
+
+        iteration_data = {
+            'capacity_spectrum': {
+                "Sd": cap_sd.tolist(),
+                "Sa": cap_sa.tolist()
+            },
+            'demand_spectrum': {
+                "Sd": dem_sd.tolist(),
+                "Sa": dem_sa.tolist()
+            },
+            'beta_eff': beta_eff,
+            'performance_point': [perf_sd, perf_sa]
+        }
+        capacity_data['iterations'].append(iteration_data)
 
         # Calc effective damping at this point on the capacity curve
         beta_eff = damping_model.get_beta(perf_sd, perf_sa)
@@ -220,6 +263,9 @@ def run_csm(demand_model, capacity_model, damping_model, tol, max_iter, im_i):
                 f'The capacity spectrum method did not converge for the {im_i}th IM realization.'
             )
 
+    with open('capacity_data.json','w') as f:
+        json.dump(capacity_data,f,indent=2)
+
     return perf_sd, perf_sa
 
 
@@ -230,19 +276,18 @@ def determine_response(AIM_input_path, EVENT_input_path, EDP_input_path):  # noq
         AIM_in = json.load(f)  # noqa: N806
     applications = AIM_in['Applications']
 
-    # Table 5-1 in Hazus, convert to inches
-    general_info = AIM_in['GeneralInformation']
-    if general_info.get('RoofHeight', None) is not None:
-        roof_height = general_info['RoofHeight']
-    elif general_info.get('height', None) is not None:
-        roof_height = general_info['height']        
-    else:
-        roof_height = capacity_model.get_hazus_roof_height() * 12  # KUANSHI UNITS
+    # open the event file and get the list of events
+    with open(EVENT_input_path, encoding='utf-8') as f:  # noqa: PTH123
+        EVENT_in = json.load(f)  # noqa: N806
 
-    num_stories = general_info['NumberOfStories']
+    # use the first event
+    evt = EVENT_in['Events'][0]
 
-    units = general_info.get('units',None)
-    
+    # make sure we are working with a Seismic event
+    if evt['type']  != 'Seismic':
+        msg = 'Wrong Event Type, need Seismic NOT ' + evt_type
+        raise ValueError(msg)        
+
     # get the simulation application
     SIM_input = applications['Simulation']  # noqa: N806
     if SIM_input['Application'] != 'CapacitySpectrumMethod2':
@@ -252,30 +297,75 @@ def determine_response(AIM_input_path, EVENT_input_path, EDP_input_path):  # noq
     tol = SIM_input_data.get('tolerance', 0.05)
     max_iter = SIM_input_data.get('max_iter', 100)
 
-    # open the event file and get the list of events
-    with open(EVENT_input_path, encoding='utf-8') as f:  # noqa: PTH123
-        EVENT_in = json.load(f)  # noqa: N806
-
-    evt = EVENT_in['Events'][0]
-
-    # check the type of event
-    evt_type = evt['type']
-
-    if evt_type  != 'Seismic':
-        msg = 'Wrong Event Type, need Seismic NOT ' + evt_type
-        raise ValueError(msg)        
-
     # get magnitude, use event file one over interface one
     if "magnitude" in evt:
-        Mw = evt["magnitude"]
+        event_magnitude = evt["magnitude"]
     else:
-        Mw=SIM_input_data['DemandModel']['Parameters']['EarthquakeMagnitude']
+        event_magnitude = SIM_input_data['DemandModel']['Parameters']['EarthquakeMagnitude']
+
+    # Identify the models to use
+    # demand model
+    demand_model_name = SIM_input_data['DemandModel']['Name']
+    if demand_model_name not in ['HAZUS', 'HAZUS_lin_chang_2003']:
+        msg = f"Unknown Demand Model: {demand_model_name}"
+        raise ValueError(msg)
+
+    # capacity model
+    capacity_model_name = SIM_input_data['CapacityModel']['Name']
+    if capacity_model_name != 'HAZUS_cao_peterson_2006':
+        msg = f"Unknown Capacity Model: {capacity_model_name}"
+        raise ValueError(msg)
+
+    # damping model
+    damping_model_name = SIM_input_data['DampingModel']['Name']
+    if damping_model_name != 'HAZUS_cao_peterson_2006':
+        msg = f"Unknown Damping Model: {damping_model_name}"
+        raise ValueError(msg)
+
+    general_info = AIM_in['GeneralInformation']
+
+    roof_height = None
+    if not pd.isna(general_info.get('RoofHeight')):
+        roof_height = general_info['RoofHeight']
+    elif not pd.isna(general_info.get('height')):
+        roof_height = general_info['height']
+
+    # we need to scale from input units to internal units
+    units = general_info['units']
+    length_unit_in = units['length']
+    f_length_in = getattr(simcenter_common, length_unit_in, None)
+    f_length_internal = getattr(simcenter_common, "inch", None)
+    roof_height *= f_length_in/f_length_internal
+
+    # If roof height is not defined as an input, use Hazus estimates
+    if roof_height == None:
+
+        capacity_model = getattr(CapacityModels, capacity_model_name)(
+            general_info=general_info
+            )
+
+        roof_height = capacity_model.get_hazus_roof_height()
+
+        # Table 5-1 in Hazus provides roof height in feet, we need to convert to inches 
+        # because that unit is used by this code internally
+        roof_height *= 12  # KUANSHI UNITS
+
+    if not pd.isna(general_info.get('NumberOfStories')):
+        num_stories = general_info['NumberOfStories']
+    else:
+        msg = 'Required feature NumberOfStories is not defined.'
+        raise ValueError(msg)   
+
+
+    # TODO: This is a temporary bugfix because the MultiplePEER app only 
+    # provides event accelerations in "g. We need to fix the MultiPEER app
+    # and then remove this fix from here
+    if evt['subtype'] == 'MultiplePEER_Event':
+        evt['timeSeries'][0]['factor'] *= getattr(simcenter_common, "g") / f_length_in
 
     #
-    # determine SA .3 and SA 1.0
-    #
-
-    im_units=dict()
+    # determine SA 0.3 and SA 1.0
+    #    
     ampScaled=False
     
     # convert to in/sec
@@ -285,16 +375,26 @@ def determine_response(AIM_input_path, EVENT_input_path, EDP_input_path):  # noq
     # get spectrum values
     #
 
+    # This takes care of scaling the event data with the factor in the event file
     time_series_dict = load_records(EVENT_in, ampScaled)
+    #print(len(time_series_dict['dirn1']))
+
+    # This converts the time series from the provided units to cm/s2 
+    # for internal calcs in the IntensityMeasureComputer
     im_computer = IntensityMeasureComputer(time_hist_dict=time_series_dict, units=units, ampScaled=ampScaled)
-    periods=[0.3, 1.0]
+    
+    periods=[0.0001, 0.3, 1.0]
+    # This returns SA values in "g" by default. We should provide the desired units as im_units
+    im_units=dict()
     im_computer.compute_response_spectrum(periods=periods, im_units=im_units)
 
-    print(im_computer.intensity_measures)
+    #print(json.dumps(im_computer.intensity_measures, indent=2))
 
     response_accel=im_computer.intensity_measures.get('AccelerationSpectrum', None)
+    # After the various conversions above, the response_accel is coming out in "g" 
+    # as long as the original EVENT_in had the accelerations in the AIM units
 
-    # set initial responses to 0, done in case accel not provide for all dirn.
+    # set initial responses to 0, in case accel is not provided for all directions
     #  - dimension 2: 1 = x dir, 2 = y dir
     pga = [0,0]
     drift_ratio1 = [0,0]
@@ -305,104 +405,93 @@ def determine_response(AIM_input_path, EVENT_input_path, EDP_input_path):  # noq
     # compute X dirn response 
     #
     
-    accel_x = response_accel.get('accel_x', None)
-    if accel_x == None:
-        accel_x = response_accel.get('dirn1', None)
+    accel_x = None
+    if 'accel_x' in response_accel:
+        accel_x = response_accel['accel_x']
+    elif 'dirn1' in response_accel:
+        accel_x = response_accel['dirn1']
 
-        if accel_x is not None:
+    if accel_x is not None:
 
-            # demand model
-            demand_model_name = SIM_input_data['DemandModel']['Name']
-            if demand_model_name in ['HAZUS', 'HAZUS_lin_chang_2003']:
-                demand_model = getattr(DemandModels, demand_model_name)(Mw)
-                
-            # capacity model
-            capacity_model_name = SIM_input_data['CapacityModel']['Name']
-            if capacity_model_name == 'HAZUS_cao_peterson_2006':
-                capacity_model = CapacityModels.HAZUS_cao_peterson_2006(
-                    general_info=AIM_in['GeneralInformation']
-                )
+        pga[0], sa_x_03, sa_x_10 = accel_x
 
-            # damping model
-            damping_model_name = SIM_input_data['DampingModel']['Name']
-            if damping_model_name == 'HAZUS_cao_peterson_2006':
-                damping_model = DampingModels.HAZUS_cao_peterson_2006(
-                    demand_model, capacity_model
-                )
-
-            pga[0] = 0.0
-            saX_03 = accel_x[0]
-            saX_10 = accel_x[1]
-            
-            demand_model.set_IMs(saX_03, saX_10)
-            demand_model.set_Tavb(damping_model)
-            demand_model.set_beta_tvd(damping_model)
-            
-            # iterate to get sd and sa
-            perf_sdX, perf_saX = run_csm(
-                demand_model, capacity_model, damping_model, tol, max_iter, 0
+        demand_model = getattr(DemandModels, demand_model_name)(
+            event_magnitude
             )
 
-            drift_ratioX = perf_sdX / capacity_model.get_hazus_alpha2() / roof_height
-            drift_ratio1[0] = drift_ratioX
-            roof_sa1[0] = perf_saX
-            roof_disp1[0] = drift_ratioX*roof_height
+        capacity_model = getattr(CapacityModels, capacity_model_name)(
+            general_info=general_info
+            )
+
+        damping_model = getattr(DampingModels, damping_model_name)(
+            demand_model, capacity_model
+            )
+        
+        demand_model.set_IMs(sa_x_03, sa_x_10)  # this function almost surely expects SA in "g"
+        demand_model.set_Tavb(damping_model)
+        demand_model.set_beta_tvd(damping_model)
+        
+        # iterate to get sd and sa
+        perf_sd_x, perf_sa_x = run_csm(
+            demand_model, capacity_model, damping_model, tol, max_iter, 0
+        )
+
+        average_drift_x = perf_sd_x / (capacity_model.get_hazus_alpha2() * roof_height)
+        drift_ratio1[0] = average_drift_x
+        roof_sa1[0] = perf_sa_x
+        roof_disp1[0] = average_drift_x * roof_height
 
     #
     # now y (or 2) dirn response
     #
-    
-    accel_y = response_accel.get('accel_y', None)
-    if accel_y == None:
-        
-        accel_y = response_accel.get('dirn2', None)
 
-        if accel_y is not None:
-            
-            pga[1] = 0.0            
-            saY_03 = accel_y[0]
-            saY_10 = accel_y[1]
+    accel_y = None
+    if 'accel_y' in response_accel:
+        accel_y = response_accel['accel_y']
+    elif 'dirn2' in response_accel:
+        accel_y = response_accel['dirn2']
 
-            # demand model
-            demand_model_name = SIM_input_data['DemandModel']['Name']
-            if demand_model_name in ['HAZUS', 'HAZUS_lin_chang_2003']:
-                demand_model = getattr(DemandModels, demand_model_name)(Mw)
-                
-            # capacity model
-            capacity_model_name = SIM_input_data['CapacityModel']['Name']
-            if capacity_model_name == 'HAZUS_cao_peterson_2006':
-                capacity_model = CapacityModels.HAZUS_cao_peterson_2006(
-                    general_info=AIM_in['GeneralInformation']
-                )
+    if accel_y is not None:
 
-            # damping model
-            damping_model_name = SIM_input_data['DampingModel']['Name']
-            if damping_model_name == 'HAZUS_cao_peterson_2006':
-                damping_model = DampingModels.HAZUS_cao_peterson_2006(
-                    demand_model, capacity_model
-                )
-                
-            demand_model.set_IMs(saY_03, saY_10)
-            demand_model.set_Tavb(damping_model)
-            demand_model.set_beta_tvd(damping_model)
-            
-            # iterate to get sd and sa
-            perf_sdY, perf_saY = run_csm(
-                demand_model, capacity_model, damping_model, tol, max_iter, 0
+        pga[1], sa_y_03, sa_y_10 = accel_y
+
+        demand_model = getattr(DemandModels, demand_model_name)(
+            event_magnitude
+            )
+
+        capacity_model = getattr(CapacityModels, capacity_model_name)(
+            general_info=general_info
+            )
+
+        damping_model = getattr(DampingModels, damping_model_name)(
+            demand_model, capacity_model
             )
             
-            drift_ratio1[1] = perf_sdY / capacity_model.get_hazus_alpha2() / roof_height
-            roof_sa1[1] = perf_saY
-            roof_disp1[1] = drift_ratio1[1]*roof_height                
+        demand_model.set_IMs(sa_y_03, sa_y_10)
+        demand_model.set_Tavb(damping_model)
+        demand_model.set_beta_tvd(damping_model)
+        
+        # iterate to get sd and sa
+        perf_sd_y, perf_sa_y = run_csm(
+            demand_model, capacity_model, damping_model, tol, max_iter, 0
+        )
+        
+        average_drift_y = perf_sd_y / (capacity_model.get_hazus_alpha2() * roof_height)
+        drift_ratio1[1] = average_drift_y
+        roof_sa1[1] = perf_sa_y
+        roof_disp1[1] = average_drift_y * roof_height                
             
     #
-    # store the IM(s) in the EDPs
+    # store the EDPs
     #
 
     # open EDP file
     
     with open(EDP_input_path, encoding='utf-8') as f:  # noqa: PTH123
         EDP_in = json.load(f)  # noqa: N806
+
+    # calculate scale factor to convert accelerations back to output units
+    sa_factor = getattr(simcenter_common, "g") / f_length_in
     
 
     # update EDP
@@ -418,10 +507,10 @@ def determine_response(AIM_input_path, EVENT_input_path, EDP_input_path):  # noq
                 floor = int(floor)
                 
             if floor == num_stories:
-                edp_item['scalar_data'] =[roof_sa1[i-1] for i in dofs]
+                edp_item['scalar_data'] =[roof_sa1[i-1] * sa_factor for i in dofs]
 
             elif floor == 0:
-                edp_item['scalar_data'] = [pga[i-1] for i in dofs]
+                edp_item['scalar_data'] = [pga[i-1] * sa_factor for i in dofs]
             else:
                 edp_item['scalar_data'] = [0.0 for i in dofs]
 
