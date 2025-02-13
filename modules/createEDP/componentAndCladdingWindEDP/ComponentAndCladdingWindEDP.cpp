@@ -376,7 +376,6 @@ int main(int argc, char ** argv) {
     while (std::getline(loadFile, line)) 
     {
       std::stringstream ss(line);
-
       while (std::getline(ss, token, ',')) 
       {
         loadArrays[count_comp].push_back(std::stod(token)); // Convert to double
@@ -405,7 +404,13 @@ int main(int argc, char ** argv) {
 
     // now loop over load entries putting in values
 
-    int count  = 0;
+    int count0  = 0;
+    int count1  = 0;
+    int count2  = 0;
+    int count3  = 0;
+    int count4  = 0;
+    int count5  = 0;
+    
     for (size_t j = 0; j < json_array_size(loads); j++) 
     {
       json_t *load = json_array_get(loads, j);
@@ -417,26 +422,30 @@ int main(int argc, char ** argv) {
         continue;
       }
 
-      // Add 1 to the "scalar_data" array
       if(strcmp(json_string_value(loadType),"mean_pressure")){
-        json_array_append_new(scalarData, json_real(loadArrays[0][count]));
+        json_array_append_new(scalarData, json_real(loadArrays[0][count0]));
+	count0++;
       }
-        else if(strcmp(json_string_value(loadType),"rms_pressure")){
-          json_array_append_new(scalarData, json_real(loadArrays[1][count]));
+      else if(strcmp(json_string_value(loadType),"rms_pressure")){
+	json_array_append_new(scalarData, json_real(loadArrays[1][count1]));
+	count1++;
       }
-        else if(strcmp(json_string_value(loadType),"peak_pressure")){
-              json_array_append_new(scalarData, json_real(loadArrays[2][count]));
+      else if(strcmp(json_string_value(loadType),"peak_pressure")){
+	json_array_append_new(scalarData, json_real(loadArrays[2][count2]));
+	count2++;
       }
-        else if(strcmp(json_string_value(loadType),"mean_force")){
-              json_array_append_new(scalarData, json_real(loadArrays[3][count]));
+      else if(strcmp(json_string_value(loadType),"mean_force")){
+	json_array_append_new(scalarData, json_real(loadArrays[3][count3]));
+	count3++;
       }
-        else if(strcmp(json_string_value(loadType),"rms_force")){
-              json_array_append_new(scalarData, json_real(loadArrays[4][count]));
+      else if(strcmp(json_string_value(loadType),"rms_force")){
+	json_array_append_new(scalarData, json_real(loadArrays[4][count4]));
+	count4++;
       }
-        else if(strcmp(json_string_value(loadType),"peak_force")){
-              json_array_append_new(scalarData, json_real(loadArrays[5][count]));
+      else if(strcmp(json_string_value(loadType),"peak_force")){
+	json_array_append_new(scalarData, json_real(loadArrays[5][count5]));
+	count5++;
       }
-      count++ ;
     }
 
     json_dump_file(rootEDP, filenameEDP, 0);
