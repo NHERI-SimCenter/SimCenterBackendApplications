@@ -422,27 +422,43 @@ int main(int argc, char ** argv) {
         continue;
       }
 
+      cerr << "check = " << strcmp(json_string_value(loadType), "mean_pressure") << endl;
+      break;
+
       if(strcmp(json_string_value(loadType),"mean_pressure")){
+        std::cerr << "size: " << loadArrays[0].size() << endl;
+        std::cerr << "count0: " << count0 << endl;
+
         json_array_append_new(scalarData, json_real(loadArrays[0][count0]));
 	count0++;
       }
-      else if(strcmp(json_string_value(loadType),"rms_pressure")){
+      else if(strcmp(json_string_value(loadType),"rms_pressure")){       
+        std::cerr << "size: " << loadArrays[1].size() << endl;
+        std::cerr << "count1: " << count1 << endl;
 	json_array_append_new(scalarData, json_real(loadArrays[1][count1]));
 	count1++;
       }
       else if(strcmp(json_string_value(loadType),"peak_pressure")){
+        std::cerr << "size: " << loadArrays[2].size() << endl;
+        std::cerr << "count2: " << count2 << endl;
 	json_array_append_new(scalarData, json_real(loadArrays[2][count2]));
 	count2++;
       }
       else if(strcmp(json_string_value(loadType),"mean_force")){
+        std::cerr << "size: " << loadArrays[3].size() << endl;
+        std::cerr << "count3: " << count3<< endl;
 	json_array_append_new(scalarData, json_real(loadArrays[3][count3]));
 	count3++;
       }
       else if(strcmp(json_string_value(loadType),"rms_force")){
+        std::cerr << "size: " << loadArrays[4].size() << endl;
+        std::cerr << "count4: " << count4 << endl;
 	json_array_append_new(scalarData, json_real(loadArrays[4][count4]));
 	count4++;
       }
       else if(strcmp(json_string_value(loadType),"peak_force")){
+        std::cerr << "size: " << loadArrays[5].size() << endl;
+        std::cerr << "count5: " << count5 << endl;
 	json_array_append_new(scalarData, json_real(loadArrays[5][count5]));
 	count5++;
       }
