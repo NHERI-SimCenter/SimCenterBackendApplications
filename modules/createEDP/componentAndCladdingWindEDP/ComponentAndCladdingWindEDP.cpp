@@ -422,27 +422,27 @@ int main(int argc, char ** argv) {
         continue;
       }
 
-      if(strcmp(json_string_value(loadType),"mean_pressure")){
+      if(!strcmp(json_string_value(loadType),"mean_pressure")){
         json_array_append_new(scalarData, json_real(loadArrays[0][count0]));
 	count0++;
       }
-      else if(strcmp(json_string_value(loadType),"rms_pressure")){
+      else if(!strcmp(json_string_value(loadType),"rms_pressure")){
 	json_array_append_new(scalarData, json_real(loadArrays[1][count1]));
 	count1++;
       }
-      else if(strcmp(json_string_value(loadType),"peak_pressure")){
+      else if(!strcmp(json_string_value(loadType),"peak_pressure")){
 	json_array_append_new(scalarData, json_real(loadArrays[2][count2]));
 	count2++;
       }
-      else if(strcmp(json_string_value(loadType),"mean_force")){
+      else if(!strcmp(json_string_value(loadType),"mean_force")){
 	json_array_append_new(scalarData, json_real(loadArrays[3][count3]));
 	count3++;
       }
-      else if(strcmp(json_string_value(loadType),"rms_force")){
+      else if(!strcmp(json_string_value(loadType),"rms_force")){
 	json_array_append_new(scalarData, json_real(loadArrays[4][count4]));
 	count4++;
       }
-      else if(strcmp(json_string_value(loadType),"peak_force")){
+      else if(!strcmp(json_string_value(loadType),"peak_force")){
 	json_array_append_new(scalarData, json_real(loadArrays[5][count5]));
 	count5++;
       }
