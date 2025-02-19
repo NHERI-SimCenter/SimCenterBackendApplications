@@ -458,18 +458,19 @@ if __name__ == '__main__':
     Entry point to read the simulation results from OpenFOAM case and post-process it.
     """
 
-    # # CLI parser
-    # parser = argparse.ArgumentParser(
-    #     description='Get EVENT file from OpenFOAM output'
-    # )
-    # parser.add_argument(
-    #     '-c', '--case', help='OpenFOAM case directory', required=True
-    # )
+    # CLI parser
+    parser = argparse.ArgumentParser(
+        description='Get EVENT file from OpenFOAM output'
+    )
+    parser.add_argument(
+        '-c', '--case', help='OpenFOAM case directory', required=True
+    )
 
-    # arguments, unknowns = parser.parse_known_args()
+    arguments, unknowns = parser.parse_known_args()
 
-    # case_path = arguments.case
-    case_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD_PBE"
+    case_path = arguments.case
+
+    # case_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD_PBE"
 
     print('Case full path: ', case_path)  # noqa: T201
 
@@ -515,11 +516,6 @@ if __name__ == '__main__':
 
     storyLoads[:, 0] = time
     
-    # print(np.shape(storyLoads))
-    # print(np.shape(forces))
-    # print(np.shape(moments))
-    # print(num_stories)
-
     for i in range(num_stories):
         storyLoads[:, 3 * i + 1] = forces[:, i, 0]
         storyLoads[:, 3 * i + 2] = forces[:, i, 1]
@@ -595,11 +591,6 @@ if __name__ == '__main__':
             delimiter='\t',
         )
         
-    
-    # compt_probes_path = os.path.join(case_path, 'postProcessing', 
-    #                                  'componentPressureSamplingPoints')
-    
-    
     # Build the path using Path operations (platform-independent)
     compt_probes_path = Path(case_path)/'postProcessing'/'componentPressureSamplingPoints'
         
