@@ -380,7 +380,7 @@ int main(int argc, char ** argv) {
       {
         loadArrays[count_comp].push_back(std::stod(token)); // Convert to double
       }      
-
+      
       count_comp++;
     }
 
