@@ -278,7 +278,7 @@ def determine_response(AIM_input_path, EVENT_input_path, EDP_input_path):  # noq
 
     # make sure we are working with a Seismic event
     if evt['type'] != 'Seismic':
-        msg = f'Wrong Event Type, need Seismic NOT {evt['type']}'
+        msg = f'Wrong Event Type, need Seismic NOT {evt["type"]}'
         raise ValueError(msg)
 
     # get the simulation application
