@@ -46,7 +46,7 @@ def ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime, lengthScale, 
     It will scale dT and forces using the 2 scale factors: dT *= velocityScale/lengthScale; force *= lengthScale/(velocityScale*velocityScale)
     
     In newer version of OpenFOAM (>=9) the output force format has been changed, the porous forces are not written anymore. So, depending on the
-    wether the porous is written or not  the expected format is changed. 
+    whether the porous is written or not  the expected format is changed. 
     
     The scaling is also changed from model-scale to full-scale instead of the other way around
     """
