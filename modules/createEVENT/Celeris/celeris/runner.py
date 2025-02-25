@@ -486,6 +486,7 @@ class Evolve:  # noqa: D101
         if not os.path.exists(plotpath):  # noqa: PTH110
             os.makedirs(plotpath)  # noqa: PTH103
         i = 0.0
+        show_gui = None
         use_ggui = None
         window = None
         canvas = None
@@ -493,14 +494,25 @@ class Evolve:  # noqa: D101
             window = ti.ui.Window('CelerisAi', (self.solver.nx, self.solver.ny))  # noqa: F405
             canvas = window.get_canvas()
             use_ggui = True
+            show_gui = True
         except:  # noqa: E722
             # TODO : Formal error handling and logging  # noqa: TD002
             print('GGUI not available, reverting to legacy Taichi GUI.')  # noqa: T201
             use_ggui = False
             use_fast_gui = False  # Need ti.Vector.field equiv to self.solver.pixel to use fast_gui
-            window = ti.GUI(  # noqa: F405
-                'CelerisAi', (self.solver.nx, self.solver.ny), fast_gui=use_fast_gui
-            )  # fast_gui - display directly on frame buffer if not drawing shapes or text
+            show_gui = True
+            try:
+                show_gui = True
+                print('Default: Show GUI window (e.g., for desktop use.')
+                window = ti.GUI(  # noqa: F405
+                    'CelerisAi', (self.solver.nx, self.solver.ny), fast_gui=use_fast_gui, show_gui=show_gui
+                )  # fast_gui - display directly on frame buffer if not drawing shapes or text
+            except:
+                show_gui = False
+                print('Headless: Do not show GUI window (e.g., for command-line use on remote HPC systems.')
+                window = ti.GUI(  # noqa: F405
+                    'CelerisAi', (self.solver.nx, self.solver.ny), fast_gui=use_fast_gui, show_gui=show_gui
+                )  # fast_gui - display directly on frame buffer if not drawing shapes or text
             canvas = None
             print('Legacy GUI initialized.')  # noqa: T201
         else:
