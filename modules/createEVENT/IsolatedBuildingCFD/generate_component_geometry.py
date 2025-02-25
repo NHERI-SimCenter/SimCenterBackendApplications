@@ -15,7 +15,7 @@
 # ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 # DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGESG
 # (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 #  OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
@@ -164,6 +164,10 @@ def write_component_probes_file(  # noqa: D103
 
 def create_component_geometry(input_json_path, compt_json_path, template_dict_path, case_path):  
     
+    if not os.path.exists(input_json_path + '/IsolatedBuildingCFD.json'):
+        print("CFD case directory not setup yet!")
+        return
+
     # Read JSON data
     with open(  # noqa: PTH123
         input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
