@@ -147,6 +147,8 @@ class damping_model_hazus(damping_model_base):
             header=None,
         )
         self.kappa_col_map = {
+            'SC': {'S': 1, 'M': 2, 'L': 3},
+            'VC': {'S': 1, 'M': 2, 'L': 3},
             'HC': {'S': 1, 'M': 2, 'L': 3},
             'MC': {'S': 4, 'M': 5, 'L': 6},
             'LC': {'S': 7, 'M': 8, 'L': 9},
