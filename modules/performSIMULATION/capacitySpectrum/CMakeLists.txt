@@ -10,5 +10,8 @@ simcenter_add_python_script(SCRIPT HC_capacity_data.csv)
 simcenter_add_python_script(SCRIPT MC_capacity_data.csv)
 simcenter_add_python_script(SCRIPT LC_capacity_data.csv)
 simcenter_add_python_script(SCRIPT PC_capacity_data.csv)
+simcenter_add_python_script(SCRIPT SC_capacity_data.csv)
+simcenter_add_python_script(SCRIPT VC_capacity_data.csv)
+
 
 

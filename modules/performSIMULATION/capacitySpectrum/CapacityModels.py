@@ -55,13 +55,13 @@ import time
 import numpy as np
 import pandas as pd
 
-ap_DesignLevel = {1940: 'LC', 1975: 'MC', 2100: 'HC'}  # noqa: N816
+ap_DesignLevel = {1940: 'PC', 1975: 'MC', 2100: 'HC'}  # noqa: N816
 # original:
 # ap_DesignLevel = {1940: 'PC', 1940: 'LC', 1975: 'MC', 2100: 'HC'}
 # Note that the duplicated key is ignored, and Python keeps the last
 # entry.
 
-ap_DesignLevel_W1 = {0: 'LC', 1975: 'MC', 2100: 'HC'}  # noqa: N816
+ap_DesignLevel_W1 = {0: 'MC', 1975: 'MC', 2100: 'HC'}  # noqa: N816
 # original:
 # ap_DesignLevel_W1 = {0: 'PC', 0: 'LC', 1975: 'MC', 2100: 'HC'}
 # same thing applies
@@ -291,6 +291,20 @@ class HAZUS_cao_peterson_2006(capacity_model_base):
     def __init__(self, general_info, dD=0.001):  # noqa: N803
         # HAZUS capacity data: Table 5-7 to Table 5-10 in HAZUS 5.1
         self.capacity_data = dict()  # noqa: C408
+        self.capacity_data['SC'] = pd.read_csv(
+            os.path.join(  # noqa: PTH118
+                os.path.dirname(__file__),  # noqa: PTH118, PTH120, RUF100
+                'SC_capacity_data.csv',
+            ),
+            index_col=0,
+        ).to_dict(orient='index')
+        self.capacity_data['VC'] = pd.read_csv(
+            os.path.join(  # noqa: PTH118
+                os.path.dirname(__file__),  # noqa: PTH118, PTH120, RUF100
+                'VC_capacity_data.csv',
+            ),
+            index_col=0,
+        ).to_dict(orient='index')
         self.capacity_data['HC'] = pd.read_csv(
             os.path.join(  # noqa: PTH118
                 os.path.dirname(__file__),  # noqa: PTH118, PTH120, RUF100
