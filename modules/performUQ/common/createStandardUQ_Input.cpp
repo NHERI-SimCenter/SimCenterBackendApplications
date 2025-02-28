@@ -203,7 +203,7 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
             json_t *event = json_array_get(fileEDPs,i);
 
             //
-            // loop over all edp for the event in respnses
+            // loop over all edp for the event in responses
             //
 	    
             json_t *eventEDPs = json_object_get(event,"responses");
