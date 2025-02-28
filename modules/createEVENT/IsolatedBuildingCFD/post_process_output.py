@@ -415,8 +415,8 @@ class PressureData:
             x_max[i] = np.amax(x[i*n_per_seg:(i+1)*n_per_seg])
             x_min[i] = np.amin(x[i*n_per_seg:(i+1)*n_per_seg])
     
-        x_max = np.sort(x_max)      #sort in assending order
-        x_min = -np.sort(-x_min)    #sort in decending order
+        x_max = np.sort(x_max)      #sort in ascending order
+        x_min = -np.sort(-x_min)    #sort in descending order
     
     
         #Calculate the mode and dispertions
