@@ -183,149 +183,90 @@ def find_neighbors(  # noqa: C901, D103
     for asset_i, (aim_id, dist_list, ind_list) in enumerate(  # noqa: B007
         zip(aim_df.index, distances, indices)
     ):
-        if run_parallel == False or (i % num_processes) == process_id:
-            # open the AIM file
-            aim_index_id = aim_df.index[aim_id]
-            asst_file = aim_df.loc[aim_index_id, 'file']
+        # open the AIM file
+        aim_index_id = aim_df.index[aim_id]
+        asst_file = aim_df.loc[aim_index_id, 'file']
 
-            with open(asst_file, encoding='utf-8') as f:  # noqa: PTH123
-                asset_data = json.load(f)
+        with open(asst_file, encoding='utf-8') as f:  # noqa: PTH123
+            asset_data = json.load(f)
 
-            if filter_label != '':
-                # soil type of building
+        if filter_label != '':
+            # soil type of building
+            asset_label = asset_data['GeneralInformation'][filter_label]
+            # soil types of all initial neighbors
+            grid_label = grid_df[filter_label][ind_list]
+
+            # only keep the distances and indices corresponding to neighbors
+            # with the same soil type
+            dist_list = dist_list[(grid_label == asset_label).values]  # noqa: PD011, PLW2901
+            ind_list = ind_list[(grid_label == asset_label).values]  # noqa: PD011, PLW2901
+
+            # return dist_list & ind_list with a length equals neighbors
+            # assuming that at least neighbors grid points exist with
+            # the same filter_label as the building
+
+            # because dist_list, ind_list sorted initially in order of increasing
+            # distance, just take the first neighbors grid points of each
+            dist_list = dist_list[:neighbors]  # noqa: PLW2901
+            ind_list = ind_list[:neighbors]  # noqa: PLW2901
+
+        if len(grid_extra_keys) > 0:
+            filter_labels = []
+            for key in asset_data['GeneralInformation'].keys():  # noqa: SIM118
+                if key in grid_extra_keys:
+                    filter_labels.append(key)  # noqa: PERF401
+
+            filter_list = [True for i in dist_list]
+            for filter_label in filter_labels:  # noqa: PLR1704
                 asset_label = asset_data['GeneralInformation'][filter_label]
-                # soil types of all initial neighbors
                 grid_label = grid_df[filter_label][ind_list]
+                filter_list_i = (grid_label == asset_label).values  # noqa: PD011
+                filter_list = filter_list and filter_list_i
 
-                # only keep the distances and indices corresponding to neighbors
-                # with the same soil type
-                dist_list = dist_list[(grid_label == asset_label).values]  # noqa: PD011, PLW2901
-                ind_list = ind_list[(grid_label == asset_label).values]  # noqa: PD011, PLW2901
+            # only keep the distances and indices corresponding to neighbors
+            # with the same soil type
+            dist_list = dist_list[filter_list]  # noqa: PLW2901
+            ind_list = ind_list[filter_list]  # noqa: PLW2901
 
-                # return dist_list & ind_list with a length equals neighbors
-                # assuming that at least neighbors grid points exist with
-                # the same filter_label as the building
+            # return dist_list & ind_list with a length equals neighbors
+            # assuming that at least neighbors grid points exist with
+            # the same filter_label as the building
 
-                # because dist_list, ind_list sorted initially in order of increasing
-                # distance, just take the first neighbors grid points of each
-                dist_list = dist_list[:neighbors]  # noqa: PLW2901
-                ind_list = ind_list[:neighbors]  # noqa: PLW2901
+            # because dist_list, ind_list sorted initially in order of increasing
+            # distance, just take the first neighbors grid points of each
+            dist_list = dist_list[:neighbors]  # noqa: PLW2901
+            ind_list = ind_list[:neighbors]  # noqa: PLW2901
 
-            if len(grid_extra_keys) > 0:
-                filter_labels = []
-                for key in asset_data['GeneralInformation'].keys():  # noqa: SIM118
-                    if key in grid_extra_keys:
-                        filter_labels.append(key)  # noqa: PERF401
+        # calculate the weights for each neighbor based on their distance
+        dist_list = 1.0 / (dist_list**2.0)  # noqa: PLW2901
+        weights = np.array(dist_list) / np.sum(dist_list)
 
-                filter_list = [True for i in dist_list]
-                for filter_label in filter_labels:  # noqa: PLR1704
-                    asset_label = asset_data['GeneralInformation'][filter_label]
-                    grid_label = grid_df[filter_label][ind_list]
-                    filter_list_i = (grid_label == asset_label).values  # noqa: PD011
-                    filter_list = filter_list and filter_list_i
+        # get the pre-defined number of samples for each neighbor
+        nbr_samples = np.where(rng.multinomial(1, weights, samples) == 1)[1]
 
-                # only keep the distances and indices corresponding to neighbors
-                # with the same soil type
-                dist_list = dist_list[filter_list]  # noqa: PLW2901
-                ind_list = ind_list[filter_list]  # noqa: PLW2901
+        # this is the preferred behavior, the else clause is left for legacy inputs
+        if file_extension == '.csv':
+            if grid_df.iloc[0]['GP_file'][-3:] == 'csv':
+                # We assume that every grid point has the same type and number of
+                # event data. That is, you cannot mix ground motion records and
+                # intensity measures and you cannot assign 10 records to one point
+                # and 15 records to another.
 
-                # return dist_list & ind_list with a length equals neighbors
-                # assuming that at least neighbors grid points exist with
-                # the same filter_label as the building
-
-                # because dist_list, ind_list sorted initially in order of increasing
-                # distance, just take the first neighbors grid points of each
-                dist_list = dist_list[:neighbors]  # noqa: PLW2901
-                ind_list = ind_list[:neighbors]  # noqa: PLW2901
-
-            # calculate the weights for each neighbor based on their distance
-            dist_list = 1.0 / (dist_list**2.0)  # noqa: PLW2901
-            weights = np.array(dist_list) / np.sum(dist_list)
-
-            # get the pre-defined number of samples for each neighbor
-            nbr_samples = np.where(rng.multinomial(1, weights, samples) == 1)[1]
-
-            # this is the preferred behavior, the else clause is left for legacy inputs
-            if file_extension == '.csv':
-                if grid_df.iloc[0]['GP_file'][-3:] == 'csv':
-                    # We assume that every grid point has the same type and number of
-                    # event data. That is, you cannot mix ground motion records and
-                    # intensity measures and you cannot assign 10 records to one point
-                    # and 15 records to another.
-
-                    # Load the first file and identify if this is a grid of IM or GM
-                    # information. GM grids have GM record filenames defined in the
-                    # grid point files.
-                    first_file = pd.read_csv(
-                        event_dir / grid_df.iloc[0]['GP_file'], header=0
-                    )
-                    if first_file.columns[0] == 'TH_file':
-                        event_type = 'timeHistory'
-                    else:
-                        event_type = 'intensityMeasure'
-                    event_count = first_file.shape[0]
-
-                    # collect the list of events and scale factors
-                    event_list = []
-                    scale_list = []
-
-                    # for each neighbor
-                    for sample_j, nbr in enumerate(nbr_samples):
-                        # make sure we resample events if samples > event_count
-                        event_j = sample_j % event_count
-
-                        # get the index of the nth neighbor
-                        nbr_index = ind_list[nbr]
-
-                        # if the grid has ground motion records...
-                        if event_type == 'timeHistory':
-                            # load the file for the selected grid point
-                            event_collection_file = grid_df.iloc[nbr_index]['GP_file']
-                            event_df = pd.read_csv(
-                                event_dir / event_collection_file, header=0
-                            )
-
-                            # append the GM record name to the event list
-                            event_list.append(event_df.iloc[event_j, 0])
-
-                            # append the scale factor (or 1.0) to the scale list
-                            if len(event_df.columns) > 1:
-                                scale_list.append(float(event_df.iloc[event_j, 1]))
-                            else:
-                                scale_list.append(1.0)
-
-                        # if the grid has intensity measures
-                        elif event_type == 'intensityMeasure':
-                            # save the collection file name and the IM row id
-                            event_list.append(
-                                grid_df.iloc[nbr_index]['GP_file'] + f'x{event_j}'
-                            )
-
-                            # IM collections are not scaled
-                            scale_list.append(1.0)
-
-                # TODO: update the LLNL input data and remove this clause  # noqa: TD002
+                # Load the first file and identify if this is a grid of IM or GM
+                # information. GM grids have GM record filenames defined in the
+                # grid point files.
+                first_file = pd.read_csv(
+                    event_dir / grid_df.iloc[0]['GP_file'], header=0
+                )
+                if first_file.columns[0] == 'TH_file':
+                    event_type = 'timeHistory'
                 else:
-                    event_list = []
-                    for e, i in zip(nbr_samples, ind_list):
-                        event_list += [
-                            grid_df.iloc[i]['GP_file'],
-                        ] * e
+                    event_type = 'intensityMeasure'
+                event_count = first_file.shape[0]
 
-                    scale_list = np.ones(len(event_list))
-            else:
+                # collect the list of events and scale factors
                 event_list = []
                 scale_list = []
-                event_type = 'intensityMeasure'
-
-                # Determine event_count (number of IMs per grid point)
-                im_columns = [
-                    col
-                    for col in grid_df.columns
-                    if col not in ['geometry', 'Longitude', 'Latitude']
-                ]
-                # event_count = len(im_columns)
-                event_count = 1
 
                 # for each neighbor
                 for sample_j, nbr in enumerate(nbr_samples):
@@ -335,68 +276,124 @@ def find_neighbors(  # noqa: C901, D103
                     # get the index of the nth neighbor
                     nbr_index = ind_list[nbr]
 
-                    # For GIS files, create a new CSV file
-                    csv_filename = f'Site_{nbr_index}.csv'
-
-                    csv_path = event_dir / csv_filename
-
-                    if not csv_path.exists():
-                        # Create a CSV file with data from the GIS file
-                        # Use actual data from the GIS file if available, otherwise use dummy data
-                        im_columns = [
-                            col
-                            for col in grid_df.columns
-                            if col not in ['geometry', 'Longitude', 'Latitude']
-                        ]
-
-                        im_data = pd.DataFrame(
-                            {
-                                col: [grid_df.iloc[nbr_index][col]] * event_count
-                                for col in im_columns
-                            }
+                    # if the grid has ground motion records...
+                    if event_type == 'timeHistory':
+                        # load the file for the selected grid point
+                        event_collection_file = grid_df.iloc[nbr_index]['GP_file']
+                        event_df = pd.read_csv(
+                            event_dir / event_collection_file, header=0
                         )
 
-                        im_data.to_csv(csv_path, index=False)
-                    # save the collection file name and the IM row id
-                    event_list.append(csv_filename + f'x{event_j}')
+                        # append the GM record name to the event list
+                        event_list.append(event_df.iloc[event_j, 0])
 
-                    # IM collections are not scaled
-                    scale_list.append(1.0)
+                        # append the scale factor (or 1.0) to the scale list
+                        if len(event_df.columns) > 1:
+                            scale_list.append(float(event_df.iloc[event_j, 1]))
+                        else:
+                            scale_list.append(1.0)
 
-            # prepare a dictionary of events
-            event_list_json = []
-            for e_i, event in enumerate(event_list):
-                # event_list_json.append({
-                #    #"EventClassification": "Earthquake",
-                #    "fileName": f'{event}x{e_i:05d}',
-                #    "factor": scale_list[e_i],
-                #    #"type": event_type
-                #    })
-                event_list_json.append([f'{event}x{e_i:05d}', scale_list[e_i]])
+                    # if the grid has intensity measures
+                    elif event_type == 'intensityMeasure':
+                        # save the collection file name and the IM row id
+                        event_list.append(
+                            grid_df.iloc[nbr_index]['GP_file'] + f'x{event_j}'
+                        )
 
-            # save the event dictionary to the AIM
-            # TODO: we assume there is only one event  # noqa: TD002
-            # handling multiple events will require more sophisticated inputs
+                        # IM collections are not scaled
+                        scale_list.append(1.0)
 
-            if 'Events' not in asset_data:
-                asset_data['Events'] = [{}]
-            elif len(asset_data['Events']) == 0:
-                asset_data['Events'].append({})
+            # TODO: update the LLNL input data and remove this clause  # noqa: TD002
+            else:
+                event_list = []
+                for e, i in zip(nbr_samples, ind_list):
+                    event_list += [
+                        grid_df.iloc[i]['GP_file'],
+                    ] * e
 
-            asset_data['Events'][0].update(
-                {
-                    # "EventClassification": "Earthquake",
-                    'EventFolderPath': str(event_dir),
-                    'Events': event_list_json,
-                    'type': event_type,
-                    # "type": "SimCenterEvents"
-                }
-            )
+                scale_list = np.ones(len(event_list))
+        else:
+            event_list = []
+            scale_list = []
+            event_type = 'intensityMeasure'
 
-            with open(asst_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
-                json.dump(asset_data, f, indent=2)
-        
-            count = count + 1
+            # Determine event_count (number of IMs per grid point)
+            im_columns = [
+                col
+                for col in grid_df.columns
+                if col not in ['geometry', 'Longitude', 'Latitude']
+            ]
+            # event_count = len(im_columns)
+            event_count = 1
+
+            # for each neighbor
+            for sample_j, nbr in enumerate(nbr_samples):
+                # make sure we resample events if samples > event_count
+                event_j = sample_j % event_count
+
+                # get the index of the nth neighbor
+                nbr_index = ind_list[nbr]
+
+                # For GIS files, create a new CSV file
+                csv_filename = f'Site_{nbr_index}.csv'
+
+                csv_path = event_dir / csv_filename
+
+                if not csv_path.exists():
+                    # Create a CSV file with data from the GIS file
+                    # Use actual data from the GIS file if available, otherwise use dummy data
+                    im_columns = [
+                        col
+                        for col in grid_df.columns
+                        if col not in ['geometry', 'Longitude', 'Latitude']
+                    ]
+
+                    im_data = pd.DataFrame(
+                        {
+                            col: [grid_df.iloc[nbr_index][col]] * event_count
+                            for col in im_columns
+                        }
+                    )
+
+                    im_data.to_csv(csv_path, index=False)
+                # save the collection file name and the IM row id
+                event_list.append(csv_filename + f'x{event_j}')
+
+                # IM collections are not scaled
+                scale_list.append(1.0)
+
+        # prepare a dictionary of events
+        event_list_json = []
+        for e_i, event in enumerate(event_list):
+            # event_list_json.append({
+            #    #"EventClassification": "Earthquake",
+            #    "fileName": f'{event}x{e_i:05d}',
+            #    "factor": scale_list[e_i],
+            #    #"type": event_type
+            #    })
+            event_list_json.append([f'{event}x{e_i:05d}', scale_list[e_i]])
+
+        # save the event dictionary to the AIM
+        # TODO: we assume there is only one event  # noqa: TD002
+        # handling multiple events will require more sophisticated inputs
+
+        if 'Events' not in asset_data:
+            asset_data['Events'] = [{}]
+        elif len(asset_data['Events']) == 0:
+            asset_data['Events'].append({})
+
+        asset_data['Events'][0].update(
+            {
+                # "EventClassification": "Earthquake",
+                'EventFolderPath': str(event_dir),
+                'Events': event_list_json,
+                'type': event_type,
+                # "type": "SimCenterEvents"
+            }
+        )
+
+        with open(asst_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
+            json.dump(asset_data, f, indent=2)
 
 
 if __name__ == '__main__':
