@@ -165,7 +165,7 @@ def write_component_probes_file(  # noqa: D103
 def create_component_geometry(input_json_path, compt_json_path, template_dict_path, case_path):  
     
     if not os.path.exists(input_json_path + '/IsolatedBuildingCFD.json'):
-        print("CFD case directory not setup yet!")
+        print("Waiting for the CFD case directory to be setup!")
         return
 
     # Read JSON data

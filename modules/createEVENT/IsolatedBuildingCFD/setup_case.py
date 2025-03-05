@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-  # noqa: INP001, D100, UP009
+t# -*- coding: utf-8 -*-  # noqa: INP001, D100, UP009
 # Copyright (c) 2016-2017, The Regents of the University of California (Regents).
 # All rights reserved.
 #
@@ -1290,13 +1290,16 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
 
     monitor_base_load = rm_data['monitorBaseLoad']
     monitor_surface_pressure = rm_data['monitorSurfacePressure']
+    monitor_surface_pressure = rm_data['monitorSurfacePressure']
 
     monitor_vtk_planes = rm_data['monitorVTKPlane']
     vtk_planes = rm_data['vtkPlanes']
-  # noqa: W293
+    
+    # noqa: W293
     # Need to change this for  # noqa: W291
     max_delta_t = 10*time_step
-  # noqa: W293
+    
+    # noqa: W293
     #Write 10 times
     write_frequency = 10.0
     write_interval_time = duration / write_frequency
@@ -1374,16 +1377,21 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
             added_part += "    #includeFunc  {}\n".format(pln["name"])
         dict_lines.insert(start_index, added_part)
 
+    #Write pressure data at selected sampling points
+    if monitor_surface_pressure:
+        added_part =  '    #includeFunc  generatedPressureSamplingPoints\n'
+        added_part += '    #includeFunc  importedPressureSamplingPoints\n'
+        dict_lines.insert(start_index, added_part)
+
     #Write component sampling points  # noqa: W291
 
 
 
     #Write edited dict to file
     write_file_name = case_path + "/system/controlDict"
-  # noqa: W293
+
     if os.path.exists(write_file_name):
         os.remove(write_file_name)
-  # noqa: W293
     output_file = open(write_file_name, "w+")
     for line in dict_lines:
         output_file.write(line)
