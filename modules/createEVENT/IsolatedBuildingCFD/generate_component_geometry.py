@@ -1009,16 +1009,16 @@ if __name__ == '__main__':
     
     input_args = sys.argv
 
-    # # Set filenames
-    # input_json_path = sys.argv[1]
-    # compt_json_path = sys.argv[2]
-    # template_dict_path = sys.argv[3]
-    # case_path = sys.argv[4]
+    # Set file names
+    input_json_path = sys.argv[1]
+    compt_json_path = sys.argv[2]
+    template_dict_path = sys.argv[3]
+    case_path = sys.argv[4]
 
-    input_json_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD_PBE\\constant\\simCenter\\input\\"
-    compt_json_path = "C:\\Users\\fanta\\SimCenter\\WBS_Items\\PBWE\\CC_Pressure_EDP_Example_TPU_V1.json"
-    template_dict_path = "C:\\Users\\fanta\\SimCenter\\SourceCode\\NHERI-SimCenter\\SimCenterBackendApplications\\modules\\createEVENT\\IsolatedBuildingCFD\\templateOF10Dicts\\"
-    case_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD_PBE"
+    # input_json_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD_PBE\\constant\\simCenter\\input\\"
+    # compt_json_path = "C:\\Users\\fanta\\SimCenter\\WBS_Items\\PBWE\\CC_Pressure_EDP_Example_TPU_V1.json"
+    # template_dict_path = "C:\\Users\\fanta\\SimCenter\\SourceCode\\NHERI-SimCenter\\SimCenterBackendApplications\\modules\\createEVENT\\IsolatedBuildingCFD\\templateOF10Dicts\\"
+    # case_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD_PBE"
 
     # Write the component's geometry
     create_component_geometry(input_json_path, compt_json_path, template_dict_path, case_path)

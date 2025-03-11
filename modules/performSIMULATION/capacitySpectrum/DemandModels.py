@@ -149,21 +149,8 @@ class HAZUS(demand_model_base):
         self.dem_sa_05 = np.zeros_like(self.T)
         ## Eq A1a to Eq A2c in Cao and Peterson 2006
         for i, t in enumerate(self.T):
-            if t <= self.Tav:
-                self.dem_sa_05[i] = sa_03
-                self.dem_sd_05[i] = (
-                    self.g / (4 * np.pi**2) * t**2 * self.dem_sa_05[i]
-                )  # Eq. A2
-            elif t <= self.Tvd:
-                self.dem_sa_05[i] = sa_10 / t
-                self.dem_sd_05[i] = (
-                    self.g / (4 * np.pi**2) * t**2 * self.dem_sa_05[i]
-                )  # Eq. A2
-            else:
-                self.dem_sa_05[i] = sa_10 * self.Tvd / t**2  # Ea. A1a
-                self.dem_sd_05[i] = (
-                    self.g / (4 * np.pi**2) * t**2 * self.dem_sa_05[i]
-                )
+            self.dem_sa_05[i] = self.get_sa(t)
+            self.dem_sd_05[i] = self.get_sd(t)
 
     def get_sa(self, T):  # noqa: N803
         """
@@ -202,11 +189,7 @@ class HAZUS(demand_model_base):
         """
         # return np.interp(T, self.T, self.dem_sd_05)
         # return np.interp(T, self.T, self.dem_sa_05)
-        if self.Tav >= T:
-            return self.get_sd_from_sa(self.sa_03, T)
-        if self.Tvd >= T:
-            return self.get_sd_from_sa(self.sa_10 / T, T)
-        return self.get_sd_from_sa(self.sa_10 * self.Tvd / T**2, T)
+        return self.get_sd_from_sa(self.get_sa(T), T)
 
     def get_sd_from_sa(self, sa, T):  # noqa: N803
         """
@@ -224,7 +207,7 @@ class HAZUS(demand_model_base):
         float
             The spectrum displacement.
         """
-        return self.g / (4 * np.pi**2) * T**2 * sa
+        return self.g / (4 * np.pi**2) * T**2 * sa  # Eq. A2
 
     def set_Tavb(self, damping_model, tol=0.05, max_iter=100):  # noqa: N802
         """

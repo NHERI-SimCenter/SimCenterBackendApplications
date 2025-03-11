@@ -270,6 +270,52 @@ def read_pressure_data(file_names):
         p1 = p2  # noqa: F841
     return probes, connected_time, connected_p
 
+def lieblin_blue(x):
+        """
+        Performs Lieblin Blue fitted peak values for a time series in 'x'.
+        If the time series cannot be divided into 10 equal segments the remaining 
+        part is discarded.
+        """
+    
+        #Coefficient used for the Lieblein Blue fit
+        a = [ 0.222867,  0.162308,  0.133845, 0.112868, 0.095636, 0.080618, 0.066988, 0.054193, 0.041748, 0.028929]
+        b = [-0.347830, -0.091158, -0.019210, 0.022179, 0.048671, 0.066064, 0.077021, 0.082771, 0.083552, 0.077940]
+    
+        n_seg = 10 #Number of segments
+    
+        #Min and max of each segment
+        x_max = np.zeros(n_seg)
+        x_min = np.zeros(n_seg)
+    
+        #Number of time steps per each segment
+        n_per_seg = int(np.rint(len(x)/n_seg))
+    
+        #Calculate the min and max of each segment.
+        for i in range(n_seg):
+            x_max[i] = np.amax(x[i*n_per_seg:(i+1)*n_per_seg])
+            x_min[i] = np.amin(x[i*n_per_seg:(i+1)*n_per_seg])
+    
+        x_max = np.sort(x_max)      #sort in ascending order
+        x_min = -np.sort(-x_min)    #sort in ascending order
+    
+    
+        #Calculate the mode and dispersions
+        u_max = np.dot(a,x_max)
+        u_min = np.dot(a,x_min)
+        d_max = np.dot(b,x_max)
+        d_min = np.dot(b,x_min)
+    
+    
+        #Calculate the peak based on Gambel distribution.
+        x_peak_gb_max = u_max + d_max*np.log(n_seg)
+        x_peak_gb_min = u_min + d_min*np.log(n_seg)
+    
+        #Calculate the stable peak using Lieblein Blue method.
+        x_peak_lb_max = x_peak_gb_max + 0.5772*d_max
+        x_peak_lb_min = x_peak_gb_min + 0.5772*d_min
+    
+        return x_peak_lb_max, x_peak_lb_min
+
 
 class PressureData:
     """
@@ -412,18 +458,19 @@ if __name__ == '__main__':
     Entry point to read the simulation results from OpenFOAM case and post-process it.
     """
 
-    # # CLI parser
-    # parser = argparse.ArgumentParser(
-    #     description='Get EVENT file from OpenFOAM output'
-    # )
-    # parser.add_argument(
-    #     '-c', '--case', help='OpenFOAM case directory', required=True
-    # )
+    # CLI parser
+    parser = argparse.ArgumentParser(
+        description='Get EVENT file from OpenFOAM output'
+    )
+    parser.add_argument(
+        '-c', '--case', help='OpenFOAM case directory', required=True
+    )
 
-    # arguments, unknowns = parser.parse_known_args()
+    arguments, unknowns = parser.parse_known_args()
 
-    # case_path = arguments.case
-    case_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD_PBE"
+    case_path = arguments.case
+
+    # case_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD_PBE"
 
     print('Case full path: ', case_path)  # noqa: T201
 
@@ -469,11 +516,6 @@ if __name__ == '__main__':
 
     storyLoads[:, 0] = time
     
-    # print(np.shape(storyLoads))
-    # print(np.shape(forces))
-    # print(np.shape(moments))
-    # print(num_stories)
-
     for i in range(num_stories):
         storyLoads[:, 3 * i + 1] = forces[:, i, 0]
         storyLoads[:, 3 * i + 2] = forces[:, i, 1]
@@ -549,16 +591,10 @@ if __name__ == '__main__':
             delimiter='\t',
         )
         
-    
-    # compt_probes_path = os.path.join(case_path, 'postProcessing', 
-    #                                  'componentPressureSamplingPoints')
-    
-    
     # Build the path using Path operations (platform-independent)
     compt_probes_path = Path(case_path)/'postProcessing'/'componentPressureSamplingPoints'
         
     if compt_probes_path.exists():
-        
         geom_data = json_data['GeometricData']
         
         geom_scale = 1.0/float(geom_data['geometricScale'])
@@ -575,15 +611,15 @@ if __name__ == '__main__':
             rho=air_density,
             p_ref=0.0,
             start_time=duration*0.1,
-            end_time=None,
+            end_time=None
         )
 
         num_times = len(cfd_p.time)
 
-        pressureData = np.zeros((num_times, cfd_p.probe_count + 1))  # noqa: N816
+        pData = np.zeros((num_times, cfd_p.probe_count + 1))  # noqa: N816
 
-        pressureData[:, 0] = cfd_p.time
-        pressureData[:, 1:] = np.transpose(cfd_p.cp)
+        pData[:, 0] = cfd_p.time
+        pData[:, 1:] = np.transpose(cfd_p.cp)
         
         areas_path = case_path + '/constant/geometry/components/probe_areas.txt'
         indexes_path = case_path + '/constant/geometry/components/probe_indexes.txt'
@@ -595,50 +631,46 @@ if __name__ == '__main__':
         
         dyn_p = 0.5*air_density*(fs_wind_speed**2.0)
                 
-        peak_p = cfd_p.cp_abs_peak*dyn_p
+        p_data = cfd_p.cp*dyn_p
         
-        compt_pressures = []
         start_index = 0  # Initialize starting index
         compt_forces = []
         
-        compt_json_path = "C:\\Users\\fanta\\SimCenter\\WBS_Items\\PBWE\\CC_Pressure_EDP_Example_TPU_V1.json"
-        with open(compt_json_path, encoding='utf-8') as json_file:
+
+        # Read JSON data
+        compt_json_path = os.path.join(  # noqa: PTH118
+            case_path, 'constant', 'simCenter', 'input', 'ComponentDefinition.json'
+        )
+        
+        with open(compt_json_path) as json_file:  # noqa: PTH123
             compt_json_data = json.load(json_file)
         
+    
         compts = compt_json_data['components']
-
+        
         count = 0
+        count_compt  = 0
+        n_loads  = 6
+        n_compts = len(compts)
 
-        export_json = {}
-        
-        wind_speeds = np.random.normal(fs_wind_speed, 0.1*fs_wind_speed, 100)        
-        n_wind_speeds = np.shape(wind_speeds)[0]
-
-        compt_pressures_export = [] #np.zeros((len(compts), n_wind_speeds))
-        compt_forces_export = []
-        cmpt_ids = []
-        export_json["windSpeeds"] = wind_speeds.tolist()
-        
+        component_loads = np.zeros((n_loads, n_compts))
 
         #Write stl files for each component
         for compt_i in compts:
             geoms = compt_i["geometries"]            
             geoms_p = []
             geoms_f = []
-            geoms_a = []
-            
-            cmpt_ids.append(compt_i["componentId"])
-            
-
+            geoms_a = []                       
             for geom_i in geoms:
                 end_index = indexes[count]
                 # Extract group of areas and pressures
                 element_areas = areas[start_index:end_index]
-                element_pressures = peak_p[start_index:end_index]
-                element_force = np.sum(element_pressures * element_areas)
+                element_pressures = p_data[start_index:end_index]            
+
+                element_force = np.sum(element_pressures.transpose()*element_areas, axis=1)
 
                 # Calculate weighted pressure and total area
-                weighted_pressure = np.sum(element_pressures * element_areas)
+                weighted_pressure = np.sum(element_pressures.transpose()*element_areas, axis=1)
                 total_area = np.sum(element_areas)
         
                 # Calculate area-averaged pressure
@@ -650,71 +682,35 @@ if __name__ == '__main__':
 
                 # Update start index for the next group
                 start_index = end_index  
-                count+=1
+                count += 1
             
             #Compute for each component
             area = np.sum(np.array(geoms_a))
-            pressure = np.sum(np.array(geoms_p)*np.array(geoms_a))/area
-            force = np.sum(np.array(geoms_f)*np.array(geoms_a))/area
+            pressure = np.sum(np.array(geoms_p).transpose()*np.array(geoms_a), axis=1)/area
+            force = np.sum(np.array(geoms_f).transpose()*np.array(geoms_a), axis=1)/area
             
-            compt_pressures_export.append(pressure*(wind_speeds/fs_wind_speed)**2.0)
-            compt_forces_export.append(force*(wind_speeds/fs_wind_speed)**2.0)
-
-            export_json["componentId"] = {"forces": force, "pressure": pressure, "area":area}
-
-
-            compt_pressures.append(pressure)
-            compt_forces.append(force)
-
-    
-        json_output_file = os.path.join(load_output_path, 'componentExportData.json')
-    
-        with open(json_output_file, 'w') as jsonfile:
-            json.dump(export_json, jsonfile, indent=4)
+            print(np.shape(pressure))
+            print(np.shape(force))
             
-            
-        p_output_file = os.path.join(load_output_path, 'componentPeakPressurePBE.csv')
-        f_output_file = os.path.join(load_output_path, 'componentPeakForcePBE.csv')
-    
-        with open(p_output_file, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(cmpt_ids)
-    
-            compt_pressures_export = np.array(compt_pressures_export)
-            
-            for ui in range(n_wind_speeds):
-                writer.writerow(compt_pressures_export[:, ui].tolist())
+            component_loads[0, count_compt] = np.mean(pressure)
+            component_loads[1, count_compt] = np.std(pressure)
+            pos_peak, neg_peak = lieblin_blue(pressure)
+            if np.abs(pos_peak) > np.abs(neg_peak):
+                component_loads[2, count_compt] = pos_peak
+            else:
+                component_loads[2, count_compt] = neg_peak
 
-        with open(f_output_file, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(cmpt_ids)
-    
-            compt_forces_export = np.array(compt_forces_export)
             
-            for ui in range(n_wind_speeds):
-                writer.writerow(compt_forces_export[:, ui].tolist())
-        
-        np.savetxt(
-            os.path.join(load_output_path, 'windSpeedPBE.csv'),  # noqa: PTH118
-            wind_speeds,
-            delimiter=',',
-        )
-        
-        np.savetxt(
-            os.path.join(load_output_path, 'componentPeakPressureData.txt'),  # noqa: PTH118
-            compt_pressures,
-            delimiter='\t',
-        )
-        
-        np.savetxt(
-            os.path.join(load_output_path, 'componentPeakForceData.txt'),  # noqa: PTH118
-            compt_forces,
-            delimiter='\t',
-        )
-        
-        # np.savetxt(
-        #     os.path.join(load_output_path, 'rawComponentCpData.txt'),  # noqa: PTH118
-        #     pressureData,
-        #     delimiter='\t',
-        # )
-        
+            component_loads[3, count_compt] = np.mean(force)
+            component_loads[4, count_compt] = np.std(force)
+            pos_peak, neg_peak = lieblin_blue(force)
+            if np.abs(pos_peak) > np.abs(neg_peak):
+                component_loads[5, count_compt] = pos_peak
+            else:
+                component_loads[5, count_compt] = neg_peak
+
+            count_compt+=1
+
+        comp_load_file = os.path.join(load_output_path, 'componentLoads.csv')
+
+        np.savetxt(comp_load_file, component_loads, fmt='%.6e', delimiter=',')
