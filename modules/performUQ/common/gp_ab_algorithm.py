@@ -592,13 +592,17 @@ def preprocess(input_arguments):
     -------
         tuple: A tuple containing the preprocessed data required for the GP-AB Algorithm.
     """
+    input_file_full_path = (
+        Path(input_arguments.path_to_template_directory)
+        / input_arguments.input_json_file
+    )
     (
         uq_inputs,
         rv_inputs,
         correlation_matrix_inputs,
         edp_inputs,
         application_inputs,
-    ) = read_inputs(input_arguments.input_json_file)
+    ) = read_inputs(input_file_full_path)
 
     data_file = uq_inputs.calDataFilePath / uq_inputs.calDataFile
     with data_file.open() as f:
