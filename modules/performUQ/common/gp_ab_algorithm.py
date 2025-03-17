@@ -475,19 +475,21 @@ class GP_AB_Algorithm:
             num_burn_in=0,
         )
 
-        # Step 3.1: Assess convergence
-        gkl = convergence_metrics.calculate_gkl(
-            log_posterior_approximation,
-            previous_log_posterior_approximation,
-            samples,
-        )
-        gmap = convergence_metrics.calculate_gmap(
-            log_posterior_approximation,
-            previous_log_posterior_approximation,
-            samples,
-            self.prior_variances,
-        )
-        self.converged = gkl < self.gkl_threshold and gmap < self.gmap_threshold
+        self.converged = False
+        if k > 0:
+            # Step 3.1: Assess convergence
+            gkl = convergence_metrics.calculate_gkl(
+                log_posterior_approximation,
+                previous_log_posterior_approximation,
+                samples,
+            )
+            gmap = convergence_metrics.calculate_gmap(
+                log_posterior_approximation,
+                previous_log_posterior_approximation,
+                samples,
+                self.prior_variances,
+            )
+            self.converged = gkl < self.gkl_threshold and gmap < self.gmap_threshold
 
         # Step 3.2: Computational budget related termination
         self.budget_exceeded = (len(self.inputs) >= self.max_simulations) or (
