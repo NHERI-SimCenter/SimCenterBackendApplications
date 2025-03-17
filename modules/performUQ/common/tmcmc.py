@@ -176,7 +176,7 @@ def _generate_error_message(size):
     return f'Expected a single value, but got {size} values.'
 
 
-def _run_one_stage_serial(  # noqa: C901
+def _run_one_stage_unequal_chain_lengths(  # noqa: C901
     samples,
     log_likelihood_values,
     log_target_density_values,
@@ -235,7 +235,7 @@ def _run_one_stage_serial(  # noqa: C901
 
     num_samples = samples.shape[0]
     num_accepts = 0
-    n_adapt = 1
+    num_adapt = 1
     step_count = 0
     num_steps = number_of_steps
     # print(f'{new_beta = }, {do_thinning = }, {num_steps = }')
@@ -250,9 +250,9 @@ def _run_one_stage_serial(  # noqa: C901
             if step_count % adapt_frequency == 0:
                 acceptance_rate = num_accepts / adapt_frequency
                 num_accepts = 0
-                n_adapt += 1
+                num_adapt += 1
                 ca = (acceptance_rate - target_acceptance_rate) / (
-                    math.sqrt(n_adapt)
+                    math.sqrt(num_adapt)
                 )
                 scale_factor = scale_factor * np.exp(ca)
                 proposal_covariance = _get_scaled_proposal_covariance(
@@ -408,7 +408,7 @@ class TMCMC:
                 new_log_target_density_values,
                 new_beta,
                 log_evidence,
-            ) = _run_one_stage_serial(
+            ) = _run_one_stage_unequal_chain_lengths(
                 samples_dict[stage_num],
                 log_likelihood_values_dict[stage_num],
                 log_target_density_values_dict[stage_num],
@@ -431,18 +431,17 @@ class TMCMC:
             log_target_density_values_dict[stage_num] = new_log_target_density_values
             log_evidence_dict[stage_num] = log_evidence
 
-        return (
-            samples_dict,
-            betas_dict,
-            log_likelihood_values_dict,
-            log_target_density_values_dict,
-            log_evidence_dict,
-        )
+        return {
+            'samples_dict': samples_dict,
+            'betas_dict': betas_dict,
+            'log_likelihood_values_dict': log_likelihood_values_dict,
+            'log_target_density_values_dict': log_target_density_values_dict,
+            'log_evidence_dict': log_evidence_dict,
+        }
 
 
 if __name__ == '__main__':
     import numpy as np
-    from scipy import stats
 
     # Define log-likelihood function (2D Gaussian)
     def _log_likelihood_approximation_function(samples):
@@ -482,13 +481,7 @@ if __name__ == '__main__':
 
     # Run TMCMC
     stage_num = 0
-    (
-        samples_dict,
-        betas_dict,
-        log_likelihoods_dict,
-        log_target_density_values_dict,
-        log_evidence_dict,
-    ) = tmcmc_sampler.run(
+    results = tmcmc_sampler.run(
         samples_dict,
         betas_dict,
         log_likelihoods_dict,
@@ -498,6 +491,13 @@ if __name__ == '__main__':
         stage_num,
         num_burn_in=100,
     )
+
+    # Unpack returned dictionary
+    samples_dict = results['samples_dict']
+    betas_dict = results['betas_dict']
+    log_likelihoods_dict = results['log_likelihood_values_dict']
+    log_target_density_values_dict = results['log_target_density_values_dict']
+    log_evidence_dict = results['log_evidence_dict']
 
     # Display results
     final_stage_num = max(samples_dict.keys())
