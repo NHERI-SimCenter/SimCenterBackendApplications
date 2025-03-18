@@ -1,4 +1,3 @@
-t# -*- coding: utf-8 -*-  # noqa: INP001, D100, UP009
 # Copyright (c) 2016-2017, The Regents of the University of California (Regents).
 # All rights reserved.
 #
@@ -1383,10 +1382,6 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
         added_part += '    #includeFunc  importedPressureSamplingPoints\n'
         dict_lines.insert(start_index, added_part)
 
-    #Write component sampling points  # noqa: W291
-
-
-
     #Write edited dict to file
     write_file_name = case_path + "/system/controlDict"
 
@@ -1616,16 +1611,18 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):  # n
     ) as json_file:
         json_data = json.load(json_file)
 
-    air_density = 1.0
+    air_density_inf = 1.0
 
     # Returns JSON object as a dictionary
     rm_data = json_data['resultMonitoring']
+    ns_data = json_data['numericalSetup']
 
-    num_stories = rm_data['numStories']  # noqa: F841
-    floor_height = rm_data['floorHeight']  # noqa: F841
     center_of_rotation = rm_data['centerOfRotation']
     base_load_write_interval = rm_data['baseLoadWriteInterval']
     monitor_base_load = rm_data['monitorBaseLoad']  # noqa: F841
+    solver_type = ns_data['solverType']
+    time_step = ns_data['timeStep']
+    adjust_time_step = ns_data['adjustTimeStep']
 
     # Open the template file (OpenFOAM file) for manipulation
     dict_file = open(template_dict_path + '/baseForcesTemplate')  # noqa: SIM115, PTH123
@@ -1633,9 +1630,29 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):  # n
     dict_lines = dict_file.readlines()
     dict_file.close()
 
+
     # Write writeInterval
     start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
     dict_lines[start_index] = f'writeInterval \t{base_load_write_interval};\n'
+
+    # Write writeControl
+    start_index = foam.find_keyword_line(dict_lines, 'writeControl')
+    if solver_type == 'pimpleFoam' and adjust_time_step:
+        dict_lines[start_index] = 'writeControl \t{};\n'.format(
+            'adjustableRunTime'
+        )
+    else:
+        dict_lines[start_index] = 'writeControl \t{};\n'.format('timeStep')
+
+    # Write writeInterval
+    start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
+    if solver_type == 'pimpleFoam' and adjust_time_step:
+        dict_lines[start_index] = (
+            f'writeInterval \t{base_load_write_interval * time_step:.6f};\n'
+        )
+    else:
+        dict_lines[start_index] = f'writeInterval \t{base_load_write_interval};\n'
+
 
     # Write patch name to integrate forces on
     start_index = foam.find_keyword_line(dict_lines, 'patches')
@@ -1643,7 +1660,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):  # n
 
     # Write air density to rhoInf
     start_index = foam.find_keyword_line(dict_lines, 'rhoInf')
-    dict_lines[start_index] = f'rhoInf \t\t{air_density:.4f};\n'
+    dict_lines[start_index] = f'rhoInf \t\t{air_density_inf:.4f};\n'
 
     # Write center of rotation
     start_index = foam.find_keyword_line(dict_lines, 'CofR')
@@ -1676,12 +1693,14 @@ def write_story_forces_file(input_json_path, template_dict_path, case_path):  # 
 
     # Returns JSON object as a dictionary
     rm_data = json_data['resultMonitoring']
+    ns_data = json_data['numericalSetup']
 
     num_stories = rm_data['numStories']
-    floor_height = rm_data['floorHeight']  # noqa: F841
     center_of_rotation = rm_data['centerOfRotation']
     story_load_write_interval = rm_data['storyLoadWriteInterval']
-    monitor_base_load = rm_data['monitorBaseLoad']  # noqa: F841
+    solver_type = ns_data['solverType']
+    time_step = ns_data['timeStep']
+    adjust_time_step = ns_data['adjustTimeStep']
 
     # Open the template file (OpenFOAM file) for manipulation
     dict_file = open(template_dict_path + '/storyForcesTemplate')  # noqa: SIM115, PTH123
@@ -1692,6 +1711,24 @@ def write_story_forces_file(input_json_path, template_dict_path, case_path):  # 
     # Write writeInterval
     start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
     dict_lines[start_index] = f'writeInterval \t{story_load_write_interval};\n'
+
+    # Write writeControl
+    start_index = foam.find_keyword_line(dict_lines, 'writeControl')
+    if solver_type == 'pimpleFoam' and adjust_time_step:
+        dict_lines[start_index] = 'writeControl \t{};\n'.format(
+            'adjustableRunTime'
+        )
+    else:
+        dict_lines[start_index] = 'writeControl \t{};\n'.format('timeStep')
+
+    # Write writeInterval
+    start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
+    if solver_type == 'pimpleFoam' and adjust_time_step:
+        dict_lines[start_index] = (
+            f'writeInterval \t{story_load_write_interval * time_step:.6f};\n'
+        )
+    else:
+        dict_lines[start_index] = f'writeInterval \t{story_load_write_interval};\n'
 
     # Write patch name to integrate forces on
     start_index = foam.find_keyword_line(dict_lines, 'patches')
