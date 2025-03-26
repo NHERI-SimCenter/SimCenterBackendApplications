@@ -382,35 +382,46 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
 
   int corrSize = theRandomVariables.ordering.size();
 
-  /* *****************************************************
+  //* *****************************************************
+  // sy - TODO: This block of codes was commented out in the past for unknown reasons. Let's keep it this way until we identify why. 
+
   if (!theRandomVariables.corrMat.empty()) {
 
-    if (theRandomVariables.corrMat[0] !=0 ) {
+    try {
 
-  std::cerr << "NEW ORDER: \n" << " size: " << corrSize << "\n";
-      std::vector<int> newOrder;
+        if (theRandomVariables.corrMat[0] !=0 ) {
+          std::cerr << "NEW ORDER: \n" << " size: " << corrSize << "\n";
+          std::vector<int> newOrder;
 
-      for (int i=0; i<18; i++) {
-         for (int j=0; j<corrSize; j++) {
-           if (i==theRandomVariables.ordering[j]) {
-       std::cerr << theRandomVariables.ordering[j] << " " << j << "\n";
-       newOrder.push_back(j);
-           }
+          for (int i=0; i<18; i++) {
+             for (int j=0; j<corrSize; j++) {
+               if (i==theRandomVariables.ordering[j]) {
+           std::cerr << theRandomVariables.ordering[j] << " " << j << "\n";
+           newOrder.push_back(j);
+               }
+            }
+          }
+
+          dakotaFile<<"uncertain_correlation_matrix\n";
+          for (int i : newOrder) {
+            dakotaFile << "    ";
+            for (int j : newOrder) {
+              double corrval = theRandomVariables.corrMat[i*corrSize+j];
+              dakotaFile << corrval << " ";
+            }
+            dakotaFile << "\n";
+          }
         }
       }
-
-      dakotaFile<<"uncertain_correlation_matrix\n";
-      for (int i : newOrder) {
-        dakotaFile << "    ";
-        for (int j : newOrder) {
-          double corrval = theRandomVariables.corrMat[i*corrSize+j];
-          dakotaFile << corrval << " ";
-        }
-        dakotaFile << "\n";
+      catch (const exception& e) {
+        std::cerr << "The correlation module failed due to an internal error. The RVs will be treated independent. Please report this bug at https://github.com/orgs/NHERI-SimCenter/discussions\n";
       }
+
     }
-  }
-  ***************************** */
+
+
+  //***************************** */
+
   dakotaFile << "\n\n";
 
   return 0;
