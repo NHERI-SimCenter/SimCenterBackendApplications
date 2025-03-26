@@ -414,7 +414,7 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
         }
       }
       catch (const exception& e) {
-        std::cerr << "The correlation module failed due to an internal error. The RVs will be treated independent. Please report this bug at https://github.com/orgs/NHERI-SimCenter/discussions\n";
+        std::cerr << "The correlation module failed due to an internal error. The RVs will be treated independent. Please report this bug at https://github.com/orgs/NHERI-SimCenter/discussions\n"; 
       }
 
     }
