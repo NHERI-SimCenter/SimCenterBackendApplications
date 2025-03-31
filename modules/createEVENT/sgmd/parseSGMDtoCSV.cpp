@@ -166,7 +166,6 @@ int main(int argc, const char **argv) {
     
     std::string outputJSONFilename = outputDirname + "/" + stationName + ".json";
     std::string inputCSVFilename =  stationName + ".csv";
-    /*
     if (writeJSON(inputCSVFilename, outputJSONFilename,elev) == 0) {
 
       // write data to EventGrid file
@@ -181,7 +180,6 @@ int main(int argc, const char **argv) {
       outputCSVFile << "TH_file\n" << stationName;
       outputCSVFile.close();      
     }
-    */
   }
   
   inputFile.close();

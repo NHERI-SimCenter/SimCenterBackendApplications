@@ -84,12 +84,11 @@ getMax(std::string inputFilename, int &result) {
   double maxValue;
   for (const auto& dp : data) {
     double fp = std::abs(dp.acc_fp*0.10197162129779283);
-    double fn = std::abs(dp.acc_fp*0.10197162129779283);
+    double fn = std::abs(dp.acc_fn*0.10197162129779283);
     if (fp > maxValue) maxValue = fp;
     if (fn > maxValue) maxValue = fn;    
   }
 
-  std::cerr << " MAX: " << maxValue << " error end getMAx " << result << " ";
   return maxValue;
 }
 
@@ -152,17 +151,15 @@ int main(int argc, const char **argv) {
     std::string outputJSONFilename = outputDirname + "/" + stationName + ".json";
     std::string inputCSVFilename =  stationName + ".csv";
 
-
+    double maxPGA = 0;
     int error;
     std::cerr << inputCSVFilename << "\t";
     double pga = getMax(inputCSVFilename, error);
-    
-    std::cerr << " error " << error << " PGA " << pga << "\t";
+    if (pga > maxPGA)
+      maxPGA = pga;
     
     if (error == 0) {// write data to EventGrid file
 
-      std::cerr << " PGA2 " << pga << "\t";
-      
       eventFile << stationName << ".csv," << lng << "," <<  lat << "\n";
       
       // create the csv file for the entry
