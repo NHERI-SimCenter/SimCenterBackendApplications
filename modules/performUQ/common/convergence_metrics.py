@@ -75,7 +75,10 @@ def _calculate_normalization_constants(
 
 
 def _calculate_kl_divergence(
-    current_log_target_function, previous_log_target_function, samples
+    current_log_likelihood_function,
+    previous_log_likelihood_function,
+    prior_pdf,
+    samples,
 ):
     """
     Calculate the KL divergence between the current and previous log target functions.
@@ -89,8 +92,14 @@ def _calculate_kl_divergence(
     -------
         float: The KL divergence estimate.
     """
-    current_function_values = current_log_target_function(samples)
-    previous_function_values = previous_log_target_function(samples)
+    current_log_likelihood_values = current_log_likelihood_function(samples)
+    previous_log_likelihood_values = previous_log_likelihood_function(samples)
+    current_function_values = current_log_likelihood_values + np.log(
+        prior_pdf(samples)
+    )
+    previous_function_values = previous_log_likelihood_values + np.log(
+        prior_pdf(samples)
+    )
     alpha_1, alpha_2 = _calculate_normalization_constants(
         current_function_values, previous_function_values
     )
@@ -120,7 +129,10 @@ def _calculate_kl_divergence(
 
 
 def calculate_gkl(
-    current_log_target_function, previous_log_target_function, samples
+    current_log_likelihood_function,
+    previous_log_likelihood_function,
+    prior_pdf,
+    samples,
 ):
     """
     Calculate the generalized KL divergence (GKL).
@@ -135,7 +147,10 @@ def calculate_gkl(
         float: The GKL value.
     """
     kl_divergence_estimate = _calculate_kl_divergence(
-        current_log_target_function, previous_log_target_function, samples
+        current_log_likelihood_function,
+        previous_log_likelihood_function,
+        prior_pdf,
+        samples,
     )
     n_theta = np.shape(samples)[1]
     gkl = 1 / n_theta * kl_divergence_estimate
@@ -143,8 +158,9 @@ def calculate_gkl(
 
 
 def calculate_gmap(
-    current_log_target_function,
-    previous_log_target_function,
+    current_log_likelihood_function,
+    previous_log_likelihood_function,
+    prior_pdf,
     samples,
     prior_variances,
 ):
@@ -161,10 +177,14 @@ def calculate_gmap(
     -------
         float: The GMAP value.
     """
-    current_function_values = current_log_target_function(samples)
-    previous_function_values = previous_log_target_function(samples)
-    current_map = np.argmax(current_function_values)
-    previous_map = np.argmax(previous_function_values)
+    current_log_likelihood_values = current_log_likelihood_function(samples)
+    previous_log_likelihood_values = previous_log_likelihood_function(samples)
+    current_map = np.argmax(
+        current_log_likelihood_values + np.log(prior_pdf(samples))
+    )
+    previous_map = np.argmax(
+        previous_log_likelihood_values + np.log(prior_pdf(samples))
+    )
 
     gmap = np.sqrt(np.sum((current_map - previous_map) ** 2 / prior_variances))
     return gmap  # noqa: RET504
