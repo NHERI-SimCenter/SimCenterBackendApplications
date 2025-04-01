@@ -46,19 +46,21 @@ def calculate_warm_start_stage(
     -------
         int: The stage number for the warm start.
     """
-    stage_nums = sorted(previous_results[0].keys(), reverse=True)
+    stage_nums = sorted(previous_results['samples_dict'].keys(), reverse=True)
     for stage_num in stage_nums:
         current_loglikelihood_values = current_loglikelihood_approximation(
-            previous_results[0][stage_num]
+            previous_results['samples_dict'][stage_num]
         )
-        previous_loglikelihood_values = previous_results[2][stage_num]
-        beta = previous_results[1][stage_num]
+        previous_loglikelihood_values = previous_results[
+            'log_likelihood_values_dict'
+        ][stage_num]
+        beta = previous_results['betas_dict'][stage_num]
         weights = _calculate_weights_warm_start(
             beta, current_loglikelihood_values, previous_loglikelihood_values
         )
         cov_weights = np.nanstd(weights) / np.nanmean(weights)
         if cov_weights < threshold_cov:
-            return stage_num
+            return np.max(stage_num - 1, 0)
     return 0
 
 
