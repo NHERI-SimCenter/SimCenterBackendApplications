@@ -435,15 +435,17 @@ class GP_AB_Algorithm:
             #     )
             j_star = calculate_warm_start_stage(
                 log_likelihood_approximation,
-                current_tmcmc_results,  # noqa: F821
+                self.results,
             )
-            previous_log_posterior_approximation = log_posterior_approximation
+            previous_log_likelihood_approximation = log_likelihood_approximation
+            # previous_log_posterior_approximation = log_posterior_approximation
 
         # Step 2.2: Sequential MC sampling
         if j_star == 0:
             samples = self._perform_initial_doe(num_samples_per_stage)
+            samples_transformed = self.sample_transformation_function(samples)
             log_target_density_values = np.log(
-                self.prior_pdf_function(samples)
+                self.prior_pdf_function(samples_transformed)
             ).reshape((-1, 1))
             log_likelihood_values = np.ones_like(log_target_density_values)
             log_evidence = 0
@@ -456,15 +458,17 @@ class GP_AB_Algorithm:
             log_evidence_dict[j_star] = log_evidence
         else:
             for j in range(j_star):
-                samples_dict[j] = self.samples_dict[j]
-                betas_dict[j] = self.betas_dict[j]
-                log_likelihoods_dict[j] = self.log_likelihoods_dict[j]
-                log_target_density_values_dict[j] = (
-                    self.log_target_density_values_dict[j]
-                )
-                log_evidence_dict[j] = self.log_evidence_dict[j]
+                samples_dict[j] = self.results['samples_dict'][j]
+                betas_dict[j] = self.results['betas_dict'][j]
+                log_likelihoods_dict[j] = self.results['log_likelihood_values_dict'][
+                    j
+                ]
+                log_target_density_values_dict[j] = self.results[
+                    'log_target_density_values_dict'
+                ][j]
+                log_evidence_dict[j] = self.results['log_evidence_dict'][j]
 
-        current_tmcmc_results = tmcmc.run(
+        self.results = tmcmc.run(
             samples_dict,
             betas_dict,
             log_likelihoods_dict,
@@ -479,13 +483,15 @@ class GP_AB_Algorithm:
         if k > 0:
             # Step 3.1: Assess convergence
             gkl = convergence_metrics.calculate_gkl(
-                log_posterior_approximation,
-                previous_log_posterior_approximation,
+                log_likelihood_approximation,
+                previous_log_likelihood_approximation,
+                self.prior_pdf_function,
                 samples,
             )
             gmap = convergence_metrics.calculate_gmap(
-                log_posterior_approximation,
-                previous_log_posterior_approximation,
+                log_likelihood_approximation,
+                previous_log_likelihood_approximation,
+                self.prior_pdf_function,
                 samples,
                 self.prior_variances,
             )
@@ -497,12 +503,12 @@ class GP_AB_Algorithm:
         )
         self.terminate = self.converged or self.budget_exceeded
         if self.terminate:
-            return self.terminate, current_tmcmc_results
+            return self.terminate, self.results
 
         # Step 4.1: Select variance for DoE
         n_training_points = 2 * self.input_dimension
         self.exploitation_proportion = 0.5
-        n_exploit = np.ceil(self.exploitation_proportion * n_training_points)
+        n_exploit = int(np.ceil(self.exploitation_proportion * n_training_points))
         current_doe = AdaptiveDesignOfExperiments(
             self.current_gp_model, self.current_pca, self.domain
         )
@@ -530,7 +536,7 @@ class GP_AB_Algorithm:
         )
         self.outputs = np.vstack([self.outputs, new_training_outputs])
 
-        return self.terminate, current_tmcmc_results
+        return self.terminate, self.results
 
     def run_initial_doe(self, num_initial_doe_per_dim=2):
         """
@@ -719,8 +725,9 @@ def run_gp_ab_algorithm(input_arguments):
     gp_ab.outputs = outputs
     gp_ab.num_experiments.append(num_initial_doe_samples)
     iteration = 0
-    while not gp_ab.terminate:
-        gp_ab.terminate, gp_ab.results = gp_ab.run_iteration(iteration)
+    terminate = False
+    while not terminate:
+        terminate, results = gp_ab.run_iteration(iteration)
         gp_ab.write_results()
         iteration += 1
 
