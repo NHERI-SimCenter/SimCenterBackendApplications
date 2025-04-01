@@ -64,9 +64,9 @@ class AdaptiveDesignOfExperiments:
         -------
             float: The computed lengthscale.
         """
-        eigenvalues = self.pca.explained_variance_
+        eigenvalues = self.pca.pca.explained_variance_
         w = eigenvalues / np.sum(eigenvalues)
-        lengthscales = np.atleast_2d([m.kernel.lengthscale for m in self.gp_model])
+        lengthscales = np.atleast_2d(self.gp_model.kernel.lengthscale)
         self.lengthscale_star = np.sum(w * lengthscales)
         return self.lengthscale_star
 
@@ -94,7 +94,7 @@ class AdaptiveDesignOfExperiments:
         -------
             GaussianProcessRegressor: The created GP model.
         """
-        self.gp_model_for_doe = self.gp_model[0].copy()
+        self.gp_model_for_doe = self.gp_model.model[0].copy()
         self.gp_model_for_doe.kernel = self.kernel
         return self.gp_model_for_doe
 
