@@ -390,6 +390,9 @@ class GP_AB_Algorithm:
                 model_outputs
             )
             self.num_pca_components_list.append(np.shape(self.latent_outputs)[1])
+            self.current_gp_model.fit(
+                model_parameters, self.latent_outputs, reoptimize=False
+            )
 
         # Step 1.2: GP predictive model
         gp_prediction_latent_mean, gp_prediction_latent_variance = (

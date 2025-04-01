@@ -81,17 +81,22 @@ class GaussianProcessModel:
             self.model[i].likelihood.variance = value
             self.model[i].likelihood.variance.fix()
 
-    def fit(self, x_train, y_train):
+    def fit(self, x_train, y_train, reoptimize=True):  # noqa: FBT002
         """
         Fit the GP models to the training data.
 
         Args:
             x_train (np.ndarray): The input training data.
             y_train (np.ndarray): The output training data.
+            reoptimize (bool): Whether to re-optimize hyperparameters.
         """
         for i in range(self.output_dimension):
             self.model[i].set_XY(x_train, np.reshape(y_train[:, i], (-1, 1)))
-            self.model[i].optimize()
+            if reoptimize:
+                self.model[i].optimize()
+            else:
+                # Force recomputation of the posterior
+                _ = self.model[i].posterior  # Triggers re-computation if dirty
 
     def predict(self, x_predict):
         """
