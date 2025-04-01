@@ -121,11 +121,11 @@ class AdaptiveDesignOfExperiments:
         beta = 2.0 * n_theta
         imse = np.zeros((candidate_training_points.shape[0], 1))
         for i, candidate in enumerate(candidate_training_points):
-            correlation_vector = self.gp_model_for_doe.kern.K(mci_samples, candidate)
-            imse[i] = (
-                1
-                / (mci_samples.shape[0])
-                * np.dot(correlation_vector**beta, pred_var)
+            correlation_vector = self.gp_model_for_doe.kern.K(
+                mci_samples, np.atleast_2d(candidate)
+            )
+            imse[i] = (1 / mci_samples.shape[0]) * np.sum(
+                (correlation_vector**beta) * pred_var
             )
         return imse
 
