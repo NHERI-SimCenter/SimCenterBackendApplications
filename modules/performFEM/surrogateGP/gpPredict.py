@@ -726,7 +726,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         if np.isnan(y_pred_var[:, ny]).any():
             y_pred_var[:, ny] = np.nan_to_num(y_pred_var[:, ny])
         if np.isnan(y_pred_var_m[:, ny]).any():
-            y_pred_m_var[:, ny] = np.nan_to_num(y_pred_m_var[:, ny])  # noqa: F821
+            y_pred_var_m[:, ny] = np.nan_to_num(y_pred_var_m[:, ny])  # noqa: F821
 
         # for parname in m_list[ny].parameter_names():
         #    if (kern_name in parname) and parname.endswith('variance'):

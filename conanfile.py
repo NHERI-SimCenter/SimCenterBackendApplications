@@ -37,10 +37,6 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
     ]
 
 
-    def requirements(self):
-        if self.settings.os in ["Linux"]:
-            requirements.append("boost/1.72.0")
-            
     # Custom attributes for Bincrafters recipe conventions
     _source_subfolder = 'source_subfolder'
     _build_subfolder = 'build_subfolder'

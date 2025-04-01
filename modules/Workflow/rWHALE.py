@@ -272,7 +272,8 @@ def main(  # noqa: C901, D103
             or asset_type == 'WaterDistributionNetwork'
             or asset_type == 'PowerNetwork'
         ):
-            WF.aggregate_results(asst_data=asst_data, asset_type=asset_type)
+            if procID == 0:
+                WF.aggregate_results(asst_data=asst_data, asset_type=asset_type)
 
         elif asset_type == 'WaterNetworkPipelines':
             # Provide the headers and out types
@@ -291,7 +292,11 @@ def main(  # noqa: C901, D103
         if doParallel == True:  # noqa: E712
             comm.Barrier()
 
-    WF.combine_assets_results(asset_files)
+    if procID == 0:
+        WF.combine_assets_results(asset_files)
+
+    if doParallel == True:  # noqa: E712
+        comm.Barrier()        
 
     #
     # add system performance
