@@ -8,7 +8,7 @@ if not os.path.exists(directory):  # noqa: PTH110
 import json  # noqa: E402
 
 import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
+import pandas as pd  # noqa: E402   
 
 
 def Istanbul(information):  # noqa: N802, D103
@@ -35,10 +35,10 @@ def Istanbul(information):  # noqa: N802, D103
 
     if 'TopoFlag':
         # IstanbulDirectory = '/corral-repl/projects/NHERI/published/PRJ-3712/GM_data/GM_topo/'
-        IstanbulDirectory = '/home/jovyan/work/projects/PRJ-3712/GM_data/GM_topo/'  # noqa: N806
+        IstanbulDirectory = '/home/NHERI-Published/PRJ-3712/GM_data/GM_topo'  # noqa: N806
     else:
         # IstanbulDirectory = '/corral-repl/projects/NHERI/published/PRJ-3712/GM_data/GM_flat/'
-        IstanbulDirectory = '/home/jovyan/work/projects/PRJ-3712/GM_data/GM_flat/'  # noqa: N806
+        IstanbulDirectory = '/home/NHERI-Published/PRJ-3712/GM_data/GM_flat'  # noqa: N806
 
     # print number of cites
     print(f'Number of sites: {len(gdf)}')  # noqa: T201
