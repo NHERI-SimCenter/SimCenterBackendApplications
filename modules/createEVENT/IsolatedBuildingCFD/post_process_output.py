@@ -62,6 +62,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import argparse
 import re
+import csv
 
 
 def read_bin_forces(fileName):  # noqa: C901, N803
@@ -269,6 +270,52 @@ def read_pressure_data(file_names):
         p1 = p2  # noqa: F841
     return probes, connected_time, connected_p
 
+def lieblin_blue(x):
+        """
+        Performs Lieblin Blue fitted peak values for a time series in 'x'.
+        If the time series cannot be divided into 10 equal segments the remaining 
+        part is discarded.
+        """
+    
+        #Coefficient used for the Lieblein Blue fit
+        a = [ 0.222867,  0.162308,  0.133845, 0.112868, 0.095636, 0.080618, 0.066988, 0.054193, 0.041748, 0.028929]
+        b = [-0.347830, -0.091158, -0.019210, 0.022179, 0.048671, 0.066064, 0.077021, 0.082771, 0.083552, 0.077940]
+    
+        n_seg = 10 #Number of segments
+    
+        #Min and max of each segment
+        x_max = np.zeros(n_seg)
+        x_min = np.zeros(n_seg)
+    
+        #Number of time steps per each segment
+        n_per_seg = int(np.rint(len(x)/n_seg))
+    
+        #Calculate the min and max of each segment.
+        for i in range(n_seg):
+            x_max[i] = np.amax(x[i*n_per_seg:(i+1)*n_per_seg])
+            x_min[i] = np.amin(x[i*n_per_seg:(i+1)*n_per_seg])
+    
+        x_max = np.sort(x_max)      #sort in ascending order
+        x_min = -np.sort(-x_min)    #sort in ascending order
+    
+    
+        #Calculate the mode and dispersions
+        u_max = np.dot(a,x_max)
+        u_min = np.dot(a,x_min)
+        d_max = np.dot(b,x_max)
+        d_min = np.dot(b,x_min)
+    
+    
+        #Calculate the peak based on Gambel distribution.
+        x_peak_gb_max = u_max + d_max*np.log(n_seg)
+        x_peak_gb_min = u_min + d_min*np.log(n_seg)
+    
+        #Calculate the stable peak using Lieblein Blue method.
+        x_peak_lb_max = x_peak_gb_max + 0.5772*d_max
+        x_peak_lb_min = x_peak_gb_min + 0.5772*d_min
+    
+        return x_peak_lb_max, x_peak_lb_min
+
 
 class PressureData:
     """
@@ -295,6 +342,7 @@ class PressureData:
         self.x = self.probes[:, 0]
         self.dt = np.mean(np.diff(self.time))
         self.probe_count = np.shape(self.probes)[0]
+        self.calculate_all()
 
     def read_cfd_data(self):  # noqa: D102
         if os.path.isdir(self.path):  # noqa: PTH112
@@ -341,7 +389,69 @@ class PressureData:
                 self.cp = self.cp[:, :end_index]
             except:  # noqa: S110, E722
                 pass
+            
+    def lieblin_blue(self, x):
+        """
+        Performs Lieblin Blue fitted peak values for a time series in 'x'.
+        If the time series cannot be divided into 10 equal segments the remaining 
+        part is discarded.
+        """
+    
+        #Coefficient used for the Lieblein Blue fit
+        a = [ 0.222867,  0.162308,  0.133845, 0.112868, 0.095636, 0.080618, 0.066988, 0.054193, 0.041748, 0.028929]
+        b = [-0.347830, -0.091158, -0.019210, 0.022179, 0.048671, 0.066064, 0.077021, 0.082771, 0.083552, 0.077940]
+    
+        n_seg = 10 #Number of segments
+    
+        #Min and max of each segment
+        x_max = np.zeros(n_seg)
+        x_min = np.zeros(n_seg)
+    
+        #Number of time steps per each segment
+        n_per_seg = int(np.rint(len(x)/n_seg))
+    
+        #Calculate the min and max of each segment.
+        for i in range(n_seg):
+            x_max[i] = np.amax(x[i*n_per_seg:(i+1)*n_per_seg])
+            x_min[i] = np.amin(x[i*n_per_seg:(i+1)*n_per_seg])
+    
+        x_max = np.sort(x_max)      #sort in ascending order
+        x_min = -np.sort(-x_min)    #sort in descending order
+    
+    
+        #Calculate the mode and dispertions
+        u_max = np.dot(a,x_max)
+        u_min = np.dot(a,x_min)
+        d_max = np.dot(b,x_max)
+        d_min = np.dot(b,x_min)
+    
+    
+        #Calculate the peak based on Gambel distribution.
+        x_peak_gb_max = u_max + d_max*np.log(n_seg)
+        x_peak_gb_min = u_min + d_min*np.log(n_seg)
+    
+        #Calculate the stable peak using Lieblein Blue method.
+        x_peak_lb_max = x_peak_gb_max + 0.5772*d_max
+        x_peak_lb_min = x_peak_gb_min + 0.5772*d_min
+    
+        return x_peak_lb_max, x_peak_lb_min
+    
+    def calculate_all(self):
+        
+        self.cp_mean = np.mean(self.cp, axis=1) 
+        self.cp_rms = np.std(self.cp, axis=1) 
+        self.cp_neg_peak = np.zeros(self.probe_count)
+        self.cp_pos_peak = np.zeros(self.probe_count)
+        
+        # print(self.probe_count)
+        # print(np.shape(self.cp))
 
+        for i in range(self.probe_count):
+            self.cp_pos_peak[i], self.cp_neg_peak[i] = self.lieblin_blue(self.cp[i,:])
+            
+        self.cp_abs_peak = np.maximum(np.abs(self.cp_pos_peak), np.abs(self.cp_neg_peak))
+        
+        
 
 if __name__ == '__main__':
     """"
@@ -359,7 +469,8 @@ if __name__ == '__main__':
     arguments, unknowns = parser.parse_known_args()
 
     case_path = arguments.case
-    # case_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD"
+
+    # case_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\IsolatedBuildingCFD_PBE"
 
     print('Case full path: ', case_path)  # noqa: T201
 
@@ -404,7 +515,7 @@ if __name__ == '__main__':
     storyLoads = np.zeros((num_times, num_stories * 3 + 1))  # noqa: N816
 
     storyLoads[:, 0] = time
-
+    
     for i in range(num_stories):
         storyLoads[:, 3 * i + 1] = forces[:, i, 0]
         storyLoads[:, 3 * i + 2] = forces[:, i, 1]
@@ -443,7 +554,7 @@ if __name__ == '__main__':
             delimiter='\t',
         )
 
-    # Write base loads
+    # Write pressure 
     if rm_data['monitorSurfacePressure']:
         p_file_name = ''
         if rm_data['importPressureSamplingPoints']:
@@ -479,3 +590,127 @@ if __name__ == '__main__':
             pressureData,
             delimiter='\t',
         )
+        
+    # Build the path using Path operations (platform-independent)
+    compt_probes_path = Path(case_path)/'postProcessing'/'componentPressureSamplingPoints'
+        
+    if compt_probes_path.exists():
+        geom_data = json_data['GeometricData']
+        
+        geom_scale = 1.0/float(geom_data['geometricScale'])
+        time_scale = 1.0/float(wc_data['timeScale'])
+        velocity_scale = 1.0/float(wc_data['velocityScale'])
+        air_density = wc_data['airDensity']
+        kinematic_viscosity = wc_data['kinematicViscosity']
+
+        wind_speed = wc_data['referenceWindSpeed']
+
+        cfd_p = PressureData(
+            compt_probes_path,
+            u_ref=wind_speed,
+            rho=air_density,
+            p_ref=0.0,
+            start_time=duration*0.1,
+            end_time=None
+        )
+
+        num_times = len(cfd_p.time)
+
+        pData = np.zeros((num_times, cfd_p.probe_count + 1))  # noqa: N816
+
+        pData[:, 0] = cfd_p.time
+        pData[:, 1:] = np.transpose(cfd_p.cp)
+        
+        areas_path = case_path + '/constant/geometry/components/probe_areas.txt'
+        indexes_path = case_path + '/constant/geometry/components/probe_indexes.txt'
+
+        areas = np.loadtxt(areas_path)/(geom_scale**2.0)
+        indexes = np.loadtxt(indexes_path).astype(int)
+                
+        fs_wind_speed = wind_speed/velocity_scale
+        
+        dyn_p = 0.5*air_density*(fs_wind_speed**2.0)
+                
+        p_data = cfd_p.cp*dyn_p
+        
+        start_index = 0  # Initialize starting index
+        compt_forces = []
+        
+
+        # Read JSON data
+        compt_json_path = os.path.join(  # noqa: PTH118
+            case_path, 'constant', 'simCenter', 'input', 'ComponentDefinition.json'
+        )
+        
+        with open(compt_json_path) as json_file:  # noqa: PTH123
+            compt_json_data = json.load(json_file)
+        
+    
+        compts = compt_json_data['components']
+        
+        count = 0
+        count_compt  = 0
+        n_loads  = 6
+        n_compts = len(compts)
+
+        component_loads = np.zeros((n_loads, n_compts))
+
+        #Write stl files for each component
+        for compt_i in compts:
+            geoms = compt_i["geometries"]            
+            geoms_p = []
+            geoms_f = []
+            geoms_a = []                       
+            for geom_i in geoms:
+                end_index = indexes[count]
+                # Extract group of areas and pressures
+                element_areas = areas[start_index:end_index]
+                element_pressures = p_data[start_index:end_index]            
+
+                element_force = np.sum(element_pressures.transpose()*element_areas, axis=1)
+
+                # Calculate weighted pressure and total area
+                weighted_pressure = np.sum(element_pressures.transpose()*element_areas, axis=1)
+                total_area = np.sum(element_areas)
+        
+                # Calculate area-averaged pressure
+                element_pressure = weighted_pressure/total_area
+                
+                geoms_p.append(element_pressure)
+                geoms_f.append(element_force)
+                geoms_a.append(total_area)
+
+                # Update start index for the next group
+                start_index = end_index  
+                count += 1
+            
+            #Compute for each component
+            area = np.sum(np.array(geoms_a))
+            pressure = np.sum(np.array(geoms_p).transpose()*np.array(geoms_a), axis=1)/area
+            force = np.sum(np.array(geoms_f).transpose()*np.array(geoms_a), axis=1)/area
+            
+            print(np.shape(pressure))
+            print(np.shape(force))
+            
+            component_loads[0, count_compt] = np.mean(pressure)
+            component_loads[1, count_compt] = np.std(pressure)
+            pos_peak, neg_peak = lieblin_blue(pressure)
+            if np.abs(pos_peak) > np.abs(neg_peak):
+                component_loads[2, count_compt] = pos_peak
+            else:
+                component_loads[2, count_compt] = neg_peak
+
+            
+            component_loads[3, count_compt] = np.mean(force)
+            component_loads[4, count_compt] = np.std(force)
+            pos_peak, neg_peak = lieblin_blue(force)
+            if np.abs(pos_peak) > np.abs(neg_peak):
+                component_loads[5, count_compt] = pos_peak
+            else:
+                component_loads[5, count_compt] = neg_peak
+
+            count_compt+=1
+
+        comp_load_file = os.path.join(load_output_path, 'componentLoads.csv')
+
+        np.savetxt(comp_load_file, component_loads, fmt='%.6e', delimiter=',')

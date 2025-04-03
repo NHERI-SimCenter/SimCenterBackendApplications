@@ -1,3 +1,47 @@
+# Copyright (c) 2016-2017, The Regents of the University of California (Regents).
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+#  OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# The views and conclusions contained in the software and documentation are those
+# of the authors and should not be interpreted as representing official policies,
+# either expressed or implied, of the FreeBSD Project.
+#
+# REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+# THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS
+# PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT,
+# UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+
+#
+# Contributors:
+# Abiy Melaku
+
+
+#
+# This script reads OpenFOAM output and plot the characteristics of the
+# approaching wind. For now, it read and plots only velocity field data and
+# pressure on predicted set of probes.
+#
+
 """This script writes BC and initial condition, and setups the OpenFoam case
 directory.
 
@@ -1245,13 +1289,16 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
 
     monitor_base_load = rm_data['monitorBaseLoad']
     monitor_surface_pressure = rm_data['monitorSurfacePressure']
+    monitor_surface_pressure = rm_data['monitorSurfacePressure']
 
     monitor_vtk_planes = rm_data['monitorVTKPlane']
     vtk_planes = rm_data['vtkPlanes']
-  # noqa: W293
+    
+    # noqa: W293
     # Need to change this for  # noqa: W291
     max_delta_t = 10*time_step
-  # noqa: W293
+    
+    # noqa: W293
     #Write 10 times
     write_frequency = 10.0
     write_interval_time = duration / write_frequency
@@ -1322,21 +1369,24 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
         added_part = '    #includeFunc  baseForces\n'
         dict_lines.insert(start_index, added_part)
 
-    #Write VTK sampling sampling points  # noqa: W291
+    #Write VTK sampling points  # noqa: W291
     if monitor_vtk_planes:
         added_part = ""
         for pln in vtk_planes:
             added_part += "    #includeFunc  {}\n".format(pln["name"])
         dict_lines.insert(start_index, added_part)
-  # noqa: W293
 
+    #Write pressure data at selected sampling points
+    if monitor_surface_pressure:
+        added_part =  '    #includeFunc  generatedPressureSamplingPoints\n'
+        added_part += '    #includeFunc  importedPressureSamplingPoints\n'
+        dict_lines.insert(start_index, added_part)
 
     #Write edited dict to file
     write_file_name = case_path + "/system/controlDict"
-  # noqa: W293
+
     if os.path.exists(write_file_name):
         os.remove(write_file_name)
-  # noqa: W293
     output_file = open(write_file_name, "w+")
     for line in dict_lines:
         output_file.write(line)
@@ -1561,16 +1611,18 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):  # n
     ) as json_file:
         json_data = json.load(json_file)
 
-    air_density = 1.0
+    air_density_inf = 1.0
 
     # Returns JSON object as a dictionary
     rm_data = json_data['resultMonitoring']
+    ns_data = json_data['numericalSetup']
 
-    num_stories = rm_data['numStories']  # noqa: F841
-    floor_height = rm_data['floorHeight']  # noqa: F841
     center_of_rotation = rm_data['centerOfRotation']
     base_load_write_interval = rm_data['baseLoadWriteInterval']
     monitor_base_load = rm_data['monitorBaseLoad']  # noqa: F841
+    solver_type = ns_data['solverType']
+    time_step = ns_data['timeStep']
+    adjust_time_step = ns_data['adjustTimeStep']
 
     # Open the template file (OpenFOAM file) for manipulation
     dict_file = open(template_dict_path + '/baseForcesTemplate')  # noqa: SIM115, PTH123
@@ -1578,9 +1630,29 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):  # n
     dict_lines = dict_file.readlines()
     dict_file.close()
 
+
     # Write writeInterval
     start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
     dict_lines[start_index] = f'writeInterval \t{base_load_write_interval};\n'
+
+    # Write writeControl
+    start_index = foam.find_keyword_line(dict_lines, 'writeControl')
+    if solver_type == 'pimpleFoam' and adjust_time_step:
+        dict_lines[start_index] = 'writeControl \t{};\n'.format(
+            'adjustableRunTime'
+        )
+    else:
+        dict_lines[start_index] = 'writeControl \t{};\n'.format('timeStep')
+
+    # Write writeInterval
+    start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
+    if solver_type == 'pimpleFoam' and adjust_time_step:
+        dict_lines[start_index] = (
+            f'writeInterval \t{base_load_write_interval * time_step:.6f};\n'
+        )
+    else:
+        dict_lines[start_index] = f'writeInterval \t{base_load_write_interval};\n'
+
 
     # Write patch name to integrate forces on
     start_index = foam.find_keyword_line(dict_lines, 'patches')
@@ -1588,7 +1660,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):  # n
 
     # Write air density to rhoInf
     start_index = foam.find_keyword_line(dict_lines, 'rhoInf')
-    dict_lines[start_index] = f'rhoInf \t\t{air_density:.4f};\n'
+    dict_lines[start_index] = f'rhoInf \t\t{air_density_inf:.4f};\n'
 
     # Write center of rotation
     start_index = foam.find_keyword_line(dict_lines, 'CofR')
@@ -1621,12 +1693,14 @@ def write_story_forces_file(input_json_path, template_dict_path, case_path):  # 
 
     # Returns JSON object as a dictionary
     rm_data = json_data['resultMonitoring']
+    ns_data = json_data['numericalSetup']
 
     num_stories = rm_data['numStories']
-    floor_height = rm_data['floorHeight']  # noqa: F841
     center_of_rotation = rm_data['centerOfRotation']
     story_load_write_interval = rm_data['storyLoadWriteInterval']
-    monitor_base_load = rm_data['monitorBaseLoad']  # noqa: F841
+    solver_type = ns_data['solverType']
+    time_step = ns_data['timeStep']
+    adjust_time_step = ns_data['adjustTimeStep']
 
     # Open the template file (OpenFOAM file) for manipulation
     dict_file = open(template_dict_path + '/storyForcesTemplate')  # noqa: SIM115, PTH123
@@ -1637,6 +1711,24 @@ def write_story_forces_file(input_json_path, template_dict_path, case_path):  # 
     # Write writeInterval
     start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
     dict_lines[start_index] = f'writeInterval \t{story_load_write_interval};\n'
+
+    # Write writeControl
+    start_index = foam.find_keyword_line(dict_lines, 'writeControl')
+    if solver_type == 'pimpleFoam' and adjust_time_step:
+        dict_lines[start_index] = 'writeControl \t{};\n'.format(
+            'adjustableRunTime'
+        )
+    else:
+        dict_lines[start_index] = 'writeControl \t{};\n'.format('timeStep')
+
+    # Write writeInterval
+    start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
+    if solver_type == 'pimpleFoam' and adjust_time_step:
+        dict_lines[start_index] = (
+            f'writeInterval \t{story_load_write_interval * time_step:.6f};\n'
+        )
+    else:
+        dict_lines[start_index] = f'writeInterval \t{story_load_write_interval};\n'
 
     # Write patch name to integrate forces on
     start_index = foam.find_keyword_line(dict_lines, 'patches')

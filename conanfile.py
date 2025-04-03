@@ -26,16 +26,16 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
     requires = [  # noqa: RUF012
         'jansson/2.13.1',
         'zlib/1.2.11',
-        'libcurl/8.1.1',
+        'libcurl/8.4.0',
         'eigen/3.3.7',
         'clara/1.1.5',
         'jsonformoderncpp/3.7.0',
         'nanoflann/1.3.2',
         'nlopt/2.7.1',
-        'boost/1.72.0',
         'kissfft/131.1.0',
-        'openblas/0.3.24',
+        'boost/1.72.0'
     ]
+
 
     # Custom attributes for Bincrafters recipe conventions
     _source_subfolder = 'source_subfolder'
