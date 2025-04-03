@@ -1,4 +1,4 @@
-import argparse  # noqa: INP001, D100
+import argparse  
 import os
 
 import IstanbulApp2
@@ -31,6 +31,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '-o', '--output', help='number of realizations', required=False
     )
+    # Add username and password args for tapipy
+    parser.add_argument('--username', help='username', required=False)
+    parser.add_argument('--password', help='password', required=False)
     args = parser.parse_args()
 
     if args.lat:
@@ -45,5 +48,5 @@ if __name__ == '__main__':
     # change the directory to the file location
     os.chdir(os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
     IstanbulStations.getStations(information, plot=False, show=False)
-    IstanbulApp2.Submit_tapis_job()
-    exit()  # noqa: PLR1722
+    IstanbulApp2.Submit_tapis_job(args.username, args.password)
+    exit()  
