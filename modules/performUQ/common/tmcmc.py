@@ -60,7 +60,7 @@ def calculate_warm_start_stage(
         )
         cov_weights = np.nanstd(weights) / np.nanmean(weights)
         if cov_weights < threshold_cov:
-            return np.max(stage_num - 1, 0)
+            return stage_num
     return 0
 
 
