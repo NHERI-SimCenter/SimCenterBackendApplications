@@ -77,7 +77,7 @@ def _calculate_normalization_constants(
 def _calculate_kl_divergence(
     current_log_likelihood_function,
     previous_log_likelihood_function,
-    prior_pdf,
+    prior_log_pdf,
     samples,
 ):
     """
@@ -94,12 +94,11 @@ def _calculate_kl_divergence(
     """
     current_log_likelihood_values = current_log_likelihood_function(samples)
     previous_log_likelihood_values = previous_log_likelihood_function(samples)
-    current_function_values = current_log_likelihood_values + np.log(
-        prior_pdf(samples)
+    current_function_values = current_log_likelihood_values + prior_log_pdf(samples)
+    previous_function_values = previous_log_likelihood_values + prior_log_pdf(
+        samples
     )
-    previous_function_values = previous_log_likelihood_values + np.log(
-        prior_pdf(samples)
-    )
+
     alpha_1, alpha_2 = _calculate_normalization_constants(
         current_function_values, previous_function_values
     )
@@ -131,7 +130,7 @@ def _calculate_kl_divergence(
 def calculate_gkl(
     current_log_likelihood_function,
     previous_log_likelihood_function,
-    prior_pdf,
+    prior_log_pdf,
     samples,
 ):
     """
@@ -149,7 +148,7 @@ def calculate_gkl(
     kl_divergence_estimate = _calculate_kl_divergence(
         current_log_likelihood_function,
         previous_log_likelihood_function,
-        prior_pdf,
+        prior_log_pdf,
         samples,
     )
     n_theta = np.shape(samples)[1]
@@ -160,7 +159,7 @@ def calculate_gkl(
 def calculate_gmap(
     current_log_likelihood_function,
     previous_log_likelihood_function,
-    prior_pdf,
+    prior_log_pdf,
     samples,
     prior_variances,
 ):
@@ -179,12 +178,8 @@ def calculate_gmap(
     """
     current_log_likelihood_values = current_log_likelihood_function(samples)
     previous_log_likelihood_values = previous_log_likelihood_function(samples)
-    current_map = np.argmax(
-        current_log_likelihood_values + np.log(prior_pdf(samples))
-    )
-    previous_map = np.argmax(
-        previous_log_likelihood_values + np.log(prior_pdf(samples))
-    )
+    current_map = np.argmax(current_log_likelihood_values + prior_log_pdf(samples))
+    previous_map = np.argmax(previous_log_likelihood_values + prior_log_pdf(samples))
 
     gmap = np.sqrt(np.sum((current_map - previous_map) ** 2 / prior_variances))
     return gmap  # noqa: RET504
