@@ -130,6 +130,7 @@ class GP_AB_Algorithm:
         run_type='runningLocal',
         loocv_threshold=0.2,
         recalibration_ratio=0.1,
+        num_samples_per_stage=5000,
         gkl_threshold=0.01,
         gmap_threshold=0.01,
     ):
@@ -208,6 +209,11 @@ class GP_AB_Algorithm:
         self.log_likelihoods_dict = {}
         self.log_target_density_values_dict = {}
         self.log_evidence_dict = {}
+
+        self.previous_iteration_samples = None
+        self.current_iteration_samples = None
+
+        self.num_samples_per_stage = num_samples_per_stage
 
     def _evaluate_in_parallel(self, func, samples):
         """
@@ -425,7 +431,6 @@ class GP_AB_Algorithm:
         log_target_density_values_dict = {}
         log_evidence_dict = {}
 
-        num_samples_per_stage = 50
         if k > 0:
             # loocv_measure = self.loocv_measure()
             # if loocv_measure < self.loocv_threshold:
@@ -438,20 +443,24 @@ class GP_AB_Algorithm:
             )
             previous_log_likelihood_approximation = log_likelihood_approximation
             # previous_log_posterior_approximation = log_posterior_approximation
+            max_stage = len(self.results['samples_dict']) - 1
+            self.previous_iteration_samples = self.results['samples_dict'][max_stage]
 
         # Step 2.2: Sequential MC sampling
         if j_star == 0:
-            samples = self._perform_initial_doe(num_samples_per_stage)
-            samples_transformed = self.sample_transformation_function(samples)
+            initial_samples = self._perform_initial_doe(self.num_samples_per_stage)
+            samples_transformed = self.sample_transformation_function(
+                initial_samples
+            )
             log_target_density_values = np.log(
                 self.prior_pdf_function(samples_transformed)
             ).reshape((-1, 1))
-            log_likelihood_values = log_likelihood_approximation(samples)
+            log_likelihood_values = log_likelihood_approximation(initial_samples)
             log_evidence = 0
             beta = 0
             stage_num = 0
 
-            samples_dict[j_star] = samples
+            samples_dict[j_star] = initial_samples
             betas_dict[j_star] = beta
             log_likelihoods_dict[j_star] = log_likelihood_values
             log_target_density_values_dict[j_star] = log_target_density_values
@@ -480,26 +489,36 @@ class GP_AB_Algorithm:
             num_burn_in=0,
         )
 
+        max_stage = len(self.results['samples_dict']) - 1
+        self.current_iteration_samples = self.results['samples_dict'][max_stage]
+
         self.converged = False
         if k > 0:
+            combined_samples = np.vstack(
+                [self.previous_iteration_samples, self.current_iteration_samples]
+            )  # type: ignore
             # Step 3.1: Assess convergence
             gkl = convergence_metrics.calculate_gkl(
                 log_likelihood_approximation,
                 previous_log_likelihood_approximation,
-                self.prior_pdf_function,
-                samples,
+                self._log_prior_pdf,
+                combined_samples,
             )
-            gmap = convergence_metrics.calculate_gmap(
-                log_likelihood_approximation,
-                previous_log_likelihood_approximation,
-                self.prior_pdf_function,
-                samples,
-                self.prior_variances,
-            )
-            self.converged = gkl < self.gkl_threshold and gmap < self.gmap_threshold
+            self.converged = gkl < self.gkl_threshold
+            # gmap = convergence_metrics.calculate_gmap(
+            #     log_likelihood_approximation,
+            #     previous_log_likelihood_approximation,
+            #     self.prior_pdf_function,
+            #     combined_samples,
+            #     self.prior_variances,
+            # )
+            # self.converged = gkl < self.gkl_threshold and gmap < self.gmap_threshold
 
         # Step 3.2: Computational budget related termination
-        self.budget_exceeded = (len(self.inputs) >= self.max_simulations) or (
+        num_simulations = 0
+        if self.inputs is not None:
+            num_simulations = len(self.inputs)
+        self.budget_exceeded = (num_simulations >= self.max_simulations) or (
             time.time() - self.start_time >= self.max_computational_time
         )
         self.terminate = self.converged or self.budget_exceeded
@@ -516,13 +535,16 @@ class GP_AB_Algorithm:
 
         # Step 4.2: Exploitation DoE
         exploitation_training_points = current_doe.select_training_points(
-            self.inputs, n_exploit, samples, 1000
+            self.inputs, n_exploit, self.current_iteration_samples, 1000
         )
         self.inputs = np.vstack([self.inputs, exploitation_training_points])
 
         # Step 4.3: Exploration DoE
         exploration_training_points = current_doe.select_training_points(
-            self.inputs, n_training_points - n_exploit, samples, 1000
+            self.inputs,
+            n_training_points - n_exploit,
+            self.current_iteration_samples,
+            1000,
         )
         self.inputs = np.vstack([self.inputs, exploration_training_points])
 
@@ -656,12 +678,17 @@ def preprocess(input_arguments):
         edp_lengths_list
     )  # TODO(ABS): Validate this against length of data
 
+    # TODO(ABS): Make the following parameters configurable by reading from a
+    # config.json file
     max_simulations = np.inf
     max_computational_time = np.inf
     pca_threshold = 0.999
     run_type = input_arguments.run_type
     loocv_threshold = 0.2
     recalibration_ratio = 0.1
+    num_samples_per_stage = 500
+    gkl_threshold = 0.01
+    gmap_threshold = 0.01
 
     return (
         data,
@@ -681,6 +708,9 @@ def preprocess(input_arguments):
         run_type,
         loocv_threshold,
         recalibration_ratio,
+        num_samples_per_stage,
+        gkl_threshold,
+        gmap_threshold,
     )
 
 
