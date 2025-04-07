@@ -446,9 +446,10 @@ class GP_AB_Algorithm:
             log_target_density_values = np.log(
                 self.prior_pdf_function(samples_transformed)
             ).reshape((-1, 1))
-            log_likelihood_values = np.ones_like(log_target_density_values)
+            log_likelihood_values = log_likelihood_approximation(samples)
             log_evidence = 0
             beta = 0
+            stage_num = 0
 
             samples_dict[j_star] = samples
             betas_dict[j_star] = beta
@@ -466,6 +467,7 @@ class GP_AB_Algorithm:
                     'log_target_density_values_dict'
                 ][j]
                 log_evidence_dict[j] = self.results['log_evidence_dict'][j]
+            stage_num = j_star - 1
 
         self.results = tmcmc.run(
             samples_dict,
@@ -474,7 +476,7 @@ class GP_AB_Algorithm:
             log_target_density_values_dict,
             log_evidence_dict,
             np.random.default_rng(),
-            j_star,
+            stage_num,
             num_burn_in=0,
         )
 
