@@ -576,10 +576,22 @@ class GP_AB_Algorithm:
         inputs, outputs = self._get_initial_training_set(num_initial_doe_samples)
         return inputs, outputs, num_initial_doe_samples
 
+    def _make_json_serializable(self, obj):
+        """Recursively convert NumPy arrays in nested structures to lists."""
+        if isinstance(obj, dict):
+            return {k: self._make_json_serializable(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [self._make_json_serializable(item) for item in obj]
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return obj
+
     def write_results(self):
         """Write the results of the GP-AB Algorithm to a file."""
-        # print(f'{self.iteration_number = }')
-        # print('Results written to file')
+        serializable_data = self._make_json_serializable(self.results)
+        outfile_path = Path(f'gp_ab_results_{self.iteration_number}.json')
+        with outfile_path.open('w') as f:
+            json.dump(serializable_data, f, indent=4)
 
 
 def read_inputs(input_json_file):
