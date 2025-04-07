@@ -28,6 +28,7 @@ import uq_utilities
 from adaptive_doe import AdaptiveDesignOfExperiments
 from gp_model import GaussianProcessModel
 from principal_component_analysis import PrincipalComponentAnalysis
+from scipy.special import logsumexp
 from scipy.stats import invgamma, norm
 from space_filling_doe import LatinHypercubeSampling
 from tmcmc import TMCMC, calculate_warm_start_stage
@@ -260,7 +261,9 @@ class GP_AB_Algorithm:
         outputs = self._evaluate_in_parallel(self.model_evaluation_function, inputs)
         return inputs, outputs
 
-    def _log_likelihood_approximation(self, response_approximation, samples):
+    def _log_likelihood_approximation(
+        self, response_approximation_function, samples
+    ):
         """
         Approximate the log-likelihood for the given samples.
 
@@ -272,31 +275,27 @@ class GP_AB_Algorithm:
         -------
             np.ndarray: The approximated log-likelihood values.
         """
-        u_values = samples[:, : self.input_dimension]
+        u_values = np.atleast_2d(samples[:, : self.input_dimension])
         model_parameters = self.sample_transformation_function(u_values).reshape(
-            1, -1
+            u_values.shape
         )
-        predictions = response_approximation(model_parameters)
-        prediction_errors = self.data - predictions
+        predictions = response_approximation_function(model_parameters)
 
-        q = samples[:, self.input_dimension :]
+        nd, ny = self.data.shape
+        nynd = ny * nd
+        epsilon = 1e-12  # to handle cases where the variance is zero
+
+        sum_y2 = np.sum(self.data**2, axis=0) + epsilon
 
         log_likes = []
         num_samples = samples.shape[0]
         for i in range(num_samples):
-            ll = []
-            start = 0
-            for j in range(q.shape[1]):
-                ll.append(
-                    self.log_likelihood_function(
-                        prediction_errors[
-                            i, start : start + self.output_length_list[j]
-                        ],
-                        q[i, j],
-                    )
-                )
-                start += self.output_length_list[j]
-            log_likes.append(np.sum(ll))
+            prediction_errors = self.data - predictions[i, :].reshape((1, ny))
+            sse = np.sum(prediction_errors**2, axis=0) + epsilon
+            log_ratios = np.log(sse) - np.log(sum_y2)
+            log_sum = logsumexp(log_ratios)
+            ll = -0.5 * nynd * log_sum
+            log_likes.append(ll)
         return np.array(log_likes).reshape((num_samples, 1))
 
     def _log_prior_pdf(self, samples):
@@ -315,10 +314,7 @@ class GP_AB_Algorithm:
         log_prior_model_parameters = np.log(
             self.prior_pdf_function(model_parameters)
         ).reshape((-1, 1))
-        q = samples[:, self.input_dimension :]
-        log_prior_q = np.sum(invgamma.logpdf(q, 1, scale=0.5), axis=1)
-        prior_log_pdf = log_prior_model_parameters + log_prior_q
-        return prior_log_pdf  # noqa: RET504
+        return log_prior_model_parameters  # noqa: RET504
 
     def _log_posterior_approximation(self, samples, log_likelihoods):
         """
