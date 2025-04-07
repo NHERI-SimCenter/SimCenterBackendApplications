@@ -2,6 +2,7 @@
 
 import GPy
 import numpy as np
+from GPy.mappings import Additive, Constant, Linear
 from scipy.linalg import cho_solve
 
 
@@ -46,6 +47,12 @@ class GaussianProcessModel:
         """
         return GPy.kern.Matern52(input_dim=self.input_dimension, ARD=self.ARD)
 
+    def _linear_const_mean(self):
+        return Additive(
+            Linear(input_dim=self.input_dimension, output_dim=1),
+            Constant(input_dim=self.input_dimension, output_dim=1),
+        )
+
     def _create_surrogate(self):
         """
         Create the surrogate GP regression models.
@@ -60,7 +67,8 @@ class GaussianProcessModel:
                 GPy.models.GPRegression(
                     np.zeros((1, self.input_dimension)),
                     np.zeros((1, 1)),
-                    self.kernel.copy(),
+                    kernel=self.kernel.copy(),
+                    mean_function=self._linear_const_mean(),
                 )
             ]
         return m_list
