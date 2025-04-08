@@ -303,9 +303,9 @@ class GM_Simulator:  # noqa: D101
         # inter-event model
         if correlation_info.get('InterEvent', None):
             self.inter_cm = correlation_info['InterEvent']
-        elif correlation_info.get('IntraEventCorr', None):
+        elif correlation_info.get('InterEventCorr', None):
             # back compatibility
-            self.inter_cm = correlation_info['IntraEventCorr']
+            self.inter_cm = correlation_info['InterEventCorr']
         else:
             print(  # noqa: T201
                 'GM_Simulator: no inter-event correlation information not found - results will be uncorrelated motions.'
