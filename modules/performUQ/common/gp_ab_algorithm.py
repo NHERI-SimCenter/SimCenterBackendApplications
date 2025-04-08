@@ -375,8 +375,26 @@ class GP_AB_Algorithm:
         if (
             self.num_experiments[-1] - self.num_recalibration_experiments
             >= self.recalibration_ratio * self.num_recalibration_experiments
-        ):
-            self.previous_gp_model = self.current_gp_model
+        ):  # sufficient number of experiments for recalibration
+            if k > 0:
+                self.previous_gp_model = self.current_gp_model
+                self.previous_pca = self.current_pca
+                previous_response_approximation = partial(
+                    _response_approximation,
+                    self.previous_gp_model,
+                    self.previous_pca,
+                )
+                previous_log_likelihood_approximation = partial(
+                    self._log_likelihood_approximation,
+                    previous_response_approximation,
+                )
+
+                max_stage = len(self.results['samples_dict']) - 1
+                self.previous_iteration_samples = self.results['samples_dict'][
+                    max_stage
+                ]
+
+            self.current_pca = PrincipalComponentAnalysis(self.pca_threshold)
             self.latent_outputs = self.current_pca.project_to_latent_space(
                 model_outputs
             )
@@ -386,8 +404,11 @@ class GP_AB_Algorithm:
             )
             self.current_gp_model.fit(model_parameters, self.latent_outputs)
             self.num_recalibration_experiments = self.num_experiments[-1]
-        else:
+
+        else:  # no recalibration of GP model
             self.current_gp_model = self.previous_gp_model
+            self.current_pca = self.previous_pca
+
             self.latent_outputs = self.current_pca.project_to_latent_space(
                 model_outputs
             )
@@ -396,31 +417,33 @@ class GP_AB_Algorithm:
                 model_parameters, self.latent_outputs, reoptimize=False
             )
 
-        # Step 1.2: GP predictive model
-        gp_prediction_latent_mean, gp_prediction_latent_variance = (
-            self.current_gp_model.predict(model_parameters)
-        )
-        gp_prediction_mean = self.current_pca.project_back_to_original_space(  # noqa: F841
-            gp_prediction_latent_mean
-        )
-        loo_predictions_latent_space = self.current_gp_model.loo_predictions(
-            self.latent_outputs
-        )
-        loo_predictions = self.current_pca.project_back_to_original_space(  # noqa: F841
-            loo_predictions_latent_space
-        )
+        # # Step 1.2: GP predictive model
+        # gp_prediction_latent_mean, gp_prediction_latent_variance = (
+        #     self.current_gp_model.predict(model_parameters)
+        # )
+        # gp_prediction_mean = self.current_pca.project_back_to_original_space(
+        #     gp_prediction_latent_mean
+        # )
+        # loo_predictions_latent_space = self.current_gp_model.loo_predictions(
+        #     self.latent_outputs
+        # )
+        # loo_predictions = self.current_pca.project_back_to_original_space(
+        #     loo_predictions_latent_space
+        # )
 
         # Step 1.3: Posterior distribution approximation
-        response_approximation = partial(
+        current_response_approximation = partial(
             _response_approximation, self.current_gp_model, self.current_pca
         )
-        log_likelihood_approximation = partial(
-            self._log_likelihood_approximation, response_approximation
+        current_log_likelihood_approximation = partial(
+            self._log_likelihood_approximation, current_response_approximation
         )
         log_posterior_approximation = self._log_posterior_approximation
 
         # Step 2.1: Evaluate warm-starting for TMCMC
-        tmcmc = TMCMC(log_likelihood_approximation, log_posterior_approximation)
+        tmcmc = TMCMC(
+            current_log_likelihood_approximation, log_posterior_approximation
+        )
 
         j_star = 0
         beta = 0
@@ -438,13 +461,9 @@ class GP_AB_Algorithm:
             #         log_likelihood_approximation, self.betas_dict
             #     )
             j_star = calculate_warm_start_stage(
-                log_likelihood_approximation,
+                current_log_likelihood_approximation,
                 self.results,
             )
-            previous_log_likelihood_approximation = log_likelihood_approximation
-            # previous_log_posterior_approximation = log_posterior_approximation
-            max_stage = len(self.results['samples_dict']) - 1
-            self.previous_iteration_samples = self.results['samples_dict'][max_stage]
 
         # Step 2.2: Sequential MC sampling
         if j_star == 0:
@@ -455,7 +474,9 @@ class GP_AB_Algorithm:
             log_target_density_values = np.log(
                 self.prior_pdf_function(samples_transformed)
             ).reshape((-1, 1))
-            log_likelihood_values = log_likelihood_approximation(initial_samples)
+            log_likelihood_values = current_log_likelihood_approximation(
+                initial_samples
+            )
             log_evidence = 0
             beta = 0
             stage_num = 0
@@ -499,7 +520,7 @@ class GP_AB_Algorithm:
             )  # type: ignore
             # Step 3.1: Assess convergence
             gkl = convergence_metrics.calculate_gkl(
-                log_likelihood_approximation,
+                current_log_likelihood_approximation,
                 previous_log_likelihood_approximation,
                 self._log_prior_pdf,
                 combined_samples,
