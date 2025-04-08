@@ -94,9 +94,11 @@ def _calculate_kl_divergence(
     """
     current_log_likelihood_values = current_log_likelihood_function(samples)
     previous_log_likelihood_values = previous_log_likelihood_function(samples)
-    current_function_values = current_log_likelihood_values + prior_log_pdf(samples)
-    previous_function_values = previous_log_likelihood_values + prior_log_pdf(
-        samples
+    current_function_values = np.exp(
+        current_log_likelihood_values + prior_log_pdf(samples)
+    )
+    previous_function_values = np.exp(
+        previous_log_likelihood_values + prior_log_pdf(samples)
     )
 
     alpha_1, alpha_2 = _calculate_normalization_constants(
