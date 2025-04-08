@@ -19,6 +19,7 @@ from typing import Literal
 import common_datamodels
 import convergence_metrics
 import numpy as np
+import pandas as pd
 import pydantic
 
 # sys.path.append(
@@ -115,7 +116,8 @@ class GP_AB_Algorithm:
         self,
         data,
         output_length_list,
-        output_names_list,  # noqa: ARG002
+        output_names_list,
+        rv_names_list,
         input_dimension,
         output_dimension,
         domain,
@@ -164,6 +166,9 @@ class GP_AB_Algorithm:
         self.output_length_list = output_length_list
         self.domain = domain
         self.prior_variances = prior_variances
+
+        self.rv_names_list = rv_names_list
+        self.output_names_list = output_names_list
 
         self.inputs = None
         self.outputs = None
@@ -215,7 +220,7 @@ class GP_AB_Algorithm:
 
         self.num_samples_per_stage = num_samples_per_stage
 
-    def _evaluate_in_parallel(self, func, samples):
+    def _evaluate_in_parallel(self, func, samples, simulation_number_start=0):
         """
         Evaluate the model in parallel using the provided function and samples.
 
@@ -228,7 +233,9 @@ class GP_AB_Algorithm:
             np.ndarray: The evaluated outputs.
         """
         transformed_samples = self.sample_transformation_function(samples)
-        simulation_numbers = np.arange(len(samples))
+        simulation_numbers = np.arange(
+            simulation_number_start, simulation_number_start + len(samples)
+        )
         iterable = zip(simulation_numbers, transformed_samples)
         outputs = np.atleast_2d(
             list(self.parallel_evaluation_function(func, iterable))
@@ -575,8 +582,13 @@ class GP_AB_Algorithm:
         self.num_experiments.append(len(self.inputs))
 
         # Step 5: Response estimation
+        simulation_number_start = 0
+        if self.outputs is not None:
+            simulation_number_start = len(self.outputs)
         new_training_outputs = self._evaluate_in_parallel(
-            self.model_evaluation_function, new_training_points
+            self.model_evaluation_function,
+            new_training_points,
+            simulation_number_start=simulation_number_start,
         )
         self.outputs = np.vstack([self.outputs, new_training_outputs])
 
@@ -597,6 +609,35 @@ class GP_AB_Algorithm:
         inputs, outputs = self._get_initial_training_set(num_initial_doe_samples)
         return inputs, outputs, num_initial_doe_samples
 
+    def save_tabular_results(
+        self,
+        samples,
+        predictions,
+        rv_names_list,
+        output_names_list,
+        output_length_list,
+        iteration_number,
+        output_dir: Path,
+    ):
+        # Step 1: Construct headers
+        pred_headers = []
+        for name, length in zip(output_names_list, output_length_list):
+            if length == 1:
+                pred_headers.append(name)
+            else:
+                pred_headers.extend([f'{name}_{i+1}' for i in range(length)])
+
+        # Step 2: Create DataFrame
+        tabular_data = pd.DataFrame(samples, columns=rv_names_list)
+
+        pred_df = pd.DataFrame(predictions, columns=pred_headers)
+        df_combined = pd.concat([tabular_data, pred_df], axis=1)
+
+        # Step 3: Save to TSV
+        filename = output_dir / f'tabular_results_{iteration_number}.txt'
+        df_combined.to_csv(filename, sep='\t', index=False)
+        print(f'Saved: {filename}')
+
     def _make_json_serializable(self, obj):
         """Recursively convert NumPy arrays in nested structures to lists."""
         if isinstance(obj, dict):
@@ -613,6 +654,20 @@ class GP_AB_Algorithm:
         outfile_path = Path(f'gp_ab_results_{self.iteration_number}.json')
         with outfile_path.open('w') as f:
             json.dump(serializable_data, f, indent=4)
+
+        samples = self.sample_transformation_function(self.current_iteration_samples)
+        predictions = _response_approximation(
+            self.current_gp_model, self.current_pca, samples
+        )
+        self.save_tabular_results(
+            samples=samples,
+            predictions=predictions,
+            rv_names_list=self.rv_names_list,
+            output_names_list=self.output_names_list,
+            output_length_list=self.output_length_list,
+            iteration_number=self.iteration_number,
+            output_dir=Path(),
+        )
 
 
 def read_inputs(input_json_file):
@@ -704,6 +759,8 @@ def preprocess(input_arguments):
     )
     model_evaluation_function = model.evaluate_model_once
 
+    rv_names_list = [rv['name'] for rv in rv_inputs]
+
     edp_names_list = [edp['name'] for edp in edp_inputs]
     edp_lengths_list = [edp['length'] for edp in edp_inputs]
     input_dimension = len(rv_inputs)
@@ -727,6 +784,7 @@ def preprocess(input_arguments):
         data,
         edp_lengths_list,
         edp_names_list,
+        rv_names_list,
         input_dimension,
         output_dimension,
         domain,
