@@ -220,7 +220,9 @@ class GP_AB_Algorithm:
 
         self.num_samples_per_stage = num_samples_per_stage
 
-    def _evaluate_in_parallel(self, func, samples, simulation_number_start=0):
+    def _evaluate_in_parallel(
+        self, func, model_parameters, simulation_number_start=0
+    ):
         """
         Evaluate the model in parallel using the provided function and samples.
 
@@ -232,11 +234,11 @@ class GP_AB_Algorithm:
         -------
             np.ndarray: The evaluated outputs.
         """
-        transformed_samples = self.sample_transformation_function(samples)
+        # transformed_samples = self.sample_transformation_function(samples)
         simulation_numbers = np.arange(
-            simulation_number_start, simulation_number_start + len(samples)
+            simulation_number_start, simulation_number_start + len(model_parameters)
         )
-        iterable = zip(simulation_numbers, transformed_samples)
+        iterable = zip(simulation_numbers, model_parameters)
         outputs = np.atleast_2d(
             list(self.parallel_evaluation_function(func, iterable))
         )
@@ -270,12 +272,32 @@ class GP_AB_Algorithm:
         -------
             tuple: A tuple containing the inputs and outputs of the initial training set.
         """
-        inputs = self._perform_initial_doe(n_samples)
+        inputs = self.sample_transformation_function(
+            self._perform_initial_doe(n_samples)
+        )
         outputs = self._evaluate_in_parallel(self.model_evaluation_function, inputs)
         return inputs, outputs
 
+    def _log_like(self, predictions):
+        nd, ny = self.data.shape
+        nynd = ny * nd
+        epsilon = 1e-12  # to handle cases where the variance is zero
+
+        sum_y2 = np.sum(self.data**2, axis=0) + epsilon
+
+        log_likes = []
+        num_samples = predictions.shape[0]
+        for i in range(num_samples):
+            prediction_errors = self.data - predictions[i, :].reshape((1, ny))
+            sse = np.sum(prediction_errors**2, axis=0) + epsilon
+            log_ratios = np.log(sse) - np.log(sum_y2)
+            log_sum = logsumexp(log_ratios)
+            ll = -0.5 * nynd * log_sum
+            log_likes.append(ll)
+        return np.array(log_likes).reshape((num_samples, 1))
+
     def _log_likelihood_approximation(
-        self, response_approximation_function, samples
+        self, response_approximation_function, model_parameters
     ):
         """
         Approximate the log-likelihood for the given samples.
@@ -288,30 +310,15 @@ class GP_AB_Algorithm:
         -------
             np.ndarray: The approximated log-likelihood values.
         """
-        u_values = np.atleast_2d(samples[:, : self.input_dimension])
-        model_parameters = self.sample_transformation_function(u_values).reshape(
-            u_values.shape
-        )
+        # u_values = np.atleast_2d(samples[:, : self.input_dimension])
+        # model_parameters = self.sample_transformation_function(u_values).reshape(
+        #     u_values.shape
+        # )
         predictions = response_approximation_function(model_parameters)
+        log_likes = self._log_like(predictions)
+        return log_likes  # noqa: RET504
 
-        nd, ny = self.data.shape
-        nynd = ny * nd
-        epsilon = 1e-12  # to handle cases where the variance is zero
-
-        sum_y2 = np.sum(self.data**2, axis=0) + epsilon
-
-        log_likes = []
-        num_samples = samples.shape[0]
-        for i in range(num_samples):
-            prediction_errors = self.data - predictions[i, :].reshape((1, ny))
-            sse = np.sum(prediction_errors**2, axis=0) + epsilon
-            log_ratios = np.log(sse) - np.log(sum_y2)
-            log_sum = logsumexp(log_ratios)
-            ll = -0.5 * nynd * log_sum
-            log_likes.append(ll)
-        return np.array(log_likes).reshape((num_samples, 1))
-
-    def _log_prior_pdf(self, samples):
+    def _log_prior_pdf(self, model_parameters):
         """
         Calculate the log-prior PDF for the given samples.
 
@@ -322,14 +329,14 @@ class GP_AB_Algorithm:
         -------
             np.ndarray: The log-prior PDF values.
         """
-        u_values = samples[:, : self.input_dimension]
-        model_parameters = self.sample_transformation_function(u_values)
+        # u_values = samples[:, : self.input_dimension]
+        # model_parameters = self.sample_transformation_function(u_values)
         log_prior_model_parameters = np.log(
             self.prior_pdf_function(model_parameters)
         ).reshape((-1, 1))
         return log_prior_model_parameters  # noqa: RET504
 
-    def _log_posterior_approximation(self, samples, log_likelihoods):
+    def _log_posterior_approximation(self, model_parameters, log_likelihoods):
         """
         Approximate the log-posterior for the given samples and log-likelihoods.
 
@@ -341,7 +348,7 @@ class GP_AB_Algorithm:
         -------
             np.ndarray: The approximated log-posterior values.
         """
-        log_prior = self._log_prior_pdf(samples)
+        log_prior = self._log_prior_pdf(model_parameters)
         log_posterior = log_likelihoods + log_prior
         return log_posterior  # noqa: RET504
 
@@ -386,20 +393,20 @@ class GP_AB_Algorithm:
             if k > 0:
                 self.previous_gp_model = self.current_gp_model
                 self.previous_pca = self.current_pca
-                previous_response_approximation = partial(
+                self.previous_response_approximation = partial(
                     _response_approximation,
                     self.previous_gp_model,
                     self.previous_pca,
                 )
-                previous_log_likelihood_approximation = partial(
+                self.previous_log_likelihood_approximation = partial(
                     self._log_likelihood_approximation,
-                    previous_response_approximation,
+                    self.previous_response_approximation,
                 )
 
                 max_stage = len(self.results['samples_dict']) - 1
-                self.previous_iteration_samples = self.results['samples_dict'][
-                    max_stage
-                ]
+                self.previous_iteration_samples = self.results[
+                    'model_parameters_dict'
+                ][max_stage]
 
             self.current_pca = PrincipalComponentAnalysis(self.pca_threshold)
             self.latent_outputs = self.current_pca.project_to_latent_space(
@@ -439,23 +446,26 @@ class GP_AB_Algorithm:
         # )
 
         # Step 1.3: Posterior distribution approximation
-        current_response_approximation = partial(
+        self.current_response_approximation = partial(
             _response_approximation, self.current_gp_model, self.current_pca
         )
-        current_log_likelihood_approximation = partial(
-            self._log_likelihood_approximation, current_response_approximation
+        self.current_log_likelihood_approximation = partial(
+            self._log_likelihood_approximation, self.current_response_approximation
         )
-        log_posterior_approximation = self._log_posterior_approximation
+        self.log_posterior_approximation = self._log_posterior_approximation
 
         # Step 2.1: Evaluate warm-starting for TMCMC
         tmcmc = TMCMC(
-            current_log_likelihood_approximation, log_posterior_approximation
+            self.current_log_likelihood_approximation,
+            self.log_posterior_approximation,
+            self.sample_transformation_function,
         )
 
         j_star = 0
         beta = 0
 
         samples_dict = {}
+        model_parameters_dict = {}
         betas_dict = {}
         log_likelihoods_dict = {}
         log_target_density_values_dict = {}
@@ -468,27 +478,28 @@ class GP_AB_Algorithm:
             #         log_likelihood_approximation, self.betas_dict
             #     )
             j_star = calculate_warm_start_stage(
-                current_log_likelihood_approximation,
+                self.current_log_likelihood_approximation,
                 self.results,
             )
 
         # Step 2.2: Sequential MC sampling
         if j_star == 0:
             initial_samples = self._perform_initial_doe(self.num_samples_per_stage)
-            samples_transformed = self.sample_transformation_function(
+            model_parameters_initial = self.sample_transformation_function(
                 initial_samples
             )
             log_target_density_values = np.log(
-                self.prior_pdf_function(samples_transformed)
+                self.prior_pdf_function(model_parameters_initial)
             ).reshape((-1, 1))
-            log_likelihood_values = current_log_likelihood_approximation(
-                initial_samples
+            log_likelihood_values = self.current_log_likelihood_approximation(
+                model_parameters_initial
             )
             log_evidence = 0
             beta = 0
             stage_num = 0
 
             samples_dict[j_star] = initial_samples
+            model_parameters_dict[j_star] = model_parameters_initial
             betas_dict[j_star] = beta
             log_likelihoods_dict[j_star] = log_likelihood_values
             log_target_density_values_dict[j_star] = log_target_density_values
@@ -496,6 +507,7 @@ class GP_AB_Algorithm:
         else:
             for j in range(j_star):
                 samples_dict[j] = self.results['samples_dict'][j]
+                model_parameters_dict[j] = self.results['model_parameters_dict'][j]
                 betas_dict[j] = self.results['betas_dict'][j]
                 log_likelihoods_dict[j] = self.results['log_likelihood_values_dict'][
                     j
@@ -508,6 +520,7 @@ class GP_AB_Algorithm:
 
         self.results = tmcmc.run(
             samples_dict,
+            model_parameters_dict,
             betas_dict,
             log_likelihoods_dict,
             log_target_density_values_dict,
@@ -518,7 +531,9 @@ class GP_AB_Algorithm:
         )
 
         max_stage = len(self.results['samples_dict']) - 1
-        self.current_iteration_samples = self.results['samples_dict'][max_stage]
+        self.current_iteration_samples = self.results['model_parameters_dict'][
+            max_stage
+        ]
 
         self.converged = False
         if k > 0:
@@ -527,8 +542,8 @@ class GP_AB_Algorithm:
             )  # type: ignore
             # Step 3.1: Assess convergence
             gkl = convergence_metrics.calculate_gkl(
-                current_log_likelihood_approximation,
-                previous_log_likelihood_approximation,
+                self.current_log_likelihood_approximation,
+                self.previous_log_likelihood_approximation,
                 self._log_prior_pdf,
                 combined_samples,
             )
@@ -557,6 +572,7 @@ class GP_AB_Algorithm:
         n_training_points = 2 * self.input_dimension
         self.exploitation_proportion = 0.5
         n_exploit = int(np.ceil(self.exploitation_proportion * n_training_points))
+        n_explore = n_training_points - n_exploit
         current_doe = AdaptiveDesignOfExperiments(
             self.current_gp_model, self.current_pca, self.domain
         )
@@ -569,10 +585,7 @@ class GP_AB_Algorithm:
 
         # Step 4.3: Exploration DoE
         exploration_training_points = current_doe.select_training_points(
-            self.inputs,
-            n_training_points - n_exploit,
-            self.current_iteration_samples,
-            1000,
+            self.inputs, n_explore, self.current_iteration_samples, 1000
         )
         self.inputs = np.vstack([self.inputs, exploration_training_points])
 
@@ -648,14 +661,16 @@ class GP_AB_Algorithm:
             return obj.tolist()
         return obj
 
-    def write_results(self):
+    def write_results(self, results_dir='results'):
         """Write the results of the GP-AB Algorithm to a file."""
+        res_dir = Path(results_dir)
+        res_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
         serializable_data = self._make_json_serializable(self.results)
-        outfile_path = Path(f'gp_ab_results_{self.iteration_number}.json')
+        outfile_path = res_dir / f'tmcmc_results_{self.iteration_number}.json'
         with outfile_path.open('w') as f:
             json.dump(serializable_data, f, indent=4)
 
-        samples = self.sample_transformation_function(self.current_iteration_samples)
+        samples = self.current_iteration_samples
         predictions = _response_approximation(
             self.current_gp_model, self.current_pca, samples
         )
@@ -666,7 +681,7 @@ class GP_AB_Algorithm:
             output_names_list=self.output_names_list,
             output_length_list=self.output_length_list,
             iteration_number=self.iteration_number,
-            output_dir=Path(),
+            output_dir=res_dir,
         )
 
 

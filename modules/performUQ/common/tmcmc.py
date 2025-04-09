@@ -49,7 +49,7 @@ def calculate_warm_start_stage(
     stage_nums = sorted(previous_results['samples_dict'].keys(), reverse=True)
     for stage_num in stage_nums:
         current_loglikelihood_values = current_loglikelihood_approximation(
-            previous_results['samples_dict'][stage_num]
+            previous_results['model_parameters_dict'][stage_num]
         )
         previous_loglikelihood_values = previous_results[
             'log_likelihood_values_dict'
@@ -178,14 +178,16 @@ def _generate_error_message(size):
     return f'Expected a single value, but got {size} values.'
 
 
-def _run_one_stage_unequal_chain_lengths(  # noqa: C901
+def _run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
     samples,
+    model_parameters,
     log_likelihood_values,
     log_target_density_values,
     beta,
     rng,
     log_likelihood_function,
     log_target_density_function,
+    sample_transformation_function,
     scale_factor,
     target_acceptance_rate,
     do_thinning=False,  # noqa: FBT002
@@ -228,10 +230,12 @@ def _run_one_stage_unequal_chain_lengths(  # noqa: C901
         raise RuntimeError(msg) from exc
 
     new_samples = np.zeros_like(samples)
+    new_model_parameters = np.zeros_like(model_parameters)
     new_log_likelihood_values = np.zeros_like(log_likelihood_values)
     new_log_target_density_values = np.zeros_like(log_target_density_values)
 
     current_samples = samples.copy()
+    current_model_parameters = model_parameters.copy()
     current_log_likelihood_values = log_likelihood_values.copy()
     current_log_target_density_values = log_target_density_values.copy()
 
@@ -272,14 +276,21 @@ def _run_one_stage_unequal_chain_lengths(  # noqa: C901
                 + cholesky_lower_triangular_matrix @ standard_normal_samples
             ).reshape(1, -1)
 
-            log_likelihood_at_proposed_state = log_likelihood_function(
-                proposed_state
+            proposed_model_parameter = np.reshape(
+                sample_transformation_function(proposed_state), proposed_state.shape
             )
-            log_target_density_at_proposed_state = log_target_density_function(
-                proposed_state, log_likelihood_at_proposed_state
+
+            log_likelihood_at_proposed_model_parameter = log_likelihood_function(
+                proposed_model_parameter
+            )
+            log_target_density_at_proposed_model_parameter = (
+                log_target_density_function(
+                    proposed_model_parameter,
+                    log_likelihood_at_proposed_model_parameter,
+                )
             )
             log_hastings_ratio = (
-                log_target_density_at_proposed_state
+                log_target_density_at_proposed_model_parameter
                 - current_log_target_density_values[index]
             )
             u = rng.uniform()
@@ -287,25 +298,26 @@ def _run_one_stage_unequal_chain_lengths(  # noqa: C901
             if accept:
                 num_accepts += 1
                 current_samples[index, :] = proposed_state
+                current_model_parameters[index, :] = proposed_model_parameter
                 # current_log_likelihoods[index] = log_likelihood_at_proposed_state
-                if log_likelihood_at_proposed_state.size != 1:
+                if log_likelihood_at_proposed_model_parameter.size != 1:
                     msg = _generate_error_message(
-                        log_likelihood_at_proposed_state.size
+                        log_likelihood_at_proposed_model_parameter.size
                     )
                     raise ValueError(msg)
                 current_log_likelihood_values[index] = (
-                    log_likelihood_at_proposed_state.item()
+                    log_likelihood_at_proposed_model_parameter.item()
                 )
                 # current_log_target_density_values[index] = (
                 #     log_target_density_at_proposed_state
                 # )
-                if log_target_density_at_proposed_state.size != 1:
+                if log_target_density_at_proposed_model_parameter.size != 1:
                     msg = _generate_error_message(
-                        log_target_density_at_proposed_state.size
+                        log_target_density_at_proposed_model_parameter.size
                     )
                     raise ValueError(msg)
                 current_log_target_density_values[index] = (
-                    log_target_density_at_proposed_state.item()
+                    log_target_density_at_proposed_model_parameter.item()
                 )
                 if k >= burn_in_steps:
                     weights = _calculate_weights(
@@ -314,6 +326,7 @@ def _run_one_stage_unequal_chain_lengths(  # noqa: C901
         if k >= burn_in_steps:
             k_prime = k - burn_in_steps
             new_samples[k_prime, :] = current_samples[index, :]
+            new_model_parameters[k_prime, :] = current_model_parameters[index, :]
             new_log_likelihood_values[k_prime] = current_log_likelihood_values[index]
             new_log_target_density_values[k_prime] = (
                 current_log_target_density_values[index]
@@ -321,11 +334,167 @@ def _run_one_stage_unequal_chain_lengths(  # noqa: C901
 
     return (
         new_samples,
+        new_model_parameters,
         new_log_likelihood_values,
         new_log_target_density_values,
         new_beta,
         log_evidence,
     )
+
+
+# def _run_one_stage_equal_chain_lengths(
+#     samples,
+#     log_likelihood_values,
+#     log_target_density_values,
+#     beta,
+#     rng,
+#     log_likelihood_function,
+#     log_target_density_function,
+#     scale_factor,
+#     target_acceptance_rate,
+#     do_thinning=False,
+#     burn_in_steps=0,
+#     number_of_steps=1,
+#     thinning_factor=1,
+#     adapt_frequency=50,
+# ):
+#     """
+#     Run one stage of the TMCMC algorithm.
+
+#     Args:
+#         samples (np.ndarray): The samples.
+#         log_likelihood_values (np.ndarray): The log-likelihood values.
+#         log_target_density_values (np.ndarray): The log-target density values.
+#         beta (float): The current beta value.
+#         rng (np.random.Generator): The random number generator.
+#         log_likelihood_function (callable): Function to calculate log-likelihoods.
+#         log_target_density_function (callable): Function to calculate log-target densities.
+#         scale_factor (float): The scale factor for the proposal distribution.
+#         target_acceptance_rate (float): The target acceptance rate for the MCMC chain.
+#         do_thinning (bool, optional): Whether to perform thinning. Defaults to False.
+#         burn_in_steps (int, optional): The number of burn-in steps. Defaults to 0.
+
+#     Returns
+#     -------
+#         tuple: A tuple containing the new samples, new log-likelihoods, new log-target density values, new beta, and log evidence.
+#     """
+#     new_beta = _increment_beta(log_likelihood_values, beta)
+#     log_evidence = _calculate_log_evidence(new_beta - beta, log_likelihood_values)
+#     weights = _calculate_weights(new_beta - beta, log_likelihood_values)
+
+#     proposal_covariance = _get_scaled_proposal_covariance(
+#         samples, weights, scale_factor
+#     )
+#     try:
+#         cholesky_lower_triangular_matrix = np.linalg.cholesky(proposal_covariance)
+#     except np.linalg.LinAlgError as exc:
+#         msg = f'Cholesky decomposition failed: {exc}'
+#         raise RuntimeError(msg) from exc
+
+#     new_samples = np.zeros_like(samples)
+#     new_log_likelihood_values = np.zeros_like(log_likelihood_values)
+#     new_log_target_density_values = np.zeros_like(log_target_density_values)
+
+#     current_samples = samples.copy()
+#     current_log_likelihood_values = log_likelihood_values.copy()
+#     current_log_target_density_values = log_target_density_values.copy()
+
+#     num_samples = samples.shape[0]
+#     num_accepts = 0
+#     num_adapt = 1
+#     step_count = 0
+#     num_steps = number_of_steps
+#     if new_beta == 1 or do_thinning:
+#         num_steps = number_of_steps * thinning_factor
+#     # print(f'{new_beta = }, {do_thinning = }, {num_steps = }')
+
+#     indices = rng.choice(
+#         num_samples, size=num_samples, replace=True, p=weights.flatten()
+#     )
+
+#     for k in range(burn_in_steps + num_samples):
+#         # index = rng.choice(num_samples, p=weights.flatten())
+
+#         # print(f'{new_beta = }, {do_thinning = }, {num_steps = }')
+#         for _ in range(num_steps):
+#             step_count += 1
+#             if step_count % adapt_frequency == 0:
+#                 acceptance_rate = num_accepts / adapt_frequency
+#                 num_accepts = 0
+#                 num_adapt += 1
+#                 ca = (acceptance_rate - target_acceptance_rate) / (
+#                     math.sqrt(num_adapt)
+#                 )
+#                 scale_factor = scale_factor * np.exp(ca)
+#                 proposal_covariance = _get_scaled_proposal_covariance(
+#                     current_samples, weights, scale_factor
+#                 )
+#                 cholesky_lower_triangular_matrix = np.linalg.cholesky(
+#                     proposal_covariance
+#                 )
+
+#             standard_normal_samples = rng.standard_normal(
+#                 size=current_samples.shape[1]
+#             )
+#             proposed_state = (
+#                 current_samples[index, :]
+#                 + cholesky_lower_triangular_matrix @ standard_normal_samples
+#             ).reshape(1, -1)
+
+#             log_likelihood_at_proposed_state = log_likelihood_function(
+#                 proposed_state
+#             )
+#             log_target_density_at_proposed_state = log_target_density_function(
+#                 proposed_state, log_likelihood_at_proposed_state
+#             )
+#             log_hastings_ratio = (
+#                 log_target_density_at_proposed_state
+#                 - current_log_target_density_values[index]
+#             )
+#             u = rng.uniform()
+#             accept = np.log(u) <= log_hastings_ratio
+#             if accept:
+#                 num_accepts += 1
+#                 current_samples[index, :] = proposed_state
+#                 # current_log_likelihoods[index] = log_likelihood_at_proposed_state
+#                 if log_likelihood_at_proposed_state.size != 1:
+#                     msg = _generate_error_message(
+#                         log_likelihood_at_proposed_state.size
+#                     )
+#                     raise ValueError(msg)
+#                 current_log_likelihood_values[index] = (
+#                     log_likelihood_at_proposed_state.item()
+#                 )
+#                 # current_log_target_density_values[index] = (
+#                 #     log_target_density_at_proposed_state
+#                 # )
+#                 if log_target_density_at_proposed_state.size != 1:
+#                     msg = _generate_error_message(
+#                         log_target_density_at_proposed_state.size
+#                     )
+#                     raise ValueError(msg)
+#                 current_log_target_density_values[index] = (
+#                     log_target_density_at_proposed_state.item()
+#                 )
+#                 if k >= burn_in_steps:
+#                     weights = _calculate_weights(
+#                         new_beta - beta, current_log_likelihood_values
+#                     )
+#         if k >= burn_in_steps:
+#             k_prime = k - burn_in_steps
+#             new_samples[k_prime, :] = current_samples[index, :]
+#             new_log_likelihood_values[k_prime] = current_log_likelihood_values[index]
+#             new_log_target_density_values[k_prime] = (
+#                 current_log_target_density_values[index]
+#             )
+
+#     return (
+#         new_samples,
+#         new_log_likelihood_values,
+#         new_log_target_density_values,
+#         new_beta,
+#         log_evidence,
+#     )
 
 
 class TMCMC:
@@ -346,6 +515,7 @@ class TMCMC:
         self,
         log_likelihood_function,
         log_target_density_function,
+        sample_transformation_function,
         cov_threshold=1,
         num_steps=1,
         thinning_factor=10,
@@ -364,6 +534,7 @@ class TMCMC:
         """
         self._log_likelihood_function = log_likelihood_function
         self._log_target_density_function = log_target_density_function
+        self._sample_transformation_function = sample_transformation_function
 
         self.num_steps = num_steps
         self.cov_threshold = cov_threshold
@@ -373,6 +544,7 @@ class TMCMC:
     def run(
         self,
         samples_dict,
+        model_parameters_dict,
         betas_dict,
         log_likelihood_values_dict,
         log_target_density_values_dict,
@@ -406,18 +578,21 @@ class TMCMC:
             # print(f'Beta: {betas_dict[stage_num]}')
             (
                 new_samples,
+                new_model_parameters,
                 new_log_likelihood_values,
                 new_log_target_density_values,
                 new_beta,
                 log_evidence,
             ) = _run_one_stage_unequal_chain_lengths(
                 samples_dict[stage_num],
+                model_parameters_dict[stage_num],
                 log_likelihood_values_dict[stage_num],
                 log_target_density_values_dict[stage_num],
                 betas_dict[stage_num],
                 rng,
                 self._log_likelihood_function,
                 self._log_target_density_function,
+                self._sample_transformation_function,
                 self.scale_factor,
                 self.target_acceptance_rate,
                 do_thinning=False,
@@ -428,6 +603,7 @@ class TMCMC:
             )
             stage_num += 1
             samples_dict[stage_num] = new_samples
+            model_parameters_dict[stage_num] = new_model_parameters
             betas_dict[stage_num] = new_beta
             log_likelihood_values_dict[stage_num] = new_log_likelihood_values
             log_target_density_values_dict[stage_num] = new_log_target_density_values
@@ -435,6 +611,7 @@ class TMCMC:
 
         return {
             'samples_dict': samples_dict,
+            'model_parameters_dict': model_parameters_dict,
             'betas_dict': betas_dict,
             'log_likelihood_values_dict': log_likelihood_values_dict,
             'log_target_density_values_dict': log_target_density_values_dict,
@@ -446,18 +623,25 @@ if __name__ == '__main__':
     import numpy as np
 
     # Define log-likelihood function (2D Gaussian)
-    def _log_likelihood_approximation_function(samples):
+    def _log_likelihood_approximation_function(model_parameters):
         # Assuming a Gaussian log-likelihood with mean (0, 0) and covariance identity
-        return -0.5 * np.sum((samples - 10) ** 2, axis=1)
+        return -0.5 * np.sum((model_parameters - 10) ** 2, axis=1)
 
     # Define log-posterior function (assume same as log-likelihood for this simple case)
-    def _log_target_density_approximation_function(samples, log_likelihoods):  # noqa: ARG001
+    def _log_target_density_approximation_function(
+        model_parameters, log_likelihoods
+    ):
         return log_likelihoods  # In this simple case, they are the same
+
+    # Define sample transformation function (in this case, this does nothing to the sample)
+    def _sample_transformation_function(samples):
+        return samples
 
     # Initialize the TMCMC sampler
     tmcmc_sampler = TMCMC(
         _log_likelihood_approximation_function,
         _log_target_density_approximation_function,
+        _sample_transformation_function,
         cov_threshold=1,
         num_steps=1,
         thinning_factor=5,
@@ -471,11 +655,15 @@ if __name__ == '__main__':
 
     # Start with some random samples
     initial_samples = rng.normal(size=(num_samples, num_dimensions))
-    initial_log_likelihoods = _log_likelihood_approximation_function(initial_samples)
+    initial_model_parameters = _sample_transformation_function(initial_samples)
+    initial_log_likelihoods = _log_likelihood_approximation_function(
+        initial_model_parameters
+    )
     initial_log_target_density_values = initial_log_likelihoods
 
     # Dictionaries to store results for each stage
     samples_dict = {0: initial_samples}
+    model_parameters_dict = {0: initial_model_parameters}
     betas_dict = {0: 0.0}  # Start with beta=0 (prior importance)
     log_likelihoods_dict = {0: initial_log_likelihoods}
     log_target_density_values_dict = {0: initial_log_target_density_values}
@@ -485,6 +673,7 @@ if __name__ == '__main__':
     stage_num = 0
     results = tmcmc_sampler.run(
         samples_dict,
+        model_parameters_dict,
         betas_dict,
         log_likelihoods_dict,
         log_target_density_values_dict,
@@ -496,6 +685,7 @@ if __name__ == '__main__':
 
     # Unpack returned dictionary
     samples_dict = results['samples_dict']
+    model_parameters_dict = results['model_parameters_dict']
     betas_dict = results['betas_dict']
     log_likelihoods_dict = results['log_likelihood_values_dict']
     log_target_density_values_dict = results['log_target_density_values_dict']
@@ -505,6 +695,9 @@ if __name__ == '__main__':
     final_stage_num = max(samples_dict.keys())
     print(  # noqa: T201
         f'Final samples (stage {final_stage_num}): \n{samples_dict[final_stage_num]}'
+    )
+    print(  # noqa: T201
+        f'Final model parameters (stage {final_stage_num}): \n{model_parameters_dict[final_stage_num]}'
     )
     print(f'Betas: {betas_dict.values()}')  # noqa: T201
     print(f'Log-evidence values: {log_evidence_dict.values()}')  # noqa: T201
