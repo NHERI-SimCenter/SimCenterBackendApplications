@@ -168,28 +168,42 @@ def calculate_gmap(
     prior_variances,
 ):
     """
-    Calculate the generalized MAP (GMAP).
+    Calculate the normalized RMSE between MAP estimates (g_MAP) across two iterations.
 
     Args:
-        current_log_target_function (callable): The current log target function.
-        previous_log_target_function (callable): The previous log target function.
-        samples (np.ndarray): The samples to evaluate the functions.
-        prior_variances (np.ndarray): The prior variances.
+        current_log_likelihood_function (callable): Log-likelihood function for current iteration.
+        previous_log_likelihood_function (callable): Log-likelihood function for previous iteration.
+        prior_log_pdf (callable): Function computing log prior density.
+        samples (np.ndarray): Array of shape (n_samples, n_params), samples to evaluate.
+        prior_variances (np.ndarray): Array of shape (n_params,), prior variances for normalization.
 
     Returns
     -------
-        float: The GMAP value.
+        float: g_MAP value.
     """
-    current_log_likelihood_values = current_log_likelihood_function(samples)
-    previous_log_likelihood_values = previous_log_likelihood_function(samples)
-    current_map = np.argmax(current_log_likelihood_values + prior_log_pdf(samples))
-    previous_map = np.argmax(previous_log_likelihood_values + prior_log_pdf(samples))
+    # Evaluate posterior log-probabilities (unnormalized)
+    current_log_post = current_log_likelihood_function(samples).reshape(
+        -1
+    ) + prior_log_pdf(samples).reshape(-1)
+    previous_log_post = previous_log_likelihood_function(samples).reshape(
+        -1
+    ) + prior_log_pdf(samples).reshape(-1)
 
-    gmap = np.sqrt(np.sum((current_map - previous_map) ** 2 / prior_variances))
+    # MAP estimates: sample with max log-posterior
+    current_map = samples[np.argmax(current_log_post)]
+    previous_map = samples[np.argmax(previous_log_post)]
+
+    # Compute normalized squared differences
+    delta = current_map - previous_map
+    normalized_squared_diff = delta**2 / prior_variances
+
+    # g_MAP: Root mean of normalized squared differences
+    gmap = np.sqrt(np.mean(normalized_squared_diff))
+
     return gmap  # noqa: RET504
 
 
-def calculate_loo_nrmse_w(
+def calculate_gcv(
     loo_predictions: np.ndarray,
     outputs: np.ndarray,
     weights: np.ndarray = None,
