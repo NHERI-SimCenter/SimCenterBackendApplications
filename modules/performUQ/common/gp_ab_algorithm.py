@@ -101,7 +101,7 @@ class GP_AB_Algorithm:
         run_type (str): The run type (e.g., "runningLocal").
         parallel_pool (uq_utilities.ParallelPool): The parallel pool instance.
         parallel_evaluation_function (callable): The parallel evaluation function.
-        loocv_threshold (float): The threshold for LOOCV.
+        gcv_threshold (float): The threshold for LOOCV.
         results (dict): The results dictionary.
         current_gp_model (GaussianProcessModel): The current GP model.
         current_pca (PrincipalComponentAnalysis): The current PCA model.
@@ -130,7 +130,7 @@ class GP_AB_Algorithm:
         max_computational_time=np.inf,
         pca_threshold=0.999,
         run_type='runningLocal',
-        loocv_threshold=0.2,
+        gcv_threshold=0.2,
         recalibration_ratio=0.1,
         num_samples_per_stage=5000,
         gkl_threshold=0.01,
@@ -155,7 +155,7 @@ class GP_AB_Algorithm:
             max_computational_time (float, optional): The maximum computational time. Defaults to np.inf.
             pca_threshold (float, optional): The threshold for PCA. Defaults to 0.999.
             run_type (str, optional): The run type (e.g., "runningLocal"). Defaults to "runningLocal".
-            loocv_threshold (float, optional): The threshold for LOOCV. Defaults to 0.2.
+            gcv_threshold (float, optional): The threshold for LOOCV. Defaults to 0.2.
             recalibration_ratio (float, optional): The recalibration ratio. Defaults to 0.1.
             gkl_threshold (float, optional): The threshold for GKL. Defaults to 0.01.
             gmap_threshold (float, optional): The threshold for GMAP. Defaults to 0.01.
@@ -201,7 +201,7 @@ class GP_AB_Algorithm:
         self.parallel_pool = uq_utilities.get_parallel_pool_instance(run_type)
         self.parallel_evaluation_function = self.parallel_pool.pool.starmap
 
-        self.loocv_threshold = loocv_threshold
+        self.gcv_threshold = gcv_threshold
 
         self.results = {}
         self.current_gp_model = GaussianProcessModel(
@@ -357,7 +357,7 @@ class GP_AB_Algorithm:
         log_posterior = log_likelihoods + log_prior
         return log_posterior  # noqa: RET504
 
-    def _loocv_measure(self, log_likelihood_approximation):
+    def _calculate_gcv(self, weights=None):
         """
         Calculate the Leave-One-Out Cross-Validation (LOOCV) measure.
 
@@ -368,10 +368,9 @@ class GP_AB_Algorithm:
         -------
             float: The LOOCV measure.
         """
-        lls = log_likelihood_approximation(self.inputs)
         loo_predictions = self.current_gp_model.loo_predictions(self.outputs)
-        loocv_measure = convergence_metrics.calculate_loo_nrmse_w(
-            loo_predictions, lls
+        loocv_measure = convergence_metrics.calculate_gcv(
+            loo_predictions, self.outputs, weights=weights
         )
         return loocv_measure  # noqa: RET504
 
@@ -477,9 +476,8 @@ class GP_AB_Algorithm:
         log_evidence_dict = {}
 
         if k > 0:
-            # self.gcv = self._loocv_measure(self.current_log_likelihood_approximation)
-            # self.warm_start_possible = self.gcv < self.loocv_threshold
-            self.warm_start_possible = True
+            self.gcv = self._calculate_gcv()
+            self.warm_start_possible = self.gcv < self.gcv_threshold
             if self.warm_start_possible:
                 self.j_star = calculate_warm_start_stage(
                     self.current_log_likelihood_approximation,
@@ -815,7 +813,10 @@ def preprocess(input_arguments):
         correlation_matrix_inputs,
     )
     domain = [(-3, 3) for _ in range(len(rv_inputs))]
-    prior_variances = [1 for _ in range(len(rv_inputs))]  # TODO(ABS): Validate this
+    prior_variances = [
+        (marginal.std()) ** 2 for marginal in joint_distribution.Marginals
+    ]
+    # prior_variances = [1 for _ in range(len(rv_inputs))]  # TODO(ABS): Validate this
     # Transformation function from standard to physical space
     sample_transformation_function = joint_distribution.u_to_x
 
@@ -849,7 +850,7 @@ def preprocess(input_arguments):
     max_computational_time = np.inf
     pca_threshold = 0.999
     run_type = input_arguments.run_type
-    loocv_threshold = 0.2
+    gcv_threshold = 0.2
     recalibration_ratio = 0.1
     num_samples_per_stage = 1000
     gkl_threshold = 0.01
@@ -872,7 +873,7 @@ def preprocess(input_arguments):
         max_computational_time,
         pca_threshold,
         run_type,
-        loocv_threshold,
+        gcv_threshold,
         recalibration_ratio,
         num_samples_per_stage,
         gkl_threshold,
