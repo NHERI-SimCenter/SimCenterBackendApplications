@@ -207,7 +207,10 @@ class GP_AB_Algorithm:
         self.current_gp_model = GaussianProcessModel(
             self.input_dimension, 1, ARD=True
         )
-        self.current_pca = PrincipalComponentAnalysis(self.pca_threshold)
+        self.current_pca = PrincipalComponentAnalysis(
+            self.pca_threshold, perform_scaling=True
+        )
+        self.gp_recalibrated = False
 
         self.samples_dict = {}
         self.betas_dict = {}
@@ -215,8 +218,10 @@ class GP_AB_Algorithm:
         self.log_target_density_values_dict = {}
         self.log_evidence_dict = {}
 
-        self.previous_iteration_samples = None
-        self.current_iteration_samples = None
+        self.previous_posterior_samples = None
+        self.current_posterior_samples = None
+        self.previous_model_parameters = None
+        self.current_model_parameters = None
 
         self.num_samples_per_stage = num_samples_per_stage
 
@@ -352,7 +357,7 @@ class GP_AB_Algorithm:
         log_posterior = log_likelihoods + log_prior
         return log_posterior  # noqa: RET504
 
-    def loocv_measure(self, log_likelihood_approximation):
+    def _loocv_measure(self, log_likelihood_approximation):
         """
         Calculate the Leave-One-Out Cross-Validation (LOOCV) measure.
 
@@ -403,21 +408,20 @@ class GP_AB_Algorithm:
                     self.previous_response_approximation,
                 )
 
-                max_stage = len(self.results['samples_dict']) - 1
-                self.previous_iteration_samples = self.results[
-                    'model_parameters_dict'
-                ][max_stage]
-
             self.current_pca = PrincipalComponentAnalysis(self.pca_threshold)
+            self.current_pca.fit(model_outputs)
             self.latent_outputs = self.current_pca.project_to_latent_space(
                 model_outputs
             )
-            self.num_pca_components_list.append(np.shape(self.latent_outputs)[1])
+            self.num_pca_components_list.append(self.current_pca.n_components)
             self.current_gp_model = GaussianProcessModel(
                 self.input_dimension, self.num_pca_components_list[-1], ARD=True
             )
-            self.current_gp_model.fit(model_parameters, self.latent_outputs)
+            self.current_gp_model.update(
+                model_parameters, self.latent_outputs, reoptimize=True
+            )
             self.num_recalibration_experiments = self.num_experiments[-1]
+            self.gp_recalibrated = True
 
         else:  # no recalibration of GP model
             self.current_gp_model = self.previous_gp_model
@@ -427,23 +431,24 @@ class GP_AB_Algorithm:
                 model_outputs
             )
             self.num_pca_components_list.append(np.shape(self.latent_outputs)[1])
-            self.current_gp_model.fit(
+            self.current_gp_model.update(
                 model_parameters, self.latent_outputs, reoptimize=False
             )
+            self.gp_recalibrated = False
 
-        # # Step 1.2: GP predictive model
-        # gp_prediction_latent_mean, gp_prediction_latent_variance = (
-        #     self.current_gp_model.predict(model_parameters)
-        # )
-        # gp_prediction_mean = self.current_pca.project_back_to_original_space(
-        #     gp_prediction_latent_mean
-        # )
-        # loo_predictions_latent_space = self.current_gp_model.loo_predictions(
-        #     self.latent_outputs
-        # )
-        # loo_predictions = self.current_pca.project_back_to_original_space(
-        #     loo_predictions_latent_space
-        # )
+        # Step 1.2: GP predictive model
+        gp_prediction_latent_mean, gp_prediction_latent_variance = (
+            self.current_gp_model.predict(model_parameters)
+        )
+        self.gp_prediction_mean = self.current_pca.project_back_to_original_space(
+            gp_prediction_latent_mean
+        )
+        loo_predictions_latent_space = self.current_gp_model.loo_predictions(
+            self.latent_outputs
+        )
+        self.loo_predictions = self.current_pca.project_back_to_original_space(
+            loo_predictions_latent_space
+        )
 
         # Step 1.3: Posterior distribution approximation
         self.current_response_approximation = partial(
@@ -461,7 +466,7 @@ class GP_AB_Algorithm:
             self.sample_transformation_function,
         )
 
-        j_star = 0
+        self.j_star = 0
         beta = 0
 
         samples_dict = {}
@@ -472,18 +477,23 @@ class GP_AB_Algorithm:
         log_evidence_dict = {}
 
         if k > 0:
-            # loocv_measure = self.loocv_measure()
-            # if loocv_measure < self.loocv_threshold:
-            #     j_star = self._calculate_warm_start_stage(
-            #         log_likelihood_approximation, self.betas_dict
-            #     )
-            j_star = calculate_warm_start_stage(
-                self.current_log_likelihood_approximation,
-                self.results,
-            )
+            # self.gcv = self._loocv_measure(self.current_log_likelihood_approximation)
+            # self.warm_start_possible = self.gcv < self.loocv_threshold
+            self.warm_start_possible = True
+            if self.warm_start_possible:
+                self.j_star = calculate_warm_start_stage(
+                    self.current_log_likelihood_approximation,
+                    self.results,
+                )
+
+            self.previous_model_parameters = self.results['model_parameters_dict']
+            max_stage = len(self.previous_model_parameters) - 1
+            self.previous_posterior_samples = self.previous_model_parameters[
+                max_stage
+            ]
 
         # Step 2.2: Sequential MC sampling
-        if j_star == 0:
+        if self.j_star == 0:
             initial_samples = self._perform_initial_doe(self.num_samples_per_stage)
             model_parameters_initial = self.sample_transformation_function(
                 initial_samples
@@ -498,14 +508,14 @@ class GP_AB_Algorithm:
             beta = 0
             stage_num = 0
 
-            samples_dict[j_star] = initial_samples
-            model_parameters_dict[j_star] = model_parameters_initial
-            betas_dict[j_star] = beta
-            log_likelihoods_dict[j_star] = log_likelihood_values
-            log_target_density_values_dict[j_star] = log_target_density_values
-            log_evidence_dict[j_star] = log_evidence
+            samples_dict[self.j_star] = initial_samples
+            model_parameters_dict[self.j_star] = model_parameters_initial
+            betas_dict[self.j_star] = beta
+            log_likelihoods_dict[self.j_star] = log_likelihood_values
+            log_target_density_values_dict[self.j_star] = log_target_density_values
+            log_evidence_dict[self.j_star] = log_evidence
         else:
-            for j in range(j_star):
+            for j in range(self.j_star):
                 samples_dict[j] = self.results['samples_dict'][j]
                 model_parameters_dict[j] = self.results['model_parameters_dict'][j]
                 betas_dict[j] = self.results['betas_dict'][j]
@@ -516,7 +526,7 @@ class GP_AB_Algorithm:
                     'log_target_density_values_dict'
                 ][j]
                 log_evidence_dict[j] = self.results['log_evidence_dict'][j]
-            stage_num = j_star - 1
+            stage_num = self.j_star - 1
 
         self.results = tmcmc.run(
             samples_dict,
@@ -530,32 +540,33 @@ class GP_AB_Algorithm:
             num_burn_in=0,
         )
 
-        max_stage = len(self.results['samples_dict']) - 1
-        self.current_iteration_samples = self.results['model_parameters_dict'][
-            max_stage
-        ]
+        self.current_model_parameters = self.results['model_parameters_dict']
+        max_stage = len(self.current_model_parameters) - 1
+        self.current_posterior_samples = self.current_model_parameters[max_stage]
 
         self.converged = False
         if k > 0:
             combined_samples = np.vstack(
-                [self.previous_iteration_samples, self.current_iteration_samples]
+                [self.previous_posterior_samples, self.current_posterior_samples]
             )  # type: ignore
             # Step 3.1: Assess convergence
-            gkl = convergence_metrics.calculate_gkl(
+            self.gkl = convergence_metrics.calculate_gkl(
                 self.current_log_likelihood_approximation,
                 self.previous_log_likelihood_approximation,
                 self._log_prior_pdf,
                 combined_samples,
             )
-            self.converged = gkl < self.gkl_threshold
-            # gmap = convergence_metrics.calculate_gmap(
-            #     log_likelihood_approximation,
-            #     previous_log_likelihood_approximation,
-            #     self.prior_pdf_function,
-            #     combined_samples,
-            #     self.prior_variances,
-            # )
-            # self.converged = gkl < self.gkl_threshold and gmap < self.gmap_threshold
+            self.gkl_converged = self.gkl < self.gkl_threshold
+            self.gmap = convergence_metrics.calculate_gmap(
+                self.current_log_likelihood_approximation,
+                self.previous_log_likelihood_approximation,
+                self.prior_pdf_function,
+                combined_samples,
+                self.prior_variances,
+            )
+            self.gmap_converged = self.gmap < self.gmap_threshold
+            # self.converged = self.gkl_converged and self.gmap_converged
+            self.converged = self.gkl_converged
 
         # Step 3.2: Computational budget related termination
         num_simulations = 0
@@ -578,19 +589,19 @@ class GP_AB_Algorithm:
         )
 
         # Step 4.2: Exploitation DoE
-        exploitation_training_points = current_doe.select_training_points(
-            self.inputs, n_exploit, self.current_iteration_samples, 1000
+        self.exploitation_training_points = current_doe.select_training_points(
+            self.inputs, n_exploit, self.current_posterior_samples, 1000
         )
-        self.inputs = np.vstack([self.inputs, exploitation_training_points])
+        self.inputs = np.vstack([self.inputs, self.exploitation_training_points])
 
         # Step 4.3: Exploration DoE
-        exploration_training_points = current_doe.select_training_points(
-            self.inputs, n_explore, self.current_iteration_samples, 1000
+        self.exploration_training_points = current_doe.select_training_points(
+            self.inputs, n_explore, self.current_posterior_samples, 1000
         )
-        self.inputs = np.vstack([self.inputs, exploration_training_points])
+        self.inputs = np.vstack([self.inputs, self.exploration_training_points])
 
-        new_training_points = np.vstack(
-            [exploitation_training_points, exploration_training_points]
+        self.new_training_points = np.vstack(
+            [self.exploitation_training_points, self.exploration_training_points]
         )
         self.num_experiments.append(len(self.inputs))
 
@@ -598,12 +609,12 @@ class GP_AB_Algorithm:
         simulation_number_start = 0
         if self.outputs is not None:
             simulation_number_start = len(self.outputs)
-        new_training_outputs = self._evaluate_in_parallel(
+        self.new_training_outputs = self._evaluate_in_parallel(
             self.model_evaluation_function,
-            new_training_points,
+            self.new_training_points,
             simulation_number_start=simulation_number_start,
         )
-        self.outputs = np.vstack([self.outputs, new_training_outputs])
+        self.outputs = np.vstack([self.outputs, self.new_training_outputs])
 
         return self.terminate, self.results
 
@@ -652,25 +663,75 @@ class GP_AB_Algorithm:
         print(f'Saved: {filename}')
 
     def _make_json_serializable(self, obj):
-        """Recursively convert NumPy arrays in nested structures to lists."""
+        """Recursively convert NumPy and other non-serializable types to JSON-serializable Python types."""
         if isinstance(obj, dict):
             return {k: self._make_json_serializable(v) for k, v in obj.items()}
-        if isinstance(obj, list):
+        elif isinstance(obj, list):  # noqa: RET505
             return [self._make_json_serializable(item) for item in obj]
-        if isinstance(obj, np.ndarray):
+        elif isinstance(obj, tuple):
+            return tuple(self._make_json_serializable(item) for item in obj)
+        elif isinstance(obj, np.ndarray):
             return obj.tolist()
-        return obj
+        elif isinstance(obj, (np.integer, int)):
+            return int(obj)
+        elif isinstance(obj, (np.floating, float)):
+            return float(obj)
+        elif isinstance(obj, (np.bool_, bool)):
+            return bool(obj)
+        elif obj is None:
+            return None
+        else:
+            msg = f'Object of type {type(obj)} is not JSON serializable: {obj}'
+            raise TypeError(msg)
+
+    def _save_gp_ab_progress(self):
+        """Save the current progress of the GP-AB Algorithm to a file."""
+        data = {
+            'iteration_number': self.iteration_number,
+            'gp_recalibrated': self.gp_recalibrated,
+            'inputs': self.inputs[: len(self.gp_prediction_mean)],
+            'outputs': self.outputs[: len(self.gp_prediction_mean)],
+            'gp_prediction_mean': self.gp_prediction_mean,
+            'loo_predictions': self.loo_predictions,
+            'exploitation_training_points': self.exploitation_training_points,
+            'exploration_training_points': self.exploration_training_points,
+            'num_latent_variables': self.current_pca.n_components,
+            'explained_variance_ratio': self.current_pca.pca.explained_variance_ratio_,
+        }
+
+        if self.iteration_number > 0:
+            data.update(
+                {
+                    'gcv': self.gcv,
+                    'warm_start_possible': self.warm_start_possible,
+                    'warm_start_stage': self.j_star,
+                    'gkl': self.gkl,
+                    'gkl_converged': self.gkl_converged,
+                    'gmap': self.gmap,
+                    'gmap_converged': self.gmap_converged,
+                    'converged': self.converged,
+                    'budget_exceeded': self.budget_exceeded,
+                    'terminate': self.terminate,
+                }
+            )
+
+        return self._make_json_serializable(data)
 
     def write_results(self, results_dir='results'):
         """Write the results of the GP-AB Algorithm to a file."""
         res_dir = Path(results_dir)
         res_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
+
         serializable_data = self._make_json_serializable(self.results)
         outfile_path = res_dir / f'tmcmc_results_{self.iteration_number}.json'
         with outfile_path.open('w') as f:
             json.dump(serializable_data, f, indent=4)
 
-        samples = self.current_iteration_samples
+        outfile_gp_ab_path = res_dir / f'gp_ab_progress_{self.iteration_number}.json'
+        with outfile_gp_ab_path.open('w') as f:
+            json.dump(self._save_gp_ab_progress(), f, indent=4)
+
+        samples = self.current_posterior_samples
         predictions = _response_approximation(
             self.current_gp_model, self.current_pca, samples
         )
@@ -727,8 +788,7 @@ def preprocess(input_arguments):
         tuple: A tuple containing the preprocessed data required for the GP-AB Algorithm.
     """
     input_file_full_path = (
-        Path(input_arguments.path_to_template_directory)
-        / input_arguments.input_json_file
+        input_arguments.path_to_template_directory / input_arguments.input_json_file
     )
     (
         uq_inputs,
@@ -738,9 +798,9 @@ def preprocess(input_arguments):
         application_inputs,
     ) = read_inputs(input_file_full_path)
 
-    data_file = uq_inputs.calDataFilePath / uq_inputs.calDataFile
+    data_file = input_arguments.path_to_working_directory / uq_inputs.calDataFile
     with data_file.open() as f:
-        data = np.genfromtxt(f, delimiter=',')
+        data = np.atleast_2d(np.genfromtxt(f, delimiter=','))
 
     log_likelihood_file_name = uq_inputs.logLikelihoodFile
     log_likelihood_path = uq_inputs.logLikelihoodPath
@@ -791,7 +851,7 @@ def preprocess(input_arguments):
     run_type = input_arguments.run_type
     loocv_threshold = 0.2
     recalibration_ratio = 0.1
-    num_samples_per_stage = 500
+    num_samples_per_stage = 1000
     gkl_threshold = 0.01
     gmap_threshold = 0.01
 
@@ -867,6 +927,7 @@ def run_gp_ab_algorithm(input_arguments):
         terminate, results = gp_ab.run_iteration(iteration)
         gp_ab.write_results()
         iteration += 1
+    gp_ab.parallel_pool.close_pool()
 
 
 def parse_arguments(args=None):
