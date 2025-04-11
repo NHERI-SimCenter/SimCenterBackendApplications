@@ -100,12 +100,12 @@ def _calculate_kl_divergence(
     previous_log_target_density_values = (
         previous_log_likelihood_values + prior_log_pdf(samples)
     )
-    current_target_density_values = np.exp(current_log_target_density_values)
-    previous_target_density_values = np.exp(previous_log_target_density_values)
-
     alpha_1, alpha_2 = _calculate_normalization_constants(
         current_log_target_density_values, previous_log_target_density_values
     )
+
+    current_target_density_values = np.exp(current_log_target_density_values)
+    previous_target_density_values = np.exp(previous_log_target_density_values)
     kl_divergence_estimate = (
         1
         / len(samples)
