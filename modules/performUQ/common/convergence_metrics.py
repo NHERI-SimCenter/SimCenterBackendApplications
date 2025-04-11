@@ -190,27 +190,39 @@ def calculate_gmap(
 
 
 def calculate_loo_nrmse_w(
-    loo_predictions,
-    gp_surrogate_model_prediction,
-    weights=None,
-):
+    loo_predictions: np.ndarray,
+    outputs: np.ndarray,
+    weights: np.ndarray = None,
+) -> float:
     """
-    Calculate the Leave-One-Out Normalized Root Mean Square Error (LOO NRMSE) with weights.
+    Calculate the weighted Leave-One-Out Normalized Root Mean Square Error (LOO NRMSE)
+    across all outputs and training points.
 
     Args:
-        loo_predictions (np.ndarray): The LOO predictions.
-        gp_surrogate_model_prediction (np.ndarray): The GP surrogate model predictions.
-        weights (np.ndarray, optional): The weights for the predictions. Defaults to None.
+        loo_predictions (np.ndarray): LOO predictions of shape (n_points, n_outputs).
+        true_outputs (np.ndarray): Actual outputs of shape (n_points, n_outputs).
+        weights (np.ndarray, optional): Weights for each training point. Shape: (n_points,).
+                                        If None, equal weights are used.
 
     Returns
     -------
-        np.ndarray: The LOO NRMSE values.
-    """
+        float: Weighted average normalized RMS error (scalar).
+    """  # noqa: D205
     if weights is None:
-        weights = np.ones_like(loo_predictions)
-    normalized_weights = weights / np.sum(weights)
-    g_i = np.linalg.norm(
-        loo_predictions - gp_surrogate_model_prediction, axis=1, keepdims=True
-    ) / np.linalg.norm(gp_surrogate_model_prediction, axis=1, keepdims=True)
-    g_cv = normalized_weights * g_i / len(loo_predictions)
+        weights = np.ones(loo_predictions.shape[0])
+
+    weights = np.asarray(weights)
+    assert loo_predictions.shape == outputs.shape
+    assert weights.shape[0] == loo_predictions.shape[0]
+
+    # Compute normalized RMS error per output and sample
+    diff_norms = np.linalg.norm(loo_predictions - outputs, axis=1)
+    true_norms = np.linalg.norm(outputs, axis=1)
+
+    # Avoid division by zero
+    with np.errstate(divide='ignore', invalid='ignore'):
+        g_i = np.where(true_norms != 0, diff_norms / true_norms, 0.0)
+
+    # Weighted average
+    g_cv = np.sum(weights * g_i) / np.sum(weights)
     return g_cv  # noqa: RET504
