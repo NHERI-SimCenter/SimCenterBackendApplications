@@ -2,6 +2,7 @@
 
 import numpy as np
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 
 class PrincipalComponentAnalysis:
@@ -11,84 +12,100 @@ class PrincipalComponentAnalysis:
     Attributes
     ----------
         pca_threshold (float): The threshold for the cumulative explained variance ratio to determine the number of components.
+        scale (bool): Whether to standardize data before PCA.
         pca (PCA): The PCA model.
-        mean_vec (np.ndarray): The mean vector of the original data.
-        proj_matrix (np.ndarray): The projection matrix (PCA components).
-        eigenvalues (np.ndarray): The eigenvalues of the PCA components.
-        explained_variance_ratio (np.ndarray): The explained variance ratio of the PCA components.
+        scaler (StandardScaler | None): The scaler used to standardize the data, if enabled.
         n_components (int): The number of components to retain.
     """
 
-    def __init__(self, pca_threshold) -> None:
+    def __init__(self, pca_threshold, perform_scaling=True) -> None:  # noqa: FBT002
         """
         Initialize the PrincipalComponentAnalysis class.
 
         Args:
             pca_threshold (float): The threshold for the cumulative explained variance ratio to determine the number of components.
+            scale (bool): Whether to standardize data before PCA.
         """
         self.pca_threshold = pca_threshold
+        self.perform_scaling = perform_scaling
 
+        self.scaler = StandardScaler() if self.perform_scaling else None
         self.pca = None
-        self.mean_vec = None
-        self.proj_matrix = None
-        self.eigenvalues = None
-        self.explained_variance_ratio = None
         self.n_components = None
+
+    def fit(self, outputs):
+        """
+        Fit the PCA model to the output data.
+
+        Args:
+            outputs (np.ndarray): The output data to be fitted.
+
+        Returns
+        -------
+            None
+        """
+        self.pca = PCA()
+        if self.perform_scaling:
+            scaled_outputs = self.scaler.fit_transform(outputs)
+        else:
+            scaled_outputs = outputs
+
+        self.pca.fit(scaled_outputs)
+
+        explained_variance_ratio = self.pca.explained_variance_ratio_
+        self.n_components = (
+            np.argmax(np.cumsum(explained_variance_ratio) >= self.pca_threshold) + 1
+        )
 
     def project_to_latent_space(self, outputs):
         """
-        Perform PCA on the output data to reduce the dimensionality.
+        Project the output data to the latent (reduced) space.
 
         Args:
-            outputs (np.ndarray): The output data to be projected to the latent space.
+            outputs (np.ndarray): The output data to be projected.
 
         Returns
         -------
             np.ndarray: The latent outputs after PCA transformation.
         """
-        # Perform PCA on the output data to reduce the dimensionality
-        pca = PCA()
-        pca.fit(outputs)
+        if self.pca is None:
+            msg = 'No PCA model has been fitted yet.'
+            raise ValueError(msg)
+        if self.perform_scaling and self.scaler is None:
+            msg = 'No scaler model has been fitted yet.'
+            raise ValueError(msg)
 
-        # Determine the number of components to retain based on the threshold value
-        explained_variance_ratio = pca.explained_variance_ratio_
-        self.n_components = (
-            np.argmax(np.cumsum(explained_variance_ratio) >= self.pca_threshold) + 1
+        outputs_scaled = (
+            self.scaler.transform(outputs) if self.perform_scaling else outputs
         )
-
-        # Perform PCA with the specified number of components and transform the output data
-        # TODO (ABS): Reimplement without the second PCA fit
-        self.pca = PCA(n_components=self.n_components)
-        self.pca.fit(outputs)
-        latent_outputs = self.pca.transform(outputs)
-
-        # Store the PCA parameters for later use in inverse transformation
-        self.mean_vec = self.pca.mean_
-        self.proj_matrix = self.pca.components_
-        self.eigenvalues = self.pca.explained_variance_
-        self.explained_variance_ratio = self.pca.explained_variance_ratio_
-
-        return latent_outputs
+        outputs_centered = outputs_scaled - self.pca.mean_
+        components_selected = self.pca.components_[: self.n_components]
+        latent_outputs = outputs_centered @ components_selected.T
+        return latent_outputs  # noqa: RET504
 
     def project_back_to_original_space(self, latent_outputs):
         """
-        Inverse transform the latent outputs back to the original space using the stored PCA parameters.
+        Inverse transform the latent outputs back to the original space.
 
         Args:
-            latent_outputs (np.ndarray): The latent outputs to be projected back to the original space.
+            latent_outputs (np.ndarray): The latent outputs to be projected back.
 
         Returns
         -------
             np.ndarray: The outputs in the original space.
-
-        Raises
-        ------
-            ValueError: If the PCA model has not been fitted yet.
         """
-        # Check if the PCA model has been fitted
         if self.pca is None:
-            error_message = 'No PCA model has been fitted yet.'
-            raise ValueError(error_message)
-        # Inverse transform the latent outputs using the stored PCA parameters
-        outputs = self.pca.inverse_transform(latent_outputs)
+            msg = 'No PCA model has been fitted yet.'
+            raise ValueError(msg)
+        if self.perform_scaling and self.scaler is None:
+            msg = 'No scaler model has been fitted yet.'
+            raise ValueError(msg)
+
+        components_selected = self.pca.components_[: self.n_components]
+        outputs_scaled = latent_outputs @ components_selected + self.pca.mean_
+        outputs = (
+            self.scaler.inverse_transform(outputs_scaled)
+            if self.perform_scaling
+            else outputs_scaled
+        )
         return outputs  # noqa: RET504
