@@ -134,6 +134,7 @@ class GP_AB_Algorithm:
         num_samples_per_stage=5000,
         gkl_threshold=0.01,
         gmap_threshold=0.01,
+        batch_size=2,
     ):
         """
         Initialize the GP_AB_Algorithm class.
@@ -201,6 +202,8 @@ class GP_AB_Algorithm:
         self.parallel_evaluation_function = self.parallel_pool.pool.starmap
 
         self.gcv_threshold = gcv_threshold
+
+        self.batch_size = batch_size
 
         self.results = {}
         self.current_gp_model = GaussianProcessModel(
@@ -479,9 +482,9 @@ class GP_AB_Algorithm:
                 )
 
             self.previous_model_parameters = self.results['model_parameters_dict']
-            max_stage = len(self.previous_model_parameters) - 1
+            self.num_tmcmc_stages = len(self.previous_model_parameters)
             self.previous_posterior_samples = self.previous_model_parameters[
-                max_stage
+                self.num_tmcmc_stages - 1
             ]
 
         # Step 2.2: Sequential MC sampling
@@ -533,8 +536,10 @@ class GP_AB_Algorithm:
         )
 
         self.current_model_parameters = self.results['model_parameters_dict']
-        max_stage = len(self.current_model_parameters) - 1
-        self.current_posterior_samples = self.current_model_parameters[max_stage]
+        self.num_tmcmc_stages = len(self.current_model_parameters)
+        self.current_posterior_samples = self.current_model_parameters[
+            self.num_tmcmc_stages - 1
+        ]
 
         self.converged = False
         if k > 0:
@@ -572,10 +577,13 @@ class GP_AB_Algorithm:
             return self.terminate, self.results
 
         # Step 4.1: Select variance for DoE
-        n_training_points = 2 * self.input_dimension
-        self.exploitation_proportion = 0.5
-        n_exploit = int(np.ceil(self.exploitation_proportion * n_training_points))
+        n_training_points = self.batch_size * self.input_dimension
+        self.exploitation_proportion = 0.5  # TODO (ABS): adapt based on gcv value
+        n_exploit = int(np.floor(self.exploitation_proportion * n_training_points))
         n_explore = n_training_points - n_exploit
+        num_tmcmc_intermediate_stages = self.num_tmcmc_stages - 1
+        self.stage_weights = np.ones(num_tmcmc_intermediate_stages)
+
         current_doe = AdaptiveDesignOfExperiments(
             self.current_gp_model, self.current_pca, self.domain
         )
@@ -703,6 +711,7 @@ class GP_AB_Algorithm:
                     'gcv': self.gcv,
                     'warm_start_possible': self.warm_start_possible,
                     'warm_start_stage': self.j_star,
+                    'num_tmcmc_stages': self.num_tmcmc_stages,
                     'gkl': self.gkl,
                     'gkl_converged': self.gkl_converged,
                     'gmap': self.gmap,
