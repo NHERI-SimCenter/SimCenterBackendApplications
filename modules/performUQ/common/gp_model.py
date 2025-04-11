@@ -89,14 +89,17 @@ class GaussianProcessModel:
             self.model[i].likelihood.variance = value
             self.model[i].likelihood.variance.fix()
 
-    def fit(self, x_train, y_train, reoptimize=True):  # noqa: FBT002
+    def update(self, x_train, y_train, reoptimize=True):  # noqa: FBT002
         """
-        Fit the GP models to the training data.
+        Update the GP models with new training data.
+
+        This method sets the training inputs and outputs for each GP model.
+        Optionally, it re-optimizes the hyperparameters based on the new data.
 
         Args:
-            x_train (np.ndarray): The input training data.
-            y_train (np.ndarray): The output training data.
-            reoptimize (bool): Whether to re-optimize hyperparameters.
+            x_train (np.ndarray): The input training data of shape (n_samples, n_features).
+            y_train (np.ndarray): The output training data of shape (n_samples, n_outputs).
+            reoptimize (bool, optional): Whether to re-optimize hyperparameters. Defaults to True.
         """
         for i in range(self.output_dimension):
             self.model[i].set_XY(x_train, np.reshape(y_train[:, i], (-1, 1)))
