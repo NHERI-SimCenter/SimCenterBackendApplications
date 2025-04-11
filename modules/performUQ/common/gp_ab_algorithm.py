@@ -686,7 +686,6 @@ class GP_AB_Algorithm:
         """Save the current progress of the GP-AB Algorithm to a file."""
         data = {
             'iteration_number': self.iteration_number,
-            'gp_recalibrated': self.gp_recalibrated,
             'inputs': self.inputs[: len(self.gp_prediction_mean)],
             'outputs': self.outputs[: len(self.gp_prediction_mean)],
             'gp_prediction_mean': self.gp_prediction_mean,
@@ -695,6 +694,7 @@ class GP_AB_Algorithm:
             'exploration_training_points': self.exploration_training_points,
             'num_latent_variables': self.current_pca.n_components,
             'explained_variance_ratio': self.current_pca.pca.explained_variance_ratio_,
+            'gp_recalibrated': self.gp_recalibrated,
         }
 
         if self.iteration_number > 0:
@@ -812,16 +812,16 @@ def preprocess(input_arguments):
         rv_inputs,
         correlation_matrix_inputs,
     )
-    domain = [(-3, 3) for _ in range(len(rv_inputs))]
     prior_variances = [
-        (marginal.std()) ** 2 for marginal in joint_distribution.Marginals
+        (marginal.Dist.var()) ** 2
+        for marginal in joint_distribution.ERANataf_object.Marginals
     ]
-    # prior_variances = [1 for _ in range(len(rv_inputs))]  # TODO(ABS): Validate this
     # Transformation function from standard to physical space
     sample_transformation_function = joint_distribution.u_to_x
-
     # Prior logpdf function
     prior_pdf_function = joint_distribution.pdf
+
+    domain = [(-3, 3) for _ in range(len(rv_inputs))]
 
     main_script_path = str(input_arguments.path_to_template_directory)
 
