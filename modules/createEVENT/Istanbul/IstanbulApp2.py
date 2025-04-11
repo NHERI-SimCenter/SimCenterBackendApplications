@@ -1,126 +1,161 @@
-# %%  # noqa: INP001, D100
+import os  
 import json
-import os
 import time
 from datetime import datetime
-
-from agavepy.agave import Agave
+from tapipy.tapis import Tapis
 
 # change the directory to the current directory
-os.chdir(os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
+os.chdir(os.path.dirname(os.path.realpath(__file__)))  
 
 
-def Submit_tapis_job():  # noqa: N802, D103
-    ag = Agave.restore()
-    with open('TapisFiles/information.json') as file:  # noqa: PTH123
+def Submit_tapis_job(username=None, password=None):  
+    # Initialize Tapis client with credentials
+    if username is not None and password is not None:
+        t = Tapis(
+            base_url='https://designsafe.tapis.io', username=username, password=password
+        )
+        t.get_tokens()
+    else:
+        # Use existing authentication if no credentials provided
+        t = Tapis(base_url='https://designsafe.tapis.io')
+        t.get_tokens()
+
+    with open('TapisFiles/information.json') as file: 
         information = json.load(file)
     file.close()
 
-    # %%
-    profile = ag.profiles.get()
-    username = profile['username']
-    savingDirectory = information['directory']  # noqa: N806
-    if not os.path.exists(savingDirectory):  # noqa: PTH110
-        os.makedirs(savingDirectory)  # noqa: PTH103
+    savingDirectory = information['directory']  
+    if not os.path.exists(savingDirectory): 
+        os.makedirs(savingDirectory)  
 
-    print('Uploading files to designsafe storage')  # noqa: T201
-    ag.files.manage(
-        systemId='designsafe.storage.default',
-        filePath=f'{username}/',
-        body={'action': 'mkdir', 'path': 'physics_based'},
-    )
-    ag.files.manage(
-        systemId='designsafe.storage.default',
-        filePath=f'{username}/physics_based',
-        body={'action': 'mkdir', 'path': 'Istanbul'},
-    )
-    # ag.files_mkdir(systemId="designsafe.storage.default", filePath=f"{username}/physics_based/Istanbul2")
-    with open('TapisFiles/Istanbul.py', 'rb') as file:  # noqa: PTH123
-        result = ag.files.importData(
-            filePath=f'{username}/physics_based/Istanbul/',
-            fileToUpload=file,
-            systemId='designsafe.storage.default',
+    print('Uploading files to designsafe storage')  
+    try:
+        t.files.mkdir(
+            systemId='designsafe.storage.default', path=f'{t.username}/physics_based'
         )
-    with open('TapisFiles/information.json', 'rb') as file:  # noqa: PTH123
-        result = ag.files.importData(
-            filePath=f'{username}/physics_based/Istanbul/',
-            fileToUpload=file,
-            systemId='designsafe.storage.default',
+    except:  
+        # Directory might already exist
+        pass
+    
+    try:
+        t.files.mkdir(
+            systemId='designsafe.storage.default', path=f'{t.username}/physics_based/Istanbul'
         )
-    with open('TapisFiles/selectedSites.csv', 'rb') as file:  # noqa: PTH123
-        result = ag.files.importData(  # noqa: F841
-            filePath=f'{username}/physics_based/Istanbul/',
-            fileToUpload=file,
-            systemId='designsafe.storage.default',
-        )
+    except:  
+        # Directory might already exist
+        pass
 
-    # %%
-    jobdict = {
-        'name': '',
-        'appId': 'physicsBasedMotionApp-0.0.1',
-        'nodeCount': 1,
-        'processorsPerNode': 1,
-        'archive': True,
-        'archiveOnAppError': True,
-        'inputs': {'inputDirectory': ''},
-        'parameters': {'inputScript': 'Istanbul.py'},
-        'maxRunTime': '00:01:00',
-        'memoryPerNode': '1GB',
-        'archiveSystem': 'designsafe.storage.default',
+    # Upload Istanbul.py
+    with open('TapisFiles/Istanbul.py', 'rb') as file:  
+        contents = file.read()
+    result = t.files.insert(
+        systemId='designsafe.storage.default',
+        path=f'{t.username}/physics_based/Istanbul/Istanbul.py',
+        file=contents,
+    )
+
+    # Upload information.json
+    with open('TapisFiles/information.json', 'rb') as file:  
+        contents = file.read()
+    result = t.files.insert(
+        systemId='designsafe.storage.default',
+        path=f'{t.username}/physics_based/Istanbul/information.json',
+        file=contents,
+    )
+
+    # Upload selectedSites.csv
+    with open('TapisFiles/selectedSites.csv', 'rb') as file:  
+        contents = file.read()
+    result = t.files.insert(  
+        systemId='designsafe.storage.default',
+        path=f'{t.username}/physics_based/Istanbul/selectedSites.csv',
+        file=contents,
+    )
+
+    # Define inputs
+    input_Directory = (  
+        f'tapis://designsafe.storage.default/{t.username}/physics_based/Istanbul'
+    )
+    fileInputs = [{'name': 'Input Directory', 'sourceUrl': input_Directory}] 
+
+    # Define parameterSet
+    input_filename = 'Istanbul.py'
+    parameterSet = {  
+        'envVariables': [
+            {'key': 'inputScript', 'value': input_filename},
+        ]
     }
 
-    # Generate a timestamp to append to the job name an
-    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')  # noqa: DTZ005
-    jobname = f'PhysicsBasedMotion_Istanbul_{username}_{timestamp}'
+    # Generate a timestamp to append to the job name
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')  
+    jobname = f'PhysicsBasedMotion_Istanbul_{t.username}_{timestamp}'
 
-    print('Submitting job')  # noqa: T201
-    # submit the job
-    jobdict['name'] = jobname
-    jobdict['inputs']['inputDirectory'] = (
-        f'agave://designsafe.storage.default/{username}/physics_based/Istanbul/'
-    )
+    jobdict = {
+        'name': jobname,
+        'appId': 'SimCenter-DesignSafeVM',
+        'appVersion': '0.0.1',
+        'execSystemId': 'wma-exec-01',
+        'nodeCount': 1,
+        'coresPerNode': 1,
+        'maxMinutes': 30,
+        'archiveOnAppError': True,
+        'archiveSystemId': 'designsafe.storage.default',
+        'archiveSystemDir': f'{t.username}/physics_based/Istanbul/',
+        'fileInputs': fileInputs,
+        'parameterSet': parameterSet,
+        'tags': ['portalName: DESIGNSAFE'],
+    }
 
-    # %%
-    res = ag.jobs.submit(body=jobdict)
-    jobid = res['id']
-    status = ''
-    last_status = ''
-    count = 0
-    while status != 'FINISHED':
-        status = ag.jobs.getStatus(jobId=jobid)['status']
-        if count == 0:
-            last_status = status
-            print('Job status: ', status)  # noqa: T201
-        count += 1
-        if last_status != status:
-            print('Job status: ', status)  # noqa: T201
-            last_status = status
-        if status == 'FAILED':
-            print('Job failed')  # noqa: T201
+    print('Submitting job')  
+    res = t.jobs.submitJob(**jobdict)
+    job_uuid = res.uuid
+
+    # Monitor job status
+    tlapse = 10
+    status = t.jobs.getJobStatus(jobUuid=job_uuid).status
+    previous = status
+    print(f'Job status: {status}') 
+    
+    while True:
+        if status in ['FINISHED', 'FAILED', 'STOPPED', 'CANCELLED']:
             break
+            
+        time.sleep(tlapse)
+        status = t.jobs.getJobStatus(jobUuid=job_uuid).status
+        
+        if status != previous:
+            print(f'Job status: {status}') 
+            previous = status
 
-        time.sleep(10)
+    # Download results
+    print('Downloading extracted motions')  
+    archivePath = t.jobs.getJob(jobUuid=job_uuid).archiveSystemDir  
+    archivePath = f'{archivePath}/Istanbul/Events'  
+    
+    try:
+        files = t.files.listFiles(
+            systemId='designsafe.storage.default', path=archivePath
+        )
 
-    # %%
-    print('Downloading extracted motions')  # noqa: T201
-    archivePath = ag.jobs.get(jobId=jobid)['archivePath']  # noqa: N806
-    archivePath = f'{archivePath}/Istanbul/Events/'  # noqa: N806
+        if len(files) <= 1:
+            print('No files in the archive') 
+        else:
+            for file in files:
+                filename = file.name
+                if filename == '.':
+                    continue
+                    
+                path = f'{archivePath}/{filename}'
+                res = t.files.getContents(
+                    systemId='designsafe.storage.default', path=path
+                )
 
-    files = ag.files.list(
-        filePath=archivePath, systemId='designsafe.storage.default'
-    )
-    # %%
-    if len(files) <= 1:
-        print('No files in the archive')  # noqa: T201
-    else:
-        for file in files:
-            filename = file['name']
-            if filename == '.':
-                continue
-            path = f'{archivePath}/{filename}'
-            res = ag.files.download(
-                filePath=path, systemId='designsafe.storage.default'
-            )
-            with open(f'{savingDirectory}/{filename}', 'wb') as f:  # noqa: PTH123
-                f.write(res.content)
-    # %%
+                with open(f'{savingDirectory}/{filename}', 'w') as f:  
+                    f.write(res.decode('utf-8'))
+                
+            print('Files downloaded') 
+            print('Please check the directory for the extracted motions')  
+    except Exception as e:
+        print(f'Error downloading files: {e}')  
+
+    return res
