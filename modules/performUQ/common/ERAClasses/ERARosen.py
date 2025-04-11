@@ -1,6 +1,6 @@
 # import of modules  # noqa: INP001, D100
 import matplotlib.pyplot as plt
-import networkx as nx
+# import networkx as nx
 import numpy as np
 from ERACond import ERACond
 from ERADist import ERADist
@@ -316,63 +316,64 @@ class ERARosen:
 
         return np.squeeze(X)
 
-    # %%
-    def plotGraph(self, opt=False):  # noqa: FBT002, C901, N802
-        """Plots the Bayesian network which defines the dependency
-        between the different distributions.
-        If opt is given as 'numbering' the nodes are named according
-        to their order of input in dist(e.g., the first distribution
-        is named #0, etc.). If no ID was given to a certain
-        distribution, the distribution is also named according to its
-        position in dist, otherwise the property ID is taken as the
-        name of the distribution.
-        """  # noqa: D205, D401
-        n_layer = len(self.Layers)
-        vert = np.flip(np.linspace(0, 1, n_layer))
-        pos_n = dict()  # noqa: C408
-        pos_l = dict()  # noqa: C408
-        for i in range(n_layer):
-            cur_l = self.Layers[i]
-            n_cur = len(cur_l)
-            horiz = np.linspace(0, 1, n_cur + 2)
-            for j in range(n_cur):
-                pos_n[str(cur_l[j])] = (horiz[j + 1], vert[i])
-                pos_l[cur_l[j]] = (horiz[j + 1] + 0.06, vert[i])
+    # sy- commenting out unnessessary lines
+    # # %%
+    # def plotGraph(self, opt=False):  # noqa: FBT002, C901, N802
+    #     """Plots the Bayesian network which defines the dependency
+    #     between the different distributions.
+    #     If opt is given as 'numbering' the nodes are named according
+    #     to their order of input in dist(e.g., the first distribution
+    #     is named #0, etc.). If no ID was given to a certain
+    #     distribution, the distribution is also named according to its
+    #     position in dist, otherwise the property ID is taken as the
+    #     name of the distribution.
+    #     """  # noqa: D205, D401
+    #     n_layer = len(self.Layers)
+    #     vert = np.flip(np.linspace(0, 1, n_layer))
+    #     pos_n = dict()  # noqa: C408
+    #     pos_l = dict()  # noqa: C408
+    #     for i in range(n_layer):
+    #         cur_l = self.Layers[i]
+    #         n_cur = len(cur_l)
+    #         horiz = np.linspace(0, 1, n_cur + 2)
+    #         for j in range(n_cur):
+    #             pos_n[str(cur_l[j])] = (horiz[j + 1], vert[i])
+    #             pos_l[cur_l[j]] = (horiz[j + 1] + 0.06, vert[i])
 
-        n_dim = len(self.Dist)
-        labels = dict()  # noqa: C408
-        if not opt:
-            for i in range(n_dim):
-                if self.Dist[i].ID:
-                    labels[i] = self.Dist[i].ID
-                else:
-                    labels[i] = '#' + str(i)
-        elif opt.lower != 'numbering':
-            for i in range(n_dim):
-                labels[i] = '#' + str(i)
-        else:
-            raise RuntimeError("opt must be given as 'numbering'.")  # noqa: EM101, TRY003
+    #     n_dim = len(self.Dist)
+    #     labels = dict()  # noqa: C408
+    #     if not opt:
+    #         for i in range(n_dim):
+    #             if self.Dist[i].ID:
+    #                 labels[i] = self.Dist[i].ID
+    #             else:
+    #                 labels[i] = '#' + str(i)
+    #     elif opt.lower != 'numbering':
+    #         for i in range(n_dim):
+    #             labels[i] = '#' + str(i)
+    #     else:
+    #         raise RuntimeError("opt must be given as 'numbering'.")  # noqa: EM101, TRY003
 
-        G_Adj = nx.from_numpy_matrix(self.Adjacency)  # noqa: N806
-        G = nx.DiGraph()  # noqa: N806
-        for i in range(1, n_layer):
-            cur_l = self.Layers[i]
-            n_cur = len(cur_l)
-            for j in range(n_cur):
-                s_n = np.array(self.Parents[cur_l[j]], ndmin=1)
-                for k in range(np.size(s_n)):
-                    G.add_edge(str(s_n[k]), str(cur_l[j]))
+    #     G_Adj = nx.from_numpy_matrix(self.Adjacency)  # noqa: N806
+    #     G = nx.DiGraph()  # noqa: N806
+    #     for i in range(1, n_layer):
+    #         cur_l = self.Layers[i]
+    #         n_cur = len(cur_l)
+    #         for j in range(n_cur):
+    #             s_n = np.array(self.Parents[cur_l[j]], ndmin=1)
+    #             for k in range(np.size(s_n)):
+    #                 G.add_edge(str(s_n[k]), str(cur_l[j]))
 
-        nx.draw(
-            G,
-            pos_n,
-            node_color='k',
-            alpha=0.3,
-            node_size=100,
-            arrowsize=20,
-            arrows=True,
-        )
-        nx.draw_networkx_labels(G_Adj, pos_l, labels, colors='r', font_size=15)
-        plt.xlim([-0.05, 1.05])
-        plt.ylim([-0.1, 1.1])
-        plt.show()
+    #     nx.draw(
+    #         G,
+    #         pos_n,
+    #         node_color='k',
+    #         alpha=0.3,
+    #         node_size=100,
+    #         arrowsize=20,
+    #         arrows=True,
+    #     )
+    #     nx.draw_networkx_labels(G_Adj, pos_l, labels, colors='r', font_size=15)
+    #     plt.xlim([-0.05, 1.05])
+    #     plt.ylim([-0.1, 1.1])
+    #     plt.show()
