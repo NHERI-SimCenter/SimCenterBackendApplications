@@ -12,6 +12,7 @@ import os
 import sys
 import time
 import traceback
+import warnings
 from functools import partial
 from pathlib import Path
 from typing import Literal
@@ -21,10 +22,6 @@ import convergence_metrics
 import numpy as np
 import pandas as pd
 import pydantic
-
-# sys.path.append(
-#     "/Users/aakash/SimCenter/SimCenterBackendApplications/modules/performUQ/common"
-# )
 import uq_utilities
 from adaptive_doe import AdaptiveDesignOfExperiments
 from gp_model import GaussianProcessModel
@@ -33,6 +30,8 @@ from scipy.special import logsumexp
 from scipy.stats import invgamma, norm
 from space_filling_doe import LatinHypercubeSampling
 from tmcmc import TMCMC, calculate_warm_start_stage
+
+# warnings.simplefilter('error', RuntimeWarning)
 
 
 def log_likelihood(prediction_error_vector, prediction_error_variance):
@@ -225,6 +224,8 @@ class GP_AB_Algorithm:
 
         self.num_samples_per_stage = num_samples_per_stage
 
+        self.save_outputs = False
+
     def _evaluate_in_parallel(
         self, func, model_parameters, simulation_number_start=0
     ):
@@ -239,7 +240,6 @@ class GP_AB_Algorithm:
         -------
             np.ndarray: The evaluated outputs.
         """
-        # transformed_samples = self.sample_transformation_function(samples)
         simulation_numbers = np.arange(
             simulation_number_start, simulation_number_start + len(model_parameters)
         )
@@ -315,10 +315,6 @@ class GP_AB_Algorithm:
         -------
             np.ndarray: The approximated log-likelihood values.
         """
-        # u_values = np.atleast_2d(samples[:, : self.input_dimension])
-        # model_parameters = self.sample_transformation_function(u_values).reshape(
-        #     u_values.shape
-        # )
         predictions = response_approximation_function(model_parameters)
         log_likes = self._log_like(predictions)
         return log_likes  # noqa: RET504
@@ -334,8 +330,6 @@ class GP_AB_Algorithm:
         -------
             np.ndarray: The log-prior PDF values.
         """
-        # u_values = samples[:, : self.input_dimension]
-        # model_parameters = self.sample_transformation_function(u_values)
         log_prior_model_parameters = np.log(
             self.prior_pdf_function(model_parameters)
         ).reshape((-1, 1))
@@ -374,7 +368,7 @@ class GP_AB_Algorithm:
         )
         return loocv_measure  # noqa: RET504
 
-    def run_iteration(self, k):
+    def run_iteration(self, k):  # noqa: C901
         """
         Run a single iteration of the GP-AB Algorithm.
 
@@ -669,7 +663,7 @@ class GP_AB_Algorithm:
         elif isinstance(obj, tuple):
             return tuple(self._make_json_serializable(item) for item in obj)
         elif isinstance(obj, np.ndarray):
-            return obj.tolist()
+            return self._make_json_serializable(obj.tolist())  # Recurse on elements
         elif isinstance(obj, (np.integer, int)):
             return int(obj)
         elif isinstance(obj, (np.floating, float)):
@@ -687,15 +681,21 @@ class GP_AB_Algorithm:
         data = {
             'iteration_number': self.iteration_number,
             'inputs': self.inputs[: len(self.gp_prediction_mean)],
-            'outputs': self.outputs[: len(self.gp_prediction_mean)],
-            'gp_prediction_mean': self.gp_prediction_mean,
-            'loo_predictions': self.loo_predictions,
             'exploitation_training_points': self.exploitation_training_points,
             'exploration_training_points': self.exploration_training_points,
             'num_latent_variables': self.current_pca.n_components,
             'explained_variance_ratio': self.current_pca.pca.explained_variance_ratio_,
             'gp_recalibrated': self.gp_recalibrated,
         }
+
+        if self.save_outputs:
+            data.update(
+                {
+                    'outputs': self.outputs[: len(self.gp_prediction_mean)],
+                    'gp_prediction_mean': self.gp_prediction_mean,
+                    'loo_predictions': self.loo_predictions,
+                }
+            )
 
         if self.iteration_number > 0:
             data.update(
