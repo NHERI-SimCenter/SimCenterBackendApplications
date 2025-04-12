@@ -3,8 +3,11 @@
 import math
 
 import numpy as np
+from safer_cholesky import SaferCholesky
 from scipy.optimize import root_scalar
 from scipy.special import logsumexp
+
+safer_cholesky = SaferCholesky(debug=True)
 
 
 def _calculate_weights_warm_start(
@@ -224,7 +227,10 @@ def _run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
         samples, weights, scale_factor
     )
     try:
-        cholesky_lower_triangular_matrix = np.linalg.cholesky(proposal_covariance)
+        # cholesky_lower_triangular_matrix = np.linalg.cholesky(proposal_covariance)
+        cholesky_lower_triangular_matrix = safer_cholesky.decompose(
+            proposal_covariance
+        )
     except np.linalg.LinAlgError as exc:
         msg = f'Cholesky decomposition failed: {exc}'
         raise RuntimeError(msg) from exc
@@ -264,9 +270,14 @@ def _run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
                 proposal_covariance = _get_scaled_proposal_covariance(
                     current_samples, weights, scale_factor
                 )
-                cholesky_lower_triangular_matrix = np.linalg.cholesky(
-                    proposal_covariance
-                )
+                try:
+                    # cholesky_lower_triangular_matrix = np.linalg.cholesky(proposal_covariance)
+                    cholesky_lower_triangular_matrix = safer_cholesky.decompose(
+                        proposal_covariance
+                    )
+                except np.linalg.LinAlgError as exc:
+                    msg = f'Cholesky decomposition failed: {exc}'
+                    raise RuntimeError(msg) from exc
 
             standard_normal_samples = rng.standard_normal(
                 size=current_samples.shape[1]
