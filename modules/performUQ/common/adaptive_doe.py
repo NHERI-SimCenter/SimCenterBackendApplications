@@ -1,7 +1,6 @@
 """Implements an adaptive design of experiments strategy using Gaussian Process (GP) and Principal Component Analysis (PCA)."""
 
 import numpy as np
-from space_filling_doe import LatinHypercubeSampling
 
 
 class AdaptiveDesignOfExperiments:
@@ -49,11 +48,11 @@ class AdaptiveDesignOfExperiments:
         self.pca = pca
         self.domain = domain
 
-        self._lengthscale_for_doe()
+        self._hyperparameters_for_doe()
         self._kernel_for_doe()
         self._gp_for_doe()
 
-    def _lengthscale_for_doe(self):
+    def _hyperparameters_for_doe(self):
         """
         Compute the lengthscale for the design of experiments.
 
@@ -64,11 +63,16 @@ class AdaptiveDesignOfExperiments:
         -------
             float: The computed lengthscale.
         """
-        eigenvalues = self.pca.pca.explained_variance_
+        n_components = self.pca.n_components
+        eigenvalues = self.pca.pca.explained_variance_[:n_components]
         w = eigenvalues / np.sum(eigenvalues)
-        lengthscales = np.atleast_2d(self.gp_model.kernel.lengthscale)
-        self.lengthscale_star = np.sum(w * lengthscales)
-        return self.lengthscale_star
+
+        hyperparameters_matrix = [
+            np.atleast_2d(model.kern.param_array) for model in self.gp_model.model
+        ]
+        hyperparameters_matrix = np.vstack(hyperparameters_matrix)
+        self.pca_weighted_hyperparamters = np.dot(w, hyperparameters_matrix)
+        return self.pca_weighted_hyperparamters
 
     def _kernel_for_doe(self):
         """
@@ -81,7 +85,7 @@ class AdaptiveDesignOfExperiments:
             Kernel: The created kernel.
         """
         self.kernel = self.gp_model.kernel.copy()
-        self.kernel.lengthscale = self.lengthscale_star
+        self.kernel.param_array[:] = self.pca_weighted_hyperparamters
         return self.kernel
 
     def _gp_for_doe(self):
@@ -95,10 +99,10 @@ class AdaptiveDesignOfExperiments:
             GaussianProcessRegressor: The created GP model.
         """
         self.gp_model_for_doe = self.gp_model.model[0].copy()
-        self.gp_model_for_doe.kernel = self.kernel
+        self.gp_model_for_doe.kern = self.kernel
         return self.gp_model_for_doe
 
-    def _imse_w_approximation(self, x_train, mci_samples, candidate_training_points):
+    def _imse_w_approximation(self, x_train, mci_samples):
         """
         Compute the IMSE approximation for candidate training points.
 
@@ -106,12 +110,12 @@ class AdaptiveDesignOfExperiments:
         ----------
             X_train (array-like): The current training data.
             mci_samples (array-like): Monte Carlo integration samples.
-            candidate_training_points (array-like): Candidate training points.
 
         Returns
         -------
             array: The IMSE values for the candidate training points.
         """
+        candidate_training_points = mci_samples
         self.gp_model_for_doe.set_XY(
             x_train,
             np.zeros((x_train.shape[0], 1)),
@@ -129,7 +133,15 @@ class AdaptiveDesignOfExperiments:
             )
         return imse
 
-    def select_training_points(self, x_train, n_points, mci_samples, n_candidates):
+    def _mse_approximation(self, x_train, mci_samples):
+        self.gp_model_for_doe.set_XY(
+            x_train,
+            np.zeros((x_train.shape[0], 1)),
+        )
+        _, pred_var = self.gp_model_for_doe.predict(mci_samples)
+        return np.reshape(pred_var, (-1, 1))
+
+    def select_training_points(self, x_train, n_points, mci_samples, use_mse=True):  # noqa: FBT002
         """
         Select new training points based on the IMSE criterion.
 
@@ -144,15 +156,12 @@ class AdaptiveDesignOfExperiments:
         -------
             array: The selected new training points.
         """
-        dimension = x_train.shape[1]
+        if use_mse:
+            acquisition_function = self._mse_approximation
+        else:
+            acquisition_function = self._imse_w_approximation
         for _ in range(n_points):
-            lhs = LatinHypercubeSampling(
-                n_samples=n_candidates, n_dimensions=dimension
-            )
-            candidate_training_points = lhs.generate(self.domain)
-            imse = self._imse_w_approximation(
-                x_train, mci_samples, candidate_training_points
-            )
-            next_training_point = candidate_training_points[np.argmax(imse)]
+            acquisition_function_values = acquisition_function(x_train, mci_samples)
+            next_training_point = mci_samples[np.argmax(acquisition_function_values)]
             x_train = np.vstack((x_train, next_training_point))
         return x_train[-n_points:, :]
