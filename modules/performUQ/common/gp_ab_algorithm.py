@@ -9,6 +9,7 @@ import argparse
 import importlib
 import json
 import os
+import shutil
 import sys
 import time
 import traceback
@@ -134,7 +135,8 @@ class GP_AB_Algorithm:
         num_samples_per_stage=5000,
         gkl_threshold=0.01,
         gmap_threshold=0.01,
-        batch_size=2,
+        batch_size_factor=2,
+        num_candidate_training_points=4000,
     ):
         """
         Initialize the GP_AB_Algorithm class.
@@ -203,7 +205,8 @@ class GP_AB_Algorithm:
 
         self.gcv_threshold = gcv_threshold
 
-        self.batch_size = batch_size
+        self.batch_size_factor = batch_size_factor
+        self.num_candidate_training_points = num_candidate_training_points
 
         self.results = {}
         self.current_gp_model = GaussianProcessModel(
@@ -577,26 +580,37 @@ class GP_AB_Algorithm:
             return self.terminate, self.results
 
         # Step 4.1: Select variance for DoE
-        n_training_points = self.batch_size * self.input_dimension
+        n_training_points = self.batch_size_factor * self.input_dimension
         self.exploitation_proportion = 0.5  # TODO (ABS): adapt based on gcv value
         n_exploit = int(np.floor(self.exploitation_proportion * n_training_points))
         n_explore = n_training_points - n_exploit
-        num_tmcmc_intermediate_stages = self.num_tmcmc_stages - 1
-        self.stage_weights = np.ones(num_tmcmc_intermediate_stages)
 
         current_doe = AdaptiveDesignOfExperiments(
             self.current_gp_model, self.current_pca, self.domain
         )
 
         # Step 4.2: Exploitation DoE
+        stages_after_warm_start = list(range(self.j_star, self.num_tmcmc_stages))
+        self.stage_weights = np.ones(len(stages_after_warm_start))
+
+        candidate_training_points_exploitation = self.current_posterior_samples  # TODO (ABS): use samples from intermediate stages according to adaptive weights
         self.exploitation_training_points = current_doe.select_training_points(
-            self.inputs, n_exploit, self.current_posterior_samples, 1000
+            self.inputs,
+            n_exploit,
+            candidate_training_points_exploitation,
+            use_mse=True,
         )
         self.inputs = np.vstack([self.inputs, self.exploitation_training_points])
 
         # Step 4.3: Exploration DoE
+        candidate_training_points_exploration = self.sample_transformation_function(
+            self._perform_initial_doe(self.num_candidate_training_points)
+        )
         self.exploration_training_points = current_doe.select_training_points(
-            self.inputs, n_explore, self.current_posterior_samples, 1000
+            self.inputs,
+            n_explore,
+            candidate_training_points_exploration,
+            use_mse=False,
         )
         self.inputs = np.vstack([self.inputs, self.exploration_training_points])
 
@@ -804,6 +818,10 @@ def preprocess(input_arguments):
         edp_inputs,
         application_inputs,
     ) = read_inputs(input_file_full_path)
+
+    src = input_arguments.path_to_template_directory / uq_inputs.calDataFile
+    dst = input_arguments.path_to_working_directory / uq_inputs.calDataFile
+    shutil.move(src, dst)
 
     data_file = input_arguments.path_to_working_directory / uq_inputs.calDataFile
     with data_file.open() as f:
