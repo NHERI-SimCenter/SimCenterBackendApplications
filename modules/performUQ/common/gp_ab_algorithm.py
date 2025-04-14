@@ -230,7 +230,7 @@ class GP_AB_Algorithm:
 
         self.num_samples_per_stage = num_samples_per_stage
 
-        self.save_outputs = False
+        self.save_outputs = True
 
     def _evaluate_in_parallel(
         self, func, model_parameters, simulation_number_start=0
@@ -289,23 +289,65 @@ class GP_AB_Algorithm:
         outputs = self._evaluate_in_parallel(self.model_evaluation_function, inputs)
         return inputs, outputs
 
+    # def _log_like(self, predictions):
+    #     nd, ny = self.data.shape
+    #     nynd = ny * nd
+    #     epsilon = 1e-12  # to handle cases where the variance is zero
+
+    #     sum_y2 = np.sum(self.data**2, axis=0) + epsilon
+
+    #     log_likes = []
+    #     num_samples = predictions.shape[0]
+    #     for i in range(num_samples):
+    #         prediction_errors = self.data - predictions[i, :].reshape((1, ny))
+    #         sse = np.sum(prediction_errors**2, axis=0) + epsilon
+    #         log_ratios = np.log(sse) - np.log(sum_y2)
+    #         log_sum = logsumexp(log_ratios)
+    #         ll = -0.5 * nynd * log_sum
+    #         log_likes.append(ll)
+    #     return np.array(log_likes).reshape((num_samples, 1))
+
     def _log_like(self, predictions):
-        nd, ny = self.data.shape
-        nynd = ny * nd
-        epsilon = 1e-12  # to handle cases where the variance is zero
-
-        sum_y2 = np.sum(self.data**2, axis=0) + epsilon
-
-        log_likes = []
+        predictions = np.atleast_2d(predictions)
+        nd, total_ny = self.data.shape
+        num_outputs = len(self.output_length_list)
         num_samples = predictions.shape[0]
-        for i in range(num_samples):
-            prediction_errors = self.data - predictions[i, :].reshape((1, ny))
-            sse = np.sum(prediction_errors**2, axis=0) + epsilon
-            log_ratios = np.log(sse) - np.log(sum_y2)
-            log_sum = logsumexp(log_ratios)
-            ll = -0.5 * nynd * log_sum
-            log_likes.append(ll)
-        return np.array(log_likes).reshape((num_samples, 1))
+
+        # Precompute weights: w_i = 1 / mean(y_obs_i^2)
+        weights = []
+        start = 0
+        for length in self.output_length_list:
+            end = start + length
+            y_obs = self.data[:, start:end]
+            mse = np.mean(y_obs**2)
+            weights.append(1.0 / (mse + 1e-12))
+            start = end
+
+        # Stack results for all output groups
+        weighted_sse_per_sample = np.zeros(num_samples)
+        start = 0
+
+        for j, length in enumerate(self.output_length_list):
+            end = start + length
+            y_obs = self.data[:, start:end]  # shape (nd, d_j)
+            y_obs_exp = y_obs[None, :, :]  # shape (1, nd, d_j)
+
+            # predictions[:, start:end]: shape (num_samples, d_j)
+            # broadcast to shape (num_samples, nd, d_j)
+            y_pred_exp = predictions[:, start:end][
+                :, None, :
+            ]  # shape (num_samples, 1, d_j)
+            err = y_obs_exp - y_pred_exp  # shape (num_samples, nd, d_j)
+
+            sse = np.einsum('ijk,ijk->i', err, err)  # shape (num_samples,)
+            weighted_sse_per_sample += weights[j] * sse
+
+            start = end
+
+        # Compute log-likelihood
+        exponent = -0.5 * nd * num_outputs
+        log_likes = exponent * np.log(weighted_sse_per_sample + 1e-12)
+        return log_likes.reshape((num_samples, 1))
 
     def _log_likelihood_approximation(
         self, response_approximation_function, model_parameters
