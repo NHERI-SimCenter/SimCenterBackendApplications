@@ -1,9 +1,13 @@
 """Module for creating and using Gaussian Process models with the GaussianProcessModel class."""
 
+import logging
+
 import GPy
 import numpy as np
 from GPy.mappings import Additive, Constant, Linear
 from scipy.linalg import cho_solve
+
+logger = logging.getLogger(__name__)
 
 
 class GaussianProcessModel:
@@ -129,30 +133,70 @@ class GaussianProcessModel:
 
         return y_mean, y_var
 
-    def loo_predictions(self, y_train):
+    # def loo_predictions(self, y_train):
+    #     """
+    #     Calculate the Leave-One-Out (LOO) predictions.
+
+    #     Args:
+    #         y_train (np.ndarray): The output training data.
+
+    #     Returns
+    #     -------
+    #         np.ndarray: The LOO predictions.
+    #     """
+    #     loo_pred = np.zeros_like(y_train)
+    #     for i in range(self.output_dimension):
+    #         cholesky_factor = self.model[i].posterior.K_chol
+    #         alpha = cho_solve(
+    #             (cholesky_factor, True), np.reshape(y_train[:, i], (-1, 1))
+    #         )
+    #         cholesky_factor_inverse = cho_solve(
+    #             (cholesky_factor, True), np.eye(cholesky_factor.shape[0])
+    #         )
+    #         k_inv_diag = np.reshape(
+    #             np.sum(cholesky_factor_inverse**2, axis=1), (-1, 1)
+    #         )
+    #         loo_pred[:, i] = (
+    #             np.reshape(y_train[:, i], (-1, 1)) - alpha / k_inv_diag
+    #         ).flatten()
+    #     return loo_pred
+
+    def loo_predictions(self, y_train, epsilon=1e-8):
         """
         Calculate the Leave-One-Out (LOO) predictions.
 
         Args:
-            y_train (np.ndarray): The output training data.
+            y_train (np.ndarray): The output training data. Shape: (N, output_dimension)
+            epsilon (float): Small value added to diag_Kinv only where it's zero.
 
         Returns
         -------
-            np.ndarray: The LOO predictions.
+            np.ndarray: The LOO predictions. Shape: (N, output_dimension)
         """
-        loo_pred = np.zeros_like(y_train)
+        if not hasattr(self.model[0], 'posterior'):
+            msg = (
+                'Model must be trained (optimized) before computing LOO predictions.'
+            )
+            raise ValueError(msg)
+
+        loo_pred = np.zeros_like(y_train, dtype=np.float64)
+
         for i in range(self.output_dimension):
-            cholesky_factor = self.model[i].posterior.K_chol
-            alpha = cho_solve(
-                (cholesky_factor, True), np.reshape(y_train[:, i], (-1, 1))
+            posterior = self.model[i].posterior
+            alpha = posterior.woodbury_vector  # (N, 1)
+            k_inverse = posterior.woodbury_inv  # (N, N)
+            diagonal_k_inverse = np.diag(k_inverse)
+
+            if np.any(diagonal_k_inverse == 0):
+                logger.warning(
+                    f'Zero detected on diagonal of Woodbury inverse for output {i}. '
+                    f'Adding epsilon={epsilon} to avoid division by zero.'
+                )
+                diagonal_k_inverse = np.where(
+                    diagonal_k_inverse == 0, epsilon, diagonal_k_inverse
+                )
+            loo_pred[:, i] = y_train[:, i].flatten() - (
+                alpha.flatten() / diagonal_k_inverse
             )
-            cholesky_factor_inverse = cho_solve(
-                (cholesky_factor, True), np.eye(cholesky_factor.shape[0])
-            )
-            k_inv_diag = np.reshape(
-                np.sum(cholesky_factor_inverse**2, axis=1), (-1, 1)
-            )
-            loo_pred[:, i] = (
-                np.reshape(y_train[:, i], (-1, 1)) - alpha / k_inv_diag
-            ).flatten()
+
         return loo_pred
