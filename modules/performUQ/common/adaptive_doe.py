@@ -14,7 +14,6 @@ class AdaptiveDesignOfExperiments:
     ----------
         gp_model (list): List of Gaussian Process models.
         pca (PCA): Principal Component Analysis object.
-        domain (array-like): The domain of the input space.
 
     Methods
     -------
@@ -34,7 +33,7 @@ class AdaptiveDesignOfExperiments:
             Select new training points based on the IMSE criterion.
     """
 
-    def __init__(self, gp_model, pca, domain):
+    def __init__(self, gp_model, pca):
         """
         Initialize the AdaptiveDesignOfExperiments class.
 
@@ -42,11 +41,9 @@ class AdaptiveDesignOfExperiments:
         ----------
             gp_model (list): List of Gaussian Process models.
             pca (PCA): Principal Component Analysis object.
-            domain (array-like): The domain of the input space.
         """
         self.gp_model = gp_model
         self.pca = pca
-        self.domain = domain
 
         self._hyperparameters_for_doe()
         self._kernel_for_doe()

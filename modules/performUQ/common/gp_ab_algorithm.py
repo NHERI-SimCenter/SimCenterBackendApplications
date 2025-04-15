@@ -629,7 +629,7 @@ class GP_AB_Algorithm:
         n_explore = n_training_points - n_exploit
 
         current_doe = AdaptiveDesignOfExperiments(
-            self.current_gp_model, self.current_pca, self.domain
+            self.current_gp_model, self.current_pca
         )
 
         # Step 4.2: Exploitation DoE
