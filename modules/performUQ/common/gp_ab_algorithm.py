@@ -310,7 +310,6 @@ class GP_AB_Algorithm:
     def _log_like(self, predictions):
         predictions = np.atleast_2d(predictions)
         nd, total_ny = self.data.shape
-        num_outputs = len(self.output_length_list)
         num_samples = predictions.shape[0]
 
         # Precompute weights: w_i = 1 / mean(y_obs_i^2)
@@ -345,7 +344,7 @@ class GP_AB_Algorithm:
             start = end
 
         # Compute log-likelihood
-        exponent = -0.5 * nd * num_outputs
+        exponent = -0.5 * nd * total_ny
         log_likes = exponent * np.log(weighted_sse_per_sample + 1e-12)
         return log_likes.reshape((num_samples, 1))
 
@@ -689,7 +688,7 @@ class GP_AB_Algorithm:
         inputs, outputs = self._get_initial_training_set(num_initial_doe_samples)
         return inputs, outputs, num_initial_doe_samples
 
-    def save_tabular_results(
+    def save_tabular_results(  # noqa: D102
         self,
         samples,
         predictions,
@@ -698,8 +697,9 @@ class GP_AB_Algorithm:
         output_length_list,
         iteration_number,
         output_dir: Path,
+        terminate: bool = False,  # noqa: FBT001, FBT002
     ):
-        # Step 1: Construct headers
+        # Step 1: Construct prediction headers
         pred_headers = []
         for name, length in zip(output_names_list, output_length_list):
             if length == 1:
@@ -707,16 +707,51 @@ class GP_AB_Algorithm:
             else:
                 pred_headers.extend([f'{name}_{i+1}' for i in range(length)])
 
-        # Step 2: Create DataFrame
-        tabular_data = pd.DataFrame(samples, columns=rv_names_list)
+        # Step 2: Create base dataframes
+        df_samples = pd.DataFrame(samples, columns=rv_names_list)
+        df_preds = pd.DataFrame(predictions, columns=pred_headers)
+        df_combined = pd.concat([df_samples, df_preds], axis=1)
 
-        pred_df = pd.DataFrame(predictions, columns=pred_headers)
-        df_combined = pd.concat([tabular_data, pred_df], axis=1)
+        # Step 3: Save regular tabular result file
+        tsv_path = output_dir / f'tabular_results_{iteration_number}.txt'
+        df_combined.to_csv(tsv_path, sep='\t', index=False)
+        print(f'Saved: {tsv_path}')
 
-        # Step 3: Save to TSV
-        filename = output_dir / f'tabular_results_{iteration_number}.txt'
-        df_combined.to_csv(filename, sep='\t', index=False)
-        print(f'Saved: {filename}')
+        # Step 4: If terminate, create dakotaTab and dakotaTabPrior
+        if terminate:
+            # --- COMMON HEADER PREP ---
+            final_headers = ['eval_id', 'interface'] + rv_names_list + pred_headers
+
+            # --- dakotaTab.out ---
+            n_samples = len(df_combined)
+            df_combined_with_meta = df_combined.copy()
+            df_combined_with_meta.insert(0, 'interface', 1)
+            df_combined_with_meta.insert(0, 'eval_id', range(1, n_samples + 1))
+            dakota_tab_path = 'dakotaTab.out'
+            df_combined_with_meta.to_csv(
+                dakota_tab_path, sep='\t', index=False, header=final_headers
+            )
+            print(f'Saved: {dakota_tab_path}')
+
+            # --- dakotaTabPrior.out ---
+            prior_samples = self.results['model_parameters_dict'][0]
+            prior_predictions = _response_approximation(
+                self.current_gp_model, self.current_pca, prior_samples
+            )
+
+            df_prior_samples = pd.DataFrame(prior_samples, columns=rv_names_list)
+            df_prior_preds = pd.DataFrame(prior_predictions, columns=pred_headers)
+            df_prior_combined = pd.concat([df_prior_samples, df_prior_preds], axis=1)
+            df_prior_combined.insert(0, 'interface', 1)
+            df_prior_combined.insert(
+                0, 'eval_id', range(1, len(df_prior_combined) + 1)
+            )
+
+            dakota_tab_prior_path = 'dakotaTabPrior.out'
+            df_prior_combined.to_csv(
+                dakota_tab_prior_path, sep='\t', index=False, header=final_headers
+            )
+            print(f'Saved: {dakota_tab_prior_path}')
 
     def _make_json_serializable(self, obj):
         """Recursively convert NumPy and other non-serializable types to JSON-serializable Python types."""
@@ -806,6 +841,7 @@ class GP_AB_Algorithm:
             output_length_list=self.output_length_list,
             iteration_number=self.iteration_number,
             output_dir=res_dir,
+            terminate=self.terminate,
         )
 
 
@@ -1054,6 +1090,16 @@ def main(command_args=None):
 
         # Change to the working directory
         os.chdir(args['path_to_working_directory'])
+
+        # Create logFileTMCMC.txt
+        log_file_tmcmc = args['path_to_working_directory'] / 'logFileTMCMC.txt'
+        log_file_tmcmc.touch(exist_ok=True)
+
+        # Create quoFEMTempCalibrationDataFile.cal
+        cal_data_file = (
+            args['path_to_working_directory'] / 'quoFEMTempCalibrationDataFile.cal'
+        )
+        cal_data_file.touch(exist_ok=True)
 
         # Validate input arguments
         input_arguments = InputArguments.model_validate(args)

@@ -29,7 +29,7 @@ class SaferCholesky:
         dump_dir (str): Directory to save matrices for failed decompositions.
     """
 
-    def __init__(self, *, debug=False, dump_dir='matrix_dumps'):
+    def __init__(self, *, debug=False, dump_dir='../matrix_dumps'):
         self.debug = debug
         self.dump_dir = dump_dir
 
