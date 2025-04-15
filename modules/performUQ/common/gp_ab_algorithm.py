@@ -255,7 +255,7 @@ class GP_AB_Algorithm:
         )
         return outputs  # noqa: RET504
 
-    def _perform_initial_doe(self, n_samples):
+    def _perform_space_filling_doe(self, n_samples):
         """
         Perform the initial Design of Experiments (DoE) using Latin Hypercube Sampling.
 
@@ -266,10 +266,10 @@ class GP_AB_Algorithm:
         -------
             np.ndarray: The generated samples.
         """
-        self.initial_doe = LatinHypercubeSampling(
+        self.space_filling_design = LatinHypercubeSampling(
             n_samples=n_samples, n_dimensions=self.input_dimension
         )
-        samples = self.initial_doe.generate(self.domain)
+        samples = self.space_filling_design.generate()
         return samples  # noqa: RET504
 
     def _get_initial_training_set(self, n_samples):
@@ -284,7 +284,7 @@ class GP_AB_Algorithm:
             tuple: A tuple containing the inputs and outputs of the initial training set.
         """
         inputs = self.sample_transformation_function(
-            self._perform_initial_doe(n_samples)
+            self._perform_space_filling_doe(n_samples)
         )
         outputs = self._evaluate_in_parallel(self.model_evaluation_function, inputs)
         return inputs, outputs
@@ -533,7 +533,9 @@ class GP_AB_Algorithm:
 
         # Step 2.2: Sequential MC sampling
         if self.j_star == 0:
-            initial_samples = self._perform_initial_doe(self.num_samples_per_stage)
+            initial_samples = self._perform_space_filling_doe(
+                self.num_samples_per_stage
+            )
             model_parameters_initial = self.sample_transformation_function(
                 initial_samples
             )
@@ -645,7 +647,7 @@ class GP_AB_Algorithm:
 
         # Step 4.3: Exploration DoE
         candidate_training_points_exploration = self.sample_transformation_function(
-            self._perform_initial_doe(self.num_candidate_training_points)
+            self._perform_space_filling_doe(self.num_candidate_training_points)
         )
         self.exploration_training_points = current_doe.select_training_points(
             self.inputs,
