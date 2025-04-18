@@ -502,7 +502,7 @@ class GP_AB_Algorithm:
         # Step 2.1: Evaluate warm-starting for TMCMC
         tmcmc = TMCMC(
             self.current_log_likelihood_approximation,
-            self.log_posterior_approximation,
+            self._log_prior_pdf,
             self.sample_transformation_function,
         )
 
@@ -603,7 +603,7 @@ class GP_AB_Algorithm:
             self.gmap = convergence_metrics.calculate_gmap(
                 self.current_log_likelihood_approximation,
                 self.previous_log_likelihood_approximation,
-                self.prior_pdf_function,
+                self._log_prior_pdf,
                 combined_samples,
                 self.prior_variances,
             )

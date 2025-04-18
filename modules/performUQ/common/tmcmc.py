@@ -189,7 +189,7 @@ def _run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
     beta,
     rng,
     log_likelihood_function,
-    log_target_density_function,
+    log_prior_density_function,
     sample_transformation_function,
     scale_factor,
     target_acceptance_rate,
@@ -290,19 +290,32 @@ def _run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
             proposed_model_parameter = np.reshape(
                 sample_transformation_function(proposed_state), proposed_state.shape
             )
-
             log_likelihood_at_proposed_model_parameter = log_likelihood_function(
                 proposed_model_parameter
             )
-            log_target_density_at_proposed_model_parameter = (
-                log_target_density_function(
-                    proposed_model_parameter,
-                    log_likelihood_at_proposed_model_parameter,
-                )
+            log_prior_density_at_proposed_model_parameter = (
+                log_prior_density_function(proposed_model_parameter)
             )
+            log_target_density_at_proposed_model_parameter = (
+                new_beta * log_likelihood_at_proposed_model_parameter
+                + log_prior_density_at_proposed_model_parameter
+            )
+
+            current_model_parameter = current_model_parameters[index, :]
+            log_likelihood_at_current_model_parameter = (
+                current_log_likelihood_values[index]
+            )
+            log_prior_density_at_current_parameter = log_prior_density_function(
+                current_model_parameter
+            )
+            log_target_density_at_current_parameter = (
+                new_beta * log_likelihood_at_current_model_parameter
+                + log_prior_density_at_current_parameter
+            )
+
             log_hastings_ratio = (
                 log_target_density_at_proposed_model_parameter
-                - current_log_target_density_values[index]
+                - log_target_density_at_current_parameter
             )
             u = rng.uniform()
             accept = np.log(u) <= log_hastings_ratio
@@ -525,7 +538,7 @@ class TMCMC:
     def __init__(
         self,
         log_likelihood_function,
-        log_target_density_function,
+        log_prior_density_function,
         sample_transformation_function,
         cov_threshold=1,
         num_steps=1,
@@ -544,7 +557,7 @@ class TMCMC:
             adapt_frequency (int, optional): The frequency of adaptation for the proposal distribution. Defaults to 100.
         """
         self._log_likelihood_function = log_likelihood_function
-        self._log_target_density_function = log_target_density_function
+        self._log_prior_density_function = log_prior_density_function
         self._sample_transformation_function = sample_transformation_function
 
         self.num_steps = num_steps
@@ -602,7 +615,7 @@ class TMCMC:
                 betas_dict[stage_num],
                 rng,
                 self._log_likelihood_function,
-                self._log_target_density_function,
+                self._log_prior_density_function,
                 self._sample_transformation_function,
                 self.scale_factor,
                 self.target_acceptance_rate,
