@@ -206,7 +206,7 @@ def _calculate_kl_divergence_log_alpha(
     return kl_divergence_estimate  # noqa: RET504
 
 
-def calculate_gkl_log_alpha(
+def calculate_gkl(
     current_log_likelihood_function,
     previous_log_likelihood_function,
     prior_log_pdf,
