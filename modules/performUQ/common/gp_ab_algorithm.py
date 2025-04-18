@@ -309,7 +309,7 @@ class GP_AB_Algorithm:
 
     def _log_like(self, predictions):
         predictions = np.atleast_2d(predictions)
-        nd, total_ny = self.data.shape
+        num_rows, num_cols = self.data.shape
         num_samples = predictions.shape[0]
 
         # Precompute weights: w_i = 1 / mean(y_obs_i^2)
@@ -344,7 +344,7 @@ class GP_AB_Algorithm:
             start = end
 
         # Compute log-likelihood
-        exponent = -0.5 * nd * total_ny
+        exponent = -0.5 * num_rows * num_cols
         log_likes = exponent * np.log(weighted_sse_per_sample + 1e-12)
         return log_likes.reshape((num_samples, 1))
 
@@ -641,7 +641,8 @@ class GP_AB_Algorithm:
             self.inputs,
             n_exploit,
             candidate_training_points_exploitation,
-            use_mse=True,
+            use_mse_w=True,
+            weights=None,  # TODO (ABS): get weights from KDE
         )
         self.inputs = np.vstack([self.inputs, self.exploitation_training_points])
 
@@ -653,7 +654,8 @@ class GP_AB_Algorithm:
             self.inputs,
             n_explore,
             candidate_training_points_exploration,
-            use_mse=False,
+            use_mse_w=False,
+            weights=None,
         )
         self.inputs = np.vstack([self.inputs, self.exploration_training_points])
 

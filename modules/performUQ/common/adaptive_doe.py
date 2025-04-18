@@ -99,7 +99,7 @@ class AdaptiveDesignOfExperiments:
         self.gp_model_for_doe.kern = self.kernel
         return self.gp_model_for_doe
 
-    def _imse_w_approximation(self, x_train, mci_samples):
+    def _imse_w_approximation(self, x_train, mci_samples, weights=None):  # noqa: ARG002
         """
         Compute the IMSE approximation for candidate training points.
 
@@ -138,7 +138,25 @@ class AdaptiveDesignOfExperiments:
         _, pred_var = self.gp_model_for_doe.predict(mci_samples)
         return np.reshape(pred_var, (-1, 1))
 
-    def select_training_points(self, x_train, n_points, mci_samples, use_mse=True):  # noqa: FBT002
+    def _mse_w_approximation(self, x_train, mci_samples, weights):
+        self.gp_model_for_doe.set_XY(
+            x_train,
+            np.zeros((x_train.shape[0], 1)),
+        )
+        _, pred_var = self.gp_model_for_doe.predict(mci_samples)
+        if weights is None:
+            weights = np.ones_like(pred_var)
+        mse_w = pred_var.flatten() * weights.flatten()
+        return np.reshape(mse_w, (-1, 1))
+
+    def select_training_points(
+        self,
+        x_train,
+        n_points,
+        mci_samples,
+        use_mse_w=True,  # noqa: FBT002
+        weights=None,
+    ):
         """
         Select new training points based on the IMSE criterion.
 
@@ -153,12 +171,14 @@ class AdaptiveDesignOfExperiments:
         -------
             array: The selected new training points.
         """
-        if use_mse:
-            acquisition_function = self._mse_approximation
+        if use_mse_w:
+            acquisition_function = self._mse_w_approximation
         else:
             acquisition_function = self._imse_w_approximation
         for _ in range(n_points):
-            acquisition_function_values = acquisition_function(x_train, mci_samples)
+            acquisition_function_values = acquisition_function(
+                x_train, mci_samples, weights
+            )
             next_training_point = mci_samples[np.argmax(acquisition_function_values)]
             x_train = np.vstack((x_train, next_training_point))
         return x_train[-n_points:, :]
