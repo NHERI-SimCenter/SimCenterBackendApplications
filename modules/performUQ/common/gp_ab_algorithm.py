@@ -409,9 +409,19 @@ class GP_AB_Algorithm:
         -------
             float: The LOOCV measure.
         """
-        loo_predictions = self.current_gp_model.loo_predictions(self.outputs)
+        latent_outputs = self.current_pca.project_to_latent_space(self.outputs)
+        loo_predictions_latent_space = self.current_gp_model.loo_predictions(
+            latent_outputs
+        )
+        loo_predictions = self.current_pca.project_back_to_original_space(
+            loo_predictions_latent_space
+        )
         loocv_measure = convergence_metrics.calculate_gcv(
-            loo_predictions, self.outputs, weights=weights
+            loo_predictions,
+            self.outputs,
+            self.output_length_list,
+            weights=weights,
+            weight_combination=(2 / 3, 1 / 3),
         )
         return loocv_measure  # noqa: RET504
 
@@ -517,7 +527,9 @@ class GP_AB_Algorithm:
         log_evidence_dict = {}
 
         if k > 0:
-            self.gcv = self._calculate_gcv()
+            self.gcv = self._calculate_gcv(
+                weights=None
+            )  # TODO (ABS): provide weights based on KDE
             self.warm_start_possible = self.gcv < self.gcv_threshold
             if self.warm_start_possible:
                 self.j_star = calculate_warm_start_stage(
