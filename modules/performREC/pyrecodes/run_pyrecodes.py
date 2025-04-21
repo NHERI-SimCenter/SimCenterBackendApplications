@@ -1,3 +1,7 @@
+import pyrecodes.resilience_calculator
+import pyrecodes.resilience_calculator.recodes_calculator
+import pyrecodes.resilience_calculator.resilience_calculator
+import pyrecodes.system
 import json, os, shapely, argparse, sys, ujson, importlib  # noqa: I001, E401, D100
 import geopandas as gpd
 import numpy as np
@@ -5,6 +9,7 @@ import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt
 import shutil
+import pickle
 
 # Add the path to the pyrecodes package
 # sys.path.append('/Users/jinyanzhao/Desktop/SimCenterBuild/r2d_pyrecodes')
@@ -74,7 +79,7 @@ def select_realizations_to_run(damage_input, run_dir):
             raise ValueError(msg)
 
     return rlzs_to_run
-def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
+def run_one_realization(main_file, rlz, rwhale_run_dir, system_config, save_pickle_file):
     """
     Run a single realization of the pyrecodes simulation.
 
@@ -127,10 +132,19 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
     if 'PotableWater' in system_config['Resources']:
         resources_to_plot.append('PotableWater')
         units_to_plot.append(system_config['Resources']['PotableWater'].get('Unit', 'unit_PotableWater'))
-
+    if 'TransportationService' in system_config['Resources']:
+        resources_to_plot.append('TransportationService')
+        units_to_plot.append(system_config['Resources']['TransportationService'].get('Unit', 'unit_TransportationService'))
     print(f'Resources to plot {resources_to_plot}')
 
-    plotter_object.save_supply_demand_consumption(system, resources_to_plot)
+    for calculator_i, calculator in enumerate(system.resilience_calculators):
+        if isinstance(calculator, pyrecodes.resilience_calculator.recodes_calculator.ReCoDeSCalculator):
+            resources_to_plot_i = []
+            for resource in resources_to_plot:
+                if resource in calculator.resource_names:
+                    resources_to_plot_i.append(resource)
+            if len(resources_to_plot_i) > 0:
+                plotter_object.save_supply_demand_consumption(system, resources_to_plot_i, calculator_i)
     #    plotter_object.save_component_recovery_progress(system.components[:20])
 
     
@@ -150,8 +164,12 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config):
         plotter_object.save_supply_demand_consumption(system, [resource])
 
         plotter_object.save_component_recovery_progress(system.components)
-    
-    print("MADE IT HERE")
+    if save_pickle_file:
+        # Save the system components as a pickle file
+        with open(f'system_{rlz}.pickle', 'wb') as f:
+            pickle.dump(system.components, f)
+    # Test load the system object from the pickle file
+    # system_loaded = system.load_as_pickle(f'system_{rlz}.pickle')
     
     return True
 
@@ -358,7 +376,8 @@ def run_pyrecodes(  # noqa: C901
         component_library,
         r2d_run_dir,
         input_data_dir,
-        realization
+        realization,
+        save_pickle_file,
 ):
     """
     Run pyrecodes simulation.
@@ -494,7 +513,7 @@ def run_pyrecodes(  # noqa: C901
             main_file_path = modify_main_file(main_file_dict, component_library, rlz_run_dir)
 
             # Run the pyrecodes
-            run_one_realization(main_file_path, rlz, run_dir, system_config)
+            run_one_realization(main_file_path, rlz, run_dir, system_config, save_pickle_file)
 
             # Append the results to the aggregated results dictionary
             results_agg = append_to_results_agg(results_agg, Path(rlz_run_dir / f'Results_{rlz}.json'))
@@ -532,6 +551,12 @@ if __name__ == '__main__':
     workflowArgParser.add_argument(
         '--input', required=False,
         help='R2D JSON input file.',
+    )
+
+    workflowArgParser.add_argument(
+        '--savePickleFile', required=False,
+        default=False,
+        help='If save all pyrecodes results as a pickle file.',
     )
 
     workflowArgParser.add_argument(
@@ -643,5 +668,6 @@ if __name__ == '__main__':
         component_library=wfArgs.ComponentLibraryFile,
         r2d_run_dir=wfArgs.r2dRunDir,
         input_data_dir=wfArgs.inputDataDir,
-        realization=realization_text
+        realization=realization_text,
+        save_pickle_file=wfArgs.savePickleFile
     )
