@@ -743,7 +743,7 @@ class GP_AB_Algorithm:
         )
 
         # Step 4.2: Exploitation DoE
-        start = np.max(1, self.j_star)
+        start = max(1, self.j_star)
         self.stages_after_warm_start = list(range(start, self.num_tmcmc_stages))
         self.stage_weights = np.ones(len(self.stages_after_warm_start))
 
