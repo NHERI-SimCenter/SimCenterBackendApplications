@@ -398,10 +398,15 @@ def calculate_gcv(
         scalar: weighted CV error g_CV
     """
     n_points = outputs.shape[0]
-    # Combine weights
+
     weights_uniform = np.ones(n_points)
     if weights is None:
         weights = np.ones(n_points)
+    # Normalize weights
+    weights_uniform /= np.sum(weights_uniform)  # uniform weights
+    weights /= np.sum(weights)  # normalize
+
+    # Combine weights
     alpha, beta = weight_combination
     # Safety check: weights must sum to 1
     total = alpha + beta
