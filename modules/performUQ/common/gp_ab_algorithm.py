@@ -688,27 +688,35 @@ class GP_AB_Algorithm:
         self.stage_weights = np.ones(len(stages_after_warm_start))
 
         candidate_training_points_exploitation = self.current_posterior_samples  # TODO (ABS): use samples from intermediate stages according to adaptive weights
-        self.exploitation_training_points = current_doe.select_training_points(
-            self.inputs,
-            self.n_exploit,
-            candidate_training_points_exploitation,
-            use_mse_w=True,
-            weights=None,  # TODO (ABS): get weights from KDE
-        )
-        self.inputs = np.vstack([self.inputs, self.exploitation_training_points])
+        self.exploitation_training_points = np.empty(
+            (0, self.input_dimension)
+        )  # initialize as empty 2D array
+        if self.n_exploit > 0:
+            self.exploitation_training_points = current_doe.select_training_points(
+                self.inputs,
+                self.n_exploit,
+                candidate_training_points_exploitation,
+                use_mse_w=True,
+                weights=None,  # TODO (ABS): get weights from KDE
+            )
+            self.inputs = np.vstack([self.inputs, self.exploitation_training_points])
 
         # Step 4.3: Exploration DoE
         candidate_training_points_exploration = self.sample_transformation_function(
             self._perform_space_filling_doe(self.num_candidate_training_points)
         )
-        self.exploration_training_points = current_doe.select_training_points(
-            self.inputs,
-            self.n_explore,
-            candidate_training_points_exploration,
-            use_mse_w=False,
-            weights=None,
-        )
-        self.inputs = np.vstack([self.inputs, self.exploration_training_points])
+        self.exploration_training_points = np.empty(
+            (0, self.input_dimension)
+        )  # initialize as empty 2D array
+        if self.n_explore > 0:
+            self.exploration_training_points = current_doe.select_training_points(
+                self.inputs,
+                self.n_explore,
+                candidate_training_points_exploration,
+                use_mse_w=False,
+                weights=None,
+            )
+            self.inputs = np.vstack([self.inputs, self.exploration_training_points])
 
         self.new_training_points = np.vstack(
             [self.exploitation_training_points, self.exploration_training_points]
