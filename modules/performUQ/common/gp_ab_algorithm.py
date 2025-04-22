@@ -26,6 +26,7 @@ import pydantic
 import uq_utilities
 from adaptive_doe import AdaptiveDesignOfExperiments
 from gp_model import GaussianProcessModel
+from kernel_density_estimation import GaussianKDE
 from principal_component_analysis import PrincipalComponentAnalysis
 from scipy.special import logsumexp
 from scipy.stats import invgamma, norm
@@ -217,6 +218,8 @@ class GP_AB_Algorithm:
             self.pca_threshold, perform_scaling=True
         )
         self.gp_recalibrated = False
+
+        self.kde = None
 
         self.samples_dict = {}
         self.betas_dict = {}
@@ -457,6 +460,62 @@ class GP_AB_Algorithm:
         alpha = (log_g_upper - log_g) / (log_g_upper - log_g_lower)
         return alpha * r_max
 
+    def _get_exploitation_candidates(self):
+        """
+        Assemble candidate training points for exploitation by sampling from TMCMC stages
+        after the warm start, proportionally to the provided stage weights.
+
+        Returns
+        -------
+        np.ndarray:
+            The exploitation candidate training points of shape (n_candidates, n_parameters).
+        dict:
+            Dictionary mapping stage number to the number of points sampled from that stage.
+        """  # noqa: D205
+        stage_weights = np.asarray(
+            self.stage_weights
+        )  # aligned with stages_after_warm_start
+        stage_weights = stage_weights / np.sum(stage_weights)
+
+        n_candidates = self.num_candidate_training_points
+        candidate_training_points_exploitation = []
+        stage_sample_counts = {}
+
+        for stage_idx, stage_num in enumerate(self.stages_after_warm_start):
+            samples_stage = self.results['model_parameters_dict'][stage_num]
+            n_available = samples_stage.shape[0]
+            n_stage_samples = int(np.round(stage_weights[stage_idx] * n_candidates))
+
+            if n_stage_samples >= n_available:
+                selected = samples_stage
+                n_selected = n_available
+            else:
+                selected_indices = np.random.choice(
+                    n_available, size=n_stage_samples, replace=False
+                )
+                selected = samples_stage[selected_indices]
+                n_selected = n_stage_samples
+
+            candidate_training_points_exploitation.append(selected)
+            stage_sample_counts[stage_num] = n_selected
+
+        candidate_training_points_exploitation = np.vstack(
+            candidate_training_points_exploitation
+        )
+
+        # Trim if needed
+        if candidate_training_points_exploitation.shape[0] > n_candidates:
+            trim_indices = np.random.choice(
+                candidate_training_points_exploitation.shape[0],
+                size=n_candidates,
+                replace=False,
+            )
+            candidate_training_points_exploitation = (
+                candidate_training_points_exploitation[trim_indices]
+            )
+
+        return candidate_training_points_exploitation, stage_sample_counts
+
     def run_iteration(self, k):  # noqa: C901
         """
         Run a single iteration of the GP-AB Algorithm.
@@ -559,9 +618,8 @@ class GP_AB_Algorithm:
         log_evidence_dict = {}
 
         if k > 0:
-            self.gcv = self._calculate_gcv(
-                weights=None
-            )  # TODO (ABS): provide weights based on KDE
+            weights = self.kde.evaluate(self.inputs)
+            self.gcv = self._calculate_gcv(weights=weights)
             self.warm_start_possible = self.gcv < self.gcv_threshold
             if self.warm_start_possible:
                 self.j_star = calculate_warm_start_stage(
@@ -684,10 +742,18 @@ class GP_AB_Algorithm:
         )
 
         # Step 4.2: Exploitation DoE
-        stages_after_warm_start = list(range(self.j_star, self.num_tmcmc_stages))
-        self.stage_weights = np.ones(len(stages_after_warm_start))
+        self.stages_after_warm_start = list(
+            range(self.j_star, self.num_tmcmc_stages)
+        )
+        self.stage_weights = np.ones(len(self.stages_after_warm_start))
 
-        candidate_training_points_exploitation = self.current_posterior_samples  # TODO (ABS): use samples from intermediate stages according to adaptive weights
+        candidate_training_points_exploitation, self.stage_sample_counts = (
+            self._get_exploitation_candidates()
+        )
+
+        self.kde = GaussianKDE(candidate_training_points_exploitation)
+        weights = self.kde.evaluate(candidate_training_points_exploitation)
+
         self.exploitation_training_points = np.empty(
             (0, self.input_dimension)
         )  # initialize as empty 2D array
@@ -697,7 +763,7 @@ class GP_AB_Algorithm:
                 self.n_exploit,
                 candidate_training_points_exploitation,
                 use_mse_w=True,
-                weights=None,  # TODO (ABS): get weights from KDE
+                weights=weights,
             )
             self.inputs = np.vstack([self.inputs, self.exploitation_training_points])
 

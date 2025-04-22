@@ -217,7 +217,7 @@ def _calculate_kl_divergence_log_alpha(
     # First term: log of ratio of densities with normalization constants
     log_ratio = current_log_post - previous_log_post + log_alpha_2 - log_alpha_1
 
-    # Second term: mixture weight (not inside log)
+    # Second term: mixture weight using log-sum-exp trick
     log_mix_denom = np.log(0.5) + np.logaddexp(
         current_log_post, previous_log_post + log_alpha_1 - log_alpha_2
     )
