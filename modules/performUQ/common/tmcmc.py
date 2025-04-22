@@ -158,22 +158,76 @@ def _increment_beta(log_likelihood_values, beta, threshold_cov=1):
     return new_beta  # noqa: RET504
 
 
-def _get_scaled_proposal_covariance(samples, weights, scale_factor=0.2):
-    """
-    Calculate the scaled proposal covariance matrix.
+# def _get_scaled_proposal_covariance(samples, weights, scale_factor=0.2):
+#     """
+#     Calculate the scaled proposal covariance matrix.
 
-    Args:
-        samples (np.ndarray): The samples.
-        weights (np.ndarray): The weights.
-        scale_factor (float, optional): The scale factor. Defaults to 0.2.
+#     Args:
+#         samples (np.ndarray): The samples.
+#         weights (np.ndarray): The weights.
+#         scale_factor (float, optional): The scale factor. Defaults to 0.2.
+
+#     Returns
+#     -------
+#         np.ndarray: The scaled proposal covariance matrix.
+#     """
+#     return scale_factor**2 * np.cov(
+#         samples, rowvar=False, aweights=weights.flatten()
+#     )
+
+
+def _get_scaled_proposal_covariance(
+    samples, weights, scale_factor=0.2, min_eigval=1e-10
+):
+    """
+    Compute a scaled proposal covariance matrix with robust fallback handling.
+
+    This function:
+    - Computes weighted covariance
+    - Falls back to unweighted if needed
+    - Regularizes via eigendecomposition (or SVD fallback)
+
+    Parameters
+    ----------
+    samples : np.ndarray
+        Array of shape (n_samples, n_dimensions).
+    weights : np.ndarray
+        Normalized weights of shape (n_samples,) or (n_samples, 1).
+    scale_factor : float, optional
+        Scaling factor for the proposal covariance. Default is 0.2.
+    min_eigval : float, optional
+        Minimum eigenvalue or singular value threshold. Default is 1e-10.
 
     Returns
     -------
-        np.ndarray: The scaled proposal covariance matrix.
+    cov_scaled : np.ndarray
+        Scaled, regularized proposal covariance matrix.
     """
-    return scale_factor**2 * np.cov(
-        samples, rowvar=False, aweights=weights.flatten()
-    )
+    weights = np.asarray(weights).flatten()
+
+    # Step 1: Attempt weighted covariance
+    cov = np.cov(samples, rowvar=False, aweights=weights)
+    if not np.all(np.isfinite(cov)):
+        cov = np.cov(samples, rowvar=False)
+
+    # Step 2: Ensure symmetry
+    cov = 0.5 * (cov + cov.T)
+
+    # Step 3: Try eigendecomposition with clipping
+    try:
+        eigenvalues, eigenvectors = np.linalg.eigh(cov)
+        eigenvalues_clipped = np.clip(eigenvalues, min_eigval, None)
+        cov_reg = np.real(
+            eigenvectors @ np.diag(eigenvalues_clipped) @ eigenvectors.T
+        )
+    except np.linalg.LinAlgError:
+        # Step 4: Fall back to SVD
+        left_vectors, singular_values, _ = np.linalg.svd(cov)
+        singular_values_clipped = np.clip(singular_values, min_eigval, None)
+        cov_reg = np.real((left_vectors * singular_values_clipped) @ left_vectors.T)
+
+    cov_scaled = scale_factor**2 * cov_reg
+    return cov_scaled  # noqa: RET504
 
 
 def _generate_error_message(size):
