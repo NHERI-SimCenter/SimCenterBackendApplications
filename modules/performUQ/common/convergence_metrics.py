@@ -165,45 +165,67 @@ def _calculate_kl_divergence_log_alpha(
     prior_log_pdf,
     samples,
 ):
-    """KL divergence estimate using log alpha (log normalization constants)."""
-    # Log posterior values
-    current_log_posterior = current_log_likelihood_function(samples) + prior_log_pdf(
+    """
+    Estimate KL divergence between two unnormalized posteriors using log-alpha correction.
+
+    This corresponds to Equation (21) in the generalized KL divergence formulation,
+    where the log applies only to the first ratio and the second term is used as a weight.
+
+    Parameters
+    ----------
+    current_log_likelihood_function : callable
+        Log-likelihood under the current model, evaluated at given samples.
+    previous_log_likelihood_function : callable
+        Log-likelihood under the previous model, evaluated at given samples.
+    prior_log_pdf : callable
+        Log-prior evaluated at given samples.
+    samples : np.ndarray
+        Sample points (N, d) at which posteriors are evaluated.
+
+    Returns
+    -------
+    float
+        Estimated KL divergence between current and previous unnormalized posteriors.
+    """
+    # Log posterior values (unnormalized)
+    current_log_post = current_log_likelihood_function(samples) + prior_log_pdf(
         samples
     )
-    previous_log_posterior = previous_log_likelihood_function(
+    previous_log_post = previous_log_likelihood_function(samples) + prior_log_pdf(
         samples
-    ) + prior_log_pdf(samples)
+    )
 
-    # Get log_alpha_1 and log_alpha_2 (stay in log-space)
+    # Estimate normalization constants log_alpha_1 and log_alpha_2
     def _log_alphas():
-        def obj(log_alphas):
+        def objective(log_alphas):
             log_a1, log_a2 = log_alphas
-            log_num_current = current_log_posterior - log_a1
-            log_num_previous = previous_log_posterior - log_a2
+            log_num_current = current_log_post - log_a1
+            log_num_previous = previous_log_post - log_a2
             log_mix = np.log(0.5) + np.logaddexp(log_num_current, log_num_previous)
             c1 = np.exp(logsumexp(log_num_current - log_mix) - np.log(len(samples)))
             c2 = np.exp(logsumexp(log_num_previous - log_mix) - np.log(len(samples)))
             return (c1 - 1) ** 2 + (c2 - 1) ** 2
 
-        init = [logsumexp(current_log_posterior), logsumexp(previous_log_posterior)]
-        result = minimize(obj, init, method='BFGS')
+        init_guess = [logsumexp(current_log_post), logsumexp(previous_log_post)]
+        result = minimize(objective, init_guess, method='BFGS')
+        if not result.success:
+            raise RuntimeError('Log-alpha estimation did not converge.')
         return result.x  # log_alpha_1, log_alpha_2
 
     log_alpha_1, log_alpha_2 = _log_alphas()
 
-    # Compute the KL estimate in log space
-    log_weights = current_log_posterior  # log of numerator (unnormalized)
-    log_fraction = (
-        current_log_posterior - previous_log_posterior + log_alpha_2 - log_alpha_1
-    )
+    # First term: log of ratio of densities with normalization constants
+    log_ratio = current_log_post - previous_log_post + log_alpha_2 - log_alpha_1
 
+    # Second term: mixture weight (not inside log)
     log_mix_denom = np.log(0.5) + np.logaddexp(
-        current_log_posterior, previous_log_posterior + log_alpha_1 - log_alpha_2
+        current_log_post, previous_log_post + log_alpha_1 - log_alpha_2
     )
+    weights = np.exp(current_log_post - log_mix_denom)
 
-    kl_terms = log_fraction - log_mix_denom
-    kl_divergence_estimate = np.mean(np.exp(log_weights - log_mix_denom) * kl_terms)
-    return kl_divergence_estimate  # noqa: RET504
+    # Final KL divergence estimate
+    kl_estimate = np.mean(log_ratio * weights)
+    return kl_estimate
 
 
 def calculate_gkl(

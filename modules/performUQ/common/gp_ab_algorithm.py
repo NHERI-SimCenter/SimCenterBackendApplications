@@ -669,7 +669,7 @@ class GP_AB_Algorithm:
         # Step 4.1: Select variance for DoE
         self.n_training_points = self.batch_size_factor * self.input_dimension
         if self.gcv is None:
-            self.exploitation_proportion = 0.5
+            self.exploitation_proportion = 0
         else:
             self.exploitation_proportion = self._calculate_exploitation_proportion(
                 self.gcv
