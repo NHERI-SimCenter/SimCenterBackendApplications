@@ -619,7 +619,8 @@ class GP_AB_Algorithm:
 
         if k > 0:
             weights = self.kde.evaluate(self.inputs)
-            self.gcv = self._calculate_gcv(weights=weights)
+            weights_normalized = weights / np.sum(weights)
+            self.gcv = self._calculate_gcv(weights=weights_normalized)
             self.warm_start_possible = self.gcv < self.gcv_threshold
             if self.warm_start_possible:
                 self.j_star = calculate_warm_start_stage(
@@ -742,9 +743,8 @@ class GP_AB_Algorithm:
         )
 
         # Step 4.2: Exploitation DoE
-        self.stages_after_warm_start = list(
-            range(self.j_star, self.num_tmcmc_stages)
-        )
+        start = np.max(1, self.j_star)
+        self.stages_after_warm_start = list(range(start, self.num_tmcmc_stages))
         self.stage_weights = np.ones(len(self.stages_after_warm_start))
 
         candidate_training_points_exploitation, self.stage_sample_counts = (
@@ -753,6 +753,7 @@ class GP_AB_Algorithm:
 
         self.kde = GaussianKDE(candidate_training_points_exploitation)
         weights = self.kde.evaluate(candidate_training_points_exploitation)
+        weights_normalized = weights / np.sum(weights)
 
         self.exploitation_training_points = np.empty(
             (0, self.input_dimension)
@@ -763,7 +764,7 @@ class GP_AB_Algorithm:
                 self.n_exploit,
                 candidate_training_points_exploitation,
                 use_mse_w=True,
-                weights=weights,
+                weights=weights_normalized,
             )
             self.inputs = np.vstack([self.inputs, self.exploitation_training_points])
 
@@ -913,6 +914,7 @@ class GP_AB_Algorithm:
             'n_training_points': self.n_training_points,
             'n_exploit': self.n_exploit,
             'n_explore': self.n_explore,
+            'exploitation_candidates_stage_sample_counts': self.stage_sample_counts,
             'exploitation_training_points': self.exploitation_training_points,
             'exploration_training_points': self.exploration_training_points,
             'num_latent_variables': self.current_pca.n_components,
