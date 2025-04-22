@@ -204,6 +204,7 @@ class GP_AB_Algorithm:
         self.parallel_evaluation_function = self.parallel_pool.pool.starmap
 
         self.gcv_threshold = gcv_threshold
+        self.gcv = None
 
         self.batch_size_factor = batch_size_factor
         self.num_candidate_training_points = num_candidate_training_points
@@ -425,6 +426,37 @@ class GP_AB_Algorithm:
         )
         return loocv_measure  # noqa: RET504
 
+    def _calculate_exploitation_proportion(self, gcv):
+        """
+        Compute the exploitation proportion r_ex based on gcv using log-scale interpolation.
+
+        Parameters
+        ----------
+        gcv : float
+            Cross-validation score g_cv^(k)
+
+        Returns
+        -------
+        float
+            Exploitation proportion r_ex in [0, 0.9]
+        """
+        g_upper = 0.2
+        g_lower = 0.005
+        r_max = 0.9
+
+        if gcv > g_upper:
+            return 0.0
+        if gcv < g_lower:
+            return r_max
+
+        # Linear interpolation in log scale
+        log_g = np.log(gcv)
+        log_g_upper = np.log(g_upper)
+        log_g_lower = np.log(g_lower)
+        # Interpolation factor (0 when g_cv_k = g_upper, 1 when g_cv_k = g_lower)
+        alpha = (log_g_upper - log_g) / (log_g_upper - log_g_lower)
+        return alpha * r_max
+
     def run_iteration(self, k):  # noqa: C901
         """
         Run a single iteration of the GP-AB Algorithm.
@@ -635,10 +667,17 @@ class GP_AB_Algorithm:
             return self.terminate, self.results
 
         # Step 4.1: Select variance for DoE
-        n_training_points = self.batch_size_factor * self.input_dimension
-        self.exploitation_proportion = 0.5  # TODO (ABS): adapt based on gcv value
-        n_exploit = int(np.floor(self.exploitation_proportion * n_training_points))
-        n_explore = n_training_points - n_exploit
+        self.n_training_points = self.batch_size_factor * self.input_dimension
+        if self.gcv is None:
+            self.exploitation_proportion = 0.5
+        else:
+            self.exploitation_proportion = self._calculate_exploitation_proportion(
+                self.gcv
+            )
+        self.n_exploit = int(
+            np.floor(self.exploitation_proportion * self.n_training_points)
+        )
+        self.n_explore = self.n_training_points - self.n_exploit
 
         current_doe = AdaptiveDesignOfExperiments(
             self.current_gp_model, self.current_pca
@@ -651,7 +690,7 @@ class GP_AB_Algorithm:
         candidate_training_points_exploitation = self.current_posterior_samples  # TODO (ABS): use samples from intermediate stages according to adaptive weights
         self.exploitation_training_points = current_doe.select_training_points(
             self.inputs,
-            n_exploit,
+            self.n_exploit,
             candidate_training_points_exploitation,
             use_mse_w=True,
             weights=None,  # TODO (ABS): get weights from KDE
@@ -664,7 +703,7 @@ class GP_AB_Algorithm:
         )
         self.exploration_training_points = current_doe.select_training_points(
             self.inputs,
-            n_explore,
+            self.n_explore,
             candidate_training_points_exploration,
             use_mse_w=False,
             weights=None,
@@ -796,6 +835,10 @@ class GP_AB_Algorithm:
         data = {
             'iteration_number': self.iteration_number,
             'inputs': self.inputs[: len(self.gp_prediction_mean)],
+            'exploitation_proportion': self.exploitation_proportion,
+            'n_training_points': self.n_training_points,
+            'n_exploit': self.n_exploit,
+            'n_explore': self.n_explore,
             'exploitation_training_points': self.exploitation_training_points,
             'exploration_training_points': self.exploration_training_points,
             'num_latent_variables': self.current_pca.n_components,
