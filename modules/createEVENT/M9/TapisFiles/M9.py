@@ -22,7 +22,7 @@ def M9(information):  # noqa: N802
     ]  # grid type (options: A, B, C, D, E, Y, and Z, can be "all")
 
     randomFLag = True  # if True, the realizations are selected randomly, otherwise, the first numSiteGM sites are selected  # noqa: N806
-    maxnumSiteGM = 30  # noqa: N806
+    maxnumSiteGM = 32  # noqa: N806
     numSiteGM = min(numSiteGM, maxnumSiteGM)  # number of realizations  # noqa: N806
 
     my_Directory = os.getcwd()  # noqa: PTH109, N806
@@ -33,8 +33,8 @@ def M9(information):  # noqa: N802
 
     # changing realizations order
     # indices = list(range(maxnumSiteGM));
-    Realizations = ['032']  # noqa: N806
-    indices = [0]
+    Realizations = [f"{i:03}" for i in range(1, 33)]  # noqa: N806
+    indices = [i for i in range(32)]
     if randomFLag:
         np.random.shuffle(indices)
     indices = indices[:numSiteGM]
@@ -65,6 +65,8 @@ def M9(information):  # noqa: N802
     APIFLAG = information[  # noqa: N806
         'APIFLAG'
     ]  # if the APIFLAG is True, we use M9 API to get the motion data
+    
+
 
     if not (APIFLAG):
         for i in indices:
@@ -93,7 +95,7 @@ def M9(information):  # noqa: N802
                     break
 
     if LocationFlag:
-        gdf = gdf.loc[[0]]
+        gdf = gdf.iloc[[0]]
 
     # save the gdf to a csv file in the directory just "Station Name", "Latitude", "Longitude"
     gdf[['filename', 'Latitude', 'Longitude']].to_csv(
