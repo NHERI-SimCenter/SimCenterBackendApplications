@@ -2,8 +2,11 @@
 
 import logging
 import math
+import time
+from collections import Counter
 
 import numpy as np
+import uq_utilities
 from numpy.random import SeedSequence, default_rng
 from safer_cholesky import SaferCholesky
 from scipy.optimize import root_scalar
@@ -290,8 +293,11 @@ def run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
     step_count = 0
     num_steps = number_of_steps
     # print(f'{new_beta = }, {do_thinning = }, {num_steps = }')
+
+    index_counter = Counter()
     for k in range(burn_in_steps + num_samples):
         index = rng.choice(num_samples, p=weights.flatten())
+        index_counter[index] += 1
         if k >= burn_in_steps:
             if new_beta == 1 or do_thinning:
                 num_steps = number_of_steps * thinning_factor
@@ -330,7 +336,7 @@ def run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
                 sample_transformation_function(proposed_state), proposed_state.shape
             )
             log_likelihood_at_proposed_model_parameter = log_likelihood_function(
-                proposed_model_parameter
+                proposed_model_parameter, simulation_number=step_count
             )
             log_prior_density_at_proposed_model_parameter = (
                 log_prior_density_function(proposed_model_parameter)
@@ -373,9 +379,6 @@ def run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
                 current_log_likelihood_values[index] = (
                     log_likelihood_at_proposed_model_parameter.item()
                 )
-                # current_log_target_density_values[index] = (
-                #     log_target_density_at_proposed_state
-                # )
                 if log_target_density_at_proposed_model_parameter.size != 1:
                     msg = _generate_error_message(
                         log_target_density_at_proposed_model_parameter.size
@@ -396,11 +399,19 @@ def run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
             new_log_target_density_values[k_prime] = (
                 current_log_target_density_values[index]
             )
-    total_num_model_evaluations = (burn_in_steps + num_samples) * num_steps
+    # total_num_model_evaluations = (burn_in_steps + num_samples) * num_steps
+    total_num_model_evaluations = step_count
+    num_unique_indices = len(index_counter)
+    max_count = max(index_counter.values())
+    min_count = min(index_counter.values())
     if logger is not None:
-        logger.info('  > Number of chains = 1')
         logger.info(
-            f'  > Total number of model evaluations = {total_num_model_evaluations}'
+            f'    > Number of chains picked = {num_unique_indices} out of {num_samples}'
+        )
+        logger.info(f'    > Longest chain length = {max_count}')
+        logger.info(f'    > Shortest chain length = {min_count}')
+        logger.info(
+            f'    > Total number of model evaluations = {total_num_model_evaluations}'
         )
     return (
         new_samples,
@@ -424,6 +435,7 @@ def metropolis_step(
     log_likelihood_fn,
     log_prior_fn,
     sample_transformation_fn,
+    step_num=0,
 ):
     """
     Perform one Metropolis-Hastings step using a Cholesky-based Gaussian proposal.
@@ -479,7 +491,7 @@ def metropolis_step(
 
     # --- Map to model space and evaluate ---
     proposal_x_model = sample_transformation_fn(proposal_x).reshape(1, d)
-    loglike = log_likelihood_fn(proposal_x_model)
+    loglike = log_likelihood_fn(proposal_x_model, simulation_number=step_num)
     logprior = log_prior_fn(proposal_x_model)
     logtarget = beta * loglike + logprior
 
@@ -503,6 +515,7 @@ def run_mcmc_chain(
     sample_transformation_fn,
     rng,
     num_steps,
+    chain_num,
 ):
     """
     Run a single MCMC chain using fixed-scale Metropolis-Hastings steps.
@@ -557,6 +570,7 @@ def run_mcmc_chain(
                 log_likelihood_fn,
                 log_prior_fn,
                 sample_transformation_fn,
+                chain_num,
             )
         )
 
@@ -574,11 +588,11 @@ def run_one_stage_equal_chain_lengths(
     scale_factor,
     num_steps,
     proposal_cov_fn,
-    parallel_evaluation_fn,
     seed=None,
     num_burn_in=0,
     thinning_factor=1,
     logger=None,
+    run_type='runningLocal',
 ):
     """
     Run one TMCMC stage with equal-length MCMC chains and fixed proposal scale.
@@ -645,11 +659,10 @@ def run_one_stage_equal_chain_lengths(
         chain_length = num_burn_in + int(num_steps * thinning_factor)
     total_num_model_evaluations = chain_length * num_samples
     if logger is not None:
-        logger.info(f'  > Number of steps per chain = {chain_length}')
-        logger.info(f'  > Number of chains = {num_samples}')
-        logger.info('  > Running model evaluations in parallel')
+        logger.info(f'    > Number of steps per chain = {chain_length}')
+        logger.info(f'    > Number of chains = {num_samples}')
         logger.info(
-            f'  > Total number of model evaluations = {total_num_model_evaluations}'
+            f'    > Number of model evaluations = {total_num_model_evaluations}'
         )
 
     # Build job arguments for each chain
@@ -674,10 +687,18 @@ def run_one_stage_equal_chain_lengths(
                 sample_transformation_fn,
                 chain_rngs[i],
                 chain_length,
+                i,
             )
         )
-
-    results = parallel_evaluation_fn(run_mcmc_chain, job_args)
+    parallel_runner = uq_utilities.get_parallel_pool_instance(run_type)
+    if logger is not None:
+        logger.info(
+            f'    > Running {parallel_runner.num_processors} model evaluations in parallel'
+        )
+    results = parallel_runner.run(run_mcmc_chain, job_args)
+    parallel_runner.close_pool()
+    if logger is not None:
+        logger.info('    > Model evaluations completed')
 
     # Gather results
     new_samples = np.zeros_like(samples)
@@ -727,7 +748,8 @@ def setup_logger(log_filename='logFileTMCMC.txt'):
     if not logger.handlers:
         fh = logging.FileHandler(log_filename)
         fh.setFormatter(
-            logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+            logging.Formatter('%(message)s')
+            # logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         )
         logger.addHandler(fh)
     return logger
@@ -745,8 +767,8 @@ class TMCMC:
         Function to compute log-prior densities.
     _sample_transformation_function : callable
         Function mapping latent-space samples to model-space.
-    _parallel_evaluation_function : callable or None
-        Function to evaluate MCMC chains in parallel. Required if run_parallel is True.
+    run_type : str, optional
+            The run type ("runningLocal" or "runningRemote"). Defaults to "runningLocal".
     run_parallel : bool
         Whether to evaluate MCMC chains in parallel.
     num_steps : int
@@ -765,12 +787,13 @@ class TMCMC:
         log_prior_density_function,
         sample_transformation_function,
         seed=None,
-        parallel_evaluation_function=None,
+        run_type='runningLocal',
         run_parallel=True,  # noqa: FBT002
         cov_threshold=1,
         num_steps=1,
         thinning_factor=10,
         adapt_frequency=50,
+        log_filename='logFileTMCMC.txt',
     ):
         """
         Initialize the TMCMC class.
@@ -785,8 +808,8 @@ class TMCMC:
             Function mapping latent-space samples (1, d) to model-space (1, d).
         seed : int or None, optional
             Seed for reproducibility.
-        parallel_evaluation_function : callable, optional
-            Required if run_parallel is True. A function that evaluates MCMC chains in parallel.
+        run_type : str, optional
+            The run type ("runningLocal" or "runningRemote"). Defaults to "runningLocal".
         run_parallel : bool, optional
             Whether to run chains in parallel using parallel_evaluation_function. Defaults to True.
         cov_threshold : float, optional
@@ -801,20 +824,20 @@ class TMCMC:
         self._log_likelihood_function = log_likelihood_function
         self._log_prior_density_function = log_prior_density_function
         self._sample_transformation_function = sample_transformation_function
-        self._parallel_evaluation_function = parallel_evaluation_function
+        self.run_type = run_type
         self.run_parallel = run_parallel
         self._seed = seed
         self.num_steps = num_steps
         self.cov_threshold = cov_threshold
         self.thinning_factor = thinning_factor
         self.adapt_frequency = adapt_frequency
+        self.log_filename = log_filename
 
-        if self.run_parallel:
-            if self._parallel_evaluation_function is None:
-                msg = 'TMCMC.run_parallel is True, but no parallel evaluation function was provided.'
-                raise ValueError(msg)
+        self._logger = setup_logger(log_filename=self.log_filename)
 
-        self._logger = setup_logger()
+    def flush_logs(self):
+        for handler in self._logger.handlers:
+            handler.flush()
 
     def run(
         self,
@@ -855,13 +878,21 @@ class TMCMC:
         dict
             Updated dictionaries containing TMCMC samples and log-values.
         """
+        start_time = time.time()
+        start_stage = stage_num
+        if start_stage > 0:
+            self._logger.info('Warm-starting TMCMC')
+        else:
+            self._logger.info('Starting TMCMC')
         self.num_dimensions = samples_dict[0].shape[1]
         seed_sequence = SeedSequence(self._seed)
         self.target_acceptance_rate = 0.23 + 0.21 / self.num_dimensions
         self.scale_factor = 2.4 / np.sqrt(self.num_dimensions)
         while betas_dict[stage_num] < 1:
-            self._logger.info(f'Starting TMCMC Stage {stage_num}')
-            self._logger.info(f'  Current β = {betas_dict[stage_num]:.4f}')
+            stage_start_time = time.time()
+            self._logger.info(
+                f'  Stage {stage_num} | Current β = {betas_dict[stage_num]:.4f}'
+            )
 
             seed = seed_sequence.spawn(1)[0].entropy
             if self.run_parallel:
@@ -884,7 +915,6 @@ class TMCMC:
                     self.scale_factor,
                     self.num_steps,
                     get_scaled_proposal_covariance,
-                    self._parallel_evaluation_function,
                     seed=seed,
                     num_burn_in=num_burn_in,
                     thinning_factor=self.thinning_factor,
@@ -926,10 +956,30 @@ class TMCMC:
             log_target_density_values_dict[stage_num] = new_log_target_density_values
             log_evidence_dict[stage_num] = log_evidence
             num_model_evals_dict[stage_num] = total_num_model_evaluations
-
+            elapsed_time = time.time() - stage_start_time
             self._logger.info(
-                f'  > New β = {new_beta:.4f}, logZ increment = {log_evidence:.4f}'
+                f'    > New β = {new_beta:.4f}, log evidence increment = {log_evidence:.4f}'
             )
+            self._logger.info(
+                f'    > Time for this stage = {elapsed_time/60:.2f} minutes'
+            )
+            self._logger.info(' ')
+            self.flush_logs()
+
+        self._logger.info('TMCMC completed successfully.')
+        self._logger.info(
+            f'Total log-evidence: {sum(log_evidence_dict.values()):.4f}'
+        )
+        total_model_evaluations = sum(
+            v for k, v in num_model_evals_dict.items() if k >= start_stage
+        )
+        self._logger.info(
+            f'Total number of model evaluations: {total_model_evaluations}'
+        )
+        elapsed_time = time.time() - start_time
+        self._logger.info(f'Total time: {elapsed_time/60:.2f} minutes')
+        self._logger.info('-' * 45)
+        self._logger.info(' ')
 
         return {
             'samples_dict': samples_dict,
@@ -951,16 +1001,15 @@ if __name__ == '__main__':
         _sample_transformation_function,
     )
 
-    parallel_pool = uq_utilities.get_parallel_pool_instance('runningLocal')
-    parallel_evaluation_function = parallel_pool.pool.starmap
-
+    # parallel_pool = uq_utilities.get_parallel_pool_instance('runningLocal')
+    # parallel_evaluation_function = parallel_pool.pool.starmap
     # Initialize the TMCMC sampler
     tmcmc_sampler = TMCMC(
         _log_likelihood_approximation_function,
         _log_prior_pdf,
         _sample_transformation_function,
         run_parallel=True,
-        parallel_evaluation_function=parallel_evaluation_function,
+        run_type='runningLocal',
         cov_threshold=1,
         num_steps=1,
         thinning_factor=5,

@@ -240,9 +240,13 @@ class ParallelRunnerMultiprocessing:  # noqa: D101
     def get_pool(self) -> Pool:  # noqa: D102
         self.pool = Pool(processes=self.num_processors)
         return self.pool
+    
+    def run(self, func, job_args):  # noqa: D102
+        return self.pool.starmap(func, job_args)
 
-    def close_pool(self) -> None:  # noqa: D102
+    def close_pool(self):  # noqa: D102
         self.pool.close()
+        self.pool.join()
 
 
 def make_ERADist_object(name, opt, val) -> ERADist:  # noqa: N802, D103

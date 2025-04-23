@@ -23,5 +23,9 @@ class ParallelRunnerMPI4PY:  # noqa: D101
         self.pool = MPIPoolExecutor(max_workers=self.num_processors)
         return self.pool
 
+    def run(self, func, job_args):  # noqa: D102
+        futures = [self.pool.submit(func, *args) for args in job_args]
+        return [f.result() for f in futures]
+
     def close_pool(self) -> None:  # noqa: D102
         self.pool.shutdown()
