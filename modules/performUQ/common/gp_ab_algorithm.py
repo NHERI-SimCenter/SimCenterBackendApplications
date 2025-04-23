@@ -616,6 +616,7 @@ class GP_AB_Algorithm:
         log_likelihoods_dict = {}
         log_target_density_values_dict = {}
         log_evidence_dict = {}
+        num_model_evals_dict = {}
 
         if k > 0:
             weights = self.kde.evaluate(self.inputs)
@@ -651,6 +652,7 @@ class GP_AB_Algorithm:
             log_evidence = 0
             beta = 0
             stage_num = 0
+            model_evals_tmcmc = self.num_samples_per_stage
 
             samples_dict[self.j_star] = initial_samples
             model_parameters_dict[self.j_star] = model_parameters_initial
@@ -658,6 +660,7 @@ class GP_AB_Algorithm:
             log_likelihoods_dict[self.j_star] = log_likelihood_values
             log_target_density_values_dict[self.j_star] = log_target_density_values
             log_evidence_dict[self.j_star] = log_evidence
+            num_model_evals_dict[self.j_star] = model_evals_tmcmc
         else:
             for j in range(self.j_star):
                 samples_dict[j] = self.results['samples_dict'][j]
@@ -670,6 +673,7 @@ class GP_AB_Algorithm:
                     'log_target_density_values_dict'
                 ][j]
                 log_evidence_dict[j] = self.results['log_evidence_dict'][j]
+                num_model_evals_dict[j] = self.results['num_model_evals_dict'][j]
             stage_num = self.j_star - 1
 
         self.results = tmcmc.run(
@@ -679,7 +683,7 @@ class GP_AB_Algorithm:
             log_likelihoods_dict,
             log_target_density_values_dict,
             log_evidence_dict,
-            np.random.default_rng(),
+            num_model_evals_dict,
             stage_num,
             num_burn_in=0,
         )
