@@ -27,6 +27,12 @@ import uq_utilities
 from adaptive_doe import AdaptiveDesignOfExperiments
 from gp_model import GaussianProcessModel
 from kernel_density_estimation import GaussianKDE
+from log_likelihood_functions import (
+    log_like,
+    log_likelihood_approx,
+    log_prior,
+    response_approximation,
+)
 from principal_component_analysis import PrincipalComponentAnalysis
 from scipy.special import logsumexp
 from scipy.stats import invgamma, norm
@@ -34,41 +40,6 @@ from space_filling_doe import LatinHypercubeSampling
 from tmcmc import TMCMC, calculate_warm_start_stage
 
 # warnings.simplefilter('error', RuntimeWarning)
-
-
-def log_likelihood(prediction_error_vector, prediction_error_variance):
-    """
-    Calculate the log-likelihood of the prediction errors given the variance.
-
-    Args:
-        prediction_error_vector (np.ndarray): The vector of prediction errors.
-        prediction_error_variance (float): The variance of the prediction errors.
-
-    Returns
-    -------
-        float: The log-likelihood value.
-    """
-    return np.sum(
-        norm.logpdf(prediction_error_vector, 0, np.sqrt(prediction_error_variance))
-    )
-
-
-def _response_approximation(current_gp, current_pca, model_parameters):
-    """
-    Approximate the response using the current GP model and PCA.
-
-    Args:
-        current_gp (GaussianProcessModel): The current Gaussian Process model.
-        current_pca (PrincipalComponentAnalysis): The current PCA model.
-        model_parameters (np.ndarray): The model parameters.
-
-    Returns
-    -------
-        np.ndarray: The approximated response.
-    """
-    latent_predictions, _ = current_gp.predict(model_parameters)
-    gp_prediction = current_pca.project_back_to_original_space(latent_predictions)
-    return gp_prediction  # noqa: RET504
 
 
 class GP_AB_Algorithm:
@@ -294,113 +265,95 @@ class GP_AB_Algorithm:
         return inputs, outputs
 
     # def _log_like(self, predictions):
-    #     nd, ny = self.data.shape
-    #     nynd = ny * nd
-    #     epsilon = 1e-12  # to handle cases where the variance is zero
-
-    #     sum_y2 = np.sum(self.data**2, axis=0) + epsilon
-
-    #     log_likes = []
+    #     predictions = np.atleast_2d(predictions)
+    #     num_rows, num_cols = self.data.shape
     #     num_samples = predictions.shape[0]
-    #     for i in range(num_samples):
-    #         prediction_errors = self.data - predictions[i, :].reshape((1, ny))
-    #         sse = np.sum(prediction_errors**2, axis=0) + epsilon
-    #         log_ratios = np.log(sse) - np.log(sum_y2)
-    #         log_sum = logsumexp(log_ratios)
-    #         ll = -0.5 * nynd * log_sum
-    #         log_likes.append(ll)
-    #     return np.array(log_likes).reshape((num_samples, 1))
 
-    def _log_like(self, predictions):
-        predictions = np.atleast_2d(predictions)
-        num_rows, num_cols = self.data.shape
-        num_samples = predictions.shape[0]
+    #     # Precompute weights: w_i = 1 / mean(y_obs_i^2)
+    #     weights = []
+    #     start = 0
+    #     for length in self.output_length_list:
+    #         end = start + length
+    #         y_obs = self.data[:, start:end]
+    #         mse = np.mean(y_obs**2)
+    #         weights.append(1.0 / (mse + 1e-12))
+    #         start = end
 
-        # Precompute weights: w_i = 1 / mean(y_obs_i^2)
-        weights = []
-        start = 0
-        for length in self.output_length_list:
-            end = start + length
-            y_obs = self.data[:, start:end]
-            mse = np.mean(y_obs**2)
-            weights.append(1.0 / (mse + 1e-12))
-            start = end
+    #     # Stack results for all output groups
+    #     weighted_sse_per_sample = np.zeros(num_samples)
+    #     start = 0
 
-        # Stack results for all output groups
-        weighted_sse_per_sample = np.zeros(num_samples)
-        start = 0
+    #     for j, length in enumerate(self.output_length_list):
+    #         end = start + length
+    #         y_obs = self.data[:, start:end]  # shape (nd, d_j)
+    #         y_obs_exp = y_obs[None, :, :]  # shape (1, nd, d_j)
 
-        for j, length in enumerate(self.output_length_list):
-            end = start + length
-            y_obs = self.data[:, start:end]  # shape (nd, d_j)
-            y_obs_exp = y_obs[None, :, :]  # shape (1, nd, d_j)
+    #         # predictions[:, start:end]: shape (num_samples, d_j)
+    #         # broadcast to shape (num_samples, nd, d_j)
+    #         y_pred_exp = predictions[:, start:end][
+    #             :, None, :
+    #         ]  # shape (num_samples, 1, d_j)
+    #         err = y_obs_exp - y_pred_exp  # shape (num_samples, nd, d_j)
 
-            # predictions[:, start:end]: shape (num_samples, d_j)
-            # broadcast to shape (num_samples, nd, d_j)
-            y_pred_exp = predictions[:, start:end][
-                :, None, :
-            ]  # shape (num_samples, 1, d_j)
-            err = y_obs_exp - y_pred_exp  # shape (num_samples, nd, d_j)
+    #         sse = np.einsum('ijk,ijk->i', err, err)  # shape (num_samples,)
+    #         weighted_sse_per_sample += weights[j] * sse
 
-            sse = np.einsum('ijk,ijk->i', err, err)  # shape (num_samples,)
-            weighted_sse_per_sample += weights[j] * sse
+    #         start = end
 
-            start = end
+    #     # Compute log-likelihood
+    #     exponent = -0.5 * num_rows * num_cols
+    #     log_likes = exponent * np.log(weighted_sse_per_sample + 1e-12)
+    #     return log_likes.reshape((num_samples, 1))
 
-        # Compute log-likelihood
-        exponent = -0.5 * num_rows * num_cols
-        log_likes = exponent * np.log(weighted_sse_per_sample + 1e-12)
-        return log_likes.reshape((num_samples, 1))
+    # def _log_likelihood_approximation(
+    #     self, response_approximation_function, model_parameters
+    # ):
+    #     """
+    #     Approximate the log-likelihood for the given samples.
 
-    def _log_likelihood_approximation(
-        self, response_approximation_function, model_parameters
-    ):
-        """
-        Approximate the log-likelihood for the given samples.
+    #     Args:
+    #         response_approximation (callable): The response approximation function.
+    #         samples (np.ndarray): The samples to evaluate.
 
-        Args:
-            response_approximation (callable): The response approximation function.
-            samples (np.ndarray): The samples to evaluate.
+    #     Returns
+    #     -------
+    #         np.ndarray: The approximated log-likelihood values.
+    #     """
+    #     predictions = response_approximation_function(model_parameters)
+    #     log_likes = self._log_like(predictions)
+    #     return log_likes
 
-        Returns
-        -------
-            np.ndarray: The approximated log-likelihood values.
-        """
-        predictions = response_approximation_function(model_parameters)
-        log_likes = self._log_like(predictions)
-        return log_likes  # noqa: RET504
+    # def _log_prior_pdf(self, model_parameters):
+    #     """
+    #     Calculate the log-prior PDF for the given samples.
 
-    def _log_prior_pdf(self, model_parameters):
-        """
-        Calculate the log-prior PDF for the given samples.
+    #     Args:
+    #         samples (np.ndarray): The samples to evaluate.
 
-        Args:
-            samples (np.ndarray): The samples to evaluate.
+    #     Returns
+    #     -------
+    #         np.ndarray: The log-prior PDF values.
+    #     """
+    #     log_prior_model_parameters = np.log(
+    #         self.prior_pdf_function(model_parameters)
+    #     ).reshape((-1, 1))
+    #     return log_prior_model_parameters
 
-        Returns
-        -------
-            np.ndarray: The log-prior PDF values.
-        """
-        log_prior_model_parameters = np.log(
-            self.prior_pdf_function(model_parameters)
-        ).reshape((-1, 1))
-        return log_prior_model_parameters  # noqa: RET504
+    # def _log_posterior_approximation(self, model_parameters, log_likelihoods):
+    #     """
+    #     Approximate the log-posterior for the given samples and log-likelihoods.
 
-    def _log_posterior_approximation(self, model_parameters, log_likelihoods):
-        """
-        Approximate the log-posterior for the given samples and log-likelihoods.
+    #     Args:
+    #         samples (np.ndarray): The samples to evaluate.
+    #         log_likelihoods (np.ndarray): The log-likelihood values.
 
-        Args:
-            samples (np.ndarray): The samples to evaluate.
-            log_likelihoods (np.ndarray): The log-likelihood values.
-
-        Returns
-        -------
-            np.ndarray: The approximated log-posterior values.
-        """
-        log_prior = self._log_prior_pdf(model_parameters)
-        log_posterior = log_likelihoods + log_prior
-        return log_posterior  # noqa: RET504
+    #     Returns
+    #     -------
+    #         np.ndarray: The approximated log-posterior values.
+    #     """
+    #     log_prior = self._log_prior_pdf(model_parameters)
+    #     log_posterior = log_likelihoods + log_prior
+    #     return log_posterior
 
     def _calculate_gcv(self, weights=None):
         """
@@ -531,6 +484,13 @@ class GP_AB_Algorithm:
         model_parameters = self.inputs
         model_outputs = self.outputs
 
+        # Log-likelihood function (fixed weights)
+        log_like_fn = partial(
+            log_like, data=self.data, output_length_list=self.output_length_list
+        )
+        # Log-prior
+        log_prior_fn = partial(log_prior, prior_pdf_function=self.prior_pdf_function)
+
         # Step 1.1: GP calibration
         if (
             self.num_experiments[-1] - self.num_recalibration_experiments
@@ -539,14 +499,20 @@ class GP_AB_Algorithm:
             if k > 0:
                 self.previous_gp_model = self.current_gp_model
                 self.previous_pca = self.current_pca
-                self.previous_response_approximation = partial(
-                    _response_approximation,
-                    self.previous_gp_model,
-                    self.previous_pca,
+
+                previous_response_approximation = partial(
+                    response_approximation, self.previous_gp_model, self.previous_pca
                 )
-                self.previous_log_likelihood_approximation = partial(
-                    self._log_likelihood_approximation,
-                    self.previous_response_approximation,
+                previous_log_likelihood_approximation = partial(
+                    log_likelihood_approx,
+                    log_like_fn=log_like_fn,
+                    response_approx_fn=previous_response_approximation,
+                )
+                self.previous_response_approximation = (
+                    previous_response_approximation
+                )
+                self.previous_log_likelihood_approximation = (
+                    previous_log_likelihood_approximation
                 )
 
             self.current_pca = PrincipalComponentAnalysis(self.pca_threshold)
@@ -592,19 +558,26 @@ class GP_AB_Algorithm:
         )
 
         # Step 1.3: Posterior distribution approximation
-        self.current_response_approximation = partial(
-            _response_approximation, self.current_gp_model, self.current_pca
+        current_response_approximation = partial(
+            response_approximation, self.current_gp_model, self.current_pca
         )
-        self.current_log_likelihood_approximation = partial(
-            self._log_likelihood_approximation, self.current_response_approximation
+        current_log_likelihood_approximation = partial(
+            log_likelihood_approx,
+            log_like_fn=log_like_fn,
+            response_approx_fn=current_response_approximation,
         )
-        self.log_posterior_approximation = self._log_posterior_approximation
+        self.current_response_approximation = current_response_approximation
+        self.current_log_likelihood_approximation = (
+            current_log_likelihood_approximation
+        )
+        # self.log_posterior_approximation = self._log_posterior_approximation
 
         # Step 2.1: Evaluate warm-starting for TMCMC
         tmcmc = TMCMC(
-            self.current_log_likelihood_approximation,
-            self._log_prior_pdf,
+            current_log_likelihood_approximation,
+            log_prior_fn,
             self.sample_transformation_function,
+            run_parallel=True,
         )
 
         self.j_star = 0
@@ -620,8 +593,8 @@ class GP_AB_Algorithm:
 
         if k > 0:
             weights = self.kde.evaluate(self.inputs)
-            weights_normalized = weights / np.sum(weights)
-            self.gcv = self._calculate_gcv(weights=weights_normalized)
+            # weights_normalized = weights / np.sum(weights)
+            self.gcv = self._calculate_gcv(weights=weights)
             self.warm_start_possible = self.gcv < self.gcv_threshold
             if self.warm_start_possible:
                 self.j_star = calculate_warm_start_stage(
@@ -643,10 +616,8 @@ class GP_AB_Algorithm:
             model_parameters_initial = self.sample_transformation_function(
                 initial_samples
             )
-            log_target_density_values = np.log(
-                self.prior_pdf_function(model_parameters_initial)
-            ).reshape((-1, 1))
-            log_likelihood_values = self.current_log_likelihood_approximation(
+            log_target_density_values = log_prior_fn(model_parameters_initial)
+            log_likelihood_values = current_log_likelihood_approximation(
                 model_parameters_initial
             )
             log_evidence = 0
@@ -703,14 +674,14 @@ class GP_AB_Algorithm:
             self.gkl = convergence_metrics.calculate_gkl(
                 self.current_log_likelihood_approximation,
                 self.previous_log_likelihood_approximation,
-                self._log_prior_pdf,
+                log_prior_fn,
                 combined_samples,
             )
             self.gkl_converged = self.gkl < self.gkl_threshold
             self.gmap = convergence_metrics.calculate_gmap(
                 self.current_log_likelihood_approximation,
                 self.previous_log_likelihood_approximation,
-                self._log_prior_pdf,
+                log_prior_fn,
                 combined_samples,
                 self.prior_variances,
             )
@@ -854,7 +825,7 @@ class GP_AB_Algorithm:
         # Step 4: If terminate, create dakotaTab and dakotaTabPrior
         if terminate:
             # --- COMMON HEADER PREP ---
-            final_headers = ['eval_id', 'interface'] + rv_names_list + pred_headers
+            final_headers = ['eval_id', 'interface', *rv_names_list, *pred_headers]
 
             # --- dakotaTab.out ---
             n_samples = len(df_combined)
@@ -869,7 +840,7 @@ class GP_AB_Algorithm:
 
             # --- dakotaTabPrior.out ---
             prior_samples = self.results['model_parameters_dict'][0]
-            prior_predictions = _response_approximation(
+            prior_predictions = response_approximation(
                 self.current_gp_model, self.current_pca, prior_samples
             )
 
@@ -969,7 +940,7 @@ class GP_AB_Algorithm:
             json.dump(self._save_gp_ab_progress(), f, indent=4)
 
         samples = self.current_posterior_samples
-        predictions = _response_approximation(
+        predictions = response_approximation(
             self.current_gp_model, self.current_pca, samples
         )
         self.save_tabular_results(
@@ -1044,14 +1015,6 @@ def preprocess(input_arguments):
     with data_file.open() as f:
         data = np.atleast_2d(np.genfromtxt(f, delimiter=','))
 
-    log_likelihood_file_name = uq_inputs.logLikelihoodFile
-    log_likelihood_path = uq_inputs.logLikelihoodPath
-    log_likelihood_function = log_likelihood
-    if log_likelihood_file_name:
-        sys.path.append(str(log_likelihood_path))
-        ll_module = importlib.import_module(log_likelihood_file_name)
-        log_likelihood_function = ll_module.log_likelihood
-
     joint_distribution = uq_utilities.ERANatafJointDistribution(
         rv_inputs,
         correlation_matrix_inputs,
@@ -1087,6 +1050,18 @@ def preprocess(input_arguments):
     output_dimension = sum(
         edp_lengths_list
     )  # TODO(ABS): Validate this against length of data
+
+    log_likelihood_file_name = uq_inputs.logLikelihoodFile
+    log_likelihood_path = uq_inputs.logLikelihoodPath
+    log_likelihood_function = partial(
+        log_like,
+        data=data,
+        output_length_list=edp_lengths_list,
+    )
+    if log_likelihood_file_name:
+        sys.path.append(str(log_likelihood_path))
+        ll_module = importlib.import_module(log_likelihood_file_name)
+        log_likelihood_function = ll_module.log_likelihood
 
     # TODO(ABS): Make the following parameters configurable by reading from a
     # config.json file
