@@ -1,8 +1,10 @@
 """Implementation of the Transitional Markov Chain Monte Carlo (TMCMC) algorithm."""
 
+import logging
 import math
 
 import numpy as np
+from numpy.random import SeedSequence, default_rng
 from safer_cholesky import SaferCholesky
 from scipy.optimize import root_scalar
 from scipy.special import logsumexp
@@ -158,25 +160,7 @@ def _increment_beta(log_likelihood_values, beta, threshold_cov=1):
     return new_beta  # noqa: RET504
 
 
-# def _get_scaled_proposal_covariance(samples, weights, scale_factor=0.2):
-#     """
-#     Calculate the scaled proposal covariance matrix.
-
-#     Args:
-#         samples (np.ndarray): The samples.
-#         weights (np.ndarray): The weights.
-#         scale_factor (float, optional): The scale factor. Defaults to 0.2.
-
-#     Returns
-#     -------
-#         np.ndarray: The scaled proposal covariance matrix.
-#     """
-#     return scale_factor**2 * np.cov(
-#         samples, rowvar=False, aweights=weights.flatten()
-#     )
-
-
-def _get_scaled_proposal_covariance(
+def get_scaled_proposal_covariance(
     samples, weights, scale_factor=0.2, min_eigval=1e-10
 ):
     """
@@ -235,7 +219,7 @@ def _generate_error_message(size):
     return f'Expected a single value, but got {size} values.'
 
 
-def _run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
+def run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
     samples,
     model_parameters,
     log_likelihood_values,
@@ -252,6 +236,7 @@ def _run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
     number_of_steps=1,
     thinning_factor=1,
     adapt_frequency=50,
+    logger=None,
 ):
     """
     Run one stage of the TMCMC algorithm.
@@ -277,7 +262,7 @@ def _run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
     log_evidence = _calculate_log_evidence(new_beta - beta, log_likelihood_values)
     weights = _calculate_weights(new_beta - beta, log_likelihood_values)
 
-    proposal_covariance = _get_scaled_proposal_covariance(
+    proposal_covariance = get_scaled_proposal_covariance(
         samples, weights, scale_factor
     )
     try:
@@ -321,7 +306,7 @@ def _run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
                     math.sqrt(num_adapt)
                 )
                 scale_factor = scale_factor * np.exp(ca)
-                proposal_covariance = _get_scaled_proposal_covariance(
+                proposal_covariance = get_scaled_proposal_covariance(
                     current_samples, weights, scale_factor
                 )
                 try:
@@ -373,6 +358,8 @@ def _run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
             )
             u = rng.uniform()
             accept = np.log(u) <= log_hastings_ratio
+            # print('accept:', accept, type(accept), np.shape(accept))
+
             if accept:
                 num_accepts += 1
                 current_samples[index, :] = proposed_state
@@ -409,7 +396,12 @@ def _run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
             new_log_target_density_values[k_prime] = (
                 current_log_target_density_values[index]
             )
-
+    total_num_model_evaluations = (burn_in_steps + num_samples) * num_steps
+    if logger is not None:
+        logger.info('  > Number of chains = 1')
+        logger.info(
+            f'  > Total number of model evaluations = {total_num_model_evaluations}'
+        )
     return (
         new_samples,
         new_model_parameters,
@@ -417,162 +409,328 @@ def _run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
         new_log_target_density_values,
         new_beta,
         log_evidence,
+        total_num_model_evaluations,
     )
 
 
-# def _run_one_stage_equal_chain_lengths(
-#     samples,
-#     log_likelihood_values,
-#     log_target_density_values,
-#     beta,
-#     rng,
-#     log_likelihood_function,
-#     log_target_density_function,
-#     scale_factor,
-#     target_acceptance_rate,
-#     do_thinning=False,
-#     burn_in_steps=0,
-#     number_of_steps=1,
-#     thinning_factor=1,
-#     adapt_frequency=50,
-# ):
-#     """
-#     Run one stage of the TMCMC algorithm.
+def metropolis_step(
+    current_x,  # shape: (1, d)
+    current_x_model,  # shape: (1, d)
+    loglike_current,
+    logtarget_current,
+    proposal_chol,
+    beta,
+    rng,
+    log_likelihood_fn,
+    log_prior_fn,
+    sample_transformation_fn,
+):
+    """
+    Perform one Metropolis-Hastings step using a Cholesky-based Gaussian proposal.
 
-#     Args:
-#         samples (np.ndarray): The samples.
-#         log_likelihood_values (np.ndarray): The log-likelihood values.
-#         log_target_density_values (np.ndarray): The log-target density values.
-#         beta (float): The current beta value.
-#         rng (np.random.Generator): The random number generator.
-#         log_likelihood_function (callable): Function to calculate log-likelihoods.
-#         log_target_density_function (callable): Function to calculate log-target densities.
-#         scale_factor (float): The scale factor for the proposal distribution.
-#         target_acceptance_rate (float): The target acceptance rate for the MCMC chain.
-#         do_thinning (bool, optional): Whether to perform thinning. Defaults to False.
-#         burn_in_steps (int, optional): The number of burn-in steps. Defaults to 0.
+    Parameters
+    ----------
+    current_x : np.ndarray
+        Current sample in latent space, shape (1, d).
+    current_x_model : np.ndarray
+        Corresponding model-space sample, shape (1, d).
+    loglike_current : float
+        Log-likelihood of the current model-space sample.
+    logtarget_current : float
+        Log of the tempered target density at the current sample.
+    proposal_chol : np.ndarray
+        Lower Cholesky factor of the proposal covariance matrix, shape (d, d).
+    beta : float
+        Current tempering parameter for TMCMC.
+    rng : np.random.Generator
+        Random number generator instance.
+    log_likelihood_fn : callable
+        Function that computes log-likelihood given a model-space sample of shape (1, d).
+    log_prior_fn : callable
+        Function that computes log-prior given a model-space sample of shape (1, d).
+    sample_transformation_fn : callable
+        Function mapping a latent-space sample of shape (1, d) to model space (1, d).
 
-#     Returns
-#     -------
-#         tuple: A tuple containing the new samples, new log-likelihoods, new log-target density values, new beta, and log evidence.
-#     """
-#     new_beta = _increment_beta(log_likelihood_values, beta)
-#     log_evidence = _calculate_log_evidence(new_beta - beta, log_likelihood_values)
-#     weights = _calculate_weights(new_beta - beta, log_likelihood_values)
+    Returns
+    -------
+    proposal_x : np.ndarray
+        Accepted or rejected sample in latent space, shape (1, d).
+    proposal_model : np.ndarray
+        Corresponding sample in model space, shape (1, d).
+    loglike : float
+        Log-likelihood of the accepted sample.
+    logtarget : float
+        Log of the tempered target density of the accepted sample.
+    """
+    if current_x.ndim != 2 or current_x.shape[0] != 1:
+        msg = f'current_x must be shape (1, d), got {current_x.shape}'
+        raise ValueError(msg)
+    if current_x_model.shape != current_x.shape:
+        msg = f'current_x_model must match current_x shape: got {current_x_model.shape}'
+        raise ValueError(msg)
 
-#     proposal_covariance = _get_scaled_proposal_covariance(
-#         samples, weights, scale_factor
-#     )
-#     try:
-#         cholesky_lower_triangular_matrix = np.linalg.cholesky(proposal_covariance)
-#     except np.linalg.LinAlgError as exc:
-#         msg = f'Cholesky decomposition failed: {exc}'
-#         raise RuntimeError(msg) from exc
+    d = current_x.shape[1]
+    if proposal_chol.shape != (d, d):
+        msg = f'proposal_chol must be shape ({d}, {d}), got {proposal_chol.shape}'
+        raise ValueError(msg)
 
-#     new_samples = np.zeros_like(samples)
-#     new_log_likelihood_values = np.zeros_like(log_likelihood_values)
-#     new_log_target_density_values = np.zeros_like(log_target_density_values)
+    # --- Propose new latent space sample ---
+    proposal_x = current_x + (proposal_chol @ rng.standard_normal(d)).reshape(1, d)
 
-#     current_samples = samples.copy()
-#     current_log_likelihood_values = log_likelihood_values.copy()
-#     current_log_target_density_values = log_target_density_values.copy()
+    # --- Map to model space and evaluate ---
+    proposal_x_model = sample_transformation_fn(proposal_x).reshape(1, d)
+    loglike = log_likelihood_fn(proposal_x_model)
+    logprior = log_prior_fn(proposal_x_model)
+    logtarget = beta * loglike + logprior
 
-#     num_samples = samples.shape[0]
-#     num_accepts = 0
-#     num_adapt = 1
-#     step_count = 0
-#     num_steps = number_of_steps
-#     if new_beta == 1 or do_thinning:
-#         num_steps = number_of_steps * thinning_factor
-#     # print(f'{new_beta = }, {do_thinning = }, {num_steps = }')
+    # --- Accept/reject step ---
+    log_alpha = logtarget - logtarget_current
+    if np.log(rng.uniform()) < log_alpha:
+        return proposal_x, proposal_x_model, loglike, logtarget
 
-#     indices = rng.choice(
-#         num_samples, size=num_samples, replace=True, p=weights.flatten()
-#     )
+    return current_x, current_x_model, loglike_current, logtarget_current
 
-#     for k in range(burn_in_steps + num_samples):
-#         # index = rng.choice(num_samples, p=weights.flatten())
 
-#         # print(f'{new_beta = }, {do_thinning = }, {num_steps = }')
-#         for _ in range(num_steps):
-#             step_count += 1
-#             if step_count % adapt_frequency == 0:
-#                 acceptance_rate = num_accepts / adapt_frequency
-#                 num_accepts = 0
-#                 num_adapt += 1
-#                 ca = (acceptance_rate - target_acceptance_rate) / (
-#                     math.sqrt(num_adapt)
-#                 )
-#                 scale_factor = scale_factor * np.exp(ca)
-#                 proposal_covariance = _get_scaled_proposal_covariance(
-#                     current_samples, weights, scale_factor
-#                 )
-#                 cholesky_lower_triangular_matrix = np.linalg.cholesky(
-#                     proposal_covariance
-#                 )
+def run_mcmc_chain(
+    initial_x,
+    initial_x_model,
+    loglike_initial,
+    logtarget_initial,
+    proposal_chol,
+    beta,
+    log_likelihood_fn,
+    log_prior_fn,
+    sample_transformation_fn,
+    rng,
+    num_steps,
+):
+    """
+    Run a single MCMC chain using fixed-scale Metropolis-Hastings steps.
 
-#             standard_normal_samples = rng.standard_normal(
-#                 size=current_samples.shape[1]
-#             )
-#             proposed_state = (
-#                 current_samples[index, :]
-#                 + cholesky_lower_triangular_matrix @ standard_normal_samples
-#             ).reshape(1, -1)
+    Parameters
+    ----------
+    initial_x : np.ndarray
+        Initial sample in latent space, shape (1, d).
+    initial_x_model : np.ndarray
+        Corresponding model-space sample, shape (1, d).
+    loglike_initial : float
+        Log-likelihood of the initial model-space sample.
+    logtarget_initial : float
+        Log of the tempered target density at the initial sample.
+    proposal_chol : np.ndarray
+        Cholesky factor of the fixed proposal covariance matrix, shape (d, d).
+    beta : float
+        Current tempering parameter.
+    log_likelihood_fn, log_prior_fn, sample_transformation_fn : callable
+        Model functions.
+    rng : np.random.Generator
+        Random number generator.
+    num_steps : int
+        Number of Metropolis-Hastings steps to run.
 
-#             log_likelihood_at_proposed_state = log_likelihood_function(
-#                 proposed_state
-#             )
-#             log_target_density_at_proposed_state = log_target_density_function(
-#                 proposed_state, log_likelihood_at_proposed_state
-#             )
-#             log_hastings_ratio = (
-#                 log_target_density_at_proposed_state
-#                 - current_log_target_density_values[index]
-#             )
-#             u = rng.uniform()
-#             accept = np.log(u) <= log_hastings_ratio
-#             if accept:
-#                 num_accepts += 1
-#                 current_samples[index, :] = proposed_state
-#                 # current_log_likelihoods[index] = log_likelihood_at_proposed_state
-#                 if log_likelihood_at_proposed_state.size != 1:
-#                     msg = _generate_error_message(
-#                         log_likelihood_at_proposed_state.size
-#                     )
-#                     raise ValueError(msg)
-#                 current_log_likelihood_values[index] = (
-#                     log_likelihood_at_proposed_state.item()
-#                 )
-#                 # current_log_target_density_values[index] = (
-#                 #     log_target_density_at_proposed_state
-#                 # )
-#                 if log_target_density_at_proposed_state.size != 1:
-#                     msg = _generate_error_message(
-#                         log_target_density_at_proposed_state.size
-#                     )
-#                     raise ValueError(msg)
-#                 current_log_target_density_values[index] = (
-#                     log_target_density_at_proposed_state.item()
-#                 )
-#                 if k >= burn_in_steps:
-#                     weights = _calculate_weights(
-#                         new_beta - beta, current_log_likelihood_values
-#                     )
-#         if k >= burn_in_steps:
-#             k_prime = k - burn_in_steps
-#             new_samples[k_prime, :] = current_samples[index, :]
-#             new_log_likelihood_values[k_prime] = current_log_likelihood_values[index]
-#             new_log_target_density_values[k_prime] = (
-#                 current_log_target_density_values[index]
-#             )
+    Returns
+    -------
+    final_x : np.ndarray
+        Final latent space sample (1, d).
+    final_x_model : np.ndarray
+        Final model space sample (1, d).
+    loglike : float
+        Final log-likelihood.
+    logtarget : float
+        Final log-target density.
+    """
+    current_x = initial_x
+    current_x_model = initial_x_model
+    loglike_current = loglike_initial
+    logtarget_current = logtarget_initial
 
-#     return (
-#         new_samples,
-#         new_log_likelihood_values,
-#         new_log_target_density_values,
-#         new_beta,
-#         log_evidence,
-#     )
+    for _ in range(num_steps):
+        current_x, current_x_model, loglike_current, logtarget_current = (
+            metropolis_step(
+                current_x,
+                current_x_model,
+                loglike_current,
+                logtarget_current,
+                proposal_chol,
+                beta,
+                rng,
+                log_likelihood_fn,
+                log_prior_fn,
+                sample_transformation_fn,
+            )
+        )
+
+    return current_x, current_x_model, loglike_current, logtarget_current
+
+
+def run_one_stage_equal_chain_lengths(
+    samples,
+    model_parameters,
+    log_likelihood_values,
+    beta,
+    log_likelihood_fn,
+    log_prior_fn,
+    sample_transformation_fn,
+    scale_factor,
+    num_steps,
+    proposal_cov_fn,
+    parallel_evaluation_fn,
+    seed=None,
+    num_burn_in=0,
+    thinning_factor=1,
+    logger=None,
+):
+    """
+    Run one TMCMC stage with equal-length MCMC chains and fixed proposal scale.
+
+    Parameters
+    ----------
+    samples : np.ndarray
+        Latent space samples from the previous TMCMC stage, shape (N, d).
+    model_parameters : np.ndarray
+        Corresponding model space samples, shape (N, d).
+    log_likelihood_values : np.ndarray
+        Log-likelihoods of model_parameters, shape (N,).
+    beta : float
+        Current tempering parameter.
+    log_likelihood_fn, log_prior_fn, sample_transformation_fn : callable
+        Model evaluation functions.
+    scale_factor : float
+        Scale multiplier for proposal covariance.
+    num_steps : int
+        Number of MH steps per MCMC chain.
+    proposal_cov_fn : callable
+        Function to compute proposal covariance: (samples, weights, scale) > cov.
+    parallel_evaluation_fn : callable
+        Function that evaluates run_mcmc_chain in parallel given (fn, job_args).
+    seed : int or None
+        Random seed for reproducibility.
+    num_burn_in : int
+        Number of burn-in MH steps (discarded internally, last sample is returned).
+    thinning_factor : int
+        If >1 and beta=1, the chain will run num_steps * thinning_factor steps after burn-in.
+        Only the last sample is returned.
+
+    Returns
+    -------
+    Tuple containing:
+        - new_samples : np.ndarray of shape (N, d)
+        - new_model_parameters : np.ndarray of shape (N, d)
+        - new_log_likelihoods : np.ndarray of shape (N,)
+        - new_log_target_densities : np.ndarray of shape (N,)
+        - new_beta : float
+        - log_evidence : float
+    """
+    num_samples = samples.shape[0]
+    new_beta = _increment_beta(log_likelihood_values, beta)
+    log_evidence = _calculate_log_evidence(new_beta - beta, log_likelihood_values)
+    weights = _calculate_weights(new_beta - beta, log_likelihood_values)
+
+    # Fixed proposal across all chains
+    proposal_cov = proposal_cov_fn(samples, weights, scale_factor)
+    proposal_chol = safer_cholesky.decompose(proposal_cov)
+
+    # Seed setup
+    ss = SeedSequence(seed)
+    rng_seeds = ss.spawn(num_samples)
+    chain_rngs = [default_rng(seed) for seed in rng_seeds]
+
+    resampling_rng = default_rng(ss.spawn(1)[0])
+    chain_starting_indices = resampling_rng.choice(
+        num_samples, size=num_samples, p=weights.flatten()
+    )
+
+    chain_length = num_burn_in + num_steps
+    if new_beta == 1 and thinning_factor > 1:
+        chain_length = num_burn_in + int(num_steps * thinning_factor)
+    total_num_model_evaluations = chain_length * num_samples
+    if logger is not None:
+        logger.info(f'  > Number of steps per chain = {chain_length}')
+        logger.info(f'  > Number of chains = {num_samples}')
+        logger.info('  > Running model evaluations in parallel')
+        logger.info(
+            f'  > Total number of model evaluations = {total_num_model_evaluations}'
+        )
+
+    # Build job arguments for each chain
+    job_args = []
+    for i, idx in enumerate(chain_starting_indices):
+        x = np.atleast_2d(samples[idx]).reshape(1, -1)
+        x_model = np.atleast_2d(model_parameters[idx]).reshape(1, -1)
+        loglike = log_likelihood_values[idx].item()
+        logprior = log_prior_fn(x_model)
+        logtarget = new_beta * loglike + logprior
+
+        job_args.append(
+            (
+                x,
+                x_model,
+                loglike,
+                logtarget,
+                proposal_chol,
+                new_beta,
+                log_likelihood_fn,
+                log_prior_fn,
+                sample_transformation_fn,
+                chain_rngs[i],
+                chain_length,
+            )
+        )
+
+    results = parallel_evaluation_fn(run_mcmc_chain, job_args)
+
+    # Gather results
+    new_samples = np.zeros_like(samples)
+    new_model_parameters = np.zeros_like(model_parameters)
+    new_log_likelihoods = np.zeros_like(log_likelihood_values)
+    new_log_target_densities = np.zeros_like(log_likelihood_values)
+
+    for i, (x, x_model, loglike, logtarget) in enumerate(results):
+        new_samples[i, :] = x.reshape(-1)
+        new_model_parameters[i, :] = x_model.reshape(-1)
+        new_log_likelihoods[i] = np.asarray(loglike).item()
+        new_log_target_densities[i] = np.asarray(logtarget).item()
+
+    return (
+        new_samples,
+        new_model_parameters,
+        new_log_likelihoods,
+        new_log_target_densities,
+        new_beta,
+        log_evidence,
+        total_num_model_evaluations,
+    )
+
+
+def setup_logger(log_filename='logFileTMCMC.txt'):
+    """
+    Set up a logger for TMCMC execution that logs messages to a file.
+
+    This function configures a logger named 'tmcmc' with INFO level logging
+    and attaches a FileHandler to write logs to the specified file. If the
+    logger already has handlers attached (e.g., due to repeated calls),
+    it will not add duplicate handlers.
+
+    Parameters
+    ----------
+    log_filename : str, optional
+        The name of the log file to which messages will be written.
+        Defaults to 'logFileTMCMC.txt'.
+
+    Returns
+    -------
+    logging.Logger
+        Configured logger instance ready for use.
+    """
+    logger = logging.getLogger('tmcmc')
+    logger.setLevel(logging.INFO)
+    if not logger.handlers:
+        fh = logging.FileHandler(log_filename)
+        fh.setFormatter(
+            logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        )
+        logger.addHandler(fh)
+    return logger
 
 
 class TMCMC:
@@ -581,12 +739,24 @@ class TMCMC:
 
     Attributes
     ----------
-        _log_likelihood_approximation (callable): Function to approximate log-likelihoods.
-        _log_posterior_approximation (callable): Function to approximate log-posterior densities.
-        num_steps (int): The number of steps for each stage.
-        threshold_cov (float): The threshold for the coefficient of variation.
-        thinning_factor (int): The thinning factor for the MCMC chain.
-        adapt_frequency (int): The frequency of adaptation for the proposal distribution.
+    _log_likelihood_function : callable
+        Function to compute log-likelihoods.
+    _log_prior_density_function : callable
+        Function to compute log-prior densities.
+    _sample_transformation_function : callable
+        Function mapping latent-space samples to model-space.
+    _parallel_evaluation_function : callable or None
+        Function to evaluate MCMC chains in parallel. Required if run_parallel is True.
+    run_parallel : bool
+        Whether to evaluate MCMC chains in parallel.
+    num_steps : int
+        Number of MCMC steps per chain.
+    cov_threshold : float
+        Target coefficient of variation threshold (currently unused).
+    thinning_factor : int
+        Thinning factor applied only at the final stage (if beta = 1).
+    adapt_frequency : int
+        Adaptation frequency for proposal scaling (used only in non-parallel mode).
     """
 
     def __init__(
@@ -594,6 +764,9 @@ class TMCMC:
         log_likelihood_function,
         log_prior_density_function,
         sample_transformation_function,
+        seed=None,
+        parallel_evaluation_function=None,
+        run_parallel=True,  # noqa: FBT002
         cov_threshold=1,
         num_steps=1,
         thinning_factor=10,
@@ -602,22 +775,46 @@ class TMCMC:
         """
         Initialize the TMCMC class.
 
-        Args:
-            log_likelihood_function (callable): Function to calculate log-likelihoods.
-            log_target_density_function (callable): Function to calculate log-posterior densities.
-            cov_threshold (float, optional): The threshold for the coefficient of variation. Defaults to 1.
-            num_steps (int, optional): The number of steps for each stage. Defaults to 1.
-            thinning_factor (int, optional): The thinning factor for the MCMC chain. Defaults to 10.
-            adapt_frequency (int, optional): The frequency of adaptation for the proposal distribution. Defaults to 100.
+        Parameters
+        ----------
+        log_likelihood_function : callable
+            Function to calculate log-likelihoods in model space.
+        log_prior_density_function : callable
+            Function to calculate log-prior densities in model space.
+        sample_transformation_function : callable
+            Function mapping latent-space samples (1, d) to model-space (1, d).
+        seed : int or None, optional
+            Seed for reproducibility.
+        parallel_evaluation_function : callable, optional
+            Required if run_parallel is True. A function that evaluates MCMC chains in parallel.
+        run_parallel : bool, optional
+            Whether to run chains in parallel using parallel_evaluation_function. Defaults to True.
+        cov_threshold : float, optional
+            Coefficient of variation threshold (unused in current implementation). Defaults to 1.
+        num_steps : int, optional
+            Number of MCMC steps per chain. Defaults to 1.
+        thinning_factor : int, optional
+            Thinning factor for final stage chains. Defaults to 10.
+        adapt_frequency : int, optional
+            Adaptation frequency (used only in unequal-chain serial mode). Defaults to 50.
         """
         self._log_likelihood_function = log_likelihood_function
         self._log_prior_density_function = log_prior_density_function
         self._sample_transformation_function = sample_transformation_function
-
+        self._parallel_evaluation_function = parallel_evaluation_function
+        self.run_parallel = run_parallel
+        self._seed = seed
         self.num_steps = num_steps
         self.cov_threshold = cov_threshold
         self.thinning_factor = thinning_factor
         self.adapt_frequency = adapt_frequency
+
+        if self.run_parallel:
+            if self._parallel_evaluation_function is None:
+                msg = 'TMCMC.run_parallel is True, but no parallel evaluation function was provided.'
+                raise ValueError(msg)
+
+        self._logger = setup_logger()
 
     def run(
         self,
@@ -627,58 +824,100 @@ class TMCMC:
         log_likelihood_values_dict,
         log_target_density_values_dict,
         log_evidence_dict,
-        rng,
+        num_model_evals_dict,
         stage_num,
         num_burn_in=0,
     ):
         """
         Run the TMCMC algorithm.
 
-        Args:
-            samples_dict (dict): Dictionary of samples for each stage.
-            betas_dict (dict): Dictionary of beta values for each stage.
-            log_likelihood_values_dict (dict): Dictionary of log-likelihood values for each stage.
-            log_target_density_values_dict (dict): Dictionary of log-target density values for each stage.
-            log_evidence_dict (dict): Dictionary of log evidence values for each stage.
-            rng (np.random.Generator): The random number generator.
-            stage_num (int): The current stage number.
-            num_burn_in (int, optional): The number of burn-in steps. Defaults to 0.
+        Parameters
+        ----------
+        samples_dict : dict
+            Dictionary of latent-space samples at each stage.
+        model_parameters_dict : dict
+            Dictionary of model-space samples at each stage.
+        betas_dict : dict
+            Dictionary of beta values at each stage.
+        log_likelihood_values_dict : dict
+            Dictionary of log-likelihoods at each stage.
+        log_target_density_values_dict : dict
+            Dictionary of log-target densities at each stage.
+        log_evidence_dict : dict
+            Dictionary of log evidence estimates at each stage.
+        stage_num : int
+            Current TMCMC stage number.
+        num_burn_in : int, optional
+            Number of burn-in steps for MCMC chains. Defaults to 0.
 
         Returns
         -------
-            tuple: A tuple containing the updated dictionaries for samples, betas, log-likelihoods, log-target density values, and log evidence.
+        dict
+            Updated dictionaries containing TMCMC samples and log-values.
         """
         self.num_dimensions = samples_dict[0].shape[1]
+        seed_sequence = SeedSequence(self._seed)
         self.target_acceptance_rate = 0.23 + 0.21 / self.num_dimensions
         self.scale_factor = 2.4 / np.sqrt(self.num_dimensions)
         while betas_dict[stage_num] < 1:
-            # print(f'Stage {stage_num}')
-            # print(f'Beta: {betas_dict[stage_num]}')
-            (
-                new_samples,
-                new_model_parameters,
-                new_log_likelihood_values,
-                new_log_target_density_values,
-                new_beta,
-                log_evidence,
-            ) = _run_one_stage_unequal_chain_lengths(
-                samples_dict[stage_num],
-                model_parameters_dict[stage_num],
-                log_likelihood_values_dict[stage_num],
-                log_target_density_values_dict[stage_num],
-                betas_dict[stage_num],
-                rng,
-                self._log_likelihood_function,
-                self._log_prior_density_function,
-                self._sample_transformation_function,
-                self.scale_factor,
-                self.target_acceptance_rate,
-                do_thinning=False,
-                burn_in_steps=num_burn_in,
-                number_of_steps=self.num_steps,
-                thinning_factor=self.thinning_factor,
-                adapt_frequency=self.adapt_frequency,
-            )
+            self._logger.info(f'Starting TMCMC Stage {stage_num}')
+            self._logger.info(f'  Current β = {betas_dict[stage_num]:.4f}')
+
+            seed = seed_sequence.spawn(1)[0].entropy
+            if self.run_parallel:
+                (
+                    new_samples,
+                    new_model_parameters,
+                    new_log_likelihood_values,
+                    new_log_target_density_values,
+                    new_beta,
+                    log_evidence,
+                    total_num_model_evaluations,
+                ) = run_one_stage_equal_chain_lengths(
+                    samples_dict[stage_num],
+                    model_parameters_dict[stage_num],
+                    log_likelihood_values_dict[stage_num],
+                    betas_dict[stage_num],
+                    self._log_likelihood_function,
+                    self._log_prior_density_function,
+                    self._sample_transformation_function,
+                    self.scale_factor,
+                    self.num_steps,
+                    get_scaled_proposal_covariance,
+                    self._parallel_evaluation_function,
+                    seed=seed,
+                    num_burn_in=num_burn_in,
+                    thinning_factor=self.thinning_factor,
+                    logger=self._logger,
+                )
+            else:
+                (
+                    new_samples,
+                    new_model_parameters,
+                    new_log_likelihood_values,
+                    new_log_target_density_values,
+                    new_beta,
+                    log_evidence,
+                    total_num_model_evaluations,
+                ) = run_one_stage_unequal_chain_lengths(
+                    samples_dict[stage_num],
+                    model_parameters_dict[stage_num],
+                    log_likelihood_values_dict[stage_num],
+                    log_target_density_values_dict[stage_num],
+                    betas_dict[stage_num],
+                    default_rng(seed),
+                    self._log_likelihood_function,
+                    self._log_prior_density_function,
+                    self._sample_transformation_function,
+                    self.scale_factor,
+                    self.target_acceptance_rate,
+                    do_thinning=False,
+                    burn_in_steps=num_burn_in,
+                    number_of_steps=self.num_steps,
+                    thinning_factor=self.thinning_factor,
+                    adapt_frequency=self.adapt_frequency,
+                    logger=self._logger,
+                )
             stage_num += 1
             samples_dict[stage_num] = new_samples
             model_parameters_dict[stage_num] = new_model_parameters
@@ -686,6 +925,11 @@ class TMCMC:
             log_likelihood_values_dict[stage_num] = new_log_likelihood_values
             log_target_density_values_dict[stage_num] = new_log_target_density_values
             log_evidence_dict[stage_num] = log_evidence
+            num_model_evals_dict[stage_num] = total_num_model_evaluations
+
+            self._logger.info(
+                f'  > New β = {new_beta:.4f}, logZ increment = {log_evidence:.4f}'
+            )
 
         return {
             'samples_dict': samples_dict,
@@ -694,32 +938,29 @@ class TMCMC:
             'log_likelihood_values_dict': log_likelihood_values_dict,
             'log_target_density_values_dict': log_target_density_values_dict,
             'log_evidence_dict': log_evidence_dict,
+            'num_model_evals_dict': num_model_evals_dict,
         }
 
 
 if __name__ == '__main__':
     import numpy as np
+    import uq_utilities
+    from tmcmc_test_utilities import (
+        _log_likelihood_approximation_function,
+        _log_prior_pdf,
+        _sample_transformation_function,
+    )
 
-    # Define log-likelihood function (2D Gaussian)
-    def _log_likelihood_approximation_function(model_parameters):
-        # Assuming a Gaussian log-likelihood with mean (0, 0) and covariance identity
-        return -0.5 * np.sum((model_parameters - 10) ** 2, axis=1)
-
-    # Define log-posterior function (assume same as log-likelihood for this simple case)
-    def _log_target_density_approximation_function(
-        model_parameters, log_likelihoods
-    ):
-        return log_likelihoods  # In this simple case, they are the same
-
-    # Define sample transformation function (in this case, this does nothing to the sample)
-    def _sample_transformation_function(samples):
-        return samples
+    parallel_pool = uq_utilities.get_parallel_pool_instance('runningLocal')
+    parallel_evaluation_function = parallel_pool.pool.starmap
 
     # Initialize the TMCMC sampler
     tmcmc_sampler = TMCMC(
         _log_likelihood_approximation_function,
-        _log_target_density_approximation_function,
+        _log_prior_pdf,
         _sample_transformation_function,
+        run_parallel=True,
+        parallel_evaluation_function=parallel_evaluation_function,
         cov_threshold=1,
         num_steps=1,
         thinning_factor=5,
@@ -746,6 +987,7 @@ if __name__ == '__main__':
     log_likelihoods_dict = {0: initial_log_likelihoods}
     log_target_density_values_dict = {0: initial_log_target_density_values}
     log_evidence_dict = {0: 0}
+    num_model_evals_dict = {0: num_samples}
 
     # Run TMCMC
     stage_num = 0
@@ -756,9 +998,9 @@ if __name__ == '__main__':
         log_likelihoods_dict,
         log_target_density_values_dict,
         log_evidence_dict,
-        rng,
+        num_model_evals_dict,
         stage_num,
-        num_burn_in=100,
+        num_burn_in=10,
     )
 
     # Unpack returned dictionary
@@ -768,6 +1010,7 @@ if __name__ == '__main__':
     log_likelihoods_dict = results['log_likelihood_values_dict']
     log_target_density_values_dict = results['log_target_density_values_dict']
     log_evidence_dict = results['log_evidence_dict']
+    num_model_evals_dict = results['num_model_evals_dict']
 
     # Display results
     final_stage_num = max(samples_dict.keys())
@@ -780,3 +1023,4 @@ if __name__ == '__main__':
     print(f'Betas: {betas_dict.values()}')  # noqa: T201
     print(f'Log-evidence values: {log_evidence_dict.values()}')  # noqa: T201
     print(f'Total log-evidence: {sum(log_evidence_dict.values())}')  # noqa: T201
+    print(f'Number of model evaluations: {num_model_evals_dict.values()}')  # noqa: T201
