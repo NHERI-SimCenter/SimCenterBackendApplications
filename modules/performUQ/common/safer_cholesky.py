@@ -13,7 +13,7 @@ Typical usage:
     L = chol.decompose(matrix, matrix_id="my_matrix")
 """
 
-import logging
+# import logging
 from pathlib import Path
 
 import numpy as np
@@ -36,12 +36,12 @@ class SaferCholesky:
         if self.debug:
             Path(self.dump_dir).mkdir(parents=True, exist_ok=True)
 
-        logging.basicConfig(
-            level=logging.DEBUG if self.debug else logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            filename='tmcmc_debug.log',
-            filemode='w',
-        )
+        # logging.basicConfig(
+        #     level=logging.DEBUG if self.debug else logging.INFO,
+        #     format='%(asctime)s - %(levelname)s - %(message)s',
+        #     filename='tmcmc_debug.log',
+        #     filemode='w',
+        # )
 
     def decompose(
         self,
@@ -77,16 +77,16 @@ class SaferCholesky:
             try:
                 return np.linalg.cholesky(matrix)
             except np.linalg.LinAlgError:  # noqa: PERF203
-                min_eig = np.min(np.linalg.eigvalsh(matrix))
-                cond_num = np.linalg.cond(matrix)
-                logging.warning(
-                    f'[{matrix_id}] Attempt {attempt+1}: Cholesky failed. '
-                    f'min_eigenvalue={min_eig:.2e}, cond_num={cond_num:.2e}, jitter={jitter:.1e}'
-                )
+                # min_eig = np.min(np.linalg.eigvalsh(matrix))
+                # cond_num = np.linalg.cond(matrix)
+                # logging.warning(
+                #     f'[{matrix_id}] Attempt {attempt+1}: Cholesky failed. '
+                #     f'min_eigenvalue={min_eig:.2e}, cond_num={cond_num:.2e}, jitter={jitter:.1e}'
+                # )
                 matrix += jitter * np.eye(matrix.shape[0])
                 jitter *= 10
 
-        logging.warning(f'[{matrix_id}] Falling back to EVD-based repair.')
+        # logging.warning(f'[{matrix_id}] Falling back to EVD-based repair.')
         eigvals, eigvecs = np.linalg.eigh(matrix)
         eigvals_clipped = np.clip(eigvals, eig_clip_threshold, None)
         repaired_matrix = eigvecs @ np.diag(eigvals_clipped) @ eigvecs.T
@@ -94,9 +94,9 @@ class SaferCholesky:
         try:
             return np.linalg.cholesky(repaired_matrix)
         except np.linalg.LinAlgError as exc:
-            logging.exception(
-                f'[{matrix_id}] Final Cholesky failed even after EVD repair.'
-            )
+            # logging.exception(
+            #     f'[{matrix_id}] Final Cholesky failed even after EVD repair.'
+            # )
 
             if self.debug:
                 np.save(f'{self.dump_dir}/{matrix_id}_original.npy', matrix)
@@ -106,9 +106,9 @@ class SaferCholesky:
                     eigvals_clipped,
                 )
                 np.save(f'{self.dump_dir}/{matrix_id}_repaired.npy', repaired_matrix)
-                logging.debug(
-                    f'[{matrix_id}] Matrix and eigenvalues saved to {self.dump_dir}/'
-                )
+                # logging.debug(
+                #     f'[{matrix_id}] Matrix and eigenvalues saved to {self.dump_dir}/'
+                # )
 
             msg = f'Cholesky failed for matrix {matrix_id}'
             raise RuntimeError(msg) from exc
