@@ -289,6 +289,7 @@ def run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
 
     num_samples = samples.shape[0]
     num_accepts = 0
+    total_num_accepts = 0
     num_adapt = 1
     step_count = 0
     num_steps = number_of_steps
@@ -368,6 +369,7 @@ def run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
 
             if accept:
                 num_accepts += 1
+                total_num_accepts += 1
                 current_samples[index, :] = proposed_state
                 current_model_parameters[index, :] = proposed_model_parameter
                 # current_log_likelihoods[index] = log_likelihood_at_proposed_state
@@ -421,6 +423,7 @@ def run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
         new_beta,
         log_evidence,
         total_num_model_evaluations,
+        total_num_accepts,
     )
 
 
@@ -497,10 +500,11 @@ def metropolis_step(
 
     # --- Accept/reject step ---
     log_alpha = logtarget - logtarget_current
-    if np.log(rng.uniform()) < log_alpha:
-        return proposal_x, proposal_x_model, loglike, logtarget
+    accept = np.log(rng.uniform()) < log_alpha
+    if accept:
+        return proposal_x, proposal_x_model, loglike, logtarget, accept
 
-    return current_x, current_x_model, loglike_current, logtarget_current
+    return current_x, current_x_model, loglike_current, logtarget_current, accept
 
 
 def run_mcmc_chain(
@@ -557,8 +561,10 @@ def run_mcmc_chain(
     loglike_current = loglike_initial
     logtarget_current = logtarget_initial
 
+    num_accept = 0
+
     for _ in range(num_steps):
-        current_x, current_x_model, loglike_current, logtarget_current = (
+        current_x, current_x_model, loglike_current, logtarget_current, accept = (
             metropolis_step(
                 current_x,
                 current_x_model,
@@ -573,8 +579,10 @@ def run_mcmc_chain(
                 chain_num,
             )
         )
+        if accept:
+            num_accept += 1
 
-    return current_x, current_x_model, loglike_current, logtarget_current
+    return current_x, current_x_model, loglike_current, logtarget_current, num_accept
 
 
 def run_one_stage_equal_chain_lengths(
@@ -655,7 +663,7 @@ def run_one_stage_equal_chain_lengths(
     )
 
     chain_length = num_burn_in + num_steps
-    if new_beta == 1 and thinning_factor > 1:
+    if math.isclose(new_beta, 1.0, rel_tol=1e-9) and thinning_factor > 1:
         chain_length = num_burn_in + int(num_steps * thinning_factor)
     total_num_model_evaluations = chain_length * num_samples
     if logger is not None:
@@ -695,7 +703,7 @@ def run_one_stage_equal_chain_lengths(
         logger.info(
             f'    > Running {parallel_runner.num_processors} model evaluations in parallel'
         )
-    results = parallel_runner.run(run_mcmc_chain, job_args)
+    mcmc_chain_results = parallel_runner.run(run_mcmc_chain, job_args)
     parallel_runner.close_pool()
     if logger is not None:
         logger.info('    > Model evaluations completed')
@@ -705,13 +713,17 @@ def run_one_stage_equal_chain_lengths(
     new_model_parameters = np.zeros_like(model_parameters)
     new_log_likelihoods = np.zeros_like(log_likelihood_values)
     new_log_target_densities = np.zeros_like(log_likelihood_values)
+    num_accepts = []
 
-    for i, (x, x_model, loglike, logtarget) in enumerate(results):
+    for i, (x, x_model, loglike, logtarget, num_accept) in enumerate(
+        mcmc_chain_results
+    ):
         new_samples[i, :] = x.reshape(-1)
         new_model_parameters[i, :] = x_model.reshape(-1)
         new_log_likelihoods[i] = np.asarray(loglike).item()
         new_log_target_densities[i] = np.asarray(logtarget).item()
-
+        num_accepts.append(num_accept)
+    total_num_accepts = np.sum(num_accepts)
     return (
         new_samples,
         new_model_parameters,
@@ -720,6 +732,7 @@ def run_one_stage_equal_chain_lengths(
         new_beta,
         log_evidence,
         total_num_model_evaluations,
+        total_num_accepts,
     )
 
 
@@ -896,6 +909,7 @@ class TMCMC:
 
             seed = seed_sequence.spawn(1)[0].entropy
             if self.run_parallel:
+                scale_factor = 0.2
                 (
                     new_samples,
                     new_model_parameters,
@@ -904,6 +918,7 @@ class TMCMC:
                     new_beta,
                     log_evidence,
                     total_num_model_evaluations,
+                    total_num_accepts,
                 ) = run_one_stage_equal_chain_lengths(
                     samples_dict[stage_num],
                     model_parameters_dict[stage_num],
@@ -912,7 +927,7 @@ class TMCMC:
                     self._log_likelihood_function,
                     self._log_prior_density_function,
                     self._sample_transformation_function,
-                    self.scale_factor,
+                    scale_factor,
                     self.num_steps,
                     get_scaled_proposal_covariance,
                     seed=seed,
@@ -929,6 +944,7 @@ class TMCMC:
                     new_beta,
                     log_evidence,
                     total_num_model_evaluations,
+                    total_num_accepts,
                 ) = run_one_stage_unequal_chain_lengths(
                     samples_dict[stage_num],
                     model_parameters_dict[stage_num],
@@ -962,6 +978,9 @@ class TMCMC:
             )
             self._logger.info(
                 f'    > Time for this stage = {elapsed_time/60:.2f} minutes'
+            )
+            self._logger.info(
+                f'    > Acceptance rate = {total_num_accepts/total_num_model_evaluations:.3f}'
             )
             self._logger.info(' ')
             self.flush_logs()
