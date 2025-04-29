@@ -263,6 +263,7 @@ if __name__ == '__main__':
     parser.add_argument('--assetFile')
     parser.add_argument('--filenameEVENTgrid')
     parser.add_argument('--multipleEvents', default='True')
+    parser.add_argument('--workflowInput')        
     parser.add_argument('--doParallel', default='False')
     parser.add_argument('-n', '--numP', default='8')
     parser.add_argument('-m', '--mpiExec', default='mpixece')
