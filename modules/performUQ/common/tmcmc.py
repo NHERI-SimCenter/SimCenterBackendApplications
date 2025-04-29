@@ -2,8 +2,10 @@
 
 import logging
 import math
+import os
 import time
 from collections import Counter
+from contextlib import suppress
 
 import numpy as np
 import uq_utilities
@@ -661,12 +663,25 @@ def run_one_stage_equal_chain_lengths(
     chain_starting_indices = resampling_rng.choice(
         num_samples, size=num_samples, p=weights.flatten()
     )
+    index_counter = Counter(chain_starting_indices)
+
+    # Number of unique indices picked at least once
+    num_unique_indices = len(index_counter)
+
+    # Max and min counts (among picked indices)
+    max_count = max(index_counter.values())
+    min_count = min(index_counter.values())
 
     chain_length = num_burn_in + num_steps
     if math.isclose(new_beta, 1.0, rel_tol=1e-9) and thinning_factor > 1:
         chain_length = num_burn_in + int(num_steps * thinning_factor)
     total_num_model_evaluations = chain_length * num_samples
     if logger is not None:
+        logger.info(
+            f'    > Resampled {num_unique_indices} out of {num_samples} starting points after reweighting'
+        )
+        logger.info(f'    > Longest chain length = {max_count}')
+        logger.info(f'    > Shortest chain length = {min_count}')
         logger.info(f'    > Number of steps per chain = {chain_length}')
         logger.info(f'    > Number of chains = {num_samples}')
         logger.info(
@@ -849,8 +864,16 @@ class TMCMC:
         self._logger = setup_logger(log_filename=self.log_filename)
 
     def flush_logs(self):
+        """
+        Flush all handlers associated with the logger and sync to disk.
+
+        This ensures that all log messages are written to the physical storage.
+        """
         for handler in self._logger.handlers:
             handler.flush()
+            if hasattr(handler, 'stream') and hasattr(handler.stream, 'fileno'):
+                with suppress(OSError):
+                    os.fsync(handler.stream.fileno())
 
     def run(
         self,

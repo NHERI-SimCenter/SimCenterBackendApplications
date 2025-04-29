@@ -521,9 +521,9 @@ class GP_AB_Algorithm:
                 model_outputs
             )
             self.num_pca_components_list.append(self.current_pca.n_components)
-            self.current_gp_model = GaussianProcessModel(
-                self.input_dimension, self.num_pca_components_list[-1], ARD=True
-            )
+            # self.current_gp_model = GaussianProcessModel(
+            #     self.input_dimension, self.num_pca_components_list[-1], ARD=True
+            # )
             self.current_gp_model.update(
                 model_parameters, self.latent_outputs, reoptimize=True
             )
@@ -577,7 +577,7 @@ class GP_AB_Algorithm:
             current_log_likelihood_approximation,
             log_prior_fn,
             self.sample_transformation_function,
-            run_parallel=True,
+            run_parallel=False,
         )
 
         self.j_star = 0
@@ -728,7 +728,7 @@ class GP_AB_Algorithm:
 
         self.kde = GaussianKDE(candidate_training_points_exploitation)
         weights = self.kde.evaluate(candidate_training_points_exploitation)
-        weights_normalized = weights / np.sum(weights)
+        # weights_normalized = weights / np.sum(weights)
 
         self.exploitation_training_points = np.empty(
             (0, self.input_dimension)
@@ -739,7 +739,7 @@ class GP_AB_Algorithm:
                 self.n_exploit,
                 candidate_training_points_exploitation,
                 use_mse_w=True,
-                weights=weights_normalized,
+                weights=weights,
             )
             self.inputs = np.vstack([self.inputs, self.exploitation_training_points])
 
