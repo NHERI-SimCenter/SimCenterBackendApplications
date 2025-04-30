@@ -402,9 +402,9 @@ def calculate_gcv(
     weights_uniform = np.ones(n_points) / n_points
     if weights is None:
         weights = np.ones(n_points) / n_points
-    # # Normalize weights
-    # weights_uniform /= np.sum(weights_uniform)  # uniform weights
-    # # weights /= np.sum(weights)  # normalize
+    # Normalize weights
+    weights_uniform /= np.sum(weights_uniform)  # uniform weights
+    weights /= np.sum(weights)  # normalize
 
     # Combine weights
     alpha, beta = weight_combination
