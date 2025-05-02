@@ -37,6 +37,7 @@
 # Stevan Gavrilovic
 #
 
+import os
 import argparse  # noqa: I001
 import json, csv  # noqa: E401
 from pathlib import Path
@@ -53,13 +54,18 @@ def sample_raster_at_latlon(src, lat, lon):  # noqa: D103
     if row < 0 or row >= src.height or col < 0 or col >= src.width:
         raise IndexError('Transformed coordinates are out of raster bounds')  # noqa: EM101, TRY003
 
-    # Read the raster value at the given row and column
-    raster_value = src.read(1)[row, col]
+    # Read the raster value at the given row and column for all layers NOT just the first
+    #raster_value = src.read(1)[row, col]
+    data = src.read()
+    raster_values = data[:, row, col]
+    return raster_values  # noqa: RET504
 
-    return raster_value  # noqa: RET504
 
+def create_event(asset_file, event_grid_file, num_entry):  # noqa: C901, D103, N803, RUF100
 
-def create_event(asset_file, event_grid_file):  # noqa: C901, D103, N803, RUF100
+    #print(f'asset_file: {asset_file}, entry: {num_entry}')    
+    #print(f'event_grid_file: {event_grid_file}, entry: {num_entry}')
+    
     # read the event grid data file
     event_grid_path = Path(event_grid_file).resolve()
     event_dir = event_grid_path.parent
@@ -94,7 +100,13 @@ def create_event(asset_file, event_grid_file):  # noqa: C901, D103, N803, RUF100
             # Load the asset data
             asset_data = json.load(asset_file)
 
-            im_tag = asset_data['RegionalEvent']['intensityMeasures'][0]
+            if num_entry == 0:
+                im_tag = asset_data['RegionalEvent']['intensityMeasures']
+                units = asset_data['RegionalEvent']['units']
+            else:
+                im_tag = asset_data['RegionalEvent']['multiple'][num_entry-1]['intensityMeasures']
+                units = asset_data['RegionalEvent']['multiple'][num_entry-1]['units']
+            
 
             # Extract the latitude and longitude
             lat = float(asset_data['GeneralInformation']['location']['latitude'])
@@ -113,8 +125,8 @@ def create_event(asset_file, event_grid_file):  # noqa: C901, D103, N803, RUF100
                     val = sample_raster_at_latlon(
                         src=src, lat=lat_transformed, lon=lon_transformed
                     )
-
-                    data = [[im_tag], [val]]
+                    
+                    data = [im_tag, val]
 
                     # Save the simcenter file name
                     file_name = f'Site_{asset_id}.csvx{0}x{int(asset_id):05d}'
@@ -122,22 +134,72 @@ def create_event(asset_file, event_grid_file):  # noqa: C901, D103, N803, RUF100
                     data_final.append([file_name, lat, lon])
 
                     csv_save_path = event_dir / f'Site_{asset_id}.csv'
-                    with open(csv_save_path, 'w', newline='') as file:  # noqa: PTH123
-                        # Create a CSV writer object
-                        writer = csv.writer(file)
 
-                        # Write the data to the CSV file
-                        writer.writerows(data)
+                    if num_entry == 0:
+
+                        # if first entry
+                        #    create the csv file and add the data
+                        
+                        with open(csv_save_path, 'w', newline='') as file:  # noqa: PTH123
+                            # Create a CSV writer object
+                            writer = csv.writer(file)
+
+                            # Write the data to the CSV file
+                            writer.writerows(data)
+                    else:
+
+                        # subsequent entries
+                        #  read existing file, append header and row data, 
+                        #  and finally write new file with updated data
+                        #
+                        
+                        # Read the existing file
+                        if os.path.exists(csv_save_path):
+                            with open(csv_save_path, mode='r') as f:
+                                reader = csv.DictReader(f)
+                                rows = list(reader)
+                                fieldnames = reader.fieldnames or []
+                        else:
+                            rows = []
+                            fieldnames = []
+
+                        # extend field names and row data with additional stuff to be added
+                        # IS IM_TAG a single value or an array .. should be array!
+
+                        extra = dict(zip(im_tag, val))
+                        for k in extra:
+                            if k not in fieldnames:
+                                fieldnames.append(k)
+                        for row in rows:
+                            row.update(extra)
+                        
+                        # Overwrite existing file
+                        with open(csv_save_path, mode='w', newline='') as f:
+                            writer = csv.DictWriter(f, fieldnames=fieldnames)
+                            writer.writeheader()
+                            writer.writerows(rows)                        
+
 
                     # prepare a dictionary of events
                     event_list_json = [[file_name, 1.0]]
 
-                    asset_data['Events'] = [{}]
-                    asset_data['Events'][0] = {
-                        'EventFolderPath': str(event_dir),
-                        'Events': event_list_json,
-                        'type': 'intensityMeasure',
-                    }
+
+                    # in asset file, add event info including now units
+                    if num_entry == 0:
+
+                        # if first, add an event field
+                        asset_data['Events'] = [{}]
+                        asset_data['Events'][0] = {
+                            'EventFolderPath': str(event_dir),
+                            'Events': event_list_json,
+                            'type': 'intensityMeasure',
+                            'units': units
+                        }
+
+                    else:
+                        
+                        # if additional, update units to include new                       
+                        asset_data['Events'][0]['units'].update(units)
 
                     with open(asset_file_path, 'w', encoding='utf-8') as f:  # noqa: PTH123
                         json.dump(asset_data, f, indent=2)

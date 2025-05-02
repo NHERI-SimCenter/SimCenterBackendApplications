@@ -331,7 +331,12 @@
           "type": "path",
           "description": "Name of JSON file containing an array of id,filename pairs. For each asset id the application creates a AIM file with name filename",
           "default": "assets.json"
-        }
+        },
+        {
+          "id": "workflowInput",
+          "type": "workflowDefault",
+          "description": "name of file containing the input"
+        }	  
       ],
       "Outputs": []
     },

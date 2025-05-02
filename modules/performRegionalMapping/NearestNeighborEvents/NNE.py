@@ -404,6 +404,7 @@ if __name__ == '__main__':
     parser.add_argument('--neighbors', type=int)
     parser.add_argument('--filter_label', default='')
     parser.add_argument('--doParallel', default='False')
+    parser.add_argument('--workflowInput')    
     parser.add_argument('-n', '--numP', default='8')
     parser.add_argument('-m', '--mpiExec', default='mpiexec')
     parser.add_argument('--seed', type=int, default=None)
