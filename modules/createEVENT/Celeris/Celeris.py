@@ -223,6 +223,9 @@ def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):  # noqa: N802
         addFloorForceToEvent(
             patternsArray, timeSeriesArray, floorForces, 'X', it + 1
         )
+        addFloorForceToEvent(
+            patternsArray, timeSeriesArray, floorForces, 'Y', it + 1
+        )
 
     # subtype = "StochasticWindModel-KwonKareem2006"
     eventClassification = 'Hydro'  # noqa: N806
@@ -239,8 +242,8 @@ def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):  # noqa: N802
         'timeSeries': timeSeriesArray,
         'pressure': pressure,
         'numSteps': len(forces[0].X),
-        'dT': 0.01,
-        'dt': 0.01,
+        'dT': 1.0,
+        'dt': 1.0,
         'units': {'force': 'Newton', 'length': 'Meter', 'time': 'Sec'},
     }
 
@@ -353,7 +356,7 @@ if __name__ == '__main__':
 
         result = subprocess.run(  # noqa: S603
             [  # noqa: S607
-                'python3',
+                sys.executable,
                 scriptName,
                 '-d',
                 caseDirectory,
@@ -382,7 +385,7 @@ if __name__ == '__main__':
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
         result = subprocess.run(  # noqa: S603
             [  # noqa: S607
-                'python3',
+                sys.executable,
                 scriptName,
                 '-d',
                 caseDirectory,
