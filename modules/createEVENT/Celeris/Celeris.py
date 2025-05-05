@@ -354,24 +354,24 @@ if __name__ == '__main__':
         floorsCount = GetFloorsCount(arguments.filenameAIM)  # noqa: N816
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
 
-        result = subprocess.run(  # noqa: S603
-            [  # noqa: S607
-                sys.executable,
-                scriptName,
-                '-d',
-                caseDirectory,
-                '-f',
-                configFilename,
-                '-b',
-                bathymetryFilename,
-                '-w',
-                waveFilename,
-                # f'{os.path.realpath(os.path.dirname(__file__))}'
-                # + '/taichi_script.py',
-            ],
-            stdout=subprocess.PIPE,
-            check=False,
-        )
+        # result = subprocess.run(  # noqa: S603
+        #     [  # noqa: S607
+        #         sys.executable,
+        #         scriptName,
+        #         '-d',
+        #         caseDirectory,
+        #         '-f',
+        #         configFilename,
+        #         '-b',
+        #         bathymetryFilename,
+        #         '-w',
+        #         waveFilename,
+        #         # f'{os.path.realpath(os.path.dirname(__file__))}'
+        #         # + '/taichi_script.py',
+        #     ],
+        #     stdout=subprocess.PIPE,
+        #     check=False,
+        # )
 
         forces = []
         for i in range(floorsCount):
@@ -382,6 +382,16 @@ if __name__ == '__main__':
 
     else:
         print('No RVs requested')  # noqa: T201
+        
+        # filenameAIM = arguments.filenameAIM  # noqa: N816
+        # Read in Events[0]["config"]
+        configObj = evt['Events'][0]['config']  # noqa: N806
+        # Write configObj to config_rv.json
+        configRVFilename = 'config_rv.json'  # noqa: N816
+        with open(caseDirectory + '/' + configRVFilename, 'w', encoding='utf-8') as file:
+            json.dump(configObj, file)
+        file.close
+        
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
         result = subprocess.run(  # noqa: S603
             [  # noqa: S607
@@ -390,7 +400,7 @@ if __name__ == '__main__':
                 '-d',
                 caseDirectory,
                 '-f',
-                configFilename,
+                configRVFilename,
                 '-b',
                 bathymetryFilename,
                 '-w',
