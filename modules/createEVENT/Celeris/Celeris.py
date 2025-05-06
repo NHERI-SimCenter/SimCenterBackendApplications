@@ -223,6 +223,9 @@ def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):  # noqa: N802
         addFloorForceToEvent(
             patternsArray, timeSeriesArray, floorForces, 'X', it + 1
         )
+        addFloorForceToEvent(
+            patternsArray, timeSeriesArray, floorForces, 'Y', it + 1
+        )
 
     # subtype = "StochasticWindModel-KwonKareem2006"
     eventClassification = 'Hydro'  # noqa: N806
@@ -239,8 +242,8 @@ def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):  # noqa: N802
         'timeSeries': timeSeriesArray,
         'pressure': pressure,
         'numSteps': len(forces[0].X),
-        'dT': 0.01,
-        'dt': 0.01,
+        'dT': 1.0,
+        'dt': 1.0,
         'units': {'force': 'Newton', 'length': 'Meter', 'time': 'Sec'},
     }
 
@@ -351,24 +354,24 @@ if __name__ == '__main__':
         floorsCount = GetFloorsCount(arguments.filenameAIM)  # noqa: N816
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
 
-        result = subprocess.run(  # noqa: S603
-            [  # noqa: S607
-                'python3',
-                scriptName,
-                '-d',
-                caseDirectory,
-                '-f',
-                configFilename,
-                '-b',
-                bathymetryFilename,
-                '-w',
-                waveFilename,
-                # f'{os.path.realpath(os.path.dirname(__file__))}'
-                # + '/taichi_script.py',
-            ],
-            stdout=subprocess.PIPE,
-            check=False,
-        )
+        # result = subprocess.run(  # noqa: S603
+        #     [  # noqa: S607
+        #         sys.executable,
+        #         scriptName,
+        #         '-d',
+        #         caseDirectory,
+        #         '-f',
+        #         configFilename,
+        #         '-b',
+        #         bathymetryFilename,
+        #         '-w',
+        #         waveFilename,
+        #         # f'{os.path.realpath(os.path.dirname(__file__))}'
+        #         # + '/taichi_script.py',
+        #     ],
+        #     stdout=subprocess.PIPE,
+        #     check=False,
+        # )
 
         forces = []
         for i in range(floorsCount):
@@ -379,15 +382,25 @@ if __name__ == '__main__':
 
     else:
         print('No RVs requested')  # noqa: T201
+        
+        # filenameAIM = arguments.filenameAIM  # noqa: N816
+        # Read in Events[0]["config"]
+        configObj = evt['Events'][0]['config']  # noqa: N806
+        # Write configObj to config_rv.json
+        configRVFilename = 'config_rv.json'  # noqa: N816
+        with open(caseDirectory + '/' + configRVFilename, 'w', encoding='utf-8') as file:
+            json.dump(configObj, file)
+        file.close
+        
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
         result = subprocess.run(  # noqa: S603
             [  # noqa: S607
-                'python3',
+                sys.executable,
                 scriptName,
                 '-d',
                 caseDirectory,
                 '-f',
-                configFilename,
+                configRVFilename,
                 '-b',
                 bathymetryFilename,
                 '-w',
