@@ -1,186 +1,132 @@
 """Module for creating and using Gaussian Process models with the GaussianProcessModel class."""
 
-import logging
+from __future__ import annotations
+
+import argparse
+import os
+import sys
+from pathlib import Path
 
 import GPy
 import numpy as np
+from config_utilities import load_settings_from_config, save_used_settings_as_config
 from GPy.mappings import Additive, Constant, Linear
-from scipy.linalg import cho_solve
+from logging_utilities import get_module_logger
+from pydantic import BaseModel, Field
 
-logger = logging.getLogger(__name__)
+logger = get_module_logger(style='compact', prefix='')
+
+
+# =========================================================
+# Top-level Classes
+# =========================================================
+
+
+class GaussianProcessModelSettings(BaseModel):
+    """Settings for creating a Gaussian Process Model."""
+
+    input_dimension: int = Field(..., gt=0)  # Required
+    output_dimension: int = Field(..., gt=0)  # Required
+    ARD: bool = True
+    kernel_type: str = Field(
+        'matern52', pattern='^(exponential|matern32|matern52|rbf)$'
+    )
+    mean_function: str = Field('none', pattern='^(none|constant|linear)$')
 
 
 class GaussianProcessModel:
-    """
-    A class to represent a Gaussian Process Model.
+    """A class to represent a Gaussian Process Model."""
 
-    Attributes
-    ----------
-        input_dimension (int): The input dimension of the model.
-        output_dimension (int): The output dimension of the model.
-        ARD (bool): Automatic Relevance Determination flag.
-        kernel (GPy.kern.Matern52): The kernel used in the model.
-        model (list[GPy.models.GPRegression]): The list of GP regression models.
-    """
+    def __init__(self, settings: GaussianProcessModelSettings):
+        self.settings = settings
 
-    def __init__(self, input_dimension, output_dimension, ARD):  # noqa: N803
-        """
-        Initialize the GaussianProcessModel.
-
-        Args:
-            input_dimension (int): The input dimension of the model.
-            output_dimension (int): The output dimension of the model.
-            ARD (bool): Automatic Relevance Determination flag.
-        """
-        self.input_dimension = input_dimension
-        self.output_dimension = output_dimension
-        self.ARD = ARD
+        self.input_dimension = settings.input_dimension
+        self.output_dimension = settings.output_dimension
+        self.ARD = settings.ARD
+        self.kernel_type = settings.kernel_type.lower()
+        self.mean_function_type = settings.mean_function.lower()
 
         self.kernel = self._create_kernel()
         self.model = self._create_surrogate()
-        # self._add_nugget_parameter()
-        self._fix_nugget_parameter()
+        self._add_nugget_parameter()
 
     def _create_kernel(self):
-        """
-        Create the kernel for the Gaussian Process.
+        if self.kernel_type == 'exponential':
+            return GPy.kern.Exponential(input_dim=self.input_dimension, ARD=self.ARD)
+        if self.kernel_type == 'matern32':
+            return GPy.kern.Matern32(input_dim=self.input_dimension, ARD=self.ARD)
+        if self.kernel_type == 'matern52':
+            return GPy.kern.Matern52(input_dim=self.input_dimension, ARD=self.ARD)
+        if self.kernel_type == 'rbf':
+            return GPy.kern.RBF(input_dim=self.input_dimension, ARD=self.ARD)
+        msg = f"Unknown kernel_type '{self.kernel_type}'"
+        raise ValueError(msg)
 
-        Returns
-        -------
-            GPy.kern.Matern52: The Matern52 kernel.
-        """
-        return GPy.kern.Matern52(input_dim=self.input_dimension, ARD=self.ARD)
-
-    def _linear_const_mean(self):
-        return Additive(
-            Linear(input_dim=self.input_dimension, output_dim=1),
-            Constant(input_dim=self.input_dimension, output_dim=1),
-        )
+    def _create_mean_function(self):
+        if self.mean_function_type == 'none':
+            return None
+        if self.mean_function_type == 'constant':
+            return Constant(input_dim=self.input_dimension, output_dim=1)
+        if self.mean_function_type == 'linear':
+            return Additive(
+                Constant(input_dim=self.input_dimension, output_dim=1),
+                Linear(input_dim=self.input_dimension, output_dim=1),
+            )
+        msg = f"Unknown mean_function '{self.mean_function_type}'"
+        raise ValueError(msg)
 
     def _create_surrogate(self):
-        """
-        Create the surrogate GP regression models.
-
-        Returns
-        -------
-            list[GPy.models.GPRegression]: The list of GP regression models.
-        """
-        m_list = []
+        mean_function = self._create_mean_function()
+        models = []
         for _ in range(self.output_dimension):
-            m_list += [
-                GPy.models.GPRegression(
-                    np.zeros((1, self.input_dimension)),
-                    np.zeros((1, 1)),
-                    kernel=self.kernel.copy(),
-                    mean_function=self._linear_const_mean(),
-                )
-            ]
-        return m_list
+            model = GPy.models.GPRegression(
+                X=np.zeros((1, self.input_dimension)),
+                Y=np.zeros((1, 1)),
+                kernel=self.kernel.copy(),
+                mean_function=mean_function,
+                normalizer=True,
+            )
+            models.append(model)
+        return models
 
-    def _add_nugget_parameter(self):
-        """Add a nugget parameter to the GP models to improve numerical stability."""
+    def _add_nugget_parameter(self, nugget_value=1e-6):
+        """Add a nugget parameter to improve numerical stability."""
         for i in range(self.output_dimension):
-            self.model[i].Gaussian_noise.variance = 1e-6
+            self.model[i].Gaussian_noise.variance = nugget_value
 
     def _fix_nugget_parameter(self, value=1e-8):
-        """
-        Fix the nugget parameter to a specific value.
-
-        Args:
-            value (float): The value to fix the nugget parameter to.
-        """
+        """Fix the nugget parameter to a specific value."""
         for i in range(self.output_dimension):
             self.model[i].likelihood.variance = value
             self.model[i].likelihood.variance.fix()
 
-    def update(self, x_train, y_train, reoptimize=True):  # noqa: FBT002
-        """
-        Update the GP models with new training data.
-
-        This method sets the training inputs and outputs for each GP model.
-        Optionally, it re-optimizes the hyperparameters based on the new data.
-
-        Args:
-            x_train (np.ndarray): The input training data of shape (n_samples, n_features).
-            y_train (np.ndarray): The output training data of shape (n_samples, n_outputs).
-            reoptimize (bool, optional): Whether to re-optimize hyperparameters. Defaults to True.
-        """
-        for i in range(self.output_dimension):
+    def update(self, x_train, y_train, *, reoptimize=True, num_random_restarts=10):
+        """Update the GP models with new training data."""
+        out_dim = y_train.shape[1]
+        for i in range(out_dim):
             self.model[i].set_XY(x_train, np.reshape(y_train[:, i], (-1, 1)))
             if reoptimize:
-                self.model[i].optimize()
+                self.model[i].optimize_restarts(num_random_restarts)
             else:
-                # Force recomputation of the posterior
-                _ = self.model[i].posterior  # Triggers re-computation if dirty
+                _ = self.model[i].posterior
 
     def predict(self, x_predict):
-        """
-        Predict the output for the given input data.
-
-        Args:
-            x_predict (np.ndarray): The input data for prediction.
-
-        Returns
-        -------
-            tuple: A tuple containing the mean and variance of the predictions.
-        """
+        """Predict the output for the given input data."""
         y_mean = np.zeros((x_predict.shape[0], self.output_dimension))
         y_var = np.zeros((x_predict.shape[0], self.output_dimension))
         for i in range(self.output_dimension):
             mean, var = self.model[i].predict(x_predict)
             y_mean[:, i] = mean.flatten()
             y_var[:, i] = var.flatten()
-
         return y_mean, y_var
 
-    # def loo_predictions(self, y_train):
-    #     """
-    #     Calculate the Leave-One-Out (LOO) predictions.
-
-    #     Args:
-    #         y_train (np.ndarray): The output training data.
-
-    #     Returns
-    #     -------
-    #         np.ndarray: The LOO predictions.
-    #     """
-    #     loo_pred = np.zeros_like(y_train)
-    #     for i in range(self.output_dimension):
-    #         cholesky_factor = self.model[i].posterior.K_chol
-    #         alpha = cho_solve(
-    #             (cholesky_factor, True), np.reshape(y_train[:, i], (-1, 1))
-    #         )
-    #         cholesky_factor_inverse = cho_solve(
-    #             (cholesky_factor, True), np.eye(cholesky_factor.shape[0])
-    #         )
-    #         k_inv_diag = np.reshape(
-    #             np.sum(cholesky_factor_inverse**2, axis=1), (-1, 1)
-    #         )
-    #         loo_pred[:, i] = (
-    #             np.reshape(y_train[:, i], (-1, 1)) - alpha / k_inv_diag
-    #         ).flatten()
-    #     return loo_pred
-
     def loo_predictions(self, y_train, epsilon=1e-8):
-        """
-        Calculate the Leave-One-Out (LOO) predictions.
-
-        Args:
-            y_train (np.ndarray): The output training data. Shape: (N, output_dimension)
-            epsilon (float): Small value added to diag_Kinv only where it's zero.
-
-        Returns
-        -------
-            np.ndarray: The LOO predictions. Shape: (N, output_dimension)
-        """
+        """Calculate Leave-One-Out (LOO) predictions."""
         if not hasattr(self.model[0], 'posterior'):
-            msg = (
-                'Model must be trained (optimized) before computing LOO predictions.'
-            )
+            msg = 'Model must be trained before computing LOO predictions.'
             raise ValueError(msg)
 
         loo_pred = np.zeros_like(y_train, dtype=np.float64)
-
         for i in range(self.output_dimension):
             posterior = self.model[i].posterior
             alpha = posterior.woodbury_vector  # (N, 1)
@@ -189,14 +135,202 @@ class GaussianProcessModel:
 
             if np.any(diagonal_k_inverse == 0):
                 logger.warning(
-                    f'Zero detected on diagonal of Woodbury inverse for output {i}. '
-                    f'Adding epsilon={epsilon} to avoid division by zero.'
+                    f'Zero detected on diagonal for output {i}. Adding epsilon={epsilon}.'
                 )
                 diagonal_k_inverse = np.where(
                     diagonal_k_inverse == 0, epsilon, diagonal_k_inverse
                 )
+
             loo_pred[:, i] = y_train[:, i].flatten() - (
                 alpha.flatten() / diagonal_k_inverse
             )
 
         return loo_pred
+
+    def __repr__(self):
+        """Provide a string representation of the GaussianProcessModel instance."""
+        mean_function = self.model[0].mean_function
+        names = _get_mean_function_name(mean_function)
+        return (
+            f'GaussianProcessModel(input_dimension={self.input_dimension}, '
+            f'output_dimension={self.output_dimension}, ARD={self.ARD}, '
+            f'kernel_type={self.model[0].kern.name}, '
+            f'mean_function={names})'
+        )
+
+
+# =========================================================
+# Public function
+# =========================================================
+
+
+def create_gp_model(
+    command_args=None, used_config_dir: str | Path | None = None, **kwargs
+) -> GaussianProcessModel:
+    """
+    Create a Gaussian Process Model instance.
+
+    Priority:
+    1. Keyword arguments (`kwargs`)
+    2. Command-line arguments (`command_args`)
+    3. Default config file
+    4. Raise error if none found
+    """
+    logger.info('Creating GP Regression Model.')
+
+    settings = (
+        _create_gp_settings_from_kwargs(**kwargs)
+        if kwargs
+        else _create_gp_settings_from_command_args(command_args)
+        if command_args is not None
+        else _create_gp_settings_from_default_config()
+    )
+
+    config_dict = settings.model_dump()
+
+    if used_config_dir is not None:
+        used_config_dir = Path(used_config_dir)
+        used_config_dir.mkdir(parents=True, exist_ok=True)
+        output_path = used_config_dir / 'gp_config_used.json'
+    else:
+        output_path = 'gp_config_used.json'
+
+    save_used_settings_as_config(config=config_dict, output_path=output_path)
+
+    model = GaussianProcessModel(settings)
+    logger.info(f'Created: {model}')
+    return model
+
+
+# =========================================================
+# Private helper functions
+# =========================================================
+
+
+def _create_gp_settings_from_kwargs(**kwargs) -> GaussianProcessModelSettings:
+    return GaussianProcessModelSettings(**kwargs)
+
+
+def _create_gp_settings_from_command_args(
+    command_args: list[str],
+) -> GaussianProcessModelSettings:
+    args = parse_gp_arguments(command_args)
+    config_file_path = args.pop('config_file', None)
+    cli_args = {k: v for k, v in args.items() if v is not None}
+
+    if config_file_path:
+        config_data = load_settings_from_config(config_file_path)
+        merged_settings = {**config_data, **cli_args}
+        return GaussianProcessModelSettings(**merged_settings)
+
+    return GaussianProcessModelSettings(**cli_args)
+
+
+def _create_gp_settings_from_default_config() -> GaussianProcessModelSettings:
+    config_filename = os.getenv('GP_CONFIG_FILE', 'gp_config.json')
+    config_path = Path(config_filename)
+
+    if config_path.exists():
+        logger.info(f"No arguments provided. Loading config from '{config_path}'.")
+        config_data = load_settings_from_config(config_path)
+        return GaussianProcessModelSettings(**config_data)
+
+    msg = (
+        'No keyword arguments, no command-line arguments, and no config file found. '
+        'Cannot create GP model because input_dimension and output_dimension are required.'
+    )
+    raise ValueError(msg)
+
+
+def _get_mean_function_name(mean_function):
+    if mean_function is None:
+        return 'None'
+    if type(mean_function).__name__ == 'Additive':
+        name1 = _get_mean_function_name(mean_function.mapping1)
+        name2 = _get_mean_function_name(mean_function.mapping2)
+        return f'({name1} + {name2})'
+    return type(mean_function).__name__
+
+
+class CustomFormatter(
+    argparse.ArgumentDefaultsHelpFormatter,
+    argparse.RawDescriptionHelpFormatter,
+):
+    """Custom formatter for nicer help messages."""
+
+
+def parse_gp_arguments(args=None) -> dict:
+    """
+    Parse command-line arguments for creating a Gaussian Process Model.
+
+    Parameters
+    ----------
+    args : list[str], optional
+        List of command-line arguments. Defaults to None.
+
+    Returns
+    -------
+    dict
+        Parsed arguments as a dictionary.
+    """
+    parser = argparse.ArgumentParser(
+        description='Create a Gaussian Process Model.',
+        formatter_class=CustomFormatter,
+    )
+    # Group: Required Arguments
+    required = parser.add_argument_group('Required arguments')
+    required.add_argument(
+        '--input_dimension',
+        type=int,
+        required=True,
+        help='Input dimension.',
+    )
+    required.add_argument(
+        '--output_dimension',
+        type=int,
+        required=True,
+        help='Output dimension.',
+    )
+
+    # Group: Optional Arguments
+    optional = parser.add_argument_group('Optional arguments')
+    optional.add_argument(
+        '--ARD',
+        type=lambda x: x.lower() in ('true', '1'),
+        default=True,
+        help='Use ARD (Automatic Relevance Determination).',
+    )
+    optional.add_argument(
+        '--kernel_type',
+        type=str.lower,
+        choices=['exponential', 'matern32', 'matern52', 'rbf'],
+        default='matern52',
+        help='Kernel type to use.',
+    )
+    optional.add_argument(
+        '--mean_function',
+        type=str.lower,
+        choices=['none', 'constant', 'linear'],
+        default='none',
+        help='Mean function for the GP.',
+    )
+    optional.add_argument(
+        '--config_file',
+        type=str,
+        help='Path to a JSON config file.',
+    )
+
+    parsed = parser.parse_args(args)
+    return vars(parsed)
+
+
+# =========================================================
+# CLI interface
+# =========================================================
+
+if __name__ == '__main__':
+    try:
+        gp_model = create_gp_model(command_args=sys.argv[1:])
+    except Exception:
+        logger.exception('Failed to create Gaussian Process Model.')
+        sys.exit(1)

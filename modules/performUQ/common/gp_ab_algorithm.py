@@ -5,6 +5,8 @@ It includes classes and functions for performing Gaussian Process modeling,
 Principal Component Analysis, and various convergence metrics.
 """
 
+from __future__ import annotations
+
 import argparse
 import importlib
 import json
@@ -25,7 +27,7 @@ import pandas as pd
 import pydantic
 import uq_utilities
 from adaptive_doe import AdaptiveDesignOfExperiments
-from gp_model import GaussianProcessModel
+from gp_model import create_gp_model
 from kernel_density_estimation import GaussianKDE
 from log_likelihood_functions import (
     log_like,
@@ -182,8 +184,9 @@ class GP_AB_Algorithm:
         self.num_candidate_training_points = num_candidate_training_points
 
         self.results = {}
-        self.current_gp_model = GaussianProcessModel(
-            self.input_dimension, 1, ARD=True
+        self.current_gp_model = create_gp_model(
+            input_dimension=self.input_dimension,
+            output_dimension=1,
         )
         self.current_pca = PrincipalComponentAnalysis(
             self.pca_threshold, perform_scaling=True
@@ -382,37 +385,6 @@ class GP_AB_Algorithm:
         )
         return loocv_measure  # noqa: RET504
 
-    def _calculate_exploitation_proportion(self, gcv):
-        """
-        Compute the exploitation proportion r_ex based on gcv using log-scale interpolation.
-
-        Parameters
-        ----------
-        gcv : float
-            Cross-validation score g_cv^(k)
-
-        Returns
-        -------
-        float
-            Exploitation proportion r_ex in [0, 0.9]
-        """
-        g_upper = 0.2
-        g_lower = 0.005
-        r_max = 0.9
-
-        if gcv > g_upper:
-            return 0.0
-        if gcv < g_lower:
-            return r_max
-
-        # Linear interpolation in log scale
-        log_g = np.log(gcv)
-        log_g_upper = np.log(g_upper)
-        log_g_lower = np.log(g_lower)
-        # Interpolation factor (0 when g_cv_k = g_upper, 1 when g_cv_k = g_lower)
-        alpha = (log_g_upper - log_g) / (log_g_upper - log_g_lower)
-        return alpha * r_max
-
     def _get_exploitation_candidates(self):
         """
         Assemble candidate training points for exploitation by sampling from TMCMC stages
@@ -521,9 +493,10 @@ class GP_AB_Algorithm:
                 model_outputs
             )
             self.num_pca_components_list.append(self.current_pca.n_components)
-            # self.current_gp_model = GaussianProcessModel(
-            #     self.input_dimension, self.num_pca_components_list[-1], ARD=True
-            # )
+            self.current_gp_model = create_gp_model(
+                input_dimension=self.input_dimension,
+                output_dimension=self.num_pca_components_list[-1],
+            )
             self.current_gp_model.update(
                 model_parameters, self.latent_outputs, reoptimize=True
             )
@@ -577,7 +550,7 @@ class GP_AB_Algorithm:
             current_log_likelihood_approximation,
             log_prior_fn,
             self.sample_transformation_function,
-            run_parallel=False,
+            run_parallel=True,
         )
 
         self.j_star = 0
@@ -593,7 +566,6 @@ class GP_AB_Algorithm:
 
         if k > 0:
             weights = self.kde.evaluate(self.inputs)
-            # weights_normalized = weights / np.sum(weights)
             self.gcv = self._calculate_gcv(weights=weights)
             self.warm_start_possible = self.gcv < self.gcv_threshold
             if self.warm_start_possible:
@@ -705,7 +677,7 @@ class GP_AB_Algorithm:
         if self.gcv is None:
             self.exploitation_proportion = 0
         else:
-            self.exploitation_proportion = self._calculate_exploitation_proportion(
+            self.exploitation_proportion = calculate_exploitation_proportion(
                 self.gcv
             )
         self.n_exploit = int(
@@ -725,10 +697,16 @@ class GP_AB_Algorithm:
         candidate_training_points_exploitation, self.stage_sample_counts = (
             self._get_exploitation_candidates()
         )
+        out_file_candidates = Path('results') / f'exploitation_candidates_{k}.json'
+        save_exploitation_candidates_by_stage_json(
+            out_file_candidates,
+            candidate_training_points_exploitation,
+            self.stage_sample_counts,
+        )
 
         self.kde = GaussianKDE(candidate_training_points_exploitation)
         weights = self.kde.evaluate(candidate_training_points_exploitation)
-        # weights_normalized = weights / np.sum(weights)
+        weights_normalized = weights / np.sum(weights)
 
         self.exploitation_training_points = np.empty(
             (0, self.input_dimension)
@@ -739,7 +717,7 @@ class GP_AB_Algorithm:
                 self.n_exploit,
                 candidate_training_points_exploitation,
                 use_mse_w=True,
-                weights=weights,
+                weights=weights_normalized,
             )
             self.inputs = np.vstack([self.inputs, self.exploitation_training_points])
 
@@ -858,28 +836,6 @@ class GP_AB_Algorithm:
             )
             print(f'Saved: {dakota_tab_prior_path}')
 
-    def _make_json_serializable(self, obj):
-        """Recursively convert NumPy and other non-serializable types to JSON-serializable Python types."""
-        if isinstance(obj, dict):
-            return {k: self._make_json_serializable(v) for k, v in obj.items()}
-        elif isinstance(obj, list):  # noqa: RET505
-            return [self._make_json_serializable(item) for item in obj]
-        elif isinstance(obj, tuple):
-            return tuple(self._make_json_serializable(item) for item in obj)
-        elif isinstance(obj, np.ndarray):
-            return self._make_json_serializable(obj.tolist())  # Recurse on elements
-        elif isinstance(obj, (np.integer, int)):
-            return int(obj)
-        elif isinstance(obj, (np.floating, float)):
-            return float(obj)
-        elif isinstance(obj, (np.bool_, bool)):
-            return bool(obj)
-        elif obj is None:
-            return None
-        else:
-            msg = f'Object of type {type(obj)} is not JSON serializable: {obj}'
-            raise TypeError(msg)
-
     def _save_gp_ab_progress(self):
         """Save the current progress of the GP-AB Algorithm to a file."""
         data = {
@@ -923,14 +879,14 @@ class GP_AB_Algorithm:
                 }
             )
 
-        return self._make_json_serializable(data)
+        return make_json_serializable(data)
 
     def write_results(self, results_dir='results'):
         """Write the results of the GP-AB Algorithm to a file."""
         res_dir = Path(results_dir)
         res_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 
-        serializable_data = self._make_json_serializable(self.results)
+        serializable_data = make_json_serializable(self.results)
         outfile_path = res_dir / f'tmcmc_results_{self.iteration_number}.json'
         with outfile_path.open('w') as f:
             json.dump(serializable_data, f, indent=4)
@@ -953,6 +909,159 @@ class GP_AB_Algorithm:
             output_dir=res_dir,
             terminate=self.terminate,
         )
+
+
+def make_json_serializable(obj):
+    """Recursively convert NumPy and other non-serializable types to JSON-serializable Python types."""
+    if isinstance(obj, dict):
+        return {k: make_json_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, list):  # noqa: RET505
+        return [make_json_serializable(item) for item in obj]
+    elif isinstance(obj, tuple):
+        return tuple(make_json_serializable(item) for item in obj)
+    elif isinstance(obj, np.ndarray):
+        return make_json_serializable(obj.tolist())  # Recurse on elements
+    elif isinstance(obj, (np.integer, int)):
+        return int(obj)
+    elif isinstance(obj, (np.floating, float)):
+        return float(obj)
+    elif isinstance(obj, (np.bool_, bool)):
+        return bool(obj)
+    elif obj is None:
+        return None
+    else:
+        msg = f'Object of type {type(obj)} is not JSON serializable: {obj}'
+        raise TypeError(msg)
+
+
+def save_exploitation_candidates_by_stage_json(
+    out_file: Path, samples: np.ndarray, stage_sample_counts: dict[int, int]
+):
+    """
+    Save exploitation candidate samples grouped by TMCMC stage to a JSON file.
+
+    Parameters
+    ----------
+    out_file : Path
+        Path to the output JSON file.
+    samples : np.ndarray
+        Array of shape (n_candidates, n_parameters), assumed to be ordered stage-by-stage.
+    stage_sample_counts : dict[int, int]
+        Dictionary mapping stage number to number of samples drawn from that stage.
+
+    The output JSON file will have:
+    - 'stage_sample_counts': summary of counts per stage
+    - 'samples_by_stage': mapping of stage number to list of samples
+    """
+    samples_by_stage = {}
+    start_idx = 0
+    for stage, count in stage_sample_counts.items():
+        end_idx = start_idx + count
+        stage_samples = samples[start_idx:end_idx].tolist()
+        samples_by_stage[str(stage)] = stage_samples
+        start_idx = end_idx
+
+    output = {
+        'stage_sample_counts': {str(k): v for k, v in stage_sample_counts.items()},
+        'samples_by_stage': samples_by_stage,
+    }
+    output_json_serializable = make_json_serializable(output)
+
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+    with out_file.open('w') as f:
+        json.dump(output_json_serializable, f, indent=2)
+
+
+def save_exploitation_candidates_json(
+    out_file: Path, samples: np.ndarray, stage_sample_counts: dict[int, int]
+):
+    """
+    Save exploitation candidate samples and their originating TMCMC stage to a JSON file.
+
+    Each sample is tagged with the stage it was drawn from, allowing later analysis of
+    stage-wise contribution to the candidate pool.
+
+    Parameters
+    ----------
+    out_file : Path
+        Path to the output JSON file.
+    samples : np.ndarray
+        Array of candidate samples of shape (n_candidates, n_parameters),
+        assumed to be ordered stage-by-stage.
+    stage_sample_counts : dict[int, int]
+        Dictionary mapping stage number to the number of samples drawn from that stage.
+
+    Notes
+    -----
+    The JSON file will contain:
+    - 'stage_sample_counts': summary of number of samples per stage.
+    - 'samples': a list of dicts with 'stage' and 'values' keys.
+    """
+    # Create list of samples with their corresponding stage
+    sample_dicts = []
+    start_idx = 0
+    for stage, count in stage_sample_counts.items():
+        for i in range(count):
+            sample_values = samples[start_idx + i].tolist()
+            sample_dicts.append({'stage': stage, 'values': sample_values})
+        start_idx += count
+
+    # Structure to write
+    output = {
+        'stage_sample_counts': stage_sample_counts,
+        'samples': sample_dicts,
+    }
+
+    output_json_serializable = make_json_serializable(output)
+
+    # Ensure parent directory exists
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+
+    # Save to JSON
+    with out_file.open('w') as f:
+        json.dump(output_json_serializable, f, indent=2)
+
+
+def calculate_exploitation_proportion(gcv):
+    """
+    Compute the exploitation proportion r_ex based on gcv using log-scale interpolation.
+
+    This function maps the cross-validation score `gcv` to an exploitation proportion `r_ex`
+    in the range [r_min, r_max], using interpolation in log-space. Higher `gcv` implies
+    greater uncertainty and favors exploration (lower r_ex), while lower `gcv` implies
+    model confidence and favors exploitation (higher r_ex).
+
+    Parameters
+    ----------
+    gcv : float
+        Cross-validation score g_cv^(k). Must be positive.
+
+    Returns
+    -------
+    float
+        Exploitation proportion r_ex in [r_min, r_max].
+    """
+    g_upper = 0.2
+    g_lower = 0.005
+    r_max = 0.9
+    r_min = 0.25
+
+    if gcv > g_upper:
+        return r_min
+    if gcv < g_lower:
+        return r_max
+
+    # Ensure gcv is valid for log computation
+    assert gcv > 0, 'gcv must be positive for log-scale interpolation.'
+
+    # Linear interpolation in log scale
+    log_g = np.log(gcv)
+    log_g_upper = np.log(g_upper)
+    log_g_lower = np.log(g_lower)
+
+    # Interpolation factor: 0 when gcv = g_upper, 1 when gcv = g_lower
+    alpha = (log_g_upper - log_g) / (log_g_upper - log_g_lower)
+    return r_min + alpha * (r_max - r_min)
 
 
 def read_inputs(input_json_file):
