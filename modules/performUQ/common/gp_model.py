@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import os
 import sys
 from pathlib import Path
@@ -11,11 +12,8 @@ import GPy
 import numpy as np
 from config_utilities import load_settings_from_config, save_used_settings_as_config
 from GPy.mappings import Additive, Constant, Linear
-from logging_utilities import get_module_logger
+from logging_utilities import ensure_logger, flush_logger, get_default_logger
 from pydantic import BaseModel, Field
-
-logger = get_module_logger(style='compact', prefix='')
-
 
 # =========================================================
 # Top-level Classes
@@ -37,8 +35,13 @@ class GaussianProcessModelSettings(BaseModel):
 class GaussianProcessModel:
     """A class to represent a Gaussian Process Model."""
 
-    def __init__(self, settings: GaussianProcessModelSettings):
+    def __init__(
+        self,
+        settings: GaussianProcessModelSettings,
+        logger: logging.Logger | None = None,
+    ):
         self.settings = settings
+        self._logger = logger or get_default_logger()
 
         self.input_dimension = settings.input_dimension
         self.output_dimension = settings.output_dimension
@@ -134,7 +137,7 @@ class GaussianProcessModel:
             diagonal_k_inverse = np.diag(k_inverse)
 
             if np.any(diagonal_k_inverse == 0):
-                logger.warning(
+                self._logger.warning(
                     f'Zero detected on diagonal for output {i}. Adding epsilon={epsilon}.'
                 )
                 diagonal_k_inverse = np.where(
@@ -158,6 +161,10 @@ class GaussianProcessModel:
             f'mean_function={names})'
         )
 
+    def flush_logs(self):
+        """Flush the logs for the Gaussian Process Model."""
+        flush_logger(self._logger)
+
 
 # =========================================================
 # Public function
@@ -165,7 +172,10 @@ class GaussianProcessModel:
 
 
 def create_gp_model(
-    command_args=None, used_config_dir: str | Path | None = None, **kwargs
+    command_args=None,
+    used_config_dir: str | Path | None = None,
+    logger: logging.Logger | None = None,
+    **kwargs,
 ) -> GaussianProcessModel:
     """
     Create a Gaussian Process Model instance.
@@ -176,8 +186,6 @@ def create_gp_model(
     3. Default config file
     4. Raise error if none found
     """
-    logger.info('Creating GP Regression Model.')
-
     settings = (
         _create_gp_settings_from_kwargs(**kwargs)
         if kwargs
@@ -185,6 +193,9 @@ def create_gp_model(
         if command_args is not None
         else _create_gp_settings_from_default_config()
     )
+
+    logger = logger or get_default_logger()
+    logger.info('Creating GP Regression Model.')
 
     config_dict = settings.model_dump()
 
@@ -197,7 +208,7 @@ def create_gp_model(
 
     save_used_settings_as_config(config=config_dict, output_path=output_path)
 
-    model = GaussianProcessModel(settings)
+    model = GaussianProcessModel(settings, logger=logger)
     logger.info(f'Created: {model}')
     return model
 
@@ -226,12 +237,17 @@ def _create_gp_settings_from_command_args(
     return GaussianProcessModelSettings(**cli_args)
 
 
-def _create_gp_settings_from_default_config() -> GaussianProcessModelSettings:
+def _create_gp_settings_from_default_config(
+    logger: logging.Logger | None = None,
+) -> GaussianProcessModelSettings:
     config_filename = os.getenv('GP_CONFIG_FILE', 'gp_config.json')
     config_path = Path(config_filename)
 
     if config_path.exists():
-        logger.info(f"No arguments provided. Loading config from '{config_path}'.")
+        if logger:
+            logger.info(
+                f"No arguments provided. Loading config from '{config_path}'."
+            )
         config_data = load_settings_from_config(config_path)
         return GaussianProcessModelSettings(**config_data)
 
@@ -329,8 +345,33 @@ def parse_gp_arguments(args=None) -> dict:
 # =========================================================
 
 if __name__ == '__main__':
+    from logging_utilities import (
+        LoggerAutoFlusher,
+        ensure_logger,
+        log_exception,
+        set_default_logger,
+    )
+
+    # Setup logger properly
+    logger = ensure_logger(
+        log_filename='logFileGPMODEL.txt',
+        prefix='GPMODEL',
+        console_level=logging.INFO,
+        file_level=logging.DEBUG,
+    )
+    set_default_logger(logger)
+
+    flusher = LoggerAutoFlusher(logger, interval=10)
+    flusher.start()
+
     try:
-        gp_model = create_gp_model(command_args=sys.argv[1:])
-    except Exception:
-        logger.exception('Failed to create Gaussian Process Model.')
+        logger.info('Starting Gaussian Process Model creation...')
+        gp_model = create_gp_model(command_args=sys.argv[1:], logger=logger)
+        logger.info('GP model created successfully.')
+    except Exception as ex:  # noqa: BLE001
+        log_exception(logger, ex, message='Fatal error during GP model creation')
         sys.exit(1)
+    finally:
+        flusher.stop()
+        flush_logger(logger)
+        logger.info('Program finished and logs flushed.')

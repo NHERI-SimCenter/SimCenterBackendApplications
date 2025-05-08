@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import importlib
 import json
+import logging
 import os
 import shutil
 import sys
@@ -34,6 +35,13 @@ from log_likelihood_functions import (
     log_likelihood_approx,
     log_prior,
     response_approximation,
+)
+from logging_utilities import (
+    LoggerAutoFlusher,
+    ensure_logger,
+    get_default_logger,
+    log_exception,
+    set_default_logger,
 )
 from principal_component_analysis import PrincipalComponentAnalysis
 from scipy.special import logsumexp
@@ -111,6 +119,7 @@ class GP_AB_Algorithm:
         gmap_threshold=0.01,
         batch_size_factor=2,
         num_candidate_training_points=4000,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize the GP_AB_Algorithm class.
@@ -184,9 +193,13 @@ class GP_AB_Algorithm:
         self.num_candidate_training_points = num_candidate_training_points
 
         self.results = {}
+
+        self._logger = logger or get_default_logger()
+
         self.current_gp_model = create_gp_model(
             input_dimension=self.input_dimension,
             output_dimension=1,
+            logger=self._logger,
         )
         self.current_pca = PrincipalComponentAnalysis(
             self.pca_threshold, perform_scaling=True
@@ -496,6 +509,7 @@ class GP_AB_Algorithm:
             self.current_gp_model = create_gp_model(
                 input_dimension=self.input_dimension,
                 output_dimension=self.num_pca_components_list[-1],
+                logger=self._logger,
             )
             self.current_gp_model.update(
                 model_parameters, self.latent_outputs, reoptimize=True
@@ -551,6 +565,7 @@ class GP_AB_Algorithm:
             log_prior_fn,
             self.sample_transformation_function,
             run_parallel=True,
+            logger=self._logger,
         )
 
         self.j_star = 0
@@ -1236,14 +1251,14 @@ class InputArguments(pydantic.BaseModel):
     model_config = pydantic.ConfigDict(revalidate_instances='always')
 
 
-def run_gp_ab_algorithm(input_arguments):
+def run_gp_ab_algorithm(input_arguments, logger: logging.Logger | None = None):
     """
     Run the GP-AB Algorithm.
 
     Args:
         input_arguments (InputArguments): The input arguments for the algorithm.
     """
-    gp_ab = GP_AB_Algorithm(*preprocess(input_arguments))
+    gp_ab = GP_AB_Algorithm(*preprocess(input_arguments), logger=logger)
     inputs, outputs, num_initial_doe_samples = gp_ab.run_initial_doe(
         num_initial_doe_per_dim=2
     )
@@ -1307,33 +1322,45 @@ def main(command_args=None):
         command_args (list, optional): A list of command-line arguments.
                                        If None, uses `sys.argv[1:]`.
     """
+    # Parse arguments first
+    args = parse_arguments(command_args)
+
+    # Change to working directory
+    os.chdir(args['path_to_working_directory'])
+
+    # Now create the logger
+    logger = ensure_logger(
+        log_filename='logFileTMCMC.txt',
+        prefix='',
+        style='compact',
+    )
+    set_default_logger(logger)
+
+    # Start the auto-flusher
+    flusher = LoggerAutoFlusher(logger, interval=10)
+    flusher.start()
+
+    # Create quoFEMTempCalibrationDataFile.cal
+    cal_data_file = (
+        args['path_to_working_directory'] / 'quoFEMTempCalibrationDataFile.cal'
+    )
+    cal_data_file.touch(exist_ok=True)  # TODO(ABS): Create this file properly
     try:
-        # Parse arguments (either from function call or command line)
-        args = parse_arguments(command_args)
-
-        # Change to the working directory
-        os.chdir(args['path_to_working_directory'])
-
-        # Create logFileTMCMC.txt
-        log_file_tmcmc = args['path_to_working_directory'] / 'logFileTMCMC.txt'
-        log_file_tmcmc.touch(exist_ok=True)
-
-        # Create quoFEMTempCalibrationDataFile.cal
-        cal_data_file = (
-            args['path_to_working_directory'] / 'quoFEMTempCalibrationDataFile.cal'
-        )
-        cal_data_file.touch(exist_ok=True)
-
         # Validate input arguments
         input_arguments = InputArguments.model_validate(args)
 
         # Run the GP-AB Algorithm
-        run_gp_ab_algorithm(input_arguments)
+        run_gp_ab_algorithm(input_arguments, logger=logger)
 
     except Exception as e:
         err_msg = f'ERROR: An exception occurred:\n{traceback.format_exc()}\n'
         sys.stderr.write(err_msg)
+        log_exception(logger, e, message='Error when running GP_AB_Algorithm')
         raise RuntimeError(err_msg) from e
+
+    finally:
+        # Always stop flusher
+        flusher.stop()
 
 
 if __name__ == '__main__':

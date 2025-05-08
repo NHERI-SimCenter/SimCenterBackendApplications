@@ -1,6 +1,5 @@
 """Implementation of the Transitional Markov Chain Monte Carlo (TMCMC) algorithm."""
 
-import logging
 import math
 import os
 import time
@@ -9,6 +8,7 @@ from contextlib import suppress
 
 import numpy as np
 import uq_utilities
+from logging_utilities import flush_logger, get_default_logger
 from numpy.random import SeedSequence, default_rng
 from safer_cholesky import SaferCholesky
 from scipy.optimize import root_scalar
@@ -751,38 +751,6 @@ def run_one_stage_equal_chain_lengths(
     )
 
 
-def setup_logger(log_filename='logFileTMCMC.txt'):
-    """
-    Set up a logger for TMCMC execution that logs messages to a file.
-
-    This function configures a logger named 'tmcmc' with INFO level logging
-    and attaches a FileHandler to write logs to the specified file. If the
-    logger already has handlers attached (e.g., due to repeated calls),
-    it will not add duplicate handlers.
-
-    Parameters
-    ----------
-    log_filename : str, optional
-        The name of the log file to which messages will be written.
-        Defaults to 'logFileTMCMC.txt'.
-
-    Returns
-    -------
-    logging.Logger
-        Configured logger instance ready for use.
-    """
-    logger = logging.getLogger('tmcmc')
-    logger.setLevel(logging.INFO)
-    if not logger.handlers:
-        fh = logging.FileHandler(log_filename)
-        fh.setFormatter(
-            logging.Formatter('%(message)s')
-            # logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        )
-        logger.addHandler(fh)
-    return logger
-
-
 class TMCMC:
     """
     A class to perform Transitional Markov Chain Monte Carlo (TMCMC) sampling.
@@ -821,7 +789,7 @@ class TMCMC:
         num_steps=1,
         thinning_factor=10,
         adapt_frequency=50,
-        log_filename='logFileTMCMC.txt',
+        logger=None,
     ):
         """
         Initialize the TMCMC class.
@@ -859,21 +827,12 @@ class TMCMC:
         self.cov_threshold = cov_threshold
         self.thinning_factor = thinning_factor
         self.adapt_frequency = adapt_frequency
-        self.log_filename = log_filename
 
-        self._logger = setup_logger(log_filename=self.log_filename)
+        self._logger = logger or get_default_logger()
 
     def flush_logs(self):
-        """
-        Flush all handlers associated with the logger and sync to disk.
-
-        This ensures that all log messages are written to the physical storage.
-        """
-        for handler in self._logger.handlers:
-            handler.flush()
-            if hasattr(handler, 'stream') and hasattr(handler.stream, 'fileno'):
-                with suppress(OSError):
-                    os.fsync(handler.stream.fileno())
+        """Flush the TMCMC logger and ensure all logs are written to disk."""
+        flush_logger(self._logger)
 
     def run(
         self,
@@ -1035,83 +994,78 @@ class TMCMC:
 
 
 if __name__ == '__main__':
-    import numpy as np
-    import uq_utilities
-    from tmcmc_test_utilities import (
-        _log_likelihood_approximation_function,
-        _log_prior_pdf,
-        _sample_transformation_function,
+    from logging_utilities import (
+        LoggerAutoFlusher,
+        ensure_logger,
+        log_exception,
+        set_default_logger,
     )
 
-    # parallel_pool = uq_utilities.get_parallel_pool_instance('runningLocal')
-    # parallel_evaluation_function = parallel_pool.pool.starmap
-    # Initialize the TMCMC sampler
-    tmcmc_sampler = TMCMC(
-        _log_likelihood_approximation_function,
-        _log_prior_pdf,
-        _sample_transformation_function,
-        run_parallel=True,
-        run_type='runningLocal',
-        cov_threshold=1,
-        num_steps=1,
-        thinning_factor=5,
-        adapt_frequency=50,
-    )
+    logger = ensure_logger(log_filename='logFileTMCMC.txt', prefix='')
+    set_default_logger(logger)
+    flusher = LoggerAutoFlusher(logger, interval=10)
+    flusher.start()
 
-    # Initial parameters
-    num_samples = 2000  # Number of samples
-    num_dimensions = 2  # Dimensionality of the target distribution
-    rng = np.random.default_rng(42)  # Random number generator
+    try:
+        import numpy as np
+        import uq_utilities
+        from tmcmc_test_utilities import (
+            _log_likelihood_approximation_function,
+            _log_prior_pdf,
+            _sample_transformation_function,
+        )
 
-    # Start with some random samples
-    initial_samples = rng.normal(size=(num_samples, num_dimensions))
-    initial_model_parameters = _sample_transformation_function(initial_samples)
-    initial_log_likelihoods = _log_likelihood_approximation_function(
-        initial_model_parameters
-    )
-    initial_log_target_density_values = initial_log_likelihoods
+        tmcmc_sampler = TMCMC(
+            _log_likelihood_approximation_function,
+            _log_prior_pdf,
+            _sample_transformation_function,
+            run_parallel=True,
+            run_type='runningLocal',
+            cov_threshold=1,
+            num_steps=1,
+            thinning_factor=5,
+            adapt_frequency=50,
+            logger=logger,
+        )
 
-    # Dictionaries to store results for each stage
-    samples_dict = {0: initial_samples}
-    model_parameters_dict = {0: initial_model_parameters}
-    betas_dict = {0: 0.0}  # Start with beta=0 (prior importance)
-    log_likelihoods_dict = {0: initial_log_likelihoods}
-    log_target_density_values_dict = {0: initial_log_target_density_values}
-    log_evidence_dict = {0: 0}
-    num_model_evals_dict = {0: num_samples}
+        # Initial setup...
+        num_samples = 2000
+        num_dimensions = 2
+        rng = np.random.default_rng(42)
 
-    # Run TMCMC
-    stage_num = 0
-    results = tmcmc_sampler.run(
-        samples_dict,
-        model_parameters_dict,
-        betas_dict,
-        log_likelihoods_dict,
-        log_target_density_values_dict,
-        log_evidence_dict,
-        num_model_evals_dict,
-        stage_num,
-        num_burn_in=10,
-    )
+        initial_samples = rng.normal(size=(num_samples, num_dimensions))
+        initial_model_parameters = _sample_transformation_function(initial_samples)
+        initial_log_likelihoods = _log_likelihood_approximation_function(
+            initial_model_parameters
+        )
+        initial_log_target_density_values = initial_log_likelihoods
 
-    # Unpack returned dictionary
-    samples_dict = results['samples_dict']
-    model_parameters_dict = results['model_parameters_dict']
-    betas_dict = results['betas_dict']
-    log_likelihoods_dict = results['log_likelihood_values_dict']
-    log_target_density_values_dict = results['log_target_density_values_dict']
-    log_evidence_dict = results['log_evidence_dict']
-    num_model_evals_dict = results['num_model_evals_dict']
+        samples_dict = {0: initial_samples}
+        model_parameters_dict = {0: initial_model_parameters}
+        betas_dict = {0: 0.0}
+        log_likelihoods_dict = {0: initial_log_likelihoods}
+        log_target_density_values_dict = {0: initial_log_target_density_values}
+        log_evidence_dict = {0: 0}
+        num_model_evals_dict = {0: num_samples}
 
-    # Display results
-    final_stage_num = max(samples_dict.keys())
-    print(  # noqa: T201
-        f'Final samples (stage {final_stage_num}): \n{samples_dict[final_stage_num]}'
-    )
-    print(  # noqa: T201
-        f'Final model parameters (stage {final_stage_num}): \n{model_parameters_dict[final_stage_num]}'
-    )
-    print(f'Betas: {betas_dict.values()}')  # noqa: T201
-    print(f'Log-evidence values: {log_evidence_dict.values()}')  # noqa: T201
-    print(f'Total log-evidence: {sum(log_evidence_dict.values())}')  # noqa: T201
-    print(f'Number of model evaluations: {num_model_evals_dict.values()}')  # noqa: T201
+        stage_num = 0
+        results = tmcmc_sampler.run(
+            samples_dict,
+            model_parameters_dict,
+            betas_dict,
+            log_likelihoods_dict,
+            log_target_density_values_dict,
+            log_evidence_dict,
+            num_model_evals_dict,
+            stage_num,
+            num_burn_in=10,
+        )
+
+        logger.info('TMCMC finished successfully!')
+
+    except Exception as ex:
+        log_exception(logger, ex, message='Fatal error during TMCMC execution')
+        raise
+
+    finally:
+        flusher.stop()
