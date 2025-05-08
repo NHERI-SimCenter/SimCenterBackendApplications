@@ -92,7 +92,6 @@ def Submit_tapis_job(username, password):  # noqa: N802, D103
         'maxMinutes': 30,
         'archiveOnAppError': True,
         'archiveSystemId': 'designsafe.storage.default',
-        'archiveSystemDir': f'{t.username}/physics_based/M9/',
         'fileInputs': fileInputs,
         'parameterSet': parameterSet,
         'tags': ['portalName: DESIGNSAFE'],
