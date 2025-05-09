@@ -240,8 +240,8 @@ def animation_function(ii, ax, results_dir, all_frames, times):
     gdf = gpd.GeoDataFrame(results_df, geometry='geometry', crs='EPSG:4326')
     # gdf = gdf.to_crs(epsg=3857)
 
-    gdf.plot(ax=ax, linewidth=gdf.s, color=gdf.color)
-    ax.set_title(times[ii])
+    gdf.plot(ax=ax, linewidth=gdf.s*2.5, color=gdf.color)
+    ax.set_title(times[ii], fontsize=20)
     minx, miny, maxx, maxy = gdf.total_bounds
     ax.set_xlim(minx * 0.95, maxx * 1.05)
     ax.set_ylim(miny * 0.95, maxy * 1.05)
