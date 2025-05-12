@@ -151,6 +151,18 @@ class GP_AB_Algorithm:
         self.logger = logger or get_default_logger()
         self.log_step = make_logger_context(self.logger)
         self.log_decorator = make_log_step_decorator(self.logger)
+        decorate_methods_with_log_step(
+            instance=self,
+            method_names=[
+                '_step_1_posterior_approximation',
+                '_step_2_bayesian_updating',
+                '_step_3_assess_convergence',
+                '_step_4_adaptive_training_point_selection',
+                '_step_5_evaluate_responses',
+            ],
+            logger=self.logger,
+            warn_if_longer_than=300.0,  # Optional: warn if any method takes > 5 minutes
+        )
 
         with self.log_step('Initializing GP_AB_Algorithm.'):
             self.data = data
@@ -220,10 +232,18 @@ class GP_AB_Algorithm:
             self.log_target_density_values_dict = {}
             self.log_evidence_dict = {}
 
-            self.previous_posterior_samples = None
-            self.current_posterior_samples = None
-            self.previous_model_parameters = None
-            self.current_model_parameters = None
+            self.previous_posterior_samples = np.empty(
+                (0, self.input_dimension), dtype=float
+            )
+            self.current_posterior_samples = np.empty(
+                (0, self.input_dimension), dtype=float
+            )
+            self.previous_model_parameters = np.empty(
+                (0, self.input_dimension), dtype=float
+            )
+            self.current_model_parameters = np.empty(
+                (0, self.input_dimension), dtype=float
+            )
 
             self.num_samples_per_stage = num_samples_per_stage
 
@@ -1085,7 +1105,8 @@ class GP_AB_Algorithm:
                 self._initialize_tmcmc_result_dicts()
 
                 if k > 0:
-                    weights = self.kde.evaluate(self.inputs)
+                    if self.kde is not None:
+                        weights = self.kde.evaluate(self.inputs)
                     self.gcv = self._calculate_gcv(weights)
                     self.warm_start_possible = self.gcv < self.gcv_threshold
 
