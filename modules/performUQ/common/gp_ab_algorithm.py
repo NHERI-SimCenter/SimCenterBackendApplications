@@ -40,6 +40,7 @@ from logging_utilities import (
     ensure_logger,
     get_default_logger,
     log_exception,
+    log_step_auto,
     make_log_step_decorator,
     make_logger_context,
     set_default_logger,
@@ -227,6 +228,14 @@ class GP_AB_Algorithm:
             self.num_samples_per_stage = num_samples_per_stage
 
             self.save_outputs = True
+
+        # Decorate selected methods with timing/logging
+        decorate_methods_with_log_step(
+            self,
+            method_names=['run_iteration'],
+            logger=self.logger,
+            warn_if_longer_than=300.0,
+        )
 
     def _evaluate_in_parallel(
         self, func, model_parameters, simulation_number_start=0
@@ -468,7 +477,7 @@ class GP_AB_Algorithm:
         )
         return candidate_training_points_exploitation, stage_sample_counts
 
-    @self.log_step('Running GP-AB Algorithm iteration.')
+    # @self.log_step('Running GP-AB Algorithm iteration.')
     def run_iteration(self, k):  # noqa: C901
         """
         Run a single iteration of the GP-AB Algorithm.
@@ -491,89 +500,114 @@ class GP_AB_Algorithm:
         # Log-prior
         log_prior_fn = partial(log_prior, prior_pdf_function=self.prior_pdf_function)
 
-        # Step 1.1: GP calibration
-        if (
-            self.num_experiments[-1] - self.num_recalibration_experiments
-            >= self.recalibration_ratio * self.num_recalibration_experiments
-        ):  # sufficient number of experiments for recalibration
-            if k > 0:
-                self.previous_gp_model = self.current_gp_model
-                self.previous_pca = self.current_pca
-
-                previous_response_approximation = partial(
-                    response_approximation, self.previous_gp_model, self.previous_pca
+        with log_step_auto('Posterior Approximation'):
+            self.logger.info(
+                f'New experiments added: {self.num_experiments[-1] - self.num_recalibration_experiments}'
+            )
+            self.logger.info(
+                f'Recalibration threshold: {self.recalibration_ratio * self.num_recalibration_experiments}'
+            )
+            # Step 1.1: GP calibration
+            if (
+                self.num_experiments[-1] - self.num_recalibration_experiments
+                >= self.recalibration_ratio * self.num_recalibration_experiments
+            ):  # sufficient number of experiments for recalibration
+                self.logger.info(
+                    'Sufficient number of experiments for recalibration.'
                 )
-                previous_log_likelihood_approximation = partial(
-                    log_likelihood_approx,
-                    log_like_fn=log_like_fn,
-                    response_approx_fn=previous_response_approximation,
+                if k > 0:
+                    self.logger.info(
+                        'Saving previous GP model and posterior approximation.'
+                    )
+                    self.previous_gp_model = self.current_gp_model
+                    self.previous_pca = self.current_pca
+
+                    previous_response_approximation = partial(
+                        response_approximation,
+                        self.previous_gp_model,
+                        self.previous_pca,
+                    )
+                    previous_log_likelihood_approximation = partial(
+                        log_likelihood_approx,
+                        log_like_fn=log_like_fn,
+                        response_approx_fn=previous_response_approximation,
+                    )
+                    self.previous_response_approximation = (
+                        previous_response_approximation
+                    )
+                    self.previous_log_likelihood_approximation = (
+                        previous_log_likelihood_approximation
+                    )
+
+                self.logger.info('Creating GP model.')
+                self.current_pca = PrincipalComponentAnalysis(self.pca_threshold)
+                self.current_pca.fit(model_outputs)
+                self.latent_outputs = self.current_pca.project_to_latent_space(
+                    model_outputs
                 )
-                self.previous_response_approximation = (
-                    previous_response_approximation
+                self.num_pca_components_list.append(self.current_pca.n_components)
+                self.current_gp_model = create_gp_model(
+                    input_dimension=self.input_dimension,
+                    output_dimension=self.num_pca_components_list[-1],
+                    fix_nugget=False,
+                    logger=self.logger,
                 )
-                self.previous_log_likelihood_approximation = (
-                    previous_log_likelihood_approximation
+                self.logger.info('Calibrating GP model.')
+                self.current_gp_model.update(
+                    model_parameters, self.latent_outputs, reoptimize=True
                 )
+                self.num_recalibration_experiments = self.num_experiments[-1]
+                self.gp_recalibrated = True
 
-            self.current_pca = PrincipalComponentAnalysis(self.pca_threshold)
-            self.current_pca.fit(model_outputs)
-            self.latent_outputs = self.current_pca.project_to_latent_space(
-                model_outputs
-            )
-            self.num_pca_components_list.append(self.current_pca.n_components)
-            self.current_gp_model = create_gp_model(
-                input_dimension=self.input_dimension,
-                output_dimension=self.num_pca_components_list[-1],
-                fix_nugget=True,
-                logger=self.logger,
-            )
-            self.current_gp_model.update(
-                model_parameters, self.latent_outputs, reoptimize=True
-            )
-            self.num_recalibration_experiments = self.num_experiments[-1]
-            self.gp_recalibrated = True
+            else:  # no recalibration of GP model
+                self.logger.info(
+                    'Insufficient number of experiments for recalibration.'
+                )
+                self.logger.info(
+                    'Using previous GP model and posterior approximation.'
+                )
+                self.current_gp_model = self.previous_gp_model
+                self.current_pca = self.previous_pca
 
-        else:  # no recalibration of GP model
-            self.current_gp_model = self.previous_gp_model
-            self.current_pca = self.previous_pca
+                self.latent_outputs = self.current_pca.project_to_latent_space(
+                    model_outputs
+                )
+                self.num_pca_components_list.append(np.shape(self.latent_outputs)[1])
+                self.current_gp_model.update(
+                    model_parameters, self.latent_outputs, reoptimize=False
+                )
+                self.gp_recalibrated = False
 
-            self.latent_outputs = self.current_pca.project_to_latent_space(
-                model_outputs
+            # Step 1.2: GP predictive model
+            gp_prediction_latent_mean, gp_prediction_latent_variance = (
+                self.current_gp_model.predict(model_parameters)
             )
-            self.num_pca_components_list.append(np.shape(self.latent_outputs)[1])
-            self.current_gp_model.update(
-                model_parameters, self.latent_outputs, reoptimize=False
+            self.gp_prediction_mean = (
+                self.current_pca.project_back_to_original_space(
+                    gp_prediction_latent_mean
+                )
             )
-            self.gp_recalibrated = False
+            loo_predictions_latent_space = self.current_gp_model.loo_predictions(
+                self.latent_outputs
+            )
+            self.loo_predictions = self.current_pca.project_back_to_original_space(
+                loo_predictions_latent_space
+            )
 
-        # Step 1.2: GP predictive model
-        gp_prediction_latent_mean, gp_prediction_latent_variance = (
-            self.current_gp_model.predict(model_parameters)
-        )
-        self.gp_prediction_mean = self.current_pca.project_back_to_original_space(
-            gp_prediction_latent_mean
-        )
-        loo_predictions_latent_space = self.current_gp_model.loo_predictions(
-            self.latent_outputs
-        )
-        self.loo_predictions = self.current_pca.project_back_to_original_space(
-            loo_predictions_latent_space
-        )
-
-        # Step 1.3: Posterior distribution approximation
-        current_response_approximation = partial(
-            response_approximation, self.current_gp_model, self.current_pca
-        )
-        current_log_likelihood_approximation = partial(
-            log_likelihood_approx,
-            log_like_fn=log_like_fn,
-            response_approx_fn=current_response_approximation,
-        )
-        self.current_response_approximation = current_response_approximation
-        self.current_log_likelihood_approximation = (
-            current_log_likelihood_approximation
-        )
-        # self.log_posterior_approximation = self._log_posterior_approximation
+            # Step 1.3: Posterior distribution approximation
+            current_response_approximation = partial(
+                response_approximation, self.current_gp_model, self.current_pca
+            )
+            current_log_likelihood_approximation = partial(
+                log_likelihood_approx,
+                log_like_fn=log_like_fn,
+                response_approx_fn=current_response_approximation,
+            )
+            self.current_response_approximation = current_response_approximation
+            self.current_log_likelihood_approximation = (
+                current_log_likelihood_approximation
+            )
+            # self.log_posterior_approximation = self._log_posterior_approximation
 
         # Step 2.1: Evaluate warm-starting for TMCMC
         tmcmc = TMCMC(
@@ -1274,20 +1308,33 @@ def run_gp_ab_algorithm(input_arguments, logger: logging.Logger | None = None):
     Args:
         input_arguments (InputArguments): The input arguments for the algorithm.
     """
-    gp_ab = GP_AB_Algorithm(*preprocess(input_arguments), logger=logger)
-    inputs, outputs, num_initial_doe_samples = gp_ab.run_initial_doe(
-        num_initial_doe_per_dim=2
-    )
-    gp_ab.inputs = inputs
-    gp_ab.outputs = outputs
-    gp_ab.num_experiments.append(num_initial_doe_samples)
-    iteration = 0
-    terminate = False
-    while not terminate:
-        terminate, results = gp_ab.run_iteration(iteration)
-        gp_ab.write_results()
-        iteration += 1
-    gp_ab.parallel_pool.close_pool()
+    if logger is None:
+        logger = get_default_logger()
+
+    with log_step_auto('Running GP-AB Algorithm', logger=logger):
+        gp_ab = GP_AB_Algorithm(*preprocess(input_arguments), logger=logger)
+
+        with log_step_auto('Initial Design of Experiments', logger=logger):
+            inputs, outputs, num_initial_doe_samples = gp_ab.run_initial_doe(
+                num_initial_doe_per_dim=2
+            )
+            gp_ab.inputs = inputs
+            gp_ab.outputs = outputs
+            gp_ab.num_experiments.append(num_initial_doe_samples)
+
+        try:
+            iteration = 0
+            terminate = False
+            while not terminate:
+                with log_step_auto(f'Iteration {iteration}', logger=logger):
+                    terminate, results = gp_ab.run_iteration(iteration)
+                    gp_ab.write_results()
+                iteration += 1
+        finally:
+            gp_ab.parallel_pool.close_pool()
+            logger.info('✔ GP-AB Algorithm completed successfully.')
+            logger.info(f'Total iterations: {iteration}')
+            logger.info(f'Final number of experiments: {len(gp_ab.inputs)}')
 
 
 def parse_arguments(args=None):
