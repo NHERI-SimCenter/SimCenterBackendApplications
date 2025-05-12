@@ -163,8 +163,8 @@ class GP_AB_Algorithm:
             self.rv_names_list = rv_names_list
             self.output_names_list = output_names_list
 
-            self.inputs = None
-            self.outputs = None
+            self.inputs = np.empty((0, self.input_dimension), dtype=float)
+            self.outputs = np.empty((0, self.output_dimension), dtype=float)
             self.latent_outputs = None
 
             self.prior_pdf_function = prior_pdf_function
@@ -786,7 +786,7 @@ class GP_AB_Algorithm:
                 self.converged = self.gkl_converged
 
                 # Step 3.2: Computational budget related termination
-                num_simulations = len(self.inputs) if self.inputs is not None else 0
+                num_simulations = len(self.inputs)
                 elapsed_time = time.time() - self.start_time
                 self.budget_exceeded = (
                     num_simulations >= self.max_simulations
@@ -851,7 +851,7 @@ class GP_AB_Algorithm:
             weights_normalized = weights / np.sum(weights)
 
             self.exploitation_training_points = np.empty(
-                (0, self.input_dimension)
+                (0, self.input_dimension), dtype=float
             )  # initialize as empty 2D array
             if self.n_exploit > 0:
                 self.exploitation_training_points = (
@@ -876,7 +876,7 @@ class GP_AB_Algorithm:
                 )
             )
             self.exploration_training_points = np.empty(
-                (0, self.input_dimension)
+                (0, self.input_dimension), dtype=float
             )  # initialize as empty 2D array
             if self.n_explore > 0:
                 self.exploration_training_points = (
