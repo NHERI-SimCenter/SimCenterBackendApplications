@@ -10,16 +10,14 @@ from __future__ import annotations
 import argparse
 import importlib
 import json
-import logging
 import os
 import shutil
 import sys
 import time
 import traceback
-import warnings
 from functools import partial
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import common_datamodels
 import convergence_metrics
@@ -38,16 +36,20 @@ from log_likelihood_functions import (
 )
 from logging_utilities import (
     LoggerAutoFlusher,
+    decorate_methods_with_log_step,
     ensure_logger,
     get_default_logger,
     log_exception,
+    make_log_step_decorator,
+    make_logger_context,
     set_default_logger,
 )
 from principal_component_analysis import PrincipalComponentAnalysis
-from scipy.special import logsumexp
-from scipy.stats import invgamma, norm
 from space_filling_doe import LatinHypercubeSampling
 from tmcmc import TMCMC, calculate_warm_start_stage
+
+if TYPE_CHECKING:
+    import logging
 
 # warnings.simplefilter('error', RuntimeWarning)
 
@@ -145,83 +147,86 @@ class GP_AB_Algorithm:
             gkl_threshold (float, optional): The threshold for GKL. Defaults to 0.01.
             gmap_threshold (float, optional): The threshold for GMAP. Defaults to 0.01.
         """
-        self.data = data
-        self.input_dimension = input_dimension
-        self.output_dimension = output_dimension
-        self.output_length_list = output_length_list
-        self.domain = domain
-        self.prior_variances = prior_variances
+        self.logger = logger or get_default_logger()
+        self.log_step = make_logger_context(self.logger)
+        self.log_decorator = make_log_step_decorator(self.logger)
 
-        self.rv_names_list = rv_names_list
-        self.output_names_list = output_names_list
+        with self.log_step('Initializing GP_AB_Algorithm.'):
+            self.data = data
+            self.input_dimension = input_dimension
+            self.output_dimension = output_dimension
+            self.output_length_list = output_length_list
+            self.domain = domain
+            self.prior_variances = prior_variances
 
-        self.inputs = None
-        self.outputs = None
-        self.latent_outputs = None
+            self.rv_names_list = rv_names_list
+            self.output_names_list = output_names_list
 
-        self.prior_pdf_function = prior_pdf_function
-        self.log_likelihood_function = log_likelihood_function
+            self.inputs = None
+            self.outputs = None
+            self.latent_outputs = None
 
-        self.pca_threshold = pca_threshold
-        self.num_pca_components_list = []
+            self.prior_pdf_function = prior_pdf_function
+            self.log_likelihood_function = log_likelihood_function
 
-        self.gkl_threshold = gkl_threshold
-        self.gmap_threshold = gmap_threshold
+            self.pca_threshold = pca_threshold
+            self.num_pca_components_list = []
 
-        self.max_simulations = max_simulations
-        self.max_computational_time = max_computational_time
-        self.start_time = time.time()
+            self.gkl_threshold = gkl_threshold
+            self.gmap_threshold = gmap_threshold
 
-        self.converged = False
-        self.budget_exceeded = False
-        self.terminate = False
+            self.max_simulations = max_simulations
+            self.max_computational_time = max_computational_time
+            self.start_time = time.time()
 
-        self.num_experiments = [0]
-        self.num_recalibration_experiments = 0
-        self.recalibration_ratio = recalibration_ratio
+            self.converged = False
+            self.budget_exceeded = False
+            self.terminate = False
 
-        self.sample_transformation_function = sample_transformation_function
-        self.model_evaluation_function = model_evaluation_function
-        self.run_type = run_type
-        self.parallel_pool = uq_utilities.get_parallel_pool_instance(run_type)
-        self.parallel_evaluation_function = self.parallel_pool.pool.starmap
+            self.num_experiments = [0]
+            self.num_recalibration_experiments = 0
+            self.recalibration_ratio = recalibration_ratio
 
-        self.gcv_threshold = gcv_threshold
-        self.gcv = None
+            self.sample_transformation_function = sample_transformation_function
+            self.model_evaluation_function = model_evaluation_function
+            self.run_type = run_type
+            self.parallel_pool = uq_utilities.get_parallel_pool_instance(run_type)
+            self.parallel_evaluation_function = self.parallel_pool.pool.starmap
 
-        self.batch_size_factor = batch_size_factor
-        self.num_candidate_training_points = num_candidate_training_points
+            self.gcv_threshold = gcv_threshold
+            self.gcv = None
 
-        self.results = {}
+            self.batch_size_factor = batch_size_factor
+            self.num_candidate_training_points = num_candidate_training_points
 
-        self._logger = logger or get_default_logger()
+            self.results = {}
 
-        self.current_gp_model = create_gp_model(
-            input_dimension=self.input_dimension,
-            output_dimension=1,
-            logger=self._logger,
-        )
-        self.current_pca = PrincipalComponentAnalysis(
-            self.pca_threshold, perform_scaling=True
-        )
-        self.gp_recalibrated = False
+            self.current_gp_model = create_gp_model(
+                input_dimension=self.input_dimension,
+                output_dimension=self.output_dimension,
+                logger=self.logger,
+            )
+            self.current_pca = PrincipalComponentAnalysis(
+                self.pca_threshold, perform_scaling=True
+            )
+            self.gp_recalibrated = False
 
-        self.kde = None
+            self.kde = None
 
-        self.samples_dict = {}
-        self.betas_dict = {}
-        self.log_likelihoods_dict = {}
-        self.log_target_density_values_dict = {}
-        self.log_evidence_dict = {}
+            self.samples_dict = {}
+            self.betas_dict = {}
+            self.log_likelihoods_dict = {}
+            self.log_target_density_values_dict = {}
+            self.log_evidence_dict = {}
 
-        self.previous_posterior_samples = None
-        self.current_posterior_samples = None
-        self.previous_model_parameters = None
-        self.current_model_parameters = None
+            self.previous_posterior_samples = None
+            self.current_posterior_samples = None
+            self.previous_model_parameters = None
+            self.current_model_parameters = None
 
-        self.num_samples_per_stage = num_samples_per_stage
+            self.num_samples_per_stage = num_samples_per_stage
 
-        self.save_outputs = True
+            self.save_outputs = True
 
     def _evaluate_in_parallel(
         self, func, model_parameters, simulation_number_start=0
@@ -382,6 +387,8 @@ class GP_AB_Algorithm:
         -------
             float: The LOOCV measure.
         """
+        start_time = time.time()
+        self.logger.info('Calculating leave-one-out cross validation error measure.')
         latent_outputs = self.current_pca.project_to_latent_space(self.outputs)
         loo_predictions_latent_space = self.current_gp_model.loo_predictions(
             latent_outputs
@@ -396,7 +403,11 @@ class GP_AB_Algorithm:
             weights=weights,
             weight_combination=(2 / 3, 1 / 3),
         )
-        return loocv_measure  # noqa: RET504
+        time_taken = time.time() - start_time
+        self.logger.info(
+            f'  -> Completed in {time_taken:.2g} seconds. Leave-one-out cross validation error measure: {loocv_measure:.4f}'
+        )
+        return loocv_measure
 
     def _get_exploitation_candidates(self):
         """
@@ -410,6 +421,7 @@ class GP_AB_Algorithm:
         dict:
             Dictionary mapping stage number to the number of points sampled from that stage.
         """  # noqa: D205
+        self.logger.info('Assembling candidate training points for exploitation.')
         stage_weights = np.asarray(
             self.stage_weights
         )  # aligned with stages_after_warm_start
@@ -451,9 +463,12 @@ class GP_AB_Algorithm:
             candidate_training_points_exploitation = (
                 candidate_training_points_exploitation[trim_indices]
             )
-
+        self.logger.info(
+            '  -> Completed candidate training point selection for exploitation.'
+        )
         return candidate_training_points_exploitation, stage_sample_counts
 
+    @self.log_step('Running GP-AB Algorithm iteration.')
     def run_iteration(self, k):  # noqa: C901
         """
         Run a single iteration of the GP-AB Algorithm.
@@ -509,7 +524,8 @@ class GP_AB_Algorithm:
             self.current_gp_model = create_gp_model(
                 input_dimension=self.input_dimension,
                 output_dimension=self.num_pca_components_list[-1],
-                logger=self._logger,
+                fix_nugget=True,
+                logger=self.logger,
             )
             self.current_gp_model.update(
                 model_parameters, self.latent_outputs, reoptimize=True
@@ -565,7 +581,7 @@ class GP_AB_Algorithm:
             log_prior_fn,
             self.sample_transformation_function,
             run_parallel=True,
-            logger=self._logger,
+            logger=self.logger,
         )
 
         self.j_star = 0
@@ -1059,7 +1075,7 @@ def calculate_exploitation_proportion(gcv):
     g_upper = 0.2
     g_lower = 0.005
     r_max = 0.9
-    r_min = 0.25
+    r_min = 0.3
 
     if gcv > g_upper:
         return r_min
