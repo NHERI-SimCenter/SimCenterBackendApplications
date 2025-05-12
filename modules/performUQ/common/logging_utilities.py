@@ -11,6 +11,7 @@ import contextlib
 import functools
 import logging
 import os
+import re
 import sys
 import threading
 import time
@@ -431,6 +432,53 @@ def make_log_step_decorator(logger: logging.Logger):
     return decorator_factory
 
 
+def _prettify_method_name(name: str) -> str:
+    """
+    Convert internal method names into readable log step messages.
+
+    Examples
+    --------
+    '_evaluate_gp_recalibration' → 'Evaluating GP Recalibration'
+    '_step_2_bayesian_updating' → 'Step 2: Bayesian Updating'
+    '_run_tmcmc' → 'Running TMCMC'
+    """
+    name = name.lstrip('_')
+
+    # Check for step prefix like 'step_2_bayesian_updating'
+    match = re.match(r'step_(\d+)_([a-zA-Z0-9_]+)', name)
+    if match:
+        step_num, label = match.groups()
+        return f'Step {step_num}: {_title_case_with_acronyms(label)}'
+
+    # Prepend action verb if recognizable
+    verb_map = {
+        'evaluate': 'Evaluating',
+        'construct': 'Constructing',
+        'run': 'Running',
+        'check': 'Checking',
+        'assess': 'Assessing',
+        'select': 'Selecting',
+        'prepare': 'Preparing',
+        'save': 'Saving',
+        'load': 'Loading',
+    }
+
+    tokens = name.split('_')
+    if tokens[0] in verb_map:
+        tokens[0] = verb_map[tokens[0]]
+    return _title_case_with_acronyms('_'.join(tokens))
+
+
+def _title_case_with_acronyms(text: str) -> str:
+    """Title-case a string while preserving common acronyms."""
+    known_acronyms = {'gp', 'tmcmc', 'pca', 'kl', 'mse', 'loo', 'pdf', 'cdf'}
+    words = text.split('_')
+    return ' '.join(
+        word.upper() if word.lower() in known_acronyms else word.capitalize()
+        for word in words
+    )
+
+
 def decorate_methods_with_log_step(
     instance,
     method_names: list[str],
@@ -438,18 +486,9 @@ def decorate_methods_with_log_step(
     warn_if_longer_than: float | None = 300.0,
 ):
     """
-    Decorate selected methods of an object instance using `log_step_auto_decorator`.
+    Decorate selected methods of an object instance using log_step_auto_decorator.
 
-    Parameters
-    ----------
-    instance : object
-        The class instance whose methods should be decorated.
-    method_names : list[str]
-        List of method names (as strings) to wrap.
-    logger : logging.Logger, optional
-        Logger to use. Defaults to get_default_logger().
-    warn_if_longer_than : float or None, optional
-        Threshold for logging warnings if time exceeds this.
+    Format step names for readable logs.
     """
     if logger is None:
         logger = get_default_logger()
@@ -457,8 +496,9 @@ def decorate_methods_with_log_step(
     for name in method_names:
         if hasattr(instance, name):
             method = getattr(instance, name)
+            pretty_name = _prettify_method_name(name)
             decorated = log_step_auto_decorator(
-                message=f'{instance.__class__.__name__}.{name}()',
+                message=pretty_name,
                 logger=logger,
                 warn_if_longer_than=warn_if_longer_than,
             )(method)
