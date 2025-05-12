@@ -13,7 +13,7 @@ import numpy as np
 from config_utilities import load_settings_from_config, save_used_settings_as_config
 from GPy.mappings import Additive, Constant, Linear
 from logging_utilities import ensure_logger, flush_logger, get_default_logger
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 # =========================================================
 # Top-level Classes
@@ -30,6 +30,15 @@ class GaussianProcessModelSettings(BaseModel):
         'matern52', pattern='^(exponential|matern32|matern52|rbf)$'
     )
     mean_function: str = Field('none', pattern='^(none|constant|linear)$')
+    nugget_value: float = 1e-6
+    fix_nugget: bool = True
+
+    @model_validator(mode='after')
+    def check_nugget_value(self):  # noqa: D102
+        if self.fix_nugget and self.nugget_value <= 0:
+            msg = 'If nugget is fixed, its value must be positive.'
+            raise ValueError(msg)
+        return self
 
 
 class GaussianProcessModel:
@@ -48,10 +57,12 @@ class GaussianProcessModel:
         self.ARD = settings.ARD
         self.kernel_type = settings.kernel_type.lower()
         self.mean_function_type = settings.mean_function.lower()
+        self.nugget_value = settings.nugget_value
+        self.fix_nugget = settings.fix_nugget
 
         self.kernel = self._create_kernel()
         self.model = self._create_surrogate()
-        self._add_nugget_parameter()
+        self._configure_nugget()
 
     def _create_kernel(self):
         if self.kernel_type == 'exponential':
@@ -102,6 +113,13 @@ class GaussianProcessModel:
         for i in range(self.output_dimension):
             self.model[i].likelihood.variance = value
             self.model[i].likelihood.variance.fix()
+
+    def _configure_nugget(self):
+        """Configure the nugget (Gaussian noise variance) for each GP model."""
+        if self.settings.fix_nugget:
+            self._fix_nugget_parameter(value=self.settings.nugget_value)
+        else:
+            self._add_nugget_parameter(nugget_value=self.settings.nugget_value)
 
     def update(self, x_train, y_train, *, reoptimize=True, num_random_restarts=10):
         """Update the GP models with new training data."""
@@ -154,11 +172,17 @@ class GaussianProcessModel:
         """Provide a string representation of the GaussianProcessModel instance."""
         mean_function = self.model[0].mean_function
         names = _get_mean_function_name(mean_function)
+        variance = float(self.model[0].likelihood.variance)  # Extract value
+        is_fixed = self.model[0].likelihood.variance.is_fixed  # Check if fixed
         return (
-            f'GaussianProcessModel(input_dimension={self.input_dimension}, '
-            f'output_dimension={self.output_dimension}, ARD={self.ARD}, '
+            f'GaussianProcessModel('
+            f'input_dimension={self.input_dimension}, '
+            f'output_dimension={self.output_dimension}, '
+            f'ARD={self.ARD}, '
             f'kernel_type={self.model[0].kern.name}, '
-            f'mean_function={names})'
+            f'mean_function={names}, '
+            f'nugget_value={variance}, '
+            f'fix_nugget={is_fixed})'
         )
 
     def flush_logs(self):
@@ -334,6 +358,18 @@ def parse_gp_arguments(args=None) -> dict:
         '--config_file',
         type=str,
         help='Path to a JSON config file.',
+    )
+    optional.add_argument(
+        '--nugget_value',
+        type=float,
+        default=1e-6,
+        help='Nugget value for Gaussian noise (default: 1e-6).',
+    )
+    optional.add_argument(
+        '--fix_nugget',
+        action='store_true',
+        help='Fix the nugget to the specified value instead of optimizing it. '
+        'Default behavior is to optimize.',
     )
 
     parsed = parser.parse_args(args)
