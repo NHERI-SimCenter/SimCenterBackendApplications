@@ -52,6 +52,7 @@ import os
 import sys
 
 import foam_dict_reader as foam
+import generate_wind_profiles as wind_prof
 import numpy as np
 from stl import mesh
 
@@ -2249,4 +2250,7 @@ if __name__ == '__main__':  # noqa: W291
     # write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path)
 
     # Write TInf files
-    write_boundary_data_files(input_json_path, case_path)
+    # write_boundary_data_files(input_json_path, case_path)
+    wind_prof.write_boundary_data_files(input_json_path, case_path)
+    
+    
