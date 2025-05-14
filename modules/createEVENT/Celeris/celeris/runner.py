@@ -5,7 +5,6 @@ import imageio  # For creating GIFs
 from celeris.solver import *  # noqa: F403
 from celeris.utils import *  # noqa: F403
 from taichi import tools  # For saving images
-
 # Done at top of translation unit for now, clean-up later - JB
 base_frame_dir = './plots/'  # ! Assumes we are in CelerisAi/ directory
 os.makedirs(  # noqa: PTH103
@@ -72,8 +71,8 @@ class Evolve:  # noqa: D101
 
     def Evolve_Steps(self, step=0):  # noqa: C901, N802, D102
         i = step
-
-        self.solver.Pass1()
+        self.solver.update_step()
+        self.solver.Pass1(int(i))
 
         if self.solver.useSedTransModel:
             self.solver.Pass1_SedTrans()
@@ -125,7 +124,7 @@ class Evolve:  # noqa: D101
                     src=self.solver.NewState_Sed, dst=self.solver.State_Sed
                 )
 
-            self.solver.Pass1()
+            self.solver.Pass1(int(i))
 
             if self.solver.useSedTransModel:
                 self.solver.Pass1_SedTrans()
@@ -545,6 +544,8 @@ class Evolve:  # noqa: D101
 
         start_time = time.time()
 
+        self.solver.overwrite_force()
+
         while window.running:
             # self.paint()
             # self.paint_new()
@@ -569,6 +570,8 @@ class Evolve:  # noqa: D101
                 )  # using the Taichi tensors to render the image
             self.Evolve_Steps(i)
 
+            window.line(self.solver.force_sensor_begin_scaled, self.solver.force_sensor_end_scaled, radius=1, color=0x39FF14)
+            
             self.buffer_step = 1
             self.render_step = 10
             self.image_step = 100
@@ -635,7 +638,11 @@ class Evolve:  # noqa: D101
                 # Improve the performance.The visualization is done only every 5 timesteps
                 window.show()
 
-            if i > self.maxsteps:
+            self.output_forces = True
+            if (self.output_forces):
+                self.solver.write_hydrostatic_force()
+                
+            if i > self.maxsteps:          
                 if self.saveimg:
                     print('Creating GIF...')  # noqa: T201
                     if frame_paths:  # Check if there are frames to create a GIF
