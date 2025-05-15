@@ -506,3 +506,39 @@ def decorate_methods_with_log_step(
         else:
             msg = f"{instance} has no method named '{name}'"
             raise AttributeError(msg)
+
+
+def loginfo(msg: str, logger: logging.Logger | None = None) -> None:
+    """
+    Log a single INFO message with current indentation and symbol.
+
+    Parameters
+    ----------
+    msg : str
+        The message to log.
+    logger : logging.Logger, optional
+        Logger to use. If None, uses the default logger.
+    """
+    if logger is None:
+        logger = get_default_logger()
+    indent = _get_indent_string()
+    symbol = _get_log_symbol_for_indent(logger.getEffectiveLevel())
+    logger.info(f'{indent}{symbol} {msg}')
+
+
+def make_log_info(logger: logging.Logger):
+    """
+    Return a pre-bound version of logi that uses the given logger.
+
+    Usage
+    -----
+    logi = make_log_info(logger)
+    logi("Message")  # Will use correct indent and logger
+    """
+
+    def logi_bound(msg: str):
+        indent = _get_indent_string()
+        symbol = _get_log_symbol_for_indent(logger.getEffectiveLevel())
+        logger.info(f'{indent}{symbol} {msg}')
+
+    return logi_bound
