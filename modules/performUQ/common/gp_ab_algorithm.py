@@ -41,6 +41,7 @@ from logging_utilities import (
     get_default_logger,
     log_exception,
     log_step_auto,
+    make_log_info,
     make_log_step_decorator,
     make_logger_context,
     set_default_logger,
@@ -150,7 +151,9 @@ class GP_AB_Algorithm:
         """
         self.logger = logger or get_default_logger()
         self.log_step = make_logger_context(self.logger)
-        self.log_decorator = make_log_step_decorator(self.logger)
+        # self.log_decorator = make_log_step_decorator(self.logger)
+        self.loginfo = make_log_info(self.logger)
+
         decorate_methods_with_log_step(
             instance=self,
             method_names=[
@@ -214,14 +217,17 @@ class GP_AB_Algorithm:
 
             self.results = {}
 
-            self.current_gp_model = create_gp_model(
-                input_dimension=self.input_dimension,
-                output_dimension=self.output_dimension,
-                logger=self.logger,
-            )
-            self.current_pca = PrincipalComponentAnalysis(
-                self.pca_threshold, perform_scaling=True
-            )
+            # self.current_gp_model = create_gp_model(
+            #     input_dimension=self.input_dimension,
+            #     output_dimension=self.output_dimension,
+            #     mean_function='linear',
+            #     logger=self.logger,
+            # )
+            # self.current_pca = PrincipalComponentAnalysis(
+            #     self.pca_threshold, perform_scaling=True
+            # )
+            self.current_gp_model = None
+            self.current_pca = None
             self.gp_recalibrated = False
 
             self.kde = None
@@ -247,7 +253,7 @@ class GP_AB_Algorithm:
 
             self.num_samples_per_stage = num_samples_per_stage
 
-            self.save_outputs = True
+            self.save_outputs = False
 
         # Decorate selected methods with timing/logging
         decorate_methods_with_log_step(
@@ -417,7 +423,7 @@ class GP_AB_Algorithm:
             float: The LOOCV measure.
         """
         start_time = time.time()
-        self.logger.info('Calculating leave-one-out cross validation error measure.')
+        self.loginfo('Calculating leave-one-out cross validation error measure.')
         latent_outputs = self.current_pca.project_to_latent_space(self.outputs)
         loo_predictions_latent_space = self.current_gp_model.loo_predictions(
             latent_outputs
@@ -433,7 +439,7 @@ class GP_AB_Algorithm:
             weight_combination=(2 / 3, 1 / 3),
         )
         time_taken = time.time() - start_time
-        self.logger.info(
+        self.loginfo(
             f'  -> Completed in {time_taken:.2g} seconds. Leave-one-out cross validation error measure: {loocv_measure:.4f}'
         )
         return loocv_measure
@@ -450,7 +456,7 @@ class GP_AB_Algorithm:
         dict:
             Dictionary mapping stage number to the number of points sampled from that stage.
         """  # noqa: D205
-        self.logger.info('Assembling candidate training points for exploitation.')
+        self.loginfo('Assembling candidate training points for exploitation.')
         stage_weights = np.asarray(
             self.stage_weights
         )  # aligned with stages_after_warm_start
@@ -492,846 +498,33 @@ class GP_AB_Algorithm:
             candidate_training_points_exploitation = (
                 candidate_training_points_exploitation[trim_indices]
             )
-        self.logger.info(
+        self.loginfo(
             '  -> Completed candidate training point selection for exploitation.'
         )
         return candidate_training_points_exploitation, stage_sample_counts
 
-    # def run_iteration(self, k):
-    #     """
-    #     Run a single iteration of the GP-AB Algorithm.
-
-    #     Args:
-    #         k (int): The iteration number.
-
-    #     Returns
-    #     -------
-    #         tuple: A tuple containing a boolean indicating whether to terminate and the current TMCMC results.
-    #     """
-    #     self.iteration_number = k
-    #     model_parameters = self.inputs
-    #     model_outputs = self.outputs
-
-    #     # Log-likelihood function (fixed weights)
-    #     log_like_fn = partial(
-    #         log_like, data=self.data, output_length_list=self.output_length_list
-    #     )
-    #     # Log-prior
-    #     log_prior_fn = partial(log_prior, prior_pdf_function=self.prior_pdf_function)
-
-    #     # Step 1
-    #     with log_step_auto('Posterior Approximation', logger=self.logger):
-    #         with log_step_auto(
-    #             'Evaluating if GP Recalibration Needed.', logger=self.logger
-    #         ):
-    #             self.logger.info(
-    #                 f'New experiments added: {self.num_experiments[-1] - self.num_recalibration_experiments}'
-    #             )
-    #             self.logger.info(
-    #                 f'Recalibration threshold: {self.recalibration_ratio * self.num_recalibration_experiments}'
-    #             )
-    #             # Step 1.1: GP calibration
-    #             if (
-    #                 self.num_experiments[-1] - self.num_recalibration_experiments
-    #                 >= self.recalibration_ratio * self.num_recalibration_experiments
-    #             ):  # sufficient number of experiments for recalibration
-    #                 self.logger.info(
-    #                     'Sufficient number of experiments for recalibration.'
-    #                 )
-    #                 if k > 0:
-    #                     self.logger.info(
-    #                         'Saving previous GP model and posterior approximation.'
-    #                     )
-    #                     self.previous_gp_model = self.current_gp_model
-    #                     self.previous_pca = self.current_pca
-
-    #                     previous_response_approximation = partial(
-    #                         response_approximation,
-    #                         self.previous_gp_model,
-    #                         self.previous_pca,
-    #                     )
-    #                     previous_log_likelihood_approximation = partial(
-    #                         log_likelihood_approx,
-    #                         log_like_fn=log_like_fn,
-    #                         response_approx_fn=previous_response_approximation,
-    #                     )
-    #                     self.previous_response_approximation = (
-    #                         previous_response_approximation
-    #                     )
-    #                     self.previous_log_likelihood_approximation = (
-    #                         previous_log_likelihood_approximation
-    #                     )
-
-    #                 self.logger.info('Creating GP model.')
-    #                 self.current_pca = PrincipalComponentAnalysis(self.pca_threshold)
-    #                 self.current_pca.fit(model_outputs)
-    #                 self.latent_outputs = self.current_pca.project_to_latent_space(
-    #                     model_outputs
-    #                 )
-    #                 self.num_pca_components_list.append(
-    #                     self.current_pca.n_components
-    #                 )
-    #                 self.current_gp_model = create_gp_model(
-    #                     input_dimension=self.input_dimension,
-    #                     output_dimension=self.num_pca_components_list[-1],
-    #                     fix_nugget=False,
-    #                     logger=self.logger,
-    #                 )
-    #                 self.logger.info('Calibrating GP model.')
-    #                 self.current_gp_model.update(
-    #                     model_parameters, self.latent_outputs, reoptimize=True
-    #                 )
-    #                 self.num_recalibration_experiments = self.num_experiments[-1]
-    #                 self.gp_recalibrated = True
-
-    #             else:  # no recalibration of GP model
-    #                 self.logger.info(
-    #                     'Insufficient number of experiments for recalibration.'
-    #                 )
-    #                 self.logger.info(
-    #                     'Using previous GP model and posterior approximation.'
-    #                 )
-    #                 self.current_gp_model = self.previous_gp_model
-    #                 self.current_pca = self.previous_pca
-
-    #                 self.latent_outputs = self.current_pca.project_to_latent_space(
-    #                     model_outputs
-    #                 )
-    #                 self.num_pca_components_list.append(
-    #                     np.shape(self.latent_outputs)[1]
-    #                 )
-    #                 self.current_gp_model.update(
-    #                     model_parameters, self.latent_outputs, reoptimize=False
-    #                 )
-    #                 self.gp_recalibrated = False
-
-    #         with log_step_auto(
-    #             'Constructing Posterior Distribution Approximation.',
-    #             logger=self.logger,
-    #         ):
-    #             # Step 1.2: GP predictive model
-    #             gp_prediction_latent_mean, gp_prediction_latent_variance = (
-    #                 self.current_gp_model.predict(model_parameters)
-    #             )
-    #             self.gp_prediction_mean = (
-    #                 self.current_pca.project_back_to_original_space(
-    #                     gp_prediction_latent_mean
-    #                 )
-    #             )
-    #             loo_predictions_latent_space = self.current_gp_model.loo_predictions(
-    #                 self.latent_outputs
-    #             )
-    #             self.loo_predictions = (
-    #                 self.current_pca.project_back_to_original_space(
-    #                     loo_predictions_latent_space
-    #                 )
-    #             )
-
-    #             # Step 1.3: Posterior distribution approximation
-    #             current_response_approximation = partial(
-    #                 response_approximation, self.current_gp_model, self.current_pca
-    #             )
-    #             current_log_likelihood_approximation = partial(
-    #                 log_likelihood_approx,
-    #                 log_like_fn=log_like_fn,
-    #                 response_approx_fn=current_response_approximation,
-    #             )
-    #             self.current_response_approximation = current_response_approximation
-    #             self.current_log_likelihood_approximation = (
-    #                 current_log_likelihood_approximation
-    #             )
-    #             # self.log_posterior_approximation = self._log_posterior_approximation
-
-    #     # Step 2
-    #     with log_step_auto('Bayesian Updating.', logger=self.logger):
-    #         with log_step_auto(
-    #             'Evaluating warm-start of TMCMC.', logger=self.logger
-    #         ):
-    #             # Step 2.1: Evaluate warm-starting for TMCMC
-    #             tmcmc = TMCMC(
-    #                 current_log_likelihood_approximation,
-    #                 log_prior_fn,
-    #                 self.sample_transformation_function,
-    #                 run_parallel=True,
-    #                 logger=self.logger,
-    #             )
-
-    #             self.j_star = 0
-    #             beta = 0
-
-    #             samples_dict = {}
-    #             model_parameters_dict = {}
-    #             betas_dict = {}
-    #             log_likelihoods_dict = {}
-    #             log_target_density_values_dict = {}
-    #             log_evidence_dict = {}
-    #             num_model_evals_dict = {}
-
-    #             if k > 0:
-    #                 weights = self.kde.evaluate(self.inputs)
-    #                 self.gcv = self._calculate_gcv(weights=weights)
-    #                 self.warm_start_possible = self.gcv < self.gcv_threshold
-    #                 if self.warm_start_possible:
-    #                     self.logger.info(
-    #                         f'Warm start possible since g_cv: {self.gcv} is less than the threshold: {self.gcv_threshold}.'
-    #                     )
-    #                     self.logger.info('Calculating warm-start stage.')
-    #                     self.j_star = calculate_warm_start_stage(
-    #                         self.current_log_likelihood_approximation,
-    #                         self.results,
-    #                     )
-    #                     self.logger.info(
-    #                         f'Warm-start stage calculated: {self.j_star}.'
-    #                     )
-
-    #                 self.logger.info('Saving samples from previous iteration.')
-    #                 self.previous_model_parameters = self.results[
-    #                     'model_parameters_dict'
-    #                 ]
-    #                 self.num_tmcmc_stages = len(self.previous_model_parameters)
-    #                 self.previous_posterior_samples = self.previous_model_parameters[
-    #                     self.num_tmcmc_stages - 1
-    #                 ]
-
-    #         with log_step_auto('TMCMC Sampling', logger=self.logger):
-    #             # Step 2.2: Sequential MC sampling
-    #             if self.j_star == 0:
-    #                 self.logger.info(
-    #                     'Preparing for sequential sampling starting from prior.'
-    #                 )
-    #                 initial_samples = self._perform_space_filling_doe(
-    #                     self.num_samples_per_stage
-    #                 )
-    #                 model_parameters_initial = self.sample_transformation_function(
-    #                     initial_samples
-    #                 )
-    #                 log_target_density_values = log_prior_fn(
-    #                     model_parameters_initial
-    #                 )
-    #                 log_likelihood_values = current_log_likelihood_approximation(
-    #                     model_parameters_initial
-    #                 )
-    #                 log_evidence = 0
-    #                 beta = 0
-    #                 stage_num = 0
-    #                 model_evals_tmcmc = self.num_samples_per_stage
-
-    #                 samples_dict[self.j_star] = initial_samples
-    #                 model_parameters_dict[self.j_star] = model_parameters_initial
-    #                 betas_dict[self.j_star] = beta
-    #                 log_likelihoods_dict[self.j_star] = log_likelihood_values
-    #                 log_target_density_values_dict[self.j_star] = (
-    #                     log_target_density_values
-    #                 )
-    #                 log_evidence_dict[self.j_star] = log_evidence
-    #                 num_model_evals_dict[self.j_star] = model_evals_tmcmc
-    #             else:
-    #                 self.logger.info(
-    #                     'Preparing for sequential sampling warm starting from intermediate stage.'
-    #                 )
-    #                 for j in range(self.j_star):
-    #                     samples_dict[j] = self.results['samples_dict'][j]
-    #                     model_parameters_dict[j] = self.results[
-    #                         'model_parameters_dict'
-    #                     ][j]
-    #                     betas_dict[j] = self.results['betas_dict'][j]
-    #                     log_likelihoods_dict[j] = self.results[
-    #                         'log_likelihood_values_dict'
-    #                     ][j]
-    #                     log_target_density_values_dict[j] = self.results[
-    #                         'log_target_density_values_dict'
-    #                     ][j]
-    #                     log_evidence_dict[j] = self.results['log_evidence_dict'][j]
-    #                     num_model_evals_dict[j] = self.results[
-    #                         'num_model_evals_dict'
-    #                     ][j]
-    #                 stage_num = self.j_star - 1
-
-    #             with log_step_auto('Running TMCMC sampling.', logger=self.logger):
-    #                 self.results = tmcmc.run(
-    #                     samples_dict,
-    #                     model_parameters_dict,
-    #                     betas_dict,
-    #                     log_likelihoods_dict,
-    #                     log_target_density_values_dict,
-    #                     log_evidence_dict,
-    #                     num_model_evals_dict,
-    #                     stage_num,
-    #                     num_burn_in=0,
-    #                 )
-
-    #             self.current_model_parameters = self.results['model_parameters_dict']
-    #             self.num_tmcmc_stages = len(self.current_model_parameters)
-    #             self.current_posterior_samples = self.current_model_parameters[
-    #                 self.num_tmcmc_stages - 1
-    #             ]
-
-    #     # Step 3
-    #     with log_step_auto('Assessing Convergence.', logger=self.logger):
-    #         self.converged = False
-    #         if k > 0:
-    #             with log_step_auto(
-    #                 'Calculating KL divergence based convergence metric gKL.',
-    #                 logger=self.logger,
-    #             ):
-    #                 combined_samples = np.vstack(
-    #                     [
-    #                         self.previous_posterior_samples,
-    #                         self.current_posterior_samples,
-    #                     ]
-    #                 )  # type: ignore
-    #                 # Step 3.1: Assess convergence
-    #                 self.gkl = convergence_metrics.calculate_gkl(
-    #                     self.current_log_likelihood_approximation,
-    #                     self.previous_log_likelihood_approximation,
-    #                     log_prior_fn,
-    #                     combined_samples,
-    #                 )
-    #                 self.gkl_converged = self.gkl < self.gkl_threshold
-    #                 self.logger.info(
-    #                     f'gKL: {self.gkl:.4f}, threshold: {self.gkl_threshold:.4f}'
-    #                 )
-    #                 self.logger.info(f'gKL convergence: {self.gkl_converged}')
-
-    #             self.gmap = convergence_metrics.calculate_gmap(
-    #                 self.current_log_likelihood_approximation,
-    #                 self.previous_log_likelihood_approximation,
-    #                 log_prior_fn,
-    #                 combined_samples,
-    #                 self.prior_variances,
-    #             )
-    #             self.gmap_converged = self.gmap < self.gmap_threshold
-    #             # self.converged = self.gkl_converged and self.gmap_converged
-    #             self.converged = self.gkl_converged
-
-    #             # Step 3.2: Computational budget related termination
-    #             num_simulations = len(self.inputs)
-    #             elapsed_time = time.time() - self.start_time
-    #             self.budget_exceeded = (
-    #                 num_simulations >= self.max_simulations
-    #                 or elapsed_time >= self.max_computational_time
-    #             )
-    #             self.terminate = self.converged or self.budget_exceeded
-
-    #         if self.terminate:
-    #             reasons = []
-    #             if self.gkl_converged:
-    #                 reasons.append('convergence based on gKL')
-    #             if self.budget_exceeded:
-    #                 reasons.append(
-    #                     f'computational budget exceeded '
-    #                     f'(simulations: {num_simulations}/{self.max_simulations}, '
-    #                     f'time: {elapsed_time:.2f}/{self.max_computational_time} sec)'
-    #                 )
-    #             for reason in reasons:
-    #                 self.logger.info(f'Terminating: {reason}')
-    #             return self.terminate, self.results
-
-    #     # Step 4
-    #     with log_step_auto(
-    #         'Adaptive Selection of New Training Points.', logger=self.logger
-    #     ):
-    #         # Step 4.1: Select variance for DoE
-    #         self.n_training_points = self.batch_size_factor * self.input_dimension
-    #         if self.gcv is None:
-    #             self.exploitation_proportion = 0
-    #         else:
-    #             self.exploitation_proportion = calculate_exploitation_proportion(
-    #                 self.gcv
-    #             )
-    #         self.n_exploit = int(
-    #             np.floor(self.exploitation_proportion * self.n_training_points)
-    #         )
-    #         self.n_explore = self.n_training_points - self.n_exploit
-
-    #         current_doe = AdaptiveDesignOfExperiments(
-    #             self.current_gp_model, self.current_pca
-    #         )
-
-    #         # Step 4.2: Exploitation DoE
-    #         start = max(1, self.j_star)
-    #         self.stages_after_warm_start = list(range(start, self.num_tmcmc_stages))
-    #         self.stage_weights = np.ones(len(self.stages_after_warm_start))
-
-    #         candidate_training_points_exploitation, self.stage_sample_counts = (
-    #             self._get_exploitation_candidates()
-    #         )
-    #         out_file_candidates = (
-    #             Path('results') / f'exploitation_candidates_{k}.json'
-    #         )
-    #         save_exploitation_candidates_by_stage_json(
-    #             out_file_candidates,
-    #             candidate_training_points_exploitation,
-    #             self.stage_sample_counts,
-    #         )
-
-    #         self.kde = GaussianKDE(candidate_training_points_exploitation)
-    #         weights = self.kde.evaluate(candidate_training_points_exploitation)
-    #         weights_normalized = weights / np.sum(weights)
-
-    #         self.exploitation_training_points = np.empty(
-    #             (0, self.input_dimension), dtype=float
-    #         )  # initialize as empty 2D array
-    #         if self.n_exploit > 0:
-    #             self.exploitation_training_points = (
-    #                 current_doe.select_training_points(
-    #                     self.inputs,
-    #                     self.n_exploit,
-    #                     candidate_training_points_exploitation,
-    #                     use_mse_w=True,
-    #                     weights=weights_normalized,
-    #                 )
-    #             )
-    #             self.inputs = np.vstack(
-    #                 [self.inputs, self.exploitation_training_points]
-    #             )
-
-    #         # Step 4.3: Exploration DoE
-    #         candidate_training_points_exploration = (
-    #             self.sample_transformation_function(
-    #                 self._perform_space_filling_doe(
-    #                     self.num_candidate_training_points
-    #                 )
-    #             )
-    #         )
-    #         self.exploration_training_points = np.empty(
-    #             (0, self.input_dimension), dtype=float
-    #         )  # initialize as empty 2D array
-    #         if self.n_explore > 0:
-    #             self.exploration_training_points = (
-    #                 current_doe.select_training_points(
-    #                     self.inputs,
-    #                     self.n_explore,
-    #                     candidate_training_points_exploration,
-    #                     use_mse_w=False,
-    #                     weights=None,
-    #                 )
-    #             )
-    #             self.inputs = np.vstack(
-    #                 [self.inputs, self.exploration_training_points]
-    #             )
-
-    #         self.new_training_points = np.vstack(
-    #             [self.exploitation_training_points, self.exploration_training_points]
-    #         )
-    #         self.num_experiments.append(len(self.inputs))
-
-    #     # Step 5
-    #     with log_step_auto(
-    #         'Evaluating Response at New Training Points.', logger=self.logger
-    #     ):
-    #         # Step 5: Response estimation
-    #         simulation_number_start = 0
-    #         if self.outputs is not None:
-    #             simulation_number_start = len(self.outputs)
-    #         self.new_training_outputs = self._evaluate_in_parallel(
-    #             self.model_evaluation_function,
-    #             self.new_training_points,
-    #             simulation_number_start=simulation_number_start,
-    #         )
-    #         self.outputs = np.vstack([self.outputs, self.new_training_outputs])
-
-    #     return self.terminate, self.results
-
-    def _step_1_posterior_approximation(
-        self, model_parameters, model_outputs, log_like_fn
-    ):
-        with log_step_auto('Posterior Approximation', logger=self.logger):
-            with log_step_auto(
-                'Evaluating if GP Recalibration Needed.', logger=self.logger
-            ):
-                delta_experiments = (
-                    self.num_experiments[-1] - self.num_recalibration_experiments
-                )
-                recalib_threshold = (
-                    self.recalibration_ratio * self.num_recalibration_experiments
-                )
-
-                self.logger.info(f'New experiments added: {delta_experiments}')
-                self.logger.info(f'Recalibration threshold: {recalib_threshold}')
-
-                if delta_experiments >= recalib_threshold:
-                    self.logger.info(
-                        'Sufficient number of experiments for recalibration.'
-                    )
-
-                    if self.iteration_number > 0:
-                        self.logger.info(
-                            'Saving previous GP model and posterior approximation.'
-                        )
-                        self.previous_gp_model = self.current_gp_model
-                        self.previous_pca = self.current_pca
-
-                        self.previous_response_approximation = partial(
-                            response_approximation,
-                            self.previous_gp_model,
-                            self.previous_pca,
-                        )
-                        self.previous_log_likelihood_approximation = partial(
-                            log_likelihood_approx,
-                            log_like_fn=log_like_fn,
-                            response_approx_fn=self.previous_response_approximation,
-                        )
-
-                    self.logger.info('Creating GP model.')
-                    self.current_pca = PrincipalComponentAnalysis(self.pca_threshold)
-                    self.current_pca.fit(model_outputs)
-                    self.latent_outputs = self.current_pca.project_to_latent_space(
-                        model_outputs
-                    )
-                    self.num_pca_components_list.append(
-                        self.current_pca.n_components
-                    )
-
-                    self.current_gp_model = create_gp_model(
-                        input_dimension=self.input_dimension,
-                        output_dimension=self.num_pca_components_list[-1],
-                        fix_nugget=False,
-                        logger=self.logger,
-                    )
-
-                    self.logger.info('Calibrating GP model.')
-                    self.current_gp_model.update(
-                        model_parameters, self.latent_outputs, reoptimize=True
-                    )
-
-                    self.num_recalibration_experiments = self.num_experiments[-1]
-                    self.gp_recalibrated = True
-                else:
-                    self.logger.info(
-                        'Insufficient number of experiments for recalibration.'
-                    )
-                    self.logger.info(
-                        'Using previous GP model and posterior approximation.'
-                    )
-                    self.current_gp_model = self.previous_gp_model
-                    self.current_pca = self.previous_pca
-
-                    self.latent_outputs = self.current_pca.project_to_latent_space(
-                        model_outputs
-                    )
-                    self.num_pca_components_list.append(self.latent_outputs.shape[1])
-
-                    self.current_gp_model.update(
-                        model_parameters, self.latent_outputs, reoptimize=False
-                    )
-                    self.gp_recalibrated = False
-
-            with log_step_auto(
-                'Constructing Posterior Distribution Approximation.',
-                logger=self.logger,
-            ):
-                gp_latent_mean, gp_latent_var = self.current_gp_model.predict(
-                    model_parameters
-                )
-                self.gp_prediction_mean = (
-                    self.current_pca.project_back_to_original_space(gp_latent_mean)
-                )
-
-                loo_latent = self.current_gp_model.loo_predictions(
-                    self.latent_outputs
-                )
-                self.loo_predictions = (
-                    self.current_pca.project_back_to_original_space(loo_latent)
-                )
-
-                self.current_response_approximation = partial(
-                    response_approximation, self.current_gp_model, self.current_pca
-                )
-                self.current_log_likelihood_approximation = partial(
-                    log_likelihood_approx,
-                    log_like_fn=log_like_fn,
-                    response_approx_fn=self.current_response_approximation,
-                )
-
-    def _initialize_tmcmc_result_dicts(self):
-        self.samples_dict = {}
-        self.model_parameters_dict = {}
-        self.betas_dict = {}
-        self.log_likelihoods_dict = {}
-        self.log_target_density_values_dict = {}
-        self.log_evidence_dict = {}
-        self.num_model_evals_dict = {}
-
-    def _initialize_tmcmc_from_prior(self, log_prior_fn, log_likelihood_fn):
-        self.logger.info('Preparing for sequential sampling starting from prior.')
-        initial_samples = self._perform_space_filling_doe(self.num_samples_per_stage)
-        model_parameters = self.sample_transformation_function(initial_samples)
-        log_target = log_prior_fn(model_parameters)
-        log_likelihood = log_likelihood_fn(model_parameters)
-
-        self.samples_dict[0] = initial_samples
-        self.model_parameters_dict[0] = model_parameters
-        self.betas_dict[0] = 0
-        self.log_likelihoods_dict[0] = log_likelihood
-        self.log_target_density_values_dict[0] = log_target
-        self.log_evidence_dict[0] = 0
-        self.num_model_evals_dict[0] = self.num_samples_per_stage
-
-    def _load_tmcmc_from_previous_results(self):
-        self.logger.info(
-            'Preparing for sequential sampling warm starting from intermediate stage.'
-        )
-        for j in range(self.j_star):
-            self.samples_dict[j] = self.results['samples_dict'][j]
-            self.model_parameters_dict[j] = self.results['model_parameters_dict'][j]
-            self.betas_dict[j] = self.results['betas_dict'][j]
-            self.log_likelihoods_dict[j] = self.results[
-                'log_likelihood_values_dict'
-            ][j]
-            self.log_target_density_values_dict[j] = self.results[
-                'log_target_density_values_dict'
-            ][j]
-            self.log_evidence_dict[j] = self.results['log_evidence_dict'][j]
-            self.num_model_evals_dict[j] = self.results['num_model_evals_dict'][j]
-
-    def _step_2_bayesian_updating(self, log_prior_fn, log_like_fn, k):
-        with log_step_auto('Bayesian Updating.', logger=self.logger):
-            with log_step_auto(
-                'Evaluating warm-start of TMCMC.', logger=self.logger
-            ):
-                self.j_star = 0
-                beta = 0
-
-                log_likelihood_fn = self.current_log_likelihood_approximation
-                tmcmc = TMCMC(
-                    log_likelihood_fn,
-                    log_prior_fn,
-                    self.sample_transformation_function,
-                    run_parallel=True,
-                    logger=self.logger,
-                )
-
-                self._initialize_tmcmc_result_dicts()
-
-                if k > 0:
-                    if self.kde is not None:
-                        weights = self.kde.evaluate(self.inputs)
-                    self.gcv = self._calculate_gcv(weights)
-                    self.warm_start_possible = self.gcv < self.gcv_threshold
-
-                    if self.warm_start_possible:
-                        self.logger.info(
-                            f'Warm start possible since g_cv: {self.gcv:.4f} < {self.gcv_threshold:.4f}'
-                        )
-                        self.logger.info('Calculating warm-start stage.')
-                        self.j_star = calculate_warm_start_stage(
-                            log_likelihood_fn, self.results
-                        )
-                        self.logger.info(f'Warm-start stage: {self.j_star}')
-
-                    self.logger.info('Saving samples from previous iteration.')
-                    self.previous_model_parameters = self.results[
-                        'model_parameters_dict'
-                    ]
-                    self.num_tmcmc_stages = len(self.previous_model_parameters)
-                    self.previous_posterior_samples = self.previous_model_parameters[
-                        self.num_tmcmc_stages - 1
-                    ]
-
-            with log_step_auto('TMCMC Sampling', logger=self.logger):
-                if self.j_star == 0:
-                    self._initialize_tmcmc_from_prior(
-                        log_prior_fn, log_likelihood_fn
-                    )
-                else:
-                    self._load_tmcmc_from_previous_results()
-
-                with log_step_auto('Running TMCMC sampling.', logger=self.logger):
-                    self.results = tmcmc.run(
-                        self.samples_dict,
-                        self.model_parameters_dict,
-                        self.betas_dict,
-                        self.log_likelihoods_dict,
-                        self.log_target_density_values_dict,
-                        self.log_evidence_dict,
-                        self.num_model_evals_dict,
-                        self.j_star - 1 if self.j_star > 0 else 0,
-                        num_burn_in=0,
-                    )
-
-                self.current_model_parameters = self.results['model_parameters_dict']
-                self.num_tmcmc_stages = len(self.current_model_parameters)
-                self.current_posterior_samples = self.current_model_parameters[
-                    self.num_tmcmc_stages - 1
-                ]
-
-    def _step_3_assess_convergence(self, log_prior_fn, k):
-        with log_step_auto('Assessing Convergence.', logger=self.logger):
-            self.converged = False
-            self.terminate = False
-
-            if k > 0:
-                with log_step_auto(
-                    'Calculating KL divergence based convergence metric gKL.',
-                    logger=self.logger,
-                ):
-                    combined_samples = np.vstack(
-                        [
-                            self.previous_posterior_samples,
-                            self.current_posterior_samples,
-                        ]
-                    )
-
-                    self.gkl = convergence_metrics.calculate_gkl(
-                        self.current_log_likelihood_approximation,
-                        self.previous_log_likelihood_approximation,
-                        log_prior_fn,
-                        combined_samples,
-                    )
-                    self.gkl_converged = self.gkl < self.gkl_threshold
-
-                    self.logger.info(
-                        f'gKL: {self.gkl:.4f}, threshold: {self.gkl_threshold:.4f}'
-                    )
-                    self.logger.info(f'gKL convergence: {self.gkl_converged}')
-
-                self.gmap = convergence_metrics.calculate_gmap(
-                    self.current_log_likelihood_approximation,
-                    self.previous_log_likelihood_approximation,
-                    log_prior_fn,
-                    combined_samples,
-                    self.prior_variances,
-                )
-                self.gmap_converged = self.gmap < self.gmap_threshold
-
-                # Decide convergence based on chosen criterion
-                self.converged = (
-                    self.gkl_converged
-                )  # optionally include `and self.gmap_converged`
-
-                # Step 3.2: Check computational budget
-                num_simulations = len(self.inputs)
-                elapsed_time = time.time() - self.start_time
-                self.budget_exceeded = (
-                    num_simulations >= self.max_simulations
-                    or elapsed_time >= self.max_computational_time
-                )
-
-                self.terminate = self.converged or self.budget_exceeded
-
-            if self.terminate:
-                reasons = []
-                if self.gkl_converged:
-                    reasons.append('convergence based on gKL')
-                if self.budget_exceeded:
-                    reasons.append(
-                        f'computational budget exceeded '
-                        f'(simulations: {len(self.inputs)}/{self.max_simulations}, '
-                        f'time: {elapsed_time:.2f}/{self.max_computational_time} sec)'
-                    )
-                for reason in reasons:
-                    self.logger.info(f'Terminating: {reason}')
-
-    def _step_4_adaptive_training_point_selection(self, k):
-        with log_step_auto(
-            'Adaptive Selection of New Training Points.', logger=self.logger
-        ):
-            # Step 4.1: Determine exploitation vs exploration proportions
-            self.n_training_points = self.batch_size_factor * self.input_dimension
-            self.exploitation_proportion = (
-                calculate_exploitation_proportion(self.gcv)
-                if self.gcv is not None
-                else 0
-            )
-            self.n_exploit = int(
-                np.floor(self.exploitation_proportion * self.n_training_points)
-            )
-            self.n_explore = self.n_training_points - self.n_exploit
-
-            current_doe = AdaptiveDesignOfExperiments(
-                self.current_gp_model, self.current_pca
-            )
-
-            # Step 4.2: Exploitation training points
-            start_stage = max(1, self.j_star)
-            self.stages_after_warm_start = list(
-                range(start_stage, self.num_tmcmc_stages)
-            )
-            self.stage_weights = np.ones(len(self.stages_after_warm_start))
-
-            candidates_exploit, self.stage_sample_counts = (
-                self._get_exploitation_candidates()
-            )
-            save_exploitation_candidates_by_stage_json(
-                Path('results') / f'exploitation_candidates_{k}.json',
-                candidates_exploit,
-                self.stage_sample_counts,
-            )
-
-            self.kde = GaussianKDE(candidates_exploit)
-            weights = self.kde.evaluate(candidates_exploit)
-            weights_normalized = weights / np.sum(weights)
-
-            self.exploitation_training_points = np.empty(
-                (0, self.input_dimension), dtype=float
-            )
-            if self.n_exploit > 0:
-                self.exploitation_training_points = (
-                    current_doe.select_training_points(
-                        self.inputs,
-                        self.n_exploit,
-                        candidates_exploit,
-                        use_mse_w=True,
-                        weights=weights_normalized,
-                    )
-                )
-                self.inputs = np.vstack(
-                    [self.inputs, self.exploitation_training_points]
-                )
-
-            # Step 4.3: Exploration training points
-            candidates_explore = self.sample_transformation_function(
-                self._perform_space_filling_doe(self.num_candidate_training_points)
-            )
-            self.exploration_training_points = np.empty(
-                (0, self.input_dimension), dtype=float
-            )
-            if self.n_explore > 0:
-                self.exploration_training_points = (
-                    current_doe.select_training_points(
-                        self.inputs,
-                        self.n_explore,
-                        candidates_explore,
-                        use_mse_w=False,
-                        weights=None,
-                    )
-                )
-                self.inputs = np.vstack(
-                    [self.inputs, self.exploration_training_points]
-                )
-
-            self.new_training_points = np.vstack(
-                [self.exploitation_training_points, self.exploration_training_points]
-            )
-            self.num_experiments.append(len(self.inputs))
-
-    def _step_5_evaluate_responses(self):
-        with log_step_auto(
-            'Evaluating Response at New Training Points.', logger=self.logger
-        ):
-            # Step 5: Response estimation
-            simulation_number_start = 0
-            if self.outputs is not None:
-                simulation_number_start = len(self.outputs)
-
-            self.new_training_outputs = self._evaluate_in_parallel(
-                self.model_evaluation_function,
-                self.new_training_points,
-                simulation_number_start=simulation_number_start,
-            )
-            self.outputs = np.vstack([self.outputs, self.new_training_outputs])
-
-    def run_iteration(self, k):
+    def run_iteration(self, k: int) -> tuple[bool, dict]:
         """
-        Run a single iteration of the GP-AB Algorithm.
+        Run a single iteration of the GP-AB (Gaussian Process Adaptive Bayesian) algorithm.
 
-        Args:
-            k (int): The iteration number.
+        The iteration performs five core steps:
+            1. Posterior approximation via GP model and PCA.
+            2. Bayesian updating via TMCMC (with warm-start support).
+            3. Convergence and budget checks based on gKL and gMAP metrics.
+            4. Adaptive selection of new training points (exploitation + exploration).
+            5. Evaluation of the computational model at selected points.
+
+        Parameters
+        ----------
+        k : int
+            The current iteration number.
 
         Returns
         -------
-            tuple: A tuple containing a boolean indicating whether to terminate and the current TMCMC results.
+        tuple of (bool, dict)
+            A tuple with:
+                - `terminate` : bool, indicating whether the algorithm should stop.
+                - `results` : dict, TMCMC results for the current iteration.
         """
         self.iteration_number = k
         model_parameters = self.inputs
@@ -1355,6 +548,381 @@ class GP_AB_Algorithm:
         self._step_5_evaluate_responses()
 
         return self.terminate, self.results
+
+    def _step_1_posterior_approximation(
+        self, model_parameters, model_outputs, log_like_fn
+    ):
+        """
+        Step 1: Recalibrate or reuse the GP surrogate model.
+
+        Construct an approximation to the posterior distribution using PCA and GP prediction.
+        """
+        with log_step_auto('Posterior Approximation', logger=self.logger):
+            with log_step_auto(
+                'Evaluating if GP Recalibration Needed.', logger=self.logger
+            ):
+                delta_experiments = (
+                    self.num_experiments[-1] - self.num_recalibration_experiments
+                )
+                recalib_threshold = (
+                    self.recalibration_ratio * self.num_recalibration_experiments
+                )
+
+                self.loginfo(f'New experiments added: {delta_experiments}')
+                self.loginfo(f'Recalibration threshold: {recalib_threshold}')
+
+                if delta_experiments >= recalib_threshold:
+                    self.loginfo(
+                        'Sufficient number of experiments for recalibration.'
+                    )
+
+                    if self.iteration_number > 0:
+                        self.loginfo(
+                            'Saving previous GP model and posterior approximation.'
+                        )
+                        self.previous_gp_model = self.current_gp_model
+                        self.previous_pca = self.current_pca
+
+                        self.previous_response_approximation = partial(
+                            response_approximation,
+                            self.previous_gp_model,
+                            self.previous_pca,
+                        )
+                        self.previous_log_likelihood_approximation = partial(
+                            log_likelihood_approx,
+                            log_like_fn=log_like_fn,
+                            response_approx_fn=self.previous_response_approximation,
+                        )
+
+                    self.current_pca = PrincipalComponentAnalysis(self.pca_threshold)
+                    self.current_pca.fit(model_outputs)
+                    self.latent_outputs = self.current_pca.project_to_latent_space(
+                        model_outputs
+                    )
+                    self.num_pca_components_list.append(
+                        self.current_pca.n_components
+                    )
+
+                    self.current_gp_model = create_gp_model(
+                        input_dimension=self.input_dimension,
+                        output_dimension=self.num_pca_components_list[-1],
+                        mean_function='linear',
+                        fix_nugget=False,
+                        logger=self.logger,
+                    )
+                    self.current_gp_model.update(
+                        model_parameters, self.latent_outputs, reoptimize=True
+                    )
+                    self.num_recalibration_experiments = self.num_experiments[-1]
+                    self.gp_recalibrated = True
+                else:
+                    self.loginfo(
+                        'Insufficient number of experiments for recalibration.'
+                    )
+                    self.current_gp_model = self.previous_gp_model
+                    self.current_pca = self.previous_pca
+
+                    self.latent_outputs = self.current_pca.project_to_latent_space(
+                        model_outputs
+                    )
+                    self.num_pca_components_list.append(self.latent_outputs.shape[1])
+                    self.current_gp_model.update(
+                        model_parameters, self.latent_outputs, reoptimize=False
+                    )
+                    self.gp_recalibrated = False
+
+            with log_step_auto(
+                'Constructing Posterior Distribution Approximation.',
+                logger=self.logger,
+            ):
+                gp_latent_mean, _ = self.current_gp_model.predict(model_parameters)
+                self.gp_prediction_mean = (
+                    self.current_pca.project_back_to_original_space(gp_latent_mean)
+                )
+
+                loo_latent = self.current_gp_model.loo_predictions(
+                    self.latent_outputs
+                )
+                self.loo_predictions = (
+                    self.current_pca.project_back_to_original_space(loo_latent)
+                )
+
+                self.current_response_approximation = partial(
+                    response_approximation, self.current_gp_model, self.current_pca
+                )
+                self.current_log_likelihood_approximation = partial(
+                    log_likelihood_approx,
+                    log_like_fn=log_like_fn,
+                    response_approx_fn=self.current_response_approximation,
+                )
+
+    def _step_2_bayesian_updating(self, log_prior_fn, log_like_fn, k):
+        """
+        Step 2: Perform Bayesian updating using TMCMC.
+
+        Supports warm-starting from intermediate stages when gCV is low.
+        """
+        with log_step_auto('Bayesian Updating.', logger=self.logger):
+            with log_step_auto(
+                'Evaluating warm-start of TMCMC.', logger=self.logger
+            ):
+                self.j_star = 0
+                tmcmc = TMCMC(
+                    self.current_log_likelihood_approximation,
+                    log_prior_fn,
+                    self.sample_transformation_function,
+                    run_parallel=True,
+                    logger=self.logger,
+                )
+                self._initialize_tmcmc_result_dicts()
+
+                if k > 0:
+                    weights = self.kde.evaluate(self.inputs)
+                    self.gcv = self._calculate_gcv(weights)
+                    self.warm_start_possible = self.gcv < self.gcv_threshold
+
+                    if self.warm_start_possible:
+                        self.loginfo(
+                            f'Warm start possible since g_cv: {self.gcv:.4f} < {self.gcv_threshold:.4f}'
+                        )
+                        self.j_star = calculate_warm_start_stage(
+                            self.current_log_likelihood_approximation, self.results
+                        )
+
+                    self.previous_model_parameters = self.results[
+                        'model_parameters_dict'
+                    ]
+                    self.num_tmcmc_stages = len(self.previous_model_parameters)
+                    self.previous_posterior_samples = self.previous_model_parameters[
+                        self.num_tmcmc_stages - 1
+                    ]
+
+            with log_step_auto('TMCMC Sampling', logger=self.logger):
+                if self.j_star == 0:
+                    self._initialize_tmcmc_from_prior(
+                        log_prior_fn, self.current_log_likelihood_approximation
+                    )
+                else:
+                    self._load_tmcmc_from_previous_results()
+
+                self.results = tmcmc.run(
+                    self.samples_dict,
+                    self.model_parameters_dict,
+                    self.betas_dict,
+                    self.log_likelihoods_dict,
+                    self.log_target_density_values_dict,
+                    self.log_evidence_dict,
+                    self.num_model_evals_dict,
+                    self.j_star - 1 if self.j_star > 0 else 0,
+                    num_burn_in=0,
+                )
+                self.current_model_parameters = self.results['model_parameters_dict']
+                self.num_tmcmc_stages = len(self.current_model_parameters)
+                self.current_posterior_samples = self.current_model_parameters[
+                    self.num_tmcmc_stages - 1
+                ]
+
+    def _step_3_assess_convergence(self, log_prior_fn, k):
+        """
+        Step 3: Assess convergence using gKL and gMAP divergence metrics.
+
+        Check against computational budget constraints.
+        """
+        with log_step_auto('Assessing Convergence.', logger=self.logger):
+            self.converged = False
+            self.terminate = False
+
+            if k > 0:
+                with log_step_auto(
+                    'Calculating KL divergence based convergence metric gKL.',
+                    logger=self.logger,
+                ):
+                    combined_samples = np.vstack(
+                        [
+                            self.previous_posterior_samples,
+                            self.current_posterior_samples,
+                        ]
+                    )
+                    self.gkl = convergence_metrics.calculate_gkl(
+                        self.current_log_likelihood_approximation,
+                        self.previous_log_likelihood_approximation,
+                        log_prior_fn,
+                        combined_samples,
+                    )
+                    self.gkl_converged = self.gkl < self.gkl_threshold
+                    self.loginfo(
+                        f'gKL: {self.gkl:.4f}, threshold: {self.gkl_threshold:.4f}'
+                    )
+
+                self.gmap = convergence_metrics.calculate_gmap(
+                    self.current_log_likelihood_approximation,
+                    self.previous_log_likelihood_approximation,
+                    log_prior_fn,
+                    combined_samples,
+                    self.prior_variances,
+                )
+                self.gmap_converged = self.gmap < self.gmap_threshold
+                self.converged = self.gkl_converged
+
+                num_simulations = len(self.inputs)
+                elapsed_time = time.time() - self.start_time
+                self.budget_exceeded = (
+                    num_simulations >= self.max_simulations
+                    or elapsed_time >= self.max_computational_time
+                )
+                self.terminate = self.converged or self.budget_exceeded
+
+            if self.terminate:
+                if self.gkl_converged:
+                    self.loginfo('Terminating: convergence based on gKL')
+                if self.budget_exceeded:
+                    self.loginfo(
+                        f'Terminating: computational budget exceeded '
+                        f'(simulations: {len(self.inputs)}/{self.max_simulations}, '
+                        f'time: {elapsed_time:.2f}/{self.max_computational_time} sec)'
+                    )
+
+    def _step_4_adaptive_training_point_selection(self, k):
+        """
+        Step 4: Select new training points using an adaptive Design of Experiments (DoE).
+
+        Balancing exploitation and exploration strategies.
+        """
+        with log_step_auto(
+            'Adaptive Selection of New Training Points.', logger=self.logger
+        ):
+            self.n_training_points = self.batch_size_factor * self.input_dimension
+            self.exploitation_proportion = (
+                calculate_exploitation_proportion(self.gcv)
+                if self.gcv is not None
+                else 0
+            )
+            self.n_exploit = int(
+                np.floor(self.exploitation_proportion * self.n_training_points)
+            )
+            self.n_explore = self.n_training_points - self.n_exploit
+
+            current_doe = AdaptiveDesignOfExperiments(
+                self.current_gp_model, self.current_pca
+            )
+
+            start_stage = max(1, self.j_star)
+            self.stages_after_warm_start = list(
+                range(start_stage, self.num_tmcmc_stages)
+            )
+            self.stage_weights = np.ones(len(self.stages_after_warm_start))
+
+            candidates_exploit, self.stage_sample_counts = (
+                self._get_exploitation_candidates()
+            )
+            save_exploitation_candidates_by_stage_json(
+                Path('results') / f'exploitation_candidates_{k}.json',
+                candidates_exploit,
+                self.stage_sample_counts,
+            )
+
+            self.kde = GaussianKDE(candidates_exploit)
+            weights = self.kde.evaluate(candidates_exploit)
+            weights_normalized = weights / np.sum(weights)
+
+            self.exploitation_training_points = np.empty((0, self.input_dimension))
+            if self.n_exploit > 0:
+                self.exploitation_training_points = (
+                    current_doe.select_training_points(
+                        self.inputs,
+                        self.n_exploit,
+                        candidates_exploit,
+                        use_mse_w=True,
+                        weights=weights_normalized,
+                    )
+                )
+                self.inputs = np.vstack(
+                    [self.inputs, self.exploitation_training_points]
+                )
+
+            candidates_explore = self.sample_transformation_function(
+                self._perform_space_filling_doe(self.num_candidate_training_points)
+            )
+            self.exploration_training_points = np.empty((0, self.input_dimension))
+            if self.n_explore > 0:
+                self.exploration_training_points = (
+                    current_doe.select_training_points(
+                        self.inputs,
+                        self.n_explore,
+                        candidates_explore,
+                        use_mse_w=False,
+                        weights=None,
+                    )
+                )
+                self.inputs = np.vstack(
+                    [self.inputs, self.exploration_training_points]
+                )
+
+            self.new_training_points = np.vstack(
+                [self.exploitation_training_points, self.exploration_training_points]
+            )
+            self.num_experiments.append(len(self.inputs))
+
+    def _step_5_evaluate_responses(self):
+        """
+        Step 5: Evaluate the computational model at newly selected training points.
+
+        Append the outputs to the training dataset.
+        """
+        with log_step_auto(
+            'Evaluating Response at New Training Points.', logger=self.logger
+        ):
+            simulation_number_start = (
+                len(self.outputs) if self.outputs is not None else 0
+            )
+
+            self.new_training_outputs = self._evaluate_in_parallel(
+                self.model_evaluation_function,
+                self.new_training_points,
+                simulation_number_start=simulation_number_start,
+            )
+            self.outputs = np.vstack([self.outputs, self.new_training_outputs])
+
+    def _initialize_tmcmc_result_dicts(self):
+        self.samples_dict = {}
+        self.model_parameters_dict = {}
+        self.betas_dict = {}
+        self.log_likelihoods_dict = {}
+        self.log_target_density_values_dict = {}
+        self.log_evidence_dict = {}
+        self.num_model_evals_dict = {}
+
+    def _initialize_tmcmc_from_prior(self, log_prior_fn, log_likelihood_fn):
+        self.loginfo('Preparing for sequential sampling starting from prior.')
+        initial_samples = self._perform_space_filling_doe(self.num_samples_per_stage)
+        model_parameters = self.sample_transformation_function(initial_samples)
+        log_target = log_prior_fn(model_parameters)
+        log_likelihood = log_likelihood_fn(model_parameters)
+
+        self.samples_dict[0] = initial_samples
+        self.model_parameters_dict[0] = model_parameters
+        self.betas_dict[0] = 0
+        self.log_likelihoods_dict[0] = log_likelihood
+        self.log_target_density_values_dict[0] = log_target
+        self.log_evidence_dict[0] = 0
+        self.num_model_evals_dict[0] = self.num_samples_per_stage
+
+    def _load_tmcmc_from_previous_results(self):
+        self.loginfo(
+            'Preparing for sequential sampling warm starting from intermediate stage.'
+        )
+        for j in range(self.j_star):
+            self.samples_dict[j] = self.results['samples_dict'][j]
+            self.model_parameters_dict[j] = self.results['model_parameters_dict'][j]
+            self.betas_dict[j] = self.results['betas_dict'][j]
+            self.log_likelihoods_dict[j] = self.results[
+                'log_likelihood_values_dict'
+            ][j]
+            self.log_target_density_values_dict[j] = self.results[
+                'log_target_density_values_dict'
+            ][j]
+            self.log_evidence_dict[j] = self.results['log_evidence_dict'][j]
+            self.num_model_evals_dict[j] = self.results['num_model_evals_dict'][j]
 
     def run_initial_doe(self, num_initial_doe_per_dim=2):
         """
@@ -1382,6 +950,19 @@ class GP_AB_Algorithm:
         output_dir: Path,
         terminate: bool = False,  # noqa: FBT001, FBT002
     ):
+        """
+        Save tabular results of the GP-AB Algorithm.
+
+        Args:
+            samples (np.ndarray): The samples used in the algorithm.
+            predictions (np.ndarray): The predictions corresponding to the samples.
+            rv_names_list (list[str]): List of random variable names.
+            output_names_list (list[str]): List of output variable names.
+            output_length_list (list[int]): List of output variable lengths.
+            iteration_number (int): The current iteration number.
+            output_dir (Path): The directory to save the results.
+            terminate (bool, optional): Whether this is the final iteration. Defaults to False.
+        """
         # Step 1: Construct prediction headers
         pred_headers = []
         for name, length in zip(output_names_list, output_length_list):
@@ -1851,7 +1432,7 @@ def run_gp_ab_algorithm(input_arguments, logger: logging.Logger | None = None):
 
         with log_step_auto('Initial Design of Experiments', logger=logger):
             inputs, outputs, num_initial_doe_samples = gp_ab.run_initial_doe(
-                num_initial_doe_per_dim=2
+                num_initial_doe_per_dim=4
             )
             gp_ab.inputs = inputs
             gp_ab.outputs = outputs
@@ -1867,9 +1448,9 @@ def run_gp_ab_algorithm(input_arguments, logger: logging.Logger | None = None):
                 iteration += 1
         finally:
             gp_ab.parallel_pool.close_pool()
-            logger.info('✔ GP-AB Algorithm completed successfully.')
-            logger.info(f'Total iterations: {iteration}')
-            logger.info(f'Final number of experiments: {len(gp_ab.inputs)}')
+            gp_ab.loginfo('✔ GP-AB Algorithm completed successfully.')
+            gp_ab.loginfo(f'Total iterations: {iteration}')
+            gp_ab.loginfo(f'Final number of experiments: {len(gp_ab.inputs)}')
 
 
 def parse_arguments(args=None):
