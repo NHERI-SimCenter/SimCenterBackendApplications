@@ -11,6 +11,7 @@ from pathlib import Path
 import GPy
 import numpy as np
 from config_utilities import load_settings_from_config, save_used_settings_as_config
+from GPy.core import Mapping
 from GPy.mappings import Additive, Constant, Linear
 from logging_utilities import ensure_logger, flush_logger, get_default_logger
 from pydantic import BaseModel, Field, model_validator
@@ -18,6 +19,33 @@ from pydantic import BaseModel, Field, model_validator
 # =========================================================
 # Top-level Classes
 # =========================================================
+
+
+class NamedAdditive(Mapping):
+    """A named additive mean function combining two mappings."""
+
+    def __init__(self, mapping1, mapping2, name='additive'):
+        assert mapping1.input_dim == mapping2.input_dim
+        assert mapping1.output_dim == mapping2.output_dim
+
+        super().__init__(
+            input_dim=mapping1.input_dim, output_dim=mapping1.output_dim, name=name
+        )
+        self.mapping1 = mapping1
+        self.mapping2 = mapping2
+        self.link_parameters(self.mapping1, self.mapping2)
+
+    def f(self, X):  # noqa: D102, N803
+        return self.mapping1.f(X) + self.mapping2.f(X)
+
+    def update_gradients(self, dL_dF, X):  # noqa: D102, N803
+        self.mapping1.update_gradients(dL_dF, X)
+        self.mapping2.update_gradients(dL_dF, X)
+
+    def gradients_X(self, dL_dF, X):  # noqa: D102, N802, N803
+        return self.mapping1.gradients_X(dL_dF, X) + self.mapping2.gradients_X(
+            dL_dF, X
+        )
 
 
 class GaussianProcessModelSettings(BaseModel):
@@ -50,7 +78,7 @@ class GaussianProcessModel:
         logger: logging.Logger | None = None,
     ):
         self.settings = settings
-        self._logger = logger or get_default_logger()
+        self.logger = logger or get_default_logger()
 
         self.input_dimension = settings.input_dimension
         self.output_dimension = settings.output_dimension
@@ -155,7 +183,7 @@ class GaussianProcessModel:
             diagonal_k_inverse = np.diag(k_inverse)
 
             if np.any(diagonal_k_inverse == 0):
-                self._logger.warning(
+                self.logger.warning(
                     f'Zero detected on diagonal for output {i}. Adding epsilon={epsilon}.'
                 )
                 diagonal_k_inverse = np.where(
@@ -187,7 +215,7 @@ class GaussianProcessModel:
 
     def flush_logs(self):
         """Flush the logs for the Gaussian Process Model."""
-        flush_logger(self._logger)
+        flush_logger(self.logger)
 
 
 # =========================================================
