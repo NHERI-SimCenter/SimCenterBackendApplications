@@ -3,6 +3,8 @@ import os  # noqa: INP001, D100
 import matplotlib.colors as clr
 import matplotlib.pyplot as plt
 import numpy as np
+from bresenham import bresenham
+import sys
 import taichi as ti
 import taichi.math as tm
 from celeris.utils import (
@@ -233,7 +235,35 @@ class Solver:  # noqa: D101
         self.dzdt_F_coef = dzdt_F_coef
         self.dzdt_I_coef = dzdt_I_coef
 
+        self.force_sensor_begin_scaled = [0.0, 0.0]
+        self.force_sensor_end_scaled = [1.0, 1.0]
+        self.force_sensor_begin_pixel = [0.0, 0.0]
+        self.force_sensor_end_pixel = [1.0, 1.0]
+        self.hydrostatic_forces = ti.field(dtype=ti.f32, shape=(self.maxsteps))
+        self.hydrostatic_forces_from_numpy = ti.field(dtype=ti.f32, shape=(self.maxsteps))
+        self.hydrostatic_forces.fill(-1.0)
+        self.hydrostatic_forces_numpy = np.zeros((self.maxsteps))
+        self.hydrostatic_forces_list = []
+        self.hydrostatic_force = ti.field(dtype=ti.f32, shape=(1))
+        # self.hydrostatic_forces_numpy = np.zeros((1, self.maxsteps))
+        self.step = 0
         if self.bc.celeris == True:  # noqa: E712
+            if checjson('force_sensor_begin', self.bc.configfile) == 1:
+                self.force_sensor_begin = self.bc.configfile['force_sensor_begin']
+                self.force_sensor_begin_scaled[0] = self.force_sensor_begin[0] / self.bc.configfile['WIDTH']
+                self.force_sensor_begin_scaled[1] = self.force_sensor_begin[1] / self.bc.configfile['HEIGHT']
+            else:
+                self.force_sensor_begin = [0.0, 0.0]
+                self.force_sensor_begin_scaled = [0.0, 0.0]
+                
+            if checjson('force_sensor_end', self.bc.configfile) == 1:
+                self.force_sensor_end = self.bc.configfile['force_sensor_end']
+                self.force_sensor_end_scaled[0] = self.force_sensor_end[0] / self.bc.configfile['WIDTH']
+                self.force_sensor_end_scaled[1] = self.force_sensor_end[1] / self.bc.configfile['HEIGHT']
+            else:
+                self.force_sensor_end = [self.bc.configfile['WIDTH'], self.bc.configfile['HEIGHT']]
+                self.force_sensor_end_scaled = [1.0, 1.0]
+                
             if checjson('whiteWaterDecayRate', self.bc.configfile) == 1:
                 self.whiteWaterDecayRate = float(
                     self.bc.configfile['whiteWaterDecayRate']
@@ -969,10 +999,23 @@ class Solver:  # noqa: D101
                 self.coefMaty[i, j] = ti.Vector([a, b, c, 0.0], self.precision)
 
     @ti.kernel
-    def Pass1(self):  # noqa: N802, D102
+    def Pass1(self, step: int):  # noqa: N802, D102
         # PASS 0 and Pass1 - edge value construction
         # using Generalized minmod limiter
         zro = ti.Vector([0.0, 0.0, 0.0, 0.0], self.precision)
+
+        # Bresenham's line algorithm
+        # bresenham_list = list(
+        #     bresenham(
+        #         self.force_sensor_begin[0],
+        #         self.force_sensor_begin[1],
+        #         self.force_sensor_end[0],
+        #         self.force_sensor_end[1],
+        #     )
+        # )
+        # print("Bresenham List: ", bresenham_list)
+        hydrostatic_force = 0.0
+        
         for i, j in self.State:
             # Compute the coordinates of the neighbors
             rightIdx = ti.min(i + 1, self.nx - 1)  # noqa: N806
@@ -1128,6 +1171,41 @@ class Solver:  # noqa: D101
                 [maxInundatedDepth, maxVelocityU, maxVelocityV, maxVelocityC],
                 self.precision,
             )
+                    
+            if (j >= self.force_sensor_begin[1] and j <= self.force_sensor_end[1]) and (i >= self.force_sensor_begin[0] and i <= self.force_sensor_end[0]):
+                # print("Calculating hydrostatic force at: ", i, j)
+                # Calculate the hydrostatic force
+                # Assuming a simple hydrostatic force calculation
+                # hydrostatic_force = 1/2 density * g * w * h
+                # where density is assumed to be 1 for simplicity
+                # and h is the water height at (i, j)
+                hsqr = float(self.H[i, j][0]) * float(self.H[i, j][0])
+                hydrostatic_force += 1000 * 0.5 * 1000.0 * float(self.g) * float(hsqr) * float(self.dy)
+
+        self.hydrostatic_forces[int(0)] = float(hydrostatic_force)
+        self.hydrostatic_forces[int(step)] = float(hydrostatic_force)
+
+
+    def overwrite_force(self):
+        # open forces.evt to overwrite
+        print("Overwriting forces.evt")
+        with open("forces.evt", "w") as f:
+            max_steps = 10000 # self.hydrostatic_forces.shape[0]
+            for i in range(max_steps):
+                if (i < max_steps - 1):
+                    f.write(f"{0.0} ")
+                else:
+                    f.write(f"{0.0}\n")
+                
+
+    def write_hydrostatic_force(self):
+        # open forces.evt to append        
+        with open("forces.evt", "a") as f:
+            f.write(f"{self.hydrostatic_forces[int(0)]} ")
+
+    def update_step(self):
+        self.step += 1
+
 
     @ti.kernel
     def Pass1_SedTrans(self):  # noqa: N802, D102
