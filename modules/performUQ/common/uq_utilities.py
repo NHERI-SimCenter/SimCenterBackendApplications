@@ -1,10 +1,11 @@
-import glob  # noqa: D100
+import glob  # noqa: D100, INP001
 import os
 import shutil
 import subprocess
 import sys
 import traceback
 from dataclasses import dataclass
+from multiprocessing import get_context
 from multiprocessing.pool import Pool
 from typing import Any, Union
 
@@ -226,27 +227,29 @@ class ParallelRunnerMultiprocessing:  # noqa: D101
         if num_processors is None:
             num_processors = 1
         elif num_processors < 1:
-
             raise ValueError(  # noqa: TRY003
                 'Number of processes must be at least 1.                     '  # noqa: EM102
                 f'         Got {num_processors}'
             )
-        elif num_processors > max_num_processors: 
+        elif num_processors > max_num_processors:
             # this is to get past memory problems when running large number processors in a container
             num_processors = 8
 
         return num_processors
 
     def get_pool(self) -> Pool:  # noqa: D102
-        self.pool = Pool(processes=self.num_processors)
+        context = get_context('spawn')
+        self.pool = context.Pool(processes=self.num_processors)
         return self.pool
-    
+
     def run(self, func, job_args):  # noqa: D102
         return self.pool.starmap(func, job_args)
 
     def close_pool(self):  # noqa: D102
-        self.pool.close()
-        self.pool.join()
+        if self.pool is not None:
+            self.pool.close()
+            self.pool.join()
+            self.pool = None  # optional but safe
 
 
 def make_ERADist_object(name, opt, val) -> ERADist:  # noqa: N802, D103
