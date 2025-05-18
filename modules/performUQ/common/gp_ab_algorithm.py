@@ -790,7 +790,7 @@ class GP_AB_Algorithm:
                     )
                     self.gkl_converged = self.gkl < self.gkl_threshold
                     self.loginfo(
-                        f'gKL: {self.gkl:.4f}, threshold: {self.gkl_threshold:.4f}'
+                        f'gKL: {self.gkl:.4g}, threshold: {self.gkl_threshold:.4f}'
                     )
                     if not self.gkl_converged:
                         self.loginfo('Convergence based on gKL not achieved.')
@@ -847,10 +847,8 @@ class GP_AB_Algorithm:
             self.loginfo(
                 'Adjusting the ratio of exploitation to exploration training points.'
             )
-            self.exploitation_proportion = (
-                calculate_exploitation_proportion(self.gcv)
-                if self.gcv is not None
-                else 0
+            self.exploitation_proportion = calculate_exploitation_proportion(
+                self.gcv
             )
             self.loginfo(
                 f'Proportion of exploitation points: {self.exploitation_proportion:.2f}'
@@ -978,7 +976,7 @@ class GP_AB_Algorithm:
                 f'Evaluating {len(self.new_training_points)} new training points.'
             )
             self.loginfo(
-                f'Running {self.parallel_pool.num_processors} chains in parallel'
+                f'Running {min(len(self.new_training_points), self.parallel_pool.num_processors)} model evaluations in parallel'
             )
             start_time = time.time()
             self.new_training_outputs = self._evaluate_in_parallel(
@@ -1345,6 +1343,8 @@ def calculate_exploitation_proportion(gcv):
     r_max = 0.9
     r_min = 0.3
 
+    if gcv is None:
+        return r_min
     if gcv > g_upper:
         return r_min
     if gcv < g_lower:
