@@ -72,7 +72,7 @@ class Evolve:  # noqa: D101
     def Evolve_Steps(self, step=0):  # noqa: C901, N802, D102
         i = step
         self.solver.update_step()
-        self.solver.Pass1(int(i))
+        self.solver.Pass1(step=int(i))
 
         if self.solver.useSedTransModel:
             self.solver.Pass1_SedTrans()
@@ -124,7 +124,7 @@ class Evolve:  # noqa: D101
                     src=self.solver.NewState_Sed, dst=self.solver.State_Sed
                 )
 
-            self.solver.Pass1(int(i))
+            self.solver.Pass1(step=int(i))
 
             if self.solver.useSedTransModel:
                 self.solver.Pass1_SedTrans()
@@ -484,7 +484,7 @@ class Evolve:  # noqa: D101
         plotpath = './plots'
         if not os.path.exists(plotpath):  # noqa: PTH110
             os.makedirs(plotpath)  # noqa: PTH103
-        i = 0.0
+        i = 0
         show_gui = None
         use_ggui = None
         window = None
@@ -640,7 +640,7 @@ class Evolve:  # noqa: D101
 
             self.output_forces = True
             if (self.output_forces):
-                self.solver.write_hydrostatic_force()
+                self.solver.write_force()
                 
             if i > self.maxsteps:          
                 if self.saveimg:

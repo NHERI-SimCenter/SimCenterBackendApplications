@@ -33,18 +33,24 @@ class Topodata:  # noqa: D101
         self.datatype = datatype
         self.path = path
 
-    def z(self):  # noqa: D102
+    def z(self, seaLevel=0.0): # noqa: D102
         if self.datatype == 'xyz':
             if self.path != None:  # noqa: E711
                 if self.filename == None:  # noqa: E711
                     self.filename = 'test_curve.xyz'
                 return np.loadtxt(os.path.join(self.path, self.filename))  # noqa: PTH118
             return np.loadtxt(self.filename)
+        if self.datatype == 'xz':
+            if self.path!=None:
+                return np.loadtxt(os.path.join(self.path, self.filename))
+            else:
+                return np.loadtxt(self.filename)
         if self.datatype == 'celeris' or self.datatype == 'txt':  # noqa: PLR1714
             if self.path != None:  # noqa: E711
                 if self.filename == None:  # noqa: E711
                     self.filename = 'bathy.txt'
                 bathy = np.loadtxt(os.path.join(self.path, self.filename))  # noqa: PTH118
+                bathy = bathy - seaLevel
                 return bathy * -1
         return 'No supported format'
 
@@ -58,10 +64,10 @@ class BoundaryConditions:
         self,
         celeris=True,  # noqa: FBT002
         precision=ti.f32,
-        North=None,  # noqa: N803
-        South=None,  # noqa: N803
-        East=None,  # noqa: N803
-        West=None,  # noqa: N803
+        North=10,  # noqa: N803
+        South=10,  # noqa: N803
+        East=10,  # noqa: N803
+        West=10,  # noqa: N803
         WaveType=-1,  # noqa: N803
         Amplitude=0.5,  # noqa: N803
         Period=10.0,  # noqa: N803
@@ -256,6 +262,8 @@ class Domain:  # noqa: D101
                 self.seaLevel = float(self.configfile['seaLevel'])
             elif checjson('sea_level', self.configfile) == 1:
                 self.seaLevel = float(self.configfile['sea_level'])
+            elif checjson('swl', self.configfile) == 1:
+                self.seaLevel = float(self.configfile['swl'])
             else:
                 self.seaLevel = 0.0
 
@@ -303,6 +311,15 @@ class Domain:  # noqa: D101
             self.Courant = Courant
             self.base_depth_ = base_depth
 
+        if self.topodata.datatype=='xz':
+            self.Ny = 1
+            self.dy = 1.0
+            self.dx = (self.x2 - self.x1)/self.Nx
+            self.isManning = isManning
+            self.friction = friction
+            self.Courant = Courant
+            self.base_depth_ = base_depth      
+
         self.pixels = ti.field(float, shape=(self.Nx, self.Ny))
 
     def topofield(self):  # noqa: D102
@@ -311,7 +328,7 @@ class Domain:  # noqa: D101
                 np.arange(0.0, self.Nx * self.dx, self.dx),
                 np.arange(0, self.Ny * self.dy, self.dy),
             )
-            foo = self.topodata.z()
+            foo = self.topodata.z(seaLevel=self.seaLevel)
             return x_out, y_out, foo.T
         if self.topodata.datatype == 'xyz':  # noqa: RET503
             dum = self.topodata.z()
@@ -321,10 +338,19 @@ class Domain:  # noqa: D101
             )
             dem = griddata(dum[:, :2], dum[:, 2], (x_out, y_out), method='nearest')
             return x_out.T, y_out.T, dem.T
+        if self.topodata.datatype=='xz':
+            dum = self.topodata.z()
+            x_out = np.arange( self.x1, self.x2, self.dx)
+            dem = np.interp(x_out,dum[:,0],dum[:,1])
+            return x_out, dem
 
     def bottom(self):  # noqa: D102
         nbottom = np.zeros((4, self.Nx, self.Ny), dtype=ti2np(self.precision))
-        nbottom[2] = -1.0 * self.topofield()[2]
+        if self.topodata.datatype=='xz':
+            # VERSION 1D
+            nbottom[2,:,0] =-1.0* self.topofield()[1]
+        else:
+            nbottom[2] =-1.0* self.topofield()[2]
         nbottom[3] = 99.0  # To be used in neardry
 
         bottom = ti.field(self.precision, shape=(4, self.Nx, self.Ny))
@@ -339,11 +365,20 @@ class Domain:  # noqa: D101
 
     def maxdepth(self):  # noqa: D102
         if self.base_depth_ == None:  # noqa: E711
-            return np.max(self.topofield()[2])
-        return self.base_depth_
+            # VERSION 1D
+            if self.topodata.datatype=='xz':
+                return np.max(self.topofield()[1])
+            else: 
+                return np.max(self.topofield()[2])
+        else:
+            return self.base_depth_
 
     def maxtopo(self):  # noqa: D102
-        return np.min(self.topofield()[2])
+        # VERSION 1D
+        if self.topodata.datatype=='xz':
+            return np.min(self.topofield()[1])
+        else:
+            return np.min(self.topofield()[2])
 
     def dt(self):  # noqa: D102
         maxdepth = self.maxdepth()  # noqa: F841

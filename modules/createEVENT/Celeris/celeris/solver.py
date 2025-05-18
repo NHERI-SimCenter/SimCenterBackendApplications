@@ -235,6 +235,12 @@ class Solver:  # noqa: D101
         self.dzdt_F_coef = dzdt_F_coef
         self.dzdt_I_coef = dzdt_I_coef
 
+        # Similitude scaling parameters
+        self.similitude = "Froude"
+        self.length_scale = 1.0 
+        self.time_scale = 1.0
+        
+        # Force sensor parameters
         self.force_sensor_begin_scaled = [0.0, 0.0]
         self.force_sensor_end_scaled = [1.0, 1.0]
         self.force_sensor_begin_pixel = [0.0, 0.0]
@@ -245,6 +251,10 @@ class Solver:  # noqa: D101
         self.hydrostatic_forces_numpy = np.zeros((self.maxsteps))
         self.hydrostatic_forces_list = []
         self.hydrostatic_force = ti.field(dtype=ti.f32, shape=(1))
+        self.current_U_force = ti.field(dtype=ti.f32, shape=(1))
+        self.current_V_force = ti.field(dtype=ti.f32, shape=(1))
+        self.current_force = ti.field(dtype=ti.f32, shape=(1))
+
         # self.hydrostatic_forces_numpy = np.zeros((1, self.maxsteps))
         self.step = 0
         if self.bc.celeris == True:  # noqa: E712
@@ -439,6 +449,7 @@ class Solver:  # noqa: D101
         for i, j in self.State:
             self.State[i, j] = ti.Vector([0.0, 0.0, 0.0, 0.0], self.precision)
             self.stateUVstar[i, j] = ti.Vector([0.0, 0.0, 0.0, 0.0], self.precision)
+            self.Auxiliary[i, j] = ti.Vector([0.0, 50000.0, 0.0, 0.0], self.precision)
 
     @ti.kernel
     def fill_bottom_field(self):  # noqa: D102
@@ -678,24 +689,29 @@ class Solver:  # noqa: D101
                     )
                     BCState_Sed = 0.0  # noqa: N806
                 elif self.bc.WaveType == WAVE_TYPE_SOLITARY:
-                    d_here = max(0, self.wSL - self.Bottom[2, i, j])
-                    celerity = ti.sqrt(self.g * (self.bc.amplitude + abs(d_here)))
-                    development_length = celerity * self.bc.period / 1.5
-                    # development_length = max(development_length, 10.0 * self.base_depth)
-                    development_length = max(
-                        development_length,
-                        ti.sqrt(self.g * abs(self.base_depth))
-                        * self.bc.period
-                        / 1.5,
-                    )
-                    x0 = -1.0 * abs(development_length)
-                    y0 = 0.0
-                    eta, hu, hv = self.SolitaryWave(
-                        x0, y0, 0.0, i * self.dx, j * self.dy, time, d_here
-                    )
-                    BCState = ti.Vector(  # noqa: N806
-                        [eta + self.wSL, hu, hv, 0.0], self.precision
-                    )
+                    # d_here = max(0, self.wSL - self.Bottom[2, i, j])
+                    # celerity = ti.sqrt(self.g * (self.bc.amplitude + abs(d_here)))
+                    # development_length = celerity * self.bc.period / 1.5
+                    # development_length = max(
+                    #     development_length,
+                    #     ti.sqrt(self.g * abs(self.base_depth))
+                    #     * self.bc.period
+                    #     / 1.5,
+                    # )
+                    # x0 = -1.0 * abs(development_length)
+                    # y0 = 0.0
+                    # eta, hu, hv = self.SolitaryWave(
+                    #     x0, y0, 0.0, i * self.dx, j * self.dy, time, d_here
+                    # )
+                    # BCState = ti.Vector(  # noqa: N806
+                    #     [eta + self.wSL, hu, hv, 0.0], self.precision
+                    # )
+                    d_here = max( 0 , self.wSL -self.Bottom[2,i,j])
+                    x0 = -10.0 * self.base_depth # Shift in X
+                    y0 =   0.0
+                    theta = 0.0
+                    eta,hu,hv = self.SolitaryWave(x0, y0, theta, i*self.dx, j*self.dy, time, d_here)
+                    BCState = ti.Vector([eta,hu,hv,0.0],self.precision)
                     BCState_Sed = 0.0  # noqa: N806
 
             if self.bcEast == BOUNDARY_TYPE_SINE and i >= self.nx - 3:
@@ -719,25 +735,27 @@ class Solver:  # noqa: D101
                     )
                     BCState_Sed = 0.0  # noqa: N806
                 elif self.bc.WaveType == WAVE_TYPE_SOLITARY:
-                    d_here = max(0, self.eSL - self.Bottom[2, i, j])
-                    celerity = ti.sqrt(self.g * (self.bc.amplitude + abs(d_here)))
-                    development_length = celerity * self.bc.period / 1.5
-                    # development_length = max(development_length, 10.0 * self.base_depth)
-                    development_length = max(
-                        development_length,
-                        ti.sqrt(self.g * abs(self.base_depth))
-                        * self.bc.period
-                        / 1.5,
-                    )
-                    x0 = self.nx * self.dx + abs(development_length)
+                    # d_here = max(0, self.eSL - self.Bottom[2, i, j])
+                    # celerity = ti.sqrt(self.g * (self.bc.amplitude + abs(d_here)))
+                    # development_length = celerity * self.bc.period / 1.5
+                    # development_length = max(
+                    #     development_length,
+                    #     ti.sqrt(self.g * abs(self.base_depth))
+                    #     * self.bc.period
+                    #     / 1.5,
+                    # )
+                    # x0 = self.nx * self.dx + abs(development_length)
+                    d_here = max(0, self.eSL - self.Bottom[2,i,j])
+                    x0 = self.precision(self.nx*self.dx) + 10.0 * self.base_depth
                     y0 = 0.0
                     theta = -3.1415
                     eta, hu, hv = self.SolitaryWave(
                         x0, y0, theta, i * self.dx, j * self.dy, time, d_here
                     )
-                    BCState = ti.Vector(  # noqa: N806
-                        [eta + self.eSL, hu, hv, 0.0], self.precision
-                    )
+                    # BCState = ti.Vector(  # noqa: N806
+                    #     [eta + self.eSL, hu, hv, 0.0], self.precision
+                    # )
+                    BCState = ti.Vector([eta,hu,hv,0.0],self.precision)
                     BCState_Sed = 0.0  # noqa: N806
 
             if self.bcSouth == BOUNDARY_TYPE_SINE and j <= 2:  # noqa: PLR2004
@@ -761,25 +779,30 @@ class Solver:  # noqa: D101
                     )
                     BCState_Sed = 0.0  # noqa: N806
                 elif self.bc.WaveType == WAVE_TYPE_SOLITARY:
-                    d_here = max(0, self.sSL - self.Bottom[2, i, j])
-                    celerity = ti.sqrt(self.g * (self.bc.amplitude + abs(d_here)))
-                    development_length = celerity * self.bc.period / 1.5
-                    # development_length = max(development_length, 10.0 * self.base_depth)
-                    development_length = max(
-                        development_length,
-                        ti.sqrt(self.g * abs(self.base_depth))
-                        * self.bc.period
-                        / 1.5,
-                    )
+                    # d_here = max(0, self.sSL - self.Bottom[2, i, j])
+                    # celerity = ti.sqrt(self.g * (self.bc.amplitude + abs(d_here)))
+                    # development_length = celerity * self.bc.period / 1.5
+                    # development_length = max(
+                    #     development_length,
+                    #     ti.sqrt(self.g * abs(self.base_depth))
+                    #     * self.bc.period
+                    #     / 1.5,
+                    # )
+                    # x0 = 0.0
+                    # y0 = -1.0 * abs(development_length)
+                    # theta = 3.1415 / 2.0
+                    # eta, hu, hv = self.SolitaryWave(
+                    #     x0, y0, theta, i * self.dx, j * self.dy, time, d_here
+                    # )
+                    # BCState = ti.Vector(  # noqa: N806
+                    #     [eta + self.sSL, hu, hv, 0.0], self.precision
+                    # )
+                    d_here = max( 0 , self.nSL -self.Bottom[2,i,j])
                     x0 = 0.0
-                    y0 = -1.0 * abs(development_length)
+                    y0 = -10.0 * self.base_depth
                     theta = 3.1415 / 2.0
-                    eta, hu, hv = self.SolitaryWave(
-                        x0, y0, theta, i * self.dx, j * self.dy, time, d_here
-                    )
-                    BCState = ti.Vector(  # noqa: N806
-                        [eta + self.sSL, hu, hv, 0.0], self.precision
-                    )
+                    eta,hu,hv = self.SolitaryWave(x0, y0, theta, i*self.dx, j*self.dy, time, d_here)
+                    BCState = ti.Vector([eta,hu,hv,0.0],self.precision)
                     BCState_Sed = 0.0  # noqa: N806
 
             if self.bcNorth == BOUNDARY_TYPE_SINE and j >= self.ny - 3:
@@ -804,26 +827,30 @@ class Solver:  # noqa: D101
                     BCState_Sed = 0.0  # noqa: N806
                 # Solitary Waves
                 elif self.bc.WaveType == WAVE_TYPE_SOLITARY:
+                    # d_here = max(0, self.nSL - self.Bottom[2, i, j])
+                    # celerity = ti.sqrt(self.g * (self.bc.amplitude + abs(d_here)))
+                    # development_length = celerity * self.bc.period / 1.5
+                    # development_length = max(
+                    #     development_length,
+                    #     ti.sqrt(self.g * abs(self.base_depth))
+                    #     * self.bc.period
+                    #     / 1.5,
+                    # )
+                    # x0 = 0.0
+                    # y0 = self.ny * self.dy + abs(development_length)
+                    # theta = -3.1415 / 2.0
+                    # eta, hu, hv = self.SolitaryWave(
+                    #     x0, y0, theta, i * self.dx, j * self.dy, time, d_here
+                    # )
+                    # BCState = ti.Vector(  # noqa: N806
+                    #     [eta + self.nSL, hu, hv, 0.0], self.precision
+                    # )
                     d_here = max(0, self.nSL - self.Bottom[2, i, j])
-                    celerity = ti.sqrt(self.g * (self.bc.amplitude + abs(d_here)))
-                    development_length = celerity * self.bc.period / 1.5
-                    # development_length = max(development_length, 10.0 * self.base_depth)
-                    development_length = max(
-                        development_length,
-                        ti.sqrt(self.g * abs(self.base_depth))
-                        * self.bc.period
-                        / 1.5,
-                    )
-                    x0 = 0.0
-                    y0 = self.ny * self.dy + abs(development_length)
+                    x0=0.0
+                    y0 = self.precision(self.ny*self.dy) + 10.0*self.base_depth
                     theta = -3.1415 / 2.0
-                    # SolitaryWave(x0 , y0 , theta , x , y , t , d_here):
-                    eta, hu, hv = self.SolitaryWave(
-                        x0, y0, theta, i * self.dx, j * self.dy, time, d_here
-                    )
-                    BCState = ti.Vector(  # noqa: N806
-                        [eta + self.nSL, hu, hv, 0.0], self.precision
-                    )
+                    eta,hu,hv = self.SolitaryWave(x0, y0, theta, i*self.dx, j*self.dy, time, d_here)
+                    BCState = ti.Vector([eta,hu,hv,0.0],self.precision)
                     BCState_Sed = 0.0  # noqa: N806
             # Compute the coordinates of the neighbors
             rightIdx = ti.min(i + 1, self.nx - 1)  # noqa: N806
@@ -999,9 +1026,20 @@ class Solver:  # noqa: D101
                 self.coefMaty[i, j] = ti.Vector([a, b, c, 0.0], self.precision)
 
     @ti.kernel
-    def Pass1(self, step: int):  # noqa: N802, D102
-        # PASS 0 and Pass1 - edge value construction
-        # using Generalized minmod limiter
+    def Pass1(self, step: ti.i32):  # noqa: N802, D102
+        """
+        Reconstruction step (Pass1):
+          - Builds left/right (or N/E/S/W) interface values of eta, momentum, and 
+            scalar concentration using a generalized minmod limiter.
+          - Applies near-dry checks to skip processing cells that are effectively dry.
+          - Computes velocity components and partial Froude-limiter logic.
+
+        For 1D (ny=1), a simpler logic is used. For 2D, reconstruction is in both 
+        x- and y-directions.
+
+        Args:
+            step (int): Counter to compute statistics.
+        """
         zro = ti.Vector([0.0, 0.0, 0.0, 0.0], self.precision)
 
         # Bresenham's line algorithm
@@ -1015,6 +1053,9 @@ class Solver:  # noqa: D101
         # )
         # print("Bresenham List: ", bresenham_list)
         hydrostatic_force = 0.0
+        current_U_force = 0.0
+        current_V_force = 0.0
+        current_force = 0.0
         
         for i, j in self.State:
             # Compute the coordinates of the neighbors
@@ -1060,6 +1101,7 @@ class Solver:  # noqa: D101
                     self.U[i, j] = zro
                     self.V[i, j] = zro
                     self.C[i, j] = zro
+                    self.Auxiliary[i, j] = zro
                     continue
 
             ########################################################
@@ -1146,9 +1188,12 @@ class Solver:  # noqa: D101
                 output_u = output_u * Fr_red
                 output_v = output_v * Fr_red
 
-            maxInundatedDepth = max(  # noqa: N806
-                (h[0] + h[1] + h[2] + h[3]) / 4, self.Auxiliary[i, j][0]
-            )
+            # compute statistics of flow depth
+            flow_depth = (h[0] + h[1] + h[2] + h[3]) / 4
+            maxInundatedDepth = max(flow_depth, self.Auxiliary[i,j][0])
+            minInundatedDepth = min(flow_depth, self.Auxiliary[i,j][1])
+            meanFlow_depth = (self.Auxiliary[i,j][2]*step + flow_depth)/(step+1)
+            
             maxVelocityU = max(  # noqa: N806
                 (output_u[0] + output_u[1] + output_u[2] + output_u[3]) / 4,
                 self.Auxiliary[i, j][1],
@@ -1168,10 +1213,10 @@ class Solver:  # noqa: D101
             self.V[i, j] = output_v
             self.C[i, j] = output_c
             self.Auxiliary[i, j] = ti.Vector(
-                [maxInundatedDepth, maxVelocityU, maxVelocityV, maxVelocityC],
+                [maxInundatedDepth, minInundatedDepth, meanFlow_depth, 0.0],
                 self.precision,
             )
-                    
+            
             if (j >= self.force_sensor_begin[1] and j <= self.force_sensor_end[1]) and (i >= self.force_sensor_begin[0] and i <= self.force_sensor_end[0]):
                 # print("Calculating hydrostatic force at: ", i, j)
                 # Calculate the hydrostatic force
@@ -1180,8 +1225,33 @@ class Solver:  # noqa: D101
                 # where density is assumed to be 1 for simplicity
                 # and h is the water height at (i, j)
                 hsqr = float(self.H[i, j][0]) * float(self.H[i, j][0])
-                hydrostatic_force += 1000 * 0.5 * 1000.0 * float(self.g) * float(hsqr) * float(self.dy)
+                hydrostatic_force += 0.5 * 1000.0 * float(self.g) * float(hsqr) * float(self.dy) * self.length_scale**3
+            
+                # Assume uniform current velocity vertically for simplicity
+                # volume = dx * dy * Z_water
+                # mass = density * volume
+                # acceleration = velocity / dt  assuming boundary condition
+                # force = acceleration * mass
+                cell_volume = float(self.dx) * float(self.dy) * float(self.H[i, j][0])
+                cell_mass = 1000.0 * cell_volume  # Assuming density of water is 1000 kg/m^3
+                current_U_acceleration = float(self.U[i, j][0]) / float(self.dt)
+                current_V_acceleration = float(self.V[i, j][0]) / float(self.dt)     
+                current_U_force += current_U_acceleration * cell_mass * self.length_scale**3
+                current_V_force += current_V_acceleration * cell_mass * self.length_scale**3
+                # Dot product with normal of force sensor
+                force_sensor_normal = [self.force_sensor_begin[1] - self.force_sensor_end[1], self.force_sensor_begin[0] - self.force_sensor_end[0]]
+                force_sensor_normal_length = ti.sqrt(force_sensor_normal[0]**2 + force_sensor_normal[1]**2)
+                force_sensor_normal[0] /= force_sensor_normal_length
+                force_sensor_normal[1] /= force_sensor_normal_length
+                current_force_dotted = -1.0 * (current_U_force * force_sensor_normal[0] + current_V_force * force_sensor_normal[1])
+                current_force += ti.max(current_force_dotted, 0.0) 
 
+                print("Hydrostatic force: ", hydrostatic_force)
+                print("Current force: ", current_force)
+
+        self.current_U_force[int(0)] = float(current_U_force)
+        self.current_V_force[int(0)] = float(current_V_force)
+        self.current_force[int(0)] = float(current_force)
         self.hydrostatic_forces[int(0)] = float(hydrostatic_force)
         self.hydrostatic_forces[int(step)] = float(hydrostatic_force)
 
@@ -1198,10 +1268,10 @@ class Solver:  # noqa: D101
                     f.write(f"{0.0}\n")
                 
 
-    def write_hydrostatic_force(self):
+    def write_force(self):
         # open forces.evt to append        
         with open("forces.evt", "a") as f:
-            f.write(f"{self.hydrostatic_forces[int(0)]} ")
+            f.write(f"{self.hydrostatic_forces[int(0)] + self.current_force[int(0)]} ")
 
     def update_step(self):
         self.step += 1
@@ -1639,11 +1709,11 @@ class Solver:  # noqa: D101
             if self.showBreaking == True:  # noqa: E712
                 # add breaking source
                 newState.a = ti.max(
-                    newState.a, breaking_B
+                    newState.w, breaking_B
                 )  # use the B value from Kennedy et al as a foam intensity
             elif self.showBreaking == 2:  # noqa: PLR2004
                 contaminent_source = self.ContSource[i, j].x
-                newState.a = ti.min(1.0, newState.a + contaminent_source)
+                newState.w = ti.min(1.0, newState.w + contaminent_source)
 
             F_G_vec = ti.Vector([0.0, 0.0, 0.0, 1.0], self.precision)  # noqa: N806
 
@@ -1710,7 +1780,7 @@ class Solver:  # noqa: D101
             h = eta - B
 
             divide_by_h = (
-                ti.sqrt(2.0) * h / ti.sqrt(h * h + ti.max(h * h, self.epsilon))
+                2.0 * h / ti.sqrt(h * h + ti.max(h * h, self.epsilon))
             )
 
             f = self.friction / 2.0
@@ -2260,7 +2330,7 @@ class Solver:  # noqa: D101
                     t3 = self.Breaking[rightIdx, downIdx].x
             elif Q_here > 0.0:
                 t1 = self.Breaking[i, downIdx].x
-                t2 = self.Breaking[upIdx, downIdx].x
+                t2 = self.Breaking[rightIdx, downIdx].x
                 t3 = self.Breaking[leftIdx, downIdx].x
             else:
                 t1 = self.Breaking[i, upIdx].x
@@ -2280,7 +2350,7 @@ class Solver:  # noqa: D101
             h_here = eta_here - B_here
             c_here = ti.sqrt(self.g * h_here)
             h2 = h_here * h_here
-            divide_by_h = ti.sqrt(2.0) * h_here / (h2 + ti.max(h2, self.epsilon))
+            divide_by_h = 2.0 * h_here / (h2 + ti.max(h2, self.epsilon))
 
             # Kennedy et al breaking model, default parameters
             T_star = self.T_star_coef * ti.sqrt(h_here / self.g)  # noqa: N806

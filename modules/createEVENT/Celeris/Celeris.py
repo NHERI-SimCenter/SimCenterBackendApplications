@@ -375,26 +375,7 @@ if __name__ == '__main__':
         # Read the number of floors
         floorsCount = GetFloorsCount(arguments.filenameAIM)  # noqa: N816
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
-
-        # result = subprocess.run(  # noqa: S603
-        #     [  # noqa: S607
-        #         sys.executable,
-        #         scriptName,
-        #         '-d',
-        #         caseDirectory,
-        #         '-f',
-        #         configFilename,
-        #         '-b',
-        #         bathymetryFilename,
-        #         '-w',
-        #         waveFilename,
-        #         # f'{os.path.realpath(os.path.dirname(__file__))}'
-        #         # + '/taichi_script.py',
-        #     ],
-        #     stdout=subprocess.PIPE,
-        #     check=False,
-        # )
-
+        
         forces = []
         for i in range(floorsCount):
             forces.append(FloorForces(recorderID=(i + 1)))  # noqa: PERF401
@@ -427,8 +408,6 @@ if __name__ == '__main__':
                 bathymetryFilename,
                 '-w',
                 waveFilename,
-                # f'{os.path.realpath(os.path.dirname(__file__))}'
-                # + '/taichi_script.py',
             ],
             stdout=subprocess.PIPE,
             check=False,
