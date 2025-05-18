@@ -11,41 +11,18 @@ from pathlib import Path
 import GPy
 import numpy as np
 from config_utilities import load_settings_from_config, save_used_settings_as_config
-from GPy.core import Mapping
-from GPy.mappings import Additive, Constant, Linear
-from logging_utilities import ensure_logger, flush_logger, get_default_logger
+from logging_utilities import (  # decorate_methods_with_log_step,
+    flush_logger,
+    make_log_info,
+    make_logger_context,
+    setup_logger,
+)
 from pydantic import BaseModel, Field, model_validator
+from sklearn.linear_model import LinearRegression
 
 # =========================================================
 # Top-level Classes
 # =========================================================
-
-
-class NamedAdditive(Mapping):
-    """A named additive mean function combining two mappings."""
-
-    def __init__(self, mapping1, mapping2, name='additive'):
-        assert mapping1.input_dim == mapping2.input_dim
-        assert mapping1.output_dim == mapping2.output_dim
-
-        super().__init__(
-            input_dim=mapping1.input_dim, output_dim=mapping1.output_dim, name=name
-        )
-        self.mapping1 = mapping1
-        self.mapping2 = mapping2
-        self.link_parameters(self.mapping1, self.mapping2)
-
-    def f(self, X):  # noqa: D102, N803
-        return self.mapping1.f(X) + self.mapping2.f(X)
-
-    def update_gradients(self, dL_dF, X):  # noqa: D102, N803
-        self.mapping1.update_gradients(dL_dF, X)
-        self.mapping2.update_gradients(dL_dF, X)
-
-    def gradients_X(self, dL_dF, X):  # noqa: D102, N802, N803
-        return self.mapping1.gradients_X(dL_dF, X) + self.mapping2.gradients_X(
-            dL_dF, X
-        )
 
 
 class GaussianProcessModelSettings(BaseModel):
@@ -57,7 +34,7 @@ class GaussianProcessModelSettings(BaseModel):
     kernel_type: str = Field(
         'matern52', pattern='^(exponential|matern32|matern52|rbf)$'
     )
-    mean_function: str = Field('none', pattern='^(none|constant|linear)$')
+    mean_function: str = Field('none', pattern='^(none|linear)$')
     nugget_value: float = 1e-6
     fix_nugget: bool = True
 
@@ -78,7 +55,16 @@ class GaussianProcessModel:
         logger: logging.Logger | None = None,
     ):
         self.settings = settings
-        self.logger = logger or get_default_logger()
+        # self.logger = logger or get_default_logger()
+        self.logger = logger or setup_logger()
+        self.loginfo = make_log_info(self.logger)
+        self.log_step = make_logger_context(self.logger)
+        # decorate_methods_with_log_step(
+        #     self,
+        #     method_names=['update', 'predict'],
+        #     logger=self.logger,
+        #     warn_if_longer_than=300.0,
+        # )
 
         self.input_dimension = settings.input_dimension
         self.output_dimension = settings.output_dimension
@@ -87,6 +73,10 @@ class GaussianProcessModel:
         self.mean_function_type = settings.mean_function.lower()
         self.nugget_value = settings.nugget_value
         self.fix_nugget = settings.fix_nugget
+
+        self.linear_models: list[LinearRegression | None] = [
+            None
+        ] * self.output_dimension
 
         self.kernel = self._create_kernel()
         self.model = self._create_surrogate()
@@ -104,28 +94,29 @@ class GaussianProcessModel:
         msg = f"Unknown kernel_type '{self.kernel_type}'"
         raise ValueError(msg)
 
-    def _create_mean_function(self):
-        if self.mean_function_type == 'none':
-            return None
-        if self.mean_function_type == 'constant':
-            return Constant(input_dim=self.input_dimension, output_dim=1)
-        if self.mean_function_type == 'linear':
-            return Additive(
-                Constant(input_dim=self.input_dimension, output_dim=1),
-                Linear(input_dim=self.input_dimension, output_dim=1),
-            )
-        msg = f"Unknown mean_function '{self.mean_function_type}'"
-        raise ValueError(msg)
+    # def _create_mean_function(self):
+    #     if self.mean_function_type == 'none':
+    #         return None
+    #     # if self.mean_function_type == 'constant':
+    #     #     return Constant(input_dim=self.input_dimension, output_dim=1)
+    #     # if self.mean_function_type == 'linear':
+    #     #     return Additive(
+    #     #         Constant(input_dim=self.input_dimension, output_dim=1),
+    #     #         Linear(input_dim=self.input_dimension, output_dim=1),
+    #     #     )
+    #     msg = f"Unknown mean_function '{self.mean_function_type}'"
+    #     raise ValueError(msg)
 
     def _create_surrogate(self):
-        mean_function = self._create_mean_function()
+        # mean_function = self._create_mean_function()
+        # mean_function = None
         models = []
         for _ in range(self.output_dimension):
             model = GPy.models.GPRegression(
                 X=np.zeros((1, self.input_dimension)),
                 Y=np.zeros((1, 1)),
                 kernel=self.kernel.copy(),
-                mean_function=mean_function,
+                mean_function=None,
                 normalizer=True,
             )
             models.append(model)
@@ -150,56 +141,134 @@ class GaussianProcessModel:
             self._add_nugget_parameter(nugget_value=self.settings.nugget_value)
 
     def update(self, x_train, y_train, *, reoptimize=True, num_random_restarts=10):
-        """Update the GP models with new training data."""
+        """
+        Update the Gaussian Process model with new training data.
+
+        Parameters
+        ----------
+        x_train : ndarray
+            Input training data of shape (n_samples, input_dimension).
+        y_train : ndarray
+            Output training data of shape (n_samples, output_dimension).
+        reoptimize : bool, optional
+            Whether to reoptimize the model hyperparameters (default is True).
+        num_random_restarts : int, optional
+            Number of random restarts for optimization (default is 10).
+        """
         out_dim = y_train.shape[1]
         for i in range(out_dim):
-            self.model[i].set_XY(x_train, np.reshape(y_train[:, i], (-1, 1)))
+            x = x_train
+            y = np.reshape(y_train[:, i], (-1, 1))
+
+            if self.mean_function_type == 'linear':
+                linear_model = LinearRegression()
+                linear_model.fit(x, y)
+                self.linear_models[i] = linear_model
+                y_detrended = y - linear_model.predict(x)
+            else:
+                self.linear_models[i] = None
+                y_detrended = y
+
+            self.model[i].set_XY(x, y_detrended)
             if reoptimize:
                 self.model[i].optimize_restarts(num_random_restarts)
             else:
                 _ = self.model[i].posterior
 
     def predict(self, x_predict):
-        """Predict the output for the given input data."""
+        """
+        Predict the mean and variance for the given input data.
+
+        Parameters
+        ----------
+        x_predict : ndarray
+            Input data of shape (n_samples, input_dimension) for which predictions are required.
+
+        Returns
+        -------
+        tuple
+            A tuple containing:
+            - y_mean (ndarray): Predicted mean values of shape (n_samples, output_dimension).
+            - y_var (ndarray): Predicted variance values of shape (n_samples, output_dimension).
+        """
         y_mean = np.zeros((x_predict.shape[0], self.output_dimension))
         y_var = np.zeros((x_predict.shape[0], self.output_dimension))
+
         for i in range(self.output_dimension):
             mean, var = self.model[i].predict(x_predict)
+
+            if self.linear_models[i] is not None:
+                trend = self.linear_models[i].predict(x_predict)  # type: ignore
+                mean += trend
+
             y_mean[:, i] = mean.flatten()
             y_var[:, i] = var.flatten()
+
         return y_mean, y_var
 
-    def loo_predictions(self, y_train, epsilon=1e-8):
-        """Calculate Leave-One-Out (LOO) predictions."""
+    def loo_predictions(self, x_train, y_train, epsilon=1e-8):
+        """
+        Compute Leave-One-Out (LOO) predictions, accounting for linear trend if present.
+
+        Parameters
+        ----------
+        x_train : ndarray
+            Training inputs of shape (n_samples, input_dimension).
+        y_train : ndarray
+            Training outputs of shape (n_samples, output_dimension).
+        epsilon : float
+            Small value to avoid divide-by-zero in numerical instability cases.
+
+        Returns
+        -------
+        loo_pred : ndarray
+            LOO predictions with trend restored, shape (n_samples, output_dimension).
+        """
         if not hasattr(self.model[0], 'posterior'):
-            msg = 'Model must be trained before computing LOO predictions.'
-            raise ValueError(msg)
+            raise ValueError(
+                'Model must be trained before computing LOO predictions.'
+            )
 
         loo_pred = np.zeros_like(y_train, dtype=np.float64)
-        for i in range(self.output_dimension):
-            posterior = self.model[i].posterior
-            alpha = posterior.woodbury_vector  # (N, 1)
-            k_inverse = posterior.woodbury_inv  # (N, N)
-            diagonal_k_inverse = np.diag(k_inverse)
 
-            if np.any(diagonal_k_inverse == 0):
+        for i in range(self.output_dimension):
+            x = x_train
+            y = y_train[:, i].reshape(-1, 1)
+
+            # Step 1: Detrend
+            if self.linear_models[i] is not None:
+                trend = self.linear_models[i].predict(x)
+                y_detrended = y - trend
+            else:
+                trend = np.zeros_like(y)
+                y_detrended = y
+
+            # Step 2: LOO for GP residual
+            posterior = self.model[i].posterior
+            alpha = posterior.woodbury_vector  # shape (N, 1)
+            k_inv_diag = np.diag(posterior.woodbury_inv)
+
+            # Step 3: Guard against numerical issues
+            if np.any(k_inv_diag == 0):
                 self.logger.warning(
                     f'Zero detected on diagonal for output {i}. Adding epsilon={epsilon}.'
                 )
-                diagonal_k_inverse = np.where(
-                    diagonal_k_inverse == 0, epsilon, diagonal_k_inverse
-                )
+                k_inv_diag = np.where(k_inv_diag == 0, epsilon, k_inv_diag)
 
-            loo_pred[:, i] = y_train[:, i].flatten() - (
-                alpha.flatten() / diagonal_k_inverse
-            )
+            loo_gp = y_detrended.flatten() - (alpha.flatten() / k_inv_diag)
+
+            # Step 4: Add back trend to get final prediction
+            loo_pred[:, i] = loo_gp + trend.flatten()
 
         return loo_pred
 
     def __repr__(self):
         """Provide a string representation of the GaussianProcessModel instance."""
-        mean_function = self.model[0].mean_function
-        names = _get_mean_function_name(mean_function)
+        trend_desc = (
+            'LinearTrend (sklearn)'
+            if self.mean_function_type == 'linear'
+            else 'None'
+        )
         variance = float(self.model[0].likelihood.variance)  # Extract value
         is_fixed = self.model[0].likelihood.variance.is_fixed  # Check if fixed
         return (
@@ -208,7 +277,7 @@ class GaussianProcessModel:
             f'output_dimension={self.output_dimension}, '
             f'ARD={self.ARD}, '
             f'kernel_type={self.model[0].kern.name}, '
-            f'mean_function={names}, '
+            f'mean_function={trend_desc}, '
             f'nugget_value={variance}, '
             f'fix_nugget={is_fixed})'
         )
@@ -246,8 +315,9 @@ def create_gp_model(
         else _create_gp_settings_from_default_config()
     )
 
-    logger = logger or get_default_logger()
-    logger.info('Creating GP Regression Model.')
+    logger = logger or setup_logger()
+    loginfo = make_log_info(logger)
+    loginfo('Creating GP Regression Model.')
 
     config_dict = settings.model_dump()
 
@@ -261,8 +331,8 @@ def create_gp_model(
     save_used_settings_as_config(config=config_dict, output_path=output_path)
 
     model = GaussianProcessModel(settings, logger=logger)
-    logger.info(f'Created: {model}')
-    return model
+    # loginfo(f'Created: {model}')
+    return model  # noqa: RET504
 
 
 # =========================================================
@@ -297,9 +367,8 @@ def _create_gp_settings_from_default_config(
 
     if config_path.exists():
         if logger:
-            logger.info(
-                f"No arguments provided. Loading config from '{config_path}'."
-            )
+            loginfo = make_log_info(logger)
+            loginfo(f"No arguments provided. Loading config from '{config_path}'.")
         config_data = load_settings_from_config(config_path)
         return GaussianProcessModelSettings(**config_data)
 
@@ -378,7 +447,7 @@ def parse_gp_arguments(args=None) -> dict:
     optional.add_argument(
         '--mean_function',
         type=str.lower,
-        choices=['none', 'constant', 'linear'],
+        choices=['none', 'linear'],
         default='none',
         help='Mean function for the GP.',
     )
@@ -409,33 +478,28 @@ def parse_gp_arguments(args=None) -> dict:
 # =========================================================
 
 if __name__ == '__main__':
-    from logging_utilities import (
-        LoggerAutoFlusher,
-        ensure_logger,
-        log_exception,
-        set_default_logger,
-    )
+    from logging_utilities import LoggerAutoFlusher, log_exception, make_log_info
 
     # Setup logger properly
-    logger = ensure_logger(
+    logger = setup_logger(
         log_filename='logFileGPMODEL.txt',
         prefix='GPMODEL',
         console_level=logging.INFO,
         file_level=logging.DEBUG,
     )
-    set_default_logger(logger)
+    loginfo = make_log_info(logger)
 
     flusher = LoggerAutoFlusher(logger, interval=10)
     flusher.start()
 
     try:
-        logger.info('Starting Gaussian Process Model creation...')
+        loginfo('Starting Gaussian Process Model creation...')
         gp_model = create_gp_model(command_args=sys.argv[1:], logger=logger)
-        logger.info('GP model created successfully.')
+        loginfo('GP model created successfully.')
     except Exception as ex:  # noqa: BLE001
         log_exception(logger, ex, message='Fatal error during GP model creation')
         sys.exit(1)
     finally:
         flusher.stop()
-        flush_logger(logger)
-        logger.info('Program finished and logs flushed.')
+        # flush_logger(logger)
+        loginfo('Program finished and logs flushed.')
