@@ -35,6 +35,42 @@ def get_default_logger() -> logging.Logger:
     raise RuntimeError(msg)
 
 
+def setup_logger(
+    *,
+    log_filename: str | Path = 'logFile.log',
+    prefix: str | None = None,
+    style: str = 'compact',
+    console_level: int = logging.INFO,
+    file_level: int = logging.INFO,
+    use_prefix: bool = True,
+    justify: int = 0,
+) -> logging.Logger:
+    """
+    Get the default logger if already set, or create and register a new one.
+
+    This is the preferred way to initialize logging in scripts, notebooks, or modules.
+
+    Returns
+    -------
+    logging.Logger
+        The configured logger instance.
+    """
+    try:
+        return get_default_logger()
+    except RuntimeError:
+        logger = ensure_logger(
+            log_filename=log_filename,
+            prefix=prefix,
+            style=style,
+            console_level=console_level,
+            file_level=file_level,
+            use_prefix=use_prefix,
+            justify=justify,
+        )
+        set_default_logger(logger)
+        return logger
+
+
 def flush_logger(logger: logging.Logger) -> None:
     for handler in logger.handlers:
         handler.flush()
@@ -71,8 +107,6 @@ class LoggerAutoFlusher:
             try:
                 handler.flush()
                 if hasattr(handler, 'stream') and hasattr(handler.stream, 'fileno'):
-                    import os
-
                     os.fsync(handler.stream.fileno())
             except Exception:  # noqa: BLE001, PERF203, S110
                 pass  # ignore any errors silently
@@ -286,7 +320,8 @@ def _get_log_symbol_for_indent(level: int) -> str:
         symbols = _ASCII_SYMBOLS_BY_LEVEL.get(level, _ASCII_SYMBOLS_DEFAULT)
     else:
         symbols = _UNICODE_SYMBOLS_BY_LEVEL.get(level, _UNICODE_SYMBOLS_DEFAULT)
-    return symbols[indent] if indent < len(symbols) else symbols[-1]
+    # return symbols[indent] if indent < len(symbols) else symbols[-1]
+    return symbols[indent % len(symbols)]
 
 
 @contextlib.contextmanager

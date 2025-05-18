@@ -1,5 +1,8 @@
 """Implementation of the Transitional Markov Chain Monte Carlo (TMCMC) algorithm."""
 
+from __future__ import annotations
+
+import logging
 import math
 import os
 import time
@@ -8,7 +11,13 @@ from contextlib import suppress
 
 import numpy as np
 import uq_utilities
-from logging_utilities import flush_logger, get_default_logger
+from logging_utilities import (
+    LogStepContext,
+    decorate_methods_with_log_step,
+    make_log_info,
+    make_logger_context,
+    setup_logger,
+)
 from numpy.random import SeedSequence, default_rng
 from safer_cholesky import SaferCholesky
 from scipy.optimize import root_scalar
@@ -57,7 +66,7 @@ def calculate_warm_start_stage(
         int: The stage number for the warm start.
     """
     stage_nums = sorted(previous_results['samples_dict'].keys(), reverse=True)
-    for stage_num in stage_nums:
+    for stage_num in stage_nums[1:]:
         current_loglikelihood_values = current_loglikelihood_approximation(
             previous_results['model_parameters_dict'][stage_num]
         )
@@ -241,7 +250,6 @@ def run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
     number_of_steps=1,
     thinning_factor=1,
     adapt_frequency=50,
-    logger=None,
 ):
     """
     Run one stage of the TMCMC algorithm.
@@ -263,6 +271,8 @@ def run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
     -------
         tuple: A tuple containing the new samples, new log-likelihoods, new log-target density values, new beta, and log evidence.
     """
+    logging_msg_list = []
+    logging_msg_list.append('Reweighting...')
     new_beta = _increment_beta(log_likelihood_values, beta)
     log_evidence = _calculate_log_evidence(new_beta - beta, log_likelihood_values)
     weights = _calculate_weights(new_beta - beta, log_likelihood_values)
@@ -279,6 +289,7 @@ def run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
         msg = f'Cholesky decomposition failed: {exc}'
         raise RuntimeError(msg) from exc
 
+    logging_msg_list.append('Resampling and Perturbing...')
     new_samples = np.zeros_like(samples)
     new_model_parameters = np.zeros_like(model_parameters)
     new_log_likelihood_values = np.zeros_like(log_likelihood_values)
@@ -308,6 +319,9 @@ def run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
         for _ in range(num_steps):
             step_count += 1
             if step_count % adapt_frequency == 0:
+                # logging_msg_list.append(
+                #     f'Step count: {step_count}. Adapting proposal covariance.'
+                # )
                 acceptance_rate = num_accepts / adapt_frequency
                 num_accepts = 0
                 num_adapt += 1
@@ -408,15 +422,14 @@ def run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
     num_unique_indices = len(index_counter)
     max_count = max(index_counter.values())
     min_count = min(index_counter.values())
-    if logger is not None:
-        logger.info(
-            f'    > Number of chains picked = {num_unique_indices} out of {num_samples}'
-        )
-        logger.info(f'    > Longest chain length = {max_count}')
-        logger.info(f'    > Shortest chain length = {min_count}')
-        logger.info(
-            f'    > Total number of model evaluations = {total_num_model_evaluations}'
-        )
+    logging_msg_list.append(
+        f'Number of chains picked = {num_unique_indices} out of {num_samples}'
+    )
+    logging_msg_list.append(f'Longest chain length = {max_count}')
+    logging_msg_list.append(f'Shortest chain length = {min_count}')
+    logging_msg_list.append(
+        f'Total number of model evaluations = {total_num_model_evaluations}'
+    )
     return (
         new_samples,
         new_model_parameters,
@@ -426,6 +439,7 @@ def run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
         log_evidence,
         total_num_model_evaluations,
         total_num_accepts,
+        logging_msg_list,
     )
 
 
@@ -601,7 +615,6 @@ def run_one_stage_equal_chain_lengths(
     seed=None,
     num_burn_in=0,
     thinning_factor=1,
-    logger=None,
     run_type='runningLocal',
 ):
     """
@@ -645,15 +658,20 @@ def run_one_stage_equal_chain_lengths(
         - new_beta : float
         - log_evidence : float
     """
+    logging_msg_list = []
+    logging_msg_list.append('Reweighting...')
     num_samples = samples.shape[0]
     new_beta = _increment_beta(log_likelihood_values, beta)
     log_evidence = _calculate_log_evidence(new_beta - beta, log_likelihood_values)
     weights = _calculate_weights(new_beta - beta, log_likelihood_values)
+    ess = 1 / np.sum(weights**2)
+    logging_msg_list.append(f'ESS = {ess:.2f} out of {num_samples}')
 
     # Fixed proposal across all chains
     proposal_cov = proposal_cov_fn(samples, weights, scale_factor)
     proposal_chol = safer_cholesky.decompose(proposal_cov)
 
+    logging_msg_list.append('Resampling...')
     # Seed setup
     ss = SeedSequence(seed)
     rng_seeds = ss.spawn(num_samples)
@@ -663,30 +681,43 @@ def run_one_stage_equal_chain_lengths(
     chain_starting_indices = resampling_rng.choice(
         num_samples, size=num_samples, p=weights.flatten()
     )
-    index_counter = Counter(chain_starting_indices)
+    # index_counter = Counter(chain_starting_indices)
 
     # Number of unique indices picked at least once
-    num_unique_indices = len(index_counter)
+    # num_unique_indices = len(index_counter)
 
-    # Max and min counts (among picked indices)
-    max_count = max(index_counter.values())
-    min_count = min(index_counter.values())
+    num_unique_samples = np.unique(samples[chain_starting_indices, :], axis=0).shape[
+        0
+    ]
+
+    # # Max and min counts (among picked indices)
+    # max_count = max(index_counter.values())
+    # min_count = min(index_counter.values())
 
     chain_length = num_burn_in + num_steps
+    thinning_msg = ''
     if math.isclose(new_beta, 1.0, rel_tol=1e-9) and thinning_factor > 1:
         chain_length = num_burn_in + int(num_steps * thinning_factor)
+        thinning_msg = (
+            f' and thinning steps = {int(num_steps * thinning_factor)-1} (discarded)'
+        )
     total_num_model_evaluations = chain_length * num_samples
-    if logger is not None:
-        logger.info(
-            f'    > Resampled {num_unique_indices} out of {num_samples} starting points after reweighting'
-        )
-        logger.info(f'    > Longest chain length = {max_count}')
-        logger.info(f'    > Shortest chain length = {min_count}')
-        logger.info(f'    > Number of steps per chain = {chain_length}')
-        logger.info(f'    > Number of chains = {num_samples}')
-        logger.info(
-            f'    > Number of model evaluations = {total_num_model_evaluations}'
-        )
+    logging_msg_list.append(
+        f'Resampled {num_unique_samples} out of {num_samples} starting points after reweighting'
+    )
+    # logging_msg_list.append(f'Longest chain length = {max_count}')
+    # logging_msg_list.append(f'Shortest chain length = {min_count}')
+
+    logging_msg_list.append('Perturbing...')
+    logging_msg_list.append(f'Number of chains = {num_samples}')
+    msg = f'Number of steps per chain = {chain_length}'
+    if num_burn_in > 0:
+        msg += f' of which burn-in steps = {num_burn_in} (discarded)'
+        msg += thinning_msg
+    logging_msg_list.append(msg)
+    logging_msg_list.append(
+        f'Total number of model evaluations = {total_num_model_evaluations}'
+    )
 
     # Build job arguments for each chain
     job_args = []
@@ -714,14 +745,14 @@ def run_one_stage_equal_chain_lengths(
             )
         )
     parallel_runner = uq_utilities.get_parallel_pool_instance(run_type)
-    if logger is not None:
-        logger.info(
-            f'    > Running {parallel_runner.num_processors} model evaluations in parallel'
-        )
+    logging_msg_list.append(
+        f'Running {parallel_runner.num_processors} chains in parallel'
+    )
     mcmc_chain_results = parallel_runner.run(run_mcmc_chain, job_args)
     parallel_runner.close_pool()
-    if logger is not None:
-        logger.info('    > Model evaluations completed')
+    logging_msg_list.append(
+        f'{total_num_model_evaluations} model evaluations completed'
+    )
 
     # Gather results
     new_samples = np.zeros_like(samples)
@@ -748,6 +779,7 @@ def run_one_stage_equal_chain_lengths(
         log_evidence,
         total_num_model_evaluations,
         total_num_accepts,
+        logging_msg_list,
     )
 
 
@@ -782,9 +814,10 @@ class TMCMC:
         log_likelihood_function,
         log_prior_density_function,
         sample_transformation_function,
+        *,
         seed=None,
         run_type='runningLocal',
-        run_parallel=True,  # noqa: FBT002
+        run_parallel=True,
         cov_threshold=1,
         num_steps=1,
         thinning_factor=10,
@@ -817,22 +850,33 @@ class TMCMC:
         adapt_frequency : int, optional
             Adaptation frequency (used only in unequal-chain serial mode). Defaults to 50.
         """
-        self._log_likelihood_function = log_likelihood_function
-        self._log_prior_density_function = log_prior_density_function
-        self._sample_transformation_function = sample_transformation_function
-        self.run_type = run_type
-        self.run_parallel = run_parallel
-        self._seed = seed
-        self.num_steps = num_steps
-        self.cov_threshold = cov_threshold
-        self.thinning_factor = thinning_factor
-        self.adapt_frequency = adapt_frequency
+        # self.logger = logger or get_default_logger()
+        self.logger = logger or setup_logger()
+        self.loginfo = make_log_info(self.logger)
+        self.log_step = make_logger_context(self.logger)
+        # self.log_decorator = make_log_step_decorator(self.logger)
 
-        self._logger = logger or get_default_logger()
+        # decorate_methods_with_log_step(
+        #     self,
+        #     method_names=['run'],
+        #     logger=self.logger,
+        #     warn_if_longer_than=300.0,
+        # )
+        with self.log_step('Initializing TMCMC.'):
+            self._log_likelihood_function = log_likelihood_function
+            self._log_prior_density_function = log_prior_density_function
+            self._sample_transformation_function = sample_transformation_function
+            self.run_type = run_type
+            self.run_parallel = run_parallel
+            self._seed = seed
+            self.num_steps = num_steps
+            self.cov_threshold = cov_threshold
+            self.thinning_factor = thinning_factor
+            self.adapt_frequency = adapt_frequency
 
-    def flush_logs(self):
-        """Flush the TMCMC logger and ensure all logs are written to disk."""
-        flush_logger(self._logger)
+    # def flush_logs(self):
+    #     """Flush the TMCMC logger and ensure all logs are written to disk."""
+    #     flush_logger(self.logger)
 
     def run(
         self,
@@ -873,136 +917,150 @@ class TMCMC:
         dict
             Updated dictionaries containing TMCMC samples and log-values.
         """
-        start_time = time.time()
-        start_stage = stage_num
-        if start_stage > 0:
-            self._logger.info('Warm-starting TMCMC')
-        else:
-            self._logger.info('Starting TMCMC')
-        self.num_dimensions = samples_dict[0].shape[1]
-        seed_sequence = SeedSequence(self._seed)
-        self.target_acceptance_rate = 0.23 + 0.21 / self.num_dimensions
-        self.scale_factor = 2.4 / np.sqrt(self.num_dimensions)
-        while betas_dict[stage_num] < 1:
-            stage_start_time = time.time()
-            self._logger.info(
-                f'  Stage {stage_num} | Current β = {betas_dict[stage_num]:.4f}'
-            )
-
-            seed = seed_sequence.spawn(1)[0].entropy
-            if self.run_parallel:
-                scale_factor = 0.2
-                (
-                    new_samples,
-                    new_model_parameters,
-                    new_log_likelihood_values,
-                    new_log_target_density_values,
-                    new_beta,
-                    log_evidence,
-                    total_num_model_evaluations,
-                    total_num_accepts,
-                ) = run_one_stage_equal_chain_lengths(
-                    samples_dict[stage_num],
-                    model_parameters_dict[stage_num],
-                    log_likelihood_values_dict[stage_num],
-                    betas_dict[stage_num],
-                    self._log_likelihood_function,
-                    self._log_prior_density_function,
-                    self._sample_transformation_function,
-                    scale_factor,
-                    self.num_steps,
-                    get_scaled_proposal_covariance,
-                    seed=seed,
-                    num_burn_in=num_burn_in,
-                    thinning_factor=self.thinning_factor,
-                    logger=self._logger,
-                )
+        with LogStepContext(
+            'Running TMCMC Sampler', logger=self.logger, highlight='default'
+        ):
+            # with self.log_step('Running TMCMC Sampler.'):
+            # start_time = time.time()
+            start_stage = stage_num
+            if start_stage > 0:
+                self.loginfo('Warm-starting TMCMC')
             else:
-                (
-                    new_samples,
-                    new_model_parameters,
-                    new_log_likelihood_values,
-                    new_log_target_density_values,
-                    new_beta,
-                    log_evidence,
-                    total_num_model_evaluations,
-                    total_num_accepts,
-                ) = run_one_stage_unequal_chain_lengths(
-                    samples_dict[stage_num],
-                    model_parameters_dict[stage_num],
-                    log_likelihood_values_dict[stage_num],
-                    log_target_density_values_dict[stage_num],
-                    betas_dict[stage_num],
-                    default_rng(seed),
-                    self._log_likelihood_function,
-                    self._log_prior_density_function,
-                    self._sample_transformation_function,
-                    self.scale_factor,
-                    self.target_acceptance_rate,
-                    do_thinning=False,
-                    burn_in_steps=num_burn_in,
-                    number_of_steps=self.num_steps,
-                    thinning_factor=self.thinning_factor,
-                    adapt_frequency=self.adapt_frequency,
-                    logger=self._logger,
+                self.loginfo('Starting TMCMC')
+            self.num_dimensions = samples_dict[0].shape[1]
+            seed_sequence = SeedSequence(self._seed)
+            self.target_acceptance_rate = 0.23 + 0.21 / self.num_dimensions
+            self.scale_factor = 2.4 / np.sqrt(self.num_dimensions)
+            while betas_dict[stage_num] < 1:
+                # stage_start_time = time.time()
+                with LogStepContext(
+                    f'Stage {stage_num} | Current β = {betas_dict[stage_num]:.4f}',
+                    logger=self.logger,
+                    highlight='minor',
+                ):
+                    # with self.log_step(
+                    #     f'Stage {stage_num} | Current β = {betas_dict[stage_num]:.4f}'
+                    # ):
+                    seed = seed_sequence.spawn(1)[0].entropy
+                    if self.run_parallel:
+                        scale_factor = 0.2
+                        (
+                            new_samples,
+                            new_model_parameters,
+                            new_log_likelihood_values,
+                            new_log_target_density_values,
+                            new_beta,
+                            log_evidence,
+                            total_num_model_evaluations,
+                            total_num_accepts,
+                            logging_msg_list,
+                        ) = run_one_stage_equal_chain_lengths(
+                            samples_dict[stage_num],
+                            model_parameters_dict[stage_num],
+                            log_likelihood_values_dict[stage_num],
+                            betas_dict[stage_num],
+                            self._log_likelihood_function,
+                            self._log_prior_density_function,
+                            self._sample_transformation_function,
+                            scale_factor,
+                            self.num_steps,
+                            get_scaled_proposal_covariance,
+                            seed=seed,
+                            num_burn_in=num_burn_in,
+                            thinning_factor=self.thinning_factor,
+                        )
+                    else:
+                        (
+                            new_samples,
+                            new_model_parameters,
+                            new_log_likelihood_values,
+                            new_log_target_density_values,
+                            new_beta,
+                            log_evidence,
+                            total_num_model_evaluations,
+                            total_num_accepts,
+                            logging_msg_list,
+                        ) = run_one_stage_unequal_chain_lengths(
+                            samples_dict[stage_num],
+                            model_parameters_dict[stage_num],
+                            log_likelihood_values_dict[stage_num],
+                            log_target_density_values_dict[stage_num],
+                            betas_dict[stage_num],
+                            default_rng(seed),
+                            self._log_likelihood_function,
+                            self._log_prior_density_function,
+                            self._sample_transformation_function,
+                            self.scale_factor,
+                            self.target_acceptance_rate,
+                            do_thinning=False,
+                            burn_in_steps=num_burn_in,
+                            number_of_steps=self.num_steps,
+                            thinning_factor=self.thinning_factor,
+                            adapt_frequency=self.adapt_frequency,
+                        )
+                    stage_num += 1
+                    samples_dict[stage_num] = new_samples
+                    model_parameters_dict[stage_num] = new_model_parameters
+                    betas_dict[stage_num] = new_beta
+                    log_likelihood_values_dict[stage_num] = new_log_likelihood_values
+                    log_target_density_values_dict[stage_num] = (
+                        new_log_target_density_values
+                    )
+                    log_evidence_dict[stage_num] = log_evidence
+                    num_model_evals_dict[stage_num] = total_num_model_evaluations
+                    # elapsed_time = time.time() - stage_start_time
+                    with self.log_step(f'New β = {new_beta:.4f}'):
+                        for msg in logging_msg_list:
+                            self.loginfo(msg)
+                        self.loginfo(f'log evidence increment = {log_evidence:.4f}')
+                        # self.loginfo(
+                        #     f'Time for this stage = {elapsed_time/60:.2f} minutes'
+                        # )
+                        self.loginfo(
+                            f'Acceptance rate = {total_num_accepts/total_num_model_evaluations:.3f}'
+                        )
+                        # self.loginfo('')
+                        # self.flush_logs()
+
+            with LogStepContext(
+                f'Current β = {betas_dict[stage_num]:.1f}, TMCMC completed',
+                logger=self.logger,
+                highlight='success',
+            ):
+                self.loginfo(
+                    f'Total log-evidence: {sum(log_evidence_dict.values()):.4f}'
                 )
-            stage_num += 1
-            samples_dict[stage_num] = new_samples
-            model_parameters_dict[stage_num] = new_model_parameters
-            betas_dict[stage_num] = new_beta
-            log_likelihood_values_dict[stage_num] = new_log_likelihood_values
-            log_target_density_values_dict[stage_num] = new_log_target_density_values
-            log_evidence_dict[stage_num] = log_evidence
-            num_model_evals_dict[stage_num] = total_num_model_evaluations
-            elapsed_time = time.time() - stage_start_time
-            self._logger.info(
-                f'    > New β = {new_beta:.4f}, log evidence increment = {log_evidence:.4f}'
-            )
-            self._logger.info(
-                f'    > Time for this stage = {elapsed_time/60:.2f} minutes'
-            )
-            self._logger.info(
-                f'    > Acceptance rate = {total_num_accepts/total_num_model_evaluations:.3f}'
-            )
-            self._logger.info(' ')
-            self.flush_logs()
+                total_model_evaluations = sum(
+                    v for k, v in num_model_evals_dict.items() if k >= start_stage
+                )
+                self.loginfo(
+                    f'Total number of model evaluations: {total_model_evaluations}'
+                )
+                self.loginfo(
+                    f'Number of samples from posterior: {samples_dict[stage_num].shape[0]}'
+                )
+            # elapsed_time = time.time() - start_time
+            # self.loginfo(f'Total time: {elapsed_time/60:.2f} minutes')
+            # self.loginfo('-' * 45)
+            # self.loginfo('')
 
-        self._logger.info('TMCMC completed successfully.')
-        self._logger.info(
-            f'Total log-evidence: {sum(log_evidence_dict.values()):.4f}'
-        )
-        total_model_evaluations = sum(
-            v for k, v in num_model_evals_dict.items() if k >= start_stage
-        )
-        self._logger.info(
-            f'Total number of model evaluations: {total_model_evaluations}'
-        )
-        elapsed_time = time.time() - start_time
-        self._logger.info(f'Total time: {elapsed_time/60:.2f} minutes')
-        self._logger.info('-' * 45)
-        self._logger.info(' ')
-
-        return {
-            'samples_dict': samples_dict,
-            'model_parameters_dict': model_parameters_dict,
-            'betas_dict': betas_dict,
-            'log_likelihood_values_dict': log_likelihood_values_dict,
-            'log_target_density_values_dict': log_target_density_values_dict,
-            'log_evidence_dict': log_evidence_dict,
-            'num_model_evals_dict': num_model_evals_dict,
-        }
+            return {
+                'samples_dict': samples_dict,
+                'model_parameters_dict': model_parameters_dict,
+                'betas_dict': betas_dict,
+                'log_likelihood_values_dict': log_likelihood_values_dict,
+                'log_target_density_values_dict': log_target_density_values_dict,
+                'log_evidence_dict': log_evidence_dict,
+                'num_model_evals_dict': num_model_evals_dict,
+            }
 
 
 if __name__ == '__main__':
-    from logging_utilities import (
-        LoggerAutoFlusher,
-        ensure_logger,
-        log_exception,
-        set_default_logger,
-    )
+    from logging_utilities import LoggerAutoFlusher, log_exception
 
-    logger = ensure_logger(log_filename='logFileTMCMC.txt', prefix='')
-    set_default_logger(logger)
+    # logger = ensure_logger(log_filename='logFileTMCMC.txt', prefix='')
+    # set_default_logger(logger)
+    logger = setup_logger(log_filename='logFileTMCMC.txt', prefix='')
     flusher = LoggerAutoFlusher(logger, interval=10)
     flusher.start()
 
@@ -1010,13 +1068,13 @@ if __name__ == '__main__':
         import numpy as np
         import uq_utilities
         from tmcmc_test_utilities import (
-            _log_likelihood_approximation_function,
+            _log_likelihood_function,
             _log_prior_pdf,
             _sample_transformation_function,
         )
 
         tmcmc_sampler = TMCMC(
-            _log_likelihood_approximation_function,
+            _log_likelihood_function,
             _log_prior_pdf,
             _sample_transformation_function,
             run_parallel=True,
@@ -1029,15 +1087,13 @@ if __name__ == '__main__':
         )
 
         # Initial setup...
-        num_samples = 2000
+        num_samples = 1000
         num_dimensions = 2
         rng = np.random.default_rng(42)
 
         initial_samples = rng.normal(size=(num_samples, num_dimensions))
         initial_model_parameters = _sample_transformation_function(initial_samples)
-        initial_log_likelihoods = _log_likelihood_approximation_function(
-            initial_model_parameters
-        )
+        initial_log_likelihoods = _log_likelihood_function(initial_model_parameters)
         initial_log_target_density_values = initial_log_likelihoods
 
         samples_dict = {0: initial_samples}
@@ -1058,7 +1114,7 @@ if __name__ == '__main__':
             log_evidence_dict,
             num_model_evals_dict,
             stage_num,
-            num_burn_in=10,
+            num_burn_in=20,
         )
 
         logger.info('TMCMC finished successfully!')
