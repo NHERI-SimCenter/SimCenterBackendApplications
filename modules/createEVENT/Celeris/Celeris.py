@@ -59,24 +59,6 @@ except ImportError:
     print()  # noqa: T201
 
 
-# Check if bresenham is installed before importing bresenham
-try:
-    import bresenham
-except ImportError:
-    print('Bresenham is not installed. Please install it using "pip install bresenham".')
-    # noqa: T201
-    print()
-    subprocess.run([sys.executable, '-m', 'pip', 'install', 'bresenham'], check=False)  # noqa: S603
-    try:
-        import bresenham
-    except ImportError:
-        print('Bresenham installation failed. Please install it manually.')
-        # noqa: T201
-        sys.exit(1)
-    print('Bresenham is installed successfully.')
-    # noqa: T201
-    print()
-
 class FloorForces:  # noqa: D101
     def __init__(self, recorderID=-1):  # noqa: N803
         if recorderID < 0:
