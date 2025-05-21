@@ -45,7 +45,7 @@ from logging_utilities import (
 )
 from principal_component_analysis import PrincipalComponentAnalysis
 from space_filling_doe import LatinHypercubeSampling
-from tmcmc import TMCMC, calculate_warm_start_stage
+from tmcmc import TMCMC, calculate_log_evidence, calculate_warm_start_stage
 
 if TYPE_CHECKING:
     import logging
@@ -741,9 +741,10 @@ class GP_AB_Algorithm:
                     self.log_target_density_values_dict,
                     self.log_evidence_dict,
                     self.num_model_evals_dict,
+                    self.scale_factor_dict,
                     # self.j_star - 1 if self.j_star > 0 else 0,
                     self.j_star,
-                    num_burn_in=0,
+                    num_burn_in=5,
                 )
                 time_elapsed = time.time() - start_time
                 self.posterior_sampling_time += time_elapsed
@@ -848,7 +849,7 @@ class GP_AB_Algorithm:
                 'Adjusting the ratio of exploitation to exploration training points.'
             )
             self.exploitation_proportion = calculate_exploitation_proportion(
-                self.gcv
+                self.gcv, self.n_training_points
             )
             self.loginfo(
                 f'Proportion of exploitation points: {self.exploitation_proportion:.2f}'
@@ -1004,6 +1005,7 @@ class GP_AB_Algorithm:
         self.log_target_density_values_dict = {}
         self.log_evidence_dict = {}
         self.num_model_evals_dict = {}
+        self.scale_factor_dict = {}
 
     def _initialize_tmcmc_from_prior(self, log_prior_fn, log_likelihood_fn):
         self.loginfo('Preparing for sequential sampling starting from prior.')
@@ -1019,6 +1021,14 @@ class GP_AB_Algorithm:
         self.log_target_density_values_dict[0] = log_target
         self.log_evidence_dict[0] = 0
         self.num_model_evals_dict[0] = self.num_samples_per_stage
+        if (
+            self.results is not None
+            and 'scale_factor_dict' in self.results
+            and 0 in self.results['scale_factor_dict']
+        ):
+            self.scale_factor_dict[0] = self.results['scale_factor_dict'][0]
+        else:
+            self.scale_factor_dict[0] = 2.4 / np.sqrt(self.input_dimension)
 
     def _load_tmcmc_from_previous_results(self):
         if self.j_star == 0:
@@ -1031,14 +1041,47 @@ class GP_AB_Algorithm:
             self.samples_dict[j] = self.results['samples_dict'][j]
             self.model_parameters_dict[j] = self.results['model_parameters_dict'][j]
             self.betas_dict[j] = self.results['betas_dict'][j]
-            self.log_likelihoods_dict[j] = self.results[
-                'log_likelihood_values_dict'
-            ][j]
-            self.log_target_density_values_dict[j] = self.results[
-                'log_target_density_values_dict'
-            ][j]
-            self.log_evidence_dict[j] = self.results['log_evidence_dict'][j]
             self.num_model_evals_dict[j] = self.results['num_model_evals_dict'][j]
+            self.scale_factor_dict[j] = self.results['scale_factor_dict'][j]
+            # self.log_likelihoods_dict[j] = self.results[
+            #     'log_likelihood_values_dict'
+            # ][j]
+            # self.log_target_density_values_dict[j] = self.results[
+            #     'log_target_density_values_dict'
+            # ][j]
+            # self.log_evidence_dict[j] = self.results['log_evidence_dict'][j]
+            # self.num_model_evals_dict[j] = self.results['num_model_evals_dict'][j]
+            ll_shape = self.results['log_likelihood_values_dict'][j].shape
+            lt_shape = self.results['log_target_density_values_dict'][j].shape
+            log_likes = []
+            log_targets = []
+            log_prior_fn = partial(
+                log_prior, prior_pdf_function=self.prior_pdf_function
+            )
+            for i, params in enumerate(self.model_parameters_dict[j]):
+                model_parameters = np.reshape(params, (1, -1))
+                loglike = self.current_log_likelihood_approximation(
+                    model_parameters, simulation_number=i
+                )
+                logprior = log_prior_fn(model_parameters)
+                logtarget = self.results['betas_dict'][j] * loglike + logprior
+                log_likes.append(loglike)
+                log_targets.append(logtarget)
+
+            log_likelihood_values = np.array(log_likes).reshape(ll_shape)
+            log_target_density_values = np.array(log_targets).reshape(lt_shape)
+            if j > 0:
+                beta_increment = (
+                    self.results['betas_dict'][j] - self.results['betas_dict'][j - 1]
+                )
+                log_evidence = calculate_log_evidence(
+                    beta_increment, log_likelihood_values
+                )
+            else:
+                log_evidence = 0.0
+            self.log_likelihoods_dict[j] = log_likelihood_values
+            self.log_target_density_values_dict[j] = log_target_density_values
+            self.log_evidence_dict[j] = log_evidence
 
     def run_initial_doe(self, num_initial_doe_per_dim=2):
         """
@@ -1319,7 +1362,7 @@ def save_exploitation_candidates_json(
         json.dump(output_json_serializable, f, indent=2)
 
 
-def calculate_exploitation_proportion(gcv):
+def calculate_exploitation_proportion(gcv, num_training_points):
     """
     Compute the exploitation proportion r_ex based on gcv using log-scale interpolation.
 
@@ -1340,8 +1383,10 @@ def calculate_exploitation_proportion(gcv):
     """
     g_upper = 0.2
     g_lower = 0.005
-    r_max = 0.9
-    r_min = 0.3
+    # r_max = 0.9
+    # r_min = 0.0
+    r_min = 1 / (num_training_points)
+    r_max = 1 - r_min
 
     if gcv is None:
         return r_min
