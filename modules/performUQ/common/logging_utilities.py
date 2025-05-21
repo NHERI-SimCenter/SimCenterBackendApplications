@@ -25,9 +25,13 @@ _UNICODE_SYMBOLS_DEFAULT = ['-']
 #     logging.INFO: ['->', '-->', '--->', '---->', '     >'],
 #     logging.DEBUG: ['->', '-->', '--->', '---->', '     >'],
 # }
+# _ASCII_SYMBOLS_BY_LEVEL = {
+#     logging.INFO: ['>'],
+#     logging.DEBUG: ['>'],
+# }
 _ASCII_SYMBOLS_BY_LEVEL = {
-    logging.INFO: ['>'],
-    logging.DEBUG: ['>'],
+    logging.INFO: [''],
+    logging.DEBUG: [''],
 }
 _ASCII_SYMBOLS_DEFAULT = ['-']
 
@@ -178,10 +182,11 @@ def _log_highlight_block(
     symbol = _HIGHLIGHT_SYMBOLS.get(style, '=')  # fallback to '='
     border = symbol * width
     centered_msg = msg.center(width)
+    log_symbol = _get_log_symbol_for_indent(logger.getEffectiveLevel())
 
-    logger.info(f'{indent}> {border}')
-    logger.info(f'{indent}> {centered_msg}')
-    logger.info(f'{indent}> {border}')
+    logger.info(f'{indent}{log_symbol} {border}')
+    logger.info(f'{indent}{log_symbol} {centered_msg}')
+    logger.info(f'{indent}{log_symbol} {border}')
 
 
 class LogStepContext:
