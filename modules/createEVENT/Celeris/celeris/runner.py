@@ -33,6 +33,15 @@ class Evolve:  # noqa: D101
         self.saveimg = saveimg
         self.vmin = vmin
         self.vmax = vmax
+        self.buffer_step = 1
+        self.sensor_step = 1
+        self.render_step = 5
+        self.image_step = 100
+        self.state_step = 1000
+        self.output_forces = True
+        self.output_wave_gauges = True
+        self.output_velocimeters = True
+        self.output_gif = True
         # To visualization
         self.image = ti.Vector.field(  # noqa: F405
             3,
@@ -46,6 +55,12 @@ class Evolve:  # noqa: D101
         self.outdir = outdir
         if self.outdir:
             os.makedirs(self.outdir, exist_ok=True)  # noqa: PTH103
+        # To visualize 1D
+        self.bottom1D = ti.Vector.field(2, dtype=ti.f32, shape = self.solver.nx)
+        self.indexbottom1D = ti.field(dtype=ti.i32, shape = 2*self.solver.nx)
+        self.eta1D = ti.Vector.field(2, dtype=ti.f32, shape = self.solver.nx)
+        self.x_scale = self.solver.nx * self.solver.dx
+        self.y_scale = 2 * self.solver.base_depth
 
     def Evolve_0(self):  # noqa: N802, D102
         self.solver.fill_bottom_field()
@@ -268,7 +283,7 @@ class Evolve:  # noqa: D101
 
             # land -= min(self.solver.maxtopo, self.solver.base_depth)
             approximate_wave_to_depth_breaking_ratio = 0.85  # 0.77
-            water_col = ti.pow(flow, 1 / 3) / (  # noqa: F405
+            water_col = ti.pow(flow, 1 / 2) / (  # noqa: F405
                 self.solver.base_depth / approximate_wave_to_depth_breaking_ratio
             )  # Water column normalized
             # land_elevation = land / (land_datum)  # Topo normalized
@@ -278,13 +293,13 @@ class Evolve:  # noqa: D101
             index = ti.min(  # noqa: F405
                 index, num_colors - 2
             )  # clamp index to avoid out-of-bounds
-            t = (
-                water_col - index * step
-            ) / step  # fractional position between the colors
+            t = float(
+                float(water_col) - float(index) * float(step)
+            ) / float(step)  # fractional position between the colors
             sand_capillary_height = 0.01
             if flow > 0.0:  # Water area
                 self.image[i, j] = (
-                    self.ocean[index] * (1 - t) + self.ocean[index + 1] * t
+                    float(self.ocean[index]) * float(1.0 - t) + float(self.ocean[index + 1]) * t
                 )
                 continue
             if sand_capillary_height < flow < 0.0:
@@ -302,9 +317,9 @@ class Evolve:  # noqa: D101
             land_index = abs(
                 int((land_elevation) / land_step)
             )  # which color interval we're in
-            land_index = max(
-                0, min(land_index + 0.0 * self.land.shape[0], self.land.shape[0] - 2)
-            )  # clamp index to avoid out-of-bounds
+            land_index = int(max(
+                0.0, min(float(land_index) + 0.0 * float(self.land.shape[0]), float(self.land.shape[0]) - 2.0)
+            ))  # clamp index to avoid out-of-bounds
             land_t = (
                 land_elevation - land_index * land_step
             ) / land_step  # fractional position between the colors
@@ -430,18 +445,18 @@ class Evolve:  # noqa: D101
                 self.solver.base_depth - self.solver.maxtopo
             )
             land_step = (abs(self.solver.maxtopo) / 1) / self.land.shape[0]
-            land_index = abs(
+            land_index = int(abs(
                 int((land_elevation) / land_step)
-            )  # which color interval we're in
-            land_index = max(
-                0, min(land_index + 0.0 * self.land.shape[0], self.land.shape[0] - 2)
+            ))  # which color interval we're in
+            land_index = int(max(
+                0.0, min(float(land_index) + 0.0 * self.land.shape[0], float(self.land.shape[0]) - 2.0))
             )  # clamp index to avoid out-of-bounds
-            land_t = (
-                land_elevation - land_index * land_step
-            ) / land_step  # fractional position between the colors
+            land_t = float(float(
+                float(land_elevation) - float(land_index * land_step)
+            ) / land_step)  # fractional position between the colors
             self.image[i, j] = (
-                self.land[land_index] * (1 - land_t)
-                + self.land[land_index + 1] * land_t
+                float(self.land[land_index]) * float(1.0 - land_t)
+                + float(self.land[land_index + 1]) * float(land_t)
             )
 
     @ti.kernel  # noqa: F405
@@ -466,6 +481,104 @@ class Evolve:  # noqa: D101
                         self.solver.pixel[i, j] = self.brk_color(
                             sed, 0.65, 0.75, 0.1, 5.0
                         )  # Sed
+
+
+    @ti.kernel
+    def bottom_paint(self):
+        for i in self.bottom1D:
+            self.bottom1D[i].x = i*self.solver.dx/self.x_scale
+            self.bottom1D[i].y = 0.5+self.solver.Bottom[2,i,0]/self.y_scale
+
+        for i in range(2*self.solver.nx-2):
+            self.indexbottom1D[i] = (i + 1) // 2
+            
+
+    @ti.kernel
+    def eta_paint(self):
+        for i in self.eta1D:
+            self.eta1D[i].x = i*self.solver.dx/self.x_scale
+            self.eta1D[i].y = 0.5+self.solver.State[i,0][0]/20
+    
+    def Evolve_1D_Display(self):
+        plotpath = './plots'
+        if not os.path.exists(plotpath):
+            os.makedirs(plotpath)
+        i = 0.0
+        use_ggui = None
+        window = None
+        canvas = None
+        try:
+            window = ti.ui.Window("CelerisAi(1D)", (1000,200))
+            canvas = window.get_canvas()
+            canvas.set_background_color(color=(1,1,1))
+            use_ggui = True
+        except:
+            # TODO : Formal error handling and logging
+            print("GGUI not available, reverting to legacy Taichi GUI.")
+            use_ggui = False
+            use_fast_gui = False # Need ti.Vector.field equiv to self.solver.pixel to use fast_gui
+            window = ti.GUI(  # noqa: F405
+                'CelerisAi(1D)', (1000, 200), fast_gui=use_fast_gui
+                ) # fast_gui - display directly on frame buffer if not drawing shapes or text
+            canvas = None
+            print("Legacy GUI initialized.")
+        else:
+            print("GGUI initialized without issues.")
+
+        self.Evolve_0()
+        self.bottom_paint() # To plot the bottom line
+        start_time = time.time() - 0.00001
+
+        while window.running:
+            self.eta_paint()
+            if use_ggui:
+                canvas.circles(self.eta1D,radius=0.005,color = (0., 150/255., 255./255))
+                canvas.lines(self.bottom1D,width=0.01,indices=self.indexbottom1D,color = (128/255., 0.0, 0.))
+            else:
+                for ii in range(self.solver.nx):
+                    window.circle(pos=[self.eta1D[ii][0], self.eta1D[ii][1]], radius=1, color=0x00FFFF)
+                    if ii >= self.solver.nx - 1:
+                        continue 
+                    window.line(self.bottom1D[ii], self.bottom1D[ii+1], radius=1, color = 0x39FF14)
+
+            self.Evolve_Steps(i)
+
+            if i==1 or (i%100)==0:
+                compTime = time.time() - start_time
+                print('Current Simulation time: {:2.2f}s at step: {}-- Ratio:{:2.2f}--CompTime:{:2.2f}'.format(self.dt*i,i,(self.dt*i)/compTime,compTime))
+                
+                if self.saveimg:
+                    frame = int(i)
+                    frame_filename = 'frame_{}.png'.format(frame)
+                    frame_path = os.path.join(base_frame_dir, frame_filename)
+                    frame_paths.append(frame_path)
+                    if use_ggui:
+                        window.save_image(frame_path)
+                    else:
+                        tools.imwrite(self.solver.pixel.to_numpy(), frame_path)
+
+                #window.show()
+                if self.solver.outdir:
+                    state=self.solver.State.to_numpy()
+                    np.save('{}/state_{}.npy'.format(self.outdir,int(i)),state)
+           
+            window.show()
+            
+            if i > self.maxsteps:
+                if frame_paths: # Check if there are frames to create a GIF
+                    gif_filename = f"video.gif"
+                    gif_path = os.path.join(base_frame_dir, gif_filename)
+                    try:
+                        with imageio.get_writer(gif_path, mode='I', duration=0.1) as writer:
+                            for frame_path in frame_paths:
+                                image = imageio.imread(frame_path)
+                                writer.append_data(image)
+                        print(f"GIF created at {gif_path}")
+                    except Exception as e:
+                        print(f"Error creating GIF: {e}")
+                break
+            i = i+1
+
 
     def Evolve_Display(  # noqa: C901, N802, D102
         self,
@@ -544,7 +657,9 @@ class Evolve:  # noqa: D101
 
         start_time = time.time()
 
-        self.solver.overwrite_force()
+        self.solver.overwrite_force(max_steps=int(self.maxsteps))
+        self.solver.overwrite_wave_gauge(max_steps=int(self.maxsteps))
+        self.solver.overwrite_velocity(max_steps=int(self.maxsteps))
 
         while window.running:
             # self.paint()
@@ -571,11 +686,9 @@ class Evolve:  # noqa: D101
             self.Evolve_Steps(i)
 
             window.line(self.solver.force_sensor_begin_scaled, self.solver.force_sensor_end_scaled, radius=1, color=0x39FF14)
+            for k in range(self.solver.num_wave_gauges):
+                window.circle(pos=[self.solver.wave_gauge_scaled[int(k),int(0)], self.solver.wave_gauge_scaled[int(k),int(1)]], radius=2, color=0xFF5733)
             
-            self.buffer_step = 1
-            self.render_step = 10
-            self.image_step = 100
-            self.state_step = 1000
 
             if i == self.buffer_step:
                 start_time = (
@@ -595,36 +708,10 @@ class Evolve:  # noqa: D101
                     if use_ggui:
                         window.save_image(frame_path)
                     else:
-                        # picture = self.image.to_numpy() * 255.0
                         tools.imwrite(self.image.to_numpy(), frame_path)
 
-                    # if self.saveimg and not use_ggui:
-                    #     try:
-                    #         window.show(frame_path)
-                    #     except Exception as e:
-                    #         print(f"Error showing frame: {e},  fallback to tools.imwrite...")
-                    #         try:
-                    #             tools.imwrite(self.solver.pixel.to_numpy(), frame_path)
-                    #             frame_paths.append(frame_path)
-                    #         except Exception as e:
-                    #             print(f"Error writing frame with tools.imwrite: {e}")
-                    #     else:
-                    #         frame_paths.append(frame_path)
-                    # elif self.saveimg and use_ggui:
-                    #     try:
-                    #         tools.imwrite(self.solver.pixel.to_numpy(), frame_path)
-                    #         frame_paths.append(frame_path)
-                    #     except Exception as e:
-                    #         print(f"Error writing frame with tools.imwrite: {e}")
-                    # elif not use_ggui and not self.saveimg:
-                    #     window.show()
-                    # else:
-                    #     print("WARNING - No output method selected, frame not saved or displayed...")
-                    # if not use_ggui:
-                    #     continue
             if i == self.buffer_step or (i % self.state_step) == 0:
                 if self.saveimg:
-                    # window.show()
                     if self.solver.outdir and not self.outdir:
                         self.outdir = self.solver.outdir
                         os.makedirs(self.outdir, exist_ok=True)  # noqa: PTH103
@@ -634,15 +721,20 @@ class Evolve:  # noqa: D101
                         np.save(f'{self.outdir}/state_{int(i)}.npy', state)  # noqa: F405
 
             # Show window in the right position (after save image) for GGUI systems
-            if i % self.render_step == 0:
-                # Improve the performance.The visualization is done only every 5 timesteps
+            if i % self.render_step == 0 or i == 1:
+                # Improve the performance.The visualization is done only every render_step timesteps
                 window.show()
 
-            self.output_forces = True
-            if (self.output_forces):
-                self.solver.write_force()
+            if (self.output_forces) and (i % self.sensor_step == 0):
+                self.solver.write_force(step=int(i))
+            
+            if (self.output_wave_gauges) and (i % self.sensor_step == 0):
+                self.solver.write_wave_gauge(step=int(i))    
+            
+            if (self.output_velocimeters) and (i % self.sensor_step == 0):
+                self.solver.write_velocity(step=int(i))
                 
-            if i > self.maxsteps:          
+            if (self.output_gif) and (i > self.maxsteps):                 
                 if self.saveimg:
                     print('Creating GIF...')  # noqa: T201
                     if frame_paths:  # Check if there are frames to create a GIF

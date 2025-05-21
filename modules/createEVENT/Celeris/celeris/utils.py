@@ -220,6 +220,12 @@ def FrictionCalc(hu, hv, h, base_depth, delta, isManning, g, friction):  # noqa:
     f = f * ti.sqrt(hu * hu + hv * hv) * divide_by_h2
     return f  # noqa: RET504
 
+def checjson(variable, data):  # noqa: D103
+    # To check if variables exist in Celeris configuration file
+    R = 0  # noqa: N806
+    if variable in data:
+        R = 1  # noqa: N806
+    return R
 
 def main():
     """Define utility functions used in Celeris."""

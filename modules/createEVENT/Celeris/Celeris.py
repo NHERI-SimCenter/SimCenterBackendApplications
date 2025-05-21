@@ -42,7 +42,6 @@ from fractions import Fraction
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 
 # Check if taichi is installed before importing taichi
 try:
@@ -281,23 +280,24 @@ def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
     return int(bim['GeneralInformation']['stories'])
 
 
-def GetCelerisScript(BIMFilePath):  # noqa: N802, N803, D103
-    filePath = BIMFilePath  # noqa: N806
-    with open(filePath, encoding='utf-8') as file:  # noqa: PTH123
-        evt = json.load(file)
-    file.close  # noqa: B018
+def GetCelerisScript():  # noqa: N802, N803, D103
+    # filePath = BIMFilePath  # noqa: N806
+    # with open(filePath, encoding='utf-8') as file:  # noqa: PTH123
+    #     evt = json.load(file)
+    # file.close  # noqa: B018
 
-    fileNameKey = 'simulationScript'  # noqa: N806
-    filePathKey = fileNameKey + 'Path'  # noqa: N806
+    # fileNameKey = 'simulationScript'  # noqa: N806
+    # filePathKey = fileNameKey + 'Path'  # noqa: N806
 
-    for event in evt['Events']:
-        fileName = event[fileNameKey]  # noqa: N806
-        filePath = event[filePathKey]  # noqa: N806
-        return os.path.join(filePath, fileName)  # noqa: PTH118
+    # for event in evt['Events']:
+    #     fileName = event[fileNameKey]  # noqa: N806
+    #     filePath = event[filePathKey]  # noqa: N806
+    #     return os.path.join(filePath, fileName)  # noqa: PTH118
 
     defaultScriptPath = f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: N806, PTH120
     defaultScriptName = 'setrun.py'  # noqa: N806
-    return defaultScriptPath + defaultScriptName
+    defaultScriptPath = os.path.join(defaultScriptPath, defaultScriptName)  # noqa: PTH118
+    return defaultScriptPath  # noqa: PTH118
 
 
 def main():
@@ -330,25 +330,21 @@ if __name__ == '__main__':
         default='EVENT.json',
     )
     parser.add_argument('--getRV', help='getRV', required=False, action='store_true')
-    # parser.add_argument('--filenameSAM', default=None)
-
+    
     # parsing arguments
     arguments, unknowns = parser.parse_known_args()
 
-    # import subprocess
-
     # Get json of filenameAIM
-    scriptName = GetCelerisScript(arguments.filenameAIM)  # noqa: N816
-
     filePath = arguments.filenameAIM  # noqa: N816
     with open(filePath, encoding='utf-8') as file:  # noqa: PTH123
         evt = json.load(file)
     file.close  # noqa: B018
 
+    scriptName = GetCelerisScript()  # noqa: N816
+    caseDirectory = './examples/CrescentCity'  # noqa: N816
     configFilename = 'config.json'  # noqa: N816
     bathymetryFilename = 'bathymetry.txt'  # noqa: N816
     waveFilename = 'wave.txt'  # noqa: N816
-    caseDirectory = './examples/CrescentCity'  # noqa: N816
 
     for event in evt['Events']:
         # Redesign the input structure in backend CelerisAi later.
