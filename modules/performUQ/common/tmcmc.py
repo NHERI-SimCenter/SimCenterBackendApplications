@@ -102,7 +102,7 @@ def _calculate_weights(beta_increment, log_likelihood_values):
     return weights  # noqa: RET504
 
 
-def _calculate_log_evidence(beta_increment, log_likelihood_values):
+def calculate_log_evidence(beta_increment, log_likelihood_values):
     """
     Calculate the log evidence for the given beta increment and log-likelihoods.
 
@@ -274,7 +274,7 @@ def run_one_stage_unequal_chain_lengths(  # noqa: C901, PLR0913
     logging_msg_list = []
     logging_msg_list.append('Reweighting...')
     new_beta = _increment_beta(log_likelihood_values, beta)
-    log_evidence = _calculate_log_evidence(new_beta - beta, log_likelihood_values)
+    log_evidence = calculate_log_evidence(new_beta - beta, log_likelihood_values)
     weights = _calculate_weights(new_beta - beta, log_likelihood_values)
 
     proposal_covariance = get_scaled_proposal_covariance(
@@ -614,7 +614,7 @@ def run_one_stage_equal_chain_lengths(
     proposal_cov_fn,
     seed=None,
     num_burn_in=0,
-    thinning_factor=1,
+    thinning_factor=2,
     run_type='runningLocal',
 ):
     """
@@ -662,12 +662,13 @@ def run_one_stage_equal_chain_lengths(
     logging_msg_list.append('Reweighting...')
     num_samples = samples.shape[0]
     new_beta = _increment_beta(log_likelihood_values, beta)
-    log_evidence = _calculate_log_evidence(new_beta - beta, log_likelihood_values)
+    log_evidence = calculate_log_evidence(new_beta - beta, log_likelihood_values)
     weights = _calculate_weights(new_beta - beta, log_likelihood_values)
     ess = 1 / np.sum(weights**2)
     logging_msg_list.append(f'ESS = {ess:.2f} out of {num_samples}')
 
     # Fixed proposal across all chains
+    logging_msg_list.append(f'Scale factor = {scale_factor:.4f}')
     proposal_cov = proposal_cov_fn(samples, weights, scale_factor)
     proposal_chol = safer_cholesky.decompose(proposal_cov)
 
@@ -694,10 +695,12 @@ def run_one_stage_equal_chain_lengths(
     # max_count = max(index_counter.values())
     # min_count = min(index_counter.values())
 
-    chain_length = num_burn_in + num_steps
+    adjusted_num_burn_in = int((1 - new_beta) * num_burn_in)
+
+    chain_length = adjusted_num_burn_in + num_steps
     thinning_msg = ''
     if math.isclose(new_beta, 1.0, rel_tol=1e-9) and thinning_factor > 1:
-        chain_length = num_burn_in + int(num_steps * thinning_factor)
+        chain_length = adjusted_num_burn_in + int(num_steps * thinning_factor)
         thinning_msg = (
             f' and thinning steps = {int(num_steps * thinning_factor)-1} (discarded)'
         )
@@ -712,7 +715,7 @@ def run_one_stage_equal_chain_lengths(
     logging_msg_list.append(f'Number of chains = {num_samples}')
     msg = f'Number of steps per chain = {chain_length}'
     if num_burn_in > 0:
-        msg += f' of which burn-in steps = {num_burn_in} (discarded)'
+        msg += f' of which burn-in steps = {adjusted_num_burn_in} (discarded)'
         msg += thinning_msg
     logging_msg_list.append(msg)
     logging_msg_list.append(
@@ -781,6 +784,253 @@ def run_one_stage_equal_chain_lengths(
         total_num_accepts,
         logging_msg_list,
     )
+
+
+# def adapt_scale_factor(scale_factor, acceptance_rate, min_scale=1e-2, max_scale=2.5):
+#     """
+#     Adapt the scale factor for the proposal distribution based on the acceptance rate.
+
+#     Parameters
+#     ----------
+#     scale_factor : float
+#         Current scale factor for the proposal distribution.
+#     acceptance_rate : float
+#         Current acceptance rate of the MCMC chain.
+#     min_scale : float, optional
+#         Minimum allowed scale factor. Defaults to 1e-2.
+#     max_scale : float, optional
+#         Maximum allowed scale factor. Defaults to 2.5.
+
+#     Returns
+#     -------
+#     float
+#         Updated scale factor adjusted based on the acceptance rate.
+#     """
+#     target_rate = 0.4  # ideal range is typically 0.3–0.5
+#     gamma = 0.2  # learning rate for smooth updates
+
+#     # --- Hard bounds to prevent runaway scaling
+#     if acceptance_rate < 0.2:
+#         scale_factor = max(scale_factor * 0.5, min_scale)
+#     elif acceptance_rate > 0.6:
+#         scale_factor = min(scale_factor * 2.0, max_scale)
+#     else:
+#         # Smooth update if within reasonable range
+#         scale_factor *= np.exp(gamma * (acceptance_rate - target_rate))
+#         scale_factor = np.clip(scale_factor, min_scale, max_scale)
+
+#     return scale_factor
+
+
+# def get_target_acceptance_and_band(dimension: int):
+#     """
+#     Compute the dimension-aware target acceptance rate and adaptation band.
+
+#     Parameters
+#     ----------
+#     dimension : int
+#         Dimensionality of the parameter space.
+
+#     Returns
+#     -------
+#     tuple
+#         (target_acceptance_rate: float, target_band: tuple[float, float])
+#     """
+#     target = 0.23 + 0.21 / dimension
+#     band_width = 0.1 + 0.1 / dimension
+#     target_band = (
+#         max(0.01, target - band_width / 2),
+#         min(1.0, target + band_width / 2),
+#     )
+#     return target, target_band
+
+
+# def adapt_scale_factor(
+#     scale_factor: float,
+#     acceptance_rate: float,
+#     target_band: tuple[float, float],
+#     gamma: float = 0.2,
+#     max_adjustment_factor: float = 2.0,
+#     min_scale: float = 1e-2,
+#     max_scale: float = 2.5,
+# ) -> float:
+#     """
+#     Proposal scale factor adaptation.
+
+#     Adapt the proposal scale factor based on acceptance rate, using smooth
+#     exponential adjustment within a target band, and linear ramping outside.
+
+#     Parameters
+#     ----------
+#     scale_factor : float
+#         Current scale factor.
+#     acceptance_rate : float
+#         Acceptance rate of the most recent TMCMC stage.
+#     target_band : tuple
+#         (target_low, target_high) bounds around target acceptance rate.
+#     gamma : float, optional
+#         Learning rate for exponential adaptation (default 0.2).
+#     max_adjustment_factor : float, optional
+#         Max scale factor multiplier (default 2.0).
+#     min_scale : float, optional
+#         Minimum allowable scale factor (default 1e-2).
+#     max_scale : float, optional
+#         Maximum allowable scale factor (default 2.5).
+
+#     Returns
+#     -------
+#     float
+#         Adapted scale factor.
+#     """
+#     target_low, target_high = target_band
+#     target_center = (target_low + target_high) / 2
+
+#     # Exponential bounds for the inner target band
+#     exp_low = np.exp(gamma * (target_low - target_center))
+#     exp_high = np.exp(gamma * (target_high - target_center))
+
+#     if target_low <= acceptance_rate <= target_high:
+#         # Smooth exponential adaptation
+#         scale_factor *= np.exp(gamma * (acceptance_rate - target_center))
+#     elif acceptance_rate < target_low:
+#         deviation = (target_low - acceptance_rate) / target_low
+#         min_factor = 1 / max_adjustment_factor
+#         factor = exp_low - (exp_low - min_factor) * deviation
+#         scale_factor *= factor
+#     else:  # acceptance_rate > target_high
+#         deviation = (acceptance_rate - target_high) / (1 - target_high)
+#         factor = exp_high + (max_adjustment_factor - exp_high) * deviation
+#         scale_factor *= factor
+
+#     return np.clip(scale_factor, min_scale, max_scale)
+
+
+# def adapt_scale_factor(
+#     scale_factor,
+#     acceptance_rate,
+#     min_scale=1e-2,
+#     max_scale=2.5,
+#     target_band=(0.3, 0.5),  # should be set using get_target_acceptance_and_band(d)
+#     max_adjustment_factor=2.0,
+#     gamma=1.0,
+#     cap_low=0.15,
+#     cap_high=0.65,
+# ):
+#     target_low, target_high = target_band
+#     target_center = (target_low + target_high) / 2
+
+#     # Reference scale changes at the boundaries of the target band
+#     exp_low = np.exp(gamma * (target_low - target_center))
+#     exp_high = np.exp(gamma * (target_high - target_center))
+
+#     if acceptance_rate <= cap_low:
+#         scale_factor *= 1 / max_adjustment_factor
+#     elif acceptance_rate >= cap_high:
+#         scale_factor *= max_adjustment_factor
+#     elif target_low <= acceptance_rate <= target_high:
+#         # Smooth exponential update within the band
+#         scale_factor *= np.exp(gamma * (acceptance_rate - target_center))
+#     elif acceptance_rate < target_low:
+#         deviation = (acceptance_rate - cap_low) / (target_low - cap_low)
+#         min_factor = 1 / max_adjustment_factor
+#         factor = min_factor + (exp_low - min_factor) * deviation
+#         scale_factor *= factor
+#     else:  # acceptance_rate > target_high but < cap_high
+#         deviation = (cap_high - acceptance_rate) / (cap_high - target_high)
+#         factor = (
+#             max_adjustment_factor - (max_adjustment_factor - exp_high) * deviation
+#         )
+#         scale_factor *= factor
+
+#     return np.clip(scale_factor, min_scale, max_scale)
+
+
+def get_target_acceptance_and_band(dimension: int):
+    """
+    Compute dimension-aware target acceptance rate and adaptation band.
+
+    Parameters
+    ----------
+    dimension : int
+
+    Returns
+    -------
+    tuple
+        (target_acceptance_rate, (band_low, band_high))
+    """
+    target = 0.23 + 0.21 / dimension
+    band_width = 0.3 + 0.1 / dimension
+    band = (
+        max(0.15, target - band_width / 2),
+        min(1.0, target + band_width / 2),
+    )
+    return target, band
+
+
+def adapt_scale_factor(
+    scale_factor: float,
+    acceptance_rate: float,
+    dimension: int,
+    *,
+    gamma: float = 0.2,
+    max_scale: float = 2.5,
+    min_scale: float = 1e-2,
+    max_increase_rate: float = 1.5,
+    transition_end: float = 0.7,
+) -> tuple[float, str]:
+    """
+    Adapt the scale factor based on acceptance rate:
+    - Halve below band_low
+    - Smooth exp update inside band
+    - Linearly increase from band_high to 0.6
+    - Cap at doubling after 0.6.
+
+    Parameters
+    ----------
+    scale_factor : float
+        Current scale factor.
+    acceptance_rate : float
+        Acceptance rate from TMCMC.
+    dimension : int
+        Dimensionality of parameter space.
+    gamma : float, optional
+        Learning rate for exponential update (default 0.2).
+    max_scale : float, optional
+        Upper limit for scale factor.
+    min_scale : float, optional
+        Lower limit for scale factor.
+    max_increase_rate : float, optional
+        Max factor applied at transition_end (default 2.0).
+    transition_end : float, optional
+        Acceptance rate at which max_increase_rate is applied.
+
+    Returns
+    -------
+    tuple
+        (updated scale_factor, action description string)
+    """  # noqa: D205
+    target, (band_low, band_high) = get_target_acceptance_and_band(dimension)
+    action = 'no change'
+
+    if acceptance_rate < band_low:
+        scale_factor *= 0.5
+        action = 'downscaled'
+    elif acceptance_rate <= band_high:
+        multiplier = np.exp(gamma * (acceptance_rate - target))
+        scale_factor *= multiplier
+        action = f'smooth adjustment x {multiplier:.3f}'
+    elif acceptance_rate <= transition_end:
+        exp_high = np.exp(gamma * (band_high - target))
+        frac = (acceptance_rate - band_high) / (transition_end - band_high)
+        multiplier = exp_high + (max_increase_rate - exp_high) * frac
+        scale_factor *= multiplier
+        action = f'linear increase x {multiplier:.3f}'
+    else:
+        scale_factor *= max_increase_rate
+        action = 'upscaled'
+
+    scale_factor = np.clip(scale_factor, min_scale, max_scale)
+    return scale_factor, action
 
 
 class TMCMC:
@@ -887,6 +1137,7 @@ class TMCMC:
         log_target_density_values_dict,
         log_evidence_dict,
         num_model_evals_dict,
+        scale_factor_dict,
         stage_num,
         num_burn_in=0,
     ):
@@ -929,9 +1180,17 @@ class TMCMC:
                 self.loginfo('Starting TMCMC')
             self.num_dimensions = samples_dict[0].shape[1]
             seed_sequence = SeedSequence(self._seed)
-            self.target_acceptance_rate = 0.23 + 0.21 / self.num_dimensions
-            self.scale_factor = 2.4 / np.sqrt(self.num_dimensions)
+            # self.target_acceptance_rate = 0.23 + 0.21 / self.num_dimensions
+            default_scale = 2.4 / np.sqrt(self.num_dimensions)
+            # self.scale_factor = default_scale
+            self.target_acceptance_rate, target_band = (
+                get_target_acceptance_and_band(self.num_dimensions)
+            )
+            # scale_factor_equal_chains = 0.2
+            scale_factor = scale_factor_dict.get(stage_num, default_scale)
+
             while betas_dict[stage_num] < 1:
+                # print(scale_factor_dict)
                 # stage_start_time = time.time()
                 with LogStepContext(
                     f'Stage {stage_num} | Current β = {betas_dict[stage_num]:.4f}',
@@ -943,7 +1202,6 @@ class TMCMC:
                     # ):
                     seed = seed_sequence.spawn(1)[0].entropy
                     if self.run_parallel:
-                        scale_factor = 0.2
                         (
                             new_samples,
                             new_model_parameters,
@@ -990,7 +1248,7 @@ class TMCMC:
                             self._log_likelihood_function,
                             self._log_prior_density_function,
                             self._sample_transformation_function,
-                            self.scale_factor,
+                            scale_factor,
                             self.target_acceptance_rate,
                             do_thinning=False,
                             burn_in_steps=num_burn_in,
@@ -1016,11 +1274,32 @@ class TMCMC:
                         # self.loginfo(
                         #     f'Time for this stage = {elapsed_time/60:.2f} minutes'
                         # )
-                        self.loginfo(
-                            f'Acceptance rate = {total_num_accepts/total_num_model_evaluations:.3f}'
+                        acceptance_rate = (
+                            total_num_accepts / total_num_model_evaluations
                         )
-                        # self.loginfo('')
-                        # self.flush_logs()
+                        self.loginfo(f'Acceptance rate = {acceptance_rate:.3f}')
+                        # scale_factor_equal_chains = (1 / 9) + (
+                        #     (8 / 9) * acceptance_rate
+                        # )
+                        # self.loginfo(
+                        #     f'Target acceptance rate = {self.target_acceptance_rate:.3f}'
+                        # )
+                        scale_factor, adapt_message = adapt_scale_factor(
+                            scale_factor,
+                            acceptance_rate,
+                            self.num_dimensions,
+                        )
+                        scale_factor_dict[stage_num - 1] = scale_factor
+                        if np.isclose(new_beta, 1.0):
+                            scale_factor_dict[stage_num] = scale_factor
+                            for i in range(start_stage):
+                                scale_factor_dict[i] = (
+                                    scale_factor_dict[i] * 0.8 + scale_factor * 0.2
+                                )
+                        if self.run_parallel:
+                            self.loginfo(
+                                f'Adjusted scale factor = {scale_factor:.4f}, ({adapt_message})'
+                            )
 
             with LogStepContext(
                 f'Current β = {betas_dict[stage_num]:.1f}, TMCMC completed',
@@ -1052,6 +1331,7 @@ class TMCMC:
                 'log_target_density_values_dict': log_target_density_values_dict,
                 'log_evidence_dict': log_evidence_dict,
                 'num_model_evals_dict': num_model_evals_dict,
+                'scale_factor_dict': scale_factor_dict,
             }
 
 
@@ -1103,6 +1383,7 @@ if __name__ == '__main__':
         log_target_density_values_dict = {0: initial_log_target_density_values}
         log_evidence_dict = {0: 0}
         num_model_evals_dict = {0: num_samples}
+        scale_factor_dict = {0: 2.4 / np.sqrt(num_dimensions)}
 
         stage_num = 0
         results = tmcmc_sampler.run(
@@ -1113,11 +1394,13 @@ if __name__ == '__main__':
             log_target_density_values_dict,
             log_evidence_dict,
             num_model_evals_dict,
+            scale_factor_dict,
             stage_num,
             num_burn_in=20,
         )
 
         logger.info('TMCMC finished successfully!')
+        print(scale_factor_dict)
 
     except Exception as ex:
         log_exception(logger, ex, message='Fatal error during TMCMC execution')
