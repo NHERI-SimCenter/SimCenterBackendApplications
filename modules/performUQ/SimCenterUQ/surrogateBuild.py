@@ -93,10 +93,10 @@ print(f'Current working dir (getcwd): {os.getcwd()}')  # noqa: T201, PTH109
 work_dir_tmp = sys.argv[1].replace(os.sep, '/')
 errFileName = os.path.join(work_dir_tmp, 'dakota.err')  # noqa: N816, PTH118
 
-develop_mode = len(sys.argv) == 8  # a flag for develeopmode  # noqa: PLR2004
+develop_mode = len(sys.argv) == 7  # a flag for develeopmode  # noqa: PLR2004
 if develop_mode:
-    # import matplotlib
-    # matplotlib.use('TkAgg')
+    import matplotlib
+    matplotlib.use('TkAgg')
     import matplotlib.pyplot as plt
 
     print('Developer mode')  # noqa: T201
@@ -801,8 +801,9 @@ class surrogate(UQengine):  # noqa: D101
                 ) = self.predictStoMeans(X_hf, Y_hfs)
 
                 if np.max(nugget_mean1) < 1.0e-10:  # noqa: PLR2004
-                    self.set_XY(m_tmp, ny, X_hf, Y_hfs, enforce_hom=True)
-                    return None
+                    m_tmp = self.set_XY(m_tmp, ny, X_hf, Y_hfs, enforce_hom=True)
+                    self.stochastic[ny] = False
+                    return m_tmp
                 else:  # noqa: RET505
                     Y_metadata, m_var, norm_var_str = self.predictStoVars(  # noqa: N806
                         X_hf, (Y_hfs - Y_mean1) ** 2, X_hf, Y_hfs, counts
@@ -943,7 +944,7 @@ class surrogate(UQengine):  # noqa: D101
                 for nx in range(X_repl.shape[1]):
                     myrange = np.max(X_repl, axis=0) - np.min(X_repl, axis=0)
                     lb = myrange[nx] / X_repl.shape[0]
-                    ub = myrange[nx] * 5
+                    ub = myrange[nx] * 100
                     if lb >= ub:
                         lb = 0
 
@@ -1040,7 +1041,7 @@ class surrogate(UQengine):  # noqa: D101
             X, Y, kernel_mean, normalizer=True, Y_metadata=None
         )
 
-        """
+        #"""
         for parname in m_mean.parameter_names():
             if parname.endswith('lengthscale'):
                 for nx in range(X.shape[1]):
@@ -1068,14 +1069,14 @@ class surrogate(UQengine):  # noqa: D101
                         )
                     else:
 
-                        m_mean.Gaussian_noise.constrain_bounded(0.1,0.5,warning=False)
+                        m_mean.Gaussian_noise.constrain_bounded(0.2,10,warning=False)
                         # m_mean.kern.lengthscale[[nx]] = myrange[nx]
                         m_mean.kern.lengthscale[[nx]].constrain_bounded(
                           myrange[nx]/ X.shape[0]*10,
-                          myrange[nx] * 1,
+                          myrange[nx] * 100,
                           warning=False
                         )
-        """
+        #"""
 
         # m_mean.optimize(messages=True, max_f_eval=1000)
         # # m_mean.Gaussian_noise.variance = np.var(Y) # First calibrate parameters
@@ -1774,31 +1775,33 @@ class surrogate(UQengine):  # noqa: D101
             # Predict variance
             #
 
-            log_var_pred, dum = self.m_var_list[0].predict(X_test)
-            log_Y_var_pred_w_measure = (  # noqa: N806
-                b + np.exp(log_var_pred) * self.m_list[ny].Gaussian_noise.parameters
-            )
+            # try:
+            #
+            #     log_var_pred, dum = self.m_var_list[ny].predict(X_test)
+            #     log_Y_var_pred_w_measure = (  # noqa: N806
+            #         b + np.exp(log_var_pred) * self.m_list[ny].Gaussian_noise.parameters
+            #     )
+            #
+            #     qualtile_vals = np.arange(0.1, 1, 0.1)
+            #     qualtile_reconst = np.zeros([len(qualtile_vals)])
+            #     for nqu in range(len(qualtile_vals)):
+            #         Q_b = norm.ppf(  # noqa: N806
+            #             qualtile_vals[nqu],
+            #             loc=a,
+            #             scale=np.sqrt(log_Y_var_pred_w_measure),
+            #         )
+            #         qualtile_reconst[nqu] = (
+            #             np.sum((np.log(Y_test) < Q_b[:, 0])) / Y_test.shape[0]  # noqa: UP034
+            #         )
 
-            qualtile_vals = np.arange(0.1, 1, 0.1)
-            qualtile_reconst = np.zeros([len(qualtile_vals)])
-            for nqu in range(len(qualtile_vals)):
-                Q_b = norm.ppf(  # noqa: N806
-                    qualtile_vals[nqu],
-                    loc=a,
-                    scale=np.sqrt(log_Y_var_pred_w_measure),
-                )
-                qualtile_reconst[nqu] = (
-                    np.sum((np.log(Y_test) < Q_b[:, 0])) / Y_test.shape[0]  # noqa: UP034
-                )
-
-            quant_err = abs(qualtile_reconst - qualtile_vals)
-            print(f'Test: max coverage err: {np.max(quant_err)}')  # noqa: T201
-            print(f'Test: mean coverage err: {np.mean(quant_err)}')  # noqa: T201
-            print('Test: quantile range')  # noqa: T201
-            print(qualtile_reconst)  # noqa: T201
-            print(f'Corr(log) for CV: {round(mycor_log_CV*100)/100}')  # noqa: T201
-            print(f'Corr(log) for Test: {round(mycor_log_Test*100)/100}')  # noqa: T201
-            print('')  # noqa: T201, FURB105
+            # quant_err = abs(qualtile_reconst - qualtile_vals)
+            # print(f'Test: max coverage err: {np.max(quant_err)}')  # noqa: T201
+            # print(f'Test: mean coverage err: {np.mean(quant_err)}')  # noqa: T201
+            # print('Test: quantile range')  # noqa: T201
+            # print(qualtile_reconst)  # noqa: T201
+            # print(f'Corr(log) for CV: {round(mycor_log_CV*100)/100}')  # noqa: T201
+            # print(f'Corr(log) for Test: {round(mycor_log_Test*100)/100}')  # noqa: T201
+            # print('')  # noqa: T201, FURB105
 
     def verify(self):  # noqa: D102
         Y_cv = self.Y_cv  # noqa: N806
@@ -3446,8 +3449,8 @@ def calibrating(  # noqa: C901, D103
                 if parname.endswith('lengthscale'):
                     for nx in range(X.shape[1]):
                         myrange = np.max(X, axis=0) - np.min(X, axis=0)
-                        lb = myrange[nx]
-                        ub = myrange[nx] / X.shape[0] * 10
+                        lb = myrange[nx] / X.shape[0] * 10
+                        ub = myrange[nx] 
                         if lb >= ub:
                             lb = 0
 

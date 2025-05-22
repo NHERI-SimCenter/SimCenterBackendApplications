@@ -3193,6 +3193,13 @@ class Workflow:
                         # parse decision variable data into a DataFrame
                         dv_data_i = pd.DataFrame(dv_data_i)
 
+                        # Convert cost from loss ratio to monetary value
+                        replacement_cost = GI_data_i_det.get('ReplacementCost', 1.0)
+                        for col in dv_data_i.columns:
+                            if col.startswith('Cost'):
+                                dv_data_i[col] = (
+                                    dv_data_i[col] * replacement_cost
+                                )
                         # get a list of dv types
                         dv_types = np.unique(
                             [col.split('-')[0] for col in dv_data_i.columns]

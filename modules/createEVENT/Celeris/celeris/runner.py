@@ -490,7 +490,12 @@ class Evolve:  # noqa: D101
         use_ggui = None
         window = None
         canvas = None
+        import platform
+        os_name = platform.system()
         try:
+            if 'Windows' in os_name:
+                # Throw exception to force legacy GUI
+                raise Exception('Windows detected, reverting GGUI to legacy GUI for reliability.')
             window = ti.ui.Window('CelerisAi', (self.solver.nx, self.solver.ny))  # noqa: F405
             canvas = window.get_canvas()
             use_ggui = True

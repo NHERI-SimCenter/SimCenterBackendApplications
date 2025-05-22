@@ -37,7 +37,7 @@
 # Kuanshi Zhong
 #
 
-import json
+import ujson as json
 import os
 import random
 import socket

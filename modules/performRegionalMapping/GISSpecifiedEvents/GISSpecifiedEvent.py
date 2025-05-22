@@ -37,6 +37,8 @@
 # Stevan Gavrilovic
 #
 
+import os
+import json
 import argparse  # noqa: I001
 from pathlib import Path
 import xml.etree.ElementTree as ET
@@ -68,9 +70,12 @@ def is_xml_file(filename):  # noqa: D103
         return False
 
 
-def create_event(asset_file: str, event_grid_file: str):  # noqa: C901, D103, N803, RUF100
+def create_event(asset_file: str, event_grid_file: str, workflow_input: str, do_parallel: bool):  # noqa: C901, D103, N803, RUF100
+
+    event_grid_file_path = os.path.dirname(event_grid_file)
+
     if is_raster_file(event_grid_file):
-        return create_raster_event(asset_file, event_grid_file)
+        create_raster_event(asset_file, event_grid_file, 0, do_parallel)
     elif is_xml_file(event_grid_file):  # noqa: RET505
         # Here you would call a function to handle XML files
         # For now, we'll just raise a NotImplementedError
@@ -80,11 +85,45 @@ def create_event(asset_file: str, event_grid_file: str):  # noqa: C901, D103, N8
             f'{event_grid_file} is not a raster. Only rasters are currently supported.'  # noqa: EM102
         )
 
+    #
+    # open input file, see if other raster files to deal with
+    #
+
+    # path to file and open it
+    json_path = os.path.join(os.path.dirname(os.getcwd()), workflow_input)
+    with open(json_path, 'r') as f:
+        data = json.load(f)
+
+    #
+    # If multiple exists, update event_file
+    #   note: create_raster_event modified for this purpose
+    #
+    
+    #print(f'ORIGINAL: {event_grid_file}')
+    
+    multiple_entries = data.get("RegionalEvent", {}).get("multiple", [])
+    for i, entry in enumerate(multiple_entries):
+
+        # is this assumption correct on file paths?
+        next_file = data['RegionalEvent']['multiple'][i]['eventFile']
+        next_file_path = os.path.join(event_grid_file_path, next_file)
+        create_raster_event(asset_file, next_file_path, i+1, do_parallel)        
+
+    
+    
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--assetFile')
     parser.add_argument('--filenameEVENTgrid')
+    parser.add_argument('--workflowInput')
+    parser.add_argument('--doParallel', default='False')
+    parser.add_argument('-n', '--numP', default='8')
+    parser.add_argument('-m', '--mpiExec', default='mpiexec')    
     args = parser.parse_args()
 
-    create_event(args.assetFile, args.filenameEVENTgrid)
+    create_event(args.assetFile,
+                 args.filenameEVENTgrid,
+                 args.workflowInput,
+                 args.doParallel)

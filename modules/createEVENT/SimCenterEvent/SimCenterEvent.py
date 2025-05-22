@@ -63,6 +63,14 @@ def write_RV(AIM_file, EVENT_file):  # noqa: N802, N803, D103
     if 'RegionalEvent' in aim_file.keys():  # noqa: SIM118
         input_units = aim_file['RegionalEvent'].get('units', None)
 
+        # if units are specified in the AIM file, use these instead 
+        if 'Events' in aim_file.keys():
+            if 'units' in aim_file['Events'][0].keys():
+                event_units = aim_file['Events'][0]['units']
+                if event_units:
+                    input_units = event_units
+                
+    
     output_units = aim_file.get('units', None)
 
     # scale the input data to the event unit used internally

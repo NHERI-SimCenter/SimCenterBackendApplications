@@ -291,7 +291,7 @@ if __name__ == '__main__':
 
         result = subprocess.run(  # noqa: S603
             [  # noqa: S607
-                'ti',
+                sys.executable,
                 scriptName,
                 # f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: ISC003, PTH120
                 # + '/taichi_script.py',
@@ -312,7 +312,7 @@ if __name__ == '__main__':
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
         result = subprocess.run(  # noqa: S603
             [  # noqa: S607
-                'ti',
+                sys.executable,
                 scriptName,
                 # f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: ISC003, PTH120
                 # + '/taichi_script.py',

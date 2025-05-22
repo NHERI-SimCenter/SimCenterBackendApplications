@@ -37,6 +37,7 @@
 # Stevan Gavrilovic
 #
 
+import os
 import argparse  # noqa: I001
 import json, csv  # noqa: E401
 from pathlib import Path
@@ -46,6 +47,7 @@ from rasterio.transform import rowcol
 
 
 def sample_raster_at_latlon(src, lat, lon):  # noqa: D103
+    
     # Get the row and column indices in the raster
     row, col = rowcol(src.transform, lon, lat)  # Note the order: lon, lat
 
@@ -53,14 +55,40 @@ def sample_raster_at_latlon(src, lat, lon):  # noqa: D103
     if row < 0 or row >= src.height or col < 0 or col >= src.width:
         raise IndexError('Transformed coordinates are out of raster bounds')  # noqa: EM101, TRY003
 
-    # Read the raster value at the given row and column
-    raster_value = src.read(1)[row, col]
+    # Read the raster value at the given row and column for all layers NOT just the first
+    #raster_value = src.read(1)[row, col]
+    data = src.read()
+    raster_values = data[:, row, col]
+    return raster_values  # noqa: RET504
 
-    return raster_value  # noqa: RET504
 
+def create_event(asset_file, event_grid_file, num_entry, do_parallel):  # noqa: C901, D103, N803, RUF100
 
-def create_event(asset_file, event_grid_file):  # noqa: C901, D103, N803, RUF100
+    #print(f'asset_file: {asset_file}, entry: {num_entry}')    
+    #print(f'event_grid_file: {event_grid_file}, entry: {num_entry}')
+    
     # read the event grid data file
+
+    num_processes = 1
+    process_id = 0
+    run_parallel = False
+
+    if do_parallel == 'True':
+        mpi_spec = importlib.util.find_spec('mpi4py')
+        found = mpi_spec is not None
+        if found:
+            from mpi4py import MPI
+
+            run_parallel = True
+            comm = MPI.COMM_WORLD
+            num_processes = comm.Get_size()
+            process_id = comm.Get_rank()
+            if num_processes < 2:  # noqa: PLR2004
+                do_parallel = 'False'
+                run_parallel = False
+                num_processes = 1
+                process_id = 0    
+    
     event_grid_path = Path(event_grid_file).resolve()
     event_dir = event_grid_path.parent
     event_grid_file = event_grid_path.name
@@ -84,90 +112,140 @@ def create_event(asset_file, event_grid_file):  # noqa: C901, D103, N803, RUF100
         ['GP_file', 'Latitude', 'Longitude'],
     ]
 
-    # Iterate through each asset
-    for asset in asset_dict:
-        asset_id = asset['id']
-        asset_file_path = asset['file']
+    count = 0
+    for i, asset in enumerate(asset_dict):
+        if run_parallel == False or (i % num_processes) == process_id:  # noqa: E712    
 
-        # Load the corresponding file for each asset
-        with open(asset_file_path, encoding='utf-8') as asset_file:  # noqa: PTH123, PLR1704
-            # Load the asset data
-            asset_data = json.load(asset_file)
+            # for asset in asset_dict:
+            asset_id = asset['id']
+            asset_file_path = asset['file']
+        
+            # Load the corresponding file for each asset
+            with open(asset_file_path, encoding='utf-8') as asset_file:  # noqa: PTH123, PLR1704
+                # Load the asset data
+                asset_data = json.load(asset_file)
 
-            im_tag = asset_data['RegionalEvent']['intensityMeasures'][0]
+                if num_entry == 0:
+                    im_tag = asset_data['RegionalEvent']['intensityMeasures']
+                    units = asset_data['RegionalEvent']['units']
+                else:
+                    im_tag = asset_data['RegionalEvent']['multiple'][num_entry-1]['intensityMeasures']
+                    units = asset_data['RegionalEvent']['multiple'][num_entry-1]['units']
+            
 
-            # Extract the latitude and longitude
-            lat = float(asset_data['GeneralInformation']['location']['latitude'])
-            lon = float(asset_data['GeneralInformation']['location']['longitude'])
+                # Extract the latitude and longitude
+                lat = float(asset_data['GeneralInformation']['location']['latitude'])
+                lon = float(asset_data['GeneralInformation']['location']['longitude'])
 
-            # Transform the coordinates
-            lon_transformed, lat_transformed = transformer.transform(lon, lat)
+                # Transform the coordinates
+                lon_transformed, lat_transformed = transformer.transform(lon, lat)
 
-            # Check if the transformed coordinates are within the raster bounds
-            bounds = src.bounds
-            if (
-                bounds.left <= lon_transformed <= bounds.right
-                and bounds.bottom <= lat_transformed <= bounds.top
-            ):
-                try:
-                    val = sample_raster_at_latlon(
-                        src=src, lat=lat_transformed, lon=lon_transformed
-                    )
+                # Check if the transformed coordinates are within the raster bounds
+                bounds = src.bounds
+                if (
+                        bounds.left <= lon_transformed <= bounds.right
+                        and bounds.bottom <= lat_transformed <= bounds.top
+                ):
+                    try:
+                        val = sample_raster_at_latlon(
+                            src=src, lat=lat_transformed, lon=lon_transformed
+                        )
+                    
+                        data = [im_tag, val]
 
-                    data = [[im_tag], [val]]
+                        # Save the simcenter file name
+                        file_name = f'Site_{asset_id}.csvx{0}x{int(asset_id):05d}'
 
-                    # Save the simcenter file name
-                    file_name = f'Site_{asset_id}.csvx{0}x{int(asset_id):05d}'
+                        data_final.append([file_name, lat, lon])
 
-                    data_final.append([file_name, lat, lon])
+                        csv_save_path = event_dir / f'Site_{asset_id}.csv'
 
-                    csv_save_path = event_dir / f'Site_{asset_id}.csv'
-                    with open(csv_save_path, 'w', newline='') as file:  # noqa: PTH123
-                        # Create a CSV writer object
-                        writer = csv.writer(file)
+                        if num_entry == 0:
 
-                        # Write the data to the CSV file
-                        writer.writerows(data)
+                            # if first entry
+                            #    create the csv file and add the data
+                        
+                            with open(csv_save_path, 'w', newline='') as file:  # noqa: PTH123
+                                
+                                # Create a CSV writer object
+                                writer = csv.writer(file)
 
-                    # prepare a dictionary of events
-                    event_list_json = [[file_name, 1.0]]
+                                # Write the data to the CSV file
+                                writer.writerows(data)
+                        else:
 
-                    asset_data['Events'] = [{}]
-                    asset_data['Events'][0] = {
-                        'EventFolderPath': str(event_dir),
-                        'Events': event_list_json,
-                        'type': 'intensityMeasure',
-                    }
+                            # subsequent entries
+                            #  read existing file, append header and row data, 
+                            #  and finally write new file with updated data
+                            #
+                        
+                            # Read the existing file
+                            if os.path.exists(csv_save_path):
+                                with open(csv_save_path, mode='r') as f:
+                                    reader = csv.DictReader(f)
+                                    rows = list(reader)
+                                    fieldnames = reader.fieldnames or []
+                            else:
+                                rows = []
+                                fieldnames = []
 
-                    with open(asset_file_path, 'w', encoding='utf-8') as f:  # noqa: PTH123
-                        json.dump(asset_data, f, indent=2)
+                            # extend field names and row data with additional stuff to be added
+                            # IS IM_TAG a single value or an array .. should be array!
 
-                except IndexError as e:
-                    print(f'Error for asset ID {asset_id}: {e}')  # noqa: T201
-            else:
-                print(f'Asset ID: {asset_id} is outside the raster bounds')  # noqa: T201
+                            extra = dict(zip(im_tag, val))
+                            for k in extra:
+                                if k not in fieldnames:
+                                    fieldnames.append(k)
+                                    
+                            for row in rows:
+                                row.update(extra)
+                        
+                            # Overwrite existing file
+                            with open(csv_save_path, mode='w', newline='') as f:
+                                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                                writer.writeheader()
+                                writer.writerows(rows)                        
 
-        # # save the event dictionary to the BIM
-        # asset_data['Events'] = [{}]
-        # asset_data['Events'][0] = {
-        #     # "EventClassification": "Earthquake",
-        #     'EventFolderPath': str(event_dir),
-        #     'Events': event_list_json,
-        #     'type': event_type,
-        #     # "type": "SimCenterEvents"
-        # }
 
-        # with open(asset_file, 'w', encoding='utf-8') as f:  # noqa: PTH123, RUF100
-        #     json.dump(asset_data, f, indent=2)
+                        # prepare a dictionary of events
+                        event_list_json = [[file_name, 1.0]]
 
-    # Save the final event grid
-    csv_save_path = event_dir / 'EventGrid.csv'
-    with open(csv_save_path, 'w', newline='') as file:  # noqa: PTH123
-        # Create a CSV writer object
-        writer = csv.writer(file)
 
-        # Write the data to the CSV file
-        writer.writerows(data_final)
+                        # in asset file, add event info including now units
+                        if num_entry == 0:
+
+                            # if first, add an event field
+                            asset_data['Events'] = [{}]
+                            asset_data['Events'][0] = {
+                                'EventFolderPath': str(event_dir),
+                                'Events': event_list_json,
+                                'type': 'intensityMeasure',
+                                'units': units
+                            }
+
+                        else:
+                        
+                            # if additional, update units to include new                       
+                            asset_data['Events'][0]['units'].update(units)
+
+                        with open(asset_file_path, 'w', encoding='utf-8') as f:  # noqa: PTH123
+                            json.dump(asset_data, f, indent=2)
+
+                    except IndexError as e:
+                        print(f'Error for asset ID {asset_id}: {e}')  # noqa: T201
+                else:
+                    print(f'Asset ID: {asset_id} is outside the raster bounds')  # noqa: T201
+
+
+    if process_id == 0:
+        # Save the final event grid
+        csv_save_path = event_dir / 'EventGrid.csv'
+        with open(csv_save_path, 'w', newline='') as file:  # noqa: PTH123
+            # Create a CSV writer object
+            writer = csv.writer(file)
+
+            # Write the data to the CSV file
+            writer.writerows(data_final)
 
     # Perform cleanup
     src.close()
