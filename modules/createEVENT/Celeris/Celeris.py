@@ -42,7 +42,6 @@ from fractions import Fraction
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 
 # Check if taichi is installed before importing taichi
 try:
@@ -96,7 +95,7 @@ class FloorForces:  # noqa: D101
                             continue
                         # Assume there is no header in the file
                         # Assume recorder IDs are sequential, starting from 1
-                        if (j + 1) == recorderID:
+                        if (j) == recorderID:
                             # Strip away leading / trailing white-space,
                             # Delimit by regex to capture " ", \s, "  ", tabs, etc.
                             # Each value should be a number, rep. the force on recorder j at a time-step i
@@ -173,8 +172,6 @@ def addFloorForceToEvent(  # noqa: N802
     Add force (one component) time series and pattern in the event file
     Use of Wind is just a placeholder for now, since its more developed than Hydro
     """  # noqa: D205, D400
-    seriesName = '1'  # noqa: N806
-    patternName = '1'  # noqa: N806
     seriesName = 'WindForceSeries_' + str(floor) + direction  # noqa: N806
     patternName = 'WindForcePattern_' + str(floor) + direction  # noqa: N806
 
@@ -182,7 +179,7 @@ def addFloorForceToEvent(  # noqa: N802
         'name': patternName,
         'timeSeries': seriesName,
         'numSteps': len(force.X),
-        'dT': 0.01,
+        'dT': dt,
         'type': 'WindFloorLoad',
         'floor': str(floor),
         'story': str(floor),
@@ -196,8 +193,8 @@ def addFloorForceToEvent(  # noqa: N802
         'dof': directionToDof(direction),
         'floor': str(floor),
         'story': str(floor),
-        'dT': 0.01,
-        'dt': 0.01,
+        'dT': dt,
+        'dt': dt,
         'numSteps': len(force.X),
         'data': force.X,
     }
@@ -242,8 +239,8 @@ def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):  # noqa: N802
         'timeSeries': timeSeriesArray,
         'pressure': pressure,
         'numSteps': len(forces[0].X),
-        'dT': 1.0,
-        'dt': 1.0,
+        'dT': dt,
+        'dt': dt,
         'units': {'force': 'Newton', 'length': 'Meter', 'time': 'Sec'},
     }
 
@@ -265,23 +262,24 @@ def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
     return int(bim['GeneralInformation']['stories'])
 
 
-def GetCelerisScript(BIMFilePath):  # noqa: N802, N803, D103
-    filePath = BIMFilePath  # noqa: N806
-    with open(filePath, encoding='utf-8') as file:  # noqa: PTH123
-        evt = json.load(file)
-    file.close  # noqa: B018
+def GetCelerisScript():  # noqa: N802, N803, D103
+    # filePath = BIMFilePath  # noqa: N806
+    # with open(filePath, encoding='utf-8') as file:  # noqa: PTH123
+    #     evt = json.load(file)
+    # file.close  # noqa: B018
 
-    fileNameKey = 'simulationScript'  # noqa: N806
-    filePathKey = fileNameKey + 'Path'  # noqa: N806
+    # fileNameKey = 'simulationScript'  # noqa: N806
+    # filePathKey = fileNameKey + 'Path'  # noqa: N806
 
-    for event in evt['Events']:
-        fileName = event[fileNameKey]  # noqa: N806
-        filePath = event[filePathKey]  # noqa: N806
-        return os.path.join(filePath, fileName)  # noqa: PTH118
+    # for event in evt['Events']:
+    #     fileName = event[fileNameKey]  # noqa: N806
+    #     filePath = event[filePathKey]  # noqa: N806
+    #     return os.path.join(filePath, fileName)  # noqa: PTH118
 
     defaultScriptPath = f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: N806, PTH120
     defaultScriptName = 'setrun.py'  # noqa: N806
-    return defaultScriptPath + defaultScriptName
+    defaultScriptPath = os.path.join(defaultScriptPath, defaultScriptName)  # noqa: PTH118
+    return defaultScriptPath  # noqa: PTH118
 
 
 def main():
@@ -314,25 +312,21 @@ if __name__ == '__main__':
         default='EVENT.json',
     )
     parser.add_argument('--getRV', help='getRV', required=False, action='store_true')
-    # parser.add_argument('--filenameSAM', default=None)
-
+    
     # parsing arguments
     arguments, unknowns = parser.parse_known_args()
 
-    # import subprocess
-
     # Get json of filenameAIM
-    scriptName = GetCelerisScript(arguments.filenameAIM)  # noqa: N816
-
     filePath = arguments.filenameAIM  # noqa: N816
     with open(filePath, encoding='utf-8') as file:  # noqa: PTH123
         evt = json.load(file)
     file.close  # noqa: B018
 
+    scriptName = GetCelerisScript()  # noqa: N816
+    caseDirectory = './examples/CrescentCity'  # noqa: N816
     configFilename = 'config.json'  # noqa: N816
     bathymetryFilename = 'bathymetry.txt'  # noqa: N816
     waveFilename = 'wave.txt'  # noqa: N816
-    caseDirectory = './examples/CrescentCity'  # noqa: N816
 
     for event in evt['Events']:
         # Redesign the input structure in backend CelerisAi later.
@@ -341,6 +335,10 @@ if __name__ == '__main__':
         configFilename = event['configFile']  # noqa: N816
         bathymetryFilename = event['bathymetryFile']  # noqa: N816
         waveFilename = event['waveFile']  # noqa: N816
+        # Check for event['config']['dt'] in the event file
+        # and set dt to the value in the event file
+        # if not found, set dt to 0.01
+        dt = event['config']['dt'] if 'dt' in event['config'] else 0.01
 
     print('Running Celeris with script:', scriptName)  # noqa: T201
     print('Running Celeris with directory:', caseDirectory)  # noqa: T201
@@ -348,31 +346,14 @@ if __name__ == '__main__':
     print('Running Celeris with bathymetry:', bathymetryFilename)  # noqa: T201
     print('Running Celeris with waves:', waveFilename)  # noqa: T201
 
+    floorsCount = 1  # noqa: N816
+
     if arguments.getRV == True:  # noqa: E712
         print('RVs requested')  # noqa: T201
         # Read the number of floors
         floorsCount = GetFloorsCount(arguments.filenameAIM)  # noqa: N816
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
-
-        # result = subprocess.run(  # noqa: S603
-        #     [  # noqa: S607
-        #         sys.executable,
-        #         scriptName,
-        #         '-d',
-        #         caseDirectory,
-        #         '-f',
-        #         configFilename,
-        #         '-b',
-        #         bathymetryFilename,
-        #         '-w',
-        #         waveFilename,
-        #         # f'{os.path.realpath(os.path.dirname(__file__))}'
-        #         # + '/taichi_script.py',
-        #     ],
-        #     stdout=subprocess.PIPE,
-        #     check=False,
-        # )
-
+        
         forces = []
         for i in range(floorsCount):
             forces.append(FloorForces(recorderID=(i + 1)))  # noqa: PERF401
@@ -405,15 +386,12 @@ if __name__ == '__main__':
                 bathymetryFilename,
                 '-w',
                 waveFilename,
-                # f'{os.path.realpath(os.path.dirname(__file__))}'
-                # + '/taichi_script.py',
             ],
             stdout=subprocess.PIPE,
             check=False,
         )
 
         forces = []
-        floorsCount = 1  # noqa: N816
         for i in range(floorsCount):
             forces.append(FloorForces(recorderID=(i + 1)))
 
