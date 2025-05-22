@@ -291,42 +291,42 @@ class HAZUS_cao_peterson_2006(capacity_model_base):
     def __init__(self, general_info, dD=0.001):  # noqa: N803
         # HAZUS capacity data: Table 5-7 to Table 5-10 in HAZUS 5.1
         self.capacity_data = dict()  # noqa: C408
-        self.capacity_data['SC'] = pd.read_csv(
+        self.capacity_data['Severe-Code'] = pd.read_csv(
             os.path.join(  # noqa: PTH118
                 os.path.dirname(__file__),  # noqa: PTH118, PTH120, RUF100
                 'SC_capacity_data.csv',
             ),
             index_col=0,
         ).to_dict(orient='index')
-        self.capacity_data['VC'] = pd.read_csv(
+        self.capacity_data['Very High-Code'] = pd.read_csv(
             os.path.join(  # noqa: PTH118
                 os.path.dirname(__file__),  # noqa: PTH118, PTH120, RUF100
                 'VC_capacity_data.csv',
             ),
             index_col=0,
         ).to_dict(orient='index')
-        self.capacity_data['HC'] = pd.read_csv(
+        self.capacity_data['High-Code'] = pd.read_csv(
             os.path.join(  # noqa: PTH118
                 os.path.dirname(__file__),  # noqa: PTH118, PTH120, RUF100
                 'HC_capacity_data.csv',
             ),
             index_col=0,
         ).to_dict(orient='index')
-        self.capacity_data['MC'] = pd.read_csv(
+        self.capacity_data['Moderate-Code'] = pd.read_csv(
             os.path.join(  # noqa: PTH118
                 os.path.dirname(__file__),  # noqa: PTH118, PTH120, RUF100
                 'MC_capacity_data.csv',
             ),
             index_col=0,
         ).to_dict(orient='index')
-        self.capacity_data['LC'] = pd.read_csv(
+        self.capacity_data['Low-Code'] = pd.read_csv(
             os.path.join(  # noqa: PTH118
                 os.path.dirname(__file__),  # noqa: PTH118, PTH120, RUF100
                 'LC_capacity_data.csv',
             ),
             index_col=0,
         ).to_dict(orient='index')
-        self.capacity_data['PC'] = pd.read_csv(
+        self.capacity_data['Pre-Code'] = pd.read_csv(
             os.path.join(  # noqa: PTH118
                 os.path.dirname(__file__),  # noqa: PTH118, PTH120, RUF100
                 'PC_capacity_data.csv',
