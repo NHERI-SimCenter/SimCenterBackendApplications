@@ -119,7 +119,7 @@ class PrincipalComponentAnalysis:
         n_components (int): The number of components to retain.
     """
 
-    def __init__(self, pca_threshold, perform_scaling=True) -> None:  # noqa: FBT002
+    def __init__(self, pca_threshold=0.99, perform_scaling=True) -> None:  # noqa: FBT002
         """
         Initialize the PrincipalComponentAnalysis class.
 
@@ -147,7 +147,7 @@ class PrincipalComponentAnalysis:
         """
         self.pca = PCA()
         if self.perform_scaling:
-            scaled_outputs = self.scaler.fit_transform(outputs)
+            scaled_outputs = self.scaler.fit_transform(outputs)  # type: ignore
         else:
             scaled_outputs = outputs
 
@@ -177,7 +177,7 @@ class PrincipalComponentAnalysis:
             raise ValueError(msg)
 
         outputs_scaled = (
-            self.scaler.transform(outputs) if self.perform_scaling else outputs
+            self.scaler.transform(outputs) if self.perform_scaling else outputs  # type: ignore
         )
         outputs_centered = outputs_scaled - self.pca.mean_
         components_selected = self.pca.components_[: self.n_components]
@@ -205,8 +205,122 @@ class PrincipalComponentAnalysis:
         components_selected = self.pca.components_[: self.n_components]
         outputs_scaled = latent_outputs @ components_selected + self.pca.mean_
         outputs = (
-            self.scaler.inverse_transform(outputs_scaled)
+            self.scaler.inverse_transform(outputs_scaled)  # type: ignore
             if self.perform_scaling
             else outputs_scaled
         )
         return outputs  # noqa: RET504
+
+    def inverse_transform_variance(
+        self, cov_latent: np.ndarray, *, return_marginal: bool = False
+    ) -> np.ndarray:
+        """
+        Inverse transform latent-space covariances or variances to the original output space.
+
+        Parameters
+        ----------
+        cov_latent : np.ndarray
+            Covariance in latent space:
+                - shape (n_samples, n_components) if diagonal (variance per component)
+                - shape (n_samples, n_components, n_components) if full covariance
+
+        return_marginal : bool, optional
+            If True, return only marginal variances (diagonal of covariance matrix).
+            If False, return full covariance matrices. Default is False.
+
+        Returns
+        -------
+        np.ndarray
+            If return_marginal:
+                shape (n_samples, n_outputs)
+            Else:
+                shape (n_samples, n_outputs, n_outputs)
+        """
+        if self.pca is None:
+            msg = 'No PCA model has been fitted yet.'
+            raise ValueError(msg)
+        if self.n_components is None:
+            msg = 'Number of components has not been set.'
+            raise ValueError(msg)
+
+        components = self.pca.components_[: self.n_components]
+        # components: shape (n_components, n_outputs)
+        W = components.T  # shape (n_outputs, n_components)  # noqa: N806
+
+        cov_latent = np.asarray(cov_latent)
+        if cov_latent.ndim == 2:  # noqa: PLR2004
+            # (n_samples, n_components) => treat as diagonal covariance
+            cov_orig = np.einsum('ij,nj,jk->nik', W, cov_latent, W.T)
+        elif cov_latent.ndim == 3:  # noqa: PLR2004
+            # (n_samples, n_components, n_components) => full covariance
+            cov_orig = np.einsum('ij,njk,kl->nil', W, cov_latent, W.T)
+        else:
+            msg = 'cov_latent must have shape (n_samples, n_components) or (n_samples, n_components, n_components)'
+            raise ValueError(msg)
+
+        # Apply inverse scaling
+        if self.perform_scaling:
+            scale = self.scaler.scale_  # type: ignore
+            cov_orig *= scale[None, :, None] * scale[None, None, :]  # type: ignore
+
+        if return_marginal:
+            return np.einsum('nii->ni', cov_orig)
+        return cov_orig
+
+    def transform_variance_to_latent_space(
+        self, cov_orig: np.ndarray, *, return_marginal: bool = False
+    ) -> np.ndarray:
+        """
+        Transform original-space covariances or variances into latent PCA space.
+
+        Parameters
+        ----------
+        cov_orig : np.ndarray
+            Covariance in original space:
+                - shape (n_samples, n_outputs) if diagonal (variance per output)
+                - shape (n_samples, n_outputs, n_outputs) if full covariance
+
+        return_marginal : bool, optional
+            If True, return only marginal variances (diagonal of latent covariance matrix).
+            If False, return full latent covariance matrices. Default is False.
+
+        Returns
+        -------
+        np.ndarray
+            If return_marginal:
+                shape (n_samples, n_components)
+            Else:
+                shape (n_samples, n_components, n_components)
+        """
+        if self.pca is None:
+            msg = 'No PCA model has been fitted yet.'
+            raise ValueError(msg)
+        if self.n_components is None:
+            msg = 'Number of components has not been set.'
+            raise ValueError(msg)
+
+        components = self.pca.components_[
+            : self.n_components
+        ]  # shape (n_components, n_outputs)
+        W = components  # shape (n_components, n_outputs)  # noqa: N806
+
+        cov_orig = np.asarray(cov_orig)
+        if cov_orig.ndim == 2:  # noqa: PLR2004
+            # Diagonal: (n_samples, n_outputs)
+            cov_latent = np.einsum('ij,nj,jk->nik', W, cov_orig, W.T)
+        elif cov_orig.ndim == 3:  # noqa: PLR2004
+            # Full: (n_samples, n_outputs, n_outputs)
+            cov_latent = np.einsum('ij,njk,kl->nil', W, cov_orig, W.T)
+        else:
+            msg = 'cov_orig must have shape (n_samples, n_outputs) or (n_samples, n_outputs, n_outputs)'
+            raise ValueError(msg)
+
+        # If scaling was used, rescale into scaled space
+        if self.perform_scaling:
+            scale = self.scaler.scale_  # type: ignore
+            inv_scale = 1.0 / scale  # type: ignore
+            cov_latent *= inv_scale[None, :, None] * inv_scale[None, None, :]
+
+        if return_marginal:
+            return np.einsum('nii->ni', cov_latent)
+        return cov_latent

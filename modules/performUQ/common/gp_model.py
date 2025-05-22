@@ -17,6 +17,7 @@ from logging_utilities import (  # decorate_methods_with_log_step,
     make_logger_context,
     setup_logger,
 )
+from principal_component_analysis import PrincipalComponentAnalysis
 from pydantic import BaseModel, Field, model_validator
 from sklearn.linear_model import LinearRegression
 
@@ -37,6 +38,8 @@ class GaussianProcessModelSettings(BaseModel):
     mean_function: str = Field('none', pattern='^(none|linear)$')
     nugget_value: float = 1e-6
     fix_nugget: bool = True
+    use_pca: bool = False
+    pca_threshold: float = 0.999
 
     @model_validator(mode='after')
     def check_nugget_value(self):  # noqa: D102
@@ -55,32 +58,31 @@ class GaussianProcessModel:
         logger: logging.Logger | None = None,
     ):
         self.settings = settings
-        # self.logger = logger or get_default_logger()
         self.logger = logger or setup_logger()
         self.loginfo = make_log_info(self.logger)
         self.log_step = make_logger_context(self.logger)
-        # decorate_methods_with_log_step(
-        #     self,
-        #     method_names=['update', 'predict'],
-        #     logger=self.logger,
-        #     warn_if_longer_than=300.0,
-        # )
 
         self.input_dimension = settings.input_dimension
-        self.output_dimension = settings.output_dimension
+        self.model_output_dimension = settings.output_dimension
         self.ARD = settings.ARD
         self.kernel_type = settings.kernel_type.lower()
         self.mean_function_type = settings.mean_function.lower()
         self.nugget_value = settings.nugget_value
         self.fix_nugget = settings.fix_nugget
+        self.use_pca = settings.use_pca
+        self.pca_threshold = settings.pca_threshold
 
-        self.linear_models: list[LinearRegression | None] = [
-            None
-        ] * self.output_dimension
+        self.pca = (
+            PrincipalComponentAnalysis(self.pca_threshold, perform_scaling=True)
+            if self.use_pca
+            else None
+        )
+        self.latent_dimension = None
 
         self.kernel = self._create_kernel()
-        self.model = self._create_surrogate()
-        self._configure_nugget()
+
+        self.linear_models: list[LinearRegression | None] = []
+        self.model: list[GPy.models.GPRegression] = []
 
     def _create_kernel(self):
         if self.kernel_type == 'exponential':
@@ -94,51 +96,24 @@ class GaussianProcessModel:
         msg = f"Unknown kernel_type '{self.kernel_type}'"
         raise ValueError(msg)
 
-    # def _create_mean_function(self):
-    #     if self.mean_function_type == 'none':
-    #         return None
-    #     # if self.mean_function_type == 'constant':
-    #     #     return Constant(input_dim=self.input_dimension, output_dim=1)
-    #     # if self.mean_function_type == 'linear':
-    #     #     return Additive(
-    #     #         Constant(input_dim=self.input_dimension, output_dim=1),
-    #     #         Linear(input_dim=self.input_dimension, output_dim=1),
-    #     #     )
-    #     msg = f"Unknown mean_function '{self.mean_function_type}'"
-    #     raise ValueError(msg)
-
     def _create_surrogate(self):
-        # mean_function = self._create_mean_function()
-        # mean_function = None
-        models = []
-        for _ in range(self.output_dimension):
-            model = GPy.models.GPRegression(
-                X=np.zeros((1, self.input_dimension)),
-                Y=np.zeros((1, 1)),
-                kernel=self.kernel.copy(),
-                mean_function=None,
-                normalizer=True,
-            )
-            models.append(model)
-        return models
+        model = GPy.models.GPRegression(
+            X=np.zeros((1, self.input_dimension), dtype=float),
+            Y=np.zeros((1, 1), dtype=float),
+            kernel=self.kernel.copy(),
+            mean_function=None,
+            normalizer=True,
+        )
+        self._configure_nugget(model)
+        return model
 
-    def _add_nugget_parameter(self, nugget_value=1e-6):
-        """Add a nugget parameter to improve numerical stability."""
-        for i in range(self.output_dimension):
-            self.model[i].Gaussian_noise.variance = nugget_value
-
-    def _fix_nugget_parameter(self, value=1e-8):
-        """Fix the nugget parameter to a specific value."""
-        for i in range(self.output_dimension):
-            self.model[i].likelihood.variance = value
-            self.model[i].likelihood.variance.fix()
-
-    def _configure_nugget(self):
+    def _configure_nugget(self, model: GPy.models.GPRegression):
         """Configure the nugget (Gaussian noise variance) for each GP model."""
         if self.settings.fix_nugget:
-            self._fix_nugget_parameter(value=self.settings.nugget_value)
+            model.likelihood.variance = self.settings.nugget_value
+            model.likelihood.variance.fix()
         else:
-            self._add_nugget_parameter(nugget_value=self.settings.nugget_value)
+            model.Gaussian_noise.variance = self.settings.nugget_value
 
     def update(self, x_train, y_train, *, reoptimize=True, num_random_restarts=10):
         """
@@ -155,25 +130,59 @@ class GaussianProcessModel:
         num_random_restarts : int, optional
             Number of random restarts for optimization (default is 10).
         """
-        out_dim = y_train.shape[1]
-        for i in range(out_dim):
-            x = x_train
-            y = np.reshape(y_train[:, i], (-1, 1))
+        if self.pca is not None:
+            self.loginfo('Using PCA for output dimensionality reduction.')
+            self.pca.fit(y_train)
+            y_latent = self.pca.project_to_latent_space(y_train)
+            self.latent_dimension = int(self.pca.n_components)  # type: ignore
+            self.output_dimension = self.latent_dimension
+            self.loginfo(
+                f'PCA reduced output dimension from {self.model_output_dimension} '
+                f'to {self.output_dimension}, capturing at least '
+                f'{self.pca_threshold:.2%} variance.'
+            )
+        else:
+            self.loginfo('Using model outputs for training GP. No PCA applied.')
+            y_latent = y_train
+            self.output_dimension = self.model_output_dimension
 
+        # Re-create GP models now that output dimension is known
+        self.model = []
+        self.linear_models = []
+
+        for i in range(self.output_dimension):
+            x = x_train
+            y = np.reshape(y_latent[:, i], (-1, 1))
+
+            linear_model = None
             if self.mean_function_type == 'linear':
                 linear_model = LinearRegression()
                 linear_model.fit(x, y)
-                self.linear_models[i] = linear_model
                 y_detrended = y - linear_model.predict(x)
             else:
-                self.linear_models[i] = None
                 y_detrended = y
 
-            self.model[i].set_XY(x, y_detrended)
+            gp = GPy.models.GPRegression(
+                X=x,
+                Y=y_detrended,
+                kernel=self.kernel.copy(),
+                mean_function=None,
+                normalizer=True,
+            )
+            self._configure_nugget(gp)
             if reoptimize:
-                self.model[i].optimize_restarts(num_random_restarts)
+                gp.optimize_restarts(num_random_restarts)
             else:
-                _ = self.model[i].posterior
+                _ = gp.posterior
+
+            self.model.append(gp)
+            self.linear_models.append(linear_model)
+
+            # self.model[i].set_XY(x, y_detrended)
+            # if reoptimize:
+            #     self.model[i].optimize_restarts(num_random_restarts)
+            # else:
+            #     _ = self.model[i].posterior
 
     def predict(self, x_predict):
         """
@@ -195,8 +204,7 @@ class GaussianProcessModel:
         y_var = np.zeros((x_predict.shape[0], self.output_dimension))
 
         for i in range(self.output_dimension):
-            mean, var = self.model[i].predict(x_predict)
-
+            mean, var = self.model[i].predict(x_predict)  # type: ignore
             if self.linear_models[i] is not None:
                 trend = self.linear_models[i].predict(x_predict)  # type: ignore
                 mean += trend
@@ -204,7 +212,11 @@ class GaussianProcessModel:
             y_mean[:, i] = mean.flatten()
             y_var[:, i] = var.flatten()
 
-        return y_mean, y_var
+        if self.pca is not None:
+            y_mean = self.pca.project_back_to_original_space(y_mean)
+            # y_var = self.pca.inverse_transform_variance(y_var) # Not transforming variance for now
+
+        return y_mean, y_var  # variance is in latent space, if pca is used
 
     def loo_predictions(self, x_train, y_train, epsilon=1e-8):
         """
@@ -225,11 +237,13 @@ class GaussianProcessModel:
             LOO predictions with trend restored, shape (n_samples, output_dimension).
         """
         if not hasattr(self.model[0], 'posterior'):
-            raise ValueError(
-                'Model must be trained before computing LOO predictions.'
-            )
+            msg = 'Model must be trained before computing LOO predictions.'
+            raise ValueError(msg)
 
-        loo_pred = np.zeros_like(y_train, dtype=np.float64)
+        if self.pca is not None:
+            y_train = self.pca.project_to_latent_space(y_train)
+
+        loo_pred_latent = np.zeros_like(y_train, dtype=np.float64)
 
         for i in range(self.output_dimension):
             x = x_train
@@ -237,16 +251,16 @@ class GaussianProcessModel:
 
             # Step 1: Detrend
             if self.linear_models[i] is not None:
-                trend = self.linear_models[i].predict(x)
+                trend = self.linear_models[i].predict(x)  # type: ignore
                 y_detrended = y - trend
             else:
                 trend = np.zeros_like(y)
                 y_detrended = y
 
             # Step 2: LOO for GP residual
-            posterior = self.model[i].posterior
-            alpha = posterior.woodbury_vector  # shape (N, 1)
-            k_inv_diag = np.diag(posterior.woodbury_inv)
+            posterior = self.model[i].posterior  # type: ignore
+            alpha = posterior.woodbury_vector  # type: ignore # shape (N, 1)
+            k_inv_diag = np.diag(posterior.woodbury_inv)  # type: ignore
 
             # Step 3: Guard against numerical issues
             if np.any(k_inv_diag == 0):
@@ -258,29 +272,52 @@ class GaussianProcessModel:
             loo_gp = y_detrended.flatten() - (alpha.flatten() / k_inv_diag)
 
             # Step 4: Add back trend to get final prediction
-            loo_pred[:, i] = loo_gp + trend.flatten()
+            loo_pred_latent[:, i] = loo_gp + trend.flatten()
 
-        return loo_pred
+        # Step 5: Inverse PCA if used
+        if self.pca is not None:
+            loo_pred_latent = self.pca.project_back_to_original_space(
+                loo_pred_latent
+            )
+        return loo_pred_latent
 
-    def __repr__(self):
-        """Provide a string representation of the GaussianProcessModel instance."""
-        trend_desc = (
-            'LinearTrend (sklearn)'
-            if self.mean_function_type == 'linear'
-            else 'None'
-        )
-        variance = float(self.model[0].likelihood.variance)  # Extract value
-        is_fixed = self.model[0].likelihood.variance.is_fixed  # Check if fixed
-        return (
-            f'GaussianProcessModel('
-            f'input_dimension={self.input_dimension}, '
-            f'output_dimension={self.output_dimension}, '
-            f'ARD={self.ARD}, '
-            f'kernel_type={self.model[0].kern.name}, '
-            f'mean_function={trend_desc}, '
-            f'nugget_value={variance}, '
-            f'fix_nugget={is_fixed})'
-        )
+    @property
+    def pca_info(self):
+        """
+        Retrieve information about the PCA transformation.
+
+        Returns
+        -------
+        dict
+            A dictionary containing PCA information such as the number of components
+            and the explained variance ratio, if PCA is used. Otherwise, an empty dictionary.
+        """
+        if self.use_pca:
+            return {
+                'n_components': self.pca.n_components,  # type: ignore
+                'explained_variance_ratio': self.pca.pca.explained_variance_ratio_,  # type: ignore
+            }
+        return {}
+
+    # def __repr__(self):
+    #     """Provide a string representation of the GaussianProcessModel instance."""
+    #     trend_desc = (
+    #         'LinearTrend (sklearn)'
+    #         if self.mean_function_type == 'linear'
+    #         else 'None'
+    #     )
+    #     variance = float(self.model[0].likelihood.variance)  # Extract value
+    #     is_fixed = self.model[0].likelihood.variance.is_fixed  # Check if fixed
+    #     return (
+    #         f'GaussianProcessModel('
+    #         f'input_dimension={self.input_dimension}, '
+    #         f'output_dimension={self.output_dimension}, '
+    #         f'ARD={self.ARD}, '
+    #         f'kernel_type={self.model[0].kern.name}, '
+    #         f'mean_function={trend_desc}, '
+    #         f'nugget_value={variance}, '
+    #         f'fix_nugget={is_fixed})'
+    #     )
 
     def flush_logs(self):
         """Flush the logs for the Gaussian Process Model."""
@@ -467,6 +504,17 @@ def parse_gp_arguments(args=None) -> dict:
         action='store_true',
         help='Fix the nugget to the specified value instead of optimizing it. '
         'Default behavior is to optimize.',
+    )
+    optional.add_argument(
+        '--use_pca',
+        action='store_true',
+        help='Enable dimensionality reduction using PCA before GP modeling.',
+    )
+    optional.add_argument(
+        '--pca_threshold',
+        type=float,
+        default=0.999,
+        help='Cumulative explained variance threshold for PCA (default: 0.999).',
     )
 
     parsed = parser.parse_args(args)

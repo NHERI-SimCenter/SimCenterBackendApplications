@@ -2,7 +2,7 @@
 Module implementing the GP-AB Algorithm for Bayesian calibration.
 
 It includes classes and functions for performing Gaussian Process modeling,
-Principal Component Analysis, and various convergence metrics.
+Bayesian calibration, design of computer experiments, and convergence monitoring.
 """
 
 from __future__ import annotations
@@ -43,7 +43,6 @@ from logging_utilities import (
     make_logger_context,
     setup_logger,
 )
-from principal_component_analysis import PrincipalComponentAnalysis
 from space_filling_doe import LatinHypercubeSampling
 from tmcmc import TMCMC, calculate_log_evidence, calculate_warm_start_stage
 
@@ -67,7 +66,7 @@ class GP_AB_Algorithm:
         prior_variances (np.ndarray): The prior variances.
         prior_pdf_function (callable): The prior PDF function.
         log_likelihood_function (callable): The log-likelihood function.
-        pca_threshold (float): The threshold for PCA.
+        pca_threshold (float): Threshold for variance explained when applying PCA (used internally in the GP model).
         gkl_threshold (float): The threshold for GKL.
         gmap_threshold (float): The threshold for GMAP.
         max_simulations (int): The maximum number of simulations.
@@ -87,7 +86,6 @@ class GP_AB_Algorithm:
         gcv_threshold (float): The threshold for LOOCV.
         results (dict): The results dictionary.
         current_gp_model (GaussianProcessModel): The current GP model.
-        current_pca (PrincipalComponentAnalysis): The current PCA model.
         samples_dict (dict): The dictionary of samples.
         betas_dict (dict): The dictionary of betas.
         log_likelihoods_dict (dict): The dictionary of log-likelihoods.
@@ -111,6 +109,7 @@ class GP_AB_Algorithm:
         prior_variances,
         max_simulations=np.inf,
         max_computational_time=np.inf,
+        use_pca=False,  # noqa: FBT002
         pca_threshold=0.999,
         run_type='runningLocal',
         gcv_threshold=0.2,
@@ -150,19 +149,6 @@ class GP_AB_Algorithm:
         self.log_step = make_logger_context(self.logger)
         self.loginfo = make_log_info(self.logger)
 
-        # decorate_methods_with_log_step(
-        #     instance=self,
-        #     method_names=[
-        #         '_step_1_posterior_approximation',
-        #         '_step_2_bayesian_updating',
-        #         '_step_3_assess_convergence',
-        #         '_step_4_adaptive_training_point_selection',
-        #         '_step_5_evaluate_responses',
-        #     ],
-        #     logger=self.logger,
-        #     warn_if_longer_than=300.0,  # Optional: warn if any method takes > 5 minutes
-        # )
-
         with self.log_step('Initializing GP_AB_Algorithm.'):
             self.data = data
             self.input_dimension = input_dimension
@@ -176,13 +162,16 @@ class GP_AB_Algorithm:
 
             self.inputs = np.empty((0, self.input_dimension), dtype=float)
             self.outputs = np.empty((0, self.output_dimension), dtype=float)
-            self.latent_outputs = None
 
             self.prior_pdf_function = prior_pdf_function
             self.log_likelihood_function = log_likelihood_function
 
+            self.use_pca = use_pca
+            # pca_output_dimension_threshold = 10
+            # if self.output_dimension > pca_output_dimension_threshold:
+            #     self.use_pca = True
             self.pca_threshold = pca_threshold
-            self.num_pca_components_list = []
+            self.gp_output_dimension_list = []
 
             self.gkl_threshold = gkl_threshold
             self.gmap_threshold = gmap_threshold
@@ -203,7 +192,7 @@ class GP_AB_Algorithm:
             self.model_evaluation_function = model_evaluation_function
             self.run_type = run_type
             self.parallel_pool = uq_utilities.get_parallel_pool_instance(run_type)
-            self.parallel_evaluation_function = self.parallel_pool.pool.starmap
+            self.parallel_evaluation_function = self.parallel_pool.pool.starmap  # type: ignore
 
             self.gcv_threshold = gcv_threshold
             self.gcv = None
@@ -213,17 +202,7 @@ class GP_AB_Algorithm:
 
             self.results = {}
 
-            # self.current_gp_model = create_gp_model(
-            #     input_dimension=self.input_dimension,
-            #     output_dimension=self.output_dimension,
-            #     mean_function='linear',
-            #     logger=self.logger,
-            # )
-            # self.current_pca = PrincipalComponentAnalysis(
-            #     self.pca_threshold, perform_scaling=True
-            # )
             self.current_gp_model = None
-            self.current_pca = None
             self.gp_recalibrated = False
 
             self.kde = None
@@ -427,12 +406,8 @@ class GP_AB_Algorithm:
         """
         # start_time = time.time()
         self.loginfo('Calculating leave-one-out cross validation error measure gCV.')
-        latent_outputs = self.current_pca.project_to_latent_space(self.outputs)
-        loo_predictions_latent_space = self.current_gp_model.loo_predictions(
-            self.inputs, latent_outputs
-        )
-        loo_predictions = self.current_pca.project_back_to_original_space(
-            loo_predictions_latent_space
+        loo_predictions = self.current_gp_model.loo_predictions(  # type: ignore
+            self.inputs, self.outputs
         )
         loocv_measure = convergence_metrics.calculate_gcv(
             loo_predictions,
@@ -585,12 +560,10 @@ class GP_AB_Algorithm:
                             'Saving previous GP model and posterior approximation.'
                         )
                         self.previous_gp_model = self.current_gp_model
-                        self.previous_pca = self.current_pca
 
                         self.previous_response_approximation = partial(
                             response_approximation,
                             self.previous_gp_model,
-                            self.previous_pca,
                         )
                         self.previous_log_likelihood_approximation = partial(
                             log_likelihood_approx,
@@ -599,25 +572,19 @@ class GP_AB_Algorithm:
                         )
 
                     start_time = time.time()
-                    self.current_pca = PrincipalComponentAnalysis(self.pca_threshold)
-                    self.current_pca.fit(model_outputs)
-                    self.latent_outputs = self.current_pca.project_to_latent_space(
-                        model_outputs
-                    )
-                    self.num_pca_components_list.append(
-                        self.current_pca.n_components
-                    )
 
                     self.current_gp_model = create_gp_model(
                         input_dimension=self.input_dimension,
-                        output_dimension=self.num_pca_components_list[-1],
+                        output_dimension=self.output_dimension,
                         mean_function='linear',
                         fix_nugget=False,
                         logger=self.logger,
+                        use_pca=self.use_pca,
+                        pca_threshold=self.pca_threshold,
                     )
                     with self.log_step('Calibrating the GP model.'):
                         self.current_gp_model.update(
-                            model_parameters, self.latent_outputs, reoptimize=True
+                            model_parameters, model_outputs, reoptimize=True
                         )
                     time_elapsed = time.time() - start_time
                     self.gp_training_time += time_elapsed
@@ -625,7 +592,10 @@ class GP_AB_Algorithm:
                     self.loginfo(
                         f'Total time in GP training till now: {duration_string}'
                     )
-
+                    gp_output_dimension = self.current_gp_model.pca_info.get(
+                        'n_components', self.output_dimension
+                    )
+                    self.gp_output_dimension_list.append(gp_output_dimension)
                     self.num_recalibration_experiments = self.num_experiments[-1]
                     self.gp_recalibrated = True
                 else:
@@ -633,32 +603,29 @@ class GP_AB_Algorithm:
                         'Insufficient number of experiments for recalibration.'
                     )
                     self.current_gp_model = self.previous_gp_model
-                    self.current_pca = self.previous_pca
-
-                    self.latent_outputs = self.current_pca.project_to_latent_space(
-                        model_outputs
+                    gp_output_dimension = self.current_gp_model.pca_info.get(  # type: ignore
+                        'n_components', self.output_dimension
                     )
-                    self.num_pca_components_list.append(self.latent_outputs.shape[1])
-                    self.current_gp_model.update(
-                        model_parameters, self.latent_outputs, reoptimize=False
+                    self.gp_output_dimension_list.append(gp_output_dimension)
+                    self.current_gp_model.update(  # type: ignore
+                        model_parameters, model_outputs, reoptimize=False
                     )
                     self.gp_recalibrated = False
 
-            with self.log_step('Constructing Posterior Distribution Approximation.'):
-                gp_latent_mean, _ = self.current_gp_model.predict(model_parameters)
-                self.gp_prediction_mean = (
-                    self.current_pca.project_back_to_original_space(gp_latent_mean)
+                self.loginfo(
+                    f'Current GP model output dimension: {gp_output_dimension}'
                 )
 
-                loo_latent = self.current_gp_model.loo_predictions(
-                    model_parameters, self.latent_outputs
+            with self.log_step('Constructing Posterior Distribution Approximation.'):
+                self.gp_prediction_mean, _ = self.current_gp_model.predict(  # type: ignore
+                    model_parameters
                 )
-                self.loo_predictions = (
-                    self.current_pca.project_back_to_original_space(loo_latent)
+                self.loo_predictions = self.current_gp_model.loo_predictions(  # type: ignore
+                    model_parameters, model_outputs
                 )
 
                 self.current_response_approximation = partial(
-                    response_approximation, self.current_gp_model, self.current_pca
+                    response_approximation, self.current_gp_model
                 )
                 self.current_log_likelihood_approximation = partial(
                     log_likelihood_approx,
@@ -673,7 +640,7 @@ class GP_AB_Algorithm:
         Supports warm-starting from intermediate stages when gCV is low.
         """
         current_response_approximation = partial(
-            response_approximation, self.current_gp_model, self.current_pca
+            response_approximation, self.current_gp_model
         )
         current_log_likelihood_approximation = partial(
             log_likelihood_approx,
@@ -697,7 +664,7 @@ class GP_AB_Algorithm:
 
             with self.log_step('Evaluating warm-start of TMCMC.'):
                 if self.iteration_number > 0:
-                    weights = self.kde.evaluate(self.inputs)
+                    weights = self.kde.evaluate(self.inputs)  # type: ignore
                     self.gcv = self._calculate_gcv(weights)
                     self.warm_start_possible = self.gcv <= self.gcv_threshold
 
@@ -742,7 +709,6 @@ class GP_AB_Algorithm:
                     self.log_evidence_dict,
                     self.num_model_evals_dict,
                     self.scale_factor_dict,
-                    # self.j_star - 1 if self.j_star > 0 else 0,
                     self.j_star,
                     num_burn_in=5,
                 )
@@ -863,9 +829,7 @@ class GP_AB_Algorithm:
             self.loginfo(f'Number of exploration points: {self.n_explore}')
 
             self.loginfo('Setting up GP for adaptive design of experiments.')
-            current_doe = AdaptiveDesignOfExperiments(
-                self.current_gp_model, self.current_pca
-            )
+            current_doe = AdaptiveDesignOfExperiments(self.current_gp_model)
 
             with LogStepContext(
                 'Exploitation Design of Experiments',
@@ -1159,7 +1123,7 @@ class GP_AB_Algorithm:
             # --- dakotaTabPrior.out ---
             prior_samples = self.results['model_parameters_dict'][0]
             prior_predictions = response_approximation(
-                self.current_gp_model, self.current_pca, prior_samples
+                self.current_gp_model, prior_samples
             )
 
             df_prior_samples = pd.DataFrame(prior_samples, columns=rv_names_list)
@@ -1188,8 +1152,12 @@ class GP_AB_Algorithm:
             'exploitation_candidates_stage_sample_counts': self.stage_sample_counts,
             'exploitation_training_points': self.exploitation_training_points,
             'exploration_training_points': self.exploration_training_points,
-            'num_latent_variables': self.current_pca.n_components,
-            'explained_variance_ratio': self.current_pca.pca.explained_variance_ratio_,
+            'num_latent_variables': self.current_gp_model.pca_info.get(  # type: ignore
+                'n_components', None
+            ),
+            'explained_variance_ratio': self.current_gp_model.pca_info.get(  # type: ignore
+                'explained_variance_ratio', None
+            ),
             'gp_recalibrated': self.gp_recalibrated,
         }
 
@@ -1236,9 +1204,7 @@ class GP_AB_Algorithm:
             json.dump(self._save_gp_ab_progress(), f, indent=4)
 
         samples = self.current_posterior_samples
-        predictions = response_approximation(
-            self.current_gp_model, self.current_pca, samples
-        )
+        predictions = response_approximation(self.current_gp_model, samples)
         self.save_tabular_results(
             samples=samples,
             predictions=predictions,
@@ -1470,7 +1436,7 @@ def preprocess(input_arguments):
 
     joint_distribution = uq_utilities.ERANatafJointDistribution(
         rv_inputs,
-        correlation_matrix_inputs,
+        correlation_matrix_inputs,  # type: ignore
     )
     prior_variances = [
         (marginal.Dist.var()) ** 2
@@ -1528,6 +1494,11 @@ def preprocess(input_arguments):
     gkl_threshold = 0.01
     gmap_threshold = 0.01
 
+    use_pca = False
+    pca_output_dimension_threshold = 10
+    if output_dimension > pca_output_dimension_threshold:
+        use_pca = True
+
     return (
         data,
         edp_lengths_list,
@@ -1543,6 +1514,7 @@ def preprocess(input_arguments):
         prior_variances,
         max_simulations,
         max_computational_time,
+        use_pca,
         pca_threshold,
         run_type,
         gcv_threshold,

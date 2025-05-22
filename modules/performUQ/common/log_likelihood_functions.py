@@ -11,16 +11,14 @@ import numpy as np
 from scipy.stats import norm
 
 
-def response_approximation(current_gp, current_pca, model_parameters):
+def response_approximation(current_gp, model_parameters):
     """
-    Approximate the response using the current GP model and PCA.
+    Approximate the response using the current GP model.
 
     Parameters
     ----------
     current_gp : GaussianProcessModel
         The current Gaussian Process model.
-    current_pca : PrincipalComponentAnalysis
-        The current PCA model.
     model_parameters : np.ndarray
         The model parameters in physical space.
 
@@ -29,8 +27,8 @@ def response_approximation(current_gp, current_pca, model_parameters):
     np.ndarray
         The approximated model response in the original output space.
     """
-    latent_predictions, _ = current_gp.predict(model_parameters)
-    return current_pca.project_back_to_original_space(latent_predictions)
+    predictions, _ = current_gp.predict(model_parameters)
+    return predictions
 
 
 def log_like(predictions, data, output_length_list):

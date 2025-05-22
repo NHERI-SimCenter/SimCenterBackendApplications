@@ -5,71 +5,57 @@ import numpy as np
 
 class AdaptiveDesignOfExperiments:
     """
-    Adaptive Design of Experiments (DoE) using Gaussian Process (GP) and Principal Component Analysis (PCA).
+    Adaptive Design of Experiments (DoE) using a Gaussian Process (GP) surrogate model.
 
     This class implements an adaptive design of experiments strategy to select new training points
     based on the Integrated Mean Squared Error (IMSE) criterion.
 
     Attributes
     ----------
-        gp_model (list): List of Gaussian Process models.
-        pca (PCA): Principal Component Analysis object.
-
-    Methods
-    -------
-        _lengthscale_for_doe():
-            Compute the lengthscale for the design of experiments.
-
-        _kernel_for_doe():
-            Create a kernel for the design of experiments.
-
-        _gp_for_doe():
-            Create a Gaussian Process model for the design of experiments.
-
-        _imse_w_approximation(X_train, mci_samples, candidate_training_points):
-            Compute the IMSE approximation for candidate training points.
-
-        select_training_points(X_train, n_points, mci_samples, n_candidates):
-            Select new training points based on the IMSE criterion.
+        gp_model (GaussianProcessModel): The GP surrogate model that internally handles PCA (if used).
     """
 
-    def __init__(self, gp_model, pca):
+    def __init__(self, gp_model):
         """
         Initialize the AdaptiveDesignOfExperiments class.
 
         Parameters
         ----------
-            gp_model (list): List of Gaussian Process models.
-            pca (PCA): Principal Component Analysis object.
+            gp_model (GaussianProcessModel): The GP surrogate model.
         """
         self.gp_model = gp_model
-        self.pca = pca
-
         self._hyperparameters_for_doe()
         self._kernel_for_doe()
         self._gp_for_doe()
 
     def _hyperparameters_for_doe(self):
         """
-        Compute the lengthscale for the design of experiments.
+        Compute the weighted average of kernel hyperparameters for DoE.
 
-        The lengthscale is computed as a weighted sum of the lengthscales of the individual GP models,
-        where the weights are the explained variances of the PCA components.
-
-        Returns
-        -------
-            float: The computed lengthscale.
+        If PCA is used, weights are based on explained variance.
+        Otherwise, uniform averaging is used.
         """
-        n_components = self.pca.n_components
-        eigenvalues = self.pca.pca.explained_variance_[:n_components]
-        w = eigenvalues / np.sum(eigenvalues)
+        if self.gp_model.use_pca:
+            pca_info = self.gp_model.pca_info
+            n_components = pca_info['n_components']
+            explained_variance_ratio = np.asarray(
+                pca_info['explained_variance_ratio']
+            )[:n_components]
+            if np.sum(explained_variance_ratio) == 0:
+                w = np.full(n_components, 1.0 / n_components)
+            else:
+                w = explained_variance_ratio / np.sum(explained_variance_ratio)
+        else:
+            n_models = len(self.gp_model.model)
+            w = np.full(n_models, 1.0 / n_models)
 
         hyperparameters_matrix = [
             np.atleast_2d(model.kern.param_array) for model in self.gp_model.model
         ]
         hyperparameters_matrix = np.vstack(hyperparameters_matrix)
-        self.pca_weighted_hyperparamters = np.dot(w, hyperparameters_matrix)
-        return self.pca_weighted_hyperparamters
+
+        self.weighted_hyperparameters = np.dot(w, hyperparameters_matrix)
+        return self.weighted_hyperparameters
 
     def _kernel_for_doe(self):
         """
@@ -82,7 +68,7 @@ class AdaptiveDesignOfExperiments:
             Kernel: The created kernel.
         """
         self.kernel = self.gp_model.kernel.copy()
-        self.kernel.param_array[:] = self.pca_weighted_hyperparamters
+        self.kernel.param_array[:] = self.weighted_hyperparameters
         return self.kernel
 
     def _gp_for_doe(self):
@@ -99,7 +85,7 @@ class AdaptiveDesignOfExperiments:
         self.gp_model_for_doe.kern = self.kernel
         return self.gp_model_for_doe
 
-    def _imse_w_approximation(self, x_train, mci_samples, weights=None):  # noqa: ARG002
+    def _imse_w_approximation(self, x_train, mci_samples, weights=None):
         """
         Compute the IMSE approximation for candidate training points.
 
@@ -154,7 +140,8 @@ class AdaptiveDesignOfExperiments:
         x_train,
         n_points,
         mci_samples,
-        use_mse_w=True,  # noqa: FBT002
+        *,
+        use_mse_w=True,
         weights=None,
     ):
         """
@@ -165,7 +152,6 @@ class AdaptiveDesignOfExperiments:
             X_train (array-like): The current training data.
             n_points (int): The number of new training points to select.
             mci_samples (array-like): Monte Carlo integration samples.
-            n_candidates (int): The number of candidate training points to generate.
 
         Returns
         -------
