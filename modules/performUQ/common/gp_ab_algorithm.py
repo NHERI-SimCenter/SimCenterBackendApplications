@@ -296,8 +296,12 @@ class GP_AB_Algorithm:
         -------
             tuple: A tuple containing the inputs and outputs of the initial training set.
         """
+        self.loginfo('Using a space filling strategy')
         inputs = self.sample_transformation_function(
             self._perform_space_filling_doe(n_samples)
+        )
+        self.loginfo(
+            f'Generated {inputs.shape[0]} samples for initial training set.'
         )
         outputs = self._evaluate_in_parallel(self.model_evaluation_function, inputs)
         return inputs, outputs
@@ -479,6 +483,65 @@ class GP_AB_Algorithm:
         # )
         return candidate_training_points_exploitation, stage_sample_counts
 
+    def _summarize_iteration(self):
+        with self.log_step(
+            f'Summary after iteration {self.iteration_number}',
+            highlight='success',
+        ):
+            self.loginfo(f'Number of model evaluations till now: {len(self.inputs)}')
+            self.loginfo(
+                f'Time for model evaluation till now: {_format_duration(self.model_evaluation_time)}'
+            )
+            self.loginfo(
+                f'Time for design of experiments till now: {_format_duration(self.doe_time)}'
+            )
+            self.loginfo(
+                f'Time for GP calibration till now: {_format_duration(self.gp_training_time)}'
+            )
+            self.loginfo(
+                f'Time for posterior sampling till now: {_format_duration(self.posterior_sampling_time)}'
+            )
+
+    def run(self):
+        """
+        Execute the GP-AB Algorithm.
+
+        This method initializes the algorithm, generates initial training points,
+        and iteratively performs Bayesian updating, convergence checks, and adaptive
+        training point selection until termination criteria are met.
+
+        Args:
+            batch_size_factor (int, optional): Factor to determine the batch size for training points. Defaults to 2.
+        """
+        with self.log_step('Running GP-AB Algorithm', highlight='major'):
+            with self.log_step('Generation of Initial Training Points'):
+                inputs, outputs, num_initial = self.run_initial_doe(
+                    num_initial_doe_per_dim=self.batch_size_factor
+                )
+                self.inputs = inputs
+                self.outputs = outputs
+                self.num_experiments.append(num_initial)
+
+            try:
+                iteration = 0
+                terminate = False
+                while not terminate:
+                    with self.log_step(
+                        f'Iteration {iteration}',
+                        highlight='major',
+                    ):
+                        terminate, results = self.run_iteration(iteration)
+                        self.write_results()
+                        self._summarize_iteration()
+                    iteration += 1
+
+            finally:
+                with self.log_step(
+                    'GP-AB Algorithm run completed.',
+                    highlight='major',
+                ):
+                    self.parallel_pool.close_pool()
+
     def run_iteration(self, k: int) -> tuple[bool, dict]:
         """
         Run a single iteration of the GP-AB (Gaussian Process Adaptive Bayesian) algorithm.
@@ -539,7 +602,6 @@ class GP_AB_Algorithm:
             logger=self.logger,
             highlight='submajor',
         ):
-            # with self.log_step('Posterior Approximation'):
             with self.log_step('Evaluating if GP Recalibration Needed.'):
                 delta_experiments = (
                     self.num_experiments[-1] - self.num_recalibration_experiments
@@ -588,10 +650,7 @@ class GP_AB_Algorithm:
                         )
                     time_elapsed = time.time() - start_time
                     self.gp_training_time += time_elapsed
-                    duration_string = _format_duration(self.gp_training_time)
-                    self.loginfo(
-                        f'Total time in GP training till now: {duration_string}'
-                    )
+
                     gp_output_dimension = self.current_gp_model.pca_info.get(
                         'n_components', self.output_dimension
                     )
@@ -714,10 +773,6 @@ class GP_AB_Algorithm:
                 )
                 time_elapsed = time.time() - start_time
                 self.posterior_sampling_time += time_elapsed
-                duration_string = _format_duration(self.posterior_sampling_time)
-                self.loginfo(
-                    f'Total time in posterior sampling till now: {duration_string}'
-                )
 
                 self.current_model_parameters = self.results['model_parameters_dict']
                 self.num_tmcmc_stages = len(self.current_model_parameters)
@@ -914,10 +969,7 @@ class GP_AB_Algorithm:
                 self.exploration_doe_time += time_elapsed_explore
             time_elapsed = time.time() - start_time
             self.doe_time += time_elapsed
-            duration_string = _format_duration(self.doe_time)
-            self.loginfo(
-                f'Total time in design of experiments till now: {duration_string}'
-            )
+
             self.new_training_points = np.vstack(
                 [self.exploitation_training_points, self.exploration_training_points]
             )
@@ -953,13 +1005,6 @@ class GP_AB_Algorithm:
 
             time_elapsed = time.time() - start_time
             self.model_evaluation_time += time_elapsed
-            duration_string = _format_duration(self.model_evaluation_time)
-            self.loginfo(
-                f'Total time in model evaluation till now: {duration_string}'
-            )
-            self.loginfo(
-                f'Total number of model evaluations till now: {len(self.outputs)}'
-            )
 
     def _initialize_tmcmc_result_dicts(self):
         self.samples_dict = {}
@@ -1060,6 +1105,7 @@ class GP_AB_Algorithm:
         """
         num_initial_doe_samples = num_initial_doe_per_dim * self.input_dimension
         inputs, outputs = self._get_initial_training_set(num_initial_doe_samples)
+        self.loginfo(f'Number of model evaluations till now: {len(outputs)}')
         return inputs, outputs, num_initial_doe_samples
 
     def save_tabular_results(
@@ -1560,63 +1606,9 @@ def run_gp_ab_algorithm(input_arguments, logger: logging.Logger | None = None):
         input_arguments (InputArguments): The input arguments for the algorithm.
     """
     logger = logger or setup_logger()
-    logger_context = make_logger_context(logger)
-
-    with logger_context('Running GP-AB Algorithm'):
-        gp_ab = GP_AB_Algorithm(*preprocess(input_arguments), logger=logger)
-
-        batch_size_factor = 2
-
-        with logger_context('Generation of Initial Training Points'):
-            gp_ab.loginfo(
-                f'Using a space filling strategy to generate {batch_size_factor*gp_ab.input_dimension} training points.'
-            )
-            inputs, outputs, num_initial_doe_samples = gp_ab.run_initial_doe(
-                num_initial_doe_per_dim=batch_size_factor
-            )
-            gp_ab.inputs = inputs
-            gp_ab.outputs = outputs
-            gp_ab.num_experiments.append(num_initial_doe_samples)
-
-        try:
-            iteration = 0
-            terminate = False
-            while not terminate:
-                with LogStepContext(
-                    f'Iteration {iteration}', logger=logger, highlight='major'
-                ):
-                    terminate, results = gp_ab.run_iteration(iteration)
-                    gp_ab.write_results()
-                iteration += 1
-        finally:
-            with LogStepContext(
-                'Summary',
-                logger=gp_ab.logger,
-                highlight='success',
-            ):
-                gp_ab.loginfo(f'Total iterations: {iteration}')
-                gp_ab.loginfo(
-                    f'Total number of model evaluations: {len(gp_ab.inputs)}'
-                )
-                gp_ab.loginfo(
-                    f'Total time for model evaluation: {_format_duration(gp_ab.model_evaluation_time)}'
-                )
-                gp_ab.loginfo(
-                    f'Total time for design of experiments: {_format_duration(gp_ab.doe_time)}'
-                )
-                gp_ab.loginfo(
-                    f'Total time for GP calibration: {_format_duration(gp_ab.gp_training_time)}'
-                )
-                gp_ab.loginfo(
-                    f'Total time for posterior sampling: {_format_duration(gp_ab.posterior_sampling_time)}'
-                )
-
-            with LogStepContext(
-                'GP-AB Algorithm completed successfully',
-                logger=gp_ab.logger,
-                highlight='success',
-            ):
-                gp_ab.parallel_pool.close_pool()
+    inputs = preprocess(input_arguments)
+    gp_ab = GP_AB_Algorithm(*inputs, logger=logger)
+    gp_ab.run()
 
 
 def parse_arguments(args=None):
