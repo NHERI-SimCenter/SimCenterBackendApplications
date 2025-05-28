@@ -225,7 +225,7 @@ class BoundaryConditions:
         self.WaveType = WaveType  # -1 to read from a file
         self.sine_wave = sine_wave
         self.data = np.zeros((2, 4))
-        self.N_data = 2
+        self.N_data = 1
         self.W_data = None
         self.init_eta = init_eta
         self.amplitude = Amplitude
@@ -349,6 +349,7 @@ class BoundaryConditions:
         Returns:
             ti.field: A Taichi field of shape `(N_data, 4)` containing wave parameters.
         """
+        data = None  # noqa: N806
         if self.WaveType == -1:
             self.load_data()
             data = ti.field(self.precision, shape=(self.N_data, 4))
@@ -356,6 +357,9 @@ class BoundaryConditions:
         elif self.WaveType == 1 or self.WaveType == 2:
             data = ti.field(self.precision, shape=(self.N_data, 4))
             data.from_numpy(np.array([self.sine_wave]))
+        else:
+            data = ti.field(self.precision, shape=(self.N_data, 4))
+            data.from_numpy(np.array([[0, 0, 0, 0]]))
         return data
 
 
