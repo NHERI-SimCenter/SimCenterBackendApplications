@@ -353,7 +353,7 @@ def determine_response(AIM_input_path, EVENT_input_path, EDP_input_path):  # noq
     # TODO(TBD): This is a temporary bugfix because the MultiplePEER app only
     # provides event accelerations in "g. We need to fix the MultiPEER app
     # and then remove this fix from here
-    if evt['subtype'] == 'MultiplePEER_Event':
+    if 'subtype' in evt and evt['subtype'] == 'MultiplePEER_Event':
         evt['timeSeries'][0]['factor'] *= simcenter_common.g / f_length_in
 
     #
