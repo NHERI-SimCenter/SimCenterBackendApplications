@@ -371,8 +371,8 @@ class Solver:  # noqa: D101
                 self.force_sensor_begin = self.bc.configfile['force_sensor_begin']
                 self.force_sensor_begin[0] = int(self.force_sensor_begin[0] / self.dx)
                 self.force_sensor_begin[1] = int(self.force_sensor_begin[1] / self.dy)
-                self.force_sensor_begin_scaled[0] = self.force_sensor_begin[0] / self.bc.configfile['WIDTH']
-                self.force_sensor_begin_scaled[1] = self.force_sensor_begin[1] / self.bc.configfile['HEIGHT']
+                self.force_sensor_begin_scaled[0] = self.force_sensor_begin[0] / self.domain.Nx
+                self.force_sensor_begin_scaled[1] = self.force_sensor_begin[1] / self.domain.Ny
             else:
                 self.force_sensor_begin = [0.0, 0.0]
                 self.force_sensor_begin_scaled = [0.0, 0.0]
@@ -381,10 +381,10 @@ class Solver:  # noqa: D101
                 self.force_sensor_end = self.bc.configfile['force_sensor_end']
                 self.force_sensor_end[0] = int(self.force_sensor_end[0] / self.dx)
                 self.force_sensor_end[1] = int(self.force_sensor_end[1] / self.dy)
-                self.force_sensor_end_scaled[0] = self.force_sensor_end[0] / self.bc.configfile['WIDTH']
-                self.force_sensor_end_scaled[1] = self.force_sensor_end[1] / self.bc.configfile['HEIGHT']
+                self.force_sensor_end_scaled[0] = self.force_sensor_end[0] / self.domain.Nx
+                self.force_sensor_end_scaled[1] = self.force_sensor_end[1] / self.domain.Ny
             else:
-                self.force_sensor_end = [self.bc.configfile['WIDTH'], self.bc.configfile['HEIGHT']]
+                self.force_sensor_end = [self.domain.Nx, self.domain.Ny]
                 self.force_sensor_end_scaled = [1.0, 1.0]
             if checjson('NumberOfTimeSeries', self.bc.configfile) == 1:
                 self.num_wave_gauges = int(self.bc.configfile['NumberOfTimeSeries'])
@@ -401,27 +401,27 @@ class Solver:  # noqa: D101
                     locationOfTimeSeries[1] = self.bc.configfile['locationOfTimeSeries'][ts]["yts"]
                     self.wave_gauge_pixels[ts,0] = int(locationOfTimeSeries[0] / self.dx)
                     self.wave_gauge_pixels[ts,1] = int(locationOfTimeSeries[1] / self.dy)
-                    self.wave_gauge_scaled[ts,0] = self.wave_gauge_pixels[ts,0] / self.bc.configfile['WIDTH']
-                    self.wave_gauge_scaled[ts,1] = self.wave_gauge_pixels[ts,1] / self.bc.configfile['HEIGHT']
+                    self.wave_gauge_scaled[ts,0] = self.wave_gauge_pixels[ts,0] / self.domain.Nx
+                    self.wave_gauge_scaled[ts,1] = self.wave_gauge_pixels[ts,1] / self.domain.Ny
                     print("Wave gauge location: ", locationOfTimeSeries[0], locationOfTimeSeries[1])
                     print("Wave gauge pixel location: ", self.wave_gauge_pixels[ts,0], self.wave_gauge_pixels[ts,1])
                     print("Wave gauge scaled location: ", self.wave_gauge_scaled[ts,0], self.wave_gauge_scaled[ts,1])
 
                     self.velocimeter_pixels[ts,0] = int(locationOfTimeSeries[0] / self.dx)
                     self.velocimeter_pixels[ts,1] = int(locationOfTimeSeries[1] / self.dy)
-                    self.velocimeter_scaled[ts,0] = self.velocimeter_pixels[ts,0] / self.bc.configfile['WIDTH']
-                    self.velocimeter_scaled[ts,1] = self.velocimeter_pixels[ts,1] / self.bc.configfile['HEIGHT']
+                    self.velocimeter_scaled[ts,0] = self.velocimeter_pixels[ts,0] / self.domain.Nx
+                    self.velocimeter_scaled[ts,1] = self.velocimeter_pixels[ts,1] / self.domain.Ny
                     
             else:
                 self.wave_gauge_pixels[0,0] = int(1)
                 self.wave_gauge_pixels[0,1] = int(1)
-                self.wave_gauge_scaled[0,0] = self.wave_gauge_pixels[0,0] / self.bc.configfile['WIDTH']
-                self.wave_gauge_scaled[0,1] = self.wave_gauge_pixels[0,1] / self.bc.configfile['HEIGHT']
+                self.wave_gauge_scaled[0,0] = self.wave_gauge_pixels[0,0] / self.domain.Nx
+                self.wave_gauge_scaled[0,1] = self.wave_gauge_pixels[0,1] / self.domain.Ny
                 
                 self.velocimeter_pixels[0,0] = int(1)
                 self.velocimeter_pixels[0,1] = int(1)
-                self.velocimeter_scaled[0,0] = self.velocimeter_pixels[0,0] / self.bc.configfile['WIDTH']
-                self.velocimeter_scaled[0,1] = self.velocimeter_pixels[0,1] / self.bc.configfile['HEIGHT']
+                self.velocimeter_scaled[0,0] = self.velocimeter_pixels[0,0] / self.domain.Nx
+                self.velocimeter_scaled[0,1] = self.velocimeter_pixels[0,1] / self.domain.Ny
                 
                 
             if checjson('whiteWaterDecayRate', self.bc.configfile) == 1:

@@ -225,7 +225,7 @@ class BoundaryConditions:
         self.WaveType = WaveType  # -1 to read from a file
         self.sine_wave = sine_wave
         self.data = np.zeros((2, 4))
-        self.N_data = 2
+        self.N_data = 1
         self.W_data = None
         self.init_eta = init_eta
         self.amplitude = Amplitude
@@ -242,6 +242,12 @@ class BoundaryConditions:
                 self.amplitude = float(self.configfile['amplitude'])
             if checjson('period', self.configfile) == 1:
                 self.period = float(self.configfile['period'])
+            if checjson('sine_wave', self.configfile) == 1:
+                self.sine_wave = [float(self.configfile['sine_wave'][0]),
+                                 float(self.configfile['sine_wave'][1]),
+                                 float(self.configfile['sine_wave'][2]),
+                                 float(self.configfile['sine_wave'][3])]
+                self.N_data = 1 # Just one wave
             if checjson('BoundaryWidth', self.configfile) == 1:
                 self.BoundaryWidth = int(self.configfile['BoundaryWidth'])
             else:
@@ -343,10 +349,17 @@ class BoundaryConditions:
         Returns:
             ti.field: A Taichi field of shape `(N_data, 4)` containing wave parameters.
         """
+        data = None  # noqa: N806
         if self.WaveType == -1:
             self.load_data()
-        data = ti.field(self.precision, shape=(self.N_data, 4))
-        data.from_numpy(self.data)
+            data = ti.field(self.precision, shape=(self.N_data, 4))
+            data.from_numpy(self.data)
+        elif self.WaveType == 1 or self.WaveType == 2:
+            data = ti.field(self.precision, shape=(self.N_data, 4))
+            data.from_numpy(np.array([self.sine_wave]))
+        else:
+            data = ti.field(self.precision, shape=(self.N_data, 4))
+            data.from_numpy(np.array([[0, 0, 0, 0]]))
         return data
 
 
@@ -478,11 +491,19 @@ class Domain:  # noqa: D101
             if checjson('WIDTH', self.configfile) == 1:
                 self.Nx = int(self.configfile['WIDTH'])
             else:
-                self.Nx = Nx
+                if (self.topodata != None) and (self.topodata.datatype == 'celeris' or self.topodata.datatype == 'txt'):
+                    self.Nx = self.topodata.z().shape[0]
+                else:
+                    self.Nx = Nx
+                self.configfile["WIDTH"] = self.Nx    
             if checjson('HEIGHT', self.configfile) == 1:
                 self.Ny = int(self.configfile['HEIGHT'])
             else:
-                self.Ny = Ny
+                if (self.topodata != None) and (self.topodata.datatype == 'celeris' or self.topodata.datatype == 'txt'):
+                    self.Ny = self.topodata.z().shape[1]
+                else:
+                    self.Ny = Ny
+                self.configfile["HEIGHT"] = self.Ny
             if checjson('dx', self.configfile) == 1:
                 self.dx = float(self.configfile['dx'])
             else:
