@@ -84,6 +84,9 @@ class GaussianProcessModel:
         self.linear_models: list[LinearRegression | None] = []
         self.model: list[GPy.models.GPRegression] = []
 
+        self.x_train = None
+        self.y_train = None
+
     def _create_kernel(self):
         if self.kernel_type == 'exponential':
             return GPy.kern.Exponential(input_dim=self.input_dimension, ARD=self.ARD)
@@ -115,25 +118,10 @@ class GaussianProcessModel:
         else:
             model.Gaussian_noise.variance = self.settings.nugget_value
 
-    def update(self, x_train, y_train, *, reoptimize=True, num_random_restarts=10):
-        """
-        Update the Gaussian Process model with new training data.
-
-        Parameters
-        ----------
-        x_train : ndarray
-            Input training data of shape (n_samples, input_dimension).
-        y_train : ndarray
-            Output training data of shape (n_samples, output_dimension).
-        reoptimize : bool, optional
-            Whether to reoptimize the model hyperparameters (default is True).
-        num_random_restarts : int, optional
-            Number of random restarts for optimization (default is 10).
-        """
+    def _fit_pca_and_create_models(self, *, reoptimize=True, num_random_restarts=10):
         if self.pca is not None:
-            self.loginfo('Using PCA for output dimensionality reduction.')
-            self.pca.fit(y_train)
-            y_latent = self.pca.project_to_latent_space(y_train)
+            self.pca.fit(self.y_train)
+            y_latent = self.pca.project_to_latent_space(self.y_train)
             self.latent_dimension = int(self.pca.n_components)  # type: ignore
             self.output_dimension = self.latent_dimension
             self.loginfo(
@@ -142,23 +130,25 @@ class GaussianProcessModel:
                 f'{self.pca_threshold:.2%} variance.'
             )
         else:
-            self.loginfo('Using model outputs for training GP. No PCA applied.')
-            y_latent = y_train
+            y_latent = self.y_train
             self.output_dimension = self.model_output_dimension
+            self.loginfo(
+                f'Using model outputs of dimension {self.model_output_dimension} '
+                'for training GP. Not using PCA.'
+            )
 
-        # Re-create GP models now that output dimension is known
         self.model = []
         self.linear_models = []
 
         for i in range(self.output_dimension):
-            x = x_train
-            y = np.reshape(y_latent[:, i], (-1, 1))
+            x = self.x_train
+            y = np.reshape(y_latent[:, i], (-1, 1))  # type: ignore
 
             linear_model = None
             if self.mean_function_type == 'linear':
                 linear_model = LinearRegression()
-                linear_model.fit(x, y)
-                y_detrended = y - linear_model.predict(x)
+                linear_model.fit(x, y)  # type: ignore
+                y_detrended = y - linear_model.predict(x)  # type: ignore
             else:
                 y_detrended = y
 
@@ -178,11 +168,87 @@ class GaussianProcessModel:
             self.model.append(gp)
             self.linear_models.append(linear_model)
 
-            # self.model[i].set_XY(x, y_detrended)
-            # if reoptimize:
-            #     self.model[i].optimize_restarts(num_random_restarts)
-            # else:
-            #     _ = self.model[i].posterior
+    def initialize(
+        self, x_train, y_train, *, reoptimize=True, num_random_restarts=10
+    ):
+        """
+        Initialize the Gaussian Process Model with training data.
+
+        Parameters
+        ----------
+        x_train : ndarray
+            Training input data of shape (n_samples, input_dimension).
+        y_train : ndarray
+            Training output data of shape (n_samples, output_dimension).
+        reoptimize : bool, optional
+            Whether to reoptimize the model hyperparameters (default is True).
+        num_random_restarts : int, optional
+            Number of random restarts for optimization (default is 10).
+        """
+        self.x_train = x_train
+        self.y_train = y_train
+        self._fit_pca_and_create_models(
+            reoptimize=reoptimize, num_random_restarts=num_random_restarts
+        )
+
+    def update_training_dataset(
+        self, x_train, y_train, *, reoptimize=False, num_random_restarts=10
+    ):
+        """
+        Add new training data to the Gaussian Process Model.
+
+        Parameters
+        ----------
+        x_train : ndarray
+            New training input data of shape (n_samples, input_dimension).
+        y_train : ndarray
+            New training output data of shape (n_samples, output_dimension).
+        reoptimize : bool, optional
+            Whether to reoptimize the model hyperparameters (default is False).
+        num_random_restarts : int, optional
+            Number of random restarts for optimization (default is 10).
+        """
+        if not self.model:
+            msg = 'GP model not initialized. Call `initialize` first.'
+            raise ValueError(msg)
+
+        self.x_train = x_train
+        self.y_train = y_train
+
+        if self.pca is not None:
+            self.pca.fit(self.y_train)
+            y_latent = self.pca.project_to_latent_space(self.y_train)
+            new_latent_dim = int(self.pca.n_components)  # type: ignore
+        else:
+            y_latent = self.y_train
+            new_latent_dim = self.model_output_dimension
+
+        if (
+            new_latent_dim != self.output_dimension
+        ):  # PCA dimension has changed — retrain all GP models from scratch
+            self.loginfo('Latent dimension changed. Reinitializing GP models.')
+            self.output_dimension = new_latent_dim
+            self._fit_pca_and_create_models(
+                reoptimize=True, num_random_restarts=num_random_restarts
+            )
+        else:
+            for i in range(self.output_dimension):
+                y = np.reshape(y_latent[:, i], (-1, 1))
+                if self.linear_models[i] is not None:
+                    y_detrended = y - self.linear_models[i].predict(self.x_train)  # type: ignore
+                else:
+                    y_detrended = y
+                self.model[i].set_XY(self.x_train, y_detrended)
+                if reoptimize:
+                    self.model[i].optimize_restarts(num_random_restarts)
+                else:
+                    _ = self.model[i].posterior
+
+    # def update(self, x_train, y_train, *, reoptimize=True, num_random_restarts=10):
+    #     if self.model:
+    #         self.add_training_data(x_train, y_train, reoptimize=reoptimize, num_random_restarts=num_random_restarts)
+    #     else:
+    #         self.initialize(x_train, y_train, reoptimize=reoptimize, num_random_restarts=num_random_restarts)
 
     def predict(self, x_predict):
         """
@@ -200,6 +266,10 @@ class GaussianProcessModel:
             - y_mean (ndarray): Predicted mean values of shape (n_samples, output_dimension).
             - y_var (ndarray): Predicted variance values of shape (n_samples, output_dimension).
         """
+        if not self.model:
+            msg = 'GP model not initialized. Call `initialize` first.'
+            raise ValueError(msg)
+
         y_mean = np.zeros((x_predict.shape[0], self.output_dimension))
         y_var = np.zeros((x_predict.shape[0], self.output_dimension))
 
@@ -236,6 +306,10 @@ class GaussianProcessModel:
         loo_pred : ndarray
             LOO predictions with trend restored, shape (n_samples, output_dimension).
         """
+        if not self.model:
+            msg = 'GP model not initialized. Call `initialize` first.'
+            raise ValueError(msg)
+
         if not hasattr(self.model[0], 'posterior'):
             msg = 'Model must be trained before computing LOO predictions.'
             raise ValueError(msg)
