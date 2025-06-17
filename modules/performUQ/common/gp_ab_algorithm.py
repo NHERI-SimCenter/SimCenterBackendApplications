@@ -8,6 +8,7 @@ Bayesian calibration, design of computer experiments, and convergence monitoring
 from __future__ import annotations
 
 import argparse
+import copy
 import importlib
 import json
 import os
@@ -522,6 +523,20 @@ class GP_AB_Algorithm:
                 self.outputs = outputs
                 self.num_experiments.append(num_initial)
 
+                # First time
+                self.current_gp_model = create_gp_model(
+                    input_dimension=self.input_dimension,
+                    output_dimension=self.output_dimension,
+                    mean_function='linear',
+                    fix_nugget=False,
+                    logger=self.logger,
+                    use_pca=self.use_pca,
+                    pca_threshold=self.pca_threshold,
+                )
+                self.current_gp_model.initialize(
+                    self.inputs, self.outputs, reoptimize=True
+                )
+
             try:
                 iteration = 0
                 terminate = False
@@ -602,6 +617,19 @@ class GP_AB_Algorithm:
             logger=self.logger,
             highlight='submajor',
         ):
+            if self.iteration_number > 0:
+                self.loginfo('Saving previous GP model and posterior approximation.')
+                self.previous_gp_model = copy.deepcopy(self.current_gp_model)
+
+                self.previous_response_approximation = partial(
+                    response_approximation,
+                    self.previous_gp_model,
+                )
+                self.previous_log_likelihood_approximation = partial(
+                    log_likelihood_approx,
+                    log_like_fn=log_like_fn,
+                    response_approx_fn=self.previous_response_approximation,
+                )
             with self.log_step('Evaluating if GP Recalibration Needed.'):
                 delta_experiments = (
                     self.num_experiments[-1] - self.num_recalibration_experiments
@@ -612,46 +640,41 @@ class GP_AB_Algorithm:
                 self.loginfo(f'Recalibration threshold: {recalib_threshold:.1f}')
                 self.loginfo(f'New experiments added: {delta_experiments}')
 
-                if delta_experiments >= recalib_threshold:
+                if delta_experiments > recalib_threshold:
                     self.loginfo(
                         'Sufficient number of experiments for recalibration.'
                     )
 
-                    if self.iteration_number > 0:
-                        self.loginfo(
-                            'Saving previous GP model and posterior approximation.'
-                        )
-                        self.previous_gp_model = self.current_gp_model
+                    # if self.iteration_number > 0:
+                    #     self.loginfo(
+                    #         'Saving previous GP model and posterior approximation.'
+                    #     )
+                    #     self.previous_gp_model = copy.deepcopy(self.current_gp_model)
 
-                        self.previous_response_approximation = partial(
-                            response_approximation,
-                            self.previous_gp_model,
-                        )
-                        self.previous_log_likelihood_approximation = partial(
-                            log_likelihood_approx,
-                            log_like_fn=log_like_fn,
-                            response_approx_fn=self.previous_response_approximation,
-                        )
+                    #     self.previous_response_approximation = partial(
+                    #         response_approximation,
+                    #         self.previous_gp_model,
+                    #     )
+                    #     self.previous_log_likelihood_approximation = partial(
+                    #         log_likelihood_approx,
+                    #         log_like_fn=log_like_fn,
+                    #         response_approx_fn=self.previous_response_approximation,
+                    #     )
 
                     start_time = time.time()
-
-                    self.current_gp_model = create_gp_model(
-                        input_dimension=self.input_dimension,
-                        output_dimension=self.output_dimension,
-                        mean_function='linear',
-                        fix_nugget=False,
-                        logger=self.logger,
-                        use_pca=self.use_pca,
-                        pca_threshold=self.pca_threshold,
-                    )
                     with self.log_step('Calibrating the GP model.'):
-                        self.current_gp_model.update(
+                        # Later iterations
+                        self.current_gp_model.update_training_dataset(  # type: ignore
                             model_parameters, model_outputs, reoptimize=True
                         )
+
+                        # self.current_gp_model.update(
+                        #     model_parameters, model_outputs, reoptimize=True
+                        # )
                     time_elapsed = time.time() - start_time
                     self.gp_training_time += time_elapsed
 
-                    gp_output_dimension = self.current_gp_model.pca_info.get(
+                    gp_output_dimension = self.current_gp_model.pca_info.get(  # type: ignore
                         'n_components', self.output_dimension
                     )
                     self.gp_output_dimension_list.append(gp_output_dimension)
@@ -661,12 +684,12 @@ class GP_AB_Algorithm:
                     self.loginfo(
                         'Insufficient number of experiments for recalibration.'
                     )
-                    self.current_gp_model = self.previous_gp_model
+                    # self.current_gp_model = copy.deepcopy(self.previous_gp_model)
                     gp_output_dimension = self.current_gp_model.pca_info.get(  # type: ignore
                         'n_components', self.output_dimension
                     )
                     self.gp_output_dimension_list.append(gp_output_dimension)
-                    self.current_gp_model.update(  # type: ignore
+                    self.current_gp_model.update_training_dataset(  # type: ignore
                         model_parameters, model_outputs, reoptimize=False
                     )
                     self.gp_recalibrated = False
@@ -718,6 +741,7 @@ class GP_AB_Algorithm:
                 self.sample_transformation_function,
                 run_parallel=True,
                 logger=self.logger,
+                run_type=self.run_type,
             )
             self._initialize_tmcmc_result_dicts()
 
