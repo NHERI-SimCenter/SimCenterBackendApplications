@@ -132,7 +132,7 @@ def log_likelihood_true(
     model_parameters, log_like_fn, response_true_fn, simulation_number=0
 ):
     """
-    Compute log-likelihoods for model parameters using surrogate predictions.
+    Compute log-likelihoods for model parameters using model predictions.
 
     Parameters
     ----------
@@ -140,8 +140,8 @@ def log_likelihood_true(
         Input parameters in model space, shape (n_samples, d).
     log_like_fn : callable
         Function that computes log-likelihoods from predictions.
-    response_approx_fn : callable
-        Surrogate function that maps parameters to model outputs.
+    response_true_fn : callable
+        Model function that maps parameters to model outputs.
 
     Returns
     -------
