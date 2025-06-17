@@ -1715,6 +1715,9 @@ def main(command_args=None):
     except Exception as e:
         err_msg = f'ERROR: An exception occurred:\n{traceback.format_exc()}\n'
         sys.stderr.write(err_msg)
+        err_file = input_arguments.path_to_working_directory / 'UCSD_UQ.err'
+        with err_file.open('a') as f:
+            f.write(err_msg)
         log_exception(logger, e, message='Error when running GP_AB_Algorithm')
         raise RuntimeError(err_msg) from e
 
