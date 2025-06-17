@@ -1062,6 +1062,7 @@ class TMCMC:
                             seed=seed,
                             num_burn_in=num_burn_in,
                             thinning_factor=self.thinning_factor,
+                            run_type=self.run_type,
                         )
                     else:
                         (

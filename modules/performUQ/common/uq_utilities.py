@@ -233,7 +233,7 @@ class ParallelRunnerMultiprocessing:  # noqa: D101
             )
         elif num_processors > max_num_processors:
             # this is to get past memory problems when running large number processors in a container
-            num_processors = 8
+            num_processors = max_num_processors
 
         return num_processors
 
