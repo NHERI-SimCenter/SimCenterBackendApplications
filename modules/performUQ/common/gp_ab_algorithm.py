@@ -1722,6 +1722,11 @@ def main(command_args=None):
         # Always stop flusher
         flusher.stop()
 
+        if input_arguments.run_type == 'runningRemote':
+            from mpi4py import MPI
+
+            MPI.COMM_WORLD.Abort(0)
+
 
 if __name__ == '__main__':
     try:
