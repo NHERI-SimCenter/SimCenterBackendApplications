@@ -129,6 +129,11 @@ def main():
             f.write(err_msg)
         sys.stderr.write(err_msg)
 
+        if args.run_type == 'runningRemote':
+            from mpi4py import MPI
+
+            MPI.COMM_WORLD.Abort(1)
+
 
 if __name__ == '__main__':
     main()
