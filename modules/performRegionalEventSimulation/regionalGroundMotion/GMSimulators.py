@@ -489,6 +489,10 @@ class GM_Simulator:  # noqa: D101
             residuals = CorrelationModel.du_ning_correlation_2021(
                 self.sites, im_name_list, num_simu, self.stn_dist, num_pc
             )
+        elif cm == 'Du & Ning Simple (2021)':
+            residuals = CorrelationModel.du_ning_correlation_2021_simple(
+                self.sites, im_name_list, num_simu, self.stn_dist
+            )
         else:
             # TODO: extending this to more inter-event correlation models  # noqa: TD002
             sys.exit(
