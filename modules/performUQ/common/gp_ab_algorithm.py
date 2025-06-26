@@ -1496,14 +1496,6 @@ def preprocess(input_arguments):
         application_inputs,
     ) = read_inputs(input_file_full_path)
 
-    src = input_arguments.path_to_template_directory / uq_inputs.calDataFile
-    dst = input_arguments.path_to_working_directory / uq_inputs.calDataFile
-    shutil.move(src, dst)
-
-    data_file = input_arguments.path_to_working_directory / uq_inputs.calDataFile
-    with data_file.open() as f:
-        data = np.atleast_2d(np.genfromtxt(f, delimiter=','))
-
     joint_distribution = uq_utilities.ERANatafJointDistribution(
         rv_inputs,
         correlation_matrix_inputs,  # type: ignore
@@ -1536,9 +1528,51 @@ def preprocess(input_arguments):
     edp_names_list = [edp['name'] for edp in edp_inputs]
     edp_lengths_list = [edp['length'] for edp in edp_inputs]
     input_dimension = len(rv_inputs)
-    output_dimension = sum(
-        edp_lengths_list
-    )  # TODO(ABS): Validate this against length of data
+    output_dimension = sum(edp_lengths_list)
+
+    # Move file from template to main working directory
+    src = input_arguments.path_to_template_directory / uq_inputs.calDataFile
+    dst = input_arguments.path_to_working_directory / uq_inputs.calDataFile
+    shutil.move(src, dst)
+
+    cal_data_file = dst
+    tmp_file = (
+        input_arguments.path_to_working_directory
+        / 'quoFEMTempCalibrationDataFile.cal'
+    )
+    num_experiments = 0
+
+    with cal_data_file.open('r') as f_in, tmp_file.open('w') as f_out:
+        headings = 'Exp_num interface '
+        for name, count in zip(edp_names_list, edp_lengths_list):
+            if count == 1:
+                headings += f'{name} '
+            else:
+                headings += ' '.join(f'{name}_{i+1}' for i in range(count)) + ' '
+        f_out.write(headings.strip() + '\n')
+
+        linenum = 0
+        for line in f_in:
+            linenum += 1
+            if not line.strip():
+                continue
+
+            cleaned_line = line.replace(',', ' ')
+            words = cleaned_line.split()
+
+            if len(words) != output_dimension:
+                msg = f"Line {linenum} in '{cal_data_file}' has {len(words)} entries, expected {output_dimension}."
+                raise RuntimeError(msg)
+
+            num_experiments += 1
+            new_line = f'{num_experiments} 1 ' + ' '.join(words)
+            f_out.write(new_line + '\n')
+
+    data = np.atleast_2d(
+        np.genfromtxt(
+            tmp_file, skip_header=1, usecols=np.arange(2, 2 + output_dimension)
+        )
+    )
 
     log_likelihood_file_name = uq_inputs.logLikelihoodFile
     log_likelihood_path = uq_inputs.logLikelihoodPath
@@ -1700,11 +1734,6 @@ def main(command_args=None):
     flusher = LoggerAutoFlusher(logger, interval=10)
     flusher.start()
 
-    # Create quoFEMTempCalibrationDataFile.cal
-    cal_data_file = (
-        args['path_to_working_directory'] / 'quoFEMTempCalibrationDataFile.cal'
-    )
-    cal_data_file.touch(exist_ok=True)  # TODO(ABS): Create this file properly
     try:
         # Validate input arguments
         input_arguments = InputArguments.model_validate(args)
