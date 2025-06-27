@@ -156,7 +156,7 @@ class SimCenterWorkflowDriver:  # noqa: D101
             returnStringList.append(f'The command to run the model was {ex.cmd}')
             returnStringList.append(f'The return code was {ex.returncode}')
             returnStringList.append(f'The following error occurred: \n{ex}')
-            raise ModelEvaluationError('\n\n'.join(returnStringList))  # noqa: B904
+            raise ModelEvaluationError('\n\n'.join(returnStringList))  from ex # noqa: B904
 
     def _read_outputs_from_results_file(self, workdir: str) -> NDArray:
         if glob.glob('results.out'):  # noqa: PTH207
