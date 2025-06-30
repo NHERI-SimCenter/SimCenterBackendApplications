@@ -3,6 +3,7 @@
 import os
 import subprocess
 import sys
+import json
 
 # from pathlib import Path
 
@@ -33,7 +34,76 @@ def main(args):  # noqa: D103
         #    exit(exit_code)
     else:
         # Run preprocessor
-        preprocessorCommand = f'"{scriptDir}/OpenSeesPreprocessor" {aimName} {samName} {evtName} {edpName} {simName} example.tcl > workflow.err 2>&1'  # noqa: N806
+
+        # Check if the SAM file is a FemoraInput type
+        with open(samName, 'r') as samFile:
+            samData = json.load(samFile)
+        subtype = samData.get("subType", None)
+        if subtype == "FemoraInput":
+            main_script = samData.get("mainScript", None)
+            if main_script is None:
+                print("Error: mainScript not found in SAM file.")
+                exit(1)
+
+            # remove the .* from the end of the main script
+            # it can have other . in the name but the last one is the extension
+            ext = "." + main_script.rsplit('.')[-1]
+            main_script_new = main_script[:-len(ext)]  + "_example.tcl"
+            samData["mainScript"] = main_script_new
+
+
+            shared_namespace = {}
+            random_variables = samData.get("randomVar", [])
+            command1 = "import femora as fm;\nimport os;\n"
+
+            # Loop through the random variables and create the commands
+            for rv in random_variables:
+                rv_name = rv.get("name", "")
+                rv_val  = rv.get("value", "")
+                # add the command to the shared namespace
+                command1 += f"{rv_name} = {rv_val};\n"
+                command1 += f"print('Random Variable({rv_name}) =', {rv_name});\n"
+                # command1 += f"print('Random Variable({rv_name}) =", rv_name, "');\n"
+            print("Command1:", command1)
+
+            with open(main_script, 'r') as main_script_file:
+                command2 = main_script_file.read()
+
+            command3 = f"""\nfm.export_to_tcl(filename="{main_script_new}")"""
+
+            command = command1 + command2 + command3
+            # try:
+            #     exec(command, shared_namespace)
+            #     print("exec() finished successfully.")
+            # except Exception as e:
+            #     print("exec() failed with error:", type(e).__name__, "-", e)
+            #     # append the error to the workflow.err file
+            #     with open("femora.err", 'w') as err_file:
+            #         err_file.write(f"Error: {type(e).__name__} - {e}\n")
+
+            original_stdout = sys.stdout
+            original_stderr = sys.stderr
+            import traceback
+            # Redirect both stdout and stderr to the same file
+            with open("femora.log", "w") as log_file:
+                sys.stdout = log_file
+                sys.stderr = log_file
+
+                try:
+                    exec(command, shared_namespace)
+                    print("Femora model created successfully.")
+                except Exception as e:
+                    print("Femora failed with error:", type(e).__name__, "-", e)
+                    traceback.print_exc()  # log full traceback to the same file
+
+            # Restore original stdout and stderr
+            sys.stdout = original_stdout
+            sys.stderr = original_stderr
+
+            with open(samName, 'w') as samFile:
+                json.dump(samData, samFile)
+        
+        preprocessorCommand = f'"{scriptDir}/OpenSeesPreprocessor" {aimName} {samName} {evtName} {edpName} {simName} example.tcl > workflow.err1 2>&1'  # noqa: N806
         exit_code = subprocess.Popen(preprocessorCommand, shell=True).wait()  # noqa: S602
         # exit_code = subprocess.run(preprocessorCommand, shell=True).returncode # Maybe better for compatibility - jb
         # if not exit_code==0:
