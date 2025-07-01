@@ -73,6 +73,8 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: D101
         self.R = 6371.0 * 1e3
         self.EDDY_VISCOCITY = 75.0
         self.AIR_DENSITY = 1.1
+        #self.EDDY_VISCOCITY = 100.0 # To reproduce the paper
+        #self.AIR_DENSITY = 1.2      # To reproduce the paper
         self.RA = 180.0 / np.pi
         self.EPS = np.spacing(1)
 
