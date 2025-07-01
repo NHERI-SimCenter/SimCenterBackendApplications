@@ -70,12 +70,12 @@ def is_xml_file(filename):  # noqa: D103
         return False
 
 
-def create_event(asset_file: str, event_grid_file: str, workflow_input: str):  # noqa: C901, D103, N803, RUF100
+def create_event(asset_file: str, event_grid_file: str, workflow_input: str, do_parallel: bool):  # noqa: C901, D103, N803, RUF100
 
     event_grid_file_path = os.path.dirname(event_grid_file)
-    
+
     if is_raster_file(event_grid_file):
-        create_raster_event(asset_file, event_grid_file, 0)
+        create_raster_event(asset_file, event_grid_file, 0, do_parallel)
     elif is_xml_file(event_grid_file):  # noqa: RET505
         # Here you would call a function to handle XML files
         # For now, we'll just raise a NotImplementedError
@@ -107,7 +107,7 @@ def create_event(asset_file: str, event_grid_file: str, workflow_input: str):  #
         # is this assumption correct on file paths?
         next_file = data['RegionalEvent']['multiple'][i]['eventFile']
         next_file_path = os.path.join(event_grid_file_path, next_file)
-        create_raster_event(asset_file, next_file_path, i+1)        
+        create_raster_event(asset_file, next_file_path, i+1, do_parallel)        
 
     
     
@@ -117,7 +117,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--assetFile')
     parser.add_argument('--filenameEVENTgrid')
-    parser.add_argument('--workflowInput')    
+    parser.add_argument('--workflowInput')
+    parser.add_argument('--doParallel', default='False')
+    parser.add_argument('-n', '--numP', default='8')
+    parser.add_argument('-m', '--mpiExec', default='mpiexec')    
     args = parser.parse_args()
 
-    create_event(args.assetFile, args.filenameEVENTgrid, args.workflowInput)
+    create_event(args.assetFile,
+                 args.filenameEVENTgrid,
+                 args.workflowInput,
+                 args.doParallel)

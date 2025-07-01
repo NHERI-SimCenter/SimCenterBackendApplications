@@ -81,11 +81,17 @@ int main(int argc, char **argv)
 
       // subsequent lines contain RV and value .. add to string vectors
       string rvName = "\"RV." + tokens.at(0) + "\"";  // add SimCenter delimiters begin="RV. & end="
+      string rvName2 = "RV." + tokens.at(0);  // add SimCenter delimiters begin="RV. & end="      
       string rvValue = tokens.at(1);
       original.push_back(rvName);
       replace.push_back(rvValue);
+      original.push_back(rvName2);
+      replace.push_back(rvValue);      
       originalLength.push_back(rvName.length());
       replacementLength.push_back(rvValue.length());
+      originalLength.push_back(rvName2.length());
+      replacementLength.push_back(rvValue.length());      
+      
       // std::cerr << rvName << " " << rvValue << "\n";
     }
 

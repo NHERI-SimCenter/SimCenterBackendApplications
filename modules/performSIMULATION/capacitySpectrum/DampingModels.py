@@ -147,12 +147,12 @@ class damping_model_hazus(damping_model_base):
             header=None,
         )
         self.kappa_col_map = {
-            'SC': {'S': 1, 'M': 2, 'L': 3},
-            'VC': {'S': 1, 'M': 2, 'L': 3},
-            'HC': {'S': 1, 'M': 2, 'L': 3},
-            'MC': {'S': 4, 'M': 5, 'L': 6},
-            'LC': {'S': 7, 'M': 8, 'L': 9},
-            'PC': {'S': 10, 'M': 11, 'L': 12},
+            'Severe-Code': {'S': 1, 'M': 2, 'L': 3},
+            'Very High-Code': {'S': 1, 'M': 2, 'L': 3},
+            'High-Code': {'S': 1, 'M': 2, 'L': 3},
+            'Moderate-Code': {'S': 4, 'M': 5, 'L': 6},
+            'Low-Code': {'S': 7, 'M': 8, 'L': 9},
+            'Pre-Code': {'S': 10, 'M': 11, 'L': 12},
         }
 
     def get_beta_elastic(self, HAZUS_bldg_type):  # noqa: N803
@@ -255,7 +255,7 @@ class HAZUS_cao_peterson_2006(damping_model_base):
             )
         except:  # noqa: E722
             sys.exit(
-                f'The base model {self.base_model} does not have a useful'
+                f'The base model {self.base_model} does not have a useful '
                 'get_kappa method.'
             )
         if Dp <= 0 or Ap <= 0:
