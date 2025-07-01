@@ -63,6 +63,9 @@ private:
     double dP;
     double dV;
     double dR;
+    Eigen::ArrayXd P;
+    Eigen::ArrayXd V;
+    Eigen::ArrayXd Rad;
 
     // methods
     double wrapTo360(double angle);

@@ -156,9 +156,9 @@ def simulate_storm_cpp(  # noqa: C901, D103
             ][1]
         # updating landfall properties
         scenario_info['Storm']['LandingAngle'] = scenario_data[0]['CycloneParam'][2]
-        scenario_info['Storm']['Pressure'] = scenario_data[0]['CycloneParam'][3]
-        scenario_info['Storm']['Speed'] = scenario_data[0]['CycloneParam'][4]
-        scenario_info['Storm']['Radius'] = scenario_data[0]['CycloneParam'][5]
+        scenario_info['Storm']['Pressure'] = scenario_data[0]['Pressure']
+        scenario_info['Storm']['Speed'] = scenario_data[0]['Speed']
+        scenario_info['Storm']['Radius'] = scenario_data[0]['Radius']
 
         config = {'Scenario': scenario_info, 'Event': event_info}
         abs_path_config = os.path.abspath(os.path.join(input_dir, 'SimuConfig.json'))  # noqa: PTH100, PTH118
@@ -191,27 +191,34 @@ def simulate_storm_cpp(  # noqa: C901, D103
             )
             df = pd.DataFrame.from_dict(  # noqa: PD901
                 {
-                    'Lat': scenario_data[0]['TrackSimu'],
+                    'Lat': scenario_data[0]['TrackSimu']['Latitude'],
+                    'Lon': scenario_data[0]['TrackSimu']['Longitude'],
                 }
             )
             df.to_csv(abs_path_latw, sep=',', header=False, index=False)
+
         if scenario_info['Generator'] == 'SimulationHist':
             df = pd.DataFrame.from_dict(  # noqa: PD901
                 {
-                    'Lat': scenario_data[0]['TrackSimu'],
+                    'Lat': scenario_data[0]['TrackSimu']['Latitude'],
+                    'Lon': scenario_data[0]['TrackSimu']['Longitude'],
                 }
             )
+
             df.to_csv(abs_path_latw, sep=',', header=False, index=False)
         # terrain file
         if 'Terrain' in scenario_info.keys():  # noqa: SIM118
+            file_name = os.path.basename(scenario_info['Terrain'])
+
             abs_path_terrain = os.path.abspath(  # noqa: PTH100
-                os.path.join(input_dir, scenario_info['Terrain'])  # noqa: PTH118
+                os.path.join(input_dir, file_name)  # noqa: PTH118
             )
         else:
             # default terrain z0 = 0.01 everywhere for the defined domain
             abs_path_terrain = os.path.abspath(  # noqa: PTH100
                 os.path.join(input_dir, 'DefaultTerrain.geojson')  # noqa: PTH118
             )
+
             dict_dt = {
                 'type': 'FeatureCollection',
                 'features': [
@@ -292,6 +299,7 @@ def simulate_storm_cpp(  # noqa: C901, D103
                 if os.path.exists(output_subdir):  # noqa: PTH110
                     shutil.rmtree(output_subdir)
                 os.makedirs(output_subdir)  # noqa: PTH103
+
                 args = [
                     windsimu_bin,
                     '--config',
@@ -310,19 +318,26 @@ def simulate_storm_cpp(  # noqa: C901, D103
                     output_subdir,
                     '--output',
                     output_subdir,
-                ]
+                ]                
+
 
                 pert_list.append(abs_path_pert)
                 args_list.append(args)
                 odir_list.append(output_subdir)
             # running
             print('ComputeIntensityMeaure: running analysis.')  # noqa: T201
+            print(args_list)  # noqa: T201
             procs_list = [
                 subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # noqa: S603
                 for cmd in args_list
             ]
             for proc in procs_list:
-                proc.communicate()
+                stdout, stderr = proc.communicate()  # Wait for the process to finish and get its output
+                if proc.returncode == 0:
+                    print(f"Output of process (PID {proc.pid}): {stdout.decode()}")
+                else:
+                    print(f"Error in process (PID {proc.pid}): {stderr.decode()}")
+                    
             # loading output
             print('ComputeIntensityMeaure: postprocessing simulation data.')  # noqa: T201
             for j in range(num_per_site):
@@ -352,9 +367,9 @@ def simulate_storm_cpp(  # noqa: C901, D103
                 )
                 station_res['PWS']['windspeed'] = df.values.tolist()  # noqa: PD011
                 res.append(station_res)
-                shutil.rmtree(odir_list[j])
+                #shutil.rmtree(odir_list[j])
         # house-keeping
-        os.remove(abs_path_config)  # noqa: PTH107
+        #os.remove(abs_path_config)  # noqa: PTH107
     else:
         print(  # noqa: T201
             'ComputeIntensityMeasure: currently only supporting LinearAnalytical model'
@@ -419,13 +434,13 @@ def convert_wind_speed(event_info, simu_res):  # noqa: D103
             zg_t = 274.32
         # conversion
         pws_raw = interp_wind_by_height(pws_raw, measure_height, reference_height)
-        print(np.max(pws_raw))  # noqa: T201
+        # print(np.max(pws_raw))  # noqa: T201
         # computing gradient-height wind speed
         pws_tmp = pws_raw * (zg / reference_height) ** (1.0 / alpha)
         # converting exposure
         pws_tmp = pws_tmp * (reference_height / zg_t) ** (1.0 / alpha_t)
         pws = pws_tmp * gust_factor_ESDU(gust_duration_simu, gust_duration)
-        print(np.max(pws))  # noqa: T201
+        # print(np.max(pws))  # noqa: T201
         # appending to pws_mr
         pws_mr.append(pws)
 
