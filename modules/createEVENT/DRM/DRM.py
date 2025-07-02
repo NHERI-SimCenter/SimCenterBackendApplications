@@ -47,7 +47,7 @@ def main(args):
         if event_data["Events"][i]["system"] == "predefined-designsafe":
             path = event_data["Events"][i]["filePath"]
             path = path.split("/")
-            path = "../"+ path[-1]
+            path = "../../"+ path[-1]
             event_data["Events"][i]["filePath"] = path
             
         
