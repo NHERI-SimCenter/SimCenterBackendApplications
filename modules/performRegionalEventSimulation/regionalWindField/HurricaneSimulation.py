@@ -110,6 +110,7 @@ if __name__ == '__main__':
     if scenario_info['Type'] == 'Wind':
         if 'Simulation' in scenario_info['Generator']:
             if scenario_info['ModelType'] == 'LinearAnalyticalPy':
+                # TODO: sy - the below python code need to be updated because now scenarios['track_simu'] contains both latitude and longitude. Only c++ code updated for now
                 # simulating storm
                 storm_simu = simulate_storm(  # noqa: F405
                     scenarios, event_info, 'LinearAnalytical'

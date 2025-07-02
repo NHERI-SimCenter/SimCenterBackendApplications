@@ -42,7 +42,6 @@ from fractions import Fraction
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 
 # Check if taichi is installed before importing taichi
 try:
@@ -62,7 +61,7 @@ except ImportError:
 
 class FloorForces:  # noqa: D101
     def __init__(self, recorderID=-1):  # noqa: N803
-        if recorderID < 0:
+        if recorderID < 0 or recorderID is None:  # noqa: E701
             print(  # noqa: T201
                 'No recorder ID, or a negative ID, provided, defaulting to 0 for all forces.'
             )
@@ -74,7 +73,7 @@ class FloorForces:  # noqa: D101
             self.Y = []
             self.Z = []
             # prepend zeros to the list to account for the timeSeries transient analysis req in OpenSees
-            prependZero = False  # noqa: N806
+            prependZero = True  # noqa: N806
             if prependZero:
                 self.X.append(0.0)
                 self.Y.append(0.0)
@@ -82,7 +81,6 @@ class FloorForces:  # noqa: D101
 
             # Read in forces.[out or evt] file and add to EVENT.json
             # now using intermediary forces.evt for output of preceding Python calcs,
-            # prevents confusion with forces.out made by FEM tab
             if os.path.exists('forces.evt'):  # noqa: PTH110
                 with open('forces.evt') as file:  # noqa: PTH123
                     print('Reading forces from forces.evt to EVENT.json')  # noqa: T201
@@ -94,17 +92,12 @@ class FloorForces:  # noqa: D101
                         if not strip_line:
                             print('Empty line found in forces.evt... skip')  # noqa: T201
                             continue
-                        # Assume there is no header in the file
-                        # Assume recorder IDs are sequential, starting from 1
-                        if (j + 1) == recorderID:
-                            # Strip away leading / trailing white-space,
-                            # Delimit by regex to capture " ", \s, "  ", tabs, etc.
+                        # Assume recorder IDs are sequential
+                        # Often, the first ID (0) is set to 0.0 for all time-steps, as it usually maps to a rigid node at the structures base
+                        if (j) == recorderID:
+                            # Strip away leading / trailing white-space, Delimit by regex to capture " ", \s, "  ", tabs, etc.
                             # Each value should be a number, rep. the force on recorder j at a time-step i
-                            # clean_line = re.split() # default is '\s+', which is any whitespace
                             clean_line = re.split(r';\s|;|,\s|,|\s+', strip_line)
-                            # clean_line = re.split(r';|,\s', strip_line)
-                            # clean_line = re.split("\s+", strip_line)
-
                             for k in range(len(clean_line)):
                                 self.X.append(float(clean_line[k]))
                                 self.Y.append(0.0)
@@ -122,23 +115,18 @@ class FloorForces:  # noqa: D101
                     self.Y = [0.0]
                     self.Z = [0.0]
                 else:
-                    # for a timeSeries with N elements, we append an element at N+1 to represent the max force of the series
-                    self.X.append(max(self.X))
-                    self.Y.append(max(self.Y))
-                    self.Z.append(max(self.Z))
-
                     print(  # noqa: T201
-                        'Length: ',
+                        'Force time-series length: ',
                         len(self.X),
-                        ', Max force: ',
+                        ', Max force (X,Y,Z): ',
                         max(self.X),
                         max(self.Y),
                         max(self.Z),
-                        ', Min force: ',
+                        ', Min force (X,Y,Z): ',
                         min(self.X),
                         min(self.Y),
                         min(self.Z),
-                        ', Last force: ',
+                        ', Last force (X,Y,Z): ',
                         self.X[-1],
                         self.Y[-1],
                         self.Z[-1],
@@ -173,8 +161,6 @@ def addFloorForceToEvent(  # noqa: N802
     Add force (one component) time series and pattern in the event file
     Use of Wind is just a placeholder for now, since its more developed than Hydro
     """  # noqa: D205, D400
-    seriesName = '1'  # noqa: N806
-    patternName = '1'  # noqa: N806
     seriesName = 'WindForceSeries_' + str(floor) + direction  # noqa: N806
     patternName = 'WindForcePattern_' + str(floor) + direction  # noqa: N806
 
@@ -182,7 +168,8 @@ def addFloorForceToEvent(  # noqa: N802
         'name': patternName,
         'timeSeries': seriesName,
         'numSteps': len(force.X),
-        'dT': 0.01,
+        'dT': dt,
+        'dt': dt,
         'type': 'WindFloorLoad',
         'floor': str(floor),
         'story': str(floor),
@@ -196,8 +183,8 @@ def addFloorForceToEvent(  # noqa: N802
         'dof': directionToDof(direction),
         'floor': str(floor),
         'story': str(floor),
-        'dT': 0.01,
-        'dt': 0.01,
+        'dT': dt,
+        'dt': dt,
         'numSteps': len(force.X),
         'data': force.X,
     }
@@ -242,8 +229,8 @@ def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):  # noqa: N802
         'timeSeries': timeSeriesArray,
         'pressure': pressure,
         'numSteps': len(forces[0].X),
-        'dT': 1.0,
-        'dt': 1.0,
+        'dT': dt,
+        'dt': dt,
         'units': {'force': 'Newton', 'length': 'Meter', 'time': 'Sec'},
     }
 
@@ -265,24 +252,54 @@ def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
     return int(bim['GeneralInformation']['stories'])
 
 
-def GetCelerisScript(BIMFilePath):  # noqa: N802, N803, D103
-    filePath = BIMFilePath  # noqa: N806
-    with open(filePath, encoding='utf-8') as file:  # noqa: PTH123
-        evt = json.load(file)
-    file.close  # noqa: B018
-
-    fileNameKey = 'simulationScript'  # noqa: N806
-    filePathKey = fileNameKey + 'Path'  # noqa: N806
-
-    for event in evt['Events']:
-        fileName = event[fileNameKey]  # noqa: N806
-        filePath = event[filePathKey]  # noqa: N806
-        return os.path.join(filePath, fileName)  # noqa: PTH118
-
+def GetCelerisScript(defaultScriptName = 'setrun.py'):  # noqa: N802, N803, D103
     defaultScriptPath = f'{os.path.realpath(os.path.dirname(__file__))}'  # noqa: N806, PTH120
-    defaultScriptName = 'setrun.py'  # noqa: N806
-    return defaultScriptPath + defaultScriptName
+    defaultScriptPath = os.path.join(defaultScriptPath, defaultScriptName)  # noqa: PTH118
+    return defaultScriptPath  # noqa: PTH118
 
+
+def dt(event=None):  # noqa: D102
+    """
+    Computes the time step based on the Courant criterion:
+        dt = Courant * dx / sqrt(g * maxdepth)
+
+    Returns:
+        float: The computed time step.
+    """
+    if 'Courant_num' in event['config']:
+        # Check is string
+        if isinstance(event['config']['Courant_num'], str):
+            Courant = 0.1
+        else:
+            Courant = event['config']['Courant_num']
+    else:
+        Courant = 0.1
+        
+    if 'base_depth' in event['config']:
+        # Check is string
+        if isinstance(event['config']['base_depth'], str):
+            maxdepth = 1.0
+        else:
+            maxdepth = event['config']['base_depth']
+    elif 'seaLevel' in event['config']:
+        # Check is string
+        if isinstance(event['config']['seaLevel'], str):
+            maxdepth = 1.0
+        else:
+            maxdepth = event['config']['seaLevel']
+    else:
+        maxdepth = 1.0
+    
+    if (maxdepth <= 0.0):
+        print('Warning: maxdepth is less than or equal to 0.0, setting it to 1.0. This will affect the time-step and simulation stability')  # noqa: T201
+        maxdepth = 1.0
+    dx = abs(event['config']['dx']) if 'dx' in event['config'] else 1.0
+    gravity = abs(event['config']['g']) if 'g' in event['config'] else 9.80665  # Acceleration due to gravity in m/s^2
+    dt = Courant * dx / np.sqrt(gravity * maxdepth)
+    if dt <= 0.0:
+        print('Warning: Computed dt is less than or equal to 0.0, setting it to 1.0e-3')  # noqa: T201
+        dt = 1.0e-3
+    return dt  # noqa: N806
 
 def main():
     """
@@ -314,25 +331,21 @@ if __name__ == '__main__':
         default='EVENT.json',
     )
     parser.add_argument('--getRV', help='getRV', required=False, action='store_true')
-    # parser.add_argument('--filenameSAM', default=None)
-
+    
     # parsing arguments
     arguments, unknowns = parser.parse_known_args()
 
-    # import subprocess
-
     # Get json of filenameAIM
-    scriptName = GetCelerisScript(arguments.filenameAIM)  # noqa: N816
-
     filePath = arguments.filenameAIM  # noqa: N816
     with open(filePath, encoding='utf-8') as file:  # noqa: PTH123
         evt = json.load(file)
     file.close  # noqa: B018
 
+    scriptName = GetCelerisScript()  # noqa: N816
+    caseDirectory = './examples/CrescentCity'  # noqa: N816
     configFilename = 'config.json'  # noqa: N816
     bathymetryFilename = 'bathymetry.txt'  # noqa: N816
     waveFilename = 'wave.txt'  # noqa: N816
-    caseDirectory = './examples/CrescentCity'  # noqa: N816
 
     for event in evt['Events']:
         # Redesign the input structure in backend CelerisAi later.
@@ -341,6 +354,18 @@ if __name__ == '__main__':
         configFilename = event['configFile']  # noqa: N816
         bathymetryFilename = event['bathymetryFile']  # noqa: N816
         waveFilename = event['waveFile']  # noqa: N816
+        # Determine dt for the force time series
+        # Try to compute using Courant_num (CFL), otherwise look for dt in the config
+        if 'Courant_num' in event['config']:
+            print('Courant_num found in event file. Compute dt.')  # noqa: T201
+            dt = dt(event=event)
+        else:
+            print('Courant_num not found in event file. Use provided dt')  # noqa: T201
+            if 'dt' in event['config']:
+                dt = event['config']['dt']  # noqa: N816
+            else:
+                print('dt not found in event file. Use default dt')  # noqa: T201
+                dt = 1e-3  # noqa: N806
 
     print('Running Celeris with script:', scriptName)  # noqa: T201
     print('Running Celeris with directory:', caseDirectory)  # noqa: T201
@@ -348,31 +373,14 @@ if __name__ == '__main__':
     print('Running Celeris with bathymetry:', bathymetryFilename)  # noqa: T201
     print('Running Celeris with waves:', waveFilename)  # noqa: T201
 
+    floorsCount = 1  # noqa: N816
+
     if arguments.getRV == True:  # noqa: E712
         print('RVs requested')  # noqa: T201
         # Read the number of floors
         floorsCount = GetFloorsCount(arguments.filenameAIM)  # noqa: N816
         filenameEVENT = arguments.filenameEVENT  # noqa: N816
-
-        # result = subprocess.run(  # noqa: S603
-        #     [  # noqa: S607
-        #         sys.executable,
-        #         scriptName,
-        #         '-d',
-        #         caseDirectory,
-        #         '-f',
-        #         configFilename,
-        #         '-b',
-        #         bathymetryFilename,
-        #         '-w',
-        #         waveFilename,
-        #         # f'{os.path.realpath(os.path.dirname(__file__))}'
-        #         # + '/taichi_script.py',
-        #     ],
-        #     stdout=subprocess.PIPE,
-        #     check=False,
-        # )
-
+        
         forces = []
         for i in range(floorsCount):
             forces.append(FloorForces(recorderID=(i + 1)))  # noqa: PERF401
@@ -405,18 +413,14 @@ if __name__ == '__main__':
                 bathymetryFilename,
                 '-w',
                 waveFilename,
-                # f'{os.path.realpath(os.path.dirname(__file__))}'
-                # + '/taichi_script.py',
             ],
             stdout=subprocess.PIPE,
             check=False,
         )
 
         forces = []
-        floorsCount = 1  # noqa: N816
         for i in range(floorsCount):
             forces.append(FloorForces(recorderID=(i + 1)))
 
         # write the event file
         writeEVENT(forces, filenameEVENT, floorsCount=floorsCount)
-        # writeEVENT(forces, arguments.filenameEVENT)

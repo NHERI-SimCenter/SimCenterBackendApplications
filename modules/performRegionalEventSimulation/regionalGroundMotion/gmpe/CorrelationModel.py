@@ -553,6 +553,97 @@ def load_du_ning_correlation_2021(datapath):
     )
     return DN_model, DN_pca, DN_var  # noqa: DOC201, RUF100
 
+def du_ning_correlation_2021_simple(stations, im_name_list, num_simu, stn_dist):
+    num_pc = 7
+    periods_ims = []
+    for cur_im in im_name_list:
+        if cur_im.startswith('SA'):
+            periods_ims.append(float(cur_im[3:-1]))
+        else:
+            periods_ims.append(cur_im)
+    # Loading factors
+    DN_model, DN_pca, DN_var = load_du_ning_correlation_2021(  # noqa: N806
+        os.path.dirname(__file__) + '/data/'  # noqa: PTH120
+    )
+    c1 = DN_model.loc[DN_model['Type'] == 'c1']
+    c1 = c1[c1.keys()[1:]]
+    a1 = DN_model.loc[DN_model['Type'] == 'a1']
+    a1 = a1[a1.keys()[1:]]
+    b1 = DN_model.loc[DN_model['Type'] == 'b1']
+    b1 = b1[b1.keys()[1:]]
+    a2 = DN_model.loc[DN_model['Type'] == 'a2']
+    a2 = a2[a2.keys()[1:]]
+    b2 = DN_model.loc[DN_model['Type'] == 'b2']
+    b2 = b2[b2.keys()[1:]]
+    # model_periods is pseudo periods and PGA, PGV, Ia, CAV, DS575H, DS595H
+    model_periods = DN_pca['Period&IM']
+    model_ims_list = ['PGA', 'PGV', 'Ia', 'CAV', 'DS575H', 'DS595H']
+    ims_map = {'PGA': 11, 'PGV': 12, 'Ia': 13, 'CAV': 14, 'DS575H': 15, 'DS595H': 16}
+    # convert periods to float
+    model_periods = [float(x) for x in model_periods if x not in model_ims_list] + [
+        x for x in model_periods if x in model_ims_list
+    ]
+    model_coef = DN_pca.iloc[:, 1 : num_pc + 1]
+    # Computing distance matrix
+    num_stations = len(stations)
+    # Scaling variance if less than 23 principal components are used
+    c1 = c1 / DN_var.iloc[0, num_pc - 1]
+    a1 = a1 / DN_var.iloc[0, num_pc - 1]
+    a2 = a2 / DN_var.iloc[0, num_pc - 1]
+    ## The last principal component is nugget effect with c1 = 0 (see Eq 20 and
+    # table 4. This leads to zero covariance matrix and hence no need to simulate)
+    residuals_pca = np.zeros((num_stations, num_simu, num_pc))
+    # print('du_ning_correlation_2021: set up before looping num_pc {0} sec'.format(time.time() - t_start))
+    for i in range(num_pc):
+        if a1.iloc[0, i] == 0:
+            # nug
+            cov_matrix = np.eye(num_stations) * c1.iloc[0, i]
+        else:
+            # iso nest
+            cov_matrix = (
+                c1.iloc[0, i] * (stn_dist == 0)
+                + a1.iloc[0, i] * np.exp(-3.0 * stn_dist / b1.iloc[0, i])
+                + a2.iloc[0, i] * np.exp(-3.0 * stn_dist / b2.iloc[0, i])
+            )
+        # residuals_pca[:, :, i] = np.random.multivariate_normal(
+        #     mu, cov_matrix, num_simu
+        # ).T
+        # Replace np multivariate_normal with cholesky and standard normal
+        standard_normal = np.random.standard_normal((num_simu, num_stations))
+        # cov_matrix[cov_matrix < 0.05] = 0
+        chole_lower = scipy.linalg.cholesky(cov_matrix, lower=True)
+        corr_samples = chole_lower @ standard_normal.T
+        
+        residuals_pca[:, :, i] = corr_samples
+
+    # Interpolating model_coef by periods
+    pseudo_periods = [x for x in model_periods if type(x) == float] + [  # noqa: E721
+        ims_map[x]
+        for x in model_periods
+        if type(x) == str  # noqa: E721
+    ]
+    interp_fun = interp1d(pseudo_periods, model_coef, axis=0)
+    model_Tmax = 10.0  # noqa: N806
+    simu_periods = [min(i, model_Tmax) for i in periods_ims if type(i) == float] + [  # noqa: E721
+        ims_map[i]
+        for i in periods_ims
+        if type(i) == str  # noqa: E721
+    ]
+    if (len(simu_periods) == 1) and (simu_periods[0] == 0):
+        # for PGA only (using 0.01 sec as the approximate)
+        simu_coef = model_coef.iloc[0, :]
+    else:
+        simu_periods = [0.01 if x == 0 else x for x in simu_periods]
+        simu_coef = interp_fun(simu_periods)
+    # Simulating residuals
+    num_periods = len(simu_periods)
+    residuals = np.empty([num_stations, num_periods, num_simu])
+    for i in range(num_simu):
+        residuals[:, :, i] = np.reshape(
+            np.matmul(residuals_pca[:, i, :], simu_coef.T),
+            residuals[:, :, i].shape,
+        )
+    return residuals  # noqa: DOC201, RUF100
 
 def du_ning_correlation_2021(stations, im_name_list, num_simu, stn_dist, num_pc=23):
     """Simulating intra-event residuals
