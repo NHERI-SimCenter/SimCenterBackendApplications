@@ -38,7 +38,10 @@ def main(args):  # noqa: D103
         # Check if the SAM file is a FemoraInput type
         with open(samName, 'r') as samFile:
             samData = json.load(samFile)
+        with open(aimName, 'r') as aimFile:
+            aimData = json.load(aimFile)
         subtype = samData.get("subType", None)
+        runtype = aimData.get("runType", None)
         if subtype == "FemoraInput":
             main_script = samData.get("mainScript", None)
             if main_script is None:
@@ -110,8 +113,23 @@ def main(args):  # noqa: D103
         #    exit(exit_code)
 
         # Run OpenSees
+        if subtype == "FemoraInput":
+            coresPerModel = samData.get("coresPerModel", 1)
+            # Run OpenSees in parallel using mpirun
+            if runtype == "runningLocal":
+                openSeesCommand = f'mpirun -np {coresPerModel} OpenSeesMP example.tcl >> workflow.err 2>&1'
+            elif runtype == "runningRemote":
+                # For remote runs, we assume OpenSeesMP is available on the remote machine
+                openSeesCommand = f'ibrun -n {coresPerModel} OpenSeesMP example.tcl >> workflow.err 2>&1'
+            else:
+                print(f"Error: Unsupported runType '{runtype}' in AIM file.")
+                exit(1)
+        else:
+            openSeesCommand = 'OpenSees example.tcl >> workflow.err 2>&1'
+
+
         exit_code = subprocess.Popen(  # noqa: S602
-            'OpenSees example.tcl  >> workflow.err 2>&1',  # noqa: S607
+            openSeesCommand,  # noqa: S607
             shell=True,
         ).wait()
         # Maybe better for compatibility, need to doublecheck - jb
