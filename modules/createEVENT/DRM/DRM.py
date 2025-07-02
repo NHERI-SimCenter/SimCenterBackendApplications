@@ -7,12 +7,13 @@ def main(args):
     evtName = args[4]
 
     # nothing to do with the random variables for now
-    if "--getRV" in args:
-        pass
 
     with open(srtName, encoding='utf-8') as json_file: 
         data = json.load(json_file)
 
+
+    if "--getRV" in args:
+        preprocessing = True
 
 
         
@@ -43,6 +44,12 @@ def main(args):
         event_data["Events"][i]["index"] = i
         event_data["Events"][i]["type"] = "DRM"
         event_data["Events"][i]["system"] = data["Events"][0]["system"]
+        if event_data["Events"][i]["system"] == "predefined-designsafe":
+            path = event_data["Events"][i]["filePath"]
+            path = path.split("/")
+            path = "../"+ path[-1]
+            event_data["Events"][i]["filePath"] = path
+            
         
 
 
