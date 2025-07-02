@@ -1052,7 +1052,8 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
 
 
       //  print out the DRM event
-      s << "set maxPatternTag [getMaxPatternTag]\n";
+      s << "#set maxPatternTag [getMaxPatternTag]\n";
+      s << "set maxPatternTag 1000;\n";
       s << "set patternTag [expr $maxPatternTag + 1]\n";
       //  pattern H5DRM $patternTag "/path/to/H5DRM/dataset" $factor $crd_scale $distance_tolerance $do_coordinate_transformation $T00 $T01 $T02 $T10 $T11 $T12 $T20 $T21 $T22 $x00 $x01 $x02
       s << "pattern H5DRM $patternTag \"" << eventPath << "\"" << " " << factor << " "
