@@ -106,7 +106,7 @@ def main(args):  # noqa: D103
             with open(samName, 'w') as samFile:
                 json.dump(samData, samFile)
         
-        preprocessorCommand = f'"{scriptDir}/OpenSeesPreprocessor" {aimName} {samName} {evtName} {edpName} {simName} example.tcl > workflow.err1 2>&1'  # noqa: N806
+        preprocessorCommand = f'"{scriptDir}/OpenSeesPreprocessor" {aimName} {samName} {evtName} {edpName} {simName} example.tcl > workflow.err 2>&1'  # noqa: N806
         exit_code = subprocess.Popen(preprocessorCommand, shell=True).wait()  # noqa: S602
         # exit_code = subprocess.run(preprocessorCommand, shell=True).returncode # Maybe better for compatibility - jb
         # if not exit_code==0:
@@ -144,6 +144,31 @@ def main(args):  # noqa: D103
         #            if "error" in line.lower():
         #                exit_code = -1
         #                exit(exit_code)
+
+        postprocess_commands = []
+
+        with open(edpName, 'r') as edpFile:
+            edpData = json.load(edpFile)
+            engdemand = edpData.get("EngineeringDemandParameters", [])
+            for edp in engdemand:
+                postprocessScript = edp.get("postprocessScript")
+                if postprocessScript and postprocessScript.endswith(".py"):
+                    args = " ".join(arg.get("type", "") for arg in edp.get("responses", []))
+                    command = f'python {postprocessScript} {args} >> workflow.err 2>&1'
+                    postprocess_commands.append(command)
+        if exit_code == 0:
+            for postprocess in postprocess_commands:
+                subprocess.Popen(
+                    postprocess,
+                    shell=True
+                ).wait()
+
+        print("Postprocess commands:")
+        print(postprocess_commands)
+
+
+
+
 
         # Run postprocessor
         postprocessorCommand = f'"{scriptDir}/OpenSeesPostprocessor" {aimName} {samName} {evtName} {edpName}  >> workflow.err 2>&1'  # noqa: N806
