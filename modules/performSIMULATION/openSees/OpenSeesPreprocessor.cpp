@@ -978,7 +978,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	      edpList.end(); ++itEDP) {
 	  s << " " << *itEDP;
 	}
-	s <<  "]\n puts $output\n }\nset pid [getPID]\nif {$pid==0} {call_python} \n";
+	s <<  "]\n puts $output\n }\nset pid [getPID]\nif {$pid==0} {call_python} \nbarrier\n";
 
       } else if(strstr(postprocessingScript, ".tcl") != NULL) {
 	  
