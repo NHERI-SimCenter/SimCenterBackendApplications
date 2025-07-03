@@ -205,6 +205,7 @@ def get_scaled_proposal_covariance(
 
     # Step 2: Ensure symmetry
     cov = 0.5 * (cov + cov.T)
+    cov = np.atleast_2d(cov)
 
     # Step 3: Try eigendecomposition with clipping
     try:

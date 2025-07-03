@@ -189,8 +189,18 @@ class GP_AB_Algorithm:
             self.num_recalibration_experiments = 0
             self.recalibration_ratio = recalibration_ratio
 
-            self.sample_transformation_function = sample_transformation_function
-            self.model_evaluation_function = model_evaluation_function
+            self.sample_transformation_function = uq_utilities.Ensure2DOutputShape(
+                sample_transformation_function,
+                expected_dim=self.input_dimension,
+                label='sample_transformation_function',
+            )
+
+            self.model_evaluation_function = uq_utilities.Ensure2DOutputShape(
+                model_evaluation_function,
+                expected_dim=self.output_dimension,
+                label='model_evaluation_function',
+            )
+
             self.run_type = run_type
             self.parallel_pool = uq_utilities.get_parallel_pool_instance(run_type)
             self.parallel_evaluation_function = self.parallel_pool.pool.starmap  # type: ignore
@@ -267,7 +277,14 @@ class GP_AB_Algorithm:
         outputs = np.atleast_2d(
             list(self.parallel_evaluation_function(func, iterable))
         )
-        return outputs  # noqa: RET504
+        # Fix scalar outputs → (n, 1)
+        if outputs.ndim == 1:
+            outputs = outputs.reshape(-1, 1)
+
+        # Fix shape (n, 1, d) → (n, d)
+        elif outputs.ndim == 3 and outputs.shape[1] == 1:  # noqa: PLR2004
+            outputs = np.squeeze(outputs, axis=1)
+        return outputs
 
     def _perform_space_filling_doe(self, n_samples):
         """
@@ -302,7 +319,7 @@ class GP_AB_Algorithm:
             self._perform_space_filling_doe(n_samples)
         )
         self.loginfo(
-            f'Generated {inputs.shape[0]} samples for initial training set.'
+            f'Generated {inputs.shape[0]} samples for initial training set. Evaluating the model at these samples.'
         )
         outputs = self._evaluate_in_parallel(self.model_evaluation_function, inputs)
         return inputs, outputs

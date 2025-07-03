@@ -514,3 +514,55 @@ def _get_tabular_results_file_name_for_dataset(
 def _write_to_tabular_results_file(tabular_results_file, string_to_write):
     with tabular_results_file.open('a') as f:
         f.write(string_to_write)
+
+
+class Ensure2DOutputShape:
+    def __init__(self, func, expected_dim, label="wrapped_function"):
+        self.func = func
+        self.expected_dim = expected_dim
+        self.label = label
+        self._last_input_shape = None
+        self._last_output_shape = None
+
+    def __call__(self, *args):
+        result = self.func(*args)
+        result = np.asarray(result)
+
+        # Handle scalar return (e.g., float) → reshape to (1, 1)
+        if result.ndim == 0:
+            result = result.reshape(1, 1)
+
+        # Treating the last argument of the function call as the sample
+        x = np.asarray(args[-1])
+        n_samples = x.shape[0] if x.ndim > 1 else 1
+
+        input_shape = x.shape
+        output_shape = result.shape
+        if input_shape == self._last_input_shape and output_shape == self._last_output_shape:
+            return result
+
+        if result.ndim == 1:
+            if n_samples == 1 and result.shape[0] == self.expected_dim:
+                result = result.reshape(1, self.expected_dim)
+            elif self.expected_dim == 1 and result.shape[0] == n_samples:
+                result = result.reshape(n_samples, 1)
+            else:
+                raise ValueError(
+                    f"[{self.label}] 1D output shape {result.shape} is incompatible with input {x.shape}. "
+                    f"Expected ({n_samples}, {self.expected_dim})"
+                )
+
+        elif result.ndim == 2:
+            if result.shape != (n_samples, self.expected_dim):
+                raise ValueError(
+                    f"[{self.label}] 2D output shape {result.shape} does not match expected ({n_samples}, {self.expected_dim})"
+                )
+
+        else:
+            raise ValueError(
+                f"[{self.label}] Output has {result.ndim} dimensions; expected 1D or 2D"
+            )
+
+        self._last_input_shape = input_shape
+        self._last_output_shape = result.shape
+        return result
