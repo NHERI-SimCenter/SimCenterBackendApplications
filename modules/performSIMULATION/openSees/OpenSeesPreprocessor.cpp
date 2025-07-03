@@ -978,7 +978,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	      edpList.end(); ++itEDP) {
 	  s << " " << *itEDP;
 	}
-	s <<  "]\n puts $output\n }"
+	s <<  "]\n puts $output\n }";
   // remove calling python inside tcl since it broke the mpi
   // "\nset pid [getPID]\nif {$pid==0} {call_python} \nbarrier\n";
 
