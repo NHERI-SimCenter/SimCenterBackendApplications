@@ -31,4 +31,5 @@ add_subdirectory(stochasticWave)
 add_subdirectory(TaichiEvent)
 add_subdirectory(Celeris)
 add_subdirectory(shakeMapEvent)
+add_subdirectory(DRM)
 

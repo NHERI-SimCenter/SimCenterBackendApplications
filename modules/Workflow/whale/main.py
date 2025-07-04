@@ -987,17 +987,30 @@ class Workflow:
         log_msg('  OK', prepend_timestamp=False)
 
         # store the specified units (if available)
-        if 'units' in input_data:
+        if 'units' in input_data:   # TODO check for a bug. I think it should be input_data["GeneralInformation"]
             self.units = input_data['units']
 
             log_msg('The following units were specified: ', prepend_timestamp=False)
             for key, unit in self.units.items():
                 log_msg(f'  {key}: {unit}', prepend_timestamp=False)
         else:
-            self.units = None
-            log_msg(
-                'No units specified; using Standard units.', prepend_timestamp=False
-            )
+            # check  the general info for units
+            general_info = input_data.get('GeneralInformation', None)
+            if general_info:
+                self.units = general_info.get('units', None)
+                if self.units :
+                    log_msg(
+                        'The following units were specified in the GeneralInformation section: ',  
+                        prepend_timestamp=False
+                    )
+                    for key, unit in self.units.items():
+                        log_msg(f'  {key}: {unit}', prepend_timestamp=False)
+            else:
+                # if no units were specified, use the standard units
+                self.units = None
+                log_msg(
+                    'No units specified; using Standard units.', prepend_timestamp=False
+                )
 
         # store the specified output types
         self.output_types = input_data.get('outputs', None)
