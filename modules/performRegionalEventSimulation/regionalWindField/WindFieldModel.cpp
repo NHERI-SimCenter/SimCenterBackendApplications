@@ -48,6 +48,7 @@
 #include <iostream>
 #include <fstream>
 #include <math.h>
+#include <cmath>  // Needed for round()
 #include <algorithm>
 #include <complex>
 #include <iomanip>
@@ -72,32 +73,58 @@ int WindFieldModel::ConfigSimu(std::string config_file, std::string stn_file,
     json_t *mesh = json_object_get(scen, "Mesh");
     json_t *evnt = json_object_get(config_doc, "Event");
 
-    // initializing modeling parameters
-    this->param = Eigen::ArrayXd::Zero(6);
     this->delta_p = Eigen::ArrayXd::Zero(9);
     this->del_par = Eigen::ArrayXd::Zero(3);
     this->dP = 0.0;
     this->dV = 0.0;
     this->dR = 0.0;
 
+    json_t *pr_vals = json_object_get(strm, "Pressure");
+    json_t *rd_vals = json_object_get(strm, "Radius");
+    json_t *sp_vals = json_object_get(strm, "Speed");
+
+    int num_P = int(json_array_size(pr_vals));
+    int num_V = int(json_array_size(sp_vals));
+    int num_R = int(json_array_size(rd_vals));
+
+    // initializing modeling parameters
+    //this->param = Eigen::ArrayXd::Zero(6);
+    this->P = Eigen::ArrayXd::Zero(num_P);
+    this->V = Eigen::ArrayXd::Zero(num_V);
+    this->Rad = Eigen::ArrayXd::Zero(num_R);
+
     // landfall data
     json_t *tmpObj = json_object_get(strm, "Landfall");
-    json_t *tmpLat = json_object_get(tmpObj, "Latitude");
-    json_t *tmpLon = json_object_get(tmpObj, "Longitude");
-    this->param(0) = json_number_value(tmpLat);
-    this->param(1) = json_number_value(tmpLon);
+    // json_t *tmpLat = json_object_get(tmpObj, "Latitude"); // currently landfall information is not used.... later it may be used as input of filling model
+    // json_t *tmpLon = json_object_get(tmpObj, "Longitude");
+    // json_t *tmpAng = json_object_get(strm, "LandingAngle"); // not used
+
+    //this->param(0) = json_number_value(tmpLat);
+    //this->param(1) = json_number_value(tmpLon);
     // landing angle
-    json_t *tmpAng = json_object_get(strm, "LandingAngle");
-    this->param(2) = json_number_value(tmpAng);
+    // this->param(2) = json_number_value(tmpAng);
     // central pressure difference
-    json_t *tmpPrs = json_object_get(strm, "Pressure");
-    this->param(3) = json_number_value(tmpPrs);
+    //json_t *tmpPrs = json_object_get(strm, "Pressure");
+    //this->param(3) = json_number_value(tmpPrs);
     // forward translation speed
-    json_t *tmpSpd = json_object_get(strm, "Speed");
-    this->param(4) = json_number_value(tmpSpd);
+    //json_t *tmpSpd = json_object_get(strm, "Speed");
+    //this->param(4) = json_number_value(tmpSpd);
     // radius of the maximum wind
-    json_t *tmpRds = json_object_get(strm, "Radius");
-    this->param(5) = json_number_value(tmpRds);
+    //json_t *tmpRds = json_object_get(strm, "Radius");
+    // this->param(5) = json_number_value(tmpRds);
+
+    for (int i = 0; i < num_P; i++){
+        this->P(i)  = json_number_value(json_array_get(pr_vals, i));
+    }
+
+    for (int i = 0; i < num_V; i++){
+        this->V(i)  = json_number_value(json_array_get(sp_vals, i));
+    }
+
+    for (int i = 0; i < num_R; i++){
+        this->Rad(i)  = json_number_value(json_array_get(rd_vals, i));
+    }
+
     // cyclone radius meshing
     this->delta_p(0) = 1000.0;
     json_t *tmpDvR = json_object_get(mesh, "DivRad");
@@ -191,48 +218,82 @@ int WindFieldModel::ConfigSimu(std::string config_file, std::string stn_file,
         this->Long_track(i) = tmp_trkLong[i];
     }
 
-    // refined track latitude
-    std::ifstream latw_data(latw_file);
-    std::vector<double> tmp_latw;
-    while (getline(latw_data, line))
+    // refined track
+    std::ifstream trk_simu_data(latw_file);
+    std::vector<double> tmp_trk_simu_Lat;
+    std::vector<double> tmp_trk_simu_Long;
+    while (getline(trk_simu_data, line))
     {
-        tmp_latw.push_back(std::stod(line));
+        std::stringstream r(line);
+        int tmp_tag = 0;
+        while (getline(r, h, ','))
+        {
+            if (tmp_tag == 0)
+            {
+                tmp_trk_simu_Lat.push_back(std::stod(h));
+            } else if (tmp_tag == 1)
+            {
+                tmp_trk_simu_Long.push_back(std::stod(h));
+            }
+            tmp_tag = tmp_tag + 1;
+        }
     }
-    int num_latw = int(tmp_latw.size());
-    this->Lat_w = Eigen::ArrayXd::Zero(num_latw);
+    int num_trk_simu_p = int(tmp_trk_simu_Lat.size());
+    this->Lat_w = Eigen::ArrayXd::Zero(num_trk_simu_p);
     this->Long_w = this->Lat_w;
-    for (int i = 0; i < num_latw; i++)
+    for (int i = 0; i < num_trk_simu_p; i++)
     {
-        this->Lat_w(i) = tmp_latw[i];
+        this->Lat_w(i) = tmp_trk_simu_Lat[i];
+        this->Long_w(i) = tmp_trk_simu_Long[i];
     }
-    // Calculate longitude of reference values (Long_w)
-    // This is done by interpolating
-    int value;
-    for (int ii = 0; ii < num_latw; ii++)
-    {
-        value = 0;
-        for (int jj = 0; jj < this->Lat_track.size() - 1; jj++)
-        {
-            if (((this->Lat_w(ii) >= this->Lat_track(jj)) && (this->Lat_w(ii) < this->Lat_track(jj + 1))) || ((this->Lat_w(ii) <= this->Lat_track(jj)) && (this->Lat_w(ii) > this->Lat_track(jj + 1))))
-            {
-                value = jj;
-                break;
-            }
-        }
-        if (value > 0)
-        {
-            this->Long_w(ii) = abs(this->Long_track(value) + ((this->Lat_w(ii) - this->Lat_track(value)) 
-                * (this->Long_track(value + 1) - this->Long_track(value))) / (this->Lat_track(value + 1) 
-                - this->Lat_track(value)));
-        } else {
-            if (this->Lat_w(ii) < this->Lat_track(0))
-            {
-                this->Long_w(ii) = abs(this->Long_track(0));
-            } else {
-                this->Long_w(ii) = abs(this->Long_track(num_latw - 1));
-            }
-        }
-    }
+
+    // sy - 
+    // The below code tries to interpolate refined Longitude values corresponding to refined Latitude values
+    // but it messes up when lat-long pairs are not one-to-one. Let's not interpolate in this code. 
+    // Let's do the interpolation in the wrapper script
+
+    // refined track latitude
+    // std::ifstream latw_data(latw_file);
+    // std::vector<double> tmp_latw;
+    // while (getline(latw_data, line))
+    // {
+    //     tmp_latw.push_back(std::stod(line));
+    // }
+    // int num_latw = int(tmp_latw.size());
+    // this->Lat_w = Eigen::ArrayXd::Zero(num_latw);
+    // this->Long_w = this->Lat_w;
+    // for (int i = 0; i < num_latw; i++)
+    // {
+    //     this->Lat_w(i) = tmp_latw[i];
+    // }
+    // // Calculate longitude of reference values (Long_w)
+    // // This is done by interpolating
+    // int value;
+    // for (int ii = 0; ii < num_latw; ii++)
+    // {
+    //     value = 0;
+    //     for (int jj = 0; jj < this->Lat_track.size() - 1; jj++)
+    //     {
+    //         if (((this->Lat_w(ii) >= this->Lat_track(jj)) && (this->Lat_w(ii) < this->Lat_track(jj + 1))) || ((this->Lat_w(ii) <= this->Lat_track(jj)) && (this->Lat_w(ii) > this->Lat_track(jj + 1))))
+    //         {
+    //             value = jj;
+    //             break;
+    //         }
+    //     }
+    //     if (value > 0)
+    //     {
+    //         this->Long_w(ii) = abs(this->Long_track(value) + ((this->Lat_w(ii) - this->Lat_track(value)) 
+    //             * (this->Long_track(value + 1) - this->Long_track(value))) / (this->Lat_track(value + 1) 
+    //             - this->Lat_track(value)));
+    //     } else {
+    //         if (this->Lat_w(ii) < this->Lat_track(0))
+    //         {
+    //             this->Long_w(ii) = abs(this->Long_track(0));
+    //         } else {
+    //             this->Long_w(ii) = abs(this->Long_track(num_latw - 1));
+    //         }
+    //     }
+    // }
 
     return 0;
 }
@@ -267,6 +328,7 @@ int WindFieldModel::PertubPath(std::string dpath_file)
 int WindFieldModel::DefineTern(std::string refz0_file)
 {
     std::cout << "WindFieldSimulation: reading terrain data." << std::endl;
+    std::cout << refz0_file.c_str() << std::endl;
     json_error_t error;
     json_t *z0_doc = json_load_file(refz0_file.c_str(), 0, &error);
     if (!z0_doc) {
@@ -283,8 +345,9 @@ int WindFieldModel::DefineTern(std::string refz0_file)
     {
         json_t *tmpObj = json_object_get(json_array_get(feat, i), "properties");
         this->z0r(i) = json_number_value(json_object_get(tmpObj, "z0"));
+
         json_t *tmpGeo = json_object_get(json_array_get(feat, i), "geometry");
-        json_t *tmpAry = json_object_get(tmpGeo, "coordinates");
+        json_t *tmpAry = json_array_get(json_object_get(tmpGeo, "coordinates"),0);
         this->Wr_sizes(i) = double(json_array_size(tmpAry));
     }
     // getting polygons
@@ -319,7 +382,7 @@ int WindFieldModel::ComputeStationZ0(std::string dirOutput)
     {
         double stationX = this->Lat_wout(ii);
         double stationY = this->Long_wout(ii);
-        z0_station(ii) = 0.01;
+        //z0_station(ii) = 0.1;
         int aux = 0;
         int oi = 0;
         while ((aux == 0) && (oi < this->Wr_sizes.size() - 1))
@@ -329,9 +392,10 @@ int WindFieldModel::ComputeStationZ0(std::string dirOutput)
             aux = WindFieldModel::inpolygon(PolyX, PolyY, int(this->Wr_sizes(oi)), stationX, stationY);
             oi++;
         }
+
         if (aux == 1)
         {
-            z0_station(ii) = z0r(oi);
+            z0_station(ii) = this->z0r(oi);
         }        
     }
     // Writing out z0_station to a result file
@@ -345,14 +409,14 @@ int WindFieldModel::ComputeStationZ0(std::string dirOutput)
 
 int WindFieldModel::SimulateWind(std::string dirOutput)
 {
-    // central pressure difference
-    double del_p = (this->param(3) + this->dP) * 100.0;
-    // Holland B parameter
-    double B = 1.38 + 0.00184 * (del_p / 100.0) - 0.00309 * (this->param(5) + this->dR);
-    // translation speed
-    double c = ((this->param(4) + this->dV) * 1000.0) / 3600.0;
-    // radius in meter
-    double r_m = (this->param(5) + this->dR) * 1000.0;
+    // // central pressure difference
+    // double del_p = (this->param(3) + this->dP) * 100.0;
+    // // Holland B parameter
+    // double B = 1.38 + 0.00184 * (del_p / 100.0) - 0.00309 * (this->param(5) + this->dR);
+    // // translation speed
+    // double c = ((this->param(4) + this->dV) * 1000.0) / 3600.0;
+    // // radius in meter
+    // double r_m = (this->param(5) + this->dR) * 1000.0;
     // air density
     double rho = this->AIR_DENSITY;
     // eddy viscocity
@@ -363,6 +427,18 @@ int WindFieldModel::SimulateWind(std::string dirOutput)
     double eps = this->EPS;
     // ra 
     double ra = 180.0 / this->PI;
+
+    std::cout << "rho: " << rho << std::endl;
+    std::cout << "k_m: " << k_m << std::endl;
+    std::cout << "R: " << R << std::endl;
+    std::cout << "eps: " << eps << std::endl;
+    std::cout << "ra: " << ra << std::endl;
+
+    //rho = 1.2;
+    //k_m = 100;
+    std::cout << "rho: " << rho << std::endl;
+    std::cout << "k_m: " << k_m << std::endl;
+
 
     // Calculating heading
     Eigen::ArrayXd beta_c = Eigen::ArrayXd::Zero(this->Lat_w.size());
@@ -380,6 +456,9 @@ int WindFieldModel::SimulateWind(std::string dirOutput)
         }
     }
     beta_c(this->Lat_w.size() - 1) = beta_c(this->Lat_w.size() - 2);
+
+    //std::cout << "beta_c: " << beta_c << std::endl;
+
 
     // Calculate r - theta - zp
     int size = 1 + int((this->delta_p(2) - this->delta_p(0)) / this->delta_p(1));
@@ -421,14 +500,62 @@ int WindFieldModel::SimulateWind(std::string dirOutput)
 
     // Perform the loop for different reference points
     // i.e., different instance locations in the entire storm path
+
+    
+
+    int disp_interval = std::max(floor(static_cast<double>(this->Lat_w.size()) / 10.0), 1.0);
+    std::cout << disp_interval << std::endl;
+
+    bool disp_flag;
     double Lat, Long;
     for (int ii = 0; ii < this->Lat_w.size(); ii++)
     {
-        std::cout << "WindFieldSimulation: computing wind speed field - storm track location #" << ii + 1 << "/" << this->Lat_w.size() << std::endl;
+
+        if (ii % disp_interval == 0) {
+            disp_flag = true;
+            std::cout << "WindFieldSimulation: computing wind speed field - storm track location #" << ii + 1 << "/" << this->Lat_w.size() << std::endl;
+        } else {
+            disp_flag = false;
+        }
+
+
+        // central pressure difference
+        double del_p = (this->P(ii) + this->dP) * 100.0;  // hPa into newton/square meter
+        // Holland B parameter
+        double B = 1.38 + 0.00184 * (del_p / 100.0) - 0.00309 * (this->Rad(ii) + this->dR);
+        // translation speed
+        double c = ((this->V(ii) + this->dV) * 1000.0) / 3600.0; // from km/h to m/s
+        // radius in meter
+        double r_m = (this->Rad(ii) + this->dR) * 1000.0; // from km to meter
+
+        if (disp_flag) {
+            std::cout << "del_p: " << del_p << " (N/m^2)" << std::endl;
+            std::cout << "B: " << B << std::endl;
+            std::cout << "c: " << c << std::endl;
+            std::cout << "r_m: " << r_m << std::endl;
+        }
+        // B = 1;
+        //del_p = 60*100;
+        //std::cout << "B: " << B << std::endl;
+        //std::cout << "del_p: " << del_p << std::endl;
+
+
         // location and deading, including perturbation for MC case
         Lat = this->Lat_w(ii); // + 0*del_par(0);
         Long = abs(this->Long_w(ii)) - 0.3 * this->del_par(1);
         double beta = beta_c(ii);
+        // double beta;
+
+        // if ((beta_c(ii)>= 0.0) && (beta_c(ii)<= 90.0))
+        //     beta = 90.0 - beta_c(ii);
+        // else
+        //     beta = 450.0 - beta_c(ii);
+
+        if (disp_flag) {
+            std::cout << "beta: " << beta << std::endl;
+        }   
+
+
         // Coriolis
         double omega = 0.00007292;
         double f = 2.0 * omega * sin((Lat * this->PI) / 180.0);
@@ -470,6 +597,9 @@ int WindFieldModel::SimulateWind(std::string dirOutput)
             else
                 THETA = 450.0 - theta(jj);
 
+
+            //std::cout << "Theta: " << THETA << std::endl;
+
             Eigen::ArrayXd Lat_t = Eigen::ArrayXd::Zero(r.size());
             Eigen::ArrayXd Long_t = Eigen::ArrayXd::Zero(r.size());
             Lat_t = ra * asin(sin(Lat / ra) * cos(r / R) + cos(Lat / ra) * sin(r / R) * cos(THETA / ra));
@@ -486,22 +616,35 @@ int WindFieldModel::SimulateWind(std::string dirOutput)
                 // Create arrays
                 Eigen::ArrayXd PolyX = this->Lat_wr.block(0, int(Wr_sizes.size()) - 1, int(this->Wr_sizes(int(this->Wr_sizes.size()) - 1)), 1);
                 Eigen::ArrayXd PolyY = this->Long_wr.block(0, int(Wr_sizes.size()) - 1, int(this->Wr_sizes(int(this->Wr_sizes.size()) - 1)), 1);
-                z0(kk) = 0.01;
+
+
+                //z0(kk) = 0.1;
                 int aux = 0;
                 int oi = 0;
-                while ((aux == 0) && (oi < this->Wr_sizes.size() - 2))
+
+                //while ((aux == 0) && (oi < this->Wr_sizes.size() - 2))
+                while ((aux == 0) && (oi < this->Wr_sizes.size()))
                 {
                     Eigen::ArrayXd PolyX = this->Lat_wr.block(0, oi, int(this->Wr_sizes(oi)), 1);
                     Eigen::ArrayXd PolyY = this->Long_wr.block(0, oi, int(this->Wr_sizes(oi)), 1);
                     aux = inpolygon(PolyX, PolyY, int(this->Wr_sizes(oi)), Lat_t(kk), Long_t(kk));
+
                     oi++;
                 }
                 if (aux == 1)
                 {
-                    z0(kk) = z0r(oi);
-                }                    
+                    z0(kk) = this->z0r(oi-1);
+
+                } else {
+                    std::cout << "Warning: The provided z0 polygon does not cover the asset #" << kk << " located at " << Lat_t(kk) << " and " << Long_t(kk) << ". Default 0.01 used" << std::endl;
+                    z0(kk) = 0.01;
+                }
             }
 
+            if (jj==0 && disp_flag) {
+               std::cout << "z0: " << z0(0) << std::endl;
+            }
+            
             double z10 = 10.0;
             double A = 11.4;
             Eigen::ArrayXd h = A * (z0.array().pow(0.86));
@@ -717,6 +860,7 @@ int main(int argc, char *argv[])
     a.ConfigSimu(config_file, site_file, track_file, latw_file);
     a.PertubPath(perturb_file);
     a.DefineTern(terrain_file);
+
     a.ComputeStationZ0(z0_dir);
     a.SimulateWind(pws_dir);
     return 0;

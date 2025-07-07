@@ -357,17 +357,19 @@ def runBuildingDesign(BIM_file, EVENT_file, SAM_file, getRV):  # noqa: ARG001, N
 
     # The number of stories
     vecHeights = rootSIM['VecStoryHeights']  # noqa: N806
-    vecHeights = vecHeights.split(',')  # noqa: N806
-    vecHeights = np.array(vecHeights, dtype=float)  # noqa: N806
-
-    numStories = len(vecHeights)  # noqa: N806
+    #vecHeights = vecHeights.split(',')  # noqa: N806
+    #vecHeights = np.array(vecHeights, dtype=float)  # noqa: N806
+    
+    #numStories = len(vecHeights)  # noqa: N806
+    numStories = len(vecHeights.split(','))  # noqa: N806    
     root_SAM['numStory'] = numStories
 
     # The number of spans
     vecSpans = rootSIM['VecSpans']  # noqa: N806
-    vecSpans = vecSpans.split(',')  # noqa: N806
-    vecSpans = np.array(vecSpans, dtype=float)  # noqa: N806
-    numSpans = len(vecSpans)  # noqa: N806
+    #vecSpans = vecSpans.split(',')  # noqa: N806
+    #vecSpans = np.array(vecSpans, dtype=float)  # noqa: N806
+    #numSpans = len(vecSpans)  # noqa: N806
+    numSpans = len(vecSpans.split(','))
 
     # Get the node mapping
     # Consider a structure with 3 stories and 2 spans
@@ -717,6 +719,7 @@ class RCFIAP:  # noqa: D101
 
         # fy = float(self.ui.fy.text()) * MPa
         fy = float(rootSIM['FySteel']) * MPa
+        print(f'fy: {fy}')
 
         # fcB = float(self.ui.fcB.text()) * MPa
         fcB = float(rootSIM['BeamFpc']) * MPa  # noqa: N806
@@ -1439,7 +1442,7 @@ class RCFIAP:  # noqa: D101
 
         # Function: Regularized steel parameters
         def steel_mat_regu():
-            FyTestN4 = 490.0 * MPa  # noqa: N806
+            FyTestN4 = fy * MPa; #FMK 490.0 * MPa  # noqa: N806
             FsuTestN4 = 630.0 * MPa  # noqa: N806
             epsuTestN4 = 0.10  # noqa: N806
             LgageTestN4 = 200.0 * mm  # noqa: N806
