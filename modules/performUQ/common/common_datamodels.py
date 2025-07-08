@@ -15,10 +15,8 @@ Classes:
 from __future__ import annotations
 
 import sys
-from typing import TYPE_CHECKING, Any, Literal, Optional
-
-if TYPE_CHECKING:
-    from pathlib import Path
+from pathlib import Path  # noqa: TCH003
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field, validator
 
@@ -127,12 +125,14 @@ class GP_AB_UQData(BaseModel):
         seed (int): The seed value.
     """
 
-    calibration_data_file_name: str
-    calibration_data_path: Path
-    log_likelihood_file_name: str | None
-    log_likelihood_path: Path | None
-    sample_size: int
+    calDataFile: str
+    calDataFilePath: Path
+    logLikelihoodFile: Optional[str]  # noqa: UP007
+    logLikelihoodPath: Optional[Path]  # noqa: UP007
+    numParticles: int
     seed: int
+    uqType: Literal['Transitional Markov chain Monte Carlo']  # noqa: N815
+    useApproximation: Optional[bool] = False  # noqa: N815
 
 
 class Model(BaseModel):
@@ -166,10 +166,10 @@ class Model(BaseModel):
     localAppDir: str  # noqa: N815
     randomVariables: list[dict[str, Any]]  # noqa: N815
     remoteAppDir: str  # noqa: N815
-    resultType: str  # noqa: N815
+    # resultType: Optional[str]
     runDir: str  # noqa: N815
     runType: str  # noqa: N815
-    summary: list[str]
+    # summary: Optional[list[str]]
     workingDir: str  # noqa: N815
 
     @validator('correlationMatrix', each_item=True)

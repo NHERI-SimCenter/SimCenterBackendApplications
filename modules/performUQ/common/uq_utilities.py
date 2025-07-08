@@ -1,10 +1,11 @@
-import glob  # noqa: D100
+import glob  # noqa: D100, INP001
 import os
 import shutil
 import subprocess
 import sys
 import traceback
 from dataclasses import dataclass
+from multiprocessing import get_context
 from multiprocessing.pool import Pool
 from typing import Any, Union
 
@@ -155,7 +156,7 @@ class SimCenterWorkflowDriver:  # noqa: D101
             returnStringList.append(f'The command to run the model was {ex.cmd}')
             returnStringList.append(f'The return code was {ex.returncode}')
             returnStringList.append(f'The following error occurred: \n{ex}')
-            raise ModelEvaluationError('\n\n'.join(returnStringList))  # noqa: B904
+            raise ModelEvaluationError('\n\n'.join(returnStringList))  from ex # noqa: B904
 
     def _read_outputs_from_results_file(self, workdir: str) -> NDArray:
         if glob.glob('results.out'):  # noqa: PTH207
@@ -226,23 +227,29 @@ class ParallelRunnerMultiprocessing:  # noqa: D101
         if num_processors is None:
             num_processors = 1
         elif num_processors < 1:
-
             raise ValueError(  # noqa: TRY003
                 'Number of processes must be at least 1.                     '  # noqa: EM102
                 f'         Got {num_processors}'
             )
-        elif num_processors > max_num_processors: 
+        elif num_processors > max_num_processors:
             # this is to get past memory problems when running large number processors in a container
-            num_processors = 8
+            num_processors = max_num_processors
 
         return num_processors
 
     def get_pool(self) -> Pool:  # noqa: D102
-        self.pool = Pool(processes=self.num_processors)
+        context = get_context('spawn')
+        self.pool = context.Pool(processes=self.num_processors)
         return self.pool
 
-    def close_pool(self) -> None:  # noqa: D102
-        self.pool.close()
+    def run(self, func, job_args):  # noqa: D102
+        return self.pool.starmap(func, job_args)
+
+    def close_pool(self):  # noqa: D102
+        if self.pool is not None:
+            self.pool.close()
+            self.pool.join()
+            self.pool = None  # optional but safe
 
 
 def make_ERADist_object(name, opt, val) -> ERADist:  # noqa: N802, D103
@@ -507,3 +514,55 @@ def _get_tabular_results_file_name_for_dataset(
 def _write_to_tabular_results_file(tabular_results_file, string_to_write):
     with tabular_results_file.open('a') as f:
         f.write(string_to_write)
+
+
+class Ensure2DOutputShape:
+    def __init__(self, func, expected_dim, label="wrapped_function"):
+        self.func = func
+        self.expected_dim = expected_dim
+        self.label = label
+        self._last_input_shape = None
+        self._last_output_shape = None
+
+    def __call__(self, *args):
+        result = self.func(*args)
+        result = np.asarray(result)
+
+        # Handle scalar return (e.g., float) → reshape to (1, 1)
+        if result.ndim == 0:
+            result = result.reshape(1, 1)
+
+        # Treating the last argument of the function call as the sample
+        x = np.asarray(args[-1])
+        n_samples = x.shape[0] if x.ndim > 1 else 1
+
+        input_shape = x.shape
+        output_shape = result.shape
+        if input_shape == self._last_input_shape and output_shape == self._last_output_shape:
+            return result
+
+        if result.ndim == 1:
+            if n_samples == 1 and result.shape[0] == self.expected_dim:
+                result = result.reshape(1, self.expected_dim)
+            elif self.expected_dim == 1 and result.shape[0] == n_samples:
+                result = result.reshape(n_samples, 1)
+            else:
+                raise ValueError(
+                    f"[{self.label}] 1D output shape {result.shape} is incompatible with input {x.shape}. "
+                    f"Expected ({n_samples}, {self.expected_dim})"
+                )
+
+        elif result.ndim == 2:
+            if result.shape != (n_samples, self.expected_dim):
+                raise ValueError(
+                    f"[{self.label}] 2D output shape {result.shape} does not match expected ({n_samples}, {self.expected_dim})"
+                )
+
+        else:
+            raise ValueError(
+                f"[{self.label}] Output has {result.ndim} dimensions; expected 1D or 2D"
+            )
+
+        self._last_input_shape = input_shape
+        self._last_output_shape = result.shape
+        return result
