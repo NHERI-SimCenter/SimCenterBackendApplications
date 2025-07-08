@@ -771,20 +771,33 @@ class TransportationPerformance(ABC):  # noqa: B024
         # Redirect the output from pdna to a tmp file and then delete the file
         if self.tmp_dir is not None:
             output_file = Path(self.tmp_dir) / 'pandana_stdout.txt'
+
             original_stdout_fd = sys.stdout.fileno()
-            with Path.open(output_file, 'w') as file:
-                os.dup2(file.fileno(), original_stdout_fd)
-                net = pdna.Network(
-                    nodes_df['x'],
-                    nodes_df['y'],
-                    open_edges_df['start_nid'],
-                    open_edges_df['end_nid'],
-                    open_edges_df[['fft']],
-                    twoway=two_way_edges,
-                )
-                # The file is automatically closed when exiting the with block
-                # `sys.stdout` is automatically restored to its original state because
-                # we duplicated the original descriptor to `stdout`.
+            
+            # Save the original stdout to a new file descriptor
+            saved_stdout_fd = os.dup(original_stdout_fd)
+
+            try:
+                with Path.open(output_file, 'w') as file:
+                    os.dup2(file.fileno(), original_stdout_fd)
+                    net = pdna.Network(
+                        nodes_df['x'],
+                        nodes_df['y'],
+                        open_edges_df['start_nid'],
+                        open_edges_df['end_nid'],
+                        open_edges_df[['fft']],
+                        twoway=two_way_edges,
+                    )
+                    # The file is automatically closed when exiting the with block
+                    # `sys.stdout` is automatically restored to its original state because
+                    # we duplicated the original descriptor to `stdout`.
+            
+            finally:
+                # Restore the original stdout
+                os.dup2(saved_stdout_fd, original_stdout_fd)
+                # Close the saved descriptor
+                os.close(saved_stdout_fd)
+
             if getattr(self, 'save_pandana', True):
                 Path.unlink(output_file)
         else:
