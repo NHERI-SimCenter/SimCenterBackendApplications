@@ -607,7 +607,7 @@ def log_failed_points_to_file(
         json.dump(make_json_serializable(out_data), f, indent=4)
 
     if logger:
-        logger.info(f"📄 Saved {len(failed)} failed inputs to: {out_path}")
+        logger.info(f"Saved {len(failed)} failed inputs to: {out_path}")
 
 
 def make_json_serializable(obj):
