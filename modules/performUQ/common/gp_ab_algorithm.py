@@ -256,35 +256,109 @@ class GP_AB_Algorithm:
         #     warn_if_longer_than=300.0,
         # )
 
+    # def _evaluate_in_parallel(
+    #     self, func, model_parameters, simulation_number_start=0
+    # ):
+    #     """
+    #     Evaluate the model in parallel using the provided function and samples.
+
+    #     Args:
+    #         func (callable): The function to evaluate.
+    #         samples (np.ndarray): The samples to evaluate.
+
+    #     Returns
+    #     -------
+    #         np.ndarray: The evaluated outputs.
+    #     """
+    #     simulation_numbers = np.arange(
+    #         simulation_number_start, simulation_number_start + len(model_parameters)
+    #     )
+    #     iterable = zip(simulation_numbers, model_parameters)
+    #     outputs = np.atleast_2d(
+    #         list(self.parallel_evaluation_function(func, iterable))
+    #     )
+    #     # Fix scalar outputs → (n, 1)
+    #     if outputs.ndim == 1:
+    #         outputs = outputs.reshape(-1, 1)
+
+    #     # Fix shape (n, 1, d) → (n, d)
+    #     elif outputs.ndim == 3 and outputs.shape[1] == 1:
+    #         outputs = np.squeeze(outputs, axis=1)
+    #     return outputs
+
     def _evaluate_in_parallel(
         self, func, model_parameters, simulation_number_start=0
     ):
         """
-        Evaluate the model in parallel using the provided function and samples.
+        Safely evaluate the model in parallel over a batch of input samples.
 
-        Args:
-            func (callable): The function to evaluate.
-            samples (np.ndarray): The samples to evaluate.
+        Each sample is evaluated using the provided function in a separate workdir.
+        Failed model evaluations (e.g., due to runtime errors or invalid output)
+        are skipped and logged to a JSON file with error messages.
+
+        Output shape handling is preserved for compatibility with downstream GP training:
+        - Scalar outputs are reshaped to (n, 1)
+        - Extra singleton dimensions (e.g., shape (n, 1, d)) are squeezed to (n, d)
+
+        Parameters
+        ----------
+        func : callable
+            The model evaluation function of the form (sim_number: int, x: np.ndarray) -> np.ndarray.
+        model_parameters : np.ndarray
+            Array of shape (n_samples, n_inputs) containing the parameter samples to evaluate.
+        simulation_number_start : int, optional
+            The starting index for naming simulation workdirs, by default 0.
 
         Returns
         -------
-            np.ndarray: The evaluated outputs.
+        y_valid : np.ndarray
+            Array of shape (n_valid, n_outputs) containing the outputs from successful model runs.
+        x_valid : np.ndarray
+            Array of shape (n_valid, n_inputs) containing the corresponding input samples.
         """
         simulation_numbers = np.arange(
             simulation_number_start, simulation_number_start + len(model_parameters)
         )
         iterable = zip(simulation_numbers, model_parameters)
-        outputs = np.atleast_2d(
-            list(self.parallel_evaluation_function(func, iterable))
-        )
-        # Fix scalar outputs → (n, 1)
-        if outputs.ndim == 1:
-            outputs = outputs.reshape(-1, 1)
 
-        # Fix shape (n, 1, d) → (n, d)
-        elif outputs.ndim == 3 and outputs.shape[1] == 1:  # noqa: PLR2004
-            outputs = np.squeeze(outputs, axis=1)
-        return outputs
+        wrapped_func = partial(
+            uq_utilities.safe_evaluate_model_for_gp_ab,
+            model_callable=func,
+            logger=self.logger,
+        )
+        results = list(self.parallel_evaluation_function(wrapped_func, iterable))
+
+        x_valid, y_valid, failed = [], [], []
+
+        for x, y, msg in results:
+            if y is not None:
+                x_valid.append(x)
+                y_valid.append(y)
+            else:
+                failed.append((x, msg))
+
+        if failed:
+            output_dir = Path('results')
+            out_path = (
+                output_dir / f'failed_model_inputs_iter_{self.iteration_number}.json'
+            )
+            self.logger.warning(
+                f'Skipping {len(failed)} failed model evaluations. Details in {out_path}.'
+            )
+            uq_utilities.log_failed_points_to_file(
+                failed,
+                iteration=self.iteration_number,
+                logger=self.logger,
+                output_dir=output_dir,
+            )
+
+        y_valid = np.array(y_valid)
+        if y_valid.ndim == 1:
+            y_valid = y_valid.reshape(-1, 1)
+        elif y_valid.ndim == 3 and y_valid.shape[1] == 1:  # noqa: PLR2004
+            y_valid = np.squeeze(y_valid, axis=1)
+
+        return y_valid, np.array(x_valid)
 
     def _perform_space_filling_doe(self, n_samples):
         """
@@ -315,14 +389,16 @@ class GP_AB_Algorithm:
             tuple: A tuple containing the inputs and outputs of the initial training set.
         """
         self.loginfo('Using a space filling strategy')
-        inputs = self.sample_transformation_function(
+        proposed_inputs = self.sample_transformation_function(
             self._perform_space_filling_doe(n_samples)
         )
         self.loginfo(
-            f'Generated {inputs.shape[0]} samples for initial training set. Evaluating the model at these samples.'
+            f'Generated {proposed_inputs.shape[0]} samples for initial training set. Evaluating the model at these samples.'
         )
-        outputs = self._evaluate_in_parallel(self.model_evaluation_function, inputs)
-        return inputs, outputs
+        successful_outputs, successful_inputs = self._evaluate_in_parallel(
+            self.model_evaluation_function, proposed_inputs
+        )
+        return successful_inputs, successful_outputs
 
     # def _log_like(self, predictions):
     #     predictions = np.atleast_2d(predictions)
@@ -969,18 +1045,20 @@ class GP_AB_Algorithm:
                 self.exploitation_training_points = np.empty(
                     (0, self.input_dimension)
                 )
+
+                current_inputs = self.inputs.copy()
                 if self.n_exploit > 0:
                     self.exploitation_training_points = (
                         current_doe.select_training_points(
-                            self.inputs,
+                            current_inputs,
                             self.n_exploit,
                             candidates_exploit,
                             use_mse_w=True,
                             weights=weights_normalized,
                         )
                     )
-                    self.inputs = np.vstack(
-                        [self.inputs, self.exploitation_training_points]
+                    current_inputs = np.vstack(
+                        [current_inputs, self.exploitation_training_points]
                     )
                     self.loginfo(f'{self.n_exploit} exploitation points selected.')
                 else:
@@ -1004,15 +1082,15 @@ class GP_AB_Algorithm:
                 if self.n_explore > 0:
                     self.exploration_training_points = (
                         current_doe.select_training_points(
-                            self.inputs,
+                            current_inputs,
                             self.n_explore,
                             candidates_explore,
                             use_mse_w=False,
                             weights=None,
                         )
                     )
-                    self.inputs = np.vstack(
-                        [self.inputs, self.exploration_training_points]
+                    current_inputs = np.vstack(
+                        [current_inputs, self.exploration_training_points]
                     )
                     self.loginfo(f'{self.n_explore} exploration points selected.')
                 else:
@@ -1025,7 +1103,6 @@ class GP_AB_Algorithm:
             self.new_training_points = np.vstack(
                 [self.exploitation_training_points, self.exploration_training_points]
             )
-            self.num_experiments.append(len(self.inputs))
 
     def _step_5_evaluate_responses(self):
         """
@@ -1048,12 +1125,21 @@ class GP_AB_Algorithm:
                 f'Running {min(len(self.new_training_points), self.parallel_pool.num_processors)} model evaluations in parallel'
             )
             start_time = time.time()
-            self.new_training_outputs = self._evaluate_in_parallel(
+            (
+                self.successful_new_training_outputs,
+                self.successful_new_training_inputs,
+            ) = self._evaluate_in_parallel(
                 self.model_evaluation_function,
                 self.new_training_points,
                 simulation_number_start=simulation_number_start,
             )
-            self.outputs = np.vstack([self.outputs, self.new_training_outputs])
+            self.inputs = np.vstack(
+                [self.inputs, self.successful_new_training_inputs]
+            )
+            self.outputs = np.vstack(
+                [self.outputs, self.successful_new_training_outputs]
+            )
+            self.num_experiments.append(len(self.inputs))
 
             time_elapsed = time.time() - start_time
             self.model_evaluation_time += time_elapsed

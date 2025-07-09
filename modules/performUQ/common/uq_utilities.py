@@ -1,4 +1,5 @@
 import glob  # noqa: D100, INP001
+import json
 import os
 import shutil
 import subprocess
@@ -7,6 +8,7 @@ import traceback
 from dataclasses import dataclass
 from multiprocessing import get_context
 from multiprocessing.pool import Pool
+from pathlib import Path
 from typing import Any, Union
 
 import numpy as np
@@ -566,3 +568,43 @@ class Ensure2DOutputShape:
         self._last_input_shape = input_shape
         self._last_output_shape = result.shape
         return result
+
+
+def safe_evaluate_model_for_gp_ab(sim_number: int, x: np.ndarray, model_callable, logger=None):
+    """
+    A safe wrapper to evaluate the model. Returns (x, y, msg) where msg is None if success.
+
+    Returns
+    -------
+    tuple[np.ndarray, np.ndarray | None, str | None]
+        The input, output (or None), and error message (or None).
+    """
+    try:
+        y = model_callable(sim_number, x)
+        return x, y, None
+    except (ModelEvaluationError, Exception) as e:
+        msg = f"Model evaluation failed at sim {sim_number}, x={x.tolist()}:\n{str(e)}"
+        if logger:
+            logger.warning(msg)
+        return x, None, msg
+
+
+def log_failed_points_to_file(
+    failed: list[tuple[np.ndarray, str]],
+    iteration: int,
+    logger=None,
+    output_dir: Path = Path("results"),
+):
+    """
+    Save failed input points and messages to a JSON file.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+    out_path = output_dir / f"failed_model_inputs_iter_{iteration}.json"
+
+    out_data = [{"input": x.tolist(), "message": msg} for x, msg in failed]
+
+    with out_path.open("w") as f:
+        json.dump(out_data, f, indent=4)
+
+    if logger:
+        logger.info(f"📄 Saved {len(failed)} failed inputs to: {out_path}")
