@@ -609,6 +609,7 @@ class GP_AB_Algorithm:
         """
         with self.log_step('Running GP-AB Algorithm', highlight='major'):
             with self.log_step('Generation of Initial Training Points'):
+                self.iteration_number = -1
                 inputs, outputs, num_initial = self.run_initial_doe(
                     num_initial_doe_per_dim=self.batch_size_factor
                 )
