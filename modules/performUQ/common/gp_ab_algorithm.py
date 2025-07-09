@@ -732,6 +732,17 @@ class GP_AB_Algorithm:
                     response_approx_fn=self.current_response_approximation,
                 )
 
+            res_dir = Path('results')
+            res_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
+            outfile_path = (
+                res_dir / f'gp_model_parameters_{self.iteration_number}.json'
+            )
+
+            self.current_gp_model.write_model_parameters_to_json(  # type: ignore
+                outfile_path,
+                include_training_data=True,
+            )
+
     def _step_2_bayesian_updating(self, log_prior_fn, log_like_fn):
         """
         Step 2: Perform Bayesian updating using TMCMC.

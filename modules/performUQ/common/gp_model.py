@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import os
 import sys
@@ -396,6 +397,170 @@ class GaussianProcessModel:
     def flush_logs(self):
         """Flush the logs for the Gaussian Process Model."""
         flush_logger(self.logger)
+
+    def write_model_parameters_to_json(
+        self,
+        filepath: str | Path,
+        *,
+        include_training_data: bool = True,
+    ):
+        """
+        Write GP model settings, kernel, linear regression, and optionally training data to a JSON file.
+
+        Parameters
+        ----------
+        filepath : str or Path
+            Output file path.
+        include_training_data : bool
+            Whether to include training data in the JSON file (default is True).
+        """
+        if not self.model:
+            msg = 'Model has not been initialized or trained.'
+            raise RuntimeError(msg)
+
+        model_params = {
+            'input_dimension': self.input_dimension,
+            'output_dimension': self.output_dimension,
+            'ARD': self.ARD,
+            'kernel_type': self.kernel_type,
+            'mean_function': self.mean_function_type,
+            'nugget_value': self.nugget_value,
+            'fix_nugget': self.fix_nugget,
+            'use_pca': self.use_pca,
+            'pca_threshold': self.pca_threshold,
+            'pca_info': self.pca_info,
+            'models': [],
+        }
+
+        if include_training_data:
+            if self.x_train is None or self.y_train is None:
+                self.logger.warning(
+                    'Training data is None. Skipping training data export.'
+                )
+            else:
+                model_params['x_train'] = self.x_train.tolist()
+                model_params['y_train'] = self.y_train.tolist()
+
+        for i, gp in enumerate(self.model):
+            params = {
+                'output_index': i,
+                'kernel_parameters': {
+                    param.name: {
+                        'value': param.values.tolist()  # noqa: PD011
+                        if param.size > 1
+                        else float(param.values),
+                        'shape': param.shape,
+                    }
+                    for param in gp.kern.parameters
+                },
+                'nugget': float(gp.likelihood.variance[0]),
+            }
+
+            if self.linear_models[i] is not None:
+                linear_model = self.linear_models[i]
+                params['linear_regression'] = {
+                    'coefficients': linear_model.coef_.tolist(),  # type: ignore
+                    'intercept': float(linear_model.intercept_),  # type: ignore
+                }
+            else:
+                params['linear_regression'] = None
+
+            model_params['models'].append(params)
+
+        filepath = Path(filepath)
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+
+        with filepath.open('w') as f:
+            json.dump(model_params, f, indent=2)
+
+    def load_model_parameters_from_json(
+        self,
+        filepath: str | Path,
+        *,
+        has_training_data: bool = True,
+    ):
+        """
+        Load GP model settings, kernel, linear regression, and optionally training data from a JSON file.
+
+        Parameters
+        ----------
+        filepath : str or Path
+            Path to the JSON file.
+        has_training_data : bool
+            Whether the JSON file includes training data (default is True).
+        """
+        with Path(filepath).open() as f:
+            model_params = json.load(f)
+
+        self.input_dimension = model_params['input_dimension']
+        self.output_dimension = model_params['output_dimension']
+        self.ARD = model_params['ARD']
+        self.kernel_type = model_params['kernel_type']
+        self.mean_function_type = model_params['mean_function']
+        self.nugget_value = model_params['nugget_value']
+        self.fix_nugget = model_params['fix_nugget']
+        self.use_pca = model_params['use_pca']
+        self.pca_threshold = model_params['pca_threshold']
+
+        if has_training_data:
+            self.x_train = np.array(model_params['x_train'])
+            self.y_train = np.array(model_params['y_train'])
+
+            self.pca = None
+            self.latent_dimension = None
+            if self.use_pca:
+                self.pca_info = model_params['pca_info']  # type: ignore
+                self.pca = PrincipalComponentAnalysis(
+                    self.pca_threshold, perform_scaling=True
+                )
+                self.pca.fit(self.y_train)
+
+            self._fit_pca_and_create_models(reoptimize=False)
+
+        else:
+            models_data = model_params['models']
+            if len(models_data) != self.output_dimension:
+                msg = f'Expected {self.output_dimension} models, but got {len(models_data)}'
+                raise ValueError(msg)
+
+            self.model = []
+            self.linear_models = []
+
+            base_kernel = self._create_kernel()
+
+            for _ in models_data:
+                x_dummy = np.zeros((1, self.input_dimension))
+                y_dummy = np.zeros((1, 1))
+                kernel_copy = base_kernel.copy()
+                gp = GPy.models.GPRegression(
+                    X=x_dummy,
+                    Y=y_dummy,
+                    kernel=kernel_copy,
+                    mean_function=None,
+                    normalizer=True,
+                )
+                self._configure_nugget(gp)
+                self.model.append(gp)
+                self.linear_models.append(None)
+
+        # Overwrite kernel and linear model parameters
+        for i, m in enumerate(model_params['models']):
+            gp = self.model[i]
+
+            for name, value in m['kernel_parameters'].items():
+                if name in gp.kern.parameter_names():
+                    gp.kern[name] = np.array(value['value']).reshape(value['shape'])
+
+            gp.likelihood.variance = m['nugget']
+            if self.fix_nugget:
+                gp.likelihood.variance.fix()
+
+            lr_params = m.get('linear_regression')
+            if lr_params is not None:
+                lr = LinearRegression()
+                lr.coef_ = np.array(lr_params['coefficients']).reshape(1, -1)
+                lr.intercept_ = np.array([lr_params['intercept']])
+                self.linear_models[i] = lr
 
 
 # =========================================================
