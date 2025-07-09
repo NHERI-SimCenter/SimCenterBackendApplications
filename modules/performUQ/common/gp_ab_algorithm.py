@@ -1372,14 +1372,14 @@ class GP_AB_Algorithm:
                 }
             )
 
-        return make_json_serializable(data)
+        return uq_utilities.make_json_serializable(data)
 
     def write_results(self, results_dir='results'):
         """Write the results of the GP-AB Algorithm to a file."""
         res_dir = Path(results_dir)
         res_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 
-        serializable_data = make_json_serializable(self.results)
+        serializable_data = uq_utilities.make_json_serializable(self.results)
         outfile_path = res_dir / f'tmcmc_results_{self.iteration_number}.json'
         with outfile_path.open('w') as f:
             json.dump(serializable_data, f, indent=4)
@@ -1400,29 +1400,6 @@ class GP_AB_Algorithm:
             output_dir=res_dir,
             terminate=self.terminate,
         )
-
-
-def make_json_serializable(obj):
-    """Recursively convert NumPy and other non-serializable types to JSON-serializable Python types."""
-    if isinstance(obj, dict):
-        return {k: make_json_serializable(v) for k, v in obj.items()}
-    elif isinstance(obj, list):  # noqa: RET505
-        return [make_json_serializable(item) for item in obj]
-    elif isinstance(obj, tuple):
-        return tuple(make_json_serializable(item) for item in obj)
-    elif isinstance(obj, np.ndarray):
-        return make_json_serializable(obj.tolist())  # Recurse on elements
-    elif isinstance(obj, (np.integer, int)):
-        return int(obj)
-    elif isinstance(obj, (np.floating, float)):
-        return float(obj)
-    elif isinstance(obj, (np.bool_, bool)):
-        return bool(obj)
-    elif obj is None:
-        return None
-    else:
-        msg = f'Object of type {type(obj)} is not JSON serializable: {obj}'
-        raise TypeError(msg)
 
 
 def save_exploitation_candidates_by_stage_json(
@@ -1456,7 +1433,7 @@ def save_exploitation_candidates_by_stage_json(
         'stage_sample_counts': {str(k): v for k, v in stage_sample_counts.items()},
         'samples_by_stage': samples_by_stage,
     }
-    output_json_serializable = make_json_serializable(output)
+    output_json_serializable = uq_utilities.make_json_serializable(output)
 
     out_file.parent.mkdir(parents=True, exist_ok=True)
     with out_file.open('w') as f:
@@ -1503,7 +1480,7 @@ def save_exploitation_candidates_json(
         'samples': sample_dicts,
     }
 
-    output_json_serializable = make_json_serializable(output)
+    output_json_serializable = uq_utilities.make_json_serializable(output)
 
     # Ensure parent directory exists
     out_file.parent.mkdir(parents=True, exist_ok=True)

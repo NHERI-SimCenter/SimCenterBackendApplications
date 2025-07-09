@@ -21,6 +21,7 @@ from logging_utilities import (  # decorate_methods_with_log_step,
 from principal_component_analysis import PrincipalComponentAnalysis
 from pydantic import BaseModel, Field, model_validator
 from sklearn.linear_model import LinearRegression
+from uq_utilities import make_json_serializable
 
 # =========================================================
 # Top-level Classes
@@ -471,7 +472,7 @@ class GaussianProcessModel:
         filepath.parent.mkdir(parents=True, exist_ok=True)
 
         with filepath.open('w') as f:
-            json.dump(model_params, f, indent=2)
+            json.dump(make_json_serializable(model_params), f, indent=2)
 
     def load_model_parameters_from_json(
         self,

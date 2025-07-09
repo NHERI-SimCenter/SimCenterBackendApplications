@@ -604,7 +604,31 @@ def log_failed_points_to_file(
     out_data = [{"input": x.tolist(), "message": msg} for x, msg in failed]
 
     with out_path.open("w") as f:
-        json.dump(out_data, f, indent=4)
+        json.dump(make_json_serializable(out_data), f, indent=4)
 
     if logger:
         logger.info(f"📄 Saved {len(failed)} failed inputs to: {out_path}")
+
+
+def make_json_serializable(obj):
+    """Recursively convert NumPy and other non-serializable types to JSON-serializable Python types."""
+    if isinstance(obj, dict):
+        return {k: make_json_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, list):  # noqa: RET505
+        return [make_json_serializable(item) for item in obj]
+    elif isinstance(obj, tuple):
+        return tuple(make_json_serializable(item) for item in obj)
+    elif isinstance(obj, np.ndarray):
+        return make_json_serializable(obj.tolist())  # Recurse on elements
+    elif isinstance(obj, (np.integer, int)):
+        return int(obj)
+    elif isinstance(obj, (np.floating, float)):
+        return float(obj)
+    elif isinstance(obj, (np.bool_, bool)):
+        return bool(obj)
+    elif obj is None:
+        return None
+    else:
+        msg = f'Object of type {type(obj)} is not JSON serializable: {obj}'
+        raise TypeError(msg)
+
