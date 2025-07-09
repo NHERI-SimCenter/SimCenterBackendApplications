@@ -611,24 +611,35 @@ def log_failed_points_to_file(
 
 
 def make_json_serializable(obj):
-    """Recursively convert NumPy and other non-serializable types to JSON-serializable Python types."""
+    """
+    Recursively convert Python, NumPy, and common custom types to JSON-serializable formats.
+
+    Supports: dict, list, tuple, np.ndarray, int, float, bool, str, None,
+              pathlib.Path, enum.Enum, and custom objects via __str__ fallback.
+    """
     if isinstance(obj, dict):
         return {k: make_json_serializable(v) for k, v in obj.items()}
-    elif isinstance(obj, list):  # noqa: RET505
+    elif isinstance(obj, list):
         return [make_json_serializable(item) for item in obj]
     elif isinstance(obj, tuple):
         return tuple(make_json_serializable(item) for item in obj)
     elif isinstance(obj, np.ndarray):
-        return make_json_serializable(obj.tolist())  # Recurse on elements
+        return make_json_serializable(obj.tolist())
     elif isinstance(obj, (np.integer, int)):
         return int(obj)
     elif isinstance(obj, (np.floating, float)):
         return float(obj)
     elif isinstance(obj, (np.bool_, bool)):
         return bool(obj)
+    elif isinstance(obj, str):
+        return obj
+    elif isinstance(obj, Path):
+        return str(obj)
     elif obj is None:
         return None
     else:
-        msg = f'Object of type {type(obj)} is not JSON serializable: {obj}'
-        raise TypeError(msg)
-
+        try:
+            return str(obj)
+        except Exception:
+            msg = f'Object of type {type(obj)} is not JSON serializable and cannot be converted with str(): {obj}'
+            raise TypeError(msg)
