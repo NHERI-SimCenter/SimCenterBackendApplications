@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import uq_utilities
+from scipy.stats import qmc
 
 
 class AdaptiveDesignOfExperiments:
@@ -94,29 +95,48 @@ class AdaptiveDesignOfExperiments:
         self.gp_model_for_doe.kern = self.kernel
         return self.gp_model_for_doe
 
-    def _imse_w_approximation(self, x_train, mci_samples, weights=None):
+    def _imse_w_approximation(
+        self, x_train, mci_samples, weights=None, n_samples=4000, seed=None
+    ):
         """
-        Compute the IMSE approximation for candidate training points.
+        Compute the IMSEw approximation for candidate training points.
 
         Parameters
         ----------
-            X_train (array-like): The current training data.
-            mci_samples (array-like): Monte Carlo integration samples.
+        x_train : array-like
+            Current training data in original space.
+        mci_samples : array-like
+            Monte Carlo integration samples (original space).
+        weights : array-like or None
+            Optional importance weights for IMSEw.
+        n_samples : int
+            Number of LHS candidate points to generate.
+        seed : int or None
+            Random seed for reproducibility.
 
         Returns
         -------
-            array: The IMSE values for the candidate training points.
+        imse : array of shape (n_samples, 1)
+            Approximate IMSEw acquisition values for each candidate.
+        candidates : array of shape (n_samples, d)
+            Unscaled candidate points (original space).
         """
-        scaled_mci_samples = self._scale(mci_samples)
-        candidate_training_points = scaled_mci_samples
+        # Generate LHS candidate points in original space
+        bounds = compute_lhs_bounds(x_train, mci_samples, padding=0)
+        candidates = generate_lhs_candidates(n_samples, bounds, seed=seed)
+        candidate_training_points = self._scale(candidates)
 
+        # Prepare GP model with current training data
         scaled_x_train = self._scale(x_train)
+        scaled_mci_samples = self._scale(mci_samples)
+        self.gp_model_for_doe.set_XY(scaled_x_train, np.zeros((x_train.shape[0], 1)))
 
-        self.gp_model_for_doe.set_XY(
-            scaled_x_train,
-            np.zeros((x_train.shape[0], 1)),
-        )
+        # Predict variance at integration points
         _, pred_var = self.gp_model_for_doe.predict(scaled_mci_samples)
+        if weights is not None:
+            pred_var *= weights.reshape(-1, 1)
+
+        # Compute IMSEw using correlation-based approximation
         n_theta = scaled_x_train.shape[1]
         beta = 2.0 * n_theta
         imse = np.zeros((candidate_training_points.shape[0], 1))
@@ -127,7 +147,8 @@ class AdaptiveDesignOfExperiments:
             imse[i] = (1 / scaled_mci_samples.shape[0]) * np.sum(
                 (correlation_vector**beta) * pred_var
             )
-        return imse
+
+        return imse, candidates
 
     def _mse_approximation(self, x_train, mci_samples):
         scaled_x_train = self._scale(x_train)
@@ -160,31 +181,56 @@ class AdaptiveDesignOfExperiments:
         *,
         use_mse_w=True,
         weights=None,
+        n_samples=4000,
+        seed=None,
     ):
         """
-        Select new training points based on the IMSE criterion.
+        Select new training points based on an acquisition criterion.
 
         Parameters
         ----------
-            x_train (array-like): The current training data.
-            n_points (int): The number of new training points to select.
-            mci_samples (array-like): Monte Carlo integration samples.
+        x_train : array-like
+            Current training data (original space).
+        n_points : int
+            Number of new training points to select.
+        mci_samples : array-like
+            Monte Carlo integration samples (original space).
+        use_mse_w : bool
+            Whether to use MSEw (True) or IMSEw (False) acquisition.
+        weights : array-like or None
+            Optional importance weights.
+        n_samples : int
+            Number of candidate points to generate for IMSEw.
+        seed : int or None
+            Optional seed for LHS.
 
         Returns
         -------
-            array: The selected new training points.
+        selected_points : np.ndarray of shape (n_points, d)
+            Selected new training points (original space).
         """
-        if use_mse_w:
-            acquisition_function = self._mse_w_approximation
-        else:
-            acquisition_function = self._imse_w_approximation
+        selected_points = []
+
         for _ in range(n_points):
-            acquisition_function_values = acquisition_function(
-                x_train, mci_samples, weights
-            )
-            next_training_point = mci_samples[np.argmax(acquisition_function_values)]
-            x_train = np.vstack((x_train, next_training_point))
-        return x_train[-n_points:, :]
+            if use_mse_w:
+                acquisition_values = self._mse_w_approximation(
+                    x_train, mci_samples, weights
+                )
+                next_point = mci_samples[np.argmax(acquisition_values)]
+            else:
+                acquisition_values, candidates = self._imse_w_approximation(
+                    x_train,
+                    mci_samples,
+                    weights=weights,
+                    n_samples=n_samples,
+                    seed=seed,
+                )
+                next_point = candidates[np.argmax(acquisition_values)]
+
+            x_train = np.vstack([x_train, next_point])
+            selected_points.append(next_point)
+
+        return np.array(selected_points)
 
     def write_gp_for_doe_to_json(self, filepath: str | Path):
         """
@@ -243,3 +289,57 @@ class AdaptiveDesignOfExperiments:
         filepath.parent.mkdir(parents=True, exist_ok=True)
         with filepath.open('w') as f:
             json.dump(uq_utilities.make_json_serializable(output), f, indent=4)
+
+
+def generate_lhs_candidates(n_samples, input_bounds, seed=None):
+    """
+    Generate LHS candidate points using scipy's QMC module with an optional random seed.
+
+    Parameters
+    ----------
+    n_samples : int
+        Number of candidate points to generate.
+    input_bounds : array-like of shape (d, 2)
+        Lower and upper bounds for each input dimension.
+    seed : int or None
+        Random seed for reproducibility (default: None).
+
+    Returns
+    -------
+    candidates : np.ndarray of shape (n_samples, d)
+        Generated candidate points in the original input space.
+    """
+    input_bounds = np.asarray(input_bounds)
+    d = input_bounds.shape[0]
+
+    sampler = qmc.LatinHypercube(d, seed=seed)
+    lhs_unit = sampler.random(n=n_samples)
+    candidates = qmc.scale(lhs_unit, input_bounds[:, 0], input_bounds[:, 1])
+    return candidates  # noqa: RET504
+
+
+def compute_lhs_bounds(x_train, mci_samples, padding=0):
+    """
+    Compute input bounds for LHS based on x_train and mci_samples.
+
+    Parameters
+    ----------
+    x_train : array-like, shape (n_train, d)
+    mci_samples : array-like, shape (n_mci, d)
+    padding : float
+        Relative padding (e.g., 0.05 adds ±5% range to each side).
+
+    Returns
+    -------
+    bounds : np.ndarray of shape (d, 2)
+        Array of (min, max) bounds for each dimension.
+    """
+    x_all = np.vstack([x_train, mci_samples])
+    min_vals = np.min(x_all, axis=0)
+    max_vals = np.max(x_all, axis=0)
+
+    ranges = max_vals - min_vals
+    min_vals_padded = min_vals - padding * ranges
+    max_vals_padded = max_vals + padding * ranges
+
+    return np.vstack([min_vals_padded, max_vals_padded]).T
