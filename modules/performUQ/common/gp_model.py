@@ -109,7 +109,7 @@ class GaussianProcessModel:
         msg = f"Unknown kernel_type '{self.kernel_type}'"
         raise ValueError(msg)
 
-    def _scale_inputs(self, x, *, fit=False):
+    def scale_inputs(self, x, *, fit=False):
         """Scale inputs using the input scaler."""
         if self.input_scaler is None:
             return x
@@ -148,7 +148,7 @@ class GaussianProcessModel:
         # TODO (ABS): For unscaled inputs, use default bounds or wider ranges
 
     def _fit_pca_and_create_models(self, *, reoptimize=True, num_random_restarts=10):
-        self.x_train_scaled = self._scale_inputs(self.x_train, fit=True)
+        self.x_train_scaled = self.scale_inputs(self.x_train, fit=True)
 
         if self.scale_inputs:
             self.loginfo(
@@ -256,7 +256,7 @@ class GaussianProcessModel:
         self.x_train = x_train
         self.y_train = y_train
 
-        self.x_train_scaled = self._scale_inputs(self.x_train, fit=True)
+        self.x_train_scaled = self.scale_inputs(self.x_train, fit=True)
 
         if self.pca is not None:
             self.pca.fit(self.y_train)
@@ -309,7 +309,7 @@ class GaussianProcessModel:
             msg = 'GP model not initialized. Call `initialize` first.'
             raise ValueError(msg)
 
-        x_predict_scaled = self._scale_inputs(x_predict, fit=False)
+        x_predict_scaled = self.scale_inputs(x_predict, fit=False)
 
         y_mean = np.zeros((x_predict.shape[0], self.output_dimension))
         y_var = np.zeros((x_predict.shape[0], self.output_dimension))
@@ -355,7 +355,7 @@ class GaussianProcessModel:
             msg = 'Model must be trained before computing LOO predictions.'
             raise ValueError(msg)
 
-        x_train_scaled = self._scale_inputs(x_train, fit=False)
+        x_train_scaled = self.scale_inputs(x_train, fit=False)
 
         if self.pca is not None:
             y_train = self.pca.project_to_latent_space(y_train)
@@ -544,7 +544,7 @@ class GaussianProcessModel:
             self.x_train = np.array(model_params['x_train'])
             self.y_train = np.array(model_params['y_train'])
 
-            self.x_train_scaled = self._scale_inputs(self.x_train, fit=False)
+            self.x_train_scaled = self.scale_inputs(self.x_train, fit=False)
 
             self.pca = None
             self.latent_dimension = None

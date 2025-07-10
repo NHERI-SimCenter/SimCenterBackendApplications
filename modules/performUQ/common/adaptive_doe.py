@@ -28,6 +28,9 @@ class AdaptiveDesignOfExperiments:
         self._kernel_for_doe()
         self._gp_for_doe()
 
+    def _scale(self, x):
+        return self.gp_model.scale_inputs(x, fit=False)
+
     def _hyperparameters_for_doe(self):
         """
         Compute the weighted average of kernel hyperparameters for DoE.
@@ -98,38 +101,46 @@ class AdaptiveDesignOfExperiments:
         -------
             array: The IMSE values for the candidate training points.
         """
-        candidate_training_points = mci_samples
+        scaled_mci_samples = self._scale(mci_samples)
+        candidate_training_points = scaled_mci_samples
+
+        scaled_x_train = self._scale(x_train)
+
         self.gp_model_for_doe.set_XY(
-            x_train,
+            scaled_x_train,
             np.zeros((x_train.shape[0], 1)),
         )
-        _, pred_var = self.gp_model_for_doe.predict(mci_samples)
-        n_theta = x_train.shape[1]
+        _, pred_var = self.gp_model_for_doe.predict(scaled_mci_samples)
+        n_theta = scaled_x_train.shape[1]
         beta = 2.0 * n_theta
         imse = np.zeros((candidate_training_points.shape[0], 1))
         for i, candidate in enumerate(candidate_training_points):
             correlation_vector = self.gp_model_for_doe.kern.K(
-                mci_samples, np.atleast_2d(candidate)
+                scaled_mci_samples, np.atleast_2d(candidate)
             )
-            imse[i] = (1 / mci_samples.shape[0]) * np.sum(
+            imse[i] = (1 / scaled_mci_samples.shape[0]) * np.sum(
                 (correlation_vector**beta) * pred_var
             )
         return imse
 
     def _mse_approximation(self, x_train, mci_samples):
+        scaled_x_train = self._scale(x_train)
+        scaled_mci_samples = self._scale(mci_samples)
         self.gp_model_for_doe.set_XY(
-            x_train,
-            np.zeros((x_train.shape[0], 1)),
+            scaled_x_train,
+            np.zeros((scaled_x_train.shape[0], 1)),
         )
-        _, pred_var = self.gp_model_for_doe.predict(mci_samples)
+        _, pred_var = self.gp_model_for_doe.predict(scaled_mci_samples)
         return np.reshape(pred_var, (-1, 1))
 
     def _mse_w_approximation(self, x_train, mci_samples, weights):
+        scaled_x_train = self._scale(x_train)
+        scaled_mci_samples = self._scale(mci_samples)
         self.gp_model_for_doe.set_XY(
-            x_train,
-            np.zeros((x_train.shape[0], 1)),
+            scaled_x_train,
+            np.zeros((scaled_x_train.shape[0], 1)),
         )
-        _, pred_var = self.gp_model_for_doe.predict(mci_samples)
+        _, pred_var = self.gp_model_for_doe.predict(scaled_mci_samples)
         if weights is None:
             weights = np.ones_like(pred_var)
         mse_w = pred_var.flatten() * weights.flatten()
@@ -149,7 +160,7 @@ class AdaptiveDesignOfExperiments:
 
         Parameters
         ----------
-            X_train (array-like): The current training data.
+            x_train (array-like): The current training data.
             n_points (int): The number of new training points to select.
             mci_samples (array-like): Monte Carlo integration samples.
 
