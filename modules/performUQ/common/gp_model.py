@@ -136,6 +136,7 @@ class GaussianProcessModel:
             model.likelihood.variance.fix()
         else:
             model.Gaussian_noise.variance = self.settings.nugget_value
+            model.likelihood.variance.constrain_bounded(1e-8, 1e-3)
 
     def _set_kernel_hyperparameter_bounds(self, kernel):
         """Set reasonable hyperparameter bounds for scaled inputs."""
