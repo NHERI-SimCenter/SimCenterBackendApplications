@@ -41,6 +41,7 @@ class SafeStandardScaler:
             Fitted scaler instance.
         """
         data = np.asarray(data)
+        self.n_features_in_ = data.shape[1]
         if data.shape[0] == 1:
             self.is_trivial_case = True
             self.mean_ = data[0]
