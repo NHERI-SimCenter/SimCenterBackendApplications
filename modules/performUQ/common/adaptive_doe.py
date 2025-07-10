@@ -95,83 +95,136 @@ class AdaptiveDesignOfExperiments:
         self.gp_model_for_doe.kern = self.kernel
         return self.gp_model_for_doe
 
-    def _imse_w_approximation(
-        self, x_train, mci_samples, weights=None, n_samples=4000, seed=None
-    ):
-        """
-        Compute the IMSEw approximation for candidate training points.
+    # def _imse_w_approximation(
+    #     self, x_train, mci_samples, weights=None, n_samples=4000, seed=None
+    # ):
+    #     """
+    #     Compute the IMSEw approximation for candidate training points.
 
-        Parameters
-        ----------
-        x_train : array-like
-            Current training data in original space.
-        mci_samples : array-like
-            Monte Carlo integration samples (original space).
-        weights : array-like or None
-            Optional importance weights for IMSEw.
-        n_samples : int
-            Number of LHS candidate points to generate.
-        seed : int or None
-            Random seed for reproducibility.
+    #     Parameters
+    #     ----------
+    #     x_train : array-like
+    #         Current training data in original space.
+    #     mci_samples : array-like
+    #         Monte Carlo integration samples (original space).
+    #     weights : array-like or None
+    #         Optional importance weights for IMSEw.
+    #     n_samples : int
+    #         Number of LHS candidate points to generate.
+    #     seed : int or None
+    #         Random seed for reproducibility.
 
-        Returns
-        -------
-        imse : array of shape (n_samples, 1)
-            Approximate IMSEw acquisition values for each candidate.
-        candidates : array of shape (n_samples, d)
-            Unscaled candidate points (original space).
-        """
-        # Generate LHS candidate points in original space
-        bounds = compute_lhs_bounds(x_train, mci_samples, padding=0)
-        candidates = generate_lhs_candidates(n_samples, bounds, seed=seed)
-        candidate_training_points = self._scale(candidates)
+    #     Returns
+    #     -------
+    #     imse : array of shape (n_samples, 1)
+    #         Approximate IMSEw acquisition values for each candidate.
+    #     candidates : array of shape (n_samples, d)
+    #         Unscaled candidate points (original space).
+    #     """
+    #     # Generate LHS candidate points in original space
+    #     bounds = compute_lhs_bounds(x_train, mci_samples, padding=0)
+    #     candidates = generate_lhs_candidates(n_samples, bounds, seed=seed)
+    #     candidate_training_points = self._scale(candidates)
 
-        # Prepare GP model with current training data
-        scaled_x_train = self._scale(x_train)
-        scaled_mci_samples = self._scale(mci_samples)
-        self.gp_model_for_doe.set_XY(scaled_x_train, np.zeros((x_train.shape[0], 1)))
+    #     # Prepare GP model with current training data
+    #     scaled_x_train = self._scale(x_train)
+    #     scaled_mci_samples = self._scale(mci_samples)
+    #     self.gp_model_for_doe.set_XY(scaled_x_train, np.zeros((x_train.shape[0], 1)))
 
-        # Predict variance at integration points
-        _, pred_var = self.gp_model_for_doe.predict(scaled_mci_samples)
-        if weights is not None:
-            pred_var *= weights.reshape(-1, 1)
+    #     # Predict variance at integration points
+    #     _, pred_var = self.gp_model_for_doe.predict(scaled_mci_samples)
+    #     if weights is not None:
+    #         pred_var *= weights.reshape(-1, 1)
 
-        # Compute IMSEw using correlation-based approximation
-        n_theta = scaled_x_train.shape[1]
-        beta = 2.0 * n_theta
-        imse = np.zeros((candidate_training_points.shape[0], 1))
-        for i, candidate in enumerate(candidate_training_points):
-            correlation_vector = self.gp_model_for_doe.kern.K(
-                scaled_mci_samples, np.atleast_2d(candidate)
-            )
-            imse[i] = (1 / scaled_mci_samples.shape[0]) * np.sum(
-                (correlation_vector**beta) * pred_var
-            )
+    #     # Compute IMSEw using correlation-based approximation
+    #     n_theta = scaled_x_train.shape[1]
+    #     beta = 2.0 * n_theta
+    #     imse = np.zeros((candidate_training_points.shape[0], 1))
+    #     for i, candidate in enumerate(candidate_training_points):
+    #         correlation_vector = self.gp_model_for_doe.kern.K(
+    #             scaled_mci_samples, np.atleast_2d(candidate)
+    #         )
+    #         imse[i] = (1 / scaled_mci_samples.shape[0]) * np.sum(
+    #             (correlation_vector**beta) * pred_var
+    #         )
 
-        return imse, candidates
+    #     return imse, candidates
 
-    def _mse_approximation(self, x_train, mci_samples):
-        scaled_x_train = self._scale(x_train)
-        scaled_mci_samples = self._scale(mci_samples)
-        self.gp_model_for_doe.set_XY(
-            scaled_x_train,
-            np.zeros((scaled_x_train.shape[0], 1)),
-        )
-        _, pred_var = self.gp_model_for_doe.predict(scaled_mci_samples)
-        return np.reshape(pred_var, (-1, 1))
+    # def _mse_approximation(self, x_train, mci_samples):
+    #     scaled_x_train = self._scale(x_train)
+    #     scaled_mci_samples = self._scale(mci_samples)
+    #     self.gp_model_for_doe.set_XY(scaled_x_train, np.zeros((x_train.shape[0], 1)))
+    #     _, pred_var = self.gp_model_for_doe.predict(scaled_mci_samples)
+    #     return np.reshape(pred_var, (-1, 1))
 
-    def _mse_w_approximation(self, x_train, mci_samples, weights):
-        scaled_x_train = self._scale(x_train)
-        scaled_mci_samples = self._scale(mci_samples)
-        self.gp_model_for_doe.set_XY(
-            scaled_x_train,
-            np.zeros((scaled_x_train.shape[0], 1)),
-        )
-        _, pred_var = self.gp_model_for_doe.predict(scaled_mci_samples)
-        if weights is None:
-            weights = np.ones_like(pred_var)
-        mse_w = pred_var.flatten() * weights.flatten()
-        return np.reshape(mse_w, (-1, 1))
+    # def _mse_w_approximation(self, x_train, mci_samples, weights):
+    #     scaled_x_train = self._scale(x_train)
+    #     scaled_mci_samples = self._scale(mci_samples)
+    #     self.gp_model_for_doe.set_XY(scaled_x_train, np.zeros((x_train.shape[0], 1)))
+    #     _, pred_var = self.gp_model_for_doe.predict(scaled_mci_samples)
+    #     if weights is None:
+    #         weights = np.ones_like(pred_var)
+    #     mse_w = pred_var.flatten() * weights.flatten()
+    #     return np.reshape(mse_w, (-1, 1))
+
+    # def select_training_points(
+    #     self,
+    #     x_train,
+    #     n_points,
+    #     mci_samples,
+    #     *,
+    #     use_mse_w=True,
+    #     weights=None,
+    #     n_samples=4000,
+    #     seed=None,
+    # ):
+    #     """
+    #     Select new training points based on an acquisition criterion.
+
+    #     Parameters
+    #     ----------
+    #     x_train : array-like
+    #         Current training data (original space).
+    #     n_points : int
+    #         Number of new training points to select.
+    #     mci_samples : array-like
+    #         Monte Carlo integration samples (original space).
+    #     use_mse_w : bool
+    #         Whether to use MSEw (True) or IMSEw (False) acquisition.
+    #     weights : array-like or None
+    #         Optional importance weights.
+    #     n_samples : int
+    #         Number of candidate points to generate for IMSEw.
+    #     seed : int or None
+    #         Optional seed for LHS.
+
+    #     Returns
+    #     -------
+    #     selected_points : np.ndarray of shape (n_points, d)
+    #         Selected new training points (original space).
+    #     """
+    #     selected_points = []
+
+    #     for _ in range(n_points):
+    #         if use_mse_w:
+    #             acquisition_values = self._mse_w_approximation(
+    #                 x_train, mci_samples, weights
+    #             )
+    #             next_point = mci_samples[np.argmax(acquisition_values)]
+    #         else:
+    #             acquisition_values, candidates = self._imse_w_approximation(
+    #                 x_train,
+    #                 mci_samples,
+    #                 weights=weights,
+    #                 n_samples=n_samples,
+    #                 seed=seed,
+    #             )
+    #             next_point = candidates[np.argmax(acquisition_values)]
+
+    #         x_train = np.vstack([x_train, next_point])
+    #         selected_points.append(next_point)
+
+    #     return np.array(selected_points)
 
     def select_training_points(
         self,
@@ -185,7 +238,7 @@ class AdaptiveDesignOfExperiments:
         seed=None,
     ):
         """
-        Select new training points based on an acquisition criterion.
+        Fully sequential DoE selection using MSEw or IMSEw acquisition.
 
         Parameters
         ----------
@@ -196,39 +249,67 @@ class AdaptiveDesignOfExperiments:
         mci_samples : array-like
             Monte Carlo integration samples (original space).
         use_mse_w : bool
-            Whether to use MSEw (True) or IMSEw (False) acquisition.
+            Whether to use MSEw (True) or IMSEw (False).
         weights : array-like or None
-            Optional importance weights.
+            Optional weights applied to predictive variance.
         n_samples : int
-            Number of candidate points to generate for IMSEw.
+            Number of LHS candidate points to generate (IMSEw only).
         seed : int or None
-            Optional seed for LHS.
+            Random seed for LHS sampling.
 
         Returns
         -------
         selected_points : np.ndarray of shape (n_points, d)
-            Selected new training points (original space).
+            Selected new training points.
         """
         selected_points = []
 
-        for _ in range(n_points):
-            if use_mse_w:
-                acquisition_values = self._mse_w_approximation(
-                    x_train, mci_samples, weights
-                )
-                next_point = mci_samples[np.argmax(acquisition_values)]
-            else:
-                acquisition_values, candidates = self._imse_w_approximation(
-                    x_train,
-                    mci_samples,
-                    weights=weights,
-                    n_samples=n_samples,
-                    seed=seed,
-                )
-                next_point = candidates[np.argmax(acquisition_values)]
+        # Determine candidate points
+        if use_mse_w:
+            candidate_pool = mci_samples.copy()
+        else:
+            bounds = compute_lhs_bounds(x_train, mci_samples, padding=0)
+            candidate_pool = generate_lhs_candidates(n_samples, bounds, seed=seed)
 
-            x_train = np.vstack([x_train, next_point])
+        for _ in range(n_points):
+            # Scale inputs
+            scaled_x_train = self._scale(x_train)
+            scaled_candidates = self._scale(candidate_pool)
+            scaled_mci_samples = self._scale(mci_samples)
+
+            # Update GP with current training set
+            self.gp_model_for_doe.set_XY(
+                scaled_x_train, np.zeros((scaled_x_train.shape[0], 1))
+            )
+
+            # Predict variance at integration points
+            _, pred_var = self.gp_model_for_doe.predict(scaled_mci_samples)
+            if weights is not None:
+                pred_var *= weights.reshape(-1, 1)
+
+            # Compute acquisition value
+            if use_mse_w:
+                acquisition_values = np.zeros((scaled_candidates.shape[0], 1))
+                for i, cand in enumerate(scaled_candidates):
+                    acquisition_values[i] = np.mean(pred_var)
+            else:
+                n_theta = scaled_x_train.shape[1]
+                beta = 2.0 * n_theta
+                acquisition_values = np.zeros((scaled_candidates.shape[0], 1))
+                for i, cand in enumerate(scaled_candidates):
+                    corr = self.gp_model_for_doe.kern.K(
+                        scaled_mci_samples, np.atleast_2d(cand)
+                    )
+                    acquisition_values[i] = np.mean((corr**beta) * pred_var)
+
+            # Select best candidate
+            idx = np.argmax(acquisition_values)
+            next_point = candidate_pool[idx]
             selected_points.append(next_point)
+
+            # Update training data and candidate pool
+            x_train = np.vstack([x_train, next_point])
+            candidate_pool = np.delete(candidate_pool, idx, axis=0)
 
         return np.array(selected_points)
 
