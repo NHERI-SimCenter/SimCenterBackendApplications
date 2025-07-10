@@ -1,6 +1,12 @@
 """Implements an adaptive design of experiments strategy using Gaussian Process (GP) and Principal Component Analysis (PCA)."""
 
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
 import numpy as np
+import uq_utilities
 
 
 class AdaptiveDesignOfExperiments:
@@ -179,3 +185,61 @@ class AdaptiveDesignOfExperiments:
             next_training_point = mci_samples[np.argmax(acquisition_function_values)]
             x_train = np.vstack((x_train, next_training_point))
         return x_train[-n_points:, :]
+
+    def write_gp_for_doe_to_json(self, filepath: str | Path):
+        """
+        Write DoE GP kernel hyperparameters and contributing model param_arrays to JSON.
+
+        Parameters
+        ----------
+        filepath : str or Path
+            Output file path.
+        """
+        if not hasattr(self, 'gp_model_for_doe'):
+            msg = 'gp_model_for_doe has not been initialized.'
+            raise RuntimeError(msg)
+
+        kernel = self.gp_model_for_doe.kern
+
+        # Detailed hyperparameters for the DoE model
+        doe_hyperparams = {
+            param.name: {
+                'value': param.values.tolist()  # noqa: PD011
+                if param.size > 1
+                else float(param.values),
+                'shape': param.shape,
+            }
+            for param in kernel.parameters
+        }
+
+        # Aggregation weights
+        if self.gp_model.use_pca:
+            weights = np.asarray(self.gp_model.pca_info['explained_variance_ratio'])[
+                : self.gp_model.pca_info['n_components']
+            ]
+            weights = (weights / np.sum(weights)).tolist()
+        else:
+            weights = (
+                np.ones(len(self.gp_model.model)) / len(self.gp_model.model)
+            ).tolist()
+
+        # Contributing models' param_arrays only
+        contributing_param_arrays = [
+            gp.kern.param_array.tolist() for gp in self.gp_model.model
+        ]
+
+        # Output structure
+        output = {
+            'doe_kernel_type': kernel.name,
+            'doe_ARD': kernel.ARD,
+            'doe_hyperparameters': doe_hyperparams,
+            'weighted_param_array': self.weighted_hyperparameters.tolist(),
+            'aggregation_weights': weights,
+            'contributing_param_arrays': contributing_param_arrays,
+        }
+
+        # Write JSON file
+        filepath = Path(filepath)
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+        with filepath.open('w') as f:
+            json.dump(uq_utilities.make_json_serializable(output), f, indent=4)

@@ -1016,6 +1016,13 @@ class GP_AB_Algorithm:
             self.loginfo('Setting up GP for adaptive design of experiments.')
             current_doe = AdaptiveDesignOfExperiments(self.current_gp_model)
 
+            res_dir = Path('results')
+            res_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
+            outfile_path = (
+                res_dir / f'doe_kernel_summary_{self.iteration_number}.json'
+            )
+            current_doe.write_gp_for_doe_to_json(outfile_path)
+
             with LogStepContext(
                 'Exploitation Design of Experiments',
                 logger=self.logger,
