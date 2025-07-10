@@ -107,7 +107,7 @@ class AdaptiveDesignOfExperiments:
         seed=None,
     ):
         """
-        Fully sequential DoE selection using MSEw or IMSEw acquisition.
+        Efficient sequential DoE using MSEw or IMSEw with vectorized acquisition.
 
         Parameters
         ----------
@@ -120,9 +120,9 @@ class AdaptiveDesignOfExperiments:
         use_mse_w : bool
             Whether to use MSEw (True) or IMSEw (False).
         weights : array-like or None
-            Optional weights applied to predictive variance.
+            Optional importance weights.
         n_samples : int
-            Number of LHS candidate points to generate (IMSEw only).
+            Number of candidate points to generate (IMSEw only).
         seed : int or None
             Random seed for LHS sampling.
 
@@ -133,7 +133,7 @@ class AdaptiveDesignOfExperiments:
         """
         selected_points = []
 
-        # Determine candidate points
+        # 1. Fixed candidate pool
         if use_mse_w:
             candidate_pool = mci_samples.copy()
         else:
@@ -141,42 +141,51 @@ class AdaptiveDesignOfExperiments:
             candidate_pool = generate_lhs_candidates(n_samples, bounds, seed=seed)
 
         for _ in range(n_points):
-            # Scale inputs
+            # 2. Scale everything
             scaled_x_train = self._scale(x_train)
             scaled_candidates = self._scale(candidate_pool)
             scaled_mci_samples = self._scale(mci_samples)
 
-            # Update GP with current training set
+            # 3. Fit GP with dummy outputs
             self.gp_model_for_doe.set_XY(
                 scaled_x_train, np.zeros((scaled_x_train.shape[0], 1))
             )
 
-            # Predict variance at integration points
+            # 4. Predict variance at integration points
             _, pred_var = self.gp_model_for_doe.predict(scaled_mci_samples)
             if weights is not None:
-                pred_var *= weights.reshape(-1, 1)
+                pred_var *= weights.reshape(-1, 1)  # shape (n_mci, 1)
 
-            # Compute acquisition value
+            # 5. Vectorized acquisition
             if use_mse_w:
-                acquisition_values = np.zeros((scaled_candidates.shape[0], 1))
-                for i, cand in enumerate(scaled_candidates):
-                    acquisition_values[i] = np.mean(pred_var)
+                # Just return the average variance (same for all candidates)
+                acquisition_values = np.mean(pred_var) * np.ones(
+                    (scaled_candidates.shape[0], 1)
+                )
             else:
-                n_theta = scaled_x_train.shape[1]
-                beta = 2.0 * n_theta
-                acquisition_values = np.zeros((scaled_candidates.shape[0], 1))
-                for i, cand in enumerate(scaled_candidates):
-                    corr = self.gp_model_for_doe.kern.K(
-                        scaled_mci_samples, np.atleast_2d(cand)
-                    )
-                    acquisition_values[i] = np.mean((corr**beta) * pred_var)
+                # Covariance matrix: shape (n_mci, n_candidates)
+                k_matrix = self.gp_model_for_doe.kern.K(
+                    scaled_mci_samples, scaled_candidates
+                )
 
-            # Select best candidate
+                # Normalize to get correlation matrix
+                kernel_var = self.gp_model_for_doe.kern.variance[0]  # scalar
+                corr_matrix = k_matrix / kernel_var  # element-wise division
+
+                beta = 2.0 * scaled_x_train.shape[1]
+
+                # Vectorized IMSEw: (corr^beta) * pred_var → mean over MCI samples
+                weighted_var = (
+                    corr_matrix**beta
+                ).T @ pred_var  # shape (n_candidates, 1)
+                acquisition_values = weighted_var / scaled_mci_samples.shape[0]
+
+            # 6. Select best candidate
             idx = np.argmax(acquisition_values)
             next_point = candidate_pool[idx]
             selected_points.append(next_point)
 
-            # Update training data and candidate pool
+            # 7. Update training set and candidate pool
             x_train = np.vstack([x_train, next_point])
             candidate_pool = np.delete(candidate_pool, idx, axis=0)
 
