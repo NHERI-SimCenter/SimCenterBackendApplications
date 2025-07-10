@@ -31,6 +31,31 @@ from uq_utilities import make_json_serializable
 # =========================================================
 
 
+def remove_duplicate_inputs(
+    x: np.ndarray, y: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Remove duplicate rows in X and corresponding rows in Y.
+
+    Keeps only the first occurrence.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Input array of shape (n_samples, n_features).
+    y : np.ndarray
+        Output array of shape (n_samples, n_outputs).
+
+    Returns
+    -------
+    x_unique, y_unique : tuple[np.ndarray, np.ndarray]
+        Deduplicated input-output arrays.
+    """
+    _, unique_indices = np.unique(x, axis=0, return_index=True)
+    sorted_indices = np.sort(unique_indices)
+    return x[sorted_indices], y[sorted_indices]
+
+
 class GaussianProcessModelSettings(BaseModel):
     """Settings for creating a Gaussian Process Model."""
 
@@ -227,8 +252,14 @@ class GaussianProcessModel:
         num_random_restarts : int, optional
             Number of random restarts for optimization (default is 10).
         """
-        self.x_train = x_train
-        self.y_train = y_train
+        orig_n = x_train.shape[0]
+        inputs, outputs = remove_duplicate_inputs(x_train, y_train)
+        deduped_n = inputs.shape[0]
+        if self.logger and deduped_n < orig_n:
+            self.logger.info(f'Removed {orig_n - deduped_n} duplicate input points.')
+
+        self.x_train = inputs
+        self.y_train = outputs
         self._fit_pca_and_create_models(
             reoptimize=reoptimize, num_random_restarts=num_random_restarts
         )
@@ -254,8 +285,14 @@ class GaussianProcessModel:
             msg = 'GP model not initialized. Call `initialize` first.'
             raise ValueError(msg)
 
-        self.x_train = x_train
-        self.y_train = y_train
+        orig_n = x_train.shape[0]
+        inputs, outputs = remove_duplicate_inputs(x_train, y_train)
+        deduped_n = inputs.shape[0]
+        if self.logger and deduped_n < orig_n:
+            self.logger.info(f'Removed {orig_n - deduped_n} duplicate input points.')
+
+        self.x_train = inputs
+        self.y_train = outputs
 
         self.x_train_scaled = self.apply_input_scaling(self.x_train, fit=True)
 

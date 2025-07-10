@@ -505,12 +505,16 @@ class GP_AB_Algorithm:
         """
         # start_time = time.time()
         self.loginfo('Calculating leave-one-out cross validation error measure gCV.')
+        x_train_unique, y_train_unique = (
+            self.current_gp_model.x_train,  # type: ignore
+            self.current_gp_model.y_train,  # type: ignore
+        )
         loo_predictions = self.current_gp_model.loo_predictions(  # type: ignore
-            self.inputs, self.outputs
+            x_train_unique, y_train_unique
         )
         loocv_measure = convergence_metrics.calculate_gcv(
             loo_predictions,
-            self.outputs,
+            y_train_unique,
             self.output_length_list,
             weights=weights,
             weight_combination=(2 / 3, 1 / 3),
@@ -521,8 +525,10 @@ class GP_AB_Algorithm:
 
     def _get_exploitation_candidates(self):
         """
-        Assemble candidate training points for exploitation by sampling from TMCMC stages
-        after the warm start, proportionally to the provided stage weights.
+        Assemble candidate training points for exploitation.
+
+        This is done by sampling from TMCMC stages after the warm start,
+        proportionally to the provided stage weights.
 
         Returns
         -------
@@ -530,12 +536,9 @@ class GP_AB_Algorithm:
             The exploitation candidate training points of shape (n_candidates, n_parameters).
         dict:
             Dictionary mapping stage number to the number of points sampled from that stage.
-        """  # noqa: D205
-        # self.loginfo('Assembling candidate training points for exploitation.')
-        stage_weights = np.asarray(
-            self.stage_weights
-        )  # aligned with stages_after_warm_start
-        stage_weights = stage_weights / np.sum(stage_weights)
+        """
+        stage_weights = np.asarray(self.stage_weights)
+        stage_weights /= np.sum(stage_weights)  # Normalize weights
 
         n_candidates = self.num_candidate_training_points
         candidate_training_points_exploitation = []
@@ -544,26 +547,29 @@ class GP_AB_Algorithm:
         for stage_idx, stage_num in enumerate(self.stages_after_warm_start):
             samples_stage = self.results['model_parameters_dict'][stage_num]
             n_available = samples_stage.shape[0]
-            n_stage_samples = int(np.round(stage_weights[stage_idx] * n_candidates))
 
-            if n_stage_samples >= n_available:
-                selected = samples_stage
-                n_selected = n_available
-            else:
+            n_stage_samples = int(np.round(stage_weights[stage_idx] * n_candidates))
+            if n_stage_samples == 0:
+                continue
+
+            if n_stage_samples <= n_available:
                 selected_indices = np.random.choice(
                     n_available, size=n_stage_samples, replace=False
                 )
                 selected = samples_stage[selected_indices]
-                n_selected = n_stage_samples
+            else:
+                # Use all available samples
+                selected = samples_stage
 
             candidate_training_points_exploitation.append(selected)
-            stage_sample_counts[stage_num] = n_selected
+            stage_sample_counts[stage_num] = selected.shape[0]
 
+        # Combine all stage samples
         candidate_training_points_exploitation = np.vstack(
             candidate_training_points_exploitation
         )
 
-        # Trim if needed
+        # Optional: globally truncate if total exceeds n_candidates (e.g., due to rounding)
         if candidate_training_points_exploitation.shape[0] > n_candidates:
             trim_indices = np.random.choice(
                 candidate_training_points_exploitation.shape[0],
@@ -573,9 +579,7 @@ class GP_AB_Algorithm:
             candidate_training_points_exploitation = (
                 candidate_training_points_exploitation[trim_indices]
             )
-        # self.loginfo(
-        #     'Completed candidate training point selection for exploitation.'
-        # )
+
         return candidate_training_points_exploitation, stage_sample_counts
 
     def _summarize_iteration(self):
@@ -801,8 +805,13 @@ class GP_AB_Algorithm:
                 self.gp_prediction_mean, _ = self.current_gp_model.predict(  # type: ignore
                     model_parameters
                 )
+                # self.loo_predictions = self.current_gp_model.loo_predictions(  # type: ignore
+                #     model_parameters, model_outputs
+                # )
+
                 self.loo_predictions = self.current_gp_model.loo_predictions(  # type: ignore
-                    model_parameters, model_outputs
+                    self.current_gp_model.x_train,  # type: ignore
+                    self.current_gp_model.y_train,  # type: ignore
                 )
 
                 self.current_response_approximation = partial(
@@ -856,7 +865,9 @@ class GP_AB_Algorithm:
 
             with self.log_step('Evaluating warm-start of TMCMC.'):
                 if self.iteration_number > 0:
-                    weights = self.kde.evaluate(self.inputs)  # type: ignore
+                    weights = self.kde.evaluate(  # type: ignore
+                        self.current_gp_model.x_train  # type: ignore
+                    )  # inputs deduplicated in the gp model
                     self.gcv = self._calculate_gcv(weights)
                     self.warm_start_possible = self.gcv <= self.gcv_threshold
 
@@ -1058,7 +1069,7 @@ class GP_AB_Algorithm:
                     (0, self.input_dimension)
                 )
 
-                current_inputs = self.inputs.copy()
+                current_inputs = self.current_gp_model.x_train.copy()  # type: ignore
                 if self.n_exploit > 0:
                     self.exploitation_training_points = (
                         current_doe.select_training_points(

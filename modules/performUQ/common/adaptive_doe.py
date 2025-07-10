@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import uq_utilities
+from gp_model import remove_duplicate_inputs
 from scipy.stats import qmc
 
 
@@ -131,6 +132,11 @@ class AdaptiveDesignOfExperiments:
         selected_points : np.ndarray of shape (n_points, d)
             Selected new training points.
         """
+        x_train = np.atleast_2d(x_train)
+        x_train, _ = remove_duplicate_inputs(
+            x_train, np.zeros((x_train.shape[0], 1))
+        )
+
         selected_points = []
 
         # 1. Fixed candidate pool
@@ -173,6 +179,7 @@ class AdaptiveDesignOfExperiments:
                 corr_matrix = k_matrix / kernel_var  # element-wise division
 
                 beta = 2.0 * scaled_x_train.shape[1]
+                # beta = 1.0 * scaled_x_train.shape[1]
 
                 # Vectorized IMSEw: (corr^beta) * pred_var → mean over MCI samples
                 weighted_var = (
