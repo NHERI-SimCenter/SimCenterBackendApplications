@@ -186,6 +186,7 @@ class GP_AB_Algorithm:
             self.terminate = False
 
             self.num_experiments = [0]
+            self.num_attempted_experiments = [0]
             self.num_recalibration_experiments = 0
             self.recalibration_ratio = recalibration_ratio
 
@@ -615,14 +616,15 @@ class GP_AB_Algorithm:
                 )
                 self.inputs = inputs
                 self.outputs = outputs
-                self.num_experiments.append(num_initial)
+                self.num_experiments.append(len(inputs))
+                self.num_attempted_experiments.append(num_initial)
 
                 # First time
                 self.current_gp_model = create_gp_model(
                     input_dimension=self.input_dimension,
                     output_dimension=self.output_dimension,
                     mean_function='linear',
-                    fix_nugget=False,
+                    fix_nugget=True,
                     logger=self.logger,
                     use_pca=self.use_pca,
                     pca_threshold=self.pca_threshold,
@@ -814,7 +816,6 @@ class GP_AB_Algorithm:
             outfile_path = (
                 res_dir / f'gp_model_parameters_{self.iteration_number}.json'
             )
-
             self.current_gp_model.write_model_parameters_to_json(  # type: ignore
                 outfile_path,
                 include_training_data=True,
@@ -956,7 +957,7 @@ class GP_AB_Algorithm:
                 self.gmap_converged = self.gmap < self.gmap_threshold
                 self.converged = self.gkl_converged
 
-                num_simulations = len(self.inputs)
+                num_simulations = self.num_attempted_experiments[-1]
                 elapsed_time = time.time() - self.start_time
                 self.budget_exceeded = (
                     num_simulations >= self.max_simulations
@@ -973,7 +974,7 @@ class GP_AB_Algorithm:
                 if self.budget_exceeded:
                     self.loginfo(
                         f'Terminating: computational budget exceeded '
-                        f'(simulations: {len(self.inputs)}/{self.max_simulations}, '
+                        f'(simulations: {num_simulations}/{self.max_simulations}, '
                         f'time: {elapsed_time:.2f}/{self.max_computational_time} sec)'
                     )
 
@@ -1117,7 +1118,9 @@ class GP_AB_Algorithm:
             highlight='submajor',
         ):
             simulation_number_start = (
-                len(self.outputs) if self.outputs is not None else 0
+                self.num_attempted_experiments[-1]
+                if self.num_attempted_experiments
+                else 0
             )
             self.loginfo(
                 f'Evaluating {len(self.new_training_points)} new training points.'
@@ -1141,7 +1144,14 @@ class GP_AB_Algorithm:
                 [self.outputs, self.successful_new_training_outputs]
             )
             self.num_experiments.append(len(self.inputs))
-
+            self.num_attempted_experiments.append(
+                (
+                    self.num_attempted_experiments[-1]
+                    if self.num_attempted_experiments
+                    else 0
+                )
+                + len(self.new_training_points)
+            )
             time_elapsed = time.time() - start_time
             self.model_evaluation_time += time_elapsed
 
@@ -1662,7 +1672,9 @@ def preprocess(input_arguments):
 
     data = np.atleast_2d(
         np.genfromtxt(
-            tmp_file, skip_header=1, usecols=np.arange(2, 2 + output_dimension)
+            tmp_file,
+            skip_header=1,
+            usecols=np.arange(2, 2 + output_dimension),  # type: ignore
         )
     )
 
@@ -1847,7 +1859,7 @@ def main(command_args=None):
         flusher.stop()
 
         if input_arguments.run_type == 'runningRemote':
-            from mpi4py import MPI
+            from mpi4py import MPI  # type: ignore
 
             MPI.COMM_WORLD.Abort(0)
 
