@@ -186,6 +186,7 @@ class GP_AB_Algorithm:
             self.terminate = False
 
             self.num_experiments = [0]
+            self.num_attempted_experiments = [0]
             self.num_recalibration_experiments = 0
             self.recalibration_ratio = recalibration_ratio
 
@@ -256,35 +257,109 @@ class GP_AB_Algorithm:
         #     warn_if_longer_than=300.0,
         # )
 
+    # def _evaluate_in_parallel(
+    #     self, func, model_parameters, simulation_number_start=0
+    # ):
+    #     """
+    #     Evaluate the model in parallel using the provided function and samples.
+
+    #     Args:
+    #         func (callable): The function to evaluate.
+    #         samples (np.ndarray): The samples to evaluate.
+
+    #     Returns
+    #     -------
+    #         np.ndarray: The evaluated outputs.
+    #     """
+    #     simulation_numbers = np.arange(
+    #         simulation_number_start, simulation_number_start + len(model_parameters)
+    #     )
+    #     iterable = zip(simulation_numbers, model_parameters)
+    #     outputs = np.atleast_2d(
+    #         list(self.parallel_evaluation_function(func, iterable))
+    #     )
+    #     # Fix scalar outputs → (n, 1)
+    #     if outputs.ndim == 1:
+    #         outputs = outputs.reshape(-1, 1)
+
+    #     # Fix shape (n, 1, d) → (n, d)
+    #     elif outputs.ndim == 3 and outputs.shape[1] == 1:
+    #         outputs = np.squeeze(outputs, axis=1)
+    #     return outputs
+
     def _evaluate_in_parallel(
         self, func, model_parameters, simulation_number_start=0
     ):
         """
-        Evaluate the model in parallel using the provided function and samples.
+        Safely evaluate the model in parallel over a batch of input samples.
 
-        Args:
-            func (callable): The function to evaluate.
-            samples (np.ndarray): The samples to evaluate.
+        Each sample is evaluated using the provided function in a separate workdir.
+        Failed model evaluations (e.g., due to runtime errors or invalid output)
+        are skipped and logged to a JSON file with error messages.
+
+        Output shape handling is preserved for compatibility with downstream GP training:
+        - Scalar outputs are reshaped to (n, 1)
+        - Extra singleton dimensions (e.g., shape (n, 1, d)) are squeezed to (n, d)
+
+        Parameters
+        ----------
+        func : callable
+            The model evaluation function of the form (sim_number: int, x: np.ndarray) -> np.ndarray.
+        model_parameters : np.ndarray
+            Array of shape (n_samples, n_inputs) containing the parameter samples to evaluate.
+        simulation_number_start : int, optional
+            The starting index for naming simulation workdirs, by default 0.
 
         Returns
         -------
-            np.ndarray: The evaluated outputs.
+        y_valid : np.ndarray
+            Array of shape (n_valid, n_outputs) containing the outputs from successful model runs.
+        x_valid : np.ndarray
+            Array of shape (n_valid, n_inputs) containing the corresponding input samples.
         """
         simulation_numbers = np.arange(
             simulation_number_start, simulation_number_start + len(model_parameters)
         )
         iterable = zip(simulation_numbers, model_parameters)
-        outputs = np.atleast_2d(
-            list(self.parallel_evaluation_function(func, iterable))
-        )
-        # Fix scalar outputs → (n, 1)
-        if outputs.ndim == 1:
-            outputs = outputs.reshape(-1, 1)
 
-        # Fix shape (n, 1, d) → (n, d)
-        elif outputs.ndim == 3 and outputs.shape[1] == 1:  # noqa: PLR2004
-            outputs = np.squeeze(outputs, axis=1)
-        return outputs
+        wrapped_func = partial(
+            uq_utilities.safe_evaluate_model_for_gp_ab,
+            model_callable=func,
+            logger=self.logger,
+        )
+        results = list(self.parallel_evaluation_function(wrapped_func, iterable))
+
+        x_valid, y_valid, failed = [], [], []
+
+        for x, y, msg in results:
+            if y is not None:
+                x_valid.append(x)
+                y_valid.append(y)
+            else:
+                failed.append((x, msg))
+
+        if failed:
+            output_dir = Path('results')
+            out_path = (
+                output_dir / f'failed_model_inputs_iter_{self.iteration_number}.json'
+            )
+            self.logger.warning(
+                f'Skipping {len(failed)} failed model evaluations. Details in {out_path}.'
+            )
+            uq_utilities.log_failed_points_to_file(
+                failed,
+                iteration=self.iteration_number,
+                logger=self.logger,
+                output_dir=output_dir,
+            )
+
+        y_valid = np.array(y_valid)
+        if y_valid.ndim == 1:
+            y_valid = y_valid.reshape(-1, 1)
+        elif y_valid.ndim == 3 and y_valid.shape[1] == 1:  # noqa: PLR2004
+            y_valid = np.squeeze(y_valid, axis=1)
+
+        return y_valid, np.array(x_valid)
 
     def _perform_space_filling_doe(self, n_samples):
         """
@@ -315,14 +390,16 @@ class GP_AB_Algorithm:
             tuple: A tuple containing the inputs and outputs of the initial training set.
         """
         self.loginfo('Using a space filling strategy')
-        inputs = self.sample_transformation_function(
+        proposed_inputs = self.sample_transformation_function(
             self._perform_space_filling_doe(n_samples)
         )
         self.loginfo(
-            f'Generated {inputs.shape[0]} samples for initial training set. Evaluating the model at these samples.'
+            f'Generated {proposed_inputs.shape[0]} samples for initial training set. Evaluating the model at these samples.'
         )
-        outputs = self._evaluate_in_parallel(self.model_evaluation_function, inputs)
-        return inputs, outputs
+        successful_outputs, successful_inputs = self._evaluate_in_parallel(
+            self.model_evaluation_function, proposed_inputs
+        )
+        return successful_inputs, successful_outputs
 
     # def _log_like(self, predictions):
     #     predictions = np.atleast_2d(predictions)
@@ -428,12 +505,16 @@ class GP_AB_Algorithm:
         """
         # start_time = time.time()
         self.loginfo('Calculating leave-one-out cross validation error measure gCV.')
+        x_train_unique, y_train_unique = (
+            self.current_gp_model.x_train,  # type: ignore
+            self.current_gp_model.y_train,  # type: ignore
+        )
         loo_predictions = self.current_gp_model.loo_predictions(  # type: ignore
-            self.inputs, self.outputs
+            x_train_unique, y_train_unique
         )
         loocv_measure = convergence_metrics.calculate_gcv(
             loo_predictions,
-            self.outputs,
+            y_train_unique,
             self.output_length_list,
             weights=weights,
             weight_combination=(2 / 3, 1 / 3),
@@ -444,8 +525,10 @@ class GP_AB_Algorithm:
 
     def _get_exploitation_candidates(self):
         """
-        Assemble candidate training points for exploitation by sampling from TMCMC stages
-        after the warm start, proportionally to the provided stage weights.
+        Assemble candidate training points for exploitation.
+
+        This is done by sampling from TMCMC stages after the warm start,
+        proportionally to the provided stage weights.
 
         Returns
         -------
@@ -453,12 +536,9 @@ class GP_AB_Algorithm:
             The exploitation candidate training points of shape (n_candidates, n_parameters).
         dict:
             Dictionary mapping stage number to the number of points sampled from that stage.
-        """  # noqa: D205
-        # self.loginfo('Assembling candidate training points for exploitation.')
-        stage_weights = np.asarray(
-            self.stage_weights
-        )  # aligned with stages_after_warm_start
-        stage_weights = stage_weights / np.sum(stage_weights)
+        """
+        stage_weights = np.asarray(self.stage_weights)
+        stage_weights /= np.sum(stage_weights)  # Normalize weights
 
         n_candidates = self.num_candidate_training_points
         candidate_training_points_exploitation = []
@@ -467,26 +547,29 @@ class GP_AB_Algorithm:
         for stage_idx, stage_num in enumerate(self.stages_after_warm_start):
             samples_stage = self.results['model_parameters_dict'][stage_num]
             n_available = samples_stage.shape[0]
-            n_stage_samples = int(np.round(stage_weights[stage_idx] * n_candidates))
 
-            if n_stage_samples >= n_available:
-                selected = samples_stage
-                n_selected = n_available
-            else:
+            n_stage_samples = int(np.round(stage_weights[stage_idx] * n_candidates))
+            if n_stage_samples == 0:
+                continue
+
+            if n_stage_samples <= n_available:
                 selected_indices = np.random.choice(
                     n_available, size=n_stage_samples, replace=False
                 )
                 selected = samples_stage[selected_indices]
-                n_selected = n_stage_samples
+            else:
+                # Use all available samples
+                selected = samples_stage
 
             candidate_training_points_exploitation.append(selected)
-            stage_sample_counts[stage_num] = n_selected
+            stage_sample_counts[stage_num] = selected.shape[0]
 
+        # Combine all stage samples
         candidate_training_points_exploitation = np.vstack(
             candidate_training_points_exploitation
         )
 
-        # Trim if needed
+        # Optional: globally truncate if total exceeds n_candidates (e.g., due to rounding)
         if candidate_training_points_exploitation.shape[0] > n_candidates:
             trim_indices = np.random.choice(
                 candidate_training_points_exploitation.shape[0],
@@ -496,9 +579,7 @@ class GP_AB_Algorithm:
             candidate_training_points_exploitation = (
                 candidate_training_points_exploitation[trim_indices]
             )
-        # self.loginfo(
-        #     'Completed candidate training point selection for exploitation.'
-        # )
+
         return candidate_training_points_exploitation, stage_sample_counts
 
     def _summarize_iteration(self):
@@ -533,19 +614,24 @@ class GP_AB_Algorithm:
         """
         with self.log_step('Running GP-AB Algorithm', highlight='major'):
             with self.log_step('Generation of Initial Training Points'):
+                self.iteration_number = -1
                 inputs, outputs, num_initial = self.run_initial_doe(
                     num_initial_doe_per_dim=self.batch_size_factor
                 )
                 self.inputs = inputs
                 self.outputs = outputs
-                self.num_experiments.append(num_initial)
+                self.num_experiments.append(len(inputs))
+                self.num_attempted_experiments.append(num_initial)
 
                 # First time
                 self.current_gp_model = create_gp_model(
                     input_dimension=self.input_dimension,
                     output_dimension=self.output_dimension,
                     mean_function='linear',
+                    # mean_function='none',
+                    # fix_nugget=True,
                     fix_nugget=False,
+                    nugget_value=1e-6,
                     logger=self.logger,
                     use_pca=self.use_pca,
                     pca_threshold=self.pca_threshold,
@@ -719,8 +805,13 @@ class GP_AB_Algorithm:
                 self.gp_prediction_mean, _ = self.current_gp_model.predict(  # type: ignore
                     model_parameters
                 )
+                # self.loo_predictions = self.current_gp_model.loo_predictions(  # type: ignore
+                #     model_parameters, model_outputs
+                # )
+
                 self.loo_predictions = self.current_gp_model.loo_predictions(  # type: ignore
-                    model_parameters, model_outputs
+                    self.current_gp_model.x_train,  # type: ignore
+                    self.current_gp_model.y_train,  # type: ignore
                 )
 
                 self.current_response_approximation = partial(
@@ -731,6 +822,16 @@ class GP_AB_Algorithm:
                     log_like_fn=log_like_fn,
                     response_approx_fn=self.current_response_approximation,
                 )
+
+            res_dir = Path('results')
+            res_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
+            outfile_path = (
+                res_dir / f'gp_model_parameters_{self.iteration_number}.json'
+            )
+            self.current_gp_model.write_model_parameters_to_json(  # type: ignore
+                outfile_path,
+                include_training_data=True,
+            )
 
     def _step_2_bayesian_updating(self, log_prior_fn, log_like_fn):
         """
@@ -764,7 +865,9 @@ class GP_AB_Algorithm:
 
             with self.log_step('Evaluating warm-start of TMCMC.'):
                 if self.iteration_number > 0:
-                    weights = self.kde.evaluate(self.inputs)  # type: ignore
+                    weights = self.kde.evaluate(  # type: ignore
+                        self.current_gp_model.x_train  # type: ignore
+                    )  # inputs deduplicated in the gp model
                     self.gcv = self._calculate_gcv(weights)
                     self.warm_start_possible = self.gcv <= self.gcv_threshold
 
@@ -868,7 +971,7 @@ class GP_AB_Algorithm:
                 self.gmap_converged = self.gmap < self.gmap_threshold
                 self.converged = self.gkl_converged
 
-                num_simulations = len(self.inputs)
+                num_simulations = self.num_attempted_experiments[-1]
                 elapsed_time = time.time() - self.start_time
                 self.budget_exceeded = (
                     num_simulations >= self.max_simulations
@@ -885,7 +988,7 @@ class GP_AB_Algorithm:
                 if self.budget_exceeded:
                     self.loginfo(
                         f'Terminating: computational budget exceeded '
-                        f'(simulations: {len(self.inputs)}/{self.max_simulations}, '
+                        f'(simulations: {num_simulations}/{self.max_simulations}, '
                         f'time: {elapsed_time:.2f}/{self.max_computational_time} sec)'
                     )
 
@@ -927,6 +1030,13 @@ class GP_AB_Algorithm:
             self.loginfo('Setting up GP for adaptive design of experiments.')
             current_doe = AdaptiveDesignOfExperiments(self.current_gp_model)
 
+            res_dir = Path('results')
+            res_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
+            outfile_path = (
+                res_dir / f'doe_kernel_summary_{self.iteration_number}.json'
+            )
+            current_doe.write_gp_for_doe_to_json(outfile_path)
+
             with LogStepContext(
                 'Exploitation Design of Experiments',
                 logger=self.logger,
@@ -958,18 +1068,20 @@ class GP_AB_Algorithm:
                 self.exploitation_training_points = np.empty(
                     (0, self.input_dimension)
                 )
+
+                current_inputs = self.current_gp_model.x_train.copy()  # type: ignore
                 if self.n_exploit > 0:
                     self.exploitation_training_points = (
                         current_doe.select_training_points(
-                            self.inputs,
+                            current_inputs,
                             self.n_exploit,
                             candidates_exploit,
                             use_mse_w=True,
                             weights=weights_normalized,
                         )
                     )
-                    self.inputs = np.vstack(
-                        [self.inputs, self.exploitation_training_points]
+                    current_inputs = np.vstack(
+                        [current_inputs, self.exploitation_training_points]
                     )
                     self.loginfo(f'{self.n_exploit} exploitation points selected.')
                 else:
@@ -993,15 +1105,15 @@ class GP_AB_Algorithm:
                 if self.n_explore > 0:
                     self.exploration_training_points = (
                         current_doe.select_training_points(
-                            self.inputs,
+                            current_inputs,
                             self.n_explore,
                             candidates_explore,
                             use_mse_w=False,
                             weights=None,
                         )
                     )
-                    self.inputs = np.vstack(
-                        [self.inputs, self.exploration_training_points]
+                    current_inputs = np.vstack(
+                        [current_inputs, self.exploration_training_points]
                     )
                     self.loginfo(f'{self.n_explore} exploration points selected.')
                 else:
@@ -1014,7 +1126,6 @@ class GP_AB_Algorithm:
             self.new_training_points = np.vstack(
                 [self.exploitation_training_points, self.exploration_training_points]
             )
-            self.num_experiments.append(len(self.inputs))
 
     def _step_5_evaluate_responses(self):
         """
@@ -1028,7 +1139,9 @@ class GP_AB_Algorithm:
             highlight='submajor',
         ):
             simulation_number_start = (
-                len(self.outputs) if self.outputs is not None else 0
+                self.num_attempted_experiments[-1]
+                if self.num_attempted_experiments
+                else 0
             )
             self.loginfo(
                 f'Evaluating {len(self.new_training_points)} new training points.'
@@ -1037,13 +1150,29 @@ class GP_AB_Algorithm:
                 f'Running {min(len(self.new_training_points), self.parallel_pool.num_processors)} model evaluations in parallel'
             )
             start_time = time.time()
-            self.new_training_outputs = self._evaluate_in_parallel(
+            (
+                self.successful_new_training_outputs,
+                self.successful_new_training_inputs,
+            ) = self._evaluate_in_parallel(
                 self.model_evaluation_function,
                 self.new_training_points,
                 simulation_number_start=simulation_number_start,
             )
-            self.outputs = np.vstack([self.outputs, self.new_training_outputs])
-
+            self.inputs = np.vstack(
+                [self.inputs, self.successful_new_training_inputs]
+            )
+            self.outputs = np.vstack(
+                [self.outputs, self.successful_new_training_outputs]
+            )
+            self.num_experiments.append(len(self.inputs))
+            self.num_attempted_experiments.append(
+                (
+                    self.num_attempted_experiments[-1]
+                    if self.num_attempted_experiments
+                    else 0
+                )
+                + len(self.new_training_points)
+            )
             time_elapsed = time.time() - start_time
             self.model_evaluation_time += time_elapsed
 
@@ -1274,14 +1403,14 @@ class GP_AB_Algorithm:
                 }
             )
 
-        return make_json_serializable(data)
+        return uq_utilities.make_json_serializable(data)
 
     def write_results(self, results_dir='results'):
         """Write the results of the GP-AB Algorithm to a file."""
         res_dir = Path(results_dir)
         res_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 
-        serializable_data = make_json_serializable(self.results)
+        serializable_data = uq_utilities.make_json_serializable(self.results)
         outfile_path = res_dir / f'tmcmc_results_{self.iteration_number}.json'
         with outfile_path.open('w') as f:
             json.dump(serializable_data, f, indent=4)
@@ -1302,29 +1431,6 @@ class GP_AB_Algorithm:
             output_dir=res_dir,
             terminate=self.terminate,
         )
-
-
-def make_json_serializable(obj):
-    """Recursively convert NumPy and other non-serializable types to JSON-serializable Python types."""
-    if isinstance(obj, dict):
-        return {k: make_json_serializable(v) for k, v in obj.items()}
-    elif isinstance(obj, list):  # noqa: RET505
-        return [make_json_serializable(item) for item in obj]
-    elif isinstance(obj, tuple):
-        return tuple(make_json_serializable(item) for item in obj)
-    elif isinstance(obj, np.ndarray):
-        return make_json_serializable(obj.tolist())  # Recurse on elements
-    elif isinstance(obj, (np.integer, int)):
-        return int(obj)
-    elif isinstance(obj, (np.floating, float)):
-        return float(obj)
-    elif isinstance(obj, (np.bool_, bool)):
-        return bool(obj)
-    elif obj is None:
-        return None
-    else:
-        msg = f'Object of type {type(obj)} is not JSON serializable: {obj}'
-        raise TypeError(msg)
 
 
 def save_exploitation_candidates_by_stage_json(
@@ -1358,7 +1464,7 @@ def save_exploitation_candidates_by_stage_json(
         'stage_sample_counts': {str(k): v for k, v in stage_sample_counts.items()},
         'samples_by_stage': samples_by_stage,
     }
-    output_json_serializable = make_json_serializable(output)
+    output_json_serializable = uq_utilities.make_json_serializable(output)
 
     out_file.parent.mkdir(parents=True, exist_ok=True)
     with out_file.open('w') as f:
@@ -1405,7 +1511,7 @@ def save_exploitation_candidates_json(
         'samples': sample_dicts,
     }
 
-    output_json_serializable = make_json_serializable(output)
+    output_json_serializable = uq_utilities.make_json_serializable(output)
 
     # Ensure parent directory exists
     out_file.parent.mkdir(parents=True, exist_ok=True)
@@ -1587,7 +1693,9 @@ def preprocess(input_arguments):
 
     data = np.atleast_2d(
         np.genfromtxt(
-            tmp_file, skip_header=1, usecols=np.arange(2, 2 + output_dimension)
+            tmp_file,
+            skip_header=1,
+            usecols=np.arange(2, 2 + output_dimension),  # type: ignore
         )
     )
 
@@ -1772,7 +1880,7 @@ def main(command_args=None):
         flusher.stop()
 
         if input_arguments.run_type == 'runningRemote':
-            from mpi4py import MPI
+            from mpi4py import MPI  # type: ignore
 
             MPI.COMM_WORLD.Abort(0)
 

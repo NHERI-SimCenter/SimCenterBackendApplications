@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import os
 import sys
@@ -17,13 +18,42 @@ from logging_utilities import (  # decorate_methods_with_log_step,
     make_logger_context,
     setup_logger,
 )
-from principal_component_analysis import PrincipalComponentAnalysis
+from principal_component_analysis import (
+    PrincipalComponentAnalysis,
+    SafeStandardScaler,
+)
 from pydantic import BaseModel, Field, model_validator
 from sklearn.linear_model import LinearRegression
+from uq_utilities import make_json_serializable
 
 # =========================================================
 # Top-level Classes
 # =========================================================
+
+
+def remove_duplicate_inputs(
+    x: np.ndarray, y: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Remove duplicate rows in X and corresponding rows in Y.
+
+    Keeps only the first occurrence.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Input array of shape (n_samples, n_features).
+    y : np.ndarray
+        Output array of shape (n_samples, n_outputs).
+
+    Returns
+    -------
+    x_unique, y_unique : tuple[np.ndarray, np.ndarray]
+        Deduplicated input-output arrays.
+    """
+    _, unique_indices = np.unique(x, axis=0, return_index=True)
+    sorted_indices = np.sort(unique_indices)
+    return x[sorted_indices], y[sorted_indices]
 
 
 class GaussianProcessModelSettings(BaseModel):
@@ -40,6 +70,7 @@ class GaussianProcessModelSettings(BaseModel):
     fix_nugget: bool = True
     use_pca: bool = False
     pca_threshold: float = 0.999
+    scale_inputs: bool = True
 
     @model_validator(mode='after')
     def check_nugget_value(self):  # noqa: D102
@@ -71,6 +102,7 @@ class GaussianProcessModel:
         self.fix_nugget = settings.fix_nugget
         self.use_pca = settings.use_pca
         self.pca_threshold = settings.pca_threshold
+        self.scale_inputs = settings.scale_inputs
 
         self.pca = (
             PrincipalComponentAnalysis(self.pca_threshold, perform_scaling=True)
@@ -79,6 +111,8 @@ class GaussianProcessModel:
         )
         self.latent_dimension = None
 
+        self.input_scaler = SafeStandardScaler() if self.scale_inputs else None
+
         self.kernel = self._create_kernel()
 
         self.linear_models: list[LinearRegression | None] = []
@@ -86,6 +120,7 @@ class GaussianProcessModel:
 
         self.x_train = None
         self.y_train = None
+        self.x_train_scaled = None
 
     def _create_kernel(self):
         if self.kernel_type == 'exponential':
@@ -98,6 +133,15 @@ class GaussianProcessModel:
             return GPy.kern.RBF(input_dim=self.input_dimension, ARD=self.ARD)
         msg = f"Unknown kernel_type '{self.kernel_type}'"
         raise ValueError(msg)
+
+    def apply_input_scaling(self, x, *, fit=False):
+        """Scale inputs using the input scaler."""
+        if self.input_scaler is None:
+            return x
+
+        if fit:
+            return self.input_scaler.fit_transform(x)
+        return self.input_scaler.transform(x)
 
     def _create_surrogate(self):
         model = GPy.models.GPRegression(
@@ -117,8 +161,28 @@ class GaussianProcessModel:
             model.likelihood.variance.fix()
         else:
             model.Gaussian_noise.variance = self.settings.nugget_value
+            model.likelihood.variance.constrain_bounded(1e-8, 1e-3)
+
+    def _set_kernel_hyperparameter_bounds(self, kernel):
+        """Set reasonable hyperparameter bounds for scaled inputs."""
+        if self.scale_inputs:
+            # For standardized inputs, set reasonable bounds
+            if hasattr(kernel, 'lengthscale'):
+                kernel.lengthscale.constrain_bounded(0.01, 10.0)
+            if hasattr(kernel, 'variance'):
+                kernel.variance.constrain_bounded(0.01, 100.0)
+        # TODO (ABS): For unscaled inputs, use default bounds or wider ranges
 
     def _fit_pca_and_create_models(self, *, reoptimize=True, num_random_restarts=10):
+        self.x_train_scaled = self.apply_input_scaling(self.x_train, fit=True)
+
+        if self.scale_inputs:
+            self.loginfo(
+                f'Input scaling enabled. Scaled training inputs with shape {self.x_train_scaled.shape}'
+            )
+        else:
+            self.loginfo('Input scaling disabled. Using original input scale.')
+
         if self.pca is not None:
             self.pca.fit(self.y_train)
             y_latent = self.pca.project_to_latent_space(self.y_train)
@@ -141,7 +205,7 @@ class GaussianProcessModel:
         self.linear_models = []
 
         for i in range(self.output_dimension):
-            x = self.x_train
+            x = self.x_train_scaled
             y = np.reshape(y_latent[:, i], (-1, 1))  # type: ignore
 
             linear_model = None
@@ -152,10 +216,13 @@ class GaussianProcessModel:
             else:
                 y_detrended = y
 
+            kernel_copy = self.kernel.copy()
+            self._set_kernel_hyperparameter_bounds(kernel_copy)
+
             gp = GPy.models.GPRegression(
                 X=x,
                 Y=y_detrended,
-                kernel=self.kernel.copy(),
+                kernel=kernel_copy,
                 mean_function=None,
                 normalizer=True,
             )
@@ -185,8 +252,14 @@ class GaussianProcessModel:
         num_random_restarts : int, optional
             Number of random restarts for optimization (default is 10).
         """
-        self.x_train = x_train
-        self.y_train = y_train
+        orig_n = x_train.shape[0]
+        inputs, outputs = remove_duplicate_inputs(x_train, y_train)
+        deduped_n = inputs.shape[0]
+        if self.logger and deduped_n < orig_n:
+            self.logger.info(f'Removed {orig_n - deduped_n} duplicate input points.')
+
+        self.x_train = inputs
+        self.y_train = outputs
         self._fit_pca_and_create_models(
             reoptimize=reoptimize, num_random_restarts=num_random_restarts
         )
@@ -212,8 +285,16 @@ class GaussianProcessModel:
             msg = 'GP model not initialized. Call `initialize` first.'
             raise ValueError(msg)
 
-        self.x_train = x_train
-        self.y_train = y_train
+        orig_n = x_train.shape[0]
+        inputs, outputs = remove_duplicate_inputs(x_train, y_train)
+        deduped_n = inputs.shape[0]
+        if self.logger and deduped_n < orig_n:
+            self.logger.info(f'Removed {orig_n - deduped_n} duplicate input points.')
+
+        self.x_train = inputs
+        self.y_train = outputs
+
+        self.x_train_scaled = self.apply_input_scaling(self.x_train, fit=True)
 
         if self.pca is not None:
             self.pca.fit(self.y_train)
@@ -235,20 +316,16 @@ class GaussianProcessModel:
             for i in range(self.output_dimension):
                 y = np.reshape(y_latent[:, i], (-1, 1))
                 if self.linear_models[i] is not None:
-                    y_detrended = y - self.linear_models[i].predict(self.x_train)  # type: ignore
+                    y_detrended = y - self.linear_models[i].predict(  # type: ignore
+                        self.x_train_scaled
+                    )
                 else:
                     y_detrended = y
-                self.model[i].set_XY(self.x_train, y_detrended)
+                self.model[i].set_XY(self.x_train_scaled, y_detrended)
                 if reoptimize:
                     self.model[i].optimize_restarts(num_random_restarts)
                 else:
                     _ = self.model[i].posterior
-
-    # def update(self, x_train, y_train, *, reoptimize=True, num_random_restarts=10):
-    #     if self.model:
-    #         self.add_training_data(x_train, y_train, reoptimize=reoptimize, num_random_restarts=num_random_restarts)
-    #     else:
-    #         self.initialize(x_train, y_train, reoptimize=reoptimize, num_random_restarts=num_random_restarts)
 
     def predict(self, x_predict):
         """
@@ -270,13 +347,15 @@ class GaussianProcessModel:
             msg = 'GP model not initialized. Call `initialize` first.'
             raise ValueError(msg)
 
+        x_predict_scaled = self.apply_input_scaling(x_predict, fit=False)
+
         y_mean = np.zeros((x_predict.shape[0], self.output_dimension))
         y_var = np.zeros((x_predict.shape[0], self.output_dimension))
 
         for i in range(self.output_dimension):
-            mean, var = self.model[i].predict(x_predict)  # type: ignore
+            mean, var = self.model[i].predict(x_predict_scaled)
             if self.linear_models[i] is not None:
-                trend = self.linear_models[i].predict(x_predict)  # type: ignore
+                trend = self.linear_models[i].predict(x_predict_scaled)  # type: ignore
                 mean += trend
 
             y_mean[:, i] = mean.flatten()
@@ -314,13 +393,15 @@ class GaussianProcessModel:
             msg = 'Model must be trained before computing LOO predictions.'
             raise ValueError(msg)
 
+        x_train_scaled = self.apply_input_scaling(x_train, fit=False)
+
         if self.pca is not None:
             y_train = self.pca.project_to_latent_space(y_train)
 
         loo_pred_latent = np.zeros_like(y_train, dtype=np.float64)
 
         for i in range(self.output_dimension):
-            x = x_train
+            x = x_train_scaled
             y = y_train[:, i].reshape(-1, 1)
 
             # Step 1: Detrend
@@ -373,34 +454,197 @@ class GaussianProcessModel:
             }
         return {}
 
-    # def __repr__(self):
-    #     """Provide a string representation of the GaussianProcessModel instance."""
-    #     trend_desc = (
-    #         'LinearTrend (sklearn)'
-    #         if self.mean_function_type == 'linear'
-    #         else 'None'
-    #     )
-    #     variance = float(self.model[0].likelihood.variance)  # Extract value
-    #     is_fixed = self.model[0].likelihood.variance.is_fixed  # Check if fixed
-    #     return (
-    #         f'GaussianProcessModel('
-    #         f'input_dimension={self.input_dimension}, '
-    #         f'output_dimension={self.output_dimension}, '
-    #         f'ARD={self.ARD}, '
-    #         f'kernel_type={self.model[0].kern.name}, '
-    #         f'mean_function={trend_desc}, '
-    #         f'nugget_value={variance}, '
-    #         f'fix_nugget={is_fixed})'
-    #     )
-
     def flush_logs(self):
         """Flush the logs for the Gaussian Process Model."""
         flush_logger(self.logger)
 
+    def write_model_parameters_to_json(
+        self,
+        filepath: str | Path,
+        *,
+        include_training_data: bool = True,
+    ):
+        """
+        Write GP model settings, kernel, linear regression, and optionally training data to a JSON file.
 
-# =========================================================
+        Parameters
+        ----------
+        filepath : str or Path
+            Output file path.
+        include_training_data : bool
+            Whether to include training data in the JSON file (default is True).
+        """
+        if not self.model:
+            msg = 'Model has not been initialized or trained.'
+            raise RuntimeError(msg)
+
+        model_params = {
+            'input_dimension': self.input_dimension,
+            'output_dimension': self.output_dimension,
+            'ARD': self.ARD,
+            'kernel_type': self.kernel_type,
+            'mean_function': self.mean_function_type,
+            'nugget_value': self.nugget_value,
+            'fix_nugget': self.fix_nugget,
+            'use_pca': self.use_pca,
+            'pca_threshold': self.pca_threshold,
+            'scale_inputs': self.scale_inputs,
+            'pca_info': self.pca_info,
+            'models': [],
+        }
+
+        if self.input_scaler is not None:
+            model_params['input_scaler'] = {
+                'mean_': self.input_scaler.mean_.tolist(),  # type: ignore
+                'scale_': self.input_scaler.scale_.tolist(),  # type: ignore
+                'n_features_in_': int(self.input_scaler.n_features_in_),  # type: ignore
+            }
+
+        if include_training_data:
+            if self.x_train is None or self.y_train is None:
+                self.logger.warning(
+                    'Training data is None. Skipping training data export.'
+                )
+            else:
+                model_params['x_train'] = self.x_train.tolist()
+                model_params['y_train'] = self.y_train.tolist()
+
+        for i, gp in enumerate(self.model):
+            params = {
+                'output_index': i,
+                'kernel_parameters': {
+                    param.name: {
+                        'value': param.values.tolist()  # noqa: PD011
+                        if param.size > 1
+                        else float(param.values),
+                        'shape': param.shape,
+                    }
+                    for param in gp.kern.parameters
+                },
+                'nugget': float(gp.likelihood.variance[0]),
+            }
+
+            if self.linear_models[i] is not None:
+                linear_model = self.linear_models[i]
+                params['linear_regression'] = {
+                    'coefficients': linear_model.coef_.tolist(),  # type: ignore
+                    'intercept': float(linear_model.intercept_),  # type: ignore
+                }
+            else:
+                params['linear_regression'] = None
+
+            model_params['models'].append(params)
+
+        filepath = Path(filepath)
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+
+        with filepath.open('w') as f:
+            json.dump(make_json_serializable(model_params), f, indent=2)
+
+    def load_model_parameters_from_json(  # noqa: C901
+        self,
+        filepath: str | Path,
+        *,
+        has_training_data: bool = True,
+    ):
+        """
+        Load GP model settings, kernel, linear regression, and optionally training data from a JSON file.
+
+        Parameters
+        ----------
+        filepath : str or Path
+            Path to the JSON file.
+        has_training_data : bool
+            Whether the JSON file includes training data (default is True).
+        """
+        with Path(filepath).open() as f:
+            model_params = json.load(f)
+
+        self.input_dimension = model_params['input_dimension']
+        self.output_dimension = model_params['output_dimension']
+        self.ARD = model_params['ARD']
+        self.kernel_type = model_params['kernel_type']
+        self.mean_function_type = model_params['mean_function']
+        self.nugget_value = model_params['nugget_value']
+        self.fix_nugget = model_params['fix_nugget']
+        self.use_pca = model_params['use_pca']
+        self.pca_threshold = model_params['pca_threshold']
+        self.scale_inputs = model_params.get('scale_inputs', True)
+
+        if self.scale_inputs and 'input_scaler' in model_params:
+            self.input_scaler = SafeStandardScaler()
+            scaler_params = model_params['input_scaler']
+            self.input_scaler.mean_ = np.array(scaler_params['mean_'])
+            self.input_scaler.scale_ = np.array(scaler_params['scale_'])
+            self.input_scaler.n_features_in_ = scaler_params['n_features_in_']  # type: ignore
+
+        if has_training_data:
+            self.x_train = np.array(model_params['x_train'])
+            self.y_train = np.array(model_params['y_train'])
+
+            self.x_train_scaled = self.apply_input_scaling(self.x_train, fit=False)
+
+            self.pca = None
+            self.latent_dimension = None
+            if self.use_pca:
+                self.pca_info = model_params['pca_info']  # type: ignore
+                self.pca = PrincipalComponentAnalysis(
+                    self.pca_threshold, perform_scaling=True
+                )
+                self.pca.fit(self.y_train)
+
+            self._fit_pca_and_create_models(reoptimize=False)
+
+        else:
+            models_data = model_params['models']
+            if len(models_data) != self.output_dimension:
+                msg = f'Expected {self.output_dimension} models, but got {len(models_data)}'
+                raise ValueError(msg)
+
+            self.model = []
+            self.linear_models = []
+
+            base_kernel = self._create_kernel()
+
+            for _ in models_data:
+                x_dummy = np.zeros((1, self.input_dimension))
+                y_dummy = np.zeros((1, 1))
+                kernel_copy = base_kernel.copy()
+                self._set_kernel_hyperparameter_bounds(kernel_copy)
+                gp = GPy.models.GPRegression(
+                    X=x_dummy,
+                    Y=y_dummy,
+                    kernel=kernel_copy,
+                    mean_function=None,
+                    normalizer=True,
+                )
+                self._configure_nugget(gp)
+                self.model.append(gp)
+                self.linear_models.append(None)
+
+        # Overwrite kernel and linear model parameters
+        for i, m in enumerate(model_params['models']):
+            gp = self.model[i]
+
+            for name, value in m['kernel_parameters'].items():
+                if name in gp.kern.parameter_names():
+                    gp.kern[name] = np.array(value['value']).reshape(value['shape'])
+
+            gp.likelihood.variance = m['nugget']
+            if self.fix_nugget:
+                gp.likelihood.variance.fix()
+
+            lr_params = m.get('linear_regression')
+            if lr_params is not None:
+                lr = LinearRegression()
+                lr.coef_ = np.array(lr_params['coefficients']).reshape(1, -1)
+                lr.intercept_ = np.array([lr_params['intercept']])
+                self.linear_models[i] = lr
+
+
+# ===============
 # Public function
-# =========================================================
+# ===============
 
 
 def create_gp_model(
@@ -442,13 +686,12 @@ def create_gp_model(
     save_used_settings_as_config(config=config_dict, output_path=output_path)
 
     model = GaussianProcessModel(settings, logger=logger)
-    # loginfo(f'Created: {model}')
     return model  # noqa: RET504
 
 
-# =========================================================
+# ========================
 # Private helper functions
-# =========================================================
+# ========================
 
 
 def _create_gp_settings_from_kwargs(**kwargs) -> GaussianProcessModelSettings:
@@ -576,23 +819,28 @@ def parse_gp_arguments(args=None) -> dict:
     optional.add_argument(
         '--fix_nugget',
         action='store_true',
-        help='Fix the nugget to the specified value instead of optimizing it. '
-        'Default behavior is to optimize.',
+        help='Fix the nugget value during optimization.',
     )
     optional.add_argument(
         '--use_pca',
         action='store_true',
-        help='Enable dimensionality reduction using PCA before GP modeling.',
+        help='Use PCA to reduce output dimension before training GP.',
     )
     optional.add_argument(
         '--pca_threshold',
         type=float,
         default=0.999,
-        help='Cumulative explained variance threshold for PCA (default: 0.999).',
+        help='Variance threshold to retain when using PCA (default: 0.999).',
+    )
+    optional.add_argument(
+        '--scale_inputs',
+        type=lambda x: x.lower() in ('true', '1'),
+        default=True,
+        help='Whether to scale inputs before training the GP.',
     )
 
-    parsed = parser.parse_args(args)
-    return vars(parsed)
+    parsed_args = parser.parse_args(args)
+    return vars(parsed_args)
 
 
 # =========================================================
