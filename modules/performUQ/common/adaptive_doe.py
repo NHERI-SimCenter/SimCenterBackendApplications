@@ -29,7 +29,7 @@ class AdaptiveDesignOfExperiments:
         self._gp_for_doe()
 
     def _scale(self, x):
-        return self.gp_model.scale_inputs(x, fit=False)
+        return self.gp_model.apply_input_scaling(x, fit=False)
 
     def _hyperparameters_for_doe(self):
         """
