@@ -13,13 +13,6 @@ precision = ti.f32  # ti.f16 for half-precision or ti.f32 for single precision
 
 
 def main():  # noqa: C901, D103
-    # 1) Set the topography data
-
-    directoryPath = './examples/CrescentCity'  # noqa: N806
-    configFilename = 'config.json'  # noqa: N806
-    bathymetryFilename = 'bathy.txt'  # noqa: N806
-    waveFilename = 'waves.txt'  # noqa: N806
-
     parser = argparse.ArgumentParser(
         description='Run Celeris simulation with specified inputs.'
     )
@@ -56,13 +49,18 @@ def main():  # noqa: C901, D103
     # Parse arguments
     args = parser.parse_args()
 
-    # Print received arguments
+    # Resolve file paths
+    config_path = args.config if os.path.isabs(args.config) else os.path.join(args.directory, args.config)
+    bathymetry_path = args.bathymetry if os.path.isabs(args.bathymetry) else os.path.join(args.directory, args.bathymetry)
+    wave_path = args.waves if os.path.isabs(args.waves) else os.path.join(args.directory, args.waves)
+
+    # Print resolved settings
     print('Running Celeris with the following settings:')
     print('  Directory:', args.directory)
-    print('  Config file:', args.config)
-    print('  Bathymetry file:', args.bathymetry)
-    print('  Wave file:', args.waves)
-
+    print('  Config file:', config_path)
+    print('  Bathymetry file:', bathymetry_path)
+    print('  Wave file:', wave_path)
+    
     baty = Topodata(
         datatype='celeris',
         path=args.directory,
