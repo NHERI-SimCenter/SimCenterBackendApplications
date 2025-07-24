@@ -439,6 +439,11 @@
         "ApplicationSpecificInputs": []
       },
       {
+        "Name": "DRM",
+        "ExecutablePath": "applications/createEVENT/DRM/DRM.py",
+        "ApplicationSpecificInputs": []
+      },      
+      {
         "Name": "ExistingPEER_Events",
         "ExecutablePath": "applications/createEVENT/multiplePEER/MultiplePEER",
         "ApplicationSpecificInputs": []
@@ -723,6 +728,22 @@
       },
       {
         "Name": "OpenSeesInput",
+        "ExecutablePath": "applications/createSAM/openSeesInput/OpenSeesInput",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "fileName",
+            "type": "string",
+            "description": "Defines the name of the main OpenSees model file."
+          },
+          {
+            "id": "filePath",
+            "type": "string",
+            "description": "Defines the location of the main OpenSees model file."
+          }
+        ]
+      },
+      {
+        "Name": "FemoraInput",
         "ExecutablePath": "applications/createSAM/openSeesInput/OpenSeesInput",
         "ApplicationSpecificInputs": [
           {

@@ -241,7 +241,8 @@ OpenSeesPreprocessor::processSections(ofstream &s) {
 }
 
 int 
-OpenSeesPreprocessor::processNodes(ofstream &s){
+OpenSeesPreprocessor::processNodes(ofstream &s)
+{
 
   int index;
   json_t *node;
@@ -325,7 +326,8 @@ OpenSeesPreprocessor::processNodes(ofstream &s){
 }
 
 int 
-OpenSeesPreprocessor::processElements(ofstream &s){
+OpenSeesPreprocessor::processElements(ofstream &s)
+{
 
   int index;
   json_t *element;
@@ -434,12 +436,21 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 */
 
 int
-OpenSeesPreprocessor::processDamping(ofstream &s){
+OpenSeesPreprocessor::processDamping(ofstream &s) {
 
   //
   // determine dampingRatio .. should be in SAM, use SIM if not there
   //
-  
+  json_t *useDamping = json_object_get(rootSAM,"useDamping");
+  if (useDamping != NULL && json_is_true(useDamping) == false) {
+    s << "# Damping not used in this analysis\n";
+    return -1;
+  } else {
+    s << "# Damping used in this analysis\n";
+  }
+
+
+
   // get ratio from SAM, either mainbody or in Properties
   json_t *dampingT = json_object_get(rootSAM,"dampingRatio");
   if (dampingT == NULL) {
@@ -933,17 +944,27 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	  s << "analysis " << json_string_value(json_object_get(rootSIM,"analysis")) << "\n";
 
 	
-	processDamping(s);
+	int useDamping = processDamping(s);
 
-	
+	if (useDamping == 0) {
+		s  << "set lambda1 [lindex $lambdaN 0]\n"
+		   << "set T1 [expr 2*3.14159/$lambda1]\n"
+		   << "set dTana [expr $T1/20.]\n"
+		   << "if {$dt < $dTana} {set dTana $dt}\n";
+		s << "analyze [expr int($numStep*$dt/$dTana)] $dTana \n";
+		s << "remove recorders \n";
+	}
+	else if (useDamping == -1) {
+	  // damping not used
+	  s << "analyze $numStep $dt \n";
+	  s << "remove recorders \n";
+	} else {
+		// not supported
+		std::cerr << "OpenSeesPreprocessor - damping model not supported.\n";
+		return -1;
+	}
 	
 	//s << "set lambdaN [eigen 1];\n"
-	s  << "set lambda1 [lindex $lambdaN 0]\n"
-	   << "set T1 [expr 2*3.14159/$lambda1]\n"
-	   << "set dTana [expr $T1/20.]\n"
-	   << "if {$dt < $dTana} {set dTana $dt}\n";
-	s << "analyze [expr int($numStep*$dt/$dTana)] $dTana \n";
-	s << "remove recorders \n";
       }
     }
 
@@ -957,7 +978,9 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	      edpList.end(); ++itEDP) {
 	  s << " " << *itEDP;
 	}
-	s <<  "]\n puts $output\n }\n call_python \n";
+	s <<  "]\n puts $output\n }";
+  // remove calling python inside tcl since it broke the mpi
+  // "\nset pid [getPID]\nif {$pid==0} {call_python} \nbarrier\n";
 
       } else if(strstr(postprocessingScript, ".tcl") != NULL) {
 	  
@@ -992,6 +1015,63 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
 
   const char *eventType = json_string_value(json_object_get(event,"type"));
   //  std::cerr << "Processing Event type: " << eventType << "\n";
+
+    if (strcmp(eventType,"DRM") == 0) {
+      const char *eventName = json_string_value(json_object_get(event,"name"));
+      std::string eventPath = json_string_value(json_object_get(event,"filePath"));
+      double factor = json_number_value(json_object_get(event,"factor"));
+      double crdScale = json_number_value(json_object_get(event,"crd_scale"));
+      double distanceTolerance = json_number_value(json_object_get(event,"distance_tolerance"));
+      int doCoordinateTransformation = json_integer_value(json_object_get(event,"do_coordinate_transformation"));
+      double T00 = json_number_value(json_object_get(event,"T00"));
+      double T01 = json_number_value(json_object_get(event,"T01"));
+      double T02 = json_number_value(json_object_get(event,"T02"));
+      double T10 = json_number_value(json_object_get(event,"T10"));
+      double T11 = json_number_value(json_object_get(event,"T11"));
+      double T12 = json_number_value(json_object_get(event,"T12"));
+      double T20 = json_number_value(json_object_get(event,"T20"));
+      double T21 = json_number_value(json_object_get(event,"T21"));
+      double T22 = json_number_value(json_object_get(event,"T22"));
+      double x00 = json_number_value(json_object_get(event,"x00"));
+      double x01 = json_number_value(json_object_get(event,"x01"));
+      double x02 = json_number_value(json_object_get(event,"x02"));
+      const char *system = json_string_value(json_object_get(event,"system"));
+	  double numSteps = json_integer_value(json_object_get(event,"numSteps"));
+	  double dT = json_number_value(json_object_get(event,"dT"));
+
+
+
+      if (strcmp(system,"Remote") == 0 || 
+          strcmp(system,"remote") == 0 ||
+          strcmp(system,"REMOTE") == 0 ||
+          strcmp(system,"DesignSafe") == 0 ||
+          strcmp(system,"designsafe") == 0 ||
+          strcmp(system,"DESIGNSAFE") == 0) 
+      {
+            // make the eventPath ..
+            eventPath = "../";
+      }
+
+
+      //  print out the DRM event
+      s << "#set maxPatternTag [getMaxPatternTag]\n";
+      s << "set maxPatternTag 1000;\n";
+      s << "set patternTag [expr $maxPatternTag + 1]\n";
+      //  pattern H5DRM $patternTag "/path/to/H5DRM/dataset" $factor $crd_scale $distance_tolerance $do_coordinate_transformation $T00 $T01 $T02 $T10 $T11 $T12 $T20 $T21 $T22 $x00 $x01 $x02
+      s << "pattern H5DRM $patternTag \"" << eventPath << "\"" << " " << factor << " "
+        << crdScale << " " << distanceTolerance << " " << doCoordinateTransformation << " "
+        << T00 << " " << T01 << " " << T02 << " "
+        << T10 << " " << T11 << " " << T12 << " "
+        << T20 << " " << T21 << " " << T22 << " "
+        << x00 << " " << x01 << " " << x02 << "\n";
+        s << "set DRM_NAME \"" << eventName << "\"\n";
+		s << "set  numStep " << numSteps << "\n";
+		s << "set dt " << dT << "\n";
+		analysisType = 1;
+    }
+
+
+
 
   if (strcmp(eventType,"Seismic") == 0 ||
       strcmp(eventType,"Wind") == 0    ||

@@ -157,7 +157,22 @@ main(int argc, char **argv) {
     if (ndf != NULL)
       json_object_set(rootSAM,"ndf", ndf);
 
-    
+    json_t *inputType = json_object_get(theSIM, "type");
+    if (inputType != NULL) {
+      json_object_set(rootSAM,"subType", inputType);
+    }
+    json_t *useDamping = json_object_get(theSIM, "useDamping");
+    if (useDamping != NULL) {
+      json_object_set(rootSAM,"useDamping", useDamping);
+    }
+    json_t *numCoresPerModel = json_object_get(theSIM, "numCores");
+    if (numCoresPerModel != NULL) {
+      json_object_set(rootSAM,"coresPerModel", numCoresPerModel);
+    } else {
+      json_object_set(rootSAM,"coresPerModel", json_integer(1));
+    }
+
+
     json_t *theRVs = json_object_get(theSIM,"randomVar");
 
     // check nodes exists

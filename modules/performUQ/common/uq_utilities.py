@@ -1,11 +1,14 @@
-import glob  # noqa: D100
+import glob  # noqa: D100, INP001
+import json
 import os
 import shutil
 import subprocess
 import sys
 import traceback
 from dataclasses import dataclass
+from multiprocessing import get_context
 from multiprocessing.pool import Pool
+from pathlib import Path
 from typing import Any, Union
 
 import numpy as np
@@ -155,7 +158,7 @@ class SimCenterWorkflowDriver:  # noqa: D101
             returnStringList.append(f'The command to run the model was {ex.cmd}')
             returnStringList.append(f'The return code was {ex.returncode}')
             returnStringList.append(f'The following error occurred: \n{ex}')
-            raise ModelEvaluationError('\n\n'.join(returnStringList))  # noqa: B904
+            raise ModelEvaluationError('\n\n'.join(returnStringList))  from ex # noqa: B904
 
     def _read_outputs_from_results_file(self, workdir: str) -> NDArray:
         if glob.glob('results.out'):  # noqa: PTH207
@@ -226,23 +229,29 @@ class ParallelRunnerMultiprocessing:  # noqa: D101
         if num_processors is None:
             num_processors = 1
         elif num_processors < 1:
-
             raise ValueError(  # noqa: TRY003
                 'Number of processes must be at least 1.                     '  # noqa: EM102
                 f'         Got {num_processors}'
             )
-        elif num_processors > max_num_processors: 
+        elif num_processors > max_num_processors:
             # this is to get past memory problems when running large number processors in a container
-            num_processors = 8
+            num_processors = max_num_processors
 
         return num_processors
 
     def get_pool(self) -> Pool:  # noqa: D102
-        self.pool = Pool(processes=self.num_processors)
+        context = get_context('spawn')
+        self.pool = context.Pool(processes=self.num_processors)
         return self.pool
 
-    def close_pool(self) -> None:  # noqa: D102
-        self.pool.close()
+    def run(self, func, job_args):  # noqa: D102
+        return self.pool.starmap(func, job_args)
+
+    def close_pool(self):  # noqa: D102
+        if self.pool is not None:
+            self.pool.close()
+            self.pool.join()
+            self.pool = None  # optional but safe
 
 
 def make_ERADist_object(name, opt, val) -> ERADist:  # noqa: N802, D103
@@ -507,3 +516,130 @@ def _get_tabular_results_file_name_for_dataset(
 def _write_to_tabular_results_file(tabular_results_file, string_to_write):
     with tabular_results_file.open('a') as f:
         f.write(string_to_write)
+
+
+class Ensure2DOutputShape:
+    def __init__(self, func, expected_dim, label="wrapped_function"):
+        self.func = func
+        self.expected_dim = expected_dim
+        self.label = label
+        self._last_input_shape = None
+        self._last_output_shape = None
+
+    def __call__(self, *args):
+        result = self.func(*args)
+        result = np.asarray(result)
+
+        # Handle scalar return (e.g., float) → reshape to (1, 1)
+        if result.ndim == 0:
+            result = result.reshape(1, 1)
+
+        # Treating the last argument of the function call as the sample
+        x = np.asarray(args[-1])
+        n_samples = x.shape[0] if x.ndim > 1 else 1
+
+        input_shape = x.shape
+        output_shape = result.shape
+        if input_shape == self._last_input_shape and output_shape == self._last_output_shape:
+            return result
+
+        if result.ndim == 1:
+            if n_samples == 1 and result.shape[0] == self.expected_dim:
+                result = result.reshape(1, self.expected_dim)
+            elif self.expected_dim == 1 and result.shape[0] == n_samples:
+                result = result.reshape(n_samples, 1)
+            else:
+                raise ValueError(
+                    f"[{self.label}] 1D output shape {result.shape} is incompatible with input {x.shape}. "
+                    f"Expected ({n_samples}, {self.expected_dim})"
+                )
+
+        elif result.ndim == 2:
+            if result.shape != (n_samples, self.expected_dim):
+                raise ValueError(
+                    f"[{self.label}] 2D output shape {result.shape} does not match expected ({n_samples}, {self.expected_dim})"
+                )
+
+        else:
+            raise ValueError(
+                f"[{self.label}] Output has {result.ndim} dimensions; expected 1D or 2D"
+            )
+
+        self._last_input_shape = input_shape
+        self._last_output_shape = result.shape
+        return result
+
+
+def safe_evaluate_model_for_gp_ab(sim_number: int, x: np.ndarray, model_callable, logger=None):
+    """
+    A safe wrapper to evaluate the model. Returns (x, y, msg) where msg is None if success.
+
+    Returns
+    -------
+    tuple[np.ndarray, np.ndarray | None, str | None]
+        The input, output (or None), and error message (or None).
+    """
+    try:
+        y = model_callable(sim_number, x)
+        return x, y, None
+    except (ModelEvaluationError, Exception) as e:
+        msg = f"Model evaluation failed at sim {sim_number}, x={x.tolist()}:\n{str(e)}"
+        if logger:
+            logger.warning(msg)
+        return x, None, msg
+
+
+def log_failed_points_to_file(
+    failed: list[tuple[np.ndarray, str]],
+    iteration: int,
+    logger=None,
+    output_dir: Path = Path("results"),
+):
+    """
+    Save failed input points and messages to a JSON file.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+    out_path = output_dir / f"failed_model_inputs_iter_{iteration}.json"
+
+    out_data = [{"input": x.tolist(), "message": msg} for x, msg in failed]
+
+    with out_path.open("w") as f:
+        json.dump(make_json_serializable(out_data), f, indent=4)
+
+    if logger:
+        logger.info(f"Saved {len(failed)} failed inputs to: {out_path}")
+
+
+def make_json_serializable(obj):
+    """
+    Recursively convert Python, NumPy, and common custom types to JSON-serializable formats.
+
+    Supports: dict, list, tuple, np.ndarray, int, float, bool, str, None,
+              pathlib.Path, enum.Enum, and custom objects via __str__ fallback.
+    """
+    if isinstance(obj, dict):
+        return {k: make_json_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [make_json_serializable(item) for item in obj]
+    elif isinstance(obj, tuple):
+        return tuple(make_json_serializable(item) for item in obj)
+    elif isinstance(obj, np.ndarray):
+        return make_json_serializable(obj.tolist())
+    elif isinstance(obj, (np.integer, int)):
+        return int(obj)
+    elif isinstance(obj, (np.floating, float)):
+        return float(obj)
+    elif isinstance(obj, (np.bool_, bool)):
+        return bool(obj)
+    elif isinstance(obj, str):
+        return obj
+    elif isinstance(obj, Path):
+        return str(obj)
+    elif obj is None:
+        return None
+    else:
+        try:
+            return str(obj)
+        except Exception:
+            msg = f'Object of type {type(obj)} is not JSON serializable and cannot be converted with str(): {obj}'
+            raise TypeError(msg)

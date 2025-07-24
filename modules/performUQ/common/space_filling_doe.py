@@ -6,9 +6,10 @@ This module generates space-filling designs.
 
 from __future__ import annotations
 
-import numpy as np
+from typing import Optional
+
 from pydantic import BaseModel, PositiveInt
-from scipy.stats import qmc
+from scipy.stats import norm, qmc
 
 
 class LatinHypercubeSampling(BaseModel, validate_assignment=True):
@@ -24,27 +25,22 @@ class LatinHypercubeSampling(BaseModel, validate_assignment=True):
 
     n_samples: PositiveInt
     n_dimensions: PositiveInt
-    seed: PositiveInt | None = None
+    seed: Optional[PositiveInt] = None  # noqa: UP007
 
-    def generate(self, domain=None):
+    def generate(self):
         """
         Generate samples using Latin Hypercube Sampling.
-
-        Args:
-            domain (list[tuple[float, float]], optional): The domain for each dimension. Defaults to None.
 
         Returns
         -------
             np.ndarray: The generated samples.
         """
-        lhs = qmc.LatinHypercube(self.n_dimensions, seed=self.seed)
+        lhs = qmc.LatinHypercube(
+            self.n_dimensions, seed=self.seed, optimization='random-cd'
+        )
         samples = lhs.random(self.n_samples)
-        if domain is not None:
-            # Scale samples to the provided domain
-            lower_bounds = np.array([bound[0] for bound in domain])
-            upper_bounds = np.array([bound[1] for bound in domain])
-            samples = qmc.scale(samples, lower_bounds, upper_bounds)
-        return samples
+        samples = norm.ppf(samples)  # Transform to standard normal distribution
+        return samples  # noqa: RET504
 
 
 if __name__ == '__main__':
