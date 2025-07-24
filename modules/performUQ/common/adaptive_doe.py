@@ -152,7 +152,7 @@ class AdaptiveDesignOfExperiments:
             scaled_candidates = self._scale(candidate_pool)
             scaled_mci_samples = self._scale(mci_samples)
 
-            # 3. Fit GP with dummy outputs
+            # 3. Set GP inputs
             self.gp_model_for_doe.set_XY(
                 scaled_x_train, np.zeros((scaled_x_train.shape[0], 1))
             )

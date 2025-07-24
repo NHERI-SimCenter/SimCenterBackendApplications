@@ -371,10 +371,10 @@ def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):  # noq
         #     if ((cov_weights > (threshold+0.00000005)) or  (std_weights == 0)):
         #         dBeta = dBeta*0.99999999
 
-        if dBeta < 1e-3:  # noqa: PLR2004
-            dBeta = 1e-3  # noqa: N806
-            weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
-            break
+        # if dBeta < 1e-3:
+        #     dBeta = 1e-3
+        #     weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
+        #     break
         weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
 
     beta = beta + dBeta
