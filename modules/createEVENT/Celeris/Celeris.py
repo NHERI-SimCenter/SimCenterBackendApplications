@@ -48,14 +48,63 @@ try:
     import taichi as ti
 except ImportError:
     print('Taichi is not installed. Please install it using "pip install taichi".')  # noqa: T201
+    print('Attempting to install taichi automatically for you...')  # noqa: T201
     print()  # noqa: T201
-    subprocess.run([sys.executable, '-m', 'pip', 'install', 'taichi'], check=False)  # noqa: S603
+    # SYSEXECUTABLE = sys.executable  # noqa: N806
+    # PYTHONPATH = os.environ.get('PYTHONPATH', '')  # noqa: N806
+    # PYTHONHOME = os.environ.get('PYTHONHOME', '')  # noqa: N806
+    # PYTHONSTARTUP = os.environ.get('PYTHONSTARTUP', '')  # noqa: N806
+    # VIRTUAL_ENV = os.environ.get('VIRTUAL_ENV', '')  # noqa: N806
+    # PIP_REQUIRE_VIRTUALENV = os.environ.get('PIP_REQUIRE_VIRTUALENV', '')  # noqa: N806
+    # print('If you are using a virtual environment, make sure it is activated.')  # noqa: T201
+    # print('Python executable being used to install taichi (i.e., sys.excutable):', SYSEXECUTABLE)  # noqa: T201
+    # print('PYTHONPATH:', PYTHONPATH)
+    # print('PYTHONHOME:', PYTHONHOME)  # noqa: T201
+    # print('PYTHONSTARTUP:', PYTHONSTARTUP)
+ 
+    # if VIRTUAL_ENV:
+    #     print('VIRTUAL_ENV:', VIRTUAL_ENV)
+    # else:
+    #     print('No virtual environment detected. If you are using one, please activate it before running this script.')
+ 
+    # if PIP_REQUIRE_VIRTUALENV:
+    #     print('PIP_REQUIRE_VIRTUALENV:', PIP_REQUIRE_VIRTUALENV)
+    # else:
+    #     print('No PIP_REQUIRE_VIRTUALENV environment variable detected. If you are using a virtual environment, please activate it before running this script.')
+    
+    print()
+    
     try:
-        import taichi as ti
-    except ImportError:
-        print('Taichi installation failed. Please install it manually.')  # noqa: T201
-        sys.exit(1)
-    print('Taichi is installed successfully.')  # noqa: T201
+        print('Try to install with $ python -m pip install taichi')
+        subprocess.run([sys.executable, '-m', 'pip', 'install', 'taichi'], check=False)  # noqa: S603
+        try:
+            import taichi as ti
+        except ImportError:
+            print('Taichi installation failed. Please install it manually.')  # noqa: T201
+            # sys.exit(1)
+    except:
+        # Might be user permission issue
+        print('Try to install with $ python -m pip install --user taichi')  # noqa: T201
+        try:
+            subprocess.run([sys.executable, '-m', 'pip', 'install', '--user', 'taichi'], check=False)  # noqa: S603
+            try:
+                import taichi as ti
+            except ImportError:
+                print('Taichi installation failed. Please install it manually.')
+                # sys.exit(1)
+        except:
+            print('Try to install with $ pip install taichi')  # noqa: T201
+            try:
+                subprocess.run(['pip', 'install', 'taichi'], check=False)  # noqa: S603
+                try:
+                    import taichi as ti
+                except ImportError:
+                    print('Taichi installation failed. Please install it manually.')
+                    # sys.exit(1)
+            except:
+                print('ERROR: Cannot install taichi. There is likely an issue with you Python environment, OS, GLIBC, or pip installation.')  # noqa: T201
+                print('INFO: Please manually install taichi into the Python environment specified in the desktop applications Files > Preferences tab')
+                sys.exit(1)
     print()  # noqa: T201
 
 
@@ -350,10 +399,52 @@ if __name__ == '__main__':
     for event in evt['Events']:
         # Redesign the input structure in backend CelerisAi later.
         # For now assume waveFile, bathymetryFile, configFile, etc. are in the same directory.
-        caseDirectory = event['configFilePath']  # noqa: N816
+        # caseDirectory = event['configFilePath']  # noqa: N816
+        caseDirectory = '.'
+        configDirectory = event['configFilePath']  # noqa: N816
         configFilename = event['configFile']  # noqa: N816
+        bathymetryDirectory = event['bathymetryFilePath']  # noqa: N816
         bathymetryFilename = event['bathymetryFile']  # noqa: N816
+        waveDirectory = event['waveFilePath']  # noqa: N816
         waveFilename = event['waveFile']  # noqa: N816
+        
+        # configFilename = os.path.join(  # noqa: PTH118
+        #     configDirectory, configFilename
+        # )  # noqa: N816, PTH118
+        # bathymetryFilename = os.path.join(  # noqa: PTH118
+        #     bathymetryDirectory, bathymetryFilename
+        # )  # noqa: N816, PTH118
+        # waveFilename = os.path.join( # noqa: PTH118
+        #     waveDirectory, waveFilename
+        # )  # noqa: N816, PTH118
+        
+        # Check if the config file exists
+        if not os.path.exists(configFilename):  # noqa: PTH110
+            print('Config file does not exist:', configFilename)
+            # Use default config file
+            configFilename = os.path.join(  # noqa: PTH118
+                caseDirectory, 'config.json'
+            )  # noqa: N816, PTH118
+            print('Using default config file:', configFilename)  # noqa: T201
+            
+        # Check if the bathymetry file exists
+        if not os.path.exists(bathymetryFilename):
+            print('Bathymetry file does not exist:', bathymetryFilename)  # noqa: T201
+            # Use default bathymetry file
+            bathymetryFilename = os.path.join(  # noqa: PTH118
+                caseDirectory, 'bathy.txt'
+            ) # noqa: N816, PTH118
+            print('Using default bathymetry file:', bathymetryFilename)
+        
+        # Check if the wave file exists
+        if not os.path.exists(waveFilename):  # noqa: PTH110
+            print('Wave file does not exist:', waveFilename)  # noqa: T201
+            # Use default wave file
+            waveFilename = os.path.join(  # noqa: PTH118
+                caseDirectory, 'waves.txt'
+            )
+            print('Using default wave file:', waveFilename)  # noqa: T201
+            
         # Determine dt for the force time series
         # Try to compute using Courant_num (CFL), otherwise look for dt in the config
         if 'Courant_num' in event['config']:
