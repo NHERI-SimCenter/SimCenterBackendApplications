@@ -399,7 +399,8 @@ if __name__ == '__main__':
     for event in evt['Events']:
         # Redesign the input structure in backend CelerisAi later.
         # For now assume waveFile, bathymetryFile, configFile, etc. are in the same directory.
-        caseDirectory = event['configFilePath']  # noqa: N816
+        # caseDirectory = event['configFilePath']  # noqa: N816
+        caseDirectory = '.'
         configDirectory = event['configFilePath']  # noqa: N816
         configFilename = event['configFile']  # noqa: N816
         bathymetryDirectory = event['bathymetryFilePath']  # noqa: N816
@@ -407,15 +408,15 @@ if __name__ == '__main__':
         waveDirectory = event['waveFilePath']  # noqa: N816
         waveFilename = event['waveFile']  # noqa: N816
         
-        configFilename = os.path.join(  # noqa: PTH118
-            configDirectory, configFilename
-        )  # noqa: N816, PTH118
-        bathymetryFilename = os.path.join(  # noqa: PTH118
-            bathymetryDirectory, bathymetryFilename
-        )  # noqa: N816, PTH118
-        waveFilename = os.path.join( # noqa: PTH118
-            waveDirectory, waveFilename
-        )  # noqa: N816, PTH118
+        # configFilename = os.path.join(  # noqa: PTH118
+        #     configDirectory, configFilename
+        # )  # noqa: N816, PTH118
+        # bathymetryFilename = os.path.join(  # noqa: PTH118
+        #     bathymetryDirectory, bathymetryFilename
+        # )  # noqa: N816, PTH118
+        # waveFilename = os.path.join( # noqa: PTH118
+        #     waveDirectory, waveFilename
+        # )  # noqa: N816, PTH118
         
         # Check if the config file exists
         if not os.path.exists(configFilename):  # noqa: PTH110
