@@ -532,15 +532,20 @@ class Evolve:  # noqa: D101
         while window.running:
             self.eta_paint()
             if use_ggui:
-                canvas.circles(self.eta1D,radius=0.005,color = (0., 150/255., 255./255))
-                canvas.lines(self.bottom1D,width=0.01,indices=self.indexbottom1D,color = (128/255., 0.0, 0.))
+                try:
+                    canvas.circles(self.eta1D,radius=0.005,color = (0., 150/255., 255./255))
+                    canvas.lines(self.bottom1D,width=0.01,indices=self.indexbottom1D,color = (128/255., 0.0, 0.))
+                except Exception as e:
+                    print(f"Error in GGUI circles / lines rendering: {e}")
             else:
-                for ii in range(self.solver.nx):
-                    window.circle(pos=[self.eta1D[ii][0], self.eta1D[ii][1]], radius=1, color=0x00FFFF)
-                    if ii >= self.solver.nx - 1:
-                        continue 
-                    window.line(self.bottom1D[ii], self.bottom1D[ii+1], radius=1, color = 0x39FF14)
-
+                try:
+                    for ii in range(self.solver.nx):
+                        window.circle(pos=[self.eta1D[ii][0], self.eta1D[ii][1]], radius=1, color=0x00FFFF)
+                        if ii >= self.solver.nx - 1:
+                            continue 
+                        window.line(self.bottom1D[ii], self.bottom1D[ii+1], radius=1, color = 0x39FF14)
+                except Exception as e:
+                    print(f"Error in legacy GUI circle / line rendering: {e}")
             self.Evolve_Steps(i)
 
             if i==1 or (i%100)==0:
@@ -685,10 +690,12 @@ class Evolve:  # noqa: D101
                 )  # using the Taichi tensors to render the image
             self.Evolve_Steps(i)
 
-            window.line(self.solver.force_sensor_begin_scaled, self.solver.force_sensor_end_scaled, radius=1, color=0x39FF14)
-            for k in range(self.solver.num_wave_gauges):
-                window.circle(pos=[self.solver.wave_gauge_scaled[int(k),int(0)], self.solver.wave_gauge_scaled[int(k),int(1)]], radius=2, color=0xFF5733)
-            
+            try:
+                window.line(self.solver.force_sensor_begin_scaled, self.solver.force_sensor_end_scaled, radius=1, color=0x39FF14)
+                for k in range(self.solver.num_wave_gauges):
+                    window.circle(pos=[self.solver.wave_gauge_scaled[int(k),int(0)], self.solver.wave_gauge_scaled[int(k),int(1)]], radius=2, color=0xFF5733)
+            except Exception as e:  # noqa: BLE001
+                print(f'Error in rendering sensors or wave gauges using line / circle: {e}')  # noqa:
 
             if i == self.buffer_step:
                 start_time = (

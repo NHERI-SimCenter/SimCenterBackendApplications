@@ -58,7 +58,7 @@ class FloorForces:  # noqa: D101
                             continue
                         # Assume there is no header in the file
                         # Assume recorder IDs are sequential, starting from 1
-                        if (j + 1) == recorderID:
+                        if (j) == recorderID:
                             # Strip away leading / trailing white-space,
                             # Delimit by regex to capture " ", \s, "  ", tabs, etc.
                             # Each value should be a number, rep. the force on recorder j at a time-step i
