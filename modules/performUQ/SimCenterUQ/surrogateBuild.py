@@ -147,7 +147,9 @@ if error_tag == False:  # noqa: E712
 
 
 def main(inputArgs):  # noqa: N803, D103
-    gp = surrogate(inputArgs)
+    gp = surrogate(
+        inputArgs[-6:]
+    )  # ABS - taking only the last 6 arguments to handle running in DesignSafe
 
 
 class surrogate(UQengine):  # noqa: D101
@@ -3792,10 +3794,7 @@ def read_txt(text_dir, exit_fun):  # noqa: D103
 
 
 if __name__ == '__main__':
-    main(
-        sys.argv[-6:]
-    )  # ABS - taking only the last 6 arguments to handle running in DesignSafe
-
+    main(sys.argv)
     sys.stderr.close()
 
     # try:
