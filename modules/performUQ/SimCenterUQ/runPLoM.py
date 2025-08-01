@@ -1021,6 +1021,9 @@ if __name__ == '__main__':
 
     # collect arguments
     inputArgs = sys.argv  # noqa: N816
+    inputArgs = inputArgs[  # noqa: N816
+        -6:
+    ]  # ABS - taking only the last 6 arguments to handle running in DesignSafe
     # working directory
     work_dir = inputArgs[1].replace(os.sep, '/')
     print(f'work_dir = {work_dir}')  # noqa: T201
