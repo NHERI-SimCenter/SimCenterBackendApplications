@@ -218,7 +218,7 @@ def run_TMCMC(  # noqa: C901, N802, PLR0913
     number_of_MCMC_steps = number_of_MCMC_steps  # noqa: N806, PLW0127
     adaptively_calculate_num_MCMC_steps = True  # noqa: N806
     adaptively_scale_proposal_covariance = True
-    scale_factor_for_proposal_covariance = 1  # cov scale factor
+    scale_factor_for_proposal_covariance = 0.2  # cov scale factor
     # model_evidence = 1  # model evidence
     stage_number = 0  # stage number of TMCMC
     log_evidence = 0
@@ -310,7 +310,7 @@ def run_TMCMC(  # noqa: C901, N802, PLR0913
             log_likelihoods_list.append(output[0])
             predictions_list.append(output[1])
     else:
-        from mpi4py.futures import MPIPoolExecutor # type: ignore  # noqa: I001
+        from mpi4py.futures import MPIPoolExecutor  # type: ignore  # noqa: I001
 
         executor = MPIPoolExecutor(max_workers=MPI_size)
         write_eval_data_to_logfile(
