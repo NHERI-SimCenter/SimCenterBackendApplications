@@ -88,6 +88,7 @@ except:  # noqa: E722
 
 print('Initializing error log file..')  # noqa: T201
 print(f'Current working dir (getcwd): {os.getcwd()}')  # noqa: T201, PTH109
+print(f'sys.argv: {sys.argv}')  # noqa: T201
 
 # errFileName = os.path.join(os.getcwd(),'dakota.err')
 work_dir_tmp = sys.argv[1].replace(os.sep, '/')
