@@ -94,7 +94,8 @@ print(f'sys.argv: {sys.argv}')  # noqa: T201
 work_dir_tmp = sys.argv[1].replace(os.sep, '/')
 errFileName = os.path.join(work_dir_tmp, 'dakota.err')  # noqa: N816, PTH118
 
-develop_mode = len(sys.argv) == 7  # a flag for develop mode
+# develop_mode = len(sys.argv) == 7  # a flag for develop mode
+develop_mode = False  # ABS - disable developer mode for running on DesignSafe
 if develop_mode:
     import matplotlib
 
