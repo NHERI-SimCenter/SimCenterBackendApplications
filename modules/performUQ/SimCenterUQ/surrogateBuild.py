@@ -148,6 +148,7 @@ if error_tag == False:  # noqa: E712
 
 
 def main(inputArgs):  # noqa: N803, D103
+    print(f'Input arguments in main: {inputArgs}')  # noqa: T201
     gp = surrogate(
         inputArgs[-6:]
     )  # ABS - taking only the last 6 arguments to handle running in DesignSafe
