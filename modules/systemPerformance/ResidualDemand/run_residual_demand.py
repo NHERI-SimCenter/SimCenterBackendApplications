@@ -136,8 +136,8 @@ def create_congestion_animation(edge_vol_dir, output_file_name):
     ]
     times = []
     for ii in range(len(all_frames)):
-        hour = all_frames[ii][11:12]
-        minute = int(all_frames[ii][15:16]) * 10
+        hour = all_frames[0].split('_')[2][2:]
+        minute = int(all_frames[0].split('_')[3][2:]) * 10
 
         minute_end = minute + 10
 
