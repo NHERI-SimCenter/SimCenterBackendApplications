@@ -179,7 +179,8 @@ class runPLoM:
             pass
 
         # move into the templatedir
-        run_dir = job_config.get('runDir', os.getcwd())  # noqa: PTH109
+        # run_dir = job_config.get('runDir', os.getcwd())
+        run_dir = self.work_dir  # ABS - using the run directory consistently
         os.chdir(run_dir)
         # training is done for single building (for now)
         bldg_id = None
