@@ -215,7 +215,8 @@ class runPLoM:
 
         # command line
         # KZ modified 0331
-        command_line = f'{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType {runType}'  # noqa: PTH122
+        # command_line = f'{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType {runType}'
+        command_line = f'{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType runningLocal'  # noqa: PTH122
         print(command_line)  # noqa: T201
         # run command
         dakotaTabPath = os.path.join(self.work_dir, 'dakotaTab.out')  # noqa: PTH118, N806
