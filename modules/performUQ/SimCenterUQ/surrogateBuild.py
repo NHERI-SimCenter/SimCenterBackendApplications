@@ -89,9 +89,13 @@ except:  # noqa: E722
 print('Initializing error log file..')  # noqa: T201
 print(f'Current working dir (getcwd): {os.getcwd()}')  # noqa: T201, PTH109
 print(f'sys.argv: {sys.argv}')  # noqa: T201
+inputs = sys.argv[-6:]
+print(f'Input arguments: {inputs}')  # noqa: T201
+
 
 # errFileName = os.path.join(os.getcwd(),'dakota.err')
-work_dir_tmp = sys.argv[1].replace(os.sep, '/')
+# work_dir_tmp = sys.argv[1].replace(os.sep, '/')
+work_dir_tmp = inputs[1].replace(os.sep, '/')
 errFileName = os.path.join(work_dir_tmp, 'dakota.err')  # noqa: N816, PTH118
 
 # develop_mode = len(sys.argv) == 7  # a flag for develop mode
