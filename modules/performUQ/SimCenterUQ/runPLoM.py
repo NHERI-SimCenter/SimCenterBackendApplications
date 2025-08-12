@@ -173,7 +173,8 @@ class runPLoM:
                 pass
             else:
                 # pythonEXE = os.path.join(localAppDir,'applications','python','python.exe')
-                pythonEXE = '"' + sys.executable + '"'  # noqa: N806
+                # pythonEXE = '"' + sys.executable + '"'
+                pythonEXE = sys.executable  # noqa: N806
         else:
             # for remote run and macOS, let's use system python
             pass
@@ -235,7 +236,7 @@ class runPLoM:
         ]
 
         print(  # noqa: T201
-            'Command to run dakota:', ' '.join(command_line)
+            'Command to run:', ' '.join(command_line)
         )  # for debugging
 
         dakotaTabPath = os.path.join(self.work_dir, 'dakotaTab.out')  # noqa: PTH118, N806
