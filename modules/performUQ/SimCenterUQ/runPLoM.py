@@ -187,6 +187,7 @@ class runPLoM:
         if bldg_id is not None:
             os.chdir(bldg_id)
         os.chdir('templatedir')
+        print(f'Current working directory: {os.getcwd()}')  # noqa: PTH109, T201
 
         # dakota script path
         dakotaScript = os.path.join(  # noqa: PTH118, N806
@@ -216,36 +217,96 @@ class runPLoM:
         # command line
         # KZ modified 0331
         # command_line = f'{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType {runType}'
-        command_line = f'{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType runningLocal'  # noqa: PTH122
-        print(command_line)  # noqa: T201
-        # run command
+        # command_line = f'{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType runningLocal'
+        # print(command_line)
+
+        # Build the command as a list (no shell interpretation)
+        command_line = [
+            pythonEXE,
+            dakotaScript,
+            '--workflowInput',
+            'sc_dakota_plom.json',
+            '--driverFile',
+            os.path.splitext(self.workflow_driver)[0],  # noqa: PTH122
+            '--workflowOutput',
+            'EDP.json',
+            '--runType',
+            'runningLocal',
+        ]
+
+        print(  # noqa: T201
+            'Command to run dakota:', ' '.join(command_line)
+        )  # for debugging
+
         dakotaTabPath = os.path.join(self.work_dir, 'dakotaTab.out')  # noqa: PTH118, N806
         print(dakotaTabPath)  # noqa: T201
 
+        # try:
+        #     os.system(command_line)
+        # except:
+        #     print(
+        #         'runPLoM._run_simulation: error in running dakota to generate the initial sample.'
+        #     )
+        #     print(
+        #         'runPLoM._run_simulation: please check if the dakota is installed correctly on the system.'
+        #     )
+
+        # if not os.path.exists(dakotaTabPath):
+        #     try:
+        #         subprocess.call(command_line)
+        #     except:
+        #         print(
+        #             'runPLoM._run_simulation: error in running dakota to generate the initial sample.'
+        #         )
+        #         print(
+        #             'runPLoM._run_simulation: please check if the dakota is installed correctly on the system.'
+        #         )
+
+        # if not os.path.exists(dakotaTabPath):
+        #     msg = 'Dakota preprocessor did not run successfully'
+        #     self.errlog.exit(msg)
+
+        print(f"Dakota path: {shutil.which('dakota')}")  # noqa: T201
+
+        completed = None
         try:
-            os.system(command_line)  # noqa: S605
-        except:  # noqa: E722
+            completed = subprocess.run(  # noqa: S603
+                command_line,
+                check=True,  # raise if exit code != 0
+                capture_output=True,  # capture BOTH stdout and stderr
+                text=True,  # return str, not bytes
+            )
+        except subprocess.CalledProcessError as e:
             print(  # noqa: T201
                 'runPLoM._run_simulation: error in running dakota to generate the initial sample.'
             )
             print(  # noqa: T201
                 'runPLoM._run_simulation: please check if the dakota is installed correctly on the system.'
             )
+            print(f'Command: {" ".join(e.cmd)}')  # noqa: T201
+            print(f'Return code: {e.returncode}')  # noqa: T201
+            if e.stdout:
+                print('---- STDOUT ----')  # noqa: T201
+                print(e.stdout)  # noqa: T201
+            if e.stderr:
+                print('---- STDERR ----')  # noqa: T201
+                print(e.stderr)  # noqa: T201
+            self.errlog.exit('Dakota preprocessor did not run successfully')
 
+        # Verify expected output exists
         if not os.path.exists(dakotaTabPath):  # noqa: PTH110
-            try:
-                subprocess.call(command_line)  # noqa: S603
-            except:  # noqa: E722
-                print(  # noqa: T201
-                    'runPLoM._run_simulation: error in running dakota to generate the initial sample.'
-                )
-                print(  # noqa: T201
-                    'runPLoM._run_simulation: please check if the dakota is installed correctly on the system.'
-                )
-
-        if not os.path.exists(dakotaTabPath):  # noqa: PTH110
-            msg = 'Dakota preprocessor did not run successfully'
-            self.errlog.exit(msg)
+            print(  # noqa: T201
+                'runPLoM._run_simulation: Dakota finished without creating the expected output file.'
+            )
+            print(f'Expected file missing: {dakotaTabPath}')  # noqa: T201
+            if completed is not None:
+                if completed.stdout:
+                    print('---- STDOUT ----')  # noqa: T201
+                    print(completed.stdout)  # noqa: T201
+                if completed.stderr:
+                    print('---- STDERR ----')  # noqa: T201
+                    print(completed.stderr)  # noqa: T201
+            self.errlog.exit('Dakota preprocessor did not run successfully')
 
         # remove the new dakota.json
         # os.remove('sc_dakota_plom.json')
