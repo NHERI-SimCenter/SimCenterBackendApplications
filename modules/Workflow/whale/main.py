@@ -2944,8 +2944,7 @@ class Workflow:
         self,
         asst_data,
         asset_type='',
-        # out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'],
-        out_types=['AIM', 'EDP', 'DMG', 'DV', 'every_realization'],  # noqa: B006
+        out_types=['AIM', 'EDP', 'DM', 'DV', 'every_realization'],  # noqa: B006
         headers=None,
     ):
         """Short description
