@@ -267,8 +267,6 @@ class runPLoM:
         #     msg = 'Dakota preprocessor did not run successfully'
         #     self.errlog.exit(msg)
 
-        print(f"Dakota path: {shutil.which('dakota')}")  # noqa: T201
-
         completed = None
         try:
             completed = subprocess.run(  # noqa: S603
