@@ -79,7 +79,6 @@ def create_event(asset_file: str, event_grid_file: str, workflow_input: str, do_
     #
 
     json_path = os.path.join(os.getcwd(), workflow_input)
-    print(json_path)
 
     with open(json_path, 'r') as f:
 	data = json.load(f)
