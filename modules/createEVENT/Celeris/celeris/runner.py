@@ -609,7 +609,7 @@ class Evolve:  # noqa: D101
         canvas = None
         import platform
         os_name = platform.system()
-        ON_HPC = os.environ.get("TACC_JOB_ID") or os.environ.get("SLURM_JOB_ID")
+        ON_HPC = any("TACC" in k for k in os.environ)
         use_ggui = not bool(ON_HPC)
         show_gui = not bool(ON_HPC)
         if show_gui:
