@@ -609,36 +609,44 @@ class Evolve:  # noqa: D101
         canvas = None
         import platform
         os_name = platform.system()
-        try:
-            if 'Windows' in os_name:
-                # Throw exception to force legacy GUI
-                raise Exception('Windows detected, reverting GGUI to legacy GUI for reliability.')
-            window = ti.ui.Window('CelerisAi', (self.solver.nx, self.solver.ny))  # noqa: F405
-            canvas = window.get_canvas()
-            use_ggui = True
-            show_gui = True
-        except:  # noqa: E722
-            # TODO : Formal error handling and logging  # noqa: TD002
-            print('GGUI not available, reverting to legacy Taichi GUI.')  # noqa: T201
-            use_ggui = False
-            use_fast_gui = False  # Need ti.Vector.field equiv to self.solver.pixel to use fast_gui
-            show_gui = True
+        ON_HPC = os.environ.get("TACC_JOB_ID") or os.environ.get("SLURM_JOB_ID")
+        use_ggui = not bool(ON_HPC)
+        show_gui = not bool(ON_HPC)
+        if show_gui:
             try:
+                if bool(ON_HPC):
+                    raise Exception('Headless mode detected, reverting to legacy GUI.')
+                if 'Windows' in os_name:
+                    # Throw exception to force legacy GUI
+                    raise Exception('Windows detected, reverting GGUI to legacy GUI for reliability.')
+                window = ti.ui.Window('CelerisAi', (self.solver.nx, self.solver.ny))  # noqa: F405
+                canvas = window.get_canvas()
+                use_ggui = True
                 show_gui = True
-                print('Default: Show GUI window (e.g., for desktop use.')
-                window = ti.GUI(  # noqa: F405
-                    'CelerisAi', (self.solver.nx, self.solver.ny), fast_gui=use_fast_gui, show_gui=show_gui
-                )  # fast_gui - display directly on frame buffer if not drawing shapes or text
-            except:
-                show_gui = False
-                print('Headless: Do not show GUI window (e.g., for command-line use on remote HPC systems.')
-                window = ti.GUI(  # noqa: F405
-                    'CelerisAi', (self.solver.nx, self.solver.ny), fast_gui=use_fast_gui, show_gui=show_gui
-                )  # fast_gui - display directly on frame buffer if not drawing shapes or text
-            canvas = None
-            print('Legacy GUI initialized.')  # noqa: T201
-        else:
-            print('GGUI initialized without issues.')  # noqa: T201
+            except:  # noqa: E722
+                # TODO : Formal error handling and logging  # noqa: TD002
+                print('GGUI not available, reverting to legacy Taichi GUI.')  # noqa: T201
+                use_ggui = False
+                use_fast_gui = False  # Need ti.Vector.field equiv to self.solver.pixel to use fast_gui
+                show_gui = True
+                try:
+                    if bool(ON_HPC):
+                        raise Exception('Headless mode detected, reverting to legacy GUI.')
+                    show_gui = True
+                    print('Default: Show GUI window (e.g., for desktop use.')
+                    window = ti.GUI(  # noqa: F405
+                        'CelerisAi', (self.solver.nx, self.solver.ny), fast_gui=use_fast_gui, show_gui=show_gui
+                    )  # fast_gui - display directly on frame buffer if not drawing shapes or text
+                except:
+                    show_gui = False
+                    print('Headless: Do not show GUI window (e.g., for command-line use on remote HPC systems.')
+                    window = ti.GUI(  # noqa: F405
+                        'CelerisAi', (self.solver.nx, self.solver.ny), fast_gui=use_fast_gui, show_gui=show_gui
+                    )  # fast_gui - display directly on frame buffer if not drawing shapes or text
+                canvas = None
+                print('Legacy GUI initialized.')  # noqa: T201
+            else:
+                print('GGUI initialized without issues.')  # noqa: T201
 
         # Customized colormap
         if showSediment:
