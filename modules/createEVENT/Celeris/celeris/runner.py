@@ -609,7 +609,12 @@ class Evolve:  # noqa: D101
         canvas = None
         import platform
         os_name = platform.system()
+        ON_HPC = any("TACC" in k for k in os.environ)
+        use_ggui = not bool(ON_HPC)
+        show_gui = not bool(ON_HPC)
         try:
+            if bool(ON_HPC):
+                raise Exception('Headless mode detected, reverting to legacy GUI.')
             if 'Windows' in os_name:
                 # Throw exception to force legacy GUI
                 raise Exception('Windows detected, reverting GGUI to legacy GUI for reliability.')
@@ -624,6 +629,8 @@ class Evolve:  # noqa: D101
             use_fast_gui = False  # Need ti.Vector.field equiv to self.solver.pixel to use fast_gui
             show_gui = True
             try:
+                if bool(ON_HPC):
+                    raise Exception('Headless mode detected, reverting to legacy GUI.')
                 show_gui = True
                 print('Default: Show GUI window (e.g., for desktop use.')
                 window = ti.GUI(  # noqa: F405
