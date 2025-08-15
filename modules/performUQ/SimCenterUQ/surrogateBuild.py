@@ -41,7 +41,7 @@
 
 # Jan 31, 2023: let's not use GPy calibration parallel for now, because it seems to give local maxima
 
-import copy  # noqa: I001
+import copy
 import json
 import os
 import pickle
@@ -49,8 +49,8 @@ import random
 import sys
 import time
 import warnings
+
 import numpy as np
-import random  # noqa: F811
 
 warnings.filterwarnings('ignore')
 
@@ -71,8 +71,8 @@ try:
     import GPy as GPy  # noqa: PLC0414
 
     moduleName = 'scipy.stats'  # noqa: N816
-    from scipy.stats import cramervonmises, lognorm, norm, qmc  # noqa: I001
     import scipy
+    from scipy.stats import cramervonmises, lognorm, norm, qmc
 
     moduleName = 'sklearn.linear_model'  # noqa: N816
     from sklearn.linear_model import LinearRegression
@@ -88,14 +88,21 @@ except:  # noqa: E722
 
 print('Initializing error log file..')  # noqa: T201
 print(f'Current working dir (getcwd): {os.getcwd()}')  # noqa: T201, PTH109
+print(f'sys.argv: {sys.argv}')  # noqa: T201
+inputs = sys.argv[-6:]
+print(f'Input arguments: {inputs}')  # noqa: T201
+
 
 # errFileName = os.path.join(os.getcwd(),'dakota.err')
-work_dir_tmp = sys.argv[1].replace(os.sep, '/')
+# work_dir_tmp = sys.argv[1].replace(os.sep, '/')
+work_dir_tmp = inputs[1].replace(os.sep, '/')
 errFileName = os.path.join(work_dir_tmp, 'dakota.err')  # noqa: N816, PTH118
 
-develop_mode = len(sys.argv) == 7  # a flag for develeopmode  # noqa: PLR2004
+# develop_mode = len(sys.argv) == 7  # a flag for develop mode
+develop_mode = False  # ABS - disable developer mode for running on DesignSafe
 if develop_mode:
     import matplotlib
+
     matplotlib.use('TkAgg')
     import matplotlib.pyplot as plt
 
@@ -146,7 +153,11 @@ if error_tag == False:  # noqa: E712
 
 
 def main(inputArgs):  # noqa: N803, D103
-    gp = surrogate(inputArgs)  # noqa: F841
+    print(f'Input arguments in main: {inputArgs}')  # noqa: T201
+    print(f'First six arguments in main (inputArgs[-6:]): {inputArgs[-6:]}')  # noqa: T201
+    gp = surrogate(
+        inputArgs[-6:]
+    )  # ABS - taking only the last 6 arguments to handle running in DesignSafe
 
 
 class surrogate(UQengine):  # noqa: D101
@@ -1041,7 +1052,7 @@ class surrogate(UQengine):  # noqa: D101
             X, Y, kernel_mean, normalizer=True, Y_metadata=None
         )
 
-        #"""
+        # """
         for parname in m_mean.parameter_names():
             if parname.endswith('lengthscale'):
                 for nx in range(X.shape[1]):
@@ -1068,15 +1079,16 @@ class surrogate(UQengine):  # noqa: D101
                             warning=False,
                         )
                     else:
-
-                        m_mean.Gaussian_noise.constrain_bounded(0.2,10,warning=False)
+                        m_mean.Gaussian_noise.constrain_bounded(
+                            0.2, 10, warning=False
+                        )
                         # m_mean.kern.lengthscale[[nx]] = myrange[nx]
                         m_mean.kern.lengthscale[[nx]].constrain_bounded(
-                          myrange[nx]/ X.shape[0]*10,
-                          myrange[nx] * 100,
-                          warning=False
+                            myrange[nx] / X.shape[0] * 10,
+                            myrange[nx] * 100,
+                            warning=False,
                         )
-        #"""
+        # """
 
         # m_mean.optimize(messages=True, max_f_eval=1000)
         # # m_mean.Gaussian_noise.variance = np.var(Y) # First calibrate parameters
@@ -1778,30 +1790,30 @@ class surrogate(UQengine):  # noqa: D101
             # try:
             #
             #     log_var_pred, dum = self.m_var_list[ny].predict(X_test)
-            #     log_Y_var_pred_w_measure = (  # noqa: N806
+            #     log_Y_var_pred_w_measure = (
             #         b + np.exp(log_var_pred) * self.m_list[ny].Gaussian_noise.parameters
             #     )
             #
             #     qualtile_vals = np.arange(0.1, 1, 0.1)
             #     qualtile_reconst = np.zeros([len(qualtile_vals)])
             #     for nqu in range(len(qualtile_vals)):
-            #         Q_b = norm.ppf(  # noqa: N806
+            #         Q_b = norm.ppf(
             #             qualtile_vals[nqu],
             #             loc=a,
             #             scale=np.sqrt(log_Y_var_pred_w_measure),
             #         )
             #         qualtile_reconst[nqu] = (
-            #             np.sum((np.log(Y_test) < Q_b[:, 0])) / Y_test.shape[0]  # noqa: UP034
+            #             np.sum((np.log(Y_test) < Q_b[:, 0])) / Y_test.shape[0]
             #         )
 
             # quant_err = abs(qualtile_reconst - qualtile_vals)
-            # print(f'Test: max coverage err: {np.max(quant_err)}')  # noqa: T201
-            # print(f'Test: mean coverage err: {np.mean(quant_err)}')  # noqa: T201
-            # print('Test: quantile range')  # noqa: T201
-            # print(qualtile_reconst)  # noqa: T201
-            # print(f'Corr(log) for CV: {round(mycor_log_CV*100)/100}')  # noqa: T201
-            # print(f'Corr(log) for Test: {round(mycor_log_Test*100)/100}')  # noqa: T201
-            # print('')  # noqa: T201, FURB105
+            # print(f'Test: max coverage err: {np.max(quant_err)}')
+            # print(f'Test: mean coverage err: {np.mean(quant_err)}')
+            # print('Test: quantile range')
+            # print(qualtile_reconst)
+            # print(f'Corr(log) for CV: {round(mycor_log_CV*100)/100}')
+            # print(f'Corr(log) for Test: {round(mycor_log_Test*100)/100}')
+            # print('')
 
     def verify(self):  # noqa: D102
         Y_cv = self.Y_cv  # noqa: N806
@@ -3450,7 +3462,7 @@ def calibrating(  # noqa: C901, D103
                     for nx in range(X.shape[1]):
                         myrange = np.max(X, axis=0) - np.min(X, axis=0)
                         lb = myrange[nx] / X.shape[0] * 10
-                        ub = myrange[nx] 
+                        ub = myrange[nx]
                         if lb >= ub:
                             lb = 0
 
@@ -3791,7 +3803,6 @@ def read_txt(text_dir, exit_fun):  # noqa: D103
 
 if __name__ == '__main__':
     main(sys.argv)
-
     sys.stderr.close()
 
     # try:

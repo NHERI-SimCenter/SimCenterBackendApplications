@@ -2,10 +2,13 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include <deque>
 #include <iterator>
+#include <string>
 
-using std::string;
+using std::deque;
 using std::vector;
+using std::string;
 
 /* ***************** params.in example ******
 2
@@ -55,10 +58,12 @@ int main(int argc, char **argv)
   // vectors that will contain strings to search for & their replacement
   //
 
-  vector<string> original; 
-  vector<string> replace; 
-  vector<int> originalLength; 
-  vector<int> replacementLength; 
+  deque<string> rvNames;     
+  deque<string> original; 
+  deque<string> replace; 
+  deque<int> originalLength; 
+  deque<int> replacementLength;
+
 
   //
   // from params file, 1) read # of RV and 2) then read RV names and values
@@ -68,38 +73,71 @@ int main(int argc, char **argv)
   int numRVs = 0;
   string line;
   while (getline(params, line)) {
+    
     std::istringstream buf(line);
     std::istream_iterator<std::string> beg(buf), end;
     vector<std::string> tokens(beg, end); // done!
+    
     if (lineCount == 0) {
 
       // first line contains #RV
       numRVs = std::stoi(tokens.at(0));
-      // std::cerr << "numRV: " << numRVs << "\n";
+      //std::cerr << "numRV: " << numRVs << "\n";
 
     } else {
 
       // subsequent lines contain RV and value .. add to string vectors
-      string rvName = "\"RV." + tokens.at(0) + "\"";  // add SimCenter delimiters begin="RV. & end="
-      string rvName2 = "RV." + tokens.at(0);  // add SimCenter delimiters begin="RV. & end="      
-      string rvValue = tokens.at(1);
-      original.push_back(rvName);
-      replace.push_back(rvValue);
-      original.push_back(rvName2);
-      replace.push_back(rvValue);      
-      originalLength.push_back(rvName.length());
-      replacementLength.push_back(rvValue.length());
-      originalLength.push_back(rvName2.length());
-      replacementLength.push_back(rvValue.length());      
+      string rvName = tokens.at(0);
       
-      // std::cerr << rvName << " " << rvValue << "\n";
+      string rvName2 = "RV." + rvName; // add SimCenter delimiters begin=RV.
+      string rvValue = tokens.at(1);      
+      // std::cerr << "rv name: " << rvName << " value " << rvValue << "\n";      
+      
+      // check if an existing rvName starts as a substring of current
+      bool subStringExists = false;
+      for (size_t i = 0; i < rvNames.size(); ++i) {
+        const std::string& s1 = rvNames[i];
+	if (rvName.find(s1) == 0) {
+	  subStringExists = true;
+	  break;  // No need to check further if found
+	}	
+      }
+      
+      if (subStringExists == false) {
+	rvNames.push_back(rvName);
+	
+	rvName = "\"RV." + rvName + "\"";  // add SimCenter delimiters begin="RV. &\ end="
+	original.push_back(rvName);
+	replace.push_back(rvValue);
+	original.push_back(rvName2);
+	replace.push_back(rvValue);      
+	originalLength.push_back(rvName.length());
+	replacementLength.push_back(rvValue.length());
+	originalLength.push_back(rvName2.length());
+	replacementLength.push_back(rvValue.length());      
+	
+      } else {
+	rvNames.push_front(rvName);
+	
+	rvName = "\"RV." + rvName + "\"";  // add SimCenter delimiters begin="RV. &\ end="
+	original.push_front(rvName2);
+	replace.push_front(rvValue);      	
+	original.push_front(rvName);
+	replace.push_front(rvValue);
+
+	originalLength.push_front(rvName2.length());
+	replacementLength.push_front(rvValue.length());      	
+	originalLength.push_front(rvName.length());
+	replacementLength.push_front(rvValue.length());
+      }
     }
 
     lineCount++;
-
+    
     if (lineCount > numRVs)
       break; // don't need to do anything with additional giberish in the file
   }
+
 
   //
   // read input file line by line
@@ -115,33 +153,33 @@ int main(int argc, char **argv)
       string &oldString = original.at(i);
       string &newString = replace.at(i);
 
-      // NEW CODE: line = replaceAllOccurrences(line, oldString, newString);
-      
-      /* ********************   OLD   *************************/
       int oldSize = originalLength.at(i);
       int newSize = replacementLength.at(i);
 
       // search for RV in string till end of string
       while (true) {
+	
 	  size_t pos = line.find(oldString);
 
 	  // if found .. replace
-	  if (pos != string::npos) 
+	  if (pos != string::npos) {
 
 	    if( oldSize == newSize ) {
 
 	      // if they're same size, use std::string::replace
 	      line.replace( pos, oldSize, newString );
-	      
+
 	    } else {
 
 	      // if not same size, replace by erasing and inserting (costly)
 	      line.erase(pos, oldSize );
 	      line.insert(pos, newString );
+	      
 	    }
 
+
 	  // end of string .. break .. onto next RV
-	  else 
+	  } else 
 	    break;
         }
       /******************************************************* */

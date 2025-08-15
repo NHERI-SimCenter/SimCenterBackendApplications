@@ -44,6 +44,7 @@ from pathlib import Path
 import rasterio
 import pyproj
 from rasterio.transform import rowcol
+import importlib
 
 
 def sample_raster_at_latlon(src, lat, lon):  # noqa: D103
@@ -62,7 +63,7 @@ def sample_raster_at_latlon(src, lat, lon):  # noqa: D103
     return raster_values  # noqa: RET504
 
 
-def create_event(asset_file, event_grid_file, num_entry, do_parallel):  # noqa: C901, D103, N803, RUF100
+def create_event(asset_file, event_grid_file, num_entry, do_parallel, regional_event):  # noqa: C901, D103, N803, RUF100
 
     #print(f'asset_file: {asset_file}, entry: {num_entry}')    
     #print(f'event_grid_file: {event_grid_file}, entry: {num_entry}')
@@ -126,11 +127,11 @@ def create_event(asset_file, event_grid_file, num_entry, do_parallel):  # noqa: 
                 asset_data = json.load(asset_file)
 
                 if num_entry == 0:
-                    im_tag = asset_data['RegionalEvent']['intensityMeasures']
-                    units = asset_data['RegionalEvent']['units']
+                    im_tag = regional_event['intensityMeasures']
+                    units = regional_event['units']
                 else:
-                    im_tag = asset_data['RegionalEvent']['multiple'][num_entry-1]['intensityMeasures']
-                    units = asset_data['RegionalEvent']['multiple'][num_entry-1]['units']
+                    im_tag = regional_event['multiple'][num_entry-1]['intensityMeasures']
+                    units = regional_event['multiple'][num_entry-1]['units']
             
 
                 # Extract the latitude and longitude

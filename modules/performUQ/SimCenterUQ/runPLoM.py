@@ -179,7 +179,8 @@ class runPLoM:
             pass
 
         # move into the templatedir
-        run_dir = job_config.get('runDir', os.getcwd())  # noqa: PTH109
+        # run_dir = job_config.get('runDir', os.getcwd())
+        run_dir = self.work_dir  # ABS - using the run directory consistently
         os.chdir(run_dir)
         # training is done for single building (for now)
         bldg_id = None
@@ -214,7 +215,8 @@ class runPLoM:
 
         # command line
         # KZ modified 0331
-        command_line = f'{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType {runType}'  # noqa: PTH122
+        # command_line = f'{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType {runType}'
+        command_line = f'{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType runningLocal'  # noqa: PTH122
         print(command_line)  # noqa: T201
         # run command
         dakotaTabPath = os.path.join(self.work_dir, 'dakotaTab.out')  # noqa: PTH118, N806
@@ -1021,6 +1023,9 @@ if __name__ == '__main__':
 
     # collect arguments
     inputArgs = sys.argv  # noqa: N816
+    inputArgs = inputArgs[  # noqa: N816
+        -6:
+    ]  # ABS - taking only the last 6 arguments to handle running in DesignSafe
     # working directory
     work_dir = inputArgs[1].replace(os.sep, '/')
     print(f'work_dir = {work_dir}')  # noqa: T201
