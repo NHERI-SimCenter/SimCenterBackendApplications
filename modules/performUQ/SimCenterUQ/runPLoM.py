@@ -269,13 +269,45 @@ class runPLoM:
         #     msg = 'Dakota preprocessor did not run successfully'
         #     self.errlog.exit(msg)
 
+        # decide if we're on HPC/remote
+        is_remote = job_config.get('runType', 'runningLocal') == 'runningRemote'
+
+        # build a sanitized env ONLY for the child process running Dakota on remote
+        env = os.environ.copy()
+        removed = []
+        if is_remote:
+            # Strip common MPI/PMI launch-context vars so Dakota won't try MPI_Init via PMI
+            prefixes = (
+                'PMI_',
+                'OMPI_',
+                'MPI_',
+                'I_MPI_',
+                'HYDRA_',
+                'SLURM_',
+                'PMIX_',
+                'MPICH_',
+                'UCX_',
+                'FI_',
+                'PALS_',
+            )
+            for k in list(env):
+                if k.startswith(prefixes):
+                    removed.append(k)
+                    env.pop(k, None)
+            if removed:
+                print(  # noqa: T201
+                    f'sanitized env for dakota run (removed {len(removed)} keys): {removed[:6]} ...'
+                )
+
         completed = None
         try:
+            # run DakotaUQ with the chosen env
             completed = subprocess.run(  # noqa: S603
                 command_line,
                 check=True,  # raise if exit code != 0
                 capture_output=True,  # capture BOTH stdout and stderr
                 text=True,  # return str, not bytes
+                env=env if is_remote else None,  # use sanitized env on remote
             )
         except subprocess.CalledProcessError as e:
             print(  # noqa: T201
