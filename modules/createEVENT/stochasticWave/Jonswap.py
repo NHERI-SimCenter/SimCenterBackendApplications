@@ -29,14 +29,14 @@ if __name__ == '__main__':
 
     input_args = sys.argv[1:]
 
-    print(  # noqa: T201
-        'Jonswap.py - Backend-script post_process_sensors.py running: '
-        + str(sys.argv[0])
-    )
-    print(  # noqa: T201
-        'post_process_sensors.py - Backend-script post_process_sensors.py received input args: '
-        + str(input_args)
-    )
+    # print(  # noqa: T201
+    #     'Jonswap.py - Backend-script post_process_sensors.py running: '
+    #     + str(sys.argv[0])
+    # )
+    # print(  # noqa: T201
+    #     'post_process_sensors.py - Backend-script post_process_sensors.py received input args: '
+    #     + str(input_args)
+    # )
 
     inputFile = sys.argv[1]  # noqa: N816
     outputPath = sys.argv[2]  # noqa: N816
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     with open(inputFile, encoding='utf-8') as BIMFile:  # noqa: PTH123
         bim = json.load(BIMFile)
         for event_id in range(1):
-            print('Running a sample simulation with JSON input parameters')  # noqa: T201
+            # print('Running a sample simulation with JSON input parameters')  # noqa: T201
             g = 9.80665  # gravity [m/s^2]
             rho = 1000.0  # water density
 
@@ -165,7 +165,7 @@ if __name__ == '__main__':
 
                         # if (si == seeds[-1]):
 
-                        print('Saving wave spectra and time series')  # noqa: T201
+                        # print('Saving wave spectra and time series')  # noqa: T201
                         spectra_df = pd.DataFrame()
 
                         spectra_df['Frequency'] = freq
