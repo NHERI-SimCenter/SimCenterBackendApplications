@@ -292,7 +292,7 @@ class runPLoM:
             if e.stderr:
                 print('---- STDERR ----')  # noqa: T201
                 print(e.stderr)  # noqa: T201
-            self.errlog.exit('Dakota preprocessor did not run successfully')
+            self.errlog.exit('Dakota did not run successfully')
 
         # Verify expected output exists
         if not os.path.exists(dakotaTabPath):  # noqa: PTH110
@@ -307,7 +307,7 @@ class runPLoM:
                 if completed.stderr:
                     print('---- STDERR ----')  # noqa: T201
                     print(completed.stderr)  # noqa: T201
-            self.errlog.exit('Dakota preprocessor did not run successfully')
+            self.errlog.exit('Dakota did not run successfully')
 
         # remove the new dakota.json
         # os.remove('sc_dakota_plom.json')
