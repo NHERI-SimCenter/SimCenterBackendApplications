@@ -46,6 +46,8 @@ import os
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -741,7 +743,7 @@ class runPLoM:
             if (
                 self.constraintsFlag
             ):  # sy - added because quoFEM/EE-UQ example failed 09/10/2024
-                constr_file = Path(self.constraintsFile).resolve()  # noqa: F405
+                constr_file = Path(self.constraintsFile).resolve()
                 sys.path.insert(0, str(constr_file.parent) + '/')
                 constr_script = importlib.__import__(  # noqa: F405
                     constr_file.name[:-3], globals(), locals(), [], 0
@@ -750,7 +752,7 @@ class runPLoM:
                 print('beta_c = ', self.beta_c)  # noqa: T201
                 # if smootherKDE
             if self.smootherKDE_Customize:
-                kde_file = Path(self.smootherKDE_file).resolve()  # noqa: F405
+                kde_file = Path(self.smootherKDE_file).resolve()
                 sys.path.insert(0, str(kde_file.parent) + '/')
                 kde_script = importlib.__import__(  # noqa: F405
                     kde_file.name[:-3], globals(), locals(), [], 0
@@ -761,7 +763,7 @@ class runPLoM:
                 print('epsilon_k = ', self.smootherKDE)  # noqa: T201
             # if tolKDE
             if self.kdeTolerance_Customize:
-                beta_file = Path(self.kdeTolerance_file).resolve()  # noqa: F405
+                beta_file = Path(self.kdeTolerance_file).resolve()
                 sys.path.insert(0, str(beta_file.parent) + '/')
                 beta_script = importlib.__import__(  # noqa: F405
                     beta_file.name[:-3], globals(), locals(), [], 0
@@ -1026,13 +1028,20 @@ def read_txt(text_dir, errlog):  # noqa: D103
 
 class errorLog:  # noqa: D101
     def __init__(self, work_dir):
-        self.file = open(f'{work_dir}/dakota.err', 'w')  # noqa: SIM115, PTH123
+        self.path = Path(work_dir) / 'dakota.err'
+        self.path.parent.mkdir(parents=True, exist_ok=True)  # ensure dir exists
+        self.path.touch(exist_ok=True)  # create if missing
 
     def exit(self, msg):  # noqa: D102
-        print(msg)  # noqa: T201
-        self.file.write(msg)
-        self.file.close()
-        exit(-1)  # noqa: PLR1722
+        print(msg, file=sys.stderr)  # also send to stderr  # noqa: T201
+        try:
+            with self.path.open('a', encoding='utf-8', errors='replace') as f:
+                ts = datetime.now(tz=timezone.utc).isoformat(timespec='seconds')
+                f.write(f'\n\n---- PLoM error @ {ts} ----\n')
+                f.write(msg.rstrip() + '\n')
+        except Exception as e:  # noqa: BLE001
+            print(f'[WARN] Could not write to {self.path}: {e}', file=sys.stderr)  # noqa: T201
+        sys.exit(-1)  # nonzero exit for failure
 
 
 def build_surrogate(work_dir, os_type, run_type, input_file, workflow_driver):
