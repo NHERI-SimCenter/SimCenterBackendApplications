@@ -344,7 +344,7 @@ class runPLoM:
         # remove the new dakota.json
         # os.remove('sc_dakota_plom.json')
 
-        if runType in ['run', 'runningLocal']:
+        if runType in ['run', 'runningLocal', 'runningRemote']:
             # create the response.csv file from the dakotaTab.out file
             os.chdir(run_dir)
             if bldg_id is not None:
@@ -367,7 +367,7 @@ class runPLoM:
                     )
             self.job_config = job_config
 
-        elif self.run_type in ['set_up', 'runningRemote']:
+        elif self.run_type in ['set_up']:
             pass
 
     def _prepare_training_data(self, run_dir):  # noqa: C901
