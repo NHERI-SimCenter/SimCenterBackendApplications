@@ -445,7 +445,7 @@ def get_im_exceedance_probility(  # noqa: C901, D103
             im_name = 'PGA'
         elif im_type == 'SA':
             if isinstance(period, int) or period.is_integer():
-                im_name = f'SA({int(period)!s})'
+                im_name = f'SA({int(period)!s}.0)'
             else:
                 im_name = f'SA({period!s})'
         else:
