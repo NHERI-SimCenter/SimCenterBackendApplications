@@ -266,6 +266,16 @@ def main(  # noqa: C901, D103
             comm.Barrier()
 
         # aggregate results
+        if inputs.get('outputs', False):
+            requested_outputs = []
+            for output_type in ['AIM', 'EDP', 'DM', 'DV']:
+                if inputs['outputs'].get(output_type, False):
+                    if inputs['outputs'][output_type]:
+                        requested_outputs.append(output_type)
+        else:
+            requested_outputs = ['AIM', 'EDP', 'DM', 'DV']
+        requested_outputs.append('every_realization')
+
         if (
             asset_type == 'Buildings'  # noqa: PLR1714
             or asset_type == 'TransportationNetwork'
@@ -273,7 +283,11 @@ def main(  # noqa: C901, D103
             or asset_type == 'PowerNetwork'
         ):
             if procID == 0:
-                WF.aggregate_results(asst_data=asst_data, asset_type=asset_type)
+                WF.aggregate_results(
+                    asst_data=asst_data, 
+                    asset_type=asset_type,
+                    out_types = requested_outputs
+                    )
 
         elif asset_type == 'WaterNetworkPipelines':
             # Provide the headers and out types

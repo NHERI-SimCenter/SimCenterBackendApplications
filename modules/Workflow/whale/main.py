@@ -2944,8 +2944,7 @@ class Workflow:
         self,
         asst_data,
         asset_type='',
-        # out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'],
-        out_types=['AIM', 'EDP', 'DMG', 'DV', 'every_realization'],  # noqa: B006
+        out_types=['AIM', 'EDP', 'DM', 'DV', 'every_realization'],  # noqa: B006
         headers=None,
     ):
         """Short description
@@ -3127,7 +3126,7 @@ class Workflow:
                             # deter_pointer[asset_id].update({
                             #     "R2Dres":r2d_res_i
                             # })
-                if 'DMG' in out_types:
+                if 'DM' in out_types:
                     dmg_out_file_i = 'DMG_grp.json'
 
                     if dmg_out_file_i not in os.listdir(asset_dir):
@@ -3189,15 +3188,24 @@ class Workflow:
 
                 if 'DV' in out_types:
                     dv_out_file_i = 'DV_repair_grp.json'
+                    dl_summary_file = 'DL_summary_stats.json'
 
                     if dv_out_file_i not in os.listdir(asset_dir):
                         show_warning(
                             f"Couldn't find DV file for {assetTypeHierarchy[-1]} {asset_id}"
                         )
 
+                    elif dl_summary_file not in os.listdir(asset_dir):
+                        show_warning(
+                            f"Couldn't find DL summary file for {assetTypeHierarchy[-1]} {asset_id}"
+                        )
+
                     else:
                         with open(asset_dir / dv_out_file_i, encoding='utf-8') as f:  # noqa: PTH123
                             dv_data_i = json.load(f)
+
+                        with open(asset_dir / dl_summary_file, encoding='utf-8') as f:  # noqa: PTH123
+                            dl_summary = json.load(f)
 
                         # extract DV unit info
                         dv_units = dv_data_i['Units']
@@ -3244,48 +3252,48 @@ class Workflow:
 
                         if 'DV' in R2D_res_out_types:
                             r2d_res_dv = dict()  # noqa: C408
-                            cost_columns = [
-                                col
-                                for col in dv_data_i.columns
-                                if col.startswith('Cost')
-                            ]
-                            if len(cost_columns) != 0:
-                                cost_data = dv_data_i[cost_columns].mean()
-                                cost_data_std = dv_data_i[cost_columns].std()
-                                cost_key = cost_data.idxmax()
-                                meanKey = (  # noqa: N806
-                                    f'R2Dres_mean_RepairCost_{dv_units[cost_key]}'
-                                )
-                                stdKey = (  # noqa: N806
-                                    f'R2Dres_std_RepairCost_{dv_units[cost_key]}'
-                                )
-                                r2d_res_dv.update(
-                                    {
-                                        meanKey: cost_data[cost_key],
-                                        stdKey: cost_data_std[cost_key],
-                                    }
-                                )
-                            time_columns = [
-                                col
-                                for col in dv_data_i.columns
-                                if col.startswith('Time')
-                            ]
-                            if len(time_columns) != 0:
-                                time_data = dv_data_i[time_columns].mean()
-                                time_data_std = dv_data_i[time_columns].std()
-                                time_key = time_data.idxmax()
-                                meanKey = (  # noqa: N806
-                                    f'R2Dres_mean_RepairTime_{dv_units[time_key]}'
-                                )
-                                stdKey = (  # noqa: N806
-                                    f'R2Dres_std_RepairTime_{dv_units[time_key]}'
-                                )
-                                r2d_res_dv.update(
-                                    {
-                                        meanKey: time_data[time_key],
-                                        stdKey: time_data_std[time_key],
-                                    }
-                                )
+
+                            if 'repair_cost' in dl_summary:
+                                repair_cost_data = dl_summary['repair_cost']
+
+                            elif 'repair_cost-' in dl_summary:
+                                repair_cost_data = dl_summary['repair_cost-']
+
+                            else:
+                                repair_cost_data = None
+
+                            if repair_cost_data:
+
+                                cost_unit = [unit for dv_output, unit in dv_units.items() if dv_output.startswith('Cost')][0]                            
+
+                                r2d_res_dv.update({
+                                    f'R2Dres_mean_RepairCost_{cost_unit}': repair_cost_data['mean'],
+                                    f'R2Dres_std_RepairCost_{cost_unit}': repair_cost_data['std']                                  
+                                    })
+
+                                if cost_unit == 'loss_ratio' and np.abs(replacement_cost-1.0)>1e-5:
+                                    r2d_res_dv.update({
+                                        f'R2Dres_mean_RepairCost': repair_cost_data['mean'] * replacement_cost,
+                                        f'R2Dres_std_RepairCost': repair_cost_data['std'] * replacement_cost                                    
+                                        })
+
+                            if 'repair_time' in dl_summary:
+                                repair_time_data = dl_summary['repair_time']
+
+                            elif 'repair_time-sequential' in dl_summary:
+                                repair_time_data = dl_summary['repair_time-sequential']
+
+                            else:
+                                repair_time_data = None
+
+                            if repair_time_data:
+
+                                time_unit = [unit for dv_output, unit in dv_units.items() if dv_output.startswith('Time')][0]
+
+                                r2d_res_dv.update({
+                                    f'R2Dres_mean_RepairTime_{time_unit}': repair_time_data['mean'],
+                                    f'R2Dres_std_RepairTime_{time_unit}': repair_time_data['std']
+                                    })
 
                             r2d_res_i = deter_pointer[asset_id].get('R2Dres', {})
                             r2d_res_i.update(r2d_res_dv)

@@ -74,8 +74,19 @@ def create_event(asset_file: str, event_grid_file: str, workflow_input: str, do_
 
     event_grid_file_path = os.path.dirname(event_grid_file)
 
+    #
+    # open input file & get Regional Event data
+    #
+
+    json_path = os.path.join(os.getcwd(), workflow_input)
+
+    with open(json_path, 'r') as f:
+	data = json.load(f)
+
+    regional_event = data.get("RegionalEvent")
+    
     if is_raster_file(event_grid_file):
-        create_raster_event(asset_file, event_grid_file, 0, do_parallel)
+        create_raster_event(asset_file, event_grid_file, 0, do_parallel, regional_event)
     elif is_xml_file(event_grid_file):  # noqa: RET505
         # Here you would call a function to handle XML files
         # For now, we'll just raise a NotImplementedError
@@ -84,15 +95,6 @@ def create_event(asset_file: str, event_grid_file: str, workflow_input: str, do_
         raise ValueError(  # noqa: TRY003
             f'{event_grid_file} is not a raster. Only rasters are currently supported.'  # noqa: EM102
         )
-
-    #
-    # open input file, see if other raster files to deal with
-    #
-
-    # path to file and open it
-    json_path = os.path.join(os.path.dirname(os.getcwd()), workflow_input)
-    with open(json_path, 'r') as f:
-        data = json.load(f)
 
     #
     # If multiple exists, update event_file
@@ -107,11 +109,11 @@ def create_event(asset_file: str, event_grid_file: str, workflow_input: str, do_
         # is this assumption correct on file paths?
         next_file = data['RegionalEvent']['multiple'][i]['eventFile']
         next_file_path = os.path.join(event_grid_file_path, next_file)
-        create_raster_event(asset_file, next_file_path, i+1, do_parallel)        
-
+        create_raster_event(asset_file, next_file_path, i+1, do_parallel, regional_event)
     
-    
-
+#
+# main function
+#
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
