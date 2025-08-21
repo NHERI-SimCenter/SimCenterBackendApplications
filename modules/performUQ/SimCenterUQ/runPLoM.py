@@ -1062,7 +1062,6 @@ class errorLog:  # noqa: D101
     def __init__(self, work_dir):
         self.path = Path(work_dir) / 'dakota.err'
         self.path.parent.mkdir(parents=True, exist_ok=True)  # ensure dir exists
-        self.path.touch(exist_ok=True)  # create if missing
 
     def exit(self, msg):  # noqa: D102
         print(msg, file=sys.stderr)  # also send to stderr  # noqa: T201
