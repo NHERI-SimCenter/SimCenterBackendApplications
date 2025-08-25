@@ -46,6 +46,8 @@ import os
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -173,7 +175,8 @@ class runPLoM:
                 pass
             else:
                 # pythonEXE = os.path.join(localAppDir,'applications','python','python.exe')
-                pythonEXE = '"' + sys.executable + '"'  # noqa: N806
+                # pythonEXE = '"' + sys.executable + '"'
+                pythonEXE = sys.executable  # noqa: N806
         else:
             # for remote run and macOS, let's use system python
             pass
@@ -187,6 +190,7 @@ class runPLoM:
         if bldg_id is not None:
             os.chdir(bldg_id)
         os.chdir('templatedir')
+        print(f'Current working directory: {os.getcwd()}')  # noqa: PTH109, T201
 
         # dakota script path
         dakotaScript = os.path.join(  # noqa: PTH118, N806
@@ -216,41 +220,131 @@ class runPLoM:
         # command line
         # KZ modified 0331
         # command_line = f'{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType {runType}'
-        command_line = f'{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType runningLocal'  # noqa: PTH122
-        print(command_line)  # noqa: T201
-        # run command
+        # command_line = f'{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType runningLocal'
+        # print(command_line)
+
+        # Build the command as a list (no shell interpretation)
+        command_line = [
+            pythonEXE,
+            dakotaScript,
+            '--workflowInput',
+            'sc_dakota_plom.json',
+            '--driverFile',
+            os.path.splitext(self.workflow_driver)[0],  # noqa: PTH122
+            '--workflowOutput',
+            'EDP.json',
+            '--runType',
+            'runningLocal',
+        ]
+
+        print(  # noqa: T201
+            'Command to run:', ' '.join(command_line)
+        )  # for debugging
+
         dakotaTabPath = os.path.join(self.work_dir, 'dakotaTab.out')  # noqa: PTH118, N806
         print(dakotaTabPath)  # noqa: T201
 
+        # try:
+        #     os.system(command_line)
+        # except:
+        #     print(
+        #         'runPLoM._run_simulation: error in running dakota to generate the initial sample.'
+        #     )
+        #     print(
+        #         'runPLoM._run_simulation: please check if the dakota is installed correctly on the system.'
+        #     )
+
+        # if not os.path.exists(dakotaTabPath):
+        #     try:
+        #         subprocess.call(command_line)
+        #     except:
+        #         print(
+        #             'runPLoM._run_simulation: error in running dakota to generate the initial sample.'
+        #         )
+        #         print(
+        #             'runPLoM._run_simulation: please check if the dakota is installed correctly on the system.'
+        #         )
+
+        # if not os.path.exists(dakotaTabPath):
+        #     msg = 'Dakota preprocessor did not run successfully'
+        #     self.errlog.exit(msg)
+
+        # decide if we're on HPC/remote
+        is_remote = job_config.get('runType', 'runningLocal') == 'runningRemote'
+
+        # build a sanitized env ONLY for the child process running Dakota on remote
+        env = os.environ.copy()
+        removed = []
+        if is_remote:
+            # Strip common MPI/PMI launch-context vars so Dakota won't try MPI_Init via PMI
+            prefixes = (
+                'PMI_',
+                'OMPI_',
+                'MPI_',
+                'I_MPI_',
+                'HYDRA_',
+                'SLURM_',
+                'PMIX_',
+                'MPICH_',
+                'UCX_',
+                'FI_',
+                'PALS_',
+            )
+            for k in list(env):
+                if k.startswith(prefixes):
+                    removed.append(k)
+                    env.pop(k, None)
+            if removed:
+                print(  # noqa: T201
+                    f'sanitized env for dakota run (removed {len(removed)} keys): {removed[:6]} ...'
+                )
+
+        completed = None
         try:
-            os.system(command_line)  # noqa: S605
-        except:  # noqa: E722
+            # run DakotaUQ with the chosen env
+            completed = subprocess.run(  # noqa: S603
+                command_line,
+                check=True,  # raise if exit code != 0
+                capture_output=True,  # capture BOTH stdout and stderr
+                text=True,  # return str, not bytes
+                env=env if is_remote else None,  # use sanitized env on remote
+            )
+        except subprocess.CalledProcessError as e:
             print(  # noqa: T201
                 'runPLoM._run_simulation: error in running dakota to generate the initial sample.'
             )
             print(  # noqa: T201
                 'runPLoM._run_simulation: please check if the dakota is installed correctly on the system.'
             )
+            print(f'Command: {" ".join(e.cmd)}')  # noqa: T201
+            print(f'Return code: {e.returncode}')  # noqa: T201
+            if e.stdout:
+                print('---- STDOUT ----')  # noqa: T201
+                print(e.stdout)  # noqa: T201
+            if e.stderr:
+                print('---- STDERR ----')  # noqa: T201
+                print(e.stderr)  # noqa: T201
+            self.errlog.exit('Dakota did not run successfully')
 
+        # Verify expected output exists
         if not os.path.exists(dakotaTabPath):  # noqa: PTH110
-            try:
-                subprocess.call(command_line)  # noqa: S603
-            except:  # noqa: E722
-                print(  # noqa: T201
-                    'runPLoM._run_simulation: error in running dakota to generate the initial sample.'
-                )
-                print(  # noqa: T201
-                    'runPLoM._run_simulation: please check if the dakota is installed correctly on the system.'
-                )
-
-        if not os.path.exists(dakotaTabPath):  # noqa: PTH110
-            msg = 'Dakota preprocessor did not run successfully'
-            self.errlog.exit(msg)
+            print(  # noqa: T201
+                'runPLoM._run_simulation: Dakota finished without creating the expected output file.'
+            )
+            print(f'Expected file missing: {dakotaTabPath}')  # noqa: T201
+            if completed is not None:
+                if completed.stdout:
+                    print('---- STDOUT ----')  # noqa: T201
+                    print(completed.stdout)  # noqa: T201
+                if completed.stderr:
+                    print('---- STDERR ----')  # noqa: T201
+                    print(completed.stderr)  # noqa: T201
+            self.errlog.exit('Dakota did not run successfully')
 
         # remove the new dakota.json
         # os.remove('sc_dakota_plom.json')
 
-        if runType in ['run', 'runningLocal']:
+        if runType in ['run', 'runningLocal', 'runningRemote']:
             # create the response.csv file from the dakotaTab.out file
             os.chdir(run_dir)
             if bldg_id is not None:
@@ -273,7 +367,7 @@ class runPLoM:
                     )
             self.job_config = job_config
 
-        elif self.run_type in ['set_up', 'runningRemote']:
+        elif self.run_type in ['set_up']:
             pass
 
     def _prepare_training_data(self, run_dir):  # noqa: C901
@@ -681,7 +775,7 @@ class runPLoM:
             if (
                 self.constraintsFlag
             ):  # sy - added because quoFEM/EE-UQ example failed 09/10/2024
-                constr_file = Path(self.constraintsFile).resolve()  # noqa: F405
+                constr_file = Path(self.constraintsFile).resolve()
                 sys.path.insert(0, str(constr_file.parent) + '/')
                 constr_script = importlib.__import__(  # noqa: F405
                     constr_file.name[:-3], globals(), locals(), [], 0
@@ -690,7 +784,7 @@ class runPLoM:
                 print('beta_c = ', self.beta_c)  # noqa: T201
                 # if smootherKDE
             if self.smootherKDE_Customize:
-                kde_file = Path(self.smootherKDE_file).resolve()  # noqa: F405
+                kde_file = Path(self.smootherKDE_file).resolve()
                 sys.path.insert(0, str(kde_file.parent) + '/')
                 kde_script = importlib.__import__(  # noqa: F405
                     kde_file.name[:-3], globals(), locals(), [], 0
@@ -701,7 +795,7 @@ class runPLoM:
                 print('epsilon_k = ', self.smootherKDE)  # noqa: T201
             # if tolKDE
             if self.kdeTolerance_Customize:
-                beta_file = Path(self.kdeTolerance_file).resolve()  # noqa: F405
+                beta_file = Path(self.kdeTolerance_file).resolve()
                 sys.path.insert(0, str(beta_file.parent) + '/')
                 beta_script = importlib.__import__(  # noqa: F405
                     beta_file.name[:-3], globals(), locals(), [], 0
@@ -966,13 +1060,19 @@ def read_txt(text_dir, errlog):  # noqa: D103
 
 class errorLog:  # noqa: D101
     def __init__(self, work_dir):
-        self.file = open(f'{work_dir}/dakota.err', 'w')  # noqa: SIM115, PTH123
+        self.path = Path(work_dir) / 'dakota.err'
+        self.path.parent.mkdir(parents=True, exist_ok=True)  # ensure dir exists
 
     def exit(self, msg):  # noqa: D102
-        print(msg)  # noqa: T201
-        self.file.write(msg)
-        self.file.close()
-        exit(-1)  # noqa: PLR1722
+        print(msg, file=sys.stderr)  # also send to stderr  # noqa: T201
+        try:
+            with self.path.open('a', encoding='utf-8', errors='replace') as f:
+                ts = datetime.now(tz=timezone.utc).isoformat(timespec='seconds')
+                f.write(f'\n\n---- PLoM error @ {ts} ----\n')
+                f.write(msg.rstrip() + '\n')
+        except Exception as e:  # noqa: BLE001
+            print(f'[WARN] Could not write to {self.path}: {e}', file=sys.stderr)  # noqa: T201
+        sys.exit(-1)  # nonzero exit for failure
 
 
 def build_surrogate(work_dir, os_type, run_type, input_file, workflow_driver):

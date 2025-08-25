@@ -142,9 +142,9 @@ def main(args):  # noqa: C901, D103
             returncode = e.returncode  # noqa: F841
             run_success = False
 
-        dakotaErrFile = os.path.join(cwd, 'dakota.err')  # noqa: N806, PTH109, PTH118, RUF100, W291
-        dakotaOutFile = os.path.join(cwd, 'dakota.out')  # noqa: N806, PTH109, PTH118, RUF100
-        dakotaTabFile = os.path.join(cwd, 'dakotaTab.out')  # noqa: N806, PTH109, PTH118, RUF100
+        dakotaErrFile = os.path.join(cwd, 'dakota.err')  # noqa: N806, PTH109, PTH118
+        dakotaOutFile = os.path.join(cwd, 'dakota.out')  # noqa: N806, PTH109, PTH118
+        dakotaTabFile = os.path.join(cwd, 'dakotaTab.out')  # noqa: N806, PTH109, PTH118
         checkErrFile = os.path.exists(dakotaErrFile)  # noqa: PTH110, N806
         checkOutFile = os.path.exists(dakotaOutFile)  # noqa: PTH110, N806
         checkTabFile = os.path.exists(dakotaTabFile)  # noqa: F841, N806, PTH110
