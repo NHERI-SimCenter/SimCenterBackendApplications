@@ -350,7 +350,12 @@ def scale_event(filename_aim, filename_event):
     except (json.JSONDecodeError, IOError) as e:
         print(f"Error IsolatedBuilldingCFD::scale_event processing files: {e}")
 
-        
+def GetFloorsCount(BIMFilePath):  # noqa: N802, N803, D103
+    with open(BIMFilePath) as BIMFile:  # noqa: PTH123, N806
+        bim = json.load(BIMFile)
+
+    return int(bim['GeneralInformation']['stories'])
+
 
 if __name__ == "__main__":
     """
@@ -366,17 +371,34 @@ if __name__ == "__main__":
     parser.add_argument("--getRV", action="store_true", help="used to get random variable, if not multiply EVENT by gs")
     
 
+    # #parsing arguments
+    # arguments, unknowns = parser.parse_known_args()
+
+    # # [forcesOutputName, floors, startTime, lengthScale, velocityScale] = ReadBIM(arguments.bim)
+
+    # # GetOpenFOAMEvent(arguments.case, forcesOutputName, floors, startTime, lengthScale, velocityScale)
+
+    # if not arguments.getRV:
+
+    #     scale_event(filename_aim = arguments.filenameAIM, filename_event = arguments.filenameEVENT)
+    
     #parsing arguments
     arguments, unknowns = parser.parse_known_args()
 
-    # [forcesOutputName, floors, startTime, lengthScale, velocityScale] = ReadBIM(arguments.bim)
-
-    # GetOpenFOAMEvent(arguments.case, forcesOutputName, floors, startTime, lengthScale, velocityScale)
+    if arguments.getRV == True:  # noqa: E712
+        # Read the number of floors
+        # floorsCount = GetFloorsCount(arguments.filenameAIM)  # noqa: N816
+        floorsCount = GetFloorsCount(arguments.filenameAIM)  # noqa: N816
+        forces = []
+        for i in range(floorsCount):  # noqa: B007
+            forces.append(FloorForces())  # noqa: PERF401
+        # write the event file
+        writeEVENT(forces, arguments.filenameEVENT)
 
     if not arguments.getRV:
-
         scale_event(filename_aim = arguments.filenameAIM, filename_event = arguments.filenameEVENT)
 
         
         
+    
     
