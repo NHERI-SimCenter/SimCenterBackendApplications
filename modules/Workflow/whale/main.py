@@ -2293,7 +2293,7 @@ class Workflow:
                 #      This time, (1) we do it only for python; (2) added try statement
 
                 try:
-                    if command.startswith('python'):
+                    if command.startswith('python') and self.run_type == 'set_up':
                         if platform.system() == 'Windows':
                             driver_script += 'if %errorlevel% neq 0 exit /b -1 \n' #TODO ANYONE: This variable is not defined. Check This please. (Added by Sina)
                         else:
@@ -2461,7 +2461,7 @@ class Workflow:
                 #      This time, (1) we do it only for python; (2) added try statement
 
                 # try:
-                if 'python' in command_list[0].lower():
+                if 'python' in command_list[0].lower() and self.run_type == 'set_up':
                     if platform.system() == 'Windows':
                         driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
                     else:
