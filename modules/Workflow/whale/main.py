@@ -1848,7 +1848,7 @@ class Workflow:
             )
         log_div()
 
-    def perform_regional_mapping(self, AIM_file_path, assetType, doParallel=True):  # noqa: FBT002, N803
+    def perform_regional_mapping(self, AIM_file_path, assetType, event_grid, doParallel=True):  # noqa: FBT002, N803
         """Performs the regional mapping between the asset and a hazard event.
 
         Parameters
@@ -1870,7 +1870,7 @@ class Workflow:
                 'id': 'filenameEVENTgrid',
                 'type': 'path',
                 'default': resolve_path(
-                    self.shared_data['RegionalEvent']['eventFile'],
+                    event_grid,
                     self.reference_dir,
                 ),
             }
