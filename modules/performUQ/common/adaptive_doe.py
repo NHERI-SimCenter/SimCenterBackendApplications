@@ -200,7 +200,12 @@ class AdaptiveDesignOfExperiments:
             # 7. Update training set and candidate pool
             x_train = np.vstack([x_train, next_point])
             candidate_pool = np.delete(candidate_pool, idx, axis=0)
-
+            if use_mse_w:
+                # For MSE: maintain alignment by deleting from mci_samples too
+                mci_samples = np.delete(mci_samples, idx, axis=0)
+                if weights is not None:
+                    weights = np.delete(weights, idx, axis=0)
+            # For IMSEw: keep mci_samples constant (integration domain unchanged)
         return np.array(selected_points)
 
     def write_gp_for_doe_to_json(self, filepath: str | Path):
