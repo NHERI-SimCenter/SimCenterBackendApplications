@@ -141,6 +141,13 @@ class AdaptiveDesignOfExperiments:
 
         # 1. Fixed candidate pool
         if use_mse_w:
+            # get unique MCI samples to avoid redundant computations
+            mci_samples, weights = remove_duplicate_inputs(
+                mci_samples,
+                weights
+                if weights is not None
+                else np.ones((mci_samples.shape[0], 1)),
+            )
             candidate_pool = mci_samples.copy()
         else:
             bounds = compute_lhs_bounds(x_train, mci_samples, padding=0)
@@ -164,10 +171,8 @@ class AdaptiveDesignOfExperiments:
 
             # 5. Vectorized acquisition
             if use_mse_w:
-                # Just return the average variance (same for all candidates)
-                acquisition_values = np.mean(pred_var) * np.ones(
-                    (scaled_candidates.shape[0], 1)
-                )
+                # Just return the predictive variance
+                acquisition_values = pred_var
             else:
                 # Covariance matrix: shape (n_mci, n_candidates)
                 k_matrix = self.gp_model_for_doe.kern.K(
