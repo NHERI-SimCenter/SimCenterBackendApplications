@@ -169,8 +169,8 @@ class GaussianProcessModel:
             # For standardized inputs, set reasonable bounds
             if hasattr(kernel, 'lengthscale'):
                 kernel.lengthscale.constrain_bounded(0.01, 10.0)
-            if hasattr(kernel, 'variance'):
-                kernel.variance.constrain_bounded(0.01, 100.0)
+            # if hasattr(kernel, 'variance'):
+            #     kernel.variance.constrain_bounded(0.01, 100.0)
         # TODO (ABS): For unscaled inputs, use default bounds or wider ranges
 
     def _fit_pca_and_create_models(self, *, reoptimize=True, num_random_restarts=10):
