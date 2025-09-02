@@ -108,7 +108,7 @@ class AdaptiveDesignOfExperiments:
         seed=None,
     ):
         """
-        Efficient sequential DoE using MSEw or IMSEw with vectorized acquisition.
+        Efficient sequential DoE using MSEw (equation 10) or IMSEw (equation 9) from Taflanidis et al. (https://doi.org/10.1016/j.ymssp.2025.113014).
 
         Parameters
         ----------
@@ -119,9 +119,9 @@ class AdaptiveDesignOfExperiments:
         mci_samples : array-like
             Monte Carlo integration samples (original space).
         use_mse_w : bool
-            Whether to use MSEw (True) or IMSEw (False).
+            Whether to use MSE equation (10) (True) or IMSEw equation (9) (False).
         weights : array-like or None
-            Optional importance weights.
+            Optional importance weights for integration points.
         n_samples : int
             Number of candidate points to generate (IMSEw only).
         seed : int or None
@@ -139,9 +139,9 @@ class AdaptiveDesignOfExperiments:
 
         selected_points = []
 
-        # 1. Fixed candidate pool
+        # 1. Setup candidate pool based on acquisition function
         if use_mse_w:
-            # get unique MCI samples to avoid redundant computations
+            # MSE (equation 10): candidates are the integration points themselves
             mci_samples, weights = remove_duplicate_inputs(
                 mci_samples,
                 weights
@@ -150,62 +150,84 @@ class AdaptiveDesignOfExperiments:
             )
             candidate_pool = mci_samples.copy()
         else:
+            # IMSEw (equation 9): generate separate candidate pool via LHS
             bounds = compute_lhs_bounds(x_train, mci_samples, padding=0)
             candidate_pool = generate_lhs_candidates(n_samples, bounds, seed=seed)
 
+        # 2. Sequential selection
         for _ in range(n_points):
-            # 2. Scale everything
+            # Scale all arrays
             scaled_x_train = self._scale(x_train)
             scaled_candidates = self._scale(candidate_pool)
             scaled_mci_samples = self._scale(mci_samples)
 
-            # 3. Set GP inputs
+            # Set GP with current training set
             self.gp_model_for_doe.set_XY(
                 scaled_x_train, np.zeros((scaled_x_train.shape[0], 1))
             )
 
-            # 4. Predict variance at integration points
-            _, pred_var = self.gp_model_for_doe.predict(scaled_mci_samples)
-            if weights is not None:
-                pred_var *= weights.reshape(-1, 1)  # shape (n_mci, 1)
-
-            # 5. Vectorized acquisition
+            # Compute acquisition values based on selected method
             if use_mse_w:
-                # Just return the predictive variance
+                # MSE (equation 10): σ²(θ_new|Θ^(k))
+                _, pred_var = self.gp_model_for_doe.predict(scaled_candidates)
+
+                # Apply importance weights if provided
+                if weights is not None:
+                    pred_var *= weights.reshape(-1, 1)
+
                 acquisition_values = pred_var
+
             else:
-                # Covariance matrix: shape (n_mci, n_candidates)
+                # IMSEw (equation 9): (1/N_s) * Σ[R(θ^(l), θ_new)^β * σ²(θ^(l)|Θ^(k))]
+
+                # Predict variance at integration points
+                _, pred_var = self.gp_model_for_doe.predict(scaled_mci_samples)
+
+                # Apply importance weights to integration points
+                if weights is not None:
+                    pred_var *= weights.reshape(-1, 1)
+
+                # Compute covariance K(θ^(l), θ_new)
                 k_matrix = self.gp_model_for_doe.kern.K(
                     scaled_mci_samples, scaled_candidates
                 )
 
-                # Normalize to get correlation matrix
-                kernel_var = self.gp_model_for_doe.kern.variance[0]  # scalar
-                corr_matrix = k_matrix / kernel_var  # element-wise division
+                # Get diagonal kernel values for covariance normalization
+                k_diag_mci = np.diag(
+                    self.gp_model_for_doe.kern.K(scaled_mci_samples)
+                )
+                k_diag_candidates = np.diag(
+                    self.gp_model_for_doe.kern.K(scaled_candidates)
+                )
 
+                # Correlations : R(θ^(l), θ_new)
+                corr_matrix = k_matrix / np.sqrt(
+                    np.outer(k_diag_mci, k_diag_candidates)
+                )
+
+                # Apply beta exponent
                 beta = 2.0 * scaled_x_train.shape[1]
-                # beta = 1.0 * scaled_x_train.shape[1]
 
-                # Vectorized IMSEw: (corr^beta) * pred_var → mean over MCI samples
-                weighted_var = (
-                    corr_matrix**beta
-                ).T @ pred_var  # shape (n_candidates, 1)
+                # IMSEw computation: (corr^beta).T @ pred_var / N_s
+                weighted_var = (corr_matrix**beta).T @ pred_var
                 acquisition_values = weighted_var / scaled_mci_samples.shape[0]
 
-            # 6. Select best candidate
+            # Select candidate with maximum acquisition value
             idx = np.argmax(acquisition_values)
             next_point = candidate_pool[idx]
             selected_points.append(next_point)
 
-            # 7. Update training set and candidate pool
+            # Update training set and candidate pool
             x_train = np.vstack([x_train, next_point])
             candidate_pool = np.delete(candidate_pool, idx, axis=0)
+
             if use_mse_w:
                 # For MSE: maintain alignment by deleting from mci_samples too
                 mci_samples = np.delete(mci_samples, idx, axis=0)
                 if weights is not None:
                     weights = np.delete(weights, idx, axis=0)
             # For IMSEw: keep mci_samples constant (integration domain unchanged)
+
         return np.array(selected_points)
 
     def write_gp_for_doe_to_json(self, filepath: str | Path):
