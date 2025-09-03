@@ -57,8 +57,18 @@ class AdaptiveDesignOfExperiments:
             else:
                 w = explained_variance_ratio / np.sum(explained_variance_ratio)
         else:
-            n_models = len(self.gp_model.model)
-            w = np.full(n_models, 1.0 / n_models)
+            if self.gp_model.output_scaler is not None:
+                Y_proc = self.gp_model.output_scaler.transform(self.gp_model.y_train)
+            else:
+                Y_proc = self.gp_model.y_train
+
+            var_per_output = np.nanvar(Y_proc, axis=0, ddof=1)  # shape (p,)
+            var_per_output = np.where(
+                np.isfinite(var_per_output) & (var_per_output > 0),
+                var_per_output,
+                1.0,
+            )
+            w = var_per_output / np.sum(var_per_output)
 
         hyperparameters_matrix = [
             np.atleast_2d(model.kern.param_array) for model in self.gp_model.model
