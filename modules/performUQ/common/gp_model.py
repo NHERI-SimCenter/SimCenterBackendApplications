@@ -71,6 +71,7 @@ class GaussianProcessModelSettings(BaseModel):
     use_pca: bool = False
     pca_threshold: float = 0.999
     scale_inputs: bool = True
+    scale_outputs: bool = True
 
     @model_validator(mode='after')
     def check_nugget_value(self):  # noqa: D102
@@ -105,13 +106,14 @@ class GaussianProcessModel:
         self.scale_inputs = settings.scale_inputs
 
         self.pca = (
-            PrincipalComponentAnalysis(self.pca_threshold, perform_scaling=True)
+            PrincipalComponentAnalysis(self.pca_threshold, perform_scaling=False)
             if self.use_pca
             else None
         )
         self.latent_dimension = None
 
         self.input_scaler = SafeStandardScaler() if self.scale_inputs else None
+        self.output_scaler = SafeStandardScaler() if settings.scale_outputs else None
 
         self.kernel = self._create_kernel()
 
@@ -121,6 +123,56 @@ class GaussianProcessModel:
         self.x_train = None
         self.y_train = None
         self.x_train_scaled = None
+
+    def apply_input_scaling(self, x, *, fit=False):
+        """Scale inputs using the input scaler."""
+        if self.input_scaler is None:
+            return x
+
+        if fit:
+            return self.input_scaler.fit_transform(x)
+        return self.input_scaler.transform(x)
+
+    def _preprocess_outputs(self, y, *, fit: bool) -> np.ndarray:
+        """Scale outputs and apply PCA. If fit=False, use existing transformers."""
+        y_processed = y
+        if self.output_scaler is not None:
+            y_processed = (
+                self.output_scaler.fit_transform(y_processed)
+                if fit
+                else self.output_scaler.transform(y_processed)
+            )
+        if self.pca is not None:
+            if fit:
+                self.pca.fit(y_processed)
+            y_processed = self.pca.project_to_latent_space(y_processed)
+        return y_processed
+
+    def _postprocess_outputs(self, y_latent):
+        """Single point for all output postprocessing."""
+        y_processed = y_latent
+
+        # Step 1: Inverse PCA if used
+        if self.pca is not None:
+            y_processed = self.pca.project_back_to_original_space(y_processed)
+
+        # Step 2: Inverse scaling if used
+        if self.output_scaler is not None:
+            y_processed = self.output_scaler.inverse_transform(y_processed)
+
+        return y_processed
+
+    # def _create_surrogate(self):
+    #     use_gpy_normalizer = self.output_scaler is None
+    #     model = GPy.models.GPRegression(
+    #         X=np.zeros((1, self.input_dimension), dtype=float),
+    #         Y=np.zeros((1, 1), dtype=float),
+    #         kernel=self.kernel.copy(),
+    #         mean_function=None,
+    #         normalizer=use_gpy_normalizer,
+    #     )
+    #     self._configure_nugget(model)
+    #     return model
 
     def _create_kernel(self):
         if self.kernel_type == 'exponential':
@@ -134,26 +186,6 @@ class GaussianProcessModel:
         msg = f"Unknown kernel_type '{self.kernel_type}'"
         raise ValueError(msg)
 
-    def apply_input_scaling(self, x, *, fit=False):
-        """Scale inputs using the input scaler."""
-        if self.input_scaler is None:
-            return x
-
-        if fit:
-            return self.input_scaler.fit_transform(x)
-        return self.input_scaler.transform(x)
-
-    def _create_surrogate(self):
-        model = GPy.models.GPRegression(
-            X=np.zeros((1, self.input_dimension), dtype=float),
-            Y=np.zeros((1, 1), dtype=float),
-            kernel=self.kernel.copy(),
-            mean_function=None,
-            normalizer=True,
-        )
-        self._configure_nugget(model)
-        return model
-
     def _configure_nugget(self, model: GPy.models.GPRegression):
         """Configure the nugget (Gaussian noise variance) for each GP model."""
         if self.settings.fix_nugget:
@@ -163,19 +195,92 @@ class GaussianProcessModel:
             model.Gaussian_noise.variance = self.settings.nugget_value
             model.likelihood.variance.constrain_bounded(1e-8, 1e-3)
 
+    # def _set_kernel_hyperparameter_bounds(self, kernel):
+    #     """Set reasonable hyperparameter bounds for scaled inputs."""
+    #     if self.scale_inputs:
+    #         # For standardized inputs, set reasonable bounds
+    #         if hasattr(kernel, 'lengthscale'):
+    #             kernel.lengthscale.constrain_bounded(0.01, 10.0)
+    #         # if hasattr(kernel, 'variance'):
+    #         #     kernel.variance.constrain_bounded(0.01, 100.0)
+    #     # TODO (ABS): For unscaled inputs, use default bounds or wider ranges
+
     def _set_kernel_hyperparameter_bounds(self, kernel):
-        """Set reasonable hyperparameter bounds for scaled inputs."""
-        if self.scale_inputs:
-            # For standardized inputs, set reasonable bounds
-            if hasattr(kernel, 'lengthscale'):
+        """Set reasonable hyperparameter bounds for inputs."""
+        if hasattr(kernel, 'lengthscale'):
+            if self.scale_inputs:
+                # Standard approach for scaled inputs
                 kernel.lengthscale.constrain_bounded(0.01, 10.0)
-            if hasattr(kernel, 'variance'):
-                kernel.variance.constrain_bounded(0.01, 100.0)
-        # TODO (ABS): For unscaled inputs, use default bounds or wider ranges
+            # Engineering approach: bounds based on physical scales
+            elif hasattr(self, 'x_train') and self.x_train is not None:
+                input_ranges = np.ptp(self.x_train, axis=0)
+
+                # Handle zero-variance dimensions
+                input_ranges = np.where(input_ranges == 0, 1.0, input_ranges)
+
+                # Apply bounds to lengthscale parameter
+                if self.ARD and len(input_ranges) > 1:
+                    # For ARD kernels, set bounds per dimension using GPy's indexing
+                    for nx in range(len(input_ranges)):
+                        lb = input_ranges[nx] * 0.01  # 1% of range
+                        ub = input_ranges[nx] * 10.0  # 10x range
+
+                        # Ensure valid bounds
+                        lb = max(lb, 1e-6)
+                        if lb >= ub:
+                            lb = ub * 0.01
+
+                        # Use GPy's double bracket indexing for individual lengthscale parameters
+                        kernel.lengthscale[[nx]].constrain_bounded(
+                            lb, ub, warning=False
+                        )
+                else:
+                    # Single lengthscale case
+                    lb = float(np.min(input_ranges) * 0.01)
+                    ub = float(np.max(input_ranges) * 10.0)
+                    lb = max(lb, 1e-6)
+                    kernel.lengthscale.constrain_bounded(lb, ub)
+
+    def _initialize_kernel_lengthscales(self, kernel, *, force_initialization=False):
+        """Initialize kernel lengthscales to reasonable values based on input data.
+
+        Parameters
+        ----------
+        kernel : GPy kernel
+            Kernel to initialize
+        force_initialization : bool
+            If True, always initialize. If False, only initialize if lengthscales
+            are at default values (close to 1.0).
+        """
+        if not hasattr(kernel, 'lengthscale'):
+            return
+
+        # Check if training data is available
+        if self.x_train is None:
+            return  # Can't initialize without training data
+
+        # Check if hyperparameters appear to be at default values
+        if not force_initialization:
+            current_lengthscales = kernel.lengthscale.values.flatten()  # noqa: PD011
+            if not np.allclose(current_lengthscales, 1.0, rtol=0.01):
+                return  # Skip initialization - hyperparameters appear optimized
+
+        # Simple consistent initialization: use input data ranges
+        input_ranges = np.ptp(self.x_train, axis=0)
+        # Handle zero-variance dimensions
+        input_ranges = np.where(input_ranges == 0, 1.0, input_ranges)
+
+        # Use 20% of range as initial lengthscale
+        initial_lengthscales = input_ranges * 0.2
+
+        # Apply to kernel
+        if self.ARD and len(initial_lengthscales) > 1:
+            kernel.lengthscale[:] = initial_lengthscales
+        else:
+            kernel.lengthscale = float(np.median(initial_lengthscales))
 
     def _fit_pca_and_create_models(self, *, reoptimize=True, num_random_restarts=10):
         self.x_train_scaled = self.apply_input_scaling(self.x_train, fit=True)
-
         if self.scale_inputs:
             self.loginfo(
                 f'Input scaling enabled. Scaled training inputs with shape {self.x_train_scaled.shape}'
@@ -183,9 +288,15 @@ class GaussianProcessModel:
         else:
             self.loginfo('Input scaling disabled. Using original input scale.')
 
+        y_latent = self._preprocess_outputs(self.y_train, fit=True)
+        if self.output_scaler is not None:
+            self.loginfo('Output scaling enabled. Scaled training outputs.')
+        else:
+            self.loginfo('Output scaling disabled. Using original output scale.')
+
         if self.pca is not None:
-            self.pca.fit(self.y_train)
-            y_latent = self.pca.project_to_latent_space(self.y_train)
+            # self.pca.fit(self.y_train)
+            # y_latent = self.pca.project_to_latent_space(self.y_train)
             self.latent_dimension = int(self.pca.n_components)  # type: ignore
             self.output_dimension = self.latent_dimension
             self.loginfo(
@@ -194,7 +305,7 @@ class GaussianProcessModel:
                 f'{self.pca_threshold:.2%} variance.'
             )
         else:
-            y_latent = self.y_train
+            # y_latent = self.y_train
             self.output_dimension = self.model_output_dimension
             self.loginfo(
                 f'Using model outputs of dimension {self.model_output_dimension} '
@@ -217,14 +328,20 @@ class GaussianProcessModel:
                 y_detrended = y
 
             kernel_copy = self.kernel.copy()
+            # Data-adaptive lengthscale initialization (always for new models)
+            self._initialize_kernel_lengthscales(
+                kernel_copy, force_initialization=True
+            )
             self._set_kernel_hyperparameter_bounds(kernel_copy)
+
+            use_gpy_normalizer = self.output_scaler is None
 
             gp = GPy.models.GPRegression(
                 X=x,
                 Y=y_detrended,
                 kernel=kernel_copy,
                 mean_function=None,
-                normalizer=True,
+                normalizer=use_gpy_normalizer,
             )
             self._configure_nugget(gp)
             if reoptimize:
@@ -295,13 +412,14 @@ class GaussianProcessModel:
         self.y_train = outputs
 
         self.x_train_scaled = self.apply_input_scaling(self.x_train, fit=True)
+        y_latent = self._preprocess_outputs(self.y_train, fit=True)
 
         if self.pca is not None:
-            self.pca.fit(self.y_train)
-            y_latent = self.pca.project_to_latent_space(self.y_train)
+            # self.pca.fit(self.y_train)
+            # y_latent = self.pca.project_to_latent_space(self.y_train)
             new_latent_dim = int(self.pca.n_components)  # type: ignore
         else:
-            y_latent = self.y_train
+            # y_latent = self.y_train
             new_latent_dim = self.model_output_dimension
 
         if (
@@ -321,6 +439,11 @@ class GaussianProcessModel:
                     )
                 else:
                     y_detrended = y
+
+                # Initialize only if hyperparameters appear unoptimized
+                self._initialize_kernel_lengthscales(
+                    self.model[i].kern, force_initialization=False
+                )
                 self.model[i].set_XY(self.x_train_scaled, y_detrended)
                 if reoptimize:
                     self.model[i].optimize_restarts(num_random_restarts)
@@ -361,11 +484,13 @@ class GaussianProcessModel:
             y_mean[:, i] = mean.flatten()
             y_var[:, i] = var.flatten()
 
-        if self.pca is not None:
-            y_mean = self.pca.project_back_to_original_space(y_mean)
-            # y_var = self.pca.inverse_transform_variance(y_var) # Not transforming variance for now
+        # if self.pca is not None:
+        #     y_mean = self.pca.project_back_to_original_space(y_mean)
+        #     # y_var = self.pca.inverse_transform_variance(y_var) # Not transforming variance for now
 
-        return y_mean, y_var  # variance is in latent space, if pca is used
+        y_mean_final = self._postprocess_outputs(y_mean)
+
+        return y_mean_final, y_var  # variance is in latent space, if pca is used
 
     def loo_predictions(self, x_train, y_train, epsilon=1e-8):
         """
@@ -394,15 +519,16 @@ class GaussianProcessModel:
             raise ValueError(msg)
 
         x_train_scaled = self.apply_input_scaling(x_train, fit=False)
+        y_train_processed = self._preprocess_outputs(y_train, fit=False)
 
-        if self.pca is not None:
-            y_train = self.pca.project_to_latent_space(y_train)
+        # if self.pca is not None:
+        #     y_train = self.pca.project_to_latent_space(y_train)
 
-        loo_pred_latent = np.zeros_like(y_train, dtype=np.float64)
+        loo_pred_latent = np.zeros_like(y_train_processed, dtype=np.float64)
 
         for i in range(self.output_dimension):
             x = x_train_scaled
-            y = y_train[:, i].reshape(-1, 1)
+            y = y_train_processed[:, i].reshape(-1, 1)
 
             # Step 1: Detrend
             if self.linear_models[i] is not None:
@@ -429,12 +555,13 @@ class GaussianProcessModel:
             # Step 4: Add back trend to get final prediction
             loo_pred_latent[:, i] = loo_gp + trend.flatten()
 
-        # Step 5: Inverse PCA if used
-        if self.pca is not None:
-            loo_pred_latent = self.pca.project_back_to_original_space(
-                loo_pred_latent
-            )
-        return loo_pred_latent
+        # Step 5: Postprocess outputs
+        # if self.pca is not None:
+        #     loo_pred_latent = self.pca.project_back_to_original_space(
+        #         loo_pred_latent
+        #     )
+        loo_pred_latent = self._postprocess_outputs(loo_pred_latent)
+        return loo_pred_latent  # noqa: RET504
 
     @property
     def pca_info(self):
@@ -489,6 +616,7 @@ class GaussianProcessModel:
             'use_pca': self.use_pca,
             'pca_threshold': self.pca_threshold,
             'scale_inputs': self.scale_inputs,
+            'scale_outputs': bool(self.output_scaler is not None),
             'pca_info': self.pca_info,
             'models': [],
         }
@@ -498,6 +626,13 @@ class GaussianProcessModel:
                 'mean_': self.input_scaler.mean_.tolist(),  # type: ignore
                 'scale_': self.input_scaler.scale_.tolist(),  # type: ignore
                 'n_features_in_': int(self.input_scaler.n_features_in_),  # type: ignore
+            }
+
+        if self.output_scaler is not None:
+            model_params['output_scaler'] = {
+                'mean_': self.output_scaler.mean_.tolist(),  # type: ignore
+                'scale_': self.output_scaler.scale_.tolist(),  # type: ignore
+                'n_features_in_': int(self.output_scaler.n_features_in_),
             }
 
         if include_training_data:
@@ -547,19 +682,11 @@ class GaussianProcessModel:
         *,
         has_training_data: bool = True,
     ):
-        """
-        Load GP model settings, kernel, linear regression, and optionally training data from a JSON file.
-
-        Parameters
-        ----------
-        filepath : str or Path
-            Path to the JSON file.
-        has_training_data : bool
-            Whether the JSON file includes training data (default is True).
-        """
+        """Load GP model settings, kernel, linear regression, and optionally training data from a JSON file."""
         with Path(filepath).open() as f:
             model_params = json.load(f)
 
+        # --- Settings / flags ---
         self.input_dimension = model_params['input_dimension']
         self.output_dimension = model_params['output_dimension']
         self.ARD = model_params['ARD']
@@ -570,60 +697,82 @@ class GaussianProcessModel:
         self.use_pca = model_params['use_pca']
         self.pca_threshold = model_params['pca_threshold']
         self.scale_inputs = model_params.get('scale_inputs', True)
+        scale_outputs_flag = model_params.get('scale_outputs', True)
 
+        # --- Input scaler ---
+        self.input_scaler = None
         if self.scale_inputs and 'input_scaler' in model_params:
             self.input_scaler = SafeStandardScaler()
-            scaler_params = model_params['input_scaler']
-            self.input_scaler.mean_ = np.array(scaler_params['mean_'])
-            self.input_scaler.scale_ = np.array(scaler_params['scale_'])
-            self.input_scaler.n_features_in_ = scaler_params['n_features_in_']  # type: ignore
+            s = model_params['input_scaler']
+            self.input_scaler.mean_ = np.array(s['mean_'])
+            self.input_scaler.scale_ = np.array(s['scale_'])
+            self.input_scaler.n_features_in_ = s['n_features_in_']
+
+        # --- Output scaler ---
+        self.output_scaler = None
+        if scale_outputs_flag:
+            self.output_scaler = SafeStandardScaler()
+            if 'output_scaler' in model_params:
+                s = model_params['output_scaler']
+                self.output_scaler.mean_ = np.array(s['mean_'])
+                self.output_scaler.scale_ = np.array(s['scale_'])
+                self.output_scaler.n_features_in_ = s['n_features_in_']
+            # If missing, it's fine: we'll fit during preprocessing when fit=True.
+
+        # Keep as local (don't assign to property)
+        _pca_info_from_file = model_params.get('pca_info')
+
+        # Reset PCA/latent bookkeeping; let training path fit as needed
+        self.pca = None
+        self.latent_dimension = None
+        if self.use_pca:
+            # Keep perform_scaling=False for consistency with external scalers
+            self.pca = PrincipalComponentAnalysis(
+                self.pca_threshold, perform_scaling=False
+            )
 
         if has_training_data:
+            # --- Training data path: let _fit_pca_and_create_models do all fitting ---
             self.x_train = np.array(model_params['x_train'])
             self.y_train = np.array(model_params['y_train'])
 
+            # Transform inputs using restored scaler (no fit)
             self.x_train_scaled = self.apply_input_scaling(self.x_train, fit=False)
 
-            self.pca = None
-            self.latent_dimension = None
-            if self.use_pca:
-                self.pca_info = model_params['pca_info']  # type: ignore
-                self.pca = PrincipalComponentAnalysis(
-                    self.pca_threshold, perform_scaling=True
-                )
-                self.pca.fit(self.y_train)
-
+            # Build models without re-optimizing (since we'll overwrite params below)
             self._fit_pca_and_create_models(reoptimize=False)
 
         else:
+            # --- No training data: rebuild empty models and then overwrite params ---
             models_data = model_params['models']
+            # Trust the JSON if it differs from the header output_dimension
             if len(models_data) != self.output_dimension:
-                msg = f'Expected {self.output_dimension} models, but got {len(models_data)}'
-                raise ValueError(msg)
+                self.output_dimension = len(models_data)
 
             self.model = []
             self.linear_models = []
 
             base_kernel = self._create_kernel()
-
             for _ in models_data:
                 x_dummy = np.zeros((1, self.input_dimension))
                 y_dummy = np.zeros((1, 1))
                 kernel_copy = base_kernel.copy()
                 self._set_kernel_hyperparameter_bounds(kernel_copy)
+                use_gpy_normalizer = self.output_scaler is None
                 gp = GPy.models.GPRegression(
                     X=x_dummy,
                     Y=y_dummy,
                     kernel=kernel_copy,
                     mean_function=None,
-                    normalizer=True,
+                    normalizer=use_gpy_normalizer,
                 )
                 self._configure_nugget(gp)
                 self.model.append(gp)
                 self.linear_models.append(None)
 
-        # Overwrite kernel and linear model parameters
-        for i, m in enumerate(model_params['models']):
+        # --- Overwrite kernel / nugget / linear trend params from file ---
+        models_data = model_params['models']
+        for i, m in enumerate(models_data):
             gp = self.model[i]
 
             for name, value in m['kernel_parameters'].items():
@@ -637,9 +786,12 @@ class GaussianProcessModel:
             lr_params = m.get('linear_regression')
             if lr_params is not None:
                 lr = LinearRegression()
+                # shape: (1, n_features) to match sklearn internals
                 lr.coef_ = np.array(lr_params['coefficients']).reshape(1, -1)
                 lr.intercept_ = np.array([lr_params['intercept']])
                 self.linear_models[i] = lr
+            else:
+                self.linear_models[i] = None
 
 
 # ===============
@@ -837,6 +989,12 @@ def parse_gp_arguments(args=None) -> dict:
         type=lambda x: x.lower() in ('true', '1'),
         default=True,
         help='Whether to scale inputs before training the GP.',
+    )
+    optional.add_argument(
+        '--scale_outputs',
+        type=lambda x: x.lower() in ('true', '1'),
+        default=True,
+        help='Whether to scale outputs before training the GP.',
     )
 
     parsed_args = parser.parse_args(args)
