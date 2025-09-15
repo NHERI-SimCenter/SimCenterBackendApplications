@@ -103,12 +103,14 @@ void processEDPs(const char* filenameEDP, const char* dakotaOUT, int numRV, int 
     }
   }
 
+  /* fmk
   for (int i=0; i<numSample; i++) {
     for (int j=0; j<numEDP; j++) {
       printf("%f ", data[i*numEDP+j]); 
     }
     printf("\n");
   }
+  */
 
   json_dump_file(root,filenameEDP,0);
 }

@@ -40,7 +40,7 @@ int main(int argc, const char **argv)
       	int numValues = json_array_size(sType);
       	for (int i=0; i<numValues; i++) {
       	  double value = json_number_value(json_array_get(sType,i));
-      	  printf("%f ", value);
+      	  // FMK printf("%f ", value);
       	  fOut << value << " ";
       	  numEDP++;
       	}
@@ -54,7 +54,7 @@ int main(int argc, const char **argv)
 	int numValues = json_array_size(sType);
 	for (int i=0; i<numValues; i++) {
 	  double value = json_number_value(json_array_get(sType,i));
-	  printf("%f ", value);
+	  // printf("%f ", value);
 	  fOut << value << " ";
 	  numEDP++;
 	}
@@ -68,7 +68,7 @@ int main(int argc, const char **argv)
       	int numValues = json_array_size(sType);
       	for (int i=0; i<numValues; i++) {
       	  double value = json_number_value(json_array_get(sType,i));
-      	  printf("%f ", value);
+      	  // printf("%f ", value);
       	  fOut << value << " ";
       	  numEDP++;
       	}
@@ -76,7 +76,7 @@ int main(int argc, const char **argv)
     }        
   }
 
-  printf("NUM_EDP= %d\n",numEDP);
+  //  printf("NUM_EDP= %d\n",numEDP);
 
   fOut.close();
 

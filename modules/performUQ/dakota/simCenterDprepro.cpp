@@ -1,11 +1,11 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <vector>
+#include <deque>
 #include <iterator>
 
 using std::string;
-using std::vector;
+using std::deque;
 
 /* ***************** params.in example ******
 { DAKOTA_VARS     =                      2 }
@@ -47,14 +47,15 @@ int main(int argc, char **argv)
   }
 
   //
-  // vectors that will contain strinmgs to search for & their replacement
+  // deques that will contain strinmgs to search for & their replacement
   //
 
-  vector<string> original; 
-  vector<string> replace; 
-  vector<int> originalLength; 
-  vector<int> replacementLength; 
-
+  deque<string> original; 
+  deque<string> replace; 
+  deque<int> originalLength; 
+  deque<int> replacementLength; 
+  deque<string> rvNames; // original string of random variable names
+    
   //
   // from params file, 1) read # of RV and 2) then read RV names and values
   //   
@@ -63,6 +64,8 @@ int main(int argc, char **argv)
   int numRVs = 0;
   string line;
   while (getline(params, line)) {
+
+
     std::istringstream buf(line);
     std::istream_iterator<std::string> beg(buf), end;
     vector<std::string> tokens(beg, end); // done!
@@ -75,12 +78,35 @@ int main(int argc, char **argv)
     } else {
 
       // subsequent lines contain RV and value .. add to string vectors
-      string rvName = "\"RV." + tokens.at(1) + "\"";  // add SimCenter delimiters begin="RV. & end="
+      string rvName = tokens.at(1);  // add SimCenter delimiters begin="RV. &\ end="    
       string rvValue = tokens.at(3);
+      // check if an existing rvName starts as a substring of current
+      bool subStringExists = false;
+      for (size_t i = 0; i < rvNames.size(); ++i) {
+        const std::string& s1 = rvName[i];
+	if (rvName.find(s1) == 0) {
+	    subStringExists = true;
+	    break;  // No need to check further if found
+	}	
+      }
+    }
+    
+    if (subStringExists == false) {
+      rvNames.push_back(rvName);
+      rvName = "\"RV." + rvName + "\"";  // add SimCenter delimiters begin="RV. &\ end="    
       original.push_back(rvName);
       replace.push_back(rvValue);
       originalLength.push_back(rvName.length());
       replacementLength.push_back(rvValue.length());
+
+    } else {
+      rvNames.push_front(rvName);      
+      rvName = "\"RV." + rvName + "\"";  
+      replace.push_front(rvValue);
+      originalLength.push_front(rvName.length());
+      replacementLength.push_front(rvValue.length());      
+
+    }
       // std::cerr << rvName << " " << rvValue << "\n";
     }
 
