@@ -106,6 +106,42 @@ def main(args):  # noqa: D103
             with open(samName, 'w') as samFile:
                 json.dump(samData, samFile)
         
+
+        if subtype == "SSISimulation":
+            # "building_type": "custom_3d_building"
+            if samData.get("building_type", "") not in ["custom_3d_building"]:
+                print(f"Error: building_type '{samData.get('building_type', '')}' is not supported for SSISimulation subtype.")
+                print("Only 'custom_3d_building' is supported.")
+                exit(1)
+            if samData.get("soil_type", "") not in ["soil_foundation_type_1"]:
+                print(f"Error: foundation_type '{samData.get('foundation_type', '')}' is not supported for SSISimulation subtype.")
+                print("Only 'foundation_type_1' is supported.")
+                exit(1)
+            
+            if samData.get("building_type", "") == "custom_3d_building" and samData.get("soil_type", "") == "soil_foundation_type_1":
+                main_script = samData["structure_info"].get("model_file", None)
+                main_script = os.path.basename(main_script)
+                ext = "." + main_script.rsplit('.')[-1]
+                main_script = main_script[:-len(ext)]  # remove the extension
+                main_script_new = main_script  + "_example.tcl"
+                if main_script is None:
+                    print("Error: model_file not found in structure_info of SAM file.")
+                    exit(1)
+                from femora.components.simcenter.eeuq.soil_foundation_type_one import soil_foundation_type_one 
+                num_cores = soil_foundation_type_one(model_filename=main_script_new,
+                                                     info_file=samName)
+                num_cores = int(num_cores)
+                samData["coresPerModel"] = num_cores
+                samData["mainScript"] = main_script_new
+           
+
+            with open(samName, 'w') as samFile:
+                json.dump(samData, samFile)
+
+
+                
+
+        
         preprocessorCommand = f'"{scriptDir}/OpenSeesPreprocessor" {aimName} {samName} {evtName} {edpName} {simName} example.tcl > workflow.err 2>&1'  # noqa: N806
         exit_code = subprocess.Popen(preprocessorCommand, shell=True).wait()  # noqa: S602
         # exit_code = subprocess.run(preprocessorCommand, shell=True).returncode # Maybe better for compatibility - jb
@@ -113,7 +149,7 @@ def main(args):  # noqa: D103
         #    exit(exit_code)
 
         # Run OpenSees
-        if subtype == "FemoraInput":
+        if subtype == "FemoraInput" or subtype == "SSISimulation":
             coresPerModel = samData.get("coresPerModel", 1)
             # Run OpenSees in parallel using mpirun
             if runtype == "runningLocal":
