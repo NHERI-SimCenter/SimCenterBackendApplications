@@ -129,7 +129,8 @@ def main(args):  # noqa: D103
                     exit(1)
                 from femora.components.simcenter.eeuq.soil_foundation_type_one import soil_foundation_type_one 
                 num_cores = soil_foundation_type_one(model_filename=main_script_new,
-                                                     info_file=samName)
+                                                     info_file=samName,
+                                                     EEUQ=True)
                 num_cores = int(num_cores)
                 samData["coresPerModel"] = num_cores
                 samData["mainScript"] = main_script_new
