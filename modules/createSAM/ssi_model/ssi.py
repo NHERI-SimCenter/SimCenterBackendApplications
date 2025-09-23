@@ -66,15 +66,15 @@ def create_SAM(AIM_file, EVENT_file ,SAM_file):
 
     # {"mainScript": "femoramodel_example.tcl", "type": "OpenSeesInput", "NodeMapping": [], "numStory": -1, "ndm": 3, "ndf": 3, "subType": "FemoraInput", "useDamping": false, "coresPerModel": 10, "randomVar": [{"name": "softMat_vs", "value": 276.9518021028489}, {"name": "softMat_vp_vs_ratio", "value": 1.753312207525559}, {"name": "softMat_rho", "value": 2.049575892485012}], "dampingRatio": 0}
     SAM_json['type'] = "OpenSeesInput"
-    SAM_json['mainScript'] = ""
-    SAM_json['NodeMapping'] = []
+    SAM_json['mainScript'] = ""  # will be set in the workflow
+    SAM_json['NodeMapping'] = AIM_json["Modeling"]["structure_info"].get("NodeMapping", [])
     SAM_json['numStory'] = -1
-    SAM_json['ndm'] = 3
-    SAM_json['ndf'] = 6
+    SAM_json['ndm'] = AIM_json["Modeling"]["structure_info"].get("ndm", 3)
+    SAM_json['ndf'] = AIM_json["Modeling"]["structure_info"].get("ndf", 6)
     SAM_json['subType'] = "SSISimulation"
     SAM_json['useDamping'] = False
-    SAM_json['coresPerModel'] = -1
-    SAM_json['randomVar'] = []
+    SAM_json['coresPerModel'] = -1 # will be set in the workflow
+    SAM_json['randomVar'] = AIM_json["Modeling"].get("randomVar", [])
     SAM_json['dampingRatio'] = 0.0
 
     with open(SAM_file, 'w') as f:
