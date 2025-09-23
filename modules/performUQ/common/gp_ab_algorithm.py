@@ -1055,7 +1055,7 @@ class GP_AB_Algorithm:
                     self._get_exploitation_candidates()
                 )
                 save_exploitation_candidates_by_stage_json(
-                    Path('results')
+                    res_dir
                     / f'exploitation_candidates_{self.iteration_number}.json',
                     candidates_exploit,
                     self.stage_sample_counts,
@@ -1099,6 +1099,12 @@ class GP_AB_Algorithm:
                         self.num_candidate_training_points
                     )
                 )
+                save_exploration_candidates_json(
+                    res_dir / f'exploration_candidates_{self.iteration_number}.json',
+                    candidates_explore,
+                    self.iteration_number,
+                )
+
                 self.exploration_training_points = np.empty(
                     (0, self.input_dimension)
                 )
@@ -1108,7 +1114,8 @@ class GP_AB_Algorithm:
                             current_inputs,
                             self.n_explore,
                             candidates_explore,
-                            use_mse_w=False,
+                            # use_mse_w=False,
+                            use_mse_w=True,
                             weights=None,
                         )
                     )
@@ -1308,7 +1315,7 @@ class GP_AB_Algorithm:
             if length == 1:
                 pred_headers.append(name)
             else:
-                pred_headers.extend([f'{name}_{i+1}' for i in range(length)])
+                pred_headers.extend([f'{name}_{i + 1}' for i in range(length)])
 
         # Step 2: Create base dataframes
         df_samples = pd.DataFrame(samples, columns=rv_names_list)
@@ -1431,6 +1438,51 @@ class GP_AB_Algorithm:
             output_dir=res_dir,
             terminate=self.terminate,
         )
+
+
+def save_exploration_candidates_json(
+    out_file: Path,
+    samples: np.ndarray,
+    iteration: int,
+    generation_method: str = 'latin_hypercube_sampling',
+):
+    """
+    Save exploration candidate samples to a JSON file.
+
+    Parameters
+    ----------
+    out_file : Path
+        Path to the output JSON file.
+    samples : np.ndarray
+        Array of exploration candidate samples of shape (n_candidates, n_parameters).
+    iteration : int
+        The iteration number when these candidates were generated.
+    generation_method : str, optional
+        Method used to generate candidates (default: "latin_hypercube_sampling").
+
+    Notes
+    -----
+    The JSON file will contain:
+    - 'exploration_candidates': list of candidate parameter vectors
+    - 'num_candidates': total number of candidates
+    - 'generation_method': method used to generate candidates
+    - 'iteration': iteration number
+    """
+    output = {
+        'exploration_candidates': samples.tolist(),
+        'num_candidates': len(samples),
+        'generation_method': generation_method,
+        'iteration': iteration,
+    }
+
+    output_json_serializable = uq_utilities.make_json_serializable(output)
+
+    # Ensure parent directory exists
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+
+    # Save to JSON
+    with out_file.open('w') as f:
+        json.dump(output_json_serializable, f, indent=2)
 
 
 def save_exploitation_candidates_by_stage_json(
@@ -1671,7 +1723,7 @@ def preprocess(input_arguments):
             if count == 1:
                 headings += f'{name} '
             else:
-                headings += ' '.join(f'{name}_{i+1}' for i in range(count)) + ' '
+                headings += ' '.join(f'{name}_{i + 1}' for i in range(count)) + ' '
         f_out.write(headings.strip() + '\n')
 
         linenum = 0
