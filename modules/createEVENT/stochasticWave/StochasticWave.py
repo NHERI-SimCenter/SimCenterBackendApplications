@@ -196,9 +196,9 @@ def readRV(aimFilePath='AIM.json', eventFilePath='EVENT.json'):  # noqa: D103, N
         addFloorForceToEvent(
             timeSeriesArray, patternsArray, floorForces.X, 'X', floor, deltaT
         )
-        addFloorForceToEvent(
-            timeSeriesArray, patternsArray, floorForces.Y, 'Y', floor, deltaT
-        )
+        # addFloorForceToEvent(
+        #     timeSeriesArray, patternsArray, floorForces.Y, 'Y', floor, deltaT
+        # )
         addFloorPressure(pressureArray, floor)
 
     eventDict['Events'].append(event_json)
@@ -237,9 +237,9 @@ def writeEVENT(forces, eventFilePath, deltaT=1.0):  # noqa: D103, N802, N803
         addFloorForceToEvent(
             timeSeriesArray, patternsArray, floorForces.X, 'X', floor, deltaT
         )
-        addFloorForceToEvent(
-            timeSeriesArray, patternsArray, floorForces.Y, 'Y', floor, deltaT
-        )
+        # addFloorForceToEvent(
+        #     timeSeriesArray, patternsArray, floorForces.Y, 'Y', floor, deltaT
+        # )
         addFloorPressure(pressureArray, floor)
 
     with open(eventFilePath, 'w', encoding='utf-8') as f:  # noqa: PTH123

@@ -78,10 +78,17 @@ def create_event(asset_file: str, event_grid_file: str, workflow_input: str, do_
     # open input file & get Regional Event data
     #
 
+    # candidate paths
     json_path = os.path.join(os.getcwd(), workflow_input)
 
-    with open(json_path, 'r') as f:
-	data = json.load(f)
+    if not os.path.exists(json_path):
+        json_path = os.path.join(os.path.dirname(os.getcwd()), workflow_input)
+
+    if os.path.isfile(json_path):
+        with open(json_path, 'r') as f:
+            data = json.load(f)
+    else:
+        raise FileNotFoundError(f"Could not find {workflow_input} in current or parent directory")
 
     regional_event = data.get("RegionalEvent")
     
