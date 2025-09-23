@@ -672,6 +672,8 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
     // loop through EDPs and find corresponding EDP
 
     char edpEventName[50];
+    s << "set pid [getPID]\n";
+    s << "if {$pid == 0} {\n";
     
     for (int j=0; j<numEDPs; j++) {
 
@@ -885,6 +887,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	}
       }
     }
+    s << "}\n"; // end of pid==0
    
     // create analysis
     if (analysisType == 1 || analysisType == 2) {
