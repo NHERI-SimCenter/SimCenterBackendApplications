@@ -343,13 +343,12 @@ class IntensityMeasureComputer:  # noqa: D101
             return
         elif type(periods) == list:  # noqa: RET505, E721
             periods = np.array(periods)
-        num_periods = len(periods)
 
         for cur_hist_name, cur_hist in self.time_hist_dict.items():
             dt = cur_hist[1]
             ground_acc = cur_hist[2]
             num_steps = len(ground_acc)
-            # discritize
+            # discretize
             dt_disc = 0.005
             num_steps_disc = int(np.floor(num_steps * dt / dt_disc))
             f = interp1d(
@@ -360,75 +359,73 @@ class IntensityMeasureComputer:  # noqa: D101
             )
             tmp_time = [dt_disc * x for x in range(num_steps_disc)]
             ground_acc = f(tmp_time)
+
             # circular frequency, damping, and stiffness terms
-            omega = (2 * np.pi) / periods
-            cval = damping * 2 * omega
-            kval = ((2 * np.pi) / periods) ** 2
+            omega = (2.0 * np.pi) / periods
+            cval = damping * 2.0 * omega
+            kval = ((2.0 * np.pi) / periods) ** 2
+            denom = 1.0 + 0.5 * dt_disc * cval + 0.25 * (dt_disc**2) * kval
+
+            # state vectors (length = num_periods)
+            accel = np.zeros_like(omega)
+            vel = np.zeros_like(omega)
+            disp = np.zeros_like(omega)
+
+            # rolling maxima for spectra
+            max_disp = np.zeros_like(omega)
+            max_vel = np.zeros_like(omega)
+            max_at = np.zeros_like(omega)
+
             # Newmark-Beta
-            accel = np.zeros([num_steps_disc, num_periods])
-            vel = np.zeros([num_steps_disc, num_periods])
-            disp = np.zeros([num_steps_disc, num_periods])
-            a_t = np.zeros([num_steps_disc, num_periods])
-            accel[0, :] = (-ground_acc[0] - (cval * vel[0, :])) - (kval * disp[0, :])
+            accel[:] = -ground_acc[0] - (cval * vel) - (kval * disp)
             for j in range(1, num_steps_disc):
                 delta_acc = ground_acc[j] - ground_acc[j - 1]
                 delta_d2u = (
                     -delta_acc
-                    - dt_disc * cval * accel[j - 1, :]
-                    - dt_disc
-                    * kval
-                    * (vel[j - 1, :] + 0.5 * dt_disc * accel[j - 1, :])
-                ) / (1.0 + 0.5 * dt_disc * cval + 0.25 * dt_disc**2 * kval)
-                delta_du = dt_disc * accel[j - 1, :] + 0.5 * dt_disc * delta_d2u
+                    - dt_disc * cval * accel
+                    - dt_disc * kval * (vel + 0.5 * dt_disc * accel)
+                ) / denom
+                delta_du = dt_disc * accel + 0.5 * dt_disc * delta_d2u
                 delta_u = (
-                    dt_disc * vel[j - 1, :]
-                    + 0.5 * dt_disc**2 * accel[j - 1, :]
+                    dt_disc * vel
+                    + 0.5 * dt_disc**2 * accel
                     + 0.25 * dt_disc**2 * delta_d2u
                 )
-                accel[j, :] = delta_d2u + accel[j - 1, :]
-                vel[j, :] = delta_du + vel[j - 1, :]
-                disp[j, :] = delta_u + disp[j - 1, :]
-                a_t[j, :] = ground_acc[j] + accel[j, :]
+                accel += delta_d2u
+                vel += delta_du
+                disp += delta_u
+                a_t = ground_acc[j] + accel
+
+                # update rolling maxima in-place
+                np.maximum(np.fabs(disp), max_disp, out=max_disp)
+                np.maximum(np.fabs(vel), max_vel, out=max_vel)
+                np.maximum(np.fabs(a_t), max_at, out=max_at)
+
             # collect data
             self.disp_spectrum.update(
-                {
-                    cur_hist_name: np.ndarray.tolist(
-                        unit_factor_psd * np.max(np.fabs(disp), axis=0)
-                    )
-                }
+                {cur_hist_name: np.ndarray.tolist(unit_factor_psd * max_disp)}
             )
             self.vel_spectrum.update(
-                {
-                    cur_hist_name: np.ndarray.tolist(
-                        unit_factor_vspec * np.max(np.fabs(vel), axis=0)
-                    )
-                }
+                {cur_hist_name: np.ndarray.tolist(unit_factor_vspec * max_vel)}
             )
             self.acc_spectrum.update(
                 {
                     cur_hist_name: np.ndarray.tolist(
-                        unit_factor_aspec
-                        * np.max(np.fabs(a_t), axis=0)
-                        / 100.0
-                        / self.g
+                        unit_factor_aspec * max_at / 100.0 / self.g
                     )
                 }
             )
             self.psv.update(
                 {
                     cur_hist_name: np.ndarray.tolist(
-                        unit_factor_psv * omega * np.max(np.fabs(disp), axis=0)
+                        unit_factor_psv * omega * max_disp
                     )
                 }
             )
             self.psa.update(
                 {
                     cur_hist_name: np.ndarray.tolist(
-                        unit_factor_psa
-                        * omega**2
-                        * np.max(np.fabs(disp), axis=0)
-                        / 100.0
-                        / self.g
+                        unit_factor_psa * omega**2 * max_disp / 100.0 / self.g
                     )
                 }
             )
