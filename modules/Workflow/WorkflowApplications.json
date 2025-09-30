@@ -759,6 +759,22 @@
         ]
       },
       {
+        "Name": "SSISimulation",
+        "ExecutablePath": "applications/createSAM/ssi_model/ssi.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "fileName",
+            "type": "string",
+            "description": "Defines the name of the main OpenSees model file."
+          },
+          {
+            "id": "filePath",
+            "type": "string",
+            "description": "Defines the location of the main OpenSees model file."
+          }
+        ]
+      },
+      {
         "Name": "CustomPyInput",
         "ExecutablePath": "applications/createSAM/customPyInput/customPyInput.py",
         "ApplicationSpecificInputs": [
