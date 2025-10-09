@@ -69,25 +69,33 @@ import warnings
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path, PurePath
-import pkg_resources
+import platform
 
 # check python
 
 python_path= sys.executable
 a = platform.uname()
+
 if a.system == "Darwin" and (not a.machine=='x86_64'):
     raise ValueError(f"Python version mismatch. Please update the python following the installation instruction. Current python {python_path} is based on machine={a.machine}, but we need the one for x86_64")
     exit(-2)
 
 # checking if nheri-simcenter is installed
-if not ('nheri-simcenter' in [p.project_name for p in pkg_resources.working_set]):
-    if (platform.system() == 'Windows'):
-        raise ValueError(f"Essential python package (nheri-simcenter) is not installed. Please go to file-preference and press reset to initialize the python path.")
-        exit(-2)
+required_pkg = "nheri-simcenter"
+installed_pkgs = {dist.metadata['Name'].lower() for dist in metadata.distributions()}
+if required_pkg.lower() not in installed_pkgs:
+    if platform.system() == 'Windows':
+        raise ValueError(
+            f"Essential Python package ({required_pkg}) is not installed. "
+            "Please go to File → Preferences and press Reset to initialize the Python path."
+        )
     else:
-        raise ValueError(f"Essential python package (nheri-simcenter) is not installed. Please follow the installation instruction or run: {python_path} -m pip3 install nheri-simcenter")
-        exit(-2)
-
+        python_path = sys.executable
+        raise ValueError(
+            f"Essential Python package ({required_pkg}) is not installed. "
+            f"Please follow the installation instructions or run:\n\n"
+            f"{python_path} -m pip install {required_pkg}"
+        )
             
 import shutil
 import numpy as np
