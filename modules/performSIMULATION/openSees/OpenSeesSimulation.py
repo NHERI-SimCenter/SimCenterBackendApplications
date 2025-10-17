@@ -152,17 +152,65 @@ def main(args):  # noqa: D103
         # Run OpenSees
         if subtype == "FemoraInput" or subtype == "SSISimulation":
             coresPerModel = samData.get("coresPerModel", 1)
+            
             # Run OpenSees in parallel using mpirun
+            offset = 0
+            numSamples = 0
+
+            coresPerNode = aimData.get("coresPerNode", 1)
+            nodeCount = aimData.get("nodeCount",1)
+            totalCores = coresPerNode*nodeCount
+
+            try:
+                uq_data = aimData.get("UQ", {})
+                print(f"uq_data {uq_data}")
+                sampling = uq_data.get("samplingMethodData", {})
+                numSamples = sampling.get("samples")
+                print(f"numSamples {numSamples}")
+
+                # Basic validation
+                if numSamples is None:
+                    raise KeyError("Missing one or more required keys: UQ.samplingMethodData.samples")
+
+            except KeyError as e:
+                print(f" Key Error Getting NumSamples for femora in OpenSeesSimulation: {e}")
+            except Exception as e:
+                print(f" Error Getting numSamples for femora in OpnSeesSimulation: {e}")
+
+
+            print(f"numSamples {numSamples} coresPerModel {coresPerModel} totalCores {totalCores}")
+            
+            # offset depends on workdir number, workdirs start at 1
+            # first 0 throgh numSamples-1 for dakota, rest for OpenSeesMP
+            # numDakotaCores is how many dakota is started with: ibrun -n numDakoraCores dakota ...
+            
+            numDakotaCores=totalCores/(1+coresPerModel)
+            cwd = os.getcwd()
+            x = int(cwd.split('workdir.')[-1])
+            offset = int(numDakotaCores + ((x-1)%numDakotaCores)*coresPerModel)
+            
             if runtype == "runningLocal":
-                openSeesCommand = f'mpirun -np {coresPerModel} OpenSeesMP example.tcl >> workflow.err 2>&1'
+
+                if offset == 0:
+                    openSeesCommand = f'mpirun -np {coresPerModel} OpenSeesMP example.tcl >> workflow.err 2>&1'
+                else:
+                    openSeesCommand = f'mpirun -o {offset} -np {coresPerModel} OpenSeesMP example.tcl >> workflow.err 2>&1'                
             elif runtype == "runningRemote":
+                
                 # For remote runs, we assume OpenSeesMP is available on the remote machine
-                openSeesCommand = f'ibrun -n {coresPerModel} OpenSeesMP example.tcl >> workflow.err 2>&1'
+                if offset == 0:
+                    openSeesCommand = f'ibrun -n {coresPerModel} OpenSeesMP example.tcl >> workflow.err 2>&1'
+                else:
+                    openSeesCommand = f'ibrun -o {offset} -n {coresPerModel} OpenSeesMP example.tcl >> workflow.err 2>&1'
             else:
                 print(f"Error: Unsupported runType '{runtype}' in AIM file.")
                 exit(1)
+
+            print(f" OpenSeesSimulation in workdir.{x}: {openSeesCommand}")
+            
         else:
             openSeesCommand = 'OpenSees example.tcl >> workflow.err 2>&1'
+            print(f" OpenSeesSimulation: {openSeesCommand}")
 
 
         exit_code = subprocess.Popen(  # noqa: S602
