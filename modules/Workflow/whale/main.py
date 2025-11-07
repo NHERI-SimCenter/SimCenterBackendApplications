@@ -80,23 +80,25 @@ if a.system == "Darwin" and (not a.machine=='x86_64'):
     raise ValueError(f"Python version mismatch. Please update the python following the installation instruction. Current python {python_path} is based on machine={a.machine}, but we need the one for x86_64")
     exit(-2)
 
+# ################# FMK - removing check on nheri-simcenter for moment ####################
+    
 # checking if nheri-simcenter is installed
-required_pkg = "nheri-simcenter"
-installed_pkgs = {dist.metadata['Name'].lower() for dist in metadata.distributions()}
-if required_pkg.lower() not in installed_pkgs:
-    if platform.system() == 'Windows':
-        raise ValueError(
-            f"Essential Python package ({required_pkg}) is not installed. "
-            "Please go to File → Preferences and press Reset to initialize the Python path."
-        )
-    else:
-        python_path = sys.executable
-        raise ValueError(
-            f"Essential Python package ({required_pkg}) is not installed. "
-            f"Please follow the installation instructions or run:\n\n"
-            f"{python_path} -m pip install {required_pkg}"
-        )
-            
+#required_pkg = "nheri-simcenter"
+#installed_pkgs = {dist.metadata['Name'].lower() for dist in metadata.distributions()}
+#if required_pkg.lower() not in installed_pkgs:
+#    if platform.system() == 'Windows':
+#        raise ValueError(
+#            f"Essential Python package ({required_pkg}) is not installed. "
+#            "Please go to File → Preferences and press Reset to initialize the Python path."
+#        )
+#    else:
+#        python_path = sys.executable
+#        raise ValueError(
+#            f"Essential Python package ({required_pkg}) is not installed. "
+#            f"Please follow the installation instructions or run:\n\n"
+#            f"{python_path} -m pip install {required_pkg}"
+#        )
+################################### FMK ##################################################         
 import shutil
 import numpy as np
 import pandas as pd
