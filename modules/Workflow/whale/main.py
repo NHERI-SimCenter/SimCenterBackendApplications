@@ -2598,6 +2598,14 @@ class Workflow:
                     os.chdir(asst_id)
 
                 try:
+                
+                
+                    # Open the file and count the number of lines (rows)
+                    with open('dakotaTab.out', 'r') as file:
+                        num_rows = sum(1 for line in file)
+                    if num_rows<2:
+                        raise RuntimeError(f"dakotaTab.out is empty")
+                        
                     # sy, abs - added try-statement because dakota-reliability does not write DakotaTab.out
                     dakota_out = pd.read_csv(
                         'dakotaTab.out', sep=r'\s+', header=0, index_col=0
