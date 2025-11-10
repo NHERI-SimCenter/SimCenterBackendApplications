@@ -25,7 +25,7 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
     build_policy = 'missing'
     requires = [  # noqa: RUF012
         'jansson/2.13.1',
-        'zlib/1.2.11',
+        'zlib/1.3.1',
         'libcurl/8.4.0',
         'eigen/3.3.7',
         'clara/1.1.5',
@@ -33,7 +33,7 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
         'nanoflann/1.3.2',
         'nlopt/2.7.1',
         'kissfft/131.1.0',
-        'boost/1.72.0'
+        'boost/1.84.0'        
     ]
 
 
