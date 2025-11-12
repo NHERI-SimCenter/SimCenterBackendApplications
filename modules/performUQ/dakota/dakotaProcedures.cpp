@@ -440,7 +440,11 @@ writeInterface(std::ostream &dakotaFile, json_t *uqData, std::string &workflowDr
 
   dakotaFile << "   parameters_file = 'paramsDakota.in'\n";
   dakotaFile << "   results_file = 'results.out' \n";
+#ifdef _DAKOTA_6_22
   dakotaFile << "   parameters_format\n     aprepro \n";
+#else
+  dakotaFile << "   aprepro \n";
+#endif
   dakotaFile << "   work_directory\n";
   dakotaFile << "     named \'workdir\' \n";
   if (saveWorkDirs) {
