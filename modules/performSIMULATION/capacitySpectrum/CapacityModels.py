@@ -55,15 +55,15 @@ import time
 import numpy as np
 import pandas as pd
 
-ap_DesignLevel = {1940: 'PC', 1975: 'MC', 2100: 'HC'}  # noqa: N816
+ap_DesignLevel = {1940: 'Pre-Code', 1975: 'Moderate-Code', 2100: 'High-Code'}  # noqa: N816
 # original:
-# ap_DesignLevel = {1940: 'PC', 1940: 'LC', 1975: 'MC', 2100: 'HC'}
+# ap_DesignLevel = {1940: 'Pre-Code', 1940: 'Low-Code', 1975: 'Moderate-Code', 2100: 'High-Code'}
 # Note that the duplicated key is ignored, and Python keeps the last
 # entry.
 
-ap_DesignLevel_W1 = {0: 'MC', 1975: 'MC', 2100: 'HC'}  # noqa: N816
+ap_DesignLevel_W1 = {0: 'Moderate-Code', 1975: 'Moderate-Code', 2100: 'High-Code'}  # noqa: N816
 # original:
-# ap_DesignLevel_W1 = {0: 'PC', 0: 'LC', 1975: 'MC', 2100: 'HC'}
+# ap_DesignLevel_W1 = {0: 'Pre-Code', 0: 'Low-Code', 1975: 'Moderate-Code', 2100: 'High-Code'}
 # same thing applies
 
 
