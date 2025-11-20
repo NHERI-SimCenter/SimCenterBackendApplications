@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 import time
 from tapipy.tapis import Tapis
+from tapipy import errors
 
 
 # change the directory to the current directory
@@ -109,27 +110,43 @@ def Submit_tapis_job(username, password):  # noqa: N802, D103
     res = t.jobs.submitJob(**jobdict)
     mjobUuid = res.uuid  # noqa: N806
 
-    tlapse = 1
-    status = t.jobs.getJobStatus(jobUuid=mjobUuid).status
-    previous = status
+    # Poll until job reaches a terminal state; avoid busy-looping.
+    tlapse = 2
+    previous = None
     while True:
-        if status in ['FINISHED', 'FAILED', 'STOPPED', 'STAGING_INPUTS']:
-            break
         status = t.jobs.getJobStatus(jobUuid=mjobUuid).status
-        if status == previous:
-            continue
-        else:  # noqa: RET507
+        if status in ['FINISHED', 'FAILED', 'STOPPED', 'CANCELLED']:
+            print(f'\tStatus: {status}')  # noqa: T201
+            break
+        if status != previous:
+            print(f'\tStatus: {status}')  # noqa: T201
             previous = status
-        print(f'\tStatus: {status}')  # noqa: T201
         time.sleep(tlapse)
 
     # %%
     print('Downloading extracted motions')  # noqa: T201
-    archivePath = t.jobs.getJob(jobUuid=mjobUuid).archiveSystemDir  # noqa: N806
-    archivePath = f'{archivePath}/M9/Events'  # noqa: N806
-    files = t.files.listFiles(
-        systemId='designsafe.storage.default', path=archivePath
-    )
+    archiveRoot = t.jobs.getJob(jobUuid=mjobUuid).archiveSystemDir  # noqa: N806
+    # The Events directory may be directly under archive root or under M9/Events.
+    candidate_paths = [f'{archiveRoot}/M9/Events', f'{archiveRoot}/Events']
+    archivePath = None
+    files = []
+    max_attempts = 5
+    for attempt in range(1, max_attempts + 1):
+        for cpath in candidate_paths:
+            try:
+                files = t.files.listFiles(
+                    systemId='designsafe.storage.default', path=cpath
+                )
+                archivePath = cpath
+                break
+            except errors.NotFoundError:  # noqa: PERF203
+                continue
+        if archivePath is not None:
+            break
+        time.sleep(3)
+    if archivePath is None:
+        print('Could not locate Events directory in job archive after retries.')  # noqa: T201
+        return
 
     # %%
     if len(files) <= 1:
