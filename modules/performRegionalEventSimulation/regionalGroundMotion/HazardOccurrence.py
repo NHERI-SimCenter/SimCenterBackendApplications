@@ -87,14 +87,18 @@ def configure_hazard_occurrence(  # noqa: C901, D103
     # return periods
     if hc_input is None:
         return {}
-    elif hc_input == 'Inferred_NSHMP':  # noqa: RET505
+    elif hc_input == 'NSHM V1' or hc_input == 'NSHM V2':  # noqa: RET505
         period = hzo_config.get('Period', 0.0)
         if im_type == 'SA':
             cur_imt = im_type + f'{period:.1f}'.replace('.', 'P')
         else:
             cur_imt = im_type
         # fetching hazard curve from usgs
-        cur_edition = hzo_config.get('Edition', 'E2014')
+        version_str = hc_input.split(' ')[-1]
+        if version_str == 'V1':
+            cur_edition = 'E2008'
+        else:
+            cur_edition = 'E2014'
         hazard_curve_collector = []
         for site_id in range(len(site_config)):
             cur_site = site_config[site_id]
