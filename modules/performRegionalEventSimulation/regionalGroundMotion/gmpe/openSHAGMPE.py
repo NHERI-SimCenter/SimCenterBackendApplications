@@ -317,7 +317,7 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
     timeCalc = 0  # noqa: N815
     supportedImt = None  # noqa: N815
 
-    def __init__(self):
+    def __init__(self, aftershock=False):
         self.coeff = pd.read_csv(
             os.path.join(os.path.dirname(__file__), 'data', 'ASK14.csv')  # noqa: PTH118, PTH120
         )
@@ -343,6 +343,7 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
         self.H2 = 1.5
         self.H3 = -0.75
         self.PHI_AMP_SQ = 0.16
+        self.aftershock = aftershock
 
     def setIMT(self, imt):  # noqa: N802, D102
         if imt not in self.supportedImt:
@@ -442,6 +443,7 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
         vsInferred,  # noqa: N803
         z1p0,
         style,
+        crJB=None
     ):
         if Mw > 5:  # noqa: PLR2004
             c4mag = self.C4
@@ -537,8 +539,16 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
             )
         else:
             f5 = (self.a10 + self.b * self.N) * np.log(vs30s / self.Vlin)
-        # total model (no aftershock f11) -- Equation 1
-        mean = f1 + f78 + f5 + f4 + f6 + f10
+
+        # Aftershock term -- Equation 20
+        if self.aftershock:
+            if crJB is None:
+                raise ValueError('crJB must be provided for aftershock calculations')
+            f11 = self.a14 * np.clip(1 - (crJB - 5)/10, 0, 1)
+        else:
+            f11 = 0.0    
+        # total model -- Equation 1
+        mean = f1 + f78 + f5 + f4 + f6 + f10 + f11
 
         # ****** Aleatory uncertainty model ******
         # Intra-event term -- Equation 24
@@ -604,6 +614,7 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
                 vsInf,
                 site_info['z1pt0'] / 1000.0,
                 style,
+                site_rup_dict.get('crJB', None)
             )
             self.timeCalc += time.process_time_ns() - start
             meanList.append(mean)
