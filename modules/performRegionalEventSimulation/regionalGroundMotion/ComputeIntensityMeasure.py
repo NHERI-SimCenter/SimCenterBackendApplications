@@ -54,18 +54,21 @@ LOCAL_IM_GMPE = {
     'SA': [
         'Chiou & Youngs (2014)',
         'Abrahamson, Silva & Kamai (2014)',
+        'Abrahamson, Silva & Kamai (2014) Aftershock',
         'Boore, Stewart, Seyhan & Atkinson (2014)',
         'Campbell & Bozorgnia (2014)',
     ],
     'PGA': [
         'Chiou & Youngs (2014)',
         'Abrahamson, Silva & Kamai (2014)',
+        'Abrahamson, Silva & Kamai (2014) Aftershock',
         'Boore, Stewart, Seyhan & Atkinson (2014)',
         'Campbell & Bozorgnia (2014)',
     ],
     'PGV': [
         'Chiou & Youngs (2014)',
         'Abrahamson, Silva & Kamai (2014)',
+        'Abrahamson, Silva & Kamai (2014) Aftershock',
         'Boore, Stewart, Seyhan & Atkinson (2014)',
         'Campbell & Bozorgnia (2014)',
     ],
@@ -136,11 +139,16 @@ class IM_Calculator:  # noqa: D101
         gmpe_weights_dict=dict(),  # noqa: B006, C408
         im_type=None,
         site_info=dict(),  # noqa: B006, C408
+        mainshock=None
     ):
         # basic set-ups
         self.set_im_gmpe(im_dict, gmpe_dict, gmpe_weights_dict)
         self.set_im_type(im_type)
         self.set_sites(site_info)
+        if mainshock is not None:
+            self.mainshock = mainshock.copy() # single row gdf containing mainshock rupture surface
+        else:
+            self.mainshock = None
         # self.set_source(source_info)
 
     def set_source(self, source_info):  # noqa: D102
@@ -155,6 +163,7 @@ class IM_Calculator:  # noqa: D101
                 or 'Abrahamson, Silva & Kamai (2014)' in gmpe_list
                 or 'Boore, Stewart, Seyhan & Atkinson (2014)' in gmpe_list
                 or 'Campbell & Bozorgnia (2014)' in gmpe_list
+                or 'Abrahamson, Silva & Kamai (2014) Aftershock' in gmpe_list
             ):
                 source_index = source_info.get('SourceIndex', None)
                 rupture_index = source_info.get('RuptureIndex', None)
@@ -163,6 +172,14 @@ class IM_Calculator:  # noqa: D101
                     self.erf, source_index, rupture_index, self.site_info
                 )
                 # self.timeGetRuptureInfo += time.process_time_ns() - start
+            if 'Abrahamson, Silva & Kamai (2014) Aftershock' in gmpe_list:
+                source_index = source_info.get('SourceIndex', None)
+                rupture_index = source_info.get('RuptureIndex', None)
+                crJB = get_rupture_info_ASK2014_aftershock(  # noqa: F405
+                    self.erf, source_index, rupture_index, self.mainshock
+                )
+                site_rup_dict['crJB'] = crJB
+
         elif source_info['Type'] == 'PointSource':
             if (
                 'Chiou & Youngs (2014)' in gmpe_list
@@ -456,7 +473,7 @@ class IM_Calculator:  # noqa: D101
                         eq_magnitude, self.site_rup_dict, cur_site, im_info
                     )
                     # self.timeGetIM += time.process_time_ns() - start
-                elif cur_gmpe == 'Abrahamson, Silva & Kamai (2014)':
+                elif cur_gmpe == 'Abrahamson, Silva & Kamai (2014)' or cur_gmpe == 'Abrahamson, Silva & Kamai (2014) Aftershock':
                     # start = time.process_time_ns()
                     tmpResult = self.ASK.get_IM(  # noqa: N806
                         eq_magnitude, self.site_rup_dict, cur_site, im_info
@@ -793,13 +810,17 @@ def compute_im(  # noqa: C901, D103
                     sys.exit(
                         'SA is used in hazard downsampling but not defined in the intensity measure tab'
                     )
-                elif ho_period in im_info['SA'].get('Periods'):
-                    pass
+                elif im_info.get('Periods', None) is not None:
+                    if ho_period in im_info['Periods']:
+                        pass
+                elif im_info.get('SA', None) is not None:
+                    if ho_period in im_info['SA'].get('Periods'):
+                        pass
                 else:
                     tmp_periods = im_info['SA']['Periods'] + [ho_period]
                     tmp_periods.sort()
                     im_info['SA']['Periods'] = tmp_periods
-            elif ho_period in im_info['SA'].get('Periods'):
+            elif ho_period in im_info.get('Periods'):
                 pass
             else:
                 tmp_periods = im_info['SA']['Periods'] + [ho_period]
