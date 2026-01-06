@@ -1352,7 +1352,7 @@ def create_profile_txt(n_profile: int, profile_out: Path) -> None:
 
         out_path = profile_out.parent / f"Profile{i}"
         out_path.write_text(profile_text)
-        print(f"✓ Profile written to {out_path.resolve()}")
+        print(f"  Profile written to {out_path.resolve()}")
 
 def create_plane_txt(N_plane: int, plane_out: Path) -> None:
     for i in range(1, N_plane+1):
@@ -1380,7 +1380,7 @@ def create_plane_txt(N_plane: int, plane_out: Path) -> None:
 
         out_path = plane_out.parent  / f"Plane{i}"
         out_path.write_text(plane_text)
-        print(f"✓ Plane written to {out_path.resolve()}")
+        print(f"  Plane written to {out_path.resolve()}")
 
 # ───────────────────────── Check if the path existss ─────────────────────────
 
@@ -1513,7 +1513,7 @@ def main(config: Dict[str, Any]) -> None:
     Tfootprints = Scraper({"length": "m"}).get_footprints(regionT)
 
     Tfootprints.write_to_geojson(out_path)
-    print(f"✓  GeoJSON written to {out_path.resolve()}")
+    print(f"   GeoJSON written to {out_path.resolve()}")
     
 
 
@@ -1529,7 +1529,7 @@ def main(config: Dict[str, Any]) -> None:
     inventory = scraper.get_footprints(regionR)
     inventory.write_to_geojson(out_file)
 
-    print(f"✓  Footprints saved to {out_file.resolve()}")
+    print(f"   Footprints saved to {out_file.resolve()}")
 
     full = out_path
     roi  = out_file
@@ -1631,7 +1631,7 @@ def main(config: Dict[str, Any]) -> None:
         return m
     write_stl_ascii(mesh(gdf_roi), roi_stl,  "ROI")
     write_stl_ascii(mesh(rest),    rest_stl, "Surrounding")
-    print("✓ STL files created.")
+    print("  STL files created.")
     
     # --- compute bounds ---------------------------------------------------
     verts=np.vstack([trimesh.load_mesh(str(roi_stl)).vertices,
@@ -1665,7 +1665,7 @@ def main(config: Dict[str, Any]) -> None:
     write_bmd(x0,x1,y0,y1,z0,z1,nx,ny,nz,side_choice,
               case/"system"/"blockMeshDict")
     
-    print("✓ blockMeshDict written.")
+    print("  blockMeshDict written.")
     print(f"Applied rotation −{angle_deg}° so wind aligns with +x.")
     print(f"Extents: ({x0},{y0},{z0}) to ({x1},{y1},{z1})")
     # ───────────────────────── Write snappyHexMesh ─────────────────────────
@@ -1768,7 +1768,7 @@ def main(config: Dict[str, Any]) -> None:
 
     Path(case/"system"/"snappyHexMeshDict").write_text(dict_text)
     Path(case/"system"/"surfaceFeaturesDict").write_text(TP_surfFeat)
-    print(f"✓  snappyHexMeshDict written to {Path(case/"system"/"snappyHexMeshDict").resolve()}")
+    print(f"   snappyHexMeshDict written to {Path(case/"system"/"snappyHexMeshDict").resolve()}")
     print(f"   ROI surface level        : {roi_level}")
     print(f"   Surrounding surface level: {sur_level}")
 
@@ -1825,7 +1825,7 @@ def main(config: Dict[str, Any]) -> None:
             raise ValueError("Uref, Href, z0 must be floats")            
                 
     else:
-        print("✓ constant/transportProperties written.")
+        print("  constant/transportProperties written.")
         while True:
             fw = input("Framework? [RANS / LES]: ").strip().lower()
             if fw in ("rans", "les"):
@@ -1878,7 +1878,7 @@ def main(config: Dict[str, Any]) -> None:
         # write turbulenceProperties
         fld2.parent.mkdir(parents=True, exist_ok=True)
         fld2.write_text(TP_LES)
-        print("✓ turbulenceProperties (LES) written.")
+        print("  turbulenceProperties (LES) written.")
 
         fld1 = Path(case/"0")
         fld1.mkdir(parents=True, exist_ok=True)
@@ -1897,7 +1897,7 @@ def main(config: Dict[str, Any]) -> None:
             P_BODY % (SIDE_MAP[side], SIDE_MAP[side])
         )
 
-        print(f"✓ fields written to {fld1.resolve()}")
+        print(f"  fields written to {fld1.resolve()}")
         #return  # LES path ends here
 
     else:
@@ -1905,7 +1905,7 @@ def main(config: Dict[str, Any]) -> None:
         # ───────────── RANS branch  ─────────────
         fld2.parent.mkdir(parents=True, exist_ok=True)
         fld2.write_text(TP_RANS)
-        print("✓ turbulenceProperties (RANS) written.")
+        print("  turbulenceProperties (RANS) written.")
         
         fld1 = Path(case/"0")
         fld1.mkdir(parents=True, exist_ok=True)
@@ -1926,7 +1926,7 @@ def main(config: Dict[str, Any]) -> None:
             P_BODY % (SIDE_MAP[side], SIDE_MAP[side])
         )
         
-        print(f"✓ fields written to {fld1.resolve()}")
+        print(f"  fields written to {fld1.resolve()}")
         
         
     # ───────────────────────── Inputs for ControlDict ─────────────────────────
@@ -1989,7 +1989,7 @@ def main(config: Dict[str, Any]) -> None:
         Path(case/"system"/"fvSolution").write_text(TP_fvSol_LES)
         Path(case/"system"/"fvSchemes").parent.mkdir(parents=True, exist_ok=True)
         Path(case/"system"/"fvSchemes").write_text(TP_fvSch_LES)
-        print(f"✓ system/controlDict written to {Path(case/"system"/"controlDict").resolve()}")
+        print(f"  system/controlDict written to {Path(case/"system"/"controlDict").resolve()}")
         # write profile and plane recorder
         create_profile_txt(n_profile, Path(case/"system"/"Profile"))
         create_plane_txt(n_plane, Path(case/"system"/"Plane"))
@@ -2027,7 +2027,7 @@ def main(config: Dict[str, Any]) -> None:
         Path(case/"system"/"fvSolution").write_text(TP_fvSol_RANS)
         Path(case/"system"/"fvSchemes").parent.mkdir(parents=True, exist_ok=True)
         Path(case/"system"/"fvSchemes").write_text(TP_fvSch_RANS)
-        print(f"✓ system/controlDict written to {Path(case/"system"/"controlDict").resolve()}")
+        print(f"  system/controlDict written to {Path(case/"system"/"controlDict").resolve()}")
 
         
     if 'number_of_processors' in config:
@@ -2073,7 +2073,7 @@ def main(config: Dict[str, Any]) -> None:
     outd = Path(case/"system"/"decomposeParDict") 
     outd.parent.mkdir(parents=True, exist_ok=True)
     outd.write_text(DECOMP)
-    print(f"✓ decomposeParDict written to {outd.resolve()}")
+    print(f"  decomposeParDict written to {outd.resolve()}")
     print(f"  ( {nproc} subdomains, method = scotch )")
 
     # ───────────────────────── Get TINF file ─────────────────────────
@@ -2134,21 +2134,21 @@ def main(config: Dict[str, Any]) -> None:
                     else:
                         f.write(f"(0 0 {z:g})\n")
                 f.write(")\n;\n")
-            print(f"✓ points → {pts_out.resolve()}")
+            print(f"  points → {pts_out.resolve()}")
 
     # U
             write_list(u_out, u_vals, lambda u: f"{u:g}")
-            print(f"✓ U      → {u_out.resolve()}")
+            print(f"  U      → {u_out.resolve()}")
 
     # R
             write_list(r_out, r_vals.itertuples(index=False),
                     lambda row: "(" + " ".join(f"{v:g}" for v in row) + ")")
-            print(f"✓ R      → {r_out.resolve()}")
+            print(f"  R      → {r_out.resolve()}")
 
     # L
             write_list(l_out, l_vals.itertuples(index=False),
                     lambda row: "(" + " ".join(f"{v:g}" for v in row) + ")")
-            print(f"✓ L      → {l_out.resolve()}")
+            print(f"  L      → {l_out.resolve()}")
 
     Path(case/"Community.foam").touch()
 
