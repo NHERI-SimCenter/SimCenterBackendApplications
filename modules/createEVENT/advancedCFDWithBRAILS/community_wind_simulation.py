@@ -1666,7 +1666,8 @@ def main(config: Dict[str, Any]) -> None:
               case/"system"/"blockMeshDict")
     
     print("  blockMeshDict written.")
-    print(f"Applied rotation −{angle_deg}° so wind aligns with +x.")
+
+    print(f"Applied rotation -{angle_deg} so wind aligns with +x.")
     print(f"Extents: ({x0},{y0},{z0}) to ({x1},{y1},{z1})")
     # ───────────────────────── Write snappyHexMesh ─────────────────────────
 
@@ -2151,6 +2152,7 @@ def main(config: Dict[str, Any]) -> None:
             print(f"  L      → {l_out.resolve()}")
 
     Path(case/"Community.foam").touch()
+    print("Done .. OpenFOAM Files Created")
 
 if __name__ == "__main__":
 
