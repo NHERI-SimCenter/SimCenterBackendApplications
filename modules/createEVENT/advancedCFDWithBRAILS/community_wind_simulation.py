@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 import argparse
 from pathlib import Path
 import sys, math
@@ -419,6 +419,96 @@ RAS
 }
 """)
 
+TP_RANSkw = textwrap.dedent("""
+/*--------------------------------*- C++ -*----------------------------------*\\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  10                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\\*---------------------------------------------------------------------------*/
+FoamFile{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object turbulenceProperties;
+}
+
+simulationType RAS;
+
+RAS
+{
+    RASModel kOmega;
+    turbulence on;
+    printCoeffs on;
+    delta cubeRootVol;
+    cubeRootVolCoeffs
+	{
+    		deltaCoeff      1;
+	}
+}
+""")
+
+TP_RANSkwSST = textwrap.dedent("""
+/*--------------------------------*- C++ -*----------------------------------*\\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  10                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\\*---------------------------------------------------------------------------*/
+FoamFile{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object turbulenceProperties;
+}
+
+simulationType RAS;
+
+RAS
+{
+    RASModel kOmegaSST;
+    turbulence on;
+    printCoeffs on;
+    delta cubeRootVol;
+    cubeRootVolCoeffs
+	{
+    		deltaCoeff      1;
+	}
+}
+""")
+
+TP_RANSkwSSTSAS = textwrap.dedent("""
+/*--------------------------------*- C++ -*----------------------------------*\\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  10                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\\*---------------------------------------------------------------------------*/
+FoamFile{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object turbulenceProperties;
+}
+
+simulationType RAS;
+
+RAS
+{
+    RASModel kOmegaSSTSAS;
+    turbulence on;
+    printCoeffs on;
+    delta cubeRootVol;
+    cubeRootVolCoeffs
+	{
+        deltaCoeff      1;
+	}
+}
+""")
+
 TP_LES = textwrap.dedent("""
 /*--------------------------------*- C++ -*----------------------------------*\\
 | =========                 |                                                 |
@@ -447,6 +537,162 @@ LES
     {
         Cs 0.17;
     }
+}
+""")
+
+TP_LESWale = textwrap.dedent("""
+/*--------------------------------*- C++ -*----------------------------------*\\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  10                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\\*---------------------------------------------------------------------------*/
+FoamFile{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object turbulenceProperties;
+}
+
+simulationType LES;
+
+LES
+{
+    LESModel WALE;
+    delta cubeRootVol;
+    turbulence on;
+    printCoeffs on;
+    cubeRootVolCoeffs
+    {
+        deltaCoeff      1;
+    }
+}
+""")
+
+TP_LESKeqn = textwrap.dedent("""
+/*--------------------------------*- C++ -*----------------------------------*\\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  10                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\\*---------------------------------------------------------------------------*/
+FoamFile{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object turbulenceProperties;
+}
+
+simulationType LES;
+
+LES
+{
+    LESModel kEqn;
+    delta cubeRootVol;
+    turbulence on;
+    printCoeffs on;
+    cubeRootVolCoeffs
+    {
+        deltaCoeff      1;
+    }
+}
+""")
+
+TP_LESDKeqn = textwrap.dedent("""
+/*--------------------------------*- C++ -*----------------------------------*\\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  10                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\\*---------------------------------------------------------------------------*/
+FoamFile{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object turbulenceProperties;
+}
+
+simulationType LES;
+
+LES
+{
+    LESModel dynamicKEqn;
+    delta cubeRootVol;
+    turbulence on;
+    printCoeffs on;
+    cubeRootVolCoeffs
+    {
+        deltaCoeff      1;
+    }
+    dynamicKEqnCoeffs
+    {
+        filter simple;
+    }
+}
+""")
+
+TP_DES = textwrap.dedent("""
+/*--------------------------------*- C++ -*----------------------------------*\\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  10                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\\*---------------------------------------------------------------------------*/
+FoamFile{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object turbulenceProperties;
+}
+
+simulationType LES;
+
+LES
+{
+    LESModel SpalartAllmarasDES;
+    delta cubeRootVol;
+    turbulence on;
+    printCoeffs on;
+    cubeRootVolCoeffs
+    {
+        deltaCoeff      1;
+    }
+    
+}
+""")
+
+TP_DDES = textwrap.dedent("""
+/*--------------------------------*- C++ -*----------------------------------*\\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  10                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\\*---------------------------------------------------------------------------*/
+FoamFile{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object turbulenceProperties;
+}
+
+simulationType LES;
+
+LES
+{
+    LESModel SpalartAllmarasDDES;
+    delta cubeRootVol;
+    turbulence on;
+    printCoeffs on;
+    cubeRootVolCoeffs
+    {
+        deltaCoeff      1;
+    }
+    
 }
 """)
 
@@ -581,6 +827,42 @@ def body_k(side, Uref, Href, z0):
         }}
     """)
 
+def body_ksgs(side):
+    return textwrap.dedent(f"""
+        /*--------------------------------*- C++ -*----------------------------------*\\
+        | =========                 |                                                 |
+        | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+        |  \\    /   O peration     | Version:  10                                 |
+        |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+        |    \\/     M anipulation  |                                                 |
+        \\*---------------------------------------------------------------------------*/
+        FoamFile
+        {{
+            version     2.0;
+            format      ascii;
+            class       volScalarField;
+            location    "0";
+            object      k;
+        }}
+        dimensions      [0 2 -2 0 0 0 0];
+        internalField   uniform 0.001;
+        boundaryField
+        {{
+            inlet
+            {{
+                type fixedValue;
+                value uniform 0.005;
+            }}
+            outlet {{ type zeroGradient; }}
+            side1 {{ type {side}; }}
+            side2 {{ type {side}; }}
+            top   {{ type slip; }}
+            ground        {{ type kqRWallFunction; value $internalField; }}
+            ROI           {{ type kqRWallFunction; value $internalField; }}
+            Surrounding   {{ type kqRWallFunction; value $internalField; }}
+        }}
+    """)
+
 def body_eps(side, Uref, Href, z0):
     return textwrap.dedent(f"""
         /*--------------------------------*- C++ -*----------------------------------*\\
@@ -622,6 +904,60 @@ def body_eps(side, Uref, Href, z0):
             ground        {{ type epsilonWallFunction; value $internalField; }}
             ROI           {{ type epsilonWallFunction; value $internalField; }}
             Surrounding   {{ type epsilonWallFunction; value $internalField; }}
+        }}
+    """)
+
+def body_omega(side,Uref,Href,z0):
+    return textwrap.dedent(f"""
+        /*--------------------------------*- C++ -*----------------------------------*\\
+        | =========                 |                                                 |
+        | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+        |  \\    /   O peration     | Version:  10                                 |
+        |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+        |    \\/     M anipulation  |                                                 |
+        \\*---------------------------------------------------------------------------*/
+        FoamFile
+        {{
+            version     2.0;
+            format      ascii;
+            class       volScalarField;
+            location    "0";
+            object      epsilon;
+        }}
+        dimensions      [0 0 -1 0 0 0 0];
+        internalField   uniform 100;
+        boundaryField
+        {{
+            inlet
+            {{
+                type codedFixedValue;
+                value uniform 100;
+                name  omegaCoded;
+                code
+                #{{
+                    const scalar Bs = 0.09;
+                    const fvPatch& patch = this->patch();
+                    const vectorField& cf = patch.Cf();
+                    scalarField& field = *this;
+                    forAll(cf,i)
+                    {{
+                        field[i] = {Uref}/(sqrt(Bs)*(cf[i].z()+{z0})*{math.log((Href+z0)/z0)});
+                    }}
+                #}};
+            }}
+            outlet {{ type zeroGradient; }}
+            side1 {{ type {side}; }}
+            side2 {{ type {side}; }}
+            top   {{ type slip; }}
+            ground        {{ type 	 omegaWallFunction;
+	                         blended true;
+	                         value 	$internalField; }}
+            ROI           {{ type 	 omegaWallFunction;
+	                         blended true;
+	                         value 	$internalField; }}
+            Surrounding   {{ type 	 omegaWallFunction;
+	                         blended true;
+	                         value 	$internalField; }}
         }}
     """)
 
@@ -987,6 +1323,7 @@ divSchemes
     div(phi,U)      bounded Gauss linearUpwindV grad(U);
     div(phi,k)      bounded Gauss upwind; 
     div(phi,epsilon) bounded Gauss upwind;
+    div(phi,omega)  bounded Gauss upwind;
     div((nuEff*dev2(T(grad(U))))) Gauss linear;
 }
 
@@ -1012,6 +1349,80 @@ fluxRequired
     p               ;
 }
 
+wallDist
+{
+    method meshWave;
+}
+
+// ************************************************************************* //
+
+
+""")
+
+TP_fvSch_URANS = textwrap.dedent("""
+/*--------------------------------*- C++ -*----------------------------------*\\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  www.OpenFoam.org
+    \\  /    A nd           | Version:  10
+     \\/     M anipulation  |
+\\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSchemes;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+ddtSchemes
+{
+    default         Euler;
+}
+
+gradSchemes
+{
+    default         cellLimited Gauss linear 0.5;
+}
+
+divSchemes
+{
+    default         none;
+    div(phi,U)      bounded Gauss linearUpwindV grad(U);
+    div(phi,k)      bounded Gauss upwind; 
+    div(phi,epsilon) bounded Gauss upwind;
+    div(phi,omega)  bounded Gauss upwind;
+    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+}
+
+laplacianSchemes
+{
+    default         Gauss linear limited 0.5;
+}
+
+interpolationSchemes
+{
+    default         linear;
+    interpolate(U)  linear;
+}
+
+snGradSchemes
+{
+    default         limited 0.5;
+}
+
+fluxRequired
+{
+    default         no;
+    p               ;
+}
+
+wallDist
+{
+    method meshWave;
+}
 
 // ************************************************************************* //
 
@@ -1093,6 +1504,17 @@ solvers
         maxIter         100;            // limitation of iterations number
     }
 
+    omega
+    {
+        solver          smoothSolver;   // solver type
+        smoother        GaussSeidel;    // smoother type
+        tolerance       1e-09;          // solver finishes if either absolute
+        relTol          0.001;           // tolerance is reached or the relative
+                                        // tolerance here
+        nSweeps         1;              // setting for smoothSolver
+        maxIter         100;            // limitation of iterations number
+    }
+
     R
     {
         solver          PBiCG;
@@ -1135,6 +1557,7 @@ relaxationFactors
     U               0.7;
     k               0.7;
     epsilon         0.7;
+    omega           0.7;
     R               0.7;
     nuTilda         0.7;
 }
@@ -1292,6 +1715,139 @@ PISO
 
 """)
 
+TP_fvSol_URANS = textwrap.dedent("""
+/*--------------------------------*- C++ -*----------------------------------*\\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  www.OpenFoam.org
+    \\  /    A nd           | Version:  10
+     \\/     M anipulation  |
+\\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    p
+    {
+        solver          GAMG;
+        tolerance       0;
+        relTol          0.05;
+        smoother        GaussSeidel;
+        cacheAgglomeration true;
+        nCellsInCoarsestLevel 100;
+        agglomerator    faceAreaPair;
+        mergeLevels     1;
+    }
+
+    pFinal
+    {
+        $p;
+        smoother        DICGaussSeidel;
+        tolerance       1e-06;
+        relTol          0.01;
+    }
+
+    U                                   // linear equation system solver for U
+    {
+        solver          smoothSolver;   // solver type
+        smoother        GaussSeidel;    // smoother type
+        tolerance       1e-09;          // solver finishes if either absolute
+        relTol          0.001;           // tolerance is reached or the relative
+                                        // tolerance here
+        nSweeps         1;              // setting for smoothSolver
+        maxIter         100;            // limitation of iterations number
+    }
+
+    k
+    {
+        solver          smoothSolver;   // solver type
+        smoother        GaussSeidel;    // smoother type
+        tolerance       1e-09;          // solver finishes if either absolute
+        relTol          0.001;           // tolerance is reached or the relative
+                                        // tolerance here
+        nSweeps         1;              // setting for smoothSolver
+        maxIter         100;            // limitation of iterations number
+    }
+
+    epsilon
+    {
+        solver          smoothSolver;   // solver type
+        smoother        GaussSeidel;    // smoother type
+        tolerance       1e-09;          // solver finishes if either absolute
+        relTol          0.001;           // tolerance is reached or the relative
+                                        // tolerance here
+        nSweeps         1;              // setting for smoothSolver
+        maxIter         100;            // limitation of iterations number
+    }
+
+    omega
+    {
+        solver          smoothSolver;   // solver type
+        smoother        GaussSeidel;    // smoother type
+        tolerance       1e-09;          // solver finishes if either absolute
+        relTol          0.001;           // tolerance is reached or the relative
+                                        // tolerance here
+        nSweeps         1;              // setting for smoothSolver
+        maxIter         100;            // limitation of iterations number
+    }
+
+    R
+    {
+        solver          PBiCG;
+        preconditioner  DILU;
+        tolerance       1e-06;
+//        relTol          0.1;
+	relTol          0.001;
+    }
+
+    nuTilda
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-08;
+        relTol          0.1;
+        maxIter         5;
+    }
+    
+    "(U|k|nuTilda|epsilon|omega)Final"
+    {
+        $U;
+        tolerance       1e-08;
+        relTol          0.05;
+    }
+}
+
+PIMPLE
+{
+    nOuterCorrectors 1;
+    nCorrectors     3;
+    nNonOrthogonalCorrectors 0;
+    //pRefCell        1001;
+    //pRefValue       0;
+}
+
+PISO
+{
+    nOuterCorrectors 1;
+    nCorrectors     3;
+    nNonOrthogonalCorrectors 0;
+    //pRefCell        1001;
+    //pRefValue       0;
+}
+
+// ************************************************************************* //
+
+
+""")
+
 # ────────────────────────── Generate profile and plane ──────────────────────
 
 
@@ -1324,63 +1880,12 @@ def generate_include_func(n_profile, n_plane) -> str:
     functions = "\n    ".join(includes)
     return functions
 
-def create_profile_txt(n_profile: int, profile_out: Path) -> None:
+#def create_profile_txt(n_profile: int, profile_out: Path) -> None:
 
-    for i in range(1, n_profile+1):
-        print(f"\n--- Configuring Profile{i} ---")
+    
 
-        start = tuple(map(float, get_input("  Start point (x y z)", "0 0 0").split()))
-        end   = tuple(map(float, get_input("  End point (x y z)", "0 0 0").split()))
-        n_points = int(get_input("  Number of points along the probe line", "5"))
-        fields = get_input("Field write {U or p or U p}", "U")
-        while fields not in FIELD_MAP:
-            fields = get_input("  -> Please choose U or p or U p", "U")
-        N_profile = get_input("Field write interval",    "10")
-        t_start = get_input("  Time start", "0")
-
-        # generate probe locations
-        points = generate_line_points(start, end, n_points)
-
-        # fill template
-        profile_text = TP_PROFILE.format(
-            ProfileName=f"Profile{i}",
-            N_profile=N_profile,
-            t_start=t_start,
-            fields=fields,
-            points=points
-        )
-
-        out_path = profile_out.parent / f"Profile{i}"
-        out_path.write_text(profile_text)
-        print(f"  Profile written to {out_path.resolve()}")
-
-def create_plane_txt(N_plane: int, plane_out: Path) -> None:
-    for i in range(1, N_plane+1):
-        print(f"\n--- Configuring Plane{i} ---")
-        
-        N_plane = get_input("Plane write interval",    "10")
-        t_start = get_input("  Time start", "0.000000")
-        t_end = get_input("  Time end", "10.000000")
-        fields = get_input("Field write {U or p or U p}", "U")
-        while fields not in FIELD_MAP:
-            fields = get_input("  -> Please choose U or p or U p", "U")        
-        plane_point = "(" + " ".join(get_input("  Point in plane (x y z)", "0 0 0").split()) + ")"
-        plane_normal = "(" + " ".join(get_input("  Normal vector to plane (x y z)", "0 0 0").split()) + ")"
-
-        # fill template
-        plane_text = TP_PLANE.format(
-            PlaneName=f"Plane{i}",
-            N_plane=N_plane,
-            t_start=t_start,
-            t_end=t_end,
-            fields=fields,
-            plane_point=plane_point,
-            plane_normal=plane_normal
-        )
-
-        out_path = plane_out.parent  / f"Plane{i}"
-        out_path.write_text(plane_text)
-        print(f"  Plane written to {out_path.resolve()}")
+#def create_plane_txt(N_plane: int, plane_out: Path) -> None:
+    
 
 # ───────────────────────── Check if the path existss ─────────────────────────
 
@@ -1513,7 +2018,7 @@ def main(config: Dict[str, Any]) -> None:
     Tfootprints = Scraper({"length": "m"}).get_footprints(regionT)
 
     Tfootprints.write_to_geojson(out_path)
-    print(f"   GeoJSON written to {out_path.resolve()}")
+    print(f"✓  GeoJSON written to {out_path.resolve()}")
     
 
 
@@ -1529,7 +2034,7 @@ def main(config: Dict[str, Any]) -> None:
     inventory = scraper.get_footprints(regionR)
     inventory.write_to_geojson(out_file)
 
-    print(f"   Footprints saved to {out_file.resolve()}")
+    print(f"✓  Footprints saved to {out_file.resolve()}")
 
     full = out_path
     roi  = out_file
@@ -1631,7 +2136,7 @@ def main(config: Dict[str, Any]) -> None:
         return m
     write_stl_ascii(mesh(gdf_roi), roi_stl,  "ROI")
     write_stl_ascii(mesh(rest),    rest_stl, "Surrounding")
-    print("  STL files created.")
+    print("✓ STL files created.")
     
     # --- compute bounds ---------------------------------------------------
     verts=np.vstack([trimesh.load_mesh(str(roi_stl)).vertices,
@@ -1665,9 +2170,8 @@ def main(config: Dict[str, Any]) -> None:
     write_bmd(x0,x1,y0,y1,z0,z1,nx,ny,nz,side_choice,
               case/"system"/"blockMeshDict")
     
-    print("  blockMeshDict written.")
-
-    print(f"Applied rotation -{angle_deg} so wind aligns with +x.")
+    print("✓ blockMeshDict written.")
+    print(f"Applied rotation −{angle_deg}° so wind aligns with +x.")
     print(f"Extents: ({x0},{y0},{z0}) to ({x1},{y1},{z1})")
     # ───────────────────────── Write snappyHexMesh ─────────────────────────
 
@@ -1769,7 +2273,7 @@ def main(config: Dict[str, Any]) -> None:
 
     Path(case/"system"/"snappyHexMeshDict").write_text(dict_text)
     Path(case/"system"/"surfaceFeaturesDict").write_text(TP_surfFeat)
-    print(f"   snappyHexMeshDict written to {Path(case/"system"/"snappyHexMeshDict").resolve()}")
+    print(f"✓  snappyHexMeshDict written to {Path(case/"system"/"snappyHexMeshDict").resolve()}")
     print(f"   ROI surface level        : {roi_level}")
     print(f"   Surrounding surface level: {sur_level}")
 
@@ -1792,13 +2296,7 @@ def main(config: Dict[str, Any]) -> None:
     ftp.write_text(transport_properties_write)
 
 
-    if 'computational_domain' in config and 'cells_between_levels' in config['computational_domain']:
-        try: 
-            nu = float(config['computational_domain']['kinematic_viscosity'])
-        except (TypeError, ValueError):
-            raise ValueError("kinematic_viscosity must be a float")
-    else:            
-        nu = get_input("Kinematic viscosity", "1.5e-05")    
+      
 
     side = side_choice
 
@@ -1813,12 +2311,13 @@ def main(config: Dict[str, Any]) -> None:
             
             inlet=boundary_conditions['inlet']
             fw=inlet['framework']
+            subm=inlet['subModel']
             Uref=float(inlet['Uref'])
             Href=float(inlet['Href'])
             z0=float(inlet['z0'])
-            if fw == "les" or fw == "LES":
-                fw = "les"
+            if fw == "les" or fw =="urans":
                 inflow=inlet['inflow']
+                les_algorithm=inlet['les_algorithm']
                 
         except KeyError as e:
             raise ValueError(f"Missing key {e} in boundary_conditions: {region}") from e
@@ -1826,13 +2325,17 @@ def main(config: Dict[str, Any]) -> None:
             raise ValueError("Uref, Href, z0 must be floats")            
                 
     else:
-        print("  constant/transportProperties written.")
+        print("✓ constant/transportProperties written.")
         while True:
-            fw = input("Framework? [RANS / LES]: ").strip().lower()
-            if fw in ("rans", "les"):
+            fw = input("Framework? [RANS / LES / URANS]: ").strip().lower()
+            if fw in ("rans", "les", "urans"):
                 break
 
         if fw == "les":
+            while True:
+                subm = input("SGS Model? [SMAGORINSKY/KEQN/DYNKEQN/WALE]: ").strip().lower()
+                if subm in ("smagorinsky", "keqn", "dynkeqn", "wale"):
+                    break
             # meanABL or turbulent inflow?
             inflow = ask("LES inlet type {meanABL|turbulent}", "meanABL").lower()
             while inflow not in ("meanabl", "turbulent"):
@@ -1850,15 +2353,44 @@ def main(config: Dict[str, Any]) -> None:
             while surround_style not in ("rough", "smooth"):
                 surround_style = ask(" choose rough/smooth", "smooth").lower()
 
-            Uref = ask("Reference wind speed Uref (m/s)", "10")
-            Href = ask("Reference height Zref (m)", "10")
-            z0   = ask("Roughness length z0 (m)", "0.1")
+            Uref = float(ask("Reference wind speed Uref (m/s)", "10"))
+            Href = float(ask("Reference height Zref (m)", "10"))
+            z0   = float(ask("Roughness length z0 (m)", "0.1"))
+
+        elif fw == "urans":
+            while True:
+                subm = input("Turbulence Model? [KEPSILON/KOMEGA/KOMEGASSTSAS]: ").strip().lower()
+                if subm in ("kepsilon", "komega", "komegasstsas"):
+                    break
+            # meanABL or turbulent inflow?
+            inflow = ask("URANS inlet type {meanABL|turbulent}", "meanABL").lower()
+            while inflow not in ("meanabl", "turbulent"):
+                inflow = ask(" choose meanABL or turbulent", "meanABL").lower()
+        
+            ground_style = ask("Ground wall function {rough|smooth}", "smooth").lower()
+            while ground_style not in ("rough", "smooth"):
+                ground_style = ask(" choose rough/smooth", "smooth").lower()
+
+            roi_style = ask("ROI wall function {rough|smooth}", "smooth").lower()
+            while roi_style not in ("rough", "smooth"):
+                roi_style = ask(" choose rough/smooth", "smooth").lower()
+
+            surround_style = ask("Surrounding wall function {rough|smooth}", "smooth").lower()
+            while surround_style not in ("rough", "smooth"):
+                surround_style = ask(" choose rough/smooth", "smooth").lower()
+
+            Uref = float(ask("Reference wind speed Uref (m/s)", "10"))
+            Href = float(ask("Reference height Zref (m)", "10"))
+            z0   = float(ask("Roughness length z0 (m)", "0.1"))
 
         else:
-            
-            Uref = ask("Reference wind speed Uref (m/s)", "10")
-            Href = ask("Reference height Zref (m)", "10")
-            z0   = ask("Roughness length z0 (m)", "0.1")
+            while True:
+                subm = input("Turbulence Model? [KEPSILON/KOMEGA/KOMEGASST]: ").strip().lower()
+                if subm in ("kepsilon", "komega", "komegasst"):
+                    break
+            Uref = float(ask("Reference wind speed Uref (m/s)", "10"))
+            Href = float(ask("Reference height Zref (m)", "10"))
+            z0   = float(ask("Roughness length z0 (m)", "0.1"))
 
             side = side_choice
 
@@ -1878,8 +2410,19 @@ def main(config: Dict[str, Any]) -> None:
         
         # write turbulenceProperties
         fld2.parent.mkdir(parents=True, exist_ok=True)
-        fld2.write_text(TP_LES)
-        print("  turbulenceProperties (LES) written.")
+        if subm == "smagorinsky":
+            fld2.write_text(TP_LES)
+
+        elif subm == "keqn":
+            fld2.write_text(TP_LESKeqn)
+
+        elif subm == "dynkeqn":
+            fld2.write_text(TP_LESDKeqn)
+
+        else:
+            fld2.write_text(TP_LESWale)
+
+        print("✓ turbulenceProperties (LES) written.")
 
         fld1 = Path(case/"0")
         fld1.mkdir(parents=True, exist_ok=True)
@@ -1898,15 +2441,72 @@ def main(config: Dict[str, Any]) -> None:
             P_BODY % (SIDE_MAP[side], SIDE_MAP[side])
         )
 
-        print(f"  fields written to {fld1.resolve()}")
+        if subm == "keqn" or subm == "dynkeqn":
+            fld1.joinpath("k").write_text(
+            body_ksgs(SIDE_MAP[side]))
+
+        print(f"✓ fields written to {fld1.resolve()}")
         #return  # LES path ends here
+
+    elif fw == 'urans':
+
+        fld2.parent.mkdir(parents=True, exist_ok=True)
+        if subm == "kepsilon":
+            fld2.write_text(TP_RANS)
+
+        elif subm == "komega":
+            fld2.write_text(TP_RANSkw)
+
+        else:
+            fld2.write_text(TP_RANSkwSSTSAS)
+
+        print("✓ turbulenceProperties (RANS) written.")
+        
+        fld1 = Path(case/"0")
+        fld1.mkdir(parents=True, exist_ok=True)
+        
+        if inflow == "meanabl":
+            Ubody = body_U_meanABL(SIDE_MAP[side], Uref, Href, z0)
+        else:
+            Ubody = body_U_DFM(SIDE_MAP[side], Uref)
+            
+        (fld1 / "U").write_text(Ubody)
+        
+        fld1.joinpath("k").write_text(
+            body_k(SIDE_MAP[side], Uref, Href, z0))
+        
+        if subm == "kepsilon":
+            fld1.joinpath("epsilon").write_text(
+                body_eps(SIDE_MAP[side], Uref, Href, z0))
+
+        else:
+            fld1.joinpath("omega").write_text(
+                body_omega(SIDE_MAP[side],Uref,Href,z0))
+        
+        fld1.joinpath("nut").write_text(
+            body_nut(SIDE_MAP[side], ground_style, z0,Uref,Href, roi_style, surround_style))
+        
+        fld1.joinpath("p").write_text(
+            P_BODY % (SIDE_MAP[side], SIDE_MAP[side])
+        )
+        
+        print(f"✓ fields written to {fld1.resolve()}")
 
     else:
 
         # ───────────── RANS branch  ─────────────
         fld2.parent.mkdir(parents=True, exist_ok=True)
-        fld2.write_text(TP_RANS)
-        print("  turbulenceProperties (RANS) written.")
+        if subm == "kepsilon":
+            fld2.write_text(TP_RANS)
+
+        elif subm == "komega":
+            fld2.write_text(TP_RANSkw)
+
+        else:
+            fld2.write_text(TP_RANSkwSST)
+
+
+        print("✓ turbulenceProperties (RANS) written.")
         
         fld1 = Path(case/"0")
         fld1.mkdir(parents=True, exist_ok=True)
@@ -1917,8 +2517,13 @@ def main(config: Dict[str, Any]) -> None:
         fld1.joinpath("k").write_text(
             body_k(SIDE_MAP[side], Uref, Href, z0))
         
-        fld1.joinpath("epsilon").write_text(
-            body_eps(SIDE_MAP[side], Uref, Href, z0))
+        if subm == "kepsilon":
+            fld1.joinpath("epsilon").write_text(
+                body_eps(SIDE_MAP[side], Uref, Href, z0))
+
+        else:
+            fld1.joinpath("omega").write_text(
+                body_omega(SIDE_MAP[side],Uref,Href,z0))
         
         fld1.joinpath("nut").write_text(
             body_nut(SIDE_MAP[side], ground_style, z0,Uref,Href, roi_style, surround_style))
@@ -1927,13 +2532,13 @@ def main(config: Dict[str, Any]) -> None:
             P_BODY % (SIDE_MAP[side], SIDE_MAP[side])
         )
         
-        print(f"  fields written to {fld1.resolve()}")
+        print(f"✓ fields written to {fld1.resolve()}")
         
         
     # ───────────────────────── Inputs for ControlDict ─────────────────────────
     
     lib_TINF = ""
-    if fw == "les":
+    if fw == "les" or fw == "urans":
         
         if inflow == "turbulent":
             lib_TINF = '"libturbulentInflow.so"'
@@ -1945,8 +2550,7 @@ def main(config: Dict[str, Any]) -> None:
                 deltaT_sim=float(control_dict['initial_deltaT_sim'])
                 maxDeltaT = float(control_dict['max_deltaT_sim']) 
                 adjust_time=control_dict['adjust_time']
-                deltaT_write=float(control_dict['deltaT_write'])
-                les_algorithm=control_dict['solver']
+                deltaT_write=float(control_dict['deltaT_write'])                
                 maxCo = float(control_dict['max_courant'])
                 n_profile = int(control_dict['num_wind_profiles'])
                 n_plane = int(control_dict['num_section_planes'])              
@@ -1984,17 +2588,127 @@ def main(config: Dict[str, Any]) -> None:
             lib_TINF = lib_TINF,
             functions = functions
         )
+
         Path(case/"system"/"controlDict").parent.mkdir(parents=True, exist_ok=True)
         Path(case/"system"/"controlDict").write_text(les_controldict)
-        Path(case/"system"/"fvSolution").parent.mkdir(parents=True, exist_ok=True)
-        Path(case/"system"/"fvSolution").write_text(TP_fvSol_LES)
-        Path(case/"system"/"fvSchemes").parent.mkdir(parents=True, exist_ok=True)
-        Path(case/"system"/"fvSchemes").write_text(TP_fvSch_LES)
-        print(f"  system/controlDict written to {Path(case/"system"/"controlDict").resolve()}")
-        # write profile and plane recorder
-        create_profile_txt(n_profile, Path(case/"system"/"Profile"))
-        create_plane_txt(n_plane, Path(case/"system"/"Plane"))
 
+        if fw == 'urans':
+            Path(case/"system"/"fvSolution").parent.mkdir(parents=True, exist_ok=True)
+            Path(case/"system"/"fvSolution").write_text(TP_fvSol_URANS)
+            Path(case/"system"/"fvSchemes").parent.mkdir(parents=True, exist_ok=True)
+            Path(case/"system"/"fvSchemes").write_text(TP_fvSch_URANS)
+            print(f"✓ system/controlDict written to {Path(case/"system"/"controlDict").resolve()}")
+        else:
+            Path(case/"system"/"fvSolution").parent.mkdir(parents=True, exist_ok=True)
+            Path(case/"system"/"fvSolution").write_text(TP_fvSol_LES)
+            Path(case/"system"/"fvSchemes").parent.mkdir(parents=True, exist_ok=True)
+            Path(case/"system"/"fvSchemes").write_text(TP_fvSch_LES)
+            print(f"✓ system/controlDict written to {Path(case/"system"/"controlDict").resolve()}")
+        # write profile and plane recorder
+        #create_profile_txt(n_profile, Path(case/"system"/"Profile"))
+        for i in range(1, n_profile+1):
+            print(f"\n--- Configuring Profile{i} ---")
+            if 'computational_domain' in config and 'control_dict' in config['computational_domain']:
+                control_dict = config['computational_domain']['control_dict']
+
+                try: 
+                    startX=float(control_dict[f"wind_profile{i}_startX"])
+                    startY=float(control_dict[f"wind_profile{i}_startY"])
+                    startZ=float(control_dict[f"wind_profile{i}_startZ"]) 
+                    endX=float(control_dict[f"wind_profile{i}_endX"])
+                    endY=float(control_dict[f"wind_profile{i}_endY"])
+                    endZ=float(control_dict[f"wind_profile{i}_endZ"])             
+                    n_points=int(control_dict[f"number_points{i}"])
+                    start = (startX, startY, startZ)
+                    end = (endX, endY, endZ)
+                    N_profile=int(control_dict[f"Write_Interval{i}"])
+                    fields = control_dict[f"Fields{i}"]
+                    t_start = float(control_dict[f"Start_Time{i}"])
+
+                except KeyError as e:
+                    raise ValueError(f"Missing key {e} in control_dict") from e
+                except (TypeError, ValueError):
+                    raise ValueError("float (time quantities and courant number) or int expected")
+
+            else:
+                start = tuple(map(float, get_input("  Start point (x y z)", "0 0 0").split()))
+                end   = tuple(map(float, get_input("  End point (x y z)", "0 0 0").split()))
+                n_points = int(get_input("  Number of points along the probe line", "5"))
+                fields = get_input("Field write {U or p or U p}", "U")
+                while fields not in FIELD_MAP:
+                    fields = get_input("  -> Please choose U or p or U p", "U")
+                N_profile = get_input("Field write interval",    "10")
+                t_start = get_input("  Time start", "0")
+
+        # generate probe locations
+            points = generate_line_points(start, end, n_points)
+
+        # fill template
+            profile_text = TP_PROFILE.format(
+                ProfileName=f"Profile{i}",
+                N_profile=N_profile,
+                t_start=t_start,
+                fields=fields,
+                points=points
+            )
+
+            out_path = case/"system"/f"Profile{i}"
+            out_path.write_text(profile_text)
+            print(f"✓ Profile written to {out_path.resolve()}")
+
+        #create_plane_txt(n_plane, Path(case/"system"/"Plane"))
+        for i in range(1, n_plane+1):
+            print(f"\n--- Configuring Plane{i} ---")
+
+            if 'computational_domain' in config and 'control_dict' in config['computational_domain']:
+                control_dict = config['computational_domain']['control_dict']
+
+                try: 
+                    plane_pointX=float(control_dict[f"section{i}_pointX"])
+                    plane_pointY=float(control_dict[f"section{i}_pointY"])
+                    plane_pointZ=float(control_dict[f"section{i}_pointZ"]) 
+                    plane_normalX=float(control_dict[f"section{i}_NormX"])
+                    plane_normalY=float(control_dict[f"section{i}_NormY"])
+                    plane_normalZ=float(control_dict[f"section{i}_NormZ"])             
+                    N_plane=int(control_dict[f"Write_Interval_plane{i}"])
+                    plane_point1 = (plane_pointX, plane_pointY, plane_pointZ)
+                    plane_normal1 = (plane_normalX, plane_normalY, plane_normalZ)
+                    plane_point  = "(" + " ".join(map(str, plane_point1)) + ")"
+                    plane_normal = "(" + " ".join(map(str, plane_normal1)) + ")"
+                    t_end=int(control_dict[f"End_Time_plane{i}"])
+                    fields = control_dict[f"Fields_plane{i}"]
+                    t_start = float(control_dict[f"Start_Time_plane{i}"])
+
+                except KeyError as e:
+                    raise ValueError(f"Missing key {e} in control_dict") from e
+                except (TypeError, ValueError):
+                    raise ValueError("float (time quantities and courant number) or int expected")
+
+            else:
+
+                N_plane = get_input("Plane write interval",    "10")
+                t_start = get_input("  Time start", "0.000000")
+                t_end = get_input("  Time end", "10.000000")
+                fields = get_input("Field write {U or p or U p}", "U")
+                while fields not in FIELD_MAP:
+                    fields = get_input("  -> Please choose U or p or U p", "U")        
+                plane_point = "(" + " ".join(get_input("  Point in plane (x y z)", "0 0 0").split()) + ")"
+                plane_normal = "(" + " ".join(get_input("  Normal vector to plane (x y z)", "0 0 0").split()) + ")"
+
+        # fill template
+            plane_text = TP_PLANE.format(
+                PlaneName=f"Plane{i}",
+                N_plane=N_plane,
+                t_start=t_start,
+                t_end=t_end,
+                fields=fields,
+                plane_point=plane_point,
+                plane_normal=plane_normal
+            )
+
+            out_path = case/"system"/f"Plane{i}"
+            out_path.write_text(plane_text)
+            print(f"✓ Plane written to {out_path.resolve()}")
     else:
 
         # Control dict if RANS
@@ -2028,7 +2742,7 @@ def main(config: Dict[str, Any]) -> None:
         Path(case/"system"/"fvSolution").write_text(TP_fvSol_RANS)
         Path(case/"system"/"fvSchemes").parent.mkdir(parents=True, exist_ok=True)
         Path(case/"system"/"fvSchemes").write_text(TP_fvSch_RANS)
-        print(f"  system/controlDict written to {Path(case/"system"/"controlDict").resolve()}")
+        print(f"✓ system/controlDict written to {Path(case/"system"/"controlDict").resolve()}")
 
         
     if 'number_of_processors' in config:
@@ -2074,12 +2788,12 @@ def main(config: Dict[str, Any]) -> None:
     outd = Path(case/"system"/"decomposeParDict") 
     outd.parent.mkdir(parents=True, exist_ok=True)
     outd.write_text(DECOMP)
-    print(f"  decomposeParDict written to {outd.resolve()}")
+    print(f"✓ decomposeParDict written to {outd.resolve()}")
     print(f"  ( {nproc} subdomains, method = scotch )")
 
     # ───────────────────────── Get TINF file ─────────────────────────
 
-    if fw == "les":
+    if fw == "les" or fw == "urans":
         if inflow == "turbulent":
 
             if 'computational_domain' in config and 'boundary_conditions' in config['computational_domain']:
@@ -2135,24 +2849,23 @@ def main(config: Dict[str, Any]) -> None:
                     else:
                         f.write(f"(0 0 {z:g})\n")
                 f.write(")\n;\n")
-            print(f"  points → {pts_out.resolve()}")
+            print(f"✓ points → {pts_out.resolve()}")
 
     # U
             write_list(u_out, u_vals, lambda u: f"{u:g}")
-            print(f"  U      → {u_out.resolve()}")
+            print(f"✓ U      → {u_out.resolve()}")
 
     # R
             write_list(r_out, r_vals.itertuples(index=False),
                     lambda row: "(" + " ".join(f"{v:g}" for v in row) + ")")
-            print(f"  R      → {r_out.resolve()}")
+            print(f"✓ R      → {r_out.resolve()}")
 
     # L
             write_list(l_out, l_vals.itertuples(index=False),
                     lambda row: "(" + " ".join(f"{v:g}" for v in row) + ")")
-            print(f"  L      → {l_out.resolve()}")
+            print(f"✓ L      → {l_out.resolve()}")
 
     Path(case/"Community.foam").touch()
-    print("Done .. OpenFOAM Files Created")
 
 if __name__ == "__main__":
 
