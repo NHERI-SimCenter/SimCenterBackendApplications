@@ -1,62 +1,51 @@
 {
-    "case_folder":"LESCase_meanABL",
+    "case_folder":"URANSCaseKwSST",
     "wind_direction":225.0,
     "number_of_processors":10,
     "geographic_extent":{
-	"larger_region": {
-	    "lat": 34.19707659182189,
-	    "lon": -118.14252114105332,
-	    "radius": 500.0
-	},
-	"region_of_interest": {
-	    "min_lon": -118.14636206427565,
-	    "min_lat": 34.196367,
-	    "max_lon": -118.138466,
-	    "max_lat": 34.197378
-	}
+			"larger_region": {
+				"lat": 34.187958,
+				"lon": -118.141656,
+				"radius": 200.0
+			},
+			"region_of_interest": {
+				"min_lon": -118.143614,
+				"min_lat": 34.187494,
+				"max_lon": -118.139940,
+				"max_lat": 34.188312
+			}
     },
     "brails_options":{
 	"scraper":"USA",
 	"default_building_height":20.0
     },
     "computational_domain": {
-	"roi_surface_level":5.0,
-	"surrounding_surface_level":4.0,
-	"boundary_mesh_cell_size":5.0,
+	"roi_surface_level":5,
+	"surrounding_surface_level":4,
+	"boundary_mesh_cell_size":14.0,
 	"kinematic_viscosity":1.5e-05,
 	"cells_between_levels":5,
 	"domain_extents": {
-	    "inlet_multiplier":7.5,
-	    "outlet_multiplier":20.0,
-	    "side_multiplier":10.0,
-	    "top_multiplier":20.0	
+	    "inlet_multiplier":5,
+	    "outlet_multiplier":15.0,
+	    "side_multiplier":5,
+	    "top_multiplier":15.0	
 	},	
 	"boundary_conditions": {
 	    "side":"slip",
-	    "ground_style":"rough",
+	    "ground_style":"smooth",
 	    "roi_style":"rough",
 	    "surround_style":"rough",
-	    "inlet":{
-		"framework":"les",
-		"inflow":"meanabl",
-		"Uref":10.0,
-		"Href":10.0,
-		"z0":0.1
-	    },
-	    "inletLT":{
-		"framework":"les",
-		"inflow":"turbulent",
-		"path_TINF_file":"wind_profile.csv",
-		"Uref":10.0,
-		"Href":10.0,
-		"z0":0.1
-	    },	    
-	    "inletR":{
-		"framework":"RANS",
-		"Uref":20.0,
-		"Href":50.0,
-		"z0":1.0
-	    }	    
+		"inlet": {
+			"framework": "urans",
+			"subModel" : "komegasstsas",
+			"les_algorithm": "pimpleFoam",
+			"inflow": "turbulent",
+			"path_TINF_file": "wind_profile.csv",
+			"Uref": 20.0,
+			"Href": 100.0,
+			"z0": 1.0
+		}
 	},
 	"refinement_regions":[
 	    {"name":"box1",
@@ -64,45 +53,64 @@
 	     "x_min":0,
 	     "y_min":0,
 	     "z_min":0,
-	     "x_max":390,
-	     "y_max":345,
-	     "z_max":50
+	     "x_max":548,
+	     "y_max":475.6,
+	     "z_max":80
 	    },
-	    {"name":"box2",
-	     "level":2,
-	     "x_min":0,
-	     "y_min":0,
-	     "z_min":0,
-	     "x_max":300,
-	     "y_max":300,
-	     "z_max":30
-	    },
-	    {"name":"box3",
-	     "level":3,
-	     "x_min":50,
-	     "y_min":50,
-	     "z_min":0,
-	     "x_max":250,
-	     "y_max":250,
-	     "z_max":15
-	    }	    	    
+		{
+			"name": "box2",
+			"level": 2,
+			"x_min": 0,
+			"y_min": 0,
+			"z_min": 0,
+			"x_max": 548,
+			"y_max": 475.6,
+			"z_max": 60
+		},
+		{
+			"name": "box3",
+			"level": 3,
+			"x_min": 0,
+			"y_min": 0,
+			"z_min": 0,
+			"x_max": 548,
+			"y_max": 475.6,
+			"z_max": 40
+		}
 	],
-	"control_dictR": {
-	    "end_time":10000.0,
-	    "deltaT_sim":1.0,
-	    "deltaT_write":1.0
-	},
-	"control_dict": {
-	    "end_time":100.0,
-	    "initial_deltaT_sim":0.05,
-	    "max_deltaT_sim":0.01,
-	    "adjust_time":"yes",
-	    "solver":"pisoFoam",
-	    "max_courant":1.0,
-	    "deltaT_write":1.0,
-            "num_wind_profiles":0,
-            "num_section_planes":0
-	}	
+	
+			"control_dict": {
+				"end_time": 1000.0,
+				"initial_deltaT_sim": 0.005,
+				"deltaT_sim": 1.0,
+				"max_deltaT_sim": 0.5,
+				"adjust_time": "yes",
+				"max_courant": 2.0,
+				"deltaT_write": 10.0,
+				"num_wind_profiles": 1,
+				"num_section_planes": 1,
+				"wind_profile1_startX": 30,
+				"wind_profile1_startY": 237.5,
+				"wind_profile1_startZ": 0,
+				"wind_profile1_endX": 30,
+				"wind_profile1_endY": 237.5,
+				"wind_profile1_endZ": 109.5,
+				"number_points1": 15,
+				"Write_Interval1": 1,
+				"Fields1": "U p",
+				"Start_Time1": 0,
+
+				"section1_pointX": 100,
+				"section1_pointY": 237.5,
+				"section1_pointZ": 50,
+				"section1_NormX": 0,
+				"section1_NormY": 1,
+				"section1_NormZ": 0,
+				"Write_Interval_plane1": 1,
+				"Fields_plane1": "U",
+				"Start_Time_plane1": 0,
+				"End_Time_plane1": 500
+			}	
     }
 }
 	
