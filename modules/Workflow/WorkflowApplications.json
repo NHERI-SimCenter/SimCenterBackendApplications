@@ -1278,13 +1278,7 @@
   },
   "SystemPerformanceApplications": {
     "API": {
-      "Inputs": [
-        {
-          "id": "filenameAIM",
-          "type": "workflowDefault",
-          "description": "name of AIM file"
-        }
-      ],
+      "Inputs": [],
       "Outputs": []
     },
     "Applications": [
