@@ -33,4 +33,5 @@ add_subdirectory(Celeris)
 add_subdirectory(shakeMapEvent)
 add_subdirectory(sgmd)
 add_subdirectory(DRM)
+add_subdirectory(advancedCFDWithBRAILS)
 
