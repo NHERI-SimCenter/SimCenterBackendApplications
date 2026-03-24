@@ -146,7 +146,7 @@ def get_first_value(val: dict, num_levels: int) -> int:  # noqa: D103
 def main(args):  # noqa: C901, D103, PLR0915
     print('***Running REDi Seismic Downtime engine***\n')  # noqa: T201
 
-    pelicun_results_dir = Path(args.dirnameOutput)
+    pelicun_results_dir = Path.cwd()
 
     redi_input_dir = pelicun_results_dir / 'REDi_input'
     redi_output_dir = pelicun_results_dir / 'REDi_output'
@@ -559,13 +559,6 @@ if __name__ == '__main__':
         description='REDi-Pelicun Python Package Wrapper'
     )
     parser.add_argument(
-        '-w',
-        '--dirnameOutput',
-        type=str,
-        default=None,
-        help='Path to the working directory containing the Pelicun results [str]',
-    )
-    parser.add_argument(
         '-r',
         '--riskParametersPath',
         type=str,
@@ -576,17 +569,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Check for the required arguments
-    if not args.dirnameOutput:
-        print(  # noqa: T201
-            'Path to the working directory containing the Pelicun results is required'
-        )
-        exit()  # noqa: PLR1722
-    elif not Path(args.dirnameOutput).exists():
-        print(  # noqa: T201
-            f'Provided path to the working directory {args.dirnameOutput} does not exist'
-        )
-        exit()  # noqa: PLR1722
-
     if not args.riskParametersPath:
         print('Path to the risk parameters JSON file is required')  # noqa: T201
         exit()  # noqa: PLR1722
@@ -603,6 +585,3 @@ if __name__ == '__main__':
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f'REDi finished. Elapsed time: {elapsed_time:.2f} seconds')  # noqa: T201
-
-
-'/opt/homebrew/anaconda3/envs/simcenter/bin/python' '/Users/stevan.gavrilovic/Desktop/SimCenter/SimCenterBackendApplications/applications/performanceAssessment/REDi/REDiWrapper.py' '--riskParametersPath' '/Users/stevan.gavrilovic/Desktop/SimCenter/build-PBE-Qt_6_5_1_for_macOS-Debug/PBE.app/Contents/MacOS/Examples/pbdl-0003/src/risk_params.json' '--dirnameOutput' '/Users/stevan.gavrilovic/Documents/PBE/LocalWorkDir/tmp.SimCenter'
