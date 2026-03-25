@@ -1342,14 +1342,30 @@
         "ExecutablePath": "applications/performanceAssessment/REDi/REDiWrapper.py",
         "ApplicationSpecificInputs": [
           {
-            "id": "dirnameOutput",
-            "type": "string",
-            "description": "Path to the working directory containing the Pelicun results."
+            "id": "riskParametersPath",
+            "type": "path",
+            "description": "Path to the risk parameters json file ."
+          }
+        ]
+      },
+      {
+        "Name": "ATC138",
+        "ExecutablePath": "applications/performanceAssessment/ATC138/ATC138Wrapper.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "generalInputsPath",
+            "type": "path",
+            "description": "Path to the json file with mandatory input parameters."
           },
           {
-            "id": "riskParametersPath",
-            "type": "string",
-            "description": "Path to the risk parameters json file ."
+            "id": "tenantUnitsListPath",
+            "type": "path",
+            "description": "Path to the csv file with tenant unit information."
+          },
+          {
+            "id": "optionalInputsPath",
+            "type": "path",
+            "description": "Path to the json file with optional input parameters."
           }
         ]
       }
