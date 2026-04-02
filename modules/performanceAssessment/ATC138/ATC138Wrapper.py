@@ -58,7 +58,6 @@ from atc138.driver import run_analysis
 
 # Pelicun output files required by the ATC-138 Pelicun converter.
 REQUIRED_PELICUN_FILES = (
-    'AIM.json',
     'CMP_QNT.csv',
     'DL_summary.csv',
     'DMG_sample.csv',
@@ -303,21 +302,13 @@ def main(
     for filename in REQUIRED_PELICUN_FILES:
         _stage_pelicun_file(filename, work_dir, input_dir)
 
-    # --- Stage AIM as input.json (ATC-138 Pelicun converter expects this) ----
-
-    shutil.copy2(aim_path, input_dir / 'input.json')
-
     # --- Stage tenant unit list (auto-generate if not provided) --------------
 
     if not _copy_if_exists(
         str(tenant_unit_list_path),
         input_dir / 'tenant_unit_list.csv',
     ):
-        num_stories = (
-            aim_data
-            .get('GeneralInformation', {})
-            .get('NumberOfStories', 1)
-        )
+        num_stories = int(general_inputs.get('number_of_stories', 1))
         generate_default_tenant_unit_list(
             general_inputs, num_stories, input_dir / 'tenant_unit_list.csv'
         )
