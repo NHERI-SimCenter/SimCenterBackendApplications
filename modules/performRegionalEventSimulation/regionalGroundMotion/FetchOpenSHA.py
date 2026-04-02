@@ -46,6 +46,8 @@ import importlib
 import sys
 import psutil
 import GlobalVariable
+import shapely
+import geopandas as gpd
 
 if 'stampede2' not in socket.gethostname():
     import GlobalVariable
@@ -394,6 +396,25 @@ def get_rupture_distance(erf, source_index, rupture_index, lat, lon):  # noqa: D
         )
 
     return distToRupture
+
+def get_rupture_info_ASK2014_aftershock(
+        erf, source_index, rupture_indx, mainshock):
+    rupSource = erf.getSource(source_index)  # noqa: N806
+    rupList = rupSource.getRuptureList()  # noqa: N806
+    rupSurface = rupList.get(rupture_indx).getRuptureSurface()
+    rupSurface_perimeter = rupSurface.getPerimeter()
+    coords = []
+    for i in range(rupSurface_perimeter.size()):
+        loc = rupSurface_perimeter.get(i)
+        coords.append((loc.getLongitude(), loc.getLatitude()))
+    if len(coords) == 1:
+        rup_polygon = shapely.geometry.Point(coords[0])
+    else:
+        rup_polygon = shapely.geometry.Polygon(coords)
+    rup_gdf = gpd.GeoDataFrame(index=[0], crs='EPSG:4326', geometry=[rup_polygon])
+    rup_gdf = rup_gdf.to_crs(epsg=6417)
+    centroid = rup_gdf.geometry.centroid.iloc[0]
+    return mainshock.geometry.iloc[0].distance(centroid) /1000 # in meters
 
 
 def get_rupture_info_CY2014(erf, source_index, rupture_index, siteList):  # noqa: N802, N803, D103
