@@ -37,7 +37,7 @@
 # Kuanshi Zhong
 #
 
-import ujson as json
+import ujson as python_json
 import os
 import random
 import socket
@@ -49,7 +49,7 @@ import pandas as pd
 
 if 'stampede2' not in socket.gethostname():
     #from FetchOpenSHA import *  # noqa: F403
-    from FetchOpenSHA_25_4_1 import *  # noqa: F403
+    from FetchOpenSHA_25_4 import *  # noqa: F403
 
 
 def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):  # noqa: C901, D103
@@ -110,7 +110,7 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):  # noqa: N802, N803, D1
     source_type = scenario_info['EqRupture']['Type']
     try:
         with open(rupFilePath) as f:  # noqa: PTH123
-            user_scenarios = json.load(f)
+            user_scenarios = python_json.load(f)
     except:  # noqa: E722
         sys.exit(f'CreateScenario: source file {rupFilePath} not found.')
     # number of features (i.e., ruptures)
@@ -190,7 +190,7 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
     # Reference location
     mlat = np.mean(lat)
     mlon = np.mean(lon)
-    import json
+    #import json already imported
 
     from openquake.commonlib import readinput
     from openquake.hazardlib import nrml, site, sourceconverter
@@ -203,7 +203,7 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
 
     try:
         with open(rupFile) as f:  # noqa: PTH123
-            user_scenarios = json.load(f)
+            user_scenarios = python_json.load(f)
     except:  # noqa: E722
         sys.exit(f'CreateScenario: source file {rupFile} not found.')
     # number of features (i.e., ruptures)
@@ -374,7 +374,7 @@ def load_earthquake_scenarios(scenario_info, stations, dir_info):  # noqa: D103
     )
     try:
         with open(user_scenario_file) as f:  # noqa: PTH123
-            user_scenarios = json.load(f)
+            user_scenarios = python_json.load(f)
     except:  # noqa: E722
         print(f'CreateScenario: source file {user_scenario_file} not found.')  # noqa: T201
         return {}
@@ -589,7 +589,7 @@ def create_earthquake_scenarios(  # noqa: C901, D103
             if outfile is not None:
                 print(f'The collected point source ruptures are saved in {outfile}')  # noqa: T201
                 with open(outfile, 'w') as f:  # noqa: PTH123
-                    json.dump(pointSource_data, f, indent=2)
+                    python_json.dump(pointSource_data, f, indent=2)
         elif source_type == 'oqSourceXML':
             import FetchOpenQuake
 

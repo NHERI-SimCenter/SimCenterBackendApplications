@@ -73,22 +73,19 @@ from org.opensha.sha.gcim.imr.attenRelImpl import *
 from org.opensha.sha.gcim.imr.param.EqkRuptureParams import *
 from org.opensha.sha.gcim.imr.param.IntensityMeasureParams import *
 
-# Import the functions from the main module
-#from FetchOpenSHA_25_4_1 import (
-#    getERF,
-#    CreateIMRInstance,
-#    get_site_prop,
-#    get_IM,
-#    get_PointSource_info_CY2014,
-#    horzDistanceFast,
-#    getPtSrcDistCorr,
-#    get_site_vs30_from_opensha,
-#    get_site_z1pt0_from_opensha,
-#    get_site_z2pt5_from_opensha,
-#)
-
-from FetchOpenSHA_25_4_1 import *
-
+# Import the 10 functions from the main module
+from FetchOpenSHA_25_4 import (
+    getERF,
+    CreateIMRInstance,
+    get_site_prop,
+    get_IM,
+    get_PointSource_info_CY2014,
+    horzDistanceFast,
+    getPtSrcDistCorr,
+    get_site_vs30_from_opensha,
+    get_site_z1pt0_from_opensha,
+    get_site_z2pt5_from_opensha,
+)
 
 def run_tests():
     """Run all tests to verify OpenSHA v25.4 compatibility."""
