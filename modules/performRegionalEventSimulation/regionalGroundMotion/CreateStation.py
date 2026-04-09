@@ -78,7 +78,8 @@ def tqdm_joblib(tqdm_object):
 
 
 if 'stampede2' not in socket.gethostname():
-    from FetchOpenSHA import (
+    #from FetchOpenSHA import (
+    from FetchOpenSHA_25_4_1 import (
         get_site_vs30_from_opensha,
         get_site_z1pt0_from_opensha,
         get_site_z2pt5_from_opensha,

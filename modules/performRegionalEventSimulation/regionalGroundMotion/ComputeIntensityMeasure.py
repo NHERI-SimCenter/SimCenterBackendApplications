@@ -111,7 +111,8 @@ from tqdm import tqdm  # noqa: E402
 
 if 'stampede2' not in socket.gethostname():
     from FetchOpenQuake import get_site_rup_info_oq
-    from FetchOpenSHA import *  # noqa: F403
+    #from FetchOpenSHA import *  # noqa: F403
+    from FetchOpenSHA_25_4_1 import *  # noqa: F403
 import threading  # noqa: E402
 
 import ujson  # noqa: E402

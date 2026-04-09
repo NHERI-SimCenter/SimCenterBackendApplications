@@ -52,6 +52,7 @@ import psutil
 
 R2D = True
 
+OPENSHA_JAR = 'opensha-all.jar' # version 25.4.1 (invoked in 04/2026)
 
 def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
     from CreateScenario import load_ruptures_openquake
@@ -578,7 +579,8 @@ if __name__ == '__main__':
 
             memory_total = psutil.virtual_memory().total / (1024.0**3)
             memory_request = int(memory_total * 0.75)
-            jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
+            #jpype.addClassPath('./lib/OpenSHA-1.5.2.jar') # not supported by opensha starting from 02/2026
+            jpype.addClassPath('./lib/{}'.format(OPENSHA_JAR))
             jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
     if oq_flag:
         # clear up old db.sqlite3 if any

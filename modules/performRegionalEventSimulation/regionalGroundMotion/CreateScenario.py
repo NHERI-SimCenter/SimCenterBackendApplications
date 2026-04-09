@@ -48,7 +48,8 @@ import numpy as np
 import pandas as pd
 
 if 'stampede2' not in socket.gethostname():
-    from FetchOpenSHA import *  # noqa: F403
+    #from FetchOpenSHA import *  # noqa: F403
+    from FetchOpenSHA_25_4_1 import *  # noqa: F403
 
 
 def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):  # noqa: C901, D103

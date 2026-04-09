@@ -34,7 +34,8 @@ from java.util import *  # noqa: F403
 from org.opensha.commons.data import *  # noqa: F403
 from org.opensha.commons.data.function import *  # noqa: F403
 from org.opensha.commons.data.siteData import *  # noqa: F403
-from org.opensha.commons.geo import *  # noqa: F403
+#from org.opensha.commons.geo import *  # noqa: F403
+from org.opensha.commons.geo import Location  # noqa: F403
 from org.opensha.commons.param import *  # noqa: F403
 from org.opensha.commons.param.constraint import *  # noqa: F403
 from org.opensha.commons.param.event import *  # noqa: F403
@@ -464,6 +465,7 @@ def get_PointSource_info_CY2014(source_info, siteList):  # noqa: N802, N803, D10
         'dip': float(source_info['AverageDip']),
         'width': 0.0,
         'zTop': sourceDepth,
+        'zHyp': sourceDepth,
         'aveRake': float(source_info['AverageRake']),
     }
     return site_rup_info, siteList
