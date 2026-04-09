@@ -465,6 +465,7 @@ def get_PointSource_info_CY2014(source_info, siteList):  # noqa: N802, N803, D10
         'dip': float(source_info['AverageDip']),
         'width': 0.0,
         'zTop': sourceDepth,
+        'zHyp': sourceDepth,
         'aveRake': float(source_info['AverageRake']),
     }
     return site_rup_info, siteList
