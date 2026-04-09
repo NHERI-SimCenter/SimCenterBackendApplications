@@ -47,6 +47,8 @@ import tarfile
 
 import psutil
 
+OPENSHA_JAR = 'opensha-all.jar' # version 25.4.1 (invoked in 04/2026)
+
 if __name__ == '__main__':
     # parse arguments
     parser = argparse.ArgumentParser()
@@ -112,7 +114,8 @@ if __name__ == '__main__':
 
             memory_total = psutil.virtual_memory().total / (1024.0**3)
             memory_request = int(memory_total * 0.75)
-            jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
+            #jpype.addClassPath('./lib/OpenSHA-1.5.2.jar') # not supported by opensha starting from 02/2026
+            jpype.addClassPath('./lib/{}'.format(OPENSHA_JAR))
             jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
     from CreateScenario import (
         create_earthquake_scenarios,

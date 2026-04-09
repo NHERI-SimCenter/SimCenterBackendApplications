@@ -51,6 +51,8 @@ import psutil
 
 R2D = True
 
+OPENSHA_JAR = 'opensha-all.jar' # version 25.4.1 (invoked in 04/2026)
+
 
 def site_job(hazard_info):  # noqa: C901, D103
     # Sites and stations
@@ -542,12 +544,14 @@ if __name__ == '__main__':
 
         memory_total = psutil.virtual_memory().total / (1024.0**3)
         memory_request = int(memory_total * 0.75)
-        jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
+        #jpype.addClassPath('./lib/OpenSHA-1.5.2.jar') # not supported by opensha starting from 02/2026
+        jpype.addClassPath('./lib/{}'.format(OPENSHA_JAR))
         try:
             jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
         except:  # noqa: E722
             print(  # noqa: T201
-                f'StartJVM of ./lib/OpenSHA-1.5.2.jar with {memory_request} GB Memory fails. Try again after releasing some memory'
+                #f'StartJVM of ./lib/OpenSHA-1.5.2.jar with {memory_request} GB Memory fails. Try again after releasing some memory'
+                f'StartJVM of ./lib/{OPENSHA_JAR} with {memory_request} GB Memory fails. Try again after releasing some memory'
             )
     if oq_flag:
         # clear up old db.sqlite3 if any
