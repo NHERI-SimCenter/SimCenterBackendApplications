@@ -34,7 +34,8 @@ from java.util import *  # noqa: F403
 from org.opensha.commons.data import *  # noqa: F403
 from org.opensha.commons.data.function import *  # noqa: F403
 from org.opensha.commons.data.siteData import *  # noqa: F403
-from org.opensha.commons.geo import *  # noqa: F403
+#from org.opensha.commons.geo import *  # noqa: F403
+from org.opensha.commons.geo import Location  # noqa: F403
 from org.opensha.commons.param import *  # noqa: F403
 from org.opensha.commons.param.constraint import *  # noqa: F403
 from org.opensha.commons.param.event import *  # noqa: F403
