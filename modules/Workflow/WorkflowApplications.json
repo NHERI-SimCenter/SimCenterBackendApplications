@@ -1358,7 +1358,7 @@
             "description": "Path to the json file with mandatory input parameters."
           },
           {
-            "id": "tenantUnitsListPath",
+            "id": "tenantUnitListPath",
             "type": "path",
             "description": "Path to the csv file with tenant unit information."
           },
