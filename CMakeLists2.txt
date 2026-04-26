@@ -1,0 +1,67 @@
+cmake_minimum_required(VERSION 3.15)
+project(SimCenterBackendApplications C CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(CMAKE_COLOR_MAKEFILE ON)
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
+include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
+#set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE INTERNAL "" FORCE)
+
+include(SimCenterFunctions)
+include(CMakeParseArguments)
+
+list(APPEND SIMCENTER_MODULE_DIRS "${PROJECT_SOURCE_DIR}/modules")
+list(REMOVE_DUPLICATES SIMCENTER_MODULE_DIRS)
+set(SIMCENTER_MODULE_DIRS ${SIMCENTER_MODULE_DIRS} CACHE INTERNAL "All folders that contain SimCenter modules")
+
+# On macOS, Apple Clang ships without OpenMP. Homebrew's libomp provides it but
+# is keg-only, so we must hint CMake before find_package(OpenMP) is called anywhere.
+if(APPLE)
+    find_program(_brew brew)
+    if(_brew)
+        execute_process(COMMAND ${_brew} --prefix libomp
+                        OUTPUT_VARIABLE _libomp_prefix
+                        OUTPUT_STRIP_TRAILING_WHITESPACE
+                        ERROR_QUIET)
+        if(_libomp_prefix AND EXISTS "${_libomp_prefix}")
+            # Flags for FindOpenMP — no -I here, handled separately below
+            set(OpenMP_CXX_FLAGS     "-Xpreprocessor -fopenmp")
+            set(OpenMP_C_FLAGS       "-Xpreprocessor -fopenmp")
+            set(OpenMP_CXX_LIB_NAMES "omp")
+            set(OpenMP_C_LIB_NAMES   "omp")
+            set(OpenMP_omp_LIBRARY   "${_libomp_prefix}/lib/libomp.dylib")
+            # Make omp.h findable for any target in the build
+            include_directories(SYSTEM "${_libomp_prefix}/include")
+            link_directories("${_libomp_prefix}/lib")
+            message(STATUS "macOS: using Homebrew libomp at ${_libomp_prefix}")
+        else()
+            message(WARNING "macOS: libomp not found via Homebrew. Run: brew install libomp")
+        endif()
+    endif()
+endif()
+
+# Conan 2 / CMakeDeps: config files are generated into the build dir but targets
+# are not active until find_package() is called explicitly for each dependency.
+find_package(jansson       REQUIRED)
+find_package(ZLIB          REQUIRED)
+find_package(CURL          REQUIRED)
+find_package(Eigen3        REQUIRED)
+find_package(clara         REQUIRED)
+find_package(nanoflann     REQUIRED)
+find_package(NLopt         REQUIRED)
+find_package(kissfft       REQUIRED)
+find_package(Boost         REQUIRED)
+find_package(nlohmann_json REQUIRED)
+
+# Re-expose packages under legacy CONAN_PKG:: names so module CMakeLists.txt
+# written for Conan 1 build without modification.
+include(SimCenterConanCompat)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/modules)
+add_subdirectory(modules)
