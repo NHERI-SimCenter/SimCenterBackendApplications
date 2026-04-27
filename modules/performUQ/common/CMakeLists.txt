@@ -1,31 +1,26 @@
-simcenter_add_executable(NAME extractEDP
-                         FILES extractEDP.cpp
-                         DEPENDS CONAN_PKG::jansson)
+add_executable(extractEDP extractEDP.cpp)
+target_include_directories(extractEDP PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(extractEDP PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS extractEDP DESTINATION ${_rel})
 
-simcenter_add_executable(NAME createStandardUQ_Input
-                         FILES createStandardUQ_Input.cpp
-                         DEPENDS CONAN_PKG::jansson)
+add_executable(createStandardUQ_Input createStandardUQ_Input.cpp)
+target_include_directories(createStandardUQ_Input PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(createStandardUQ_Input PRIVATE jansson::jansson)
+install(TARGETS createStandardUQ_Input DESTINATION ${_rel})
 
-add_library(commonUQ STATIC
-               parseWorkflowInput.cpp)
+add_library(commonUQ STATIC parseWorkflowInput.cpp)
+target_include_directories(commonUQ PUBLIC
+    ${CMAKE_SOURCE_DIR}/modules
+    $<TARGET_PROPERTY:jansson::jansson,INTERFACE_INCLUDE_DIRECTORIES>)
 
-target_include_directories(commonUQ PUBLIC ${CONAN_INCLUDE_DIRS_JANSSON})
+install(FILES
+    uq_utilities.py quoFEM_RV_models.py parallel_runner_mpi4py.py
+    adaptive_doe.py common_datamodels.py convergence_metrics.py
+    gp_ab_algorithm.py gp_model.py principal_component_analysis.py
+    space_filling_doe.py tmcmc.py safer_cholesky.py
+    kernel_density_estimation.py config_utilities.py logging_utilities.py
+    log_likelihood_functions.py
+    DESTINATION ${_rel})
 
-simcenter_add_python_script(SCRIPT uq_utilities.py)
-simcenter_add_python_script(SCRIPT quoFEM_RV_models.py)
-simcenter_add_python_script(SCRIPT parallel_runner_mpi4py.py)
 add_subdirectory(ERAClasses)
-
-simcenter_add_python_script(SCRIPT adaptive_doe.py)
-simcenter_add_python_script(SCRIPT common_datamodels.py)
-simcenter_add_python_script(SCRIPT convergence_metrics.py)
-simcenter_add_python_script(SCRIPT gp_ab_algorithm.py)
-simcenter_add_python_script(SCRIPT gp_model.py)
-simcenter_add_python_script(SCRIPT principal_component_analysis.py)
-simcenter_add_python_script(SCRIPT space_filling_doe.py)
-simcenter_add_python_script(SCRIPT tmcmc.py)
-simcenter_add_python_script(SCRIPT safer_cholesky.py)
-simcenter_add_python_script(SCRIPT kernel_density_estimation.py)
-simcenter_add_python_script(SCRIPT config_utilities.py)
-simcenter_add_python_script(SCRIPT logging_utilities.py)
-simcenter_add_python_script(SCRIPT log_likelihood_functions.py)

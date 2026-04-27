@@ -1,3 +1,5 @@
-simcenter_add_executable(NAME StandardHydroEDP
-                         FILES StandardHydroEDP.cpp
-                         DEPENDS CONAN_PKG::jansson)
+add_executable(StandardHydroEDP StandardHydroEDP.cpp)
+target_include_directories(StandardHydroEDP PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(StandardHydroEDP PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS StandardHydroEDP DESTINATION ${_rel})

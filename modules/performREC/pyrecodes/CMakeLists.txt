@@ -1,5 +1,2 @@
-# simcenter_add_python_script(SCRIPT __init__.py)
-simcenter_add_python_script(SCRIPT run_pyrecodes.py)
-# add_subdirectory(rewet_API)
-# add_subdirectory(residual_demand_API)
-# add_subdirectory(rewet_result)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES run_pyrecodes.py DESTINATION ${_rel})

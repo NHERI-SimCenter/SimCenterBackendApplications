@@ -1,1 +1,2 @@
-simcenter_add_python_script(SCRIPT RC_FIAP_main.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES RC_FIAP_main.py DESTINATION ${_rel})

@@ -1,25 +1,8 @@
-simcenter_add_python_script(SCRIPT flume.py)
-simcenter_add_python_script(SCRIPT GeoClaw.py)
-simcenter_add_python_script(SCRIPT GeoClawBathy.py)
-simcenter_add_python_script(SCRIPT GetOpenFOAMEvent.py)
-simcenter_add_python_script(SCRIPT hydroUtils.py)
-simcenter_add_python_script(SCRIPT of7Alpboundary.py)
-simcenter_add_python_script(SCRIPT of7Building.py)
-simcenter_add_python_script(SCRIPT of7Dakota.py)
-simcenter_add_python_script(SCRIPT of7Decomp.py)
-simcenter_add_python_script(SCRIPT of7Geometry.py)
-simcenter_add_python_script(SCRIPT of7Initial.py)
-simcenter_add_python_script(SCRIPT of7Materials.py)
-simcenter_add_python_script(SCRIPT of7Meshing.py)
-simcenter_add_python_script(SCRIPT of7Others.py)
-simcenter_add_python_script(SCRIPT of7Prboundary.py)
-simcenter_add_python_script(SCRIPT of7Process.py)
-simcenter_add_python_script(SCRIPT of7PtDboundary.py)
-simcenter_add_python_script(SCRIPT of7Solve.py)
-simcenter_add_python_script(SCRIPT of7Turbulence.py)
-simcenter_add_python_script(SCRIPT of7Uboundary.py)
-simcenter_add_python_script(SCRIPT openfoam7.py)
-simcenter_add_python_script(SCRIPT osuFlume.py)
-simcenter_add_python_script(SCRIPT Processor.py)
-simcenter_add_python_script(SCRIPT GeoClawOpenFOAM.py)
-simcenter_add_python_script(SCRIPT userFlume.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES
+    flume.py GeoClaw.py GeoClawBathy.py GetOpenFOAMEvent.py hydroUtils.py
+    of7Alpboundary.py of7Building.py of7Dakota.py of7Decomp.py of7Geometry.py
+    of7Initial.py of7Materials.py of7Meshing.py of7Others.py of7Prboundary.py
+    of7Process.py of7PtDboundary.py of7Solve.py of7Turbulence.py of7Uboundary.py
+    openfoam7.py osuFlume.py Processor.py GeoClawOpenFOAM.py userFlume.py
+    DESTINATION ${_rel})

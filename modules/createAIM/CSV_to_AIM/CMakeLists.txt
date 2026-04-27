@@ -1,1 +1,2 @@
-simcenter_add_python_script(SCRIPT CSV_to_AIM.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES CSV_to_AIM.py DESTINATION ${_rel})

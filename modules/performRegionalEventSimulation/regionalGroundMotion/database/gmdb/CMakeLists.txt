@@ -1,2 +1,2 @@
-simcenter_add_file(NAME NGAWest2.csv)
-
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES NGAWest2.csv DESTINATION ${_rel})

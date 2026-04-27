@@ -1,3 +1,5 @@
-simcenter_add_executable(NAME StandardEarthquakeEDP
-                         FILES StandardEarthquakeEDP.cpp
-                         DEPENDS CONAN_PKG::jansson)
+add_executable(StandardEarthquakeEDP StandardEarthquakeEDP.cpp)
+target_include_directories(StandardEarthquakeEDP PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(StandardEarthquakeEDP PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS StandardEarthquakeEDP DESTINATION ${_rel})

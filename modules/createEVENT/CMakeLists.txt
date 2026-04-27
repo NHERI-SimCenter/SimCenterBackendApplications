@@ -32,6 +32,8 @@ add_subdirectory(TaichiEvent)
 add_subdirectory(Celeris)
 add_subdirectory(shakeMapEvent)
 add_subdirectory(sgmd)
+add_subdirectory(NonisolatedLowRiseTPU)
 add_subdirectory(DRM)
 add_subdirectory(advancedCFDWithBRAILS)
+add_subdirectory(NNGM)
 

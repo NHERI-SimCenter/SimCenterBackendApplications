@@ -1,6 +1,5 @@
-simcenter_add_python_script(SCRIPT getBRAILSAttributes.py)
-simcenter_add_python_script(SCRIPT getBRAILSBaselineInv.py)
-simcenter_add_python_script(SCRIPT getBRAILSFootprints.py)
-simcenter_add_python_script(SCRIPT getBRAILSLocationBoundary.py)
-simcenter_add_python_script(SCRIPT runBrails.py)
-simcenter_add_python_script(SCRIPT runBrailsTransp.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES
+    getBRAILSAttributes.py getBRAILSBaselineInv.py getBRAILSFootprints.py
+    getBRAILSLocationBoundary.py runBrails.py runBrailsTransp.py
+    DESTINATION ${_rel})

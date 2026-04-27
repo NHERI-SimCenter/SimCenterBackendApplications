@@ -1,8 +1,4 @@
-simcenter_add_python_script(SCRIPT Celeris.py)
-simcenter_add_python_script(SCRIPT setrun.py)
-simcenter_add_python_script(SCRIPT setrun_old.py)
-simcenter_add_python_script(SCRIPT irrWaves.txt)
-simcenter_add_python_script(SCRIPT test_curve.xyz)
-simcenter_add_python_script(SCRIPT config.json)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES Celeris.py setrun.py setrun_old.py irrWaves.txt test_curve.xyz config.json DESTINATION ${_rel})
 
 add_subdirectory(celeris)

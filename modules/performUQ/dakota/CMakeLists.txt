@@ -1,5 +1,6 @@
-simcenter_add_executable(NAME preprocessDakota
-                         FILES preprocessDakota.cpp dakotaProcedures.cpp
-                         DEPENDS CONAN_PKG::jansson commonUQ)
-simcenter_add_python_script(SCRIPT DakotaUQ.py)
-
+add_executable(preprocessDakota preprocessDakota.cpp dakotaProcedures.cpp)
+target_include_directories(preprocessDakota PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(preprocessDakota PRIVATE jansson::jansson commonUQ)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS preprocessDakota DESTINATION ${_rel})
+install(FILES DakotaUQ.py DESTINATION ${_rel})

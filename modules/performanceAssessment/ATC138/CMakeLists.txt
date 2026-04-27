@@ -1,1 +1,2 @@
-simcenter_add_python_script(SCRIPT ATC138Wrapper.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES ATC138Wrapper.py DESTINATION ${_rel})

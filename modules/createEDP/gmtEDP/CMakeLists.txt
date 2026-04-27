@@ -1,3 +1,5 @@
-simcenter_add_executable(NAME StandardGMT_EDP
-                         FILES StandardGMT_EDP.cpp
-                         DEPENDS CONAN_PKG::jansson)
+add_executable(StandardGMT_EDP StandardGMT_EDP.cpp)
+target_include_directories(StandardGMT_EDP PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(StandardGMT_EDP PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS StandardGMT_EDP DESTINATION ${_rel})

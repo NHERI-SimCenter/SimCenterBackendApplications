@@ -1,5 +1,4 @@
 add_subdirectory(data)
-simcenter_add_python_script(SCRIPT __init__.py)
-simcenter_add_python_script(SCRIPT CorrelationModel.py)
-simcenter_add_python_script(SCRIPT SignificantDurationModel.py)
-simcenter_add_python_script(SCRIPT openSHAGMPE.py)
+
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES __init__.py CorrelationModel.py SignificantDurationModel.py openSHAGMPE.py DESTINATION ${_rel})

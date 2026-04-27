@@ -1,3 +1,5 @@
-simcenter_add_executable(NAME GenericBimDatabase
-                         FILES GenericBimDatabase.cpp BIMConfig.cpp BIM.cpp csvparser.c
-                         DEPENDS CONAN_PKG::jansson)
+add_executable(GenericBimDatabase GenericBimDatabase.cpp BIMConfig.cpp BIM.cpp csvparser.c)
+target_include_directories(GenericBimDatabase PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(GenericBimDatabase PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS GenericBimDatabase DESTINATION ${_rel})

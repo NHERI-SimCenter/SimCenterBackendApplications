@@ -1,3 +1,5 @@
-simcenter_add_executable(NAME StandardTsunamiEDP
-                         FILES StandardTsunamiEDP.cpp
-                         DEPENDS CONAN_PKG::jansson)
+add_executable(StandardTsunamiEDP StandardTsunamiEDP.cpp)
+target_include_directories(StandardTsunamiEDP PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(StandardTsunamiEDP PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS StandardTsunamiEDP DESTINATION ${_rel})

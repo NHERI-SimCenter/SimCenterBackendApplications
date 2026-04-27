@@ -1,3 +1,5 @@
-simcenter_add_executable(NAME ExtractPGA
-                         FILES ExtractPGA.cpp
-                         DEPENDS CONAN_PKG::jansson common)
+add_executable(ExtractPGA ExtractPGA.cpp)
+target_include_directories(ExtractPGA PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(ExtractPGA PRIVATE jansson::jansson common)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS ExtractPGA DESTINATION ${_rel})

@@ -1,5 +1,6 @@
-simcenter_add_executable(NAME DEDM_HRP
-                         FILES DEDM_HRP.cpp dedmCall.cpp
-                         DEPENDS CONAN_PKG::jansson CONAN_PKG::libcurl common)
-
-simcenter_add_python_script(SCRIPT DEDM_HRP.py)
+add_executable(DEDM_HRP DEDM_HRP.cpp dedmCall.cpp)
+target_include_directories(DEDM_HRP PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(DEDM_HRP PRIVATE jansson::jansson CURL::libcurl common)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS DEDM_HRP DESTINATION ${_rel})
+install(FILES DEDM_HRP.py DESTINATION ${_rel})

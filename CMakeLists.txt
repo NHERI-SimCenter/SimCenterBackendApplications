@@ -1,79 +1,52 @@
-############################################################################################################################
-##
-## SimCenterBackendApplications main cmake file
-##
-## Contents:
-##   - Definition of build options
-##   - Compiler variables ( c++ standard, warnings etc. )
-##   - Finding of service libraries. Required: Intel MKL, Intel IPP
-##     the include paths are set, and the libraries are added to variable SERVICE_LIBS
-##   - Subdirectory cmake lists are called
-##       -> createEDP/          Contains all modules for creating engineering demand parameters
-##       -> createEVENT/        Contains all modules for creating natural hazard events
-##       -> createSAM/          Contains all modules for creating structural analysis model
-##       -> performDL/          Contains all modules for performing damage and loss assessment
-##       -> performSIMULATION/  Contains all modules for performing structural simulation
-##       -> performUQ/          Contains all modules for uncertainty quantification
-##
-############################################################################################################################
+cmake_minimum_required(VERSION 3.15)
+project(SimCenterBackendApplications C CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-############################################################################################################################
-##
-## Project name, version, Custom CMake functions
-##
-############################################################################################################################
-
-CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
-PROJECT(SimCenterBackendApplications)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
-set(CMAKE_VERBOSE_MAKEFILE ON)
-set (CMAKE_OSX_ARCHITECTURES "x86_64" CACHE INTERNAL "" FORCE)
-SET (CONAN_DISABLE_CHECK_COMPILER ON)
-include(SimCenterFunctions)
-include(CMakeParseArguments)
-
-# set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_COLOR_MAKEFILE ON)
-set(CMAKE_VERBOSE_MAKEFILE OF)
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
-if (NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Debug")
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g")
-endif (NOT CMAKE_BUILD_TYPE)
+include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
 
-############################################################################################################################
-##
-## Definition of build options
-##
-############################################################################################################################
-# Currently no tests to build, so turn this off
-option(BUILD_TESTING "Enable testing for stochastic module" OFF)
+# On macOS, Apple Clang ships without OpenMP. Homebrew's libomp provides it but
+# is keg-only, so we must hint CMake before find_package(OpenMP) is called anywhere.
+if(APPLE)
+    find_program(_brew brew)
+    if(_brew)
+        execute_process(COMMAND ${_brew} --prefix libomp
+                        OUTPUT_VARIABLE _libomp_prefix
+                        OUTPUT_STRIP_TRAILING_WHITESPACE
+                        ERROR_QUIET)
+        if(_libomp_prefix AND EXISTS "${_libomp_prefix}")
+            # Flags for FindOpenMP — no -I here, handled separately below
+            set(OpenMP_CXX_FLAGS     "-Xpreprocessor -fopenmp")
+            set(OpenMP_C_FLAGS       "-Xpreprocessor -fopenmp")
+            set(OpenMP_CXX_LIB_NAMES "omp")
+            set(OpenMP_C_LIB_NAMES   "omp")
+            set(OpenMP_omp_LIBRARY   "${_libomp_prefix}/lib/libomp.dylib")
+            # Make omp.h findable for any target in the build
+            include_directories(SYSTEM "${_libomp_prefix}/include")
+            link_directories("${_libomp_prefix}/lib")
+            message(STATUS "macOS: using Homebrew libomp at ${_libomp_prefix}")
+        else()
+            message(WARNING "macOS: libomp not found via Homebrew. Run: brew install libomp")
+        endif()
+    endif()
+endif()
 
-# Every folder that is listed here can contain modules or tests
-# this can be extended by applications to have own modules
-list(APPEND SIMCENTER_MODULE_DIRS "${PROJECT_SOURCE_DIR}/modules")
-list(REMOVE_DUPLICATES  SIMCENTER_MODULE_DIRS )
-set(SIMCENTER_MODULE_DIRS  ${SIMCENTER_MODULE_DIRS} CACHE INTERNAL "All folders that contain modules or tests" )
 
-# Bring in dependencies from Conan, only getting required libs for Intel MKL and IPP
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup(TARGETS)
+find_package(jansson       REQUIRED)
+find_package(ZLIB          REQUIRED)
+find_package(CURL          REQUIRED)
+find_package(Eigen3        REQUIRED)
+find_package(clara         REQUIRED)
+find_package(nanoflann     REQUIRED)
+find_package(NLopt         REQUIRED)
+find_package(kissfft       REQUIRED)
+find_package(Boost         REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
-############################################################################################################################
-##
-## Subdirectories
-##
-############################################################################################################################
-
-# All include paths are specified relative to ./ directory
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/modules)
-
-# Sources
 add_subdirectory(modules)
-# Tests (CURRENT NO TESTS, SO COMMENTED OUT...)
-# if(BUILD_TESTING)
-#     add_subdirectory(tests)
-# else()
-#     add_subdirectory(tests EXCLUDE_FROM_ALL)
-# endif()

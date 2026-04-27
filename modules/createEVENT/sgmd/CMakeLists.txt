@@ -1,15 +1,15 @@
-simcenter_add_executable(NAME parseSGMDtoCSV
-                         FILES parseSGMDtoCSV.cpp
-                         DEPENDS CONAN_PKG::jansson)
+add_executable(parseSGMDtoCSV parseSGMDtoCSV.cpp)
+target_include_directories(parseSGMDtoCSV PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(parseSGMDtoCSV PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS parseSGMDtoCSV DESTINATION ${_rel})
 
+add_executable(parseSGMDtoJSON parseSGMDtoJSON.cpp)
+target_include_directories(parseSGMDtoJSON PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(parseSGMDtoJSON PRIVATE jansson::jansson)
+install(TARGETS parseSGMDtoJSON DESTINATION ${_rel})
 
-simcenter_add_executable(NAME parseSGMDtoJSON
-                         FILES parseSGMDtoJSON.cpp
-                         DEPENDS CONAN_PKG::jansson)
-
-simcenter_add_executable(NAME parseSGMDtoJSON_PGA
-                         FILES parseSGMDtoCSV_PGA.cpp
-                         DEPENDS CONAN_PKG::jansson)
-
-set_property(TARGET parseSGMDtoCSV PROPERTY CXX_STANDARD 17)
-set_property(TARGET parseSGMDtoJSON PROPERTY CXX_STANDARD 17)
+add_executable(parseSGMDtoJSON_PGA parseSGMDtoCSV_PGA.cpp)
+target_include_directories(parseSGMDtoJSON_PGA PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(parseSGMDtoJSON_PGA PRIVATE jansson::jansson)
+install(TARGETS parseSGMDtoJSON_PGA DESTINATION ${_rel})

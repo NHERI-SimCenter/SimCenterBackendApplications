@@ -1,7 +1,4 @@
-simcenter_add_python_script(SCRIPT __init__.py)
-simcenter_add_python_script(SCRIPT general.py)
-simcenter_add_python_script(SCRIPT PLoM.py)
-simcenter_add_python_script(SCRIPT PLoM_library.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES __init__.py general.py PLoM.py PLoM_library.py DESTINATION ${_rel})
+
 add_subdirectory(lib)
-
-

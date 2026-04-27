@@ -1,23 +1,16 @@
 add_subdirectory(whale)
-simcenter_add_python_script(SCRIPT femUQ.py)
-simcenter_add_python_script(SCRIPT changeJSON.py)
-simcenter_add_python_script(SCRIPT "sWHALE.py")
-simcenter_add_python_script(SCRIPT "qWHALE.py")
-simcenter_add_python_script(SCRIPT "rWHALE.py")
-simcenter_add_python_script(SCRIPT "createResponseCSV.py")
-simcenter_add_python_script(SCRIPT "siteResponseWHALE.py")
-simcenter_add_python_script(SCRIPT "createGM4BIM.py")
-simcenter_add_python_script(SCRIPT "computeResponseSpectrum.py")
-simcenter_add_python_script(SCRIPT RegionalEarthquakeSimulation.py)
-simcenter_add_python_script(SCRIPT WorkflowUtils.py)
-simcenter_add_python_script(SCRIPT MultiModelApplication.py)
-simcenter_add_python_script(SCRIPT MultiModelDriver.py)
 
-simcenter_add_file(NAME WorkflowApplications.json)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES
+    femUQ.py changeJSON.py sWHALE.py qWHALE.py rWHALE.py
+    createResponseCSV.py siteResponseWHALE.py createGM4BIM.py
+    computeResponseSpectrum.py RegionalEarthquakeSimulation.py WorkflowUtils.py
+    MultiModelApplication.py MultiModelDriver.py
+    SiteResponse_workflow.py R2DTool_workflow.py CreateWorkflowJobs.py
+    DESTINATION ${_rel})
 
-simcenter_add_python_script(SCRIPT SiteResponse_workflow.py)
-simcenter_add_python_script(SCRIPT R2DTool_workflow.py)
-simcenter_add_python_script(SCRIPT CreateWorkflowJobs.py)
+install(FILES WorkflowApplications.json DESTINATION ${_rel})
 
-simcenter_add_executable(NAME runMultiModelDriver
-                         FILES runMultiModelDriver.cpp)
+add_executable(runMultiModelDriver runMultiModelDriver.cpp)
+target_include_directories(runMultiModelDriver PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+install(TARGETS runMultiModelDriver DESTINATION ${_rel})

@@ -1,10 +1,6 @@
-simcenter_add_file(NAME DynamicAnalysisCollapseSolver.tcl)
-simcenter_add_file(NAME Database.csv)
-simcenter_add_file(NAME MaxDriftTester.tcl)
-simcenter_add_file(NAME DefineAllRecorders.tcl)
-simcenter_add_file(NAME Model.tcl)
-simcenter_add_file(NAME DefineFunctionsAndProcedures.tcl)
-simcenter_add_file(NAME PerformGravityAnalysis.tcl)
-simcenter_add_file(NAME DefineTimeHistory.tcl)
-simcenter_add_file(NAME RunIDA2DModel.tcl)
-simcenter_add_file(NAME DefineVariables.tcl)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES
+    DynamicAnalysisCollapseSolver.tcl Database.csv MaxDriftTester.tcl
+    DefineAllRecorders.tcl Model.tcl DefineFunctionsAndProcedures.tcl
+    PerformGravityAnalysis.tcl DefineTimeHistory.tcl RunIDA2DModel.tcl DefineVariables.tcl
+    DESTINATION ${_rel})

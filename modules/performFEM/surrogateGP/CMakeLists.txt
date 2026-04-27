@@ -1,7 +1,6 @@
-simcenter_add_executable(NAME createGpDriver
-                         FILES createGpDriver.cpp processInput.cpp
-                         DEPENDS CONAN_PKG::jansson)
-
-set_property(TARGET createGpDriver PROPERTY CXX_STANDARD 17)
-
-simcenter_add_python_script(SCRIPT gpPredict.py)
+add_executable(createGpDriver createGpDriver.cpp processInput.cpp)
+target_include_directories(createGpDriver PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(createGpDriver PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS createGpDriver DESTINATION ${_rel})
+install(FILES gpPredict.py DESTINATION ${_rel})

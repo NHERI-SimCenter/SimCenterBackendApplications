@@ -1,1 +1,2 @@
-simcenter_add_python_script(SCRIPT GeoJSON_to_BIM.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES GeoJSON_to_BIM.py DESTINATION ${_rel})

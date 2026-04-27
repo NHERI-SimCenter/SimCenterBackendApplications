@@ -1,5 +1,5 @@
-simcenter_add_executable(NAME PhysicsBasedMotion
-                         FILES PhysicsBasedMotion.cpp
-                         DEPENDS CONAN_PKG::jansson)
-
-set_property(TARGET PhysicsBasedMotion PROPERTY CXX_STANDARD 17)
+add_executable(PhysicsBasedMotion PhysicsBasedMotion.cpp)
+target_include_directories(PhysicsBasedMotion PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(PhysicsBasedMotion PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS PhysicsBasedMotion DESTINATION ${_rel})

@@ -1,4 +1,2 @@
-simcenter_add_file(NAME BeamDatabase1.csv)
-simcenter_add_file(NAME BeamDatabase2.csv)
-simcenter_add_file(NAME CleanBeamSectionDatabase.ipynb)
-simcenter_add_file(NAME BeamDatabase3.csv)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES BeamDatabase1.csv BeamDatabase2.csv CleanBeamSectionDatabase.ipynb BeamDatabase3.csv DESTINATION ${_rel})

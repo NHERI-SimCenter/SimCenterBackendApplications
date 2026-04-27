@@ -1,18 +1,11 @@
 add_subdirectory(database)
 add_subdirectory(gmpe)
 add_subdirectory(lib)
-simcenter_add_python_script(SCRIPT ComputeIntensityMeasure.py)
-simcenter_add_python_script(SCRIPT CreateScenario.py)
-simcenter_add_python_script(SCRIPT CreateStation.py)
-simcenter_add_python_script(SCRIPT FetchOpenQuake.py)
-simcenter_add_python_script(SCRIPT FetchOpenSHA_25_4.py)
-simcenter_add_python_script(SCRIPT HazardSimulation.py DEPENDS database)
-simcenter_add_python_script(SCRIPT HazardSimulationEQ.py DEPENDS database)
-simcenter_add_python_script(SCRIPT SelectGroundMotion.py)
-simcenter_add_python_script(SCRIPT HazardOccurrence.py)
-simcenter_add_python_script(SCRIPT USGS_API.py)
-simcenter_add_python_script(SCRIPT ScenarioForecast.py)
-simcenter_add_python_script(SCRIPT liquefaction.py)
-simcenter_add_python_script(SCRIPT landslide.py)
-simcenter_add_python_script(SCRIPT GMSimulators.py)
-simcenter_add_python_script(SCRIPT GlobalVariable.py)
+
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES
+    ComputeIntensityMeasure.py CreateScenario.py CreateStation.py
+    FetchOpenQuake.py FetchOpenSHA_25_4.py HazardSimulation.py HazardSimulationEQ.py
+    SelectGroundMotion.py HazardOccurrence.py USGS_API.py ScenarioForecast.py
+    liquefaction.py landslide.py GMSimulators.py GlobalVariable.py
+    DESTINATION ${_rel})

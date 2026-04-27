@@ -1,10 +1,11 @@
-simcenter_add_executable(NAME WindFieldSimulation
-			 DEPENDS CONAN_PKG::jansson
-			 DEPENDS CONAN_PKG::eigen			 
-                         FILES WindFieldModel.cpp)
-simcenter_add_python_script(SCRIPT ComputeIntensityMeasure.py)
-simcenter_add_python_script(SCRIPT CreateScenario.py)
-simcenter_add_python_script(SCRIPT CreateStation.py)
-simcenter_add_python_script(SCRIPT HurricaneSimulation.py)
-simcenter_add_python_script(SCRIPT WindFieldSimulation.py)
+add_executable(WindFieldSimulation WindFieldModel.cpp)
+target_include_directories(WindFieldSimulation PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(WindFieldSimulation PRIVATE jansson::jansson Eigen3::Eigen)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS WindFieldSimulation DESTINATION ${_rel})
+install(FILES
+    ComputeIntensityMeasure.py CreateScenario.py CreateStation.py
+    HurricaneSimulation.py WindFieldSimulation.py
+    DESTINATION ${_rel})
+
 add_subdirectory(database)

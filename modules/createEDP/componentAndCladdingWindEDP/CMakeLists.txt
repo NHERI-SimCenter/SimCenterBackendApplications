@@ -1,3 +1,5 @@
-simcenter_add_executable(NAME ComponentAndCladdingWindEDP 
-			 FILES ComponentAndCladdingWindEDP.cpp
-                         DEPENDS CONAN_PKG::jansson)
+add_executable(ComponentAndCladdingWindEDP ComponentAndCladdingWindEDP.cpp)
+target_include_directories(ComponentAndCladdingWindEDP PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(ComponentAndCladdingWindEDP PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS ComponentAndCladdingWindEDP DESTINATION ${_rel})

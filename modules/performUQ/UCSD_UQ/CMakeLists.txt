@@ -1,15 +1,7 @@
-simcenter_add_python_script(SCRIPT UCSD_UQ.py)
-simcenter_add_python_script(SCRIPT runFEM.py)
-simcenter_add_python_script(SCRIPT parseData.py)
-simcenter_add_python_script(SCRIPT pdfs.py)
-simcenter_add_python_script(SCRIPT runTMCMC.py)
-simcenter_add_python_script(SCRIPT mainscript.py)
-simcenter_add_python_script(SCRIPT tmcmcFunctions.py)
-simcenter_add_python_script(SCRIPT defaultLogLikeScript.py)
-simcenter_add_python_script(SCRIPT processInputs.py)
-simcenter_add_python_script(SCRIPT calibration_utilities.py)
-simcenter_add_python_script(SCRIPT mainscript_tmcmc.py)
-simcenter_add_python_script(SCRIPT mainscript_hierarchical_bayesian.py)
-simcenter_add_python_script(SCRIPT preprocess_hierarchical_bayesian.py)
-simcenter_add_python_script(SCRIPT mwg_sampler.py)
-simcenter_add_python_script(SCRIPT loglike_script.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES
+    UCSD_UQ.py runFEM.py parseData.py pdfs.py runTMCMC.py mainscript.py
+    tmcmcFunctions.py defaultLogLikeScript.py processInputs.py calibration_utilities.py
+    mainscript_tmcmc.py mainscript_hierarchical_bayesian.py
+    preprocess_hierarchical_bayesian.py mwg_sampler.py loglike_script.py
+    DESTINATION ${_rel})

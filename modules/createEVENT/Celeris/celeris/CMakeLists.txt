@@ -1,4 +1,2 @@
-simcenter_add_python_script(SCRIPT domain.py)
-simcenter_add_python_script(SCRIPT runner.py)
-simcenter_add_python_script(SCRIPT solver.py)
-simcenter_add_python_script(SCRIPT utils.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES domain.py runner.py solver.py utils.py DESTINATION ${_rel})

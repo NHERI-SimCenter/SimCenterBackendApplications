@@ -1,10 +1,5 @@
-simcenter_add_executable(NAME SiteResponse
-                         FILES SiteResponse.cpp)
-
-simcenter_add_python_script(SCRIPT SiteResponse.py)
-simcenter_add_python_script(SCRIPT calibration.py)
-simcenter_add_python_script(SCRIPT Gauss1D.py)
-simcenter_add_python_script(SCRIPT RegionalSiteResponse.py)
-simcenter_add_python_script(SCRIPT postProcess.py)
-simcenter_add_python_script(SCRIPT postProcessRegional.py)
-
+add_executable(SiteResponse SiteResponse.cpp)
+target_include_directories(SiteResponse PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS SiteResponse DESTINATION ${_rel})
+install(FILES SiteResponse.py calibration.py Gauss1D.py RegionalSiteResponse.py postProcess.py postProcessRegional.py DESTINATION ${_rel})

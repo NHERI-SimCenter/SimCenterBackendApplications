@@ -1,3 +1,5 @@
-simcenter_add_executable(NAME UserDefinedEDP
-                         FILES UserDefinedEDP.cpp
-                         DEPENDS CONAN_PKG::jansson)
+add_executable(UserDefinedEDP UserDefinedEDP.cpp)
+target_include_directories(UserDefinedEDP PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(UserDefinedEDP PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS UserDefinedEDP DESTINATION ${_rel})
