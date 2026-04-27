@@ -195,7 +195,12 @@ int main(int argc, char **argv) {
     float out_dist_sqr;
     nanoflann::KNNResultSet<float> resultSet(num_results);
     resultSet.init(&ret_index, &out_dist_sqr);
+#if defined(NANOFLANN_VERSION) && NANOFLANN_VERSION >= 0x150
+    index.findNeighbors(resultSet, &buildingLoc[0], nanoflann::SearchParameters(10));
+#else
     index.findNeighbors(resultSet, &buildingLoc[0], nanoflann::SearchParams(10));
+#endif
+    
     
     // 
     // create the event

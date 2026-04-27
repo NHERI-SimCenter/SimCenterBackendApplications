@@ -6,6 +6,10 @@ simcenter_add_executable(NAME createStandardUQ_Input
                          FILES createStandardUQ_Input.cpp
                          DEPENDS CONAN_PKG::jansson)
 
+simcenter_add_executable(NAME dummy_driver
+                         FILES dummy_driver.c)
+
+
 add_library(commonUQ STATIC
                parseWorkflowInput.cpp)
 
