@@ -441,7 +441,7 @@ writeInterface(std::ostream &dakotaFile, json_t *uqData, std::string &workflowDr
   dakotaFile << "   parameters_file = 'paramsDakota.in'\n";
   dakotaFile << "   results_file = 'results.out' \n";
   
-#if defined(DAKOTA_VERSION) && DAKOTA_VERSION >= 622                                                                                           
+#if defined(DAKOTA_VERSION) && DAKOTA_VERSION >= 619
   dakotaFile << "   parameters_format\n     aprepro \n";
 #else
   dakotaFile << "   aprepro \n";

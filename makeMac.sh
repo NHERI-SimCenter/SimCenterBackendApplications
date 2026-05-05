@@ -30,10 +30,10 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
 
-            if [[ "$ARCH" != "x86_64" ]]; then
+            if [[ "$ARCH" == "x86_64" ]]; then
 		CMAKE_DAKOTA_VERSION=619
 	    else
-		CMAKE_DAKOTA_VERSION=620		
+		CMAKE_DAKOTA_VERSION=623		
             fi	    
 
             # 3. If valid, set the variables
