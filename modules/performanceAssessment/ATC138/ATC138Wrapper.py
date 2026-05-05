@@ -190,9 +190,14 @@ def generate_summary(output_dir: Path) -> None:
     recovery = data['recovery']
     reoc = np.array(recovery['reoccupancy']['building_level']['recovery_day'])
     func = np.array(recovery['functional']['building_level']['recovery_day'])
-    full = np.array(
+    # The building_repair_schedule captures construction completion but
+    # excludes functional impedances modeled as parallel temp repairs (e.g.
+    # flooding_repair_day). Full Recovery must be >= Functional Recovery by
+    # definition, so envelope the schedule with the functional recovery day.
+    construction_complete = np.array(
         data['building_repair_schedule']['full']['repair_complete_day']['per_story']
     ).max(axis=-1)
+    full = np.fmax(construction_complete, func)
 
     def _stats(a: np.ndarray) -> dict:
         return {
