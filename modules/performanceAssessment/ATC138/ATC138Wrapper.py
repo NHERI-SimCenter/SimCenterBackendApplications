@@ -348,7 +348,7 @@ if __name__ == '__main__':
         help='Path to the general_inputs JSON file',
     )
     parser.add_argument(
-        '--tenantUnitsListPath',
+        '--tenantUnitListPath',
         type=Path,
         default=None,
         help='Path to the tenant_units CSV file',
@@ -364,6 +364,6 @@ if __name__ == '__main__':
 
     main(
         general_inputs_path = args.generalInputsPath,
-        tenant_unit_list_path = args.tenantUnitsListPath,
+        tenant_unit_list_path = args.tenantUnitListPath,
         optional_inputs_path = args.optionalInputsPath
     )
