@@ -69,16 +69,6 @@ import warnings
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path, PurePath
-import platform
-
-# check python
-
-python_path= sys.executable
-a = platform.uname()
-
-if a.system == "Darwin" and (not a.machine=='x86_64'):
-    raise ValueError(f"Python version mismatch. Please update the python following the installation instruction. Current python {python_path} is based on machine={a.machine}, but we need the one for x86_64")
-    exit(-2)
 
 # ################# FMK - removing check on nheri-simcenter for moment ####################
     

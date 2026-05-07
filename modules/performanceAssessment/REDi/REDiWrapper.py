@@ -291,9 +291,9 @@ def main(args):  # noqa: C901, D103, PLR0915
     log_output: List[str] = []  # noqa: FA100
 
     for sample in range(num_samples):
-        if buildingirreparableOrCollapsed[sample]:
+        if buildingirreparableOrCollapsed.iloc[sample]:
             # Convert the replacement time coming out of Pelicun (worker-days) into days by dividing by the number of workers
-            replacement_time = DVReplacementDict['Time'][sample] / num_workers
+            replacement_time = DVReplacementDict['Time'].iloc[sample] / num_workers
 
             final_results_dict[sample] = get_replacement_response(
                 replacement_time=replacement_time
