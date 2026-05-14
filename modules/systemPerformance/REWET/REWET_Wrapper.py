@@ -482,7 +482,7 @@ if __name__ == '__main__':
 
     mpi_spec = importlib.util.find_spec('mpi4py')
     found = mpi_spec is not None
-    if found and arg_parser.par:
+    if found and parser_data.par:
         from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
