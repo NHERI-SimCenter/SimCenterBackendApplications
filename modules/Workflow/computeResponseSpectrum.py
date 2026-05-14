@@ -4,8 +4,11 @@ the Newmark-Beta method
 
 import numpy as np
 from scipy.constants import g
-from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
+try:
+    from scipy.integrate import cumulative_trapezoid as cumtrapz
+except ImportError:
+    from scipy.integrate import cumtrapz
 
 
 def convert_accel_units(acceleration, from_, to_='cm/s/s'):  # noqa: C901
