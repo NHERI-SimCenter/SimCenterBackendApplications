@@ -52,6 +52,13 @@ from pathlib import Path
 import numpy as np
 from scipy import integrate
 
+
+try:
+    from scipy.integrate import cumulative_trapezoid
+except ImportError:
+    # For older scipy versions (< 1.6.0)
+    from scipy.integrate import cumtrapz as cumulative_trapezoid
+
 this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
 main_dir = this_dir.parents[1]
 sys.path.insert(0, str(main_dir / 'common'))
@@ -264,9 +271,12 @@ def run_opensees(  # noqa: D103
         # define the time series
         for evt_i, event in enumerate(event_list):
             acc = event['data']
-            vel = integrate.cumtrapz(acc, dx=event['dT']) * gravityG
+            #vel = integrate.cumtrapz(acc, dx=event['dT']) * gravityG
+            vel = cumulative_trapezoid(acc, dx=event['dT']) * gravityG
             vel = np.insert(vel, 0, 0.0)
-            disp = integrate.cumtrapz(vel, dx=event['dT'])
+
+            #disp = integrate.cumtrapz(vel, dx=event['dT'])
+            disp = cumulative_trapezoid(vel, dx=event['dT'])            
             disp = np.insert(disp, 0, 0.0)
             time = np.arange(0, event['dT'] * len(acc), event['dT'])
             np.savetxt(fileNames[evt_i] + '.acc', acc)
