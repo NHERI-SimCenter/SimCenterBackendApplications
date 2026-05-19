@@ -16,27 +16,30 @@ if 'stampede2' not in socket.gethostname():
         GlobalVariable.JVM_started = True
         import jpype
         import jpype.imports
-        from jpype.types import *
 
         memory_total = psutil.virtual_memory().total / (1024.0**3)
         memory_request = int(memory_total * 0.75)
         jpype.addClassPath('./lib/opensha-all.jar')
         jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
 
-from java.io import *
-from java.lang import *
-from java.lang.reflect import *
-from java.util import *
-from org.opensha.commons.data import *
-from org.opensha.commons.data.function import *
-from org.opensha.commons.data.siteData import *
-from org.opensha.commons.geo import *
-from org.opensha.commons.param import *
-from org.opensha.commons.param.constraint import *
-from org.opensha.commons.param.event import *
-from org.opensha.sha.calc import *
-from org.opensha.sha.earthquake import *
-from org.opensha.sha.earthquake.param import *
+# Java stdlib
+from java.util import ArrayList
+
+# OpenSHA — commons
+from org.opensha.commons.data import Site
+from org.opensha.commons.data.siteData import OrderedSiteDataProviderList
+from org.opensha.commons.geo import Location
+from org.opensha.commons.param.event import ParameterChangeWarningListener
+
+# OpenSHA — earthquake / ERF
+from org.opensha.sha.earthquake import EqkRupture
+from org.opensha.sha.earthquake.param import (
+    BPTAveragingTypeOptions,
+    BackgroundRupType,
+    IncludeBackgroundOption,
+    MagDependentAperiodicityOptions,
+    ProbabilityModelOptions,
+)
 from org.opensha.sha.earthquake.rupForecastImpl.Frankel02 import (
     Frankel02_AdjustableEqkRupForecast,
 )
@@ -47,26 +50,42 @@ from org.opensha.sha.earthquake.rupForecastImpl.WGCEP_UCERF_2_Final import UCERF
 from org.opensha.sha.earthquake.rupForecastImpl.WGCEP_UCERF_2_Final.MeanUCERF2 import (
     MeanUCERF2,
 )
-from org.opensha.sha.faultSurface import *
-from org.opensha.sha.faultSurface.utils import PointSourceDistanceCorrection
-from org.opensha.sha.faultSurface.utils import PointSourceDistanceCorrections
-from org.opensha.sha.imr import *
-from org.opensha.sha.imr.attenRelImpl import *
-from org.opensha.sha.imr.attenRelImpl.ngaw2 import *
-from org.opensha.sha.imr.attenRelImpl.ngaw2.NGAW2_Wrappers import *
-from org.opensha.sha.imr.param.IntensityMeasureParams import *
-from org.opensha.sha.imr.param.OtherParams import *
-from org.opensha.sha.util import *
 
+# OpenSHA — fault surface
+from org.opensha.sha.faultSurface import PointSurface
+from org.opensha.sha.faultSurface.utils import PointSourceDistanceCorrections
+
+# OpenSHA — IMR / GMM
+from org.opensha.sha.imr.attenRelImpl import AfshariStewart_2016_AttenRel
+from org.opensha.sha.imr.attenRelImpl.ngaw2 import (
+    ASK_2014,
+    BSSA_2014,
+    CB_2014,
+    CY_2014,
+)
+from org.opensha.sha.imr.param.IntensityMeasureParams import PeriodParam, SA_Param
+from org.opensha.sha.imr.param.OtherParams import StdDevTypeParam
+
+# OpenSHA — gcim (KS_2006 and BommerEtAl_2009 moved here in v25.4; GcimCalculator
+# and the Ds5XX duration parameters are gcim-only)
+from org.opensha.sha.gcim.calc import GcimCalculator
+from org.opensha.sha.gcim.imr.attenRelImpl import (
+    BommerEtAl_2009_AttenRel,
+    KS_2006_AttenRel,
+)
+from org.opensha.sha.gcim.imr.param.IntensityMeasureParams import (
+    Ds575_Param,
+    Ds595_Param,
+)
+
+# OpenSHA — utilities
+from org.opensha.sha.util import SiteTranslator
+
+# UCERF3 (still under the legacy `scratch.*` namespace upstream)
 try:
     from scratch.UCERF3.erf.mean import MeanUCERF3
 except ModuleNotFoundError:
     MeanUCERF3 = jpype.JClass('scratch.UCERF3.erf.mean.MeanUCERF3')
-
-from org.opensha.sha.gcim.calc import *
-from org.opensha.sha.gcim.imr.attenRelImpl import *
-from org.opensha.sha.gcim.imr.param.EqkRuptureParams import *
-from org.opensha.sha.gcim.imr.param.IntensityMeasureParams import *
 
 # Import the 10 functions from the main module
 from FetchOpenSHA import (

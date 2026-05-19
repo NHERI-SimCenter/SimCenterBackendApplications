@@ -37,7 +37,7 @@
 # Kuanshi Zhong
 #
 
-import ujson as python_json
+import ujson as json
 import os
 import random
 import socket
@@ -47,7 +47,13 @@ import numpy as np
 import pandas as pd
 
 if 'stampede2' not in socket.gethostname():
-    from FetchOpenSHA import *  # noqa: F403
+    from FetchOpenSHA import (
+        export_to_json,
+        getERF,
+        get_rupture_distance,
+        get_source_distance,
+        get_source_rupture,
+    )
 
 
 def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):  # noqa: C901, D103
@@ -108,7 +114,7 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):  # noqa: N802, N803, D1
     source_type = scenario_info['EqRupture']['Type']
     try:
         with open(rupFilePath) as f:  # noqa: PTH123
-            user_scenarios = python_json.load(f)
+            user_scenarios = json.load(f)
     except:  # noqa: E722
         raise FileNotFoundError(  # noqa: B904
             f'CreateScenario: source file {rupFilePath} not found.'
@@ -203,7 +209,7 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
 
     try:
         with open(rupFile) as f:  # noqa: PTH123
-            user_scenarios = python_json.load(f)
+            user_scenarios = json.load(f)
     except:  # noqa: E722
         raise FileNotFoundError(  # noqa: B904
             f'CreateScenario: source file {rupFile} not found.'
@@ -376,7 +382,7 @@ def load_earthquake_scenarios(scenario_info, stations, dir_info):  # noqa: D103
     )
     try:
         with open(user_scenario_file) as f:  # noqa: PTH123
-            user_scenarios = python_json.load(f)
+            user_scenarios = json.load(f)
     except:  # noqa: E722
         print(f'CreateScenario: source file {user_scenario_file} not found.')  # noqa: T201
         return {}
@@ -591,7 +597,7 @@ def create_earthquake_scenarios(  # noqa: C901, D103
             if outfile is not None:
                 print(f'The collected point source ruptures are saved in {outfile}')  # noqa: T201
                 with open(outfile, 'w') as f:  # noqa: PTH123
-                    python_json.dump(pointSource_data, f, indent=2)
+                    json.dump(pointSource_data, f, indent=2)
         elif source_type == 'oqSourceXML':
             import FetchOpenQuake
 

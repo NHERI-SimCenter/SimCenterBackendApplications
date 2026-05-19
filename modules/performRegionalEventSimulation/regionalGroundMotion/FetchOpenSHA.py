@@ -53,7 +53,6 @@ if 'stampede2' not in socket.gethostname():
         GlobalVariable.JVM_started = True
         import jpype  # noqa: I001, RUF100
         import jpype.imports
-        from jpype.types import *  # noqa: F403
 
         memory_total = psutil.virtual_memory().total / (1024.0**3)
         memory_request = int(memory_total * 0.75)
@@ -63,22 +62,26 @@ if 'stampede2' not in socket.gethostname():
             convertStrings=False,
             jvmpath=GlobalVariable.find_compatible_jvm_path(),
         )
-from java.io import *  # noqa: F403
-from java.lang import *  # noqa: F403
-from java.lang.reflect import *  # noqa: F403
-from java.util import *  # noqa: F403
-from org.opensha.commons.data import *  # noqa: F403
-from org.opensha.commons.data.function import *  # noqa: F403
-from org.opensha.commons.data.siteData import *  # noqa: F403
-# v25.4: the geo package now contains a `json` sub-package that would
-# shadow Python's stdlib `json` if star-imported. Import Location explicitly.
-from org.opensha.commons.geo import Location  # noqa: F401
-from org.opensha.commons.param import *  # noqa: F403
-from org.opensha.commons.param.constraint import *  # noqa: F403
-from org.opensha.commons.param.event import *  # noqa: F403
-from org.opensha.sha.calc import *  # noqa: F403
-from org.opensha.sha.earthquake import *  # noqa: F403
-from org.opensha.sha.earthquake.param import *  # noqa: F403
+# Java stdlib
+from java.lang import Class, Double
+from java.util import ArrayList, Arrays
+
+# OpenSHA — commons
+from org.opensha.commons.data import Site, TimeSpan
+from org.opensha.commons.data.siteData import OrderedSiteDataProviderList, SiteData
+from org.opensha.commons.geo import Location
+from org.opensha.commons.param import Parameter
+from org.opensha.commons.param.event import ParameterChangeWarningListener
+
+# OpenSHA — earthquake / ERF
+from org.opensha.sha.earthquake import EqkRupture
+from org.opensha.sha.earthquake.param import (
+    BPTAveragingTypeOptions,
+    BackgroundRupType,
+    IncludeBackgroundOption,
+    MagDependentAperiodicityOptions,
+    ProbabilityModelOptions,
+)
 from org.opensha.sha.earthquake.rupForecastImpl.Frankel02 import (
     Frankel02_AdjustableEqkRupForecast,
 )
@@ -89,50 +92,46 @@ from org.opensha.sha.earthquake.rupForecastImpl.WGCEP_UCERF_2_Final import UCERF
 from org.opensha.sha.earthquake.rupForecastImpl.WGCEP_UCERF_2_Final.MeanUCERF2 import (
     MeanUCERF2,
 )
-from org.opensha.sha.faultSurface import *  # noqa: F403
-# v25.4: PtSrcDistCorr was removed; distance corrections are now exposed via
-# PointSourceDistanceCorrection / PointSourceDistanceCorrections. The try/except
-# falls back to JClass lookup if the static import path moves again.
-try:
-    from org.opensha.sha.faultSurface.utils import (
-        PointSourceDistanceCorrection,
-        PointSourceDistanceCorrections,
-    )
-except ImportError:
-    try:
-        PointSourceDistanceCorrection = jpype.JClass(
-            'org.opensha.sha.faultSurface.utils.PointSourceDistanceCorrection'
-        )
-        PointSourceDistanceCorrections = jpype.JClass(
-            'org.opensha.sha.faultSurface.utils.PointSourceDistanceCorrections'
-        )
-    except:  # noqa: E722
-        PointSourceDistanceCorrection = None
-        PointSourceDistanceCorrections = None
-from org.opensha.sha.imr import *  # noqa: F403
-from org.opensha.sha.imr.attenRelImpl import *  # noqa: F403
-from org.opensha.sha.imr.attenRelImpl.ngaw2 import *  # noqa: F403
-# v25.4: NGAW2_Wrappers became a Java class with static nested wrapper
-# classes (it used to be a sub-package). `from ...NGAW2_Wrappers import *`
-# would silently import nothing, so bind the nested wrappers explicitly.
-ASK_2014_Wrapper = NGAW2_Wrappers.ASK_2014_Wrapper  # noqa: F405
-BSSA_2014_Wrapper = NGAW2_Wrappers.BSSA_2014_Wrapper  # noqa: F405
-CB_2014_Wrapper = NGAW2_Wrappers.CB_2014_Wrapper  # noqa: F405
-CY_2014_Wrapper = NGAW2_Wrappers.CY_2014_Wrapper  # noqa: F405
-from org.opensha.sha.imr.param.IntensityMeasureParams import *  # noqa: F403
-from org.opensha.sha.imr.param.OtherParams import *  # noqa: F403
-from org.opensha.sha.util import *  # noqa: F403
-from tqdm import tqdm
 
+# OpenSHA — fault surface utilities (v25.4: PtSrcDistCorr was removed; distance
+# corrections are now exposed via PointSourceDistanceCorrections).
+from org.opensha.sha.faultSurface.utils import PointSourceDistanceCorrections
+
+# OpenSHA — IMR / GMM
+from org.opensha.sha.imr.attenRelImpl import AfshariStewart_2016_AttenRel
+from org.opensha.sha.imr.attenRelImpl.ngaw2 import (
+    ASK_2014,
+    BSSA_2014,
+    CB_2014,
+    CY_2014,
+    NGAW2_Wrappers,
+)
+# v25.4: NGAW2_Wrappers became a Java class with static nested wrapper
+# classes (it used to be a sub-package). Bind the nested wrappers explicitly
+# so callers can use them as top-level names.
+ASK_2014_Wrapper = NGAW2_Wrappers.ASK_2014_Wrapper
+BSSA_2014_Wrapper = NGAW2_Wrappers.BSSA_2014_Wrapper
+CB_2014_Wrapper = NGAW2_Wrappers.CB_2014_Wrapper
+CY_2014_Wrapper = NGAW2_Wrappers.CY_2014_Wrapper
+from org.opensha.sha.imr.param.IntensityMeasureParams import PeriodParam, SA_Param
+from org.opensha.sha.imr.param.OtherParams import StdDevTypeParam
+
+# OpenSHA — gcim (KS_2006 and BommerEtAl_2009 moved here in v25.4)
+from org.opensha.sha.gcim.imr.attenRelImpl import (
+    BommerEtAl_2009_AttenRel,
+    KS_2006_AttenRel,
+)
+
+# OpenSHA — utilities
+from org.opensha.sha.util import SiteTranslator
+
+# UCERF3 (still under the legacy `scratch.*` namespace upstream)
 try:
     from scratch.UCERF3.erf.mean import MeanUCERF3
 except ModuleNotFoundError:
-    MeanUCERF3 = jpype.JClass('scratch.UCERF3.erf.mean.MeanUCERF3')  # noqa: F405, RUF100
+    MeanUCERF3 = jpype.JClass('scratch.UCERF3.erf.mean.MeanUCERF3')
 
-from org.opensha.sha.gcim.calc import *  # noqa: F403
-from org.opensha.sha.gcim.imr.attenRelImpl import *  # noqa: F403
-from org.opensha.sha.gcim.imr.param.EqkRuptureParams import *  # noqa: F403
-from org.opensha.sha.gcim.imr.param.IntensityMeasureParams import *  # noqa: F403
+from tqdm import tqdm
 
 
 def getERF(scenario_info, update_flag=True):  # noqa: FBT002, C901, N802, D103

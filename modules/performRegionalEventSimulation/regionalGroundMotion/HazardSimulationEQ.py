@@ -558,7 +558,6 @@ if __name__ == '__main__':
             GlobalVariable.JVM_started = True
             import jpype
             import jpype.imports
-            from jpype.types import *  # noqa: F403
 
             memory_total = psutil.virtual_memory().total / (1024.0**3)
             memory_request = int(memory_total * 0.75)
@@ -590,18 +589,29 @@ if __name__ == '__main__':
             shutil.rmtree(os.environ.get('OQ_DATADIR'))
         os.makedirs(f"{os.environ.get('OQ_DATADIR')}")  # noqa: PTH103
 
-    # import modules
-    from ComputeIntensityMeasure import *  # noqa: F403
-    from CreateScenario import *  # noqa: F403
-    from CreateStation import *  # noqa: F403
+    from ComputeIntensityMeasure import compute_im, export_im
+    from CreateScenario import load_earthquake_rupFile
 
     # KZ-08/23/22: adding hazard occurrence model
-    from HazardOccurrence import *  # noqa: F403
-    from SelectGroundMotion import *  # noqa: F403
+    from HazardOccurrence import (
+        configure_hazard_occurrence,
+        export_sampled_earthquakes,
+        get_im_exceedance_probability_gm,
+        get_im_exceedance_probility,
+        sample_earthquake_occurrence,
+    )
+    from SelectGroundMotion import (
+        output_all_ground_motion_info,
+        select_ground_motion,
+    )
 
     if oq_flag:
-        # import FetchOpenQuake
-        from FetchOpenQuake import *  # noqa: F403
+        from FetchOpenQuake import (
+            OpenQuakeHazardCalc,
+            openquake_config,
+            oq_read_uhs_classical_psha,
+            oq_run_classical_psha,
+        )
 
     # untar site databases
     # site_database = ['global_vs30_4km.tar.gz','global_zTR_4km.tar.gz','thompson_vs30_4km.tar.gz']

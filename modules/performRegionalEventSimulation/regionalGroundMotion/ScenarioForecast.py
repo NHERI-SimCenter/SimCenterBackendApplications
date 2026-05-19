@@ -92,7 +92,6 @@ if __name__ == '__main__':
             GlobalVariable.JVM_started = True
             import jpype
             import jpype.imports
-            from jpype.types import *  # noqa: F403
 
             memory_total = psutil.virtual_memory().total / (1024.0**3)
             memory_request = int(memory_total * 0.75)
@@ -124,10 +123,6 @@ if __name__ == '__main__':
     #         print('HazardSimulation: local OQ folder already exists, overwriting it now...')
     #         shutil.rmtree(os.environ.get('OQ_DATADIR'))
     #     os.makedirs(f"{os.environ.get('OQ_DATADIR')}")
-
-    if oq_flag:
-        # import FetchOpenQuake
-        from FetchOpenQuake import *  # noqa: F403
 
     # untar site databases
     site_database = [
