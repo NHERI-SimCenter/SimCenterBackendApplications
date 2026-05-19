@@ -358,135 +358,54 @@ def openquake_config(site_info, scen_info, event_info, workDir):  # noqa: C901, 
     with open(filename_ini, 'w') as configfile:  # noqa: PTH123
         cfg.write(configfile)
 
-    # openquake module
+    # OpenQuake is declared as a dependency of the SimCenter backend
+    # (currently nheri_simcenter[r2d] ships openquake.engine==3.17.1). This
+    # block locates whichever version is installed in the active environment
+    # and surfaces a warning if it does not match the scenario's OQVersion.
+    # User-supplied local OpenQuake checkouts can still be used via the
+    # OQLocal field, which prepends the checkout to sys.path before importing.
     oq_ver_loaded = None
     try:
         from importlib_metadata import version
     except:  # noqa: E722
         from importlib.metadata import version
-    if scen_info['EqRupture'].get('OQLocal', None):
-        # using user-specific local OQ
-        # first to validate the path
-        if not os.path.isdir(scen_info['EqRupture'].get('OQLocal')):  # noqa: PTH112
+
+    oqlocal = scen_info['EqRupture'].get('OQLocal', None)
+    if oqlocal:
+        if not os.path.isdir(oqlocal):  # noqa: PTH112
             print(  # noqa: T201
-                'FetchOpenQuake: Local OpenQuake instance {} not found.'.format(
-                    scen_info['EqRupture'].get('OQLocal')
-                )
+                f'FetchOpenQuake: Local OpenQuake instance {oqlocal} not found.'
             )
             return 0
-        else:  # noqa: RET505
-            # getting version
-            try:
-                oq_ver = version('openquake.engine')
-                if oq_ver:
-                    print(  # noqa: T201
-                        f'FetchOpenQuake: Removing previous installation of OpenQuake {oq_ver}.'
-                    )
-                    sys.modules.pop('openquake')
-                    subprocess.check_call(  # noqa: S603
-                        [
-                            sys.executable,
-                            '-m',
-                            'pip',
-                            'uninstall',
-                            '-y',
-                            'openquake.engine',
-                        ]
-                    )
-            except:  # noqa: E722
-                # no installed OQ python package
-                # do nothing
-                print(  # noqa: T201
-                    'FetchOpenQuake: No previous installation of OpenQuake python package found.'
-                )
-            # load the local OQ
-            try:
-                print('FetchOpenQuake: Setting up the user-specified local OQ.')  # noqa: T201
-                sys.path.insert(
-                    0,
-                    os.path.dirname(scen_info['EqRupture'].get('OQLocal')),  # noqa: PTH120
-                )
-                # owd = os.getcwd()
-                # os.chdir(os.path.dirname(scen_info['EqRupture'].get('OQLocal')))
-                if 'openquake' in list(sys.modules.keys()):
-                    sys.modules.pop('openquake')
-                from openquake import baselib
-
-                oq_ver_loaded = baselib.__version__
-                # sys.modules.pop('openquake')
-                # os.chdir(owd)
-            except:  # noqa: E722
-                print(  # noqa: T201
-                    'FetchOpenQuake: {} cannot be loaded.'.format(
-                        scen_info['EqRupture'].get('OQLocal')
-                    )
-                )
-
-    else:
-        # using the official released OQ
         try:
-            oq_ver = version('openquake.engine')
-            if oq_ver != scen_info['EqRupture'].get('OQVersion', default_oq_version):
-                print(  # noqa: T201
-                    'FetchOpenQuake: Required OpenQuake version is not found and being installed now.'
-                )
-                if oq_ver:
-                    # pop the old version first
-                    sys.modules.pop('openquake')
-                    subprocess.check_call(  # noqa: S603
-                        [
-                            sys.executable,
-                            '-m',
-                            'pip',
-                            'uninstall',
-                            '-y',
-                            'openquake.engine',
-                        ]
-                    )
+            print('FetchOpenQuake: Setting up the user-specified local OQ.')  # noqa: T201
+            sys.path.insert(0, os.path.dirname(oqlocal))  # noqa: PTH120
+            if 'openquake' in list(sys.modules.keys()):
+                sys.modules.pop('openquake')
+            from openquake import baselib
 
-                # install the required version
-                subprocess.check_call(  # noqa: S603
-                    [
-                        sys.executable,
-                        '-m',
-                        'pip',
-                        'install',
-                        'openquake.engine=='
-                        + scen_info['EqRupture'].get(
-                            'OQVersion', default_oq_version
-                        ),
-                        '--user',
-                    ]
-                )
-                oq_ver_loaded = version('openquake.engine')
-
-            else:
-                oq_ver_loaded = oq_ver
-
+            oq_ver_loaded = baselib.__version__
         except:  # noqa: E722
             print(  # noqa: T201
-                'FetchOpenQuake: No OpenQuake is not found and being installed now.'
+                f'FetchOpenQuake: {oqlocal} cannot be loaded.'
             )
-            try:
-                subprocess.check_call(  # noqa: S603
-                    [
-                        sys.executable,
-                        '-m',
-                        'pip',
-                        'install',
-                        'openquake.engine=='
-                        + scen_info['EqRupture'].get(
-                            'OQVersion', default_oq_version
-                        ),
-                        '--user',
-                    ]
-                )
-                oq_ver_loaded = version('openquake.engine')
-            except:  # noqa: E722
+    else:
+        required = scen_info['EqRupture'].get('OQVersion', default_oq_version)
+        try:
+            oq_ver_loaded = version('openquake.engine')
+        except:  # noqa: E722
+            print(  # noqa: T201
+                'FetchOpenQuake: openquake.engine is not installed in this '
+                'Python environment. Install it (e.g., '
+                '`pip install --upgrade "nheri_simcenter[r2d]"`) before '
+                'running OpenQuake-based scenarios.'
+            )
+        else:
+            if oq_ver_loaded != required:
                 print(  # noqa: T201
-                    'FetchOpenQuake: Install of OpenQuake {} failed - please check the version.'.format(
-                        scen_info['EqRupture'].get('OQVersion', default_oq_version)
-                    )
+                    f'FetchOpenQuake: this scenario expects OpenQuake '
+                    f'{required}, but the installed engine is '
+                    f'{oq_ver_loaded}. Proceeding with the installed version.'
                 )
 
     print('FetchOpenQuake: OpenQuake configured.')  # noqa: T201

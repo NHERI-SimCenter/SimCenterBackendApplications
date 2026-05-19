@@ -5,9 +5,6 @@
 
 import numpy as np
 import socket
-import subprocess
-import importlib
-import sys
 import psutil
 
 import GlobalVariable
@@ -17,8 +14,6 @@ if 'stampede2' not in socket.gethostname():
 
     if GlobalVariable.JVM_started is False:
         GlobalVariable.JVM_started = True
-        if importlib.util.find_spec('jpype') is None:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])
         import jpype
         import jpype.imports
         from jpype.types import *

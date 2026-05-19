@@ -38,11 +38,9 @@
 #
 
 import argparse
-import importlib
 import json
 import os
 import shutil
-import subprocess
 import sys
 import time
 
@@ -524,23 +522,12 @@ if __name__ == '__main__':
     except:  # noqa: E722
         oq_flag = False
 
-    # dependencies
-    if R2D:
-        packages = ['tqdm', 'psutil', 'PuLP', 'requests']
-    else:
-        packages = ['selenium', 'tqdm', 'psutil', 'PuLP', 'requests']
-    for p in packages:
-        if importlib.util.find_spec(p) is None:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-q', p])  # noqa: S603
-
     # set up environment
     import socket
 
     if 'stampede2' not in socket.gethostname():
         import GlobalVariable
 
-        if importlib.util.find_spec('jpype') is None:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])  # noqa: S603
         import jpype
         from jpype.types import *  # noqa: F403
 

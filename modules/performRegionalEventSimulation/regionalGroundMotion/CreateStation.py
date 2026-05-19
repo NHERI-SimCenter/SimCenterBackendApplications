@@ -44,14 +44,6 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import importlib
-import subprocess
-
-
-if importlib.util.find_spec('joblib') is None:
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'joblib'])  # noqa: S603
-
-if importlib.util.find_spec('contextlib') is None:
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'contextlib'])  # noqa: S603
 
 import joblib  # noqa: I001
 import contextlib

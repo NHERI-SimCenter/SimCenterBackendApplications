@@ -41,9 +41,6 @@ import numpy as np  # noqa: I001
 import pandas as pd
 import ujson
 import socket
-import subprocess
-import importlib
-import sys
 import psutil
 import GlobalVariable
 import shapely
@@ -54,11 +51,7 @@ if 'stampede2' not in socket.gethostname():
 
     if GlobalVariable.JVM_started is False:
         GlobalVariable.JVM_started = True
-        if importlib.util.find_spec('jpype') is None:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])  # noqa: S603
         import jpype  # noqa: I001, RUF100
-
-        # from jpype import imports
         import jpype.imports
         from jpype.types import *  # noqa: F403
 

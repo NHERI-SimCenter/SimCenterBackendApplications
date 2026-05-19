@@ -6,8 +6,6 @@ import ujson as json
 import os
 import sys
 import psutil
-import importlib
-import subprocess
 # Add the folder containing the script to the system path
 script_path = os.path.dirname(os.path.realpath(__file__))
 opensha_path = os.path.join(script_path, 'lib', 'OpenSHA-1.5.2.jar')
@@ -21,13 +19,7 @@ import argparse
 import GlobalVariable
 if GlobalVariable.JVM_started is False:
     GlobalVariable.JVM_started = True
-    if importlib.util.find_spec('jpype') is None:
-        subprocess.check_call(  # noqa: S603
-            [sys.executable, '-m', 'pip', 'install', 'JPype1']
-        )  # noqa: RUF100, S603
     import jpype
-
-    # from jpype import imports
     import jpype.imports
     # from jpype.types import *  # noqa: F403
 
