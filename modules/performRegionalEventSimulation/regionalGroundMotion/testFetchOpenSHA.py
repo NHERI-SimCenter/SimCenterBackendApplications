@@ -74,7 +74,7 @@ from org.opensha.sha.gcim.imr.param.EqkRuptureParams import *
 from org.opensha.sha.gcim.imr.param.IntensityMeasureParams import *
 
 # Import the 10 functions from the main module
-from FetchOpenSHA_25_4 import (
+from FetchOpenSHA import (
     getERF,
     CreateIMRInstance,
     get_site_prop,

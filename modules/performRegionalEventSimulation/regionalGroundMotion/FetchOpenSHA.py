@@ -64,7 +64,7 @@ if 'stampede2' not in socket.gethostname():
 
         memory_total = psutil.virtual_memory().total / (1024.0**3)
         memory_request = int(memory_total * 0.75)
-        jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
+        jpype.addClassPath('./lib/opensha-all.jar')
         jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
 from java.io import *  # noqa: F403
 from java.lang import *  # noqa: F403
@@ -73,7 +73,9 @@ from java.util import *  # noqa: F403
 from org.opensha.commons.data import *  # noqa: F403
 from org.opensha.commons.data.function import *  # noqa: F403
 from org.opensha.commons.data.siteData import *  # noqa: F403
-from org.opensha.commons.geo import *  # noqa: F403
+# v25.4: the geo package now contains a `json` sub-package that would
+# shadow Python's stdlib `json` if star-imported. Import Location explicitly.
+from org.opensha.commons.geo import Location  # noqa: F401
 from org.opensha.commons.param import *  # noqa: F403
 from org.opensha.commons.param.constraint import *  # noqa: F403
 from org.opensha.commons.param.event import *  # noqa: F403
@@ -91,7 +93,25 @@ from org.opensha.sha.earthquake.rupForecastImpl.WGCEP_UCERF_2_Final.MeanUCERF2 i
     MeanUCERF2,
 )
 from org.opensha.sha.faultSurface import *  # noqa: F403
-from org.opensha.sha.faultSurface.utils import PtSrcDistCorr
+# v25.4: PtSrcDistCorr was removed; distance corrections are now exposed via
+# PointSourceDistanceCorrection / PointSourceDistanceCorrections. The try/except
+# falls back to JClass lookup if the static import path moves again.
+try:
+    from org.opensha.sha.faultSurface.utils import (
+        PointSourceDistanceCorrection,
+        PointSourceDistanceCorrections,
+    )
+except ImportError:
+    try:
+        PointSourceDistanceCorrection = jpype.JClass(
+            'org.opensha.sha.faultSurface.utils.PointSourceDistanceCorrection'
+        )
+        PointSourceDistanceCorrections = jpype.JClass(
+            'org.opensha.sha.faultSurface.utils.PointSourceDistanceCorrections'
+        )
+    except:  # noqa: E722
+        PointSourceDistanceCorrection = None
+        PointSourceDistanceCorrections = None
 from org.opensha.sha.imr import *  # noqa: F403
 from org.opensha.sha.imr.attenRelImpl import *  # noqa: F403
 from org.opensha.sha.imr.attenRelImpl.ngaw2 import *  # noqa: F403
@@ -517,6 +537,7 @@ def get_PointSource_info_CY2014(source_info, siteList):  # noqa: N802, N803, D10
         'dip': float(source_info['AverageDip']),
         'width': 0.0,  # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/faultSurface/PointSurface.java#L68
         'zTop': sourceDepth,
+        'zHyp': sourceDepth,  # v25.4 PointSource requires zHyp
         'aveRake': float(source_info['AverageRake']),
     }
     return site_rup_info, siteList
@@ -575,13 +596,10 @@ def export_to_json(  # noqa: C901, D103
             rup_dist = []
             for j in range(rupList.size()):
                 ruptureSurface = rupList.get(j).getRuptureSurface()  # noqa: N806
-                # If pointsource rupture distance correction
-                if isinstance(ruptureSurface, PointSurface):  # noqa: F405
-                    # or 'FIELD' or 'NSHMP08'
-                    distCorrType = PtSrcDistCorr.Type.NONE  # noqa: N806
-                    (PointSurface @ ruptureSurface).setDistCorrMagAndType(  # noqa: F405
-                        rupList.get(j).getMag(), distCorrType
-                    )
+                # v25.4: PtSrcDistCorr.Type.NONE was removed. The legacy call
+                # explicitly disabled point-source distance correction; in
+                # v25.4 PointSurface applies no correction by default, so the
+                # explicit setDistCorrMagAndType() call is no longer needed.
                 cur_dist = ruptureSurface.getDistanceRup(site_loc)
                 rup_tag.append(j)
                 if cur_dist < maxDistance:
@@ -724,8 +742,28 @@ def CreateIMRInstance(gmpe_name):  # noqa: N802, D103
         return imrClassName
     # Getting the java class
     imrClass = Class.forName(imrClassName)  # noqa: N806, F405
-    ctor = imrClass.getConstructor()
-    imr = ctor.newInstance()
+    # v25.4: some GMMs (KS_2006, BommerEtAl_2009, ...) no longer expose a
+    # no-arg constructor; they now require a ParameterChangeWarningListener.
+    # Try the no-arg path first and fall back to the listener-aware one.
+    try:
+        ctor = imrClass.getConstructor()
+        imr = ctor.newInstance()
+    except:  # noqa: E722
+        try:
+            from org.opensha.commons.param.event import (  # noqa: PLC0415
+                ParameterChangeWarningListener,
+            )
+
+            @jpype.JImplements(ParameterChangeWarningListener)
+            class _DummyListener:
+                @jpype.JOverride
+                def parameterChangeWarning(self, event):  # noqa: ARG002
+                    pass
+
+            ctor = imrClass.getConstructor(ParameterChangeWarningListener)
+            imr = ctor.newInstance(_DummyListener())
+        except:  # noqa: E722
+            return None
     # Setting default parameters
     imr.setParamDefaults()
     # return

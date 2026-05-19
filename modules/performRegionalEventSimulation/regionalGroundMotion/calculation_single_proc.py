@@ -1,3 +1,7 @@
+# WARNING: this script still references the legacy OpenSHA-1.5.2.jar and has
+# not been updated for the v25.4.1 upgrade. It is not invoked by R2D. Before
+# use, switch to opensha-all.jar and verify compatibility with FetchOpenSHA.py.
+
 import ujson as json
 import os
 import sys

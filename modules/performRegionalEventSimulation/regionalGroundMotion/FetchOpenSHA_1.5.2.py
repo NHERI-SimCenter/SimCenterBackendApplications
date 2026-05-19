@@ -1,3 +1,46 @@
+#  # noqa: INP001, D100
+# Copyright (c) 2018 Leland Stanford Junior University
+# Copyright (c) 2018 The Regents of the University of California
+#
+# This file is part of the SimCenter Backend Applications
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# You should have received a copy of the BSD 3-Clause License along with
+# this file. If not, see <http://www.opensource.org/licenses/>.
+#
+# Contributors:
+# Kuanshi Zhong
+#
+
+# Legacy module targeting OpenSHA v1.5.2. The current module is
+# `FetchOpenSHA.py`. To use this file, place a compatible OpenSHA-1.5.2.jar
+# at `lib/OpenSHA-1.5.2.jar` (the jar is not shipped with the backend).
+
 import numpy as np  # noqa: I001
 import pandas as pd
 import ujson
@@ -19,14 +62,14 @@ if 'stampede2' not in socket.gethostname():
             subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])  # noqa: S603
         import jpype  # noqa: I001, RUF100
 
+        # from jpype import imports
         import jpype.imports
         from jpype.types import *  # noqa: F403
 
         memory_total = psutil.virtual_memory().total / (1024.0**3)
         memory_request = int(memory_total * 0.75)
-        jpype.addClassPath('./lib/opensha-all.jar')
+        jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
         jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
-
 from java.io import *  # noqa: F403
 from java.lang import *  # noqa: F403
 from java.lang.reflect import *  # noqa: F403
@@ -34,8 +77,7 @@ from java.util import *  # noqa: F403
 from org.opensha.commons.data import *  # noqa: F403
 from org.opensha.commons.data.function import *  # noqa: F403
 from org.opensha.commons.data.siteData import *  # noqa: F403
-#from org.opensha.commons.geo import *  # noqa: F403
-from org.opensha.commons.geo import Location  # noqa: F403
+from org.opensha.commons.geo import *  # noqa: F403
 from org.opensha.commons.param import *  # noqa: F403
 from org.opensha.commons.param.constraint import *  # noqa: F403
 from org.opensha.commons.param.event import *  # noqa: F403
@@ -53,22 +95,7 @@ from org.opensha.sha.earthquake.rupForecastImpl.WGCEP_UCERF_2_Final.MeanUCERF2 i
     MeanUCERF2,
 )
 from org.opensha.sha.faultSurface import *  # noqa: F403
-
-try:
-    from org.opensha.sha.faultSurface.utils import PointSourceDistanceCorrection
-    from org.opensha.sha.faultSurface.utils import PointSourceDistanceCorrections
-except ImportError:
-    try:
-        import jpype
-        PointSourceDistanceCorrection = jpype.JClass('org.opensha.sha.faultSurface.utils.PointSourceDistanceCorrection')
-        PointSourceDistanceCorrections = jpype.JClass('org.opensha.sha.faultSurface.utils.PointSourceDistanceCorrections')
-    except:
-        PointSourceDistanceCorrection = None
-        PointSourceDistanceCorrections = None
-        
-#from org.opensha.sha.faultSurface.utils import PointSourceDistanceCorrection
-#from org.opensha.sha.faultSurface.utils import PointSourceDistanceCorrections
-
+from org.opensha.sha.faultSurface.utils import PtSrcDistCorr
 from org.opensha.sha.imr import *  # noqa: F403
 from org.opensha.sha.imr.attenRelImpl import *  # noqa: F403
 from org.opensha.sha.imr.attenRelImpl.ngaw2 import *  # noqa: F403
@@ -90,22 +117,25 @@ from org.opensha.sha.gcim.imr.param.IntensityMeasureParams import *  # noqa: F40
 
 
 def getERF(scenario_info, update_flag=True):  # noqa: FBT002, C901, N802, D103
+    # Initialization
     erf = None
     erf_name = scenario_info['EqRupture']['Model']
     erf_selection = scenario_info['EqRupture']['ModelParameters']
+    # ERF model options
     if erf_name == 'WGCEP (2007) UCERF2 - Single Branch':
         erf = MeanUCERF2()
         if (erf_selection.get('Background Seismicity', None) == 'Exclude') and (
-            'Treat Background Seismicity As' in erf_selection.keys()
+            'Treat Background Seismicity As' in erf_selection.keys()  # noqa: SIM118
         ):
             value = erf_selection.pop('Treat Background Seismicity As')
-            print(
-                f'Background Seismicity is set as Excluded, Treat Background Seismicity As: {value} is ignored'
+            print(  # noqa: T201
+                f'Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored'
             )
         for key, value in erf_selection.items():
             if type(value) is int:
-                value = float(value)
+                value = float(value)  # noqa: PLW2901
             erf.setParameter(key, value)
+            # erf.getParameter(key).setValue(value)
     elif erf_name == 'USGS/CGS 2002 Adj. Cal. ERF':
         erf = Frankel02_AdjustableEqkRupForecast()
     elif erf_name == 'WGCEP UCERF 1.0 (2005)':
@@ -118,70 +148,87 @@ def getERF(scenario_info, update_flag=True):  # noqa: FBT002, C901, N802, D103
         ):
             tmp.setPreset(MeanUCERF3.Presets.BOTH_FM_BRANCH_AVG)
             if (erf_selection.get('Background Seismicity', None) == 'Exclude') and (
-                'Treat Background Seismicity As' in erf_selection.keys()
+                'Treat Background Seismicity As' in erf_selection.keys()  # noqa: SIM118
             ):
                 value = erf_selection.pop('Treat Background Seismicity As')
-                print(
-                    f'Background Seismicity is set as Excluded, Treat Background Seismicity As: {value} is ignored'
+                print(  # noqa: T201
+                    f'Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored'
                 )
+            # Some parameters in MeanUCERF3 have overloaded setValue() Need to set one by one
+            # Set Apply Aftershock Filter
             if erf_selection.get('Apply Aftershock Filter', None):
                 tmp.setParameter(
                     'Apply Aftershock Filter',
                     erf_selection['Apply Aftershock Filter'],
                 )
+            # Set Aleatoiry mag-area stdDev
             if erf_selection.get('Aleatory Mag-Area StdDev', None):
                 tmp.setParameter(
                     'Aleatory Mag-Area StdDev',
                     erf_selection['Aleatory Mag-Area StdDev'],
                 )
+            # Set IncludeBackgroundOpetion
             setERFbackgroundOptions(tmp, erf_selection)
+            # Set Treat Background Seismicity As Option
             setERFtreatBackgroundOptions(tmp, erf_selection)
         elif erf_selection.get('preset', None) == 'FM3.1 Branch Averaged':
             tmp.setPreset(MeanUCERF3.Presets.FM3_1_BRANCH_AVG)
             if (erf_selection.get('Background Seismicity', None) == 'Exclude') and (
-                'Treat Background Seismicity As' in erf_selection.keys()
+                'Treat Background Seismicity As' in erf_selection.keys()  # noqa: SIM118
             ):
                 value = erf_selection.pop('Treat Background Seismicity As')
-                print(
-                    f'Background Seismicity is set as Excluded, Treat Background Seismicity As: {value} is ignored'
+                print(  # noqa: T201
+                    f'Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored'
                 )
+            # Some parameters in MeanUCERF3 have overloaded setValue() Need to set one by one
+            # Set Apply Aftershock Filter
             if erf_selection.get('Apply Aftershock Filter', None):
                 tmp.setParameter(
                     'Apply Aftershock Filter',
                     erf_selection['Apply Aftershock Filter'],
                 )
+            # Set Aleatoiry mag-area stdDev
             if erf_selection.get('Aleatory Mag-Area StdDev', None):
                 tmp.setParameter(
                     'Aleatory Mag-Area StdDev',
                     erf_selection['Aleatory Mag-Area StdDev'],
                 )
+            # Set IncludeBackgroundOpetion
             setERFbackgroundOptions(tmp, erf_selection)
+            # Set Treat Background Seismicity As Option
             setERFtreatBackgroundOptions(tmp, erf_selection)
+            # Set Probability Model Option
             setERFProbabilityModelOptions(tmp, erf_selection)
         elif erf_selection.get('preset', None) == 'FM3.2 Branch Averaged':
             tmp.setPreset(MeanUCERF3.Presets.FM3_2_BRANCH_AVG)
             if (erf_selection.get('Background Seismicity', None) == 'Exclude') and (
-                'Treat Background Seismicity As' in erf_selection.keys()
+                'Treat Background Seismicity As' in erf_selection.keys()  # noqa: SIM118
             ):
                 value = erf_selection.pop('Treat Background Seismicity As')
-                print(
-                    f'Background Seismicity is set as Excluded, Treat Background Seismicity As: {value} is ignored'
+                print(  # noqa: T201
+                    f'Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored'
                 )
+            # Some parameters in MeanUCERF3 have overloaded setValue() Need to set one by one
+            # Set Apply Aftershock Filter
             if erf_selection.get('Apply Aftershock Filter', None):
                 tmp.setParameter(
                     'Apply Aftershock Filter',
                     erf_selection['Apply Aftershock Filter'],
                 )
+            # Set Aleatoiry mag-area stdDev
             if erf_selection.get('Aleatory Mag-Area StdDev', None):
                 tmp.setParameter(
                     'Aleatory Mag-Area StdDev',
                     erf_selection['Aleatory Mag-Area StdDev'],
                 )
+            # Set IncludeBackgroundOpetion
             setERFbackgroundOptions(tmp, erf_selection)
+            # Set Treat Background Seismicity As Option
             setERFtreatBackgroundOptions(tmp, erf_selection)
+            # Set Probability Model Option
             setERFProbabilityModelOptions(tmp, erf_selection)
         else:
-            print(
+            print(  # noqa: T201
                 f"""The specified Mean UCERF3 preset {erf_selection.get("preset", None)} is not implemented"""
             )
         erf = tmp
@@ -189,10 +236,11 @@ def getERF(scenario_info, update_flag=True):  # noqa: FBT002, C901, N802, D103
     elif erf_name == 'WGCEP Eqk Rate Model 2 ERF':
         erf = UCERF2()
     else:
-        print('Please check the ERF model name.')
+        print('Please check the ERF model name.')  # noqa: T201
 
     if erf_name and update_flag:
         erf.updateForecast()
+    # return
     return erf
 
 
@@ -331,11 +379,14 @@ def get_source_rupture(erf, source_index, rupture_index):  # noqa: D103
 def get_source_distance(erf, source_index, lat, lon):  # noqa: D103
     rupSource = erf.getSource(source_index)  # noqa: N806
     sourceSurface = rupSource.getSourceSurface()  # noqa: N806
+    # print(lon)
+    # print(lat)
     distToSource = []  # noqa: N806
     for i in range(len(lat)):
-        distToSource.append(
+        distToSource.append(  # noqa: PERF401
             float(sourceSurface.getDistanceRup(Location(lat[i], lon[i])))  # noqa: F405
         )
+
     return distToSource
 
 
@@ -344,11 +395,11 @@ def get_rupture_distance(erf, source_index, rupture_index, lat, lon):  # noqa: D
     rupSurface = rupSource.getRupture(rupture_index).getRuptureSurface()  # noqa: N806
     distToRupture = []  # noqa: N806
     for i in range(len(lat)):
-        distToRupture.append(
+        distToRupture.append(  # noqa: PERF401
             float(rupSurface.getDistanceRup(Location(lat[i], lon[i])))  # noqa: F405
         )
-    return distToRupture
 
+    return distToRupture
 
 def get_rupture_info_ASK2014_aftershock(
         erf, source_index, rupture_indx, mainshock):
@@ -367,7 +418,7 @@ def get_rupture_info_ASK2014_aftershock(
     rup_gdf = gpd.GeoDataFrame(index=[0], crs='EPSG:4326', geometry=[rup_polygon])
     rup_gdf = rup_gdf.to_crs(epsg=6417)
     centroid = rup_gdf.geometry.centroid.iloc[0]
-    return mainshock.geometry.iloc[0].distance(centroid) / 1000
+    return mainshock.geometry.iloc[0].distance(centroid) /1000 # in meters
 
 
 def get_rupture_info_CY2014(erf, source_index, rupture_index, siteList):  # noqa: N802, N803, D103
@@ -375,6 +426,7 @@ def get_rupture_info_CY2014(erf, source_index, rupture_index, siteList):  # noqa
     rupList = rupSource.getRuptureList()  # noqa: N806
     rupSurface = rupList.get(rupture_index).getRuptureSurface()  # noqa: N806
     if rupList.get(rupture_index).getHypocenterLocation() is None:
+        # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/nshmp2/imr/ngaw2/NSHMP14_WUS_CB.java#L242
         dip = float(rupSurface.getAveDip())
         width = float(rupSurface.getAveWidth())
         zTop = float(rupSurface.getAveRupTopDepth())  # noqa: N806
@@ -428,26 +480,30 @@ def horzDistanceFast(lat1, lon1, lat2, lon2):  # noqa: N802, D103
     dlat = np.abs(lat2 - lat1)
     a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
     c = 2 * np.arcsin(np.sqrt(a))
-    EARTH_RADIUS_MEAN = 6371.0072  # noqa: N806
+    EARTH_RADIUS_MEAN = 6371.0072  # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/commons/geo/GeoTools.java#L22  # noqa: N806
+    # return EARTH_RADIUS_MEAN * np.sqrt((dLat * dLat) + (dLon * dLon))
     return EARTH_RADIUS_MEAN * c
 
 
 def getPtSrcDistCorr(horzDist, mag, type):  # noqa: A002, N802, N803, D103
+    # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/faultSurface/utils/PtSrcDistCorr.java#L20
     if type == 'FIELD':
         rupLen = np.power(10.0, -3.22 + 0.69 * mag)  # noqa: N806
         return 0.7071 + (1.0 - 0.7071) / (
             1 + np.power(rupLen / (horzDist * 0.87), 1.1)
         )
-    elif type == 'NSHMP08':
-        print(
+    elif type == 'NSHMP08':  # noqa: RET505
+        print(  # noqa: T201
             'The NSHMP08 rJB correction has not been implemented. corr=1.0 is used instead'
         )
+        # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/faultSurface/utils/PtSrcDistCorr.java#L20
         return 1.0
     else:
         return 1.0
 
 
 def get_PointSource_info_CY2014(source_info, siteList):  # noqa: N802, N803, D103
+    # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/faultSurface/PointSurface.java#L118
     sourceLat = source_info['Location']['Latitude']  # noqa: N806
     sourceLon = source_info['Location']['Longitude']  # noqa: N806
     sourceDepth = source_info['Location']['Depth']  # noqa: N806
@@ -463,9 +519,8 @@ def get_PointSource_info_CY2014(source_info, siteList):  # noqa: N802, N803, D10
         siteList[i].update({'rX': rX})
     site_rup_info = {
         'dip': float(source_info['AverageDip']),
-        'width': 0.0,
+        'width': 0.0,  # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/faultSurface/PointSurface.java#L68
         'zTop': sourceDepth,
-        'zHyp': sourceDepth,
         'aveRake': float(source_info['AverageRake']),
     }
     return site_rup_info, siteList
@@ -481,22 +536,28 @@ def export_to_json(  # noqa: C901, D103
     maxDistance=1000.0,  # noqa: N803
     use_hdf5=False,  # noqa: FBT002
 ):
+    # Initializing
     erf_data = {'type': 'FeatureCollection'}
-    site_loc = Location(site_loc[0], site_loc[1])  # noqa: F405
-    site = Site(site_loc)  # noqa: F405
+    site_loc = Location(site_loc[0], site_loc[1])  # type: ignore # noqa: F405
+    site = Site(site_loc)  # type: ignore # noqa: F405
+    # Total source number
     num_sources = erf.getNumSources()
     source_tag = []
     source_dist = []
     for i in tqdm(range(num_sources), desc=f'Find sources with in {maxDistance} km'):
         rup_source = erf.getSource(i)
         distance_to_source = rup_source.getMinDistance(site)
+        # sourceSurface = rupSource.getSourceSurface()
+        # distanceToSource = sourceSurface.getDistanceRup(site_loc)
         source_tag.append(i)
         source_dist.append(distance_to_source)
-    df = pd.DataFrame.from_dict({'sourceID': source_tag, 'sourceDist': source_dist})
+    df = pd.DataFrame.from_dict({'sourceID': source_tag, 'sourceDist': source_dist})  # noqa: PD901
+    # Sorting sources
     source_collection = df.sort_values(['sourceDist'], ascending=(True))
     source_collection = source_collection[
         source_collection['sourceDist'] < maxDistance
     ]
+    # Collecting source features
     if not use_hdf5:
         feature_collection = []
         for i in tqdm(
@@ -504,6 +565,7 @@ def export_to_json(  # noqa: C901, D103
             desc=f'Find ruptures with in {maxDistance} km',
         ):
             source_index = source_collection.iloc[i, 0]
+            # Getting rupture distances
             rupSource = erf.getSource(source_index)  # noqa: N806
             try:
                 rupList = rupSource.getRuptureList()  # noqa: N806
@@ -517,29 +579,38 @@ def export_to_json(  # noqa: C901, D103
             rup_dist = []
             for j in range(rupList.size()):
                 ruptureSurface = rupList.get(j).getRuptureSurface()  # noqa: N806
-                # v25.4: PtSrcDistCorr removed. Original code used NONE
-                # (no correction). In v25.4, PointSurface applies no
-                # correction by default, so no action needed.
+                # If pointsource rupture distance correction
+                if isinstance(ruptureSurface, PointSurface):  # noqa: F405
+                    # or 'FIELD' or 'NSHMP08'
+                    distCorrType = PtSrcDistCorr.Type.NONE  # noqa: N806
+                    (PointSurface @ ruptureSurface).setDistCorrMagAndType(  # noqa: F405
+                        rupList.get(j).getMag(), distCorrType
+                    )
                 cur_dist = ruptureSurface.getDistanceRup(site_loc)
                 rup_tag.append(j)
                 if cur_dist < maxDistance:
                     rup_dist.append(cur_dist)
                 else:
+                    # exceeding the maxDistance requirement
                     rup_dist.append(-1.0)
-            df = pd.DataFrame.from_dict({'rupID': rup_tag, 'rupDist': rup_dist})
+            df = pd.DataFrame.from_dict({'rupID': rup_tag, 'rupDist': rup_dist})  # noqa: PD901
+            # Sorting
             rup_collection = df.sort_values(['rupDist'], ascending=(True))
+            # Preparing the dict of ruptures
             for j in range(rupList.size()):
                 cur_dict = dict()  # noqa: C408
                 cur_dict.update({'type': 'Feature'})
                 rup_index = rup_collection.iloc[j, 0]
                 cur_dist = rup_collection.iloc[j, 1]
                 if cur_dist <= 0.0:
+                    # skipping ruptures with distance exceeding the maxDistance
                     continue
                 rupture = rupList.get(rup_index)
                 maf = rupture.getMeanAnnualRate(erf.getTimeSpan().getDuration())
                 if maf <= 0.0:
                     continue
                 ruptureSurface = rupture.getRuptureSurface()  # noqa: N806
+                # Properties
                 cur_dict['properties'] = dict()  # noqa: C408
                 name = str(rupSource.getName())
                 if EqName is not None:
@@ -553,16 +624,18 @@ def export_to_json(  # noqa: C901, D103
                 cur_dict['properties'].update({'Rupture': int(rup_index)})
                 cur_dict['properties'].update({'Source': int(source_index)})
                 if outfile is not None:
+                    # these calls are time-consuming, so only run them if one needs
+                    # detailed outputs of the sources
                     cur_dict['properties'].update({'Distance': float(cur_dist)})
                     distanceRup = rupture.getRuptureSurface().getDistanceRup(  # noqa: N806
                         site_loc
-                    )
+                    )  # noqa: N806, RUF100
                     cur_dict['properties'].update(
                         {'DistanceRup': float(distanceRup)}
                     )
                     distanceSeis = rupture.getRuptureSurface().getDistanceSeis(  # noqa: N806
                         site_loc
-                    )
+                    )  # noqa: N806, RUF100
                     cur_dict['properties'].update(
                         {'DistanceSeis': float(distanceSeis)}
                     )
@@ -576,8 +649,10 @@ def export_to_json(  # noqa: C901, D103
                     cur_dict['properties'].update(
                         {'MeanAnnualRate': abs(float(maf))}
                     )
+                    # Geometry
                     cur_dict['geometry'] = dict()  # noqa: C408
                     if ruptureSurface.isPointSurface():
+                        # Point source
                         pointSurface = ruptureSurface  # noqa: N806
                         location = pointSurface.getLocation()
                         cur_dict['geometry'].update({'type': 'Point'})
@@ -590,45 +665,50 @@ def export_to_json(  # noqa: C901, D103
                             }
                         )
                     else:
+                        # Line source
                         try:
                             trace = ruptureSurface.getUpperEdge()
                         except:  # noqa: E722
                             trace = ruptureSurface.getEvenlyDiscritizedUpperEdge()
                         coordinates = []
                         for k in trace:
-                            coordinates.append(
+                            coordinates.append(  # noqa: PERF401
                                 [float(k.getLongitude()), float(k.getLatitude())]
                             )
                         cur_dict['geometry'].update({'type': 'LineString'})
                         cur_dict['geometry'].update({'coordinates': coordinates})
+                # Appending
                 feature_collection.append(cur_dict)
+        # sort the list
         maf_list_n = [-x['properties']['MeanAnnualRate'] for x in feature_collection]
         sort_ids = np.argsort(maf_list_n)
         feature_collection_sorted = [feature_collection[i] for i in sort_ids]
         del feature_collection
         erf_data.update({'features': feature_collection_sorted})
-        print(
+        print(  # noqa: T201
             f'FetchOpenSHA: total {len(feature_collection_sorted)} ruptures are collected.'
         )
         if outfile is not None:
-            print(
+            print(  # noqa: T201
                 f'The collected ruptures are sorted by MeanAnnualRate and saved in {outfile}'
             )
-            print(f"FetchOpenSRA_24 {outfile}")
-            with open(outfile, 'w') as f:
+            with open(outfile, 'w') as f:  # noqa: PTH123
                 ujson.dump(erf_data, f, indent=2)
     else:
         import h5py
 
         with h5py.File(outfile, 'w') as h5file:
+            # Store the geometry as a string array
             h5file.create_dataset(
                 'geometry',
-                data=gdf.geometry.astype(str).values.astype('S'),
-            )
+                data=gdf.geometry.astype(str).values.astype('S'),  # noqa: PD011, F405
+            )  # noqa: F405, PD011, RUF100
+    # return
     return erf_data
 
 
 def CreateIMRInstance(gmpe_name):  # noqa: N802, D103
+    # GMPE name map
     gmpe_map = {
         str(ASK_2014.NAME): ASK_2014_Wrapper.class_.getName(),  # noqa: F405
         str(BSSA_2014.NAME): BSSA_2014_Wrapper.class_.getName(),  # noqa: F405
@@ -642,32 +722,19 @@ def CreateIMRInstance(gmpe_name):  # noqa: N802, D103
             AfshariStewart_2016_AttenRel.NAME  # noqa: F405
         ): AfshariStewart_2016_AttenRel.class_.getName(),  # noqa: F405
     }
+    # Mapping GMPE name
     imrClassName = gmpe_map.get(gmpe_name)  # noqa: N806
     if imrClassName is None:
         return imrClassName
+    # Getting the java class
     imrClass = Class.forName(imrClassName)  # noqa: N806, F405
-    # Try no-arg constructor first
-    try:
-        ctor = imrClass.getConstructor()
-        imr = ctor.newInstance()
-    except:  # noqa: E722
-        # Some GMMs (KS_2006, BommerEtAl_2009, etc.) require a
-        # ParameterChangeWarningListener. Create a dummy one.
-        try:
-            from org.opensha.commons.param.event import ParameterChangeWarningListener
-
-            @jpype.JImplements(ParameterChangeWarningListener)
-            class _DummyListener:
-                @jpype.JOverride
-                def parameterChangeWarning(self, event):
-                    pass
-
-            ctor = imrClass.getConstructor(ParameterChangeWarningListener)
-            imr = ctor.newInstance(_DummyListener())
-        except:  # noqa: E722
-            return None
+    ctor = imrClass.getConstructor()
+    imr = ctor.newInstance()
+    # Setting default parameters
     imr.setParamDefaults()
+    # return
     return imr
+
 
 def get_DataSource(paramName, siteData):  # noqa: N802, N803, D103
     typeMap = SiteTranslator.DATA_TYPE_PARAM_NAME_MAP  # noqa: N806, F405
@@ -692,11 +759,13 @@ def get_DataSource(paramName, siteData):  # noqa: N802, N803, D103
 
 
 def get_site_prop(gmpe_name, siteSpec):  # noqa: C901, N803, D103
+    # GMPE
     try:
         imr = CreateIMRInstance(gmpe_name)
     except:  # noqa: E722
-        print('Please check GMPE name.')
+        print('Please check GMPE name.')  # noqa: T201
         return 1
+    # Site data
     sites = ArrayList()  # noqa: F405
     for cur_site in siteSpec:
         cur_loc = Location(  # noqa: F405
@@ -708,14 +777,18 @@ def get_site_prop(gmpe_name, siteSpec):  # noqa: C901, N803, D103
         availableSiteData = siteDataProviders.getAllAvailableData(sites)  # noqa: N806
     except:  # noqa: E722
         availableSiteData = []  # noqa: N806
-        print(
+        print(  # noqa: T201
             'remote getAllAvailableData is not available temporarily, will use site Vs30 in the site csv file.'
         )
+        # return 1
     siteTrans = SiteTranslator()  # noqa: N806, F405
+    # Looping over all sites
     site_prop = []
     for i in range(len(siteSpec)):
         site_tmp = dict()  # noqa: C408
+        # Current site
         site = sites.get(i)
+        # Location
         cur_site = siteSpec[i]
         locResults = {  # noqa: N806
             'Latitude': cur_site['Location']['Latitude'],
@@ -729,6 +802,7 @@ def get_site_prop(gmpe_name, siteSpec):  # noqa: C901, N803, D103
             siteDataValues.add(availableSiteData.get(j).getValue(i))
         imrSiteParams = imr.getSiteParams()  # noqa: N806
         siteDataResults = []  # noqa: N806
+        # Setting site parameters
         for j in range(imrSiteParams.size()):
             siteParam = imrSiteParams.getByIndex(j)  # noqa: N806
             newParam = Parameter.clone(siteParam)  # noqa: N806, F405
@@ -786,10 +860,13 @@ def get_site_prop(gmpe_name, siteSpec):  # noqa: C901, N803, D103
                     }
                 )
             site.addParameter(newParam)
+            # End for j
+        # Updating site specifications
         siteSpec[i] = cur_site
         site_tmp.update({'Location': locResults, 'SiteData': siteDataResults})
         site_prop.append(site_tmp)
 
+    # Return
     return siteSpec, sites, site_prop
 
 
@@ -803,16 +880,20 @@ def get_IM(  # noqa: C901, N802, D103
     station_info,
     im_info,
 ):
+    # GMPE name
     gmpe_name = gmpe_info['Type']
+    # Creating intensity measure relationship instance
     try:
         imr = CreateIMRInstance(gmpe_name)
     except:  # noqa: E722
-        print('Please check GMPE name.')
+        print('Please check GMPE name.')  # noqa: T201
         return 1, station_info
+    # Getting supported intensity measure types
     ims = imr.getSupportedIntensityMeasures()
     saParam = ims.getParameter(SA_Param.NAME)  # noqa: N806, F405
     supportedPeriods = saParam.getPeriodParam().getPeriods()  # noqa: N806
     Arrays.sort(supportedPeriods)  # noqa: F405
+    # Rupture
     eqRup = EqkRupture()  # noqa: N806, F405
     if source_info['Type'] == 'PointSource':
         eqRup.setMag(source_info['Magnitude'])
@@ -828,27 +909,38 @@ def get_IM(  # noqa: C901, N802, D103
     elif source_info['Type'] == 'ERF':
         timeSpan = TimeSpan(TimeSpan.NONE, TimeSpan.YEARS)  # noqa: N806, F405
         erfParams = source_info.get('Parameters', None)  # noqa: N806
+        # Additional parameters (if any)
         if erfParams is not None:
             for k in erfParams.keys:
                 erf.setParameter(k, erfParams[k])
+        # Time span
         timeSpan = erf.getTimeSpan()  # noqa: N806
+        # Source
         eqSource = erf.getSource(source_info['SourceIndex'])  # noqa: N806
         eqSource.getName()
+        # Rupture
         eqRup = eqSource.getRupture(source_info['RuptureIndex'])  # noqa: N806
+        # Properties
         magnitude = eqRup.getMag()
         averageDip = eqRup.getRuptureSurface().getAveDip()  # noqa: N806, F841
         averageRake = eqRup.getAveRake()  # noqa: N806, F841
+        # Probability
         probEqRup = eqRup  # noqa: N806
         probability = probEqRup.getProbability()  # noqa: F841
+        # MAF
         meanAnnualRate = probEqRup.getMeanAnnualRate(timeSpan.getDuration())  # noqa: N806
+        # Rupture surface
         surface = eqRup.getRuptureSurface()  # noqa: F841
+    # Setting up imr
     imr.setEqkRupture(eqRup)
     imrParams = gmpe_info['Parameters']  # noqa: N806
     if bool(imrParams):
-        for k in imrParams.keys():
+        for k in imrParams.keys():  # noqa: SIM118
             imr.getParameter(k).setValue(imrParams[k])
+    # Station
     if station_info['Type'] == 'SiteList':
         siteSpec = station_info['SiteList']  # noqa: N806
+    # Intensity measure
     periods = im_info.get('Periods', None)
     if periods is not None:
         periods = supportedPeriods
@@ -863,11 +955,15 @@ def get_IM(  # noqa: C901, N802, D103
         tag_PGA = True  # noqa: N806
     if 'PGV' in im_info['Type']:
         tag_PGV = True  # noqa: N806
+    # Looping over sites
     gm_collector = []
     for i in range(len(siteSpec)):
         gmResults = site_prop[i]  # noqa: N806
+        # Current site
         site = sites.get(i)
+        # Location
         cur_site = siteSpec[i]  # noqa: F841
+        # Set up the site in the imr
         imr.setSite(site)
         try:
             stdDevParam = imr.getParameter(StdDevTypeParam.NAME)  # noqa: N806, F405
@@ -875,7 +971,7 @@ def get_IM(  # noqa: C901, N802, D103
                 StdDevTypeParam.STD_DEV_TYPE_INTER  # noqa: F405
             ) and stdDevParam.isAllowed(StdDevTypeParam.STD_DEV_TYPE_INTRA)  # noqa: F405
         except:  # noqa: E722
-            stdDevParam = None  # noqa: N806
+            stdDevParaam = None  # noqa: N806, F841
             hasIEStats = False  # noqa: N806
         cur_T = im_info.get('Periods', None)  # noqa: N806
         if tag_SA:
@@ -904,6 +1000,7 @@ def get_IM(  # noqa: C901, N802, D103
                     saResult['IntraEvStdDev'].append(float(intraEvStdDev))
             gmResults.update({'lnSA': saResult})
         if tag_PGA:
+            # for PGV current T = 0
             cur_T = [0.00]  # noqa: N806
             pgaResult = {'Mean': [], 'TotalStdDev': []}  # noqa: N806
             if hasIEStats:
@@ -923,6 +1020,7 @@ def get_IM(  # noqa: C901, N802, D103
                 pgaResult['IntraEvStdDev'].append(float(intraEvStdDev))
             gmResults.update({'lnPGA': pgaResult})
         if tag_PGV:
+            # for PGV current T = 0
             cur_T = [0.00]  # noqa: N806
             pgvResult = {'Mean': [], 'TotalStdDev': []}  # noqa: N806
             if hasIEStats:
@@ -943,8 +1041,10 @@ def get_IM(  # noqa: C901, N802, D103
             gmResults.update({'lnPGV': pgvResult})
 
         gm_collector.append(gmResults)
+    # Updating station information
     if station_info['Type'] == 'SiteList':
         station_info.update({'SiteList': siteSpec})
+    # Final results
     res = {
         'Magnitude': magnitude,
         'MeanAnnualRate': meanAnnualRate,
@@ -953,16 +1053,22 @@ def get_IM(  # noqa: C901, N802, D103
         'Periods': cur_T,
         'GroundMotions': gm_collector,
     }
+    # return
     return res, station_info
 
 
 def get_site_vs30_from_opensha(lat, lon, vs30model='CGS/Wills VS30 Map (2015)'):  # noqa: D103
+    # set up site java object
     sites = ArrayList()  # noqa: F405
     num_sites = len(lat)
     for i in range(num_sites):
         sites.add(Site(Location(lat[i], lon[i])))  # noqa: F405
+
+    # prepare site data java object
     siteDataProviders = OrderedSiteDataProviderList.createSiteDataProviderDefaults()  # noqa: N806, F405
     siteData = siteDataProviders.getAllAvailableData(sites)  # noqa: N806
+
+    # search name
     vs30 = []
     for i in range(int(siteData.size())):
         cur_siteData = siteData.get(i)  # noqa: N806
@@ -971,18 +1077,24 @@ def get_site_vs30_from_opensha(lat, lon, vs30model='CGS/Wills VS30 Map (2015)'):
                 float(cur_siteData.getValue(x).getValue()) for x in range(num_sites)
             ]
             break
-        else:
+        else:  # noqa: RET508
             continue
-    if any([np.isnan(x) for x in vs30]):
+
+    # check if any nan (Wills Map return nan for offshore sites)
+    # Using global vs30 as default patch - 'Global Vs30 from Topographic Slope (Wald & Allen 2008)'
+    if any([np.isnan(x) for x in vs30]):  # noqa: C419
         non_list = np.where(np.isnan(vs30))[0].tolist()
         for i in non_list:
             vs30[i] = float(siteData.get(3).getValue(i).getValue())
+
+    # return
     return vs30
 
 
 def get_site_z1pt0_from_opensha(lat, lon):  # noqa: D103
     sites = ArrayList()  # noqa: F405
     sites.add(Site(Location(lat, lon)))  # noqa: F405
+    # prepare site data java object
     siteDataProviders = OrderedSiteDataProviderList.createSiteDataProviderDefaults()  # noqa: N806, F405
     siteData = siteDataProviders.getAllAvailableData(sites)  # noqa: N806
     for data in siteData:
@@ -996,6 +1108,7 @@ def get_site_z1pt0_from_opensha(lat, lon):  # noqa: D103
 def get_site_z2pt5_from_opensha(lat, lon):  # noqa: D103
     sites = ArrayList()  # noqa: F405
     sites.add(Site(Location(lat, lon)))  # noqa: F405
+    # prepare site data java object
     siteDataProviders = OrderedSiteDataProviderList.createSiteDataProviderDefaults()  # noqa: N806, F405
     siteData = siteDataProviders.getAllAvailableData(sites)  # noqa: N806
     for data in siteData:
