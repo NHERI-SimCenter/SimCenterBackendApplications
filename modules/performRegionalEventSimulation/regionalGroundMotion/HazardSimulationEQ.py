@@ -143,7 +143,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
             )
             if not filePath_ini:
                 # Error in ini file
-                sys.exit(
+                raise RuntimeError(
                     'HazardSimulation: errors in preparing the OpenQuake configuration file.'
                 )
             if scenario_info['EqRupture']['Type'] in [
@@ -169,7 +169,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
                             )
                         )
                     print(err_msg)  # noqa: T201
-                    sys.exit(err_msg)
+                    raise RuntimeError(err_msg)
                 else:
                     print('HazardSimulation: OpenQuake Classical PSHA completed.')  # noqa: T201
                 if scenario_info['EqRupture'].get('UHS', False):
@@ -198,7 +198,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
                 print('HazardSimulation: OpenQuake Scenario calculation completed.')  # noqa: T201
 
             else:
-                sys.exit(
+                raise NotImplementedError(
                     'HazardSimulation: OpenQuakeClassicalPSHA, OpenQuakeUserConfig and OpenQuakeScenario are supported.'
                 )
 
@@ -405,7 +405,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
             if runtag:
                 print('HazardSimulation: the ground motion list saved.')  # noqa: T201
             else:
-                sys.exit(
+                raise RuntimeError(
                     'HazardSimulation: warning - issues with saving the ground motion list.'
                 )
             # Downloading records
@@ -620,6 +620,3 @@ if __name__ == '__main__':
     ]
 
     hazard_job(hazard_info)
-
-    # Closing the current process
-    sys.exit(0)

@@ -140,7 +140,7 @@ def run_scenario_i(sce_idx, hazard_info_orig, all_rups, procID = 0):
             if runtag:
                 print('HazardSimulation: the ground motion list saved.')  # noqa: T201
             else:
-                sys.exit(
+                raise RuntimeError(
                     'HazardSimulation: warning - issues with saving the ground motion list.'
                 )
         else:

@@ -41,8 +41,7 @@
 # Anne Husley
 # Kuanshi Zhong
 # Jinyan Zhao
-import sys  # noqa: I001
-import time
+import time  # noqa: I001
 import warnings
 
 import h5py
@@ -384,7 +383,7 @@ class GM_Simulator:  # noqa: D101
             ).reshape([len(im_name_list_1), len(im_name_list_2)])
         else:
             # TODO: extending this to more inter-event correlation models  # noqa: TD002
-            sys.exit(
+            raise NotImplementedError(
                 'GM_Simulator.compute_inter_event_residual: currently supporting Baker & Jayaram (2008), Baker & Bradley (2017)'
             )
         return rho
@@ -495,7 +494,7 @@ class GM_Simulator:  # noqa: D101
             )
         else:
             # TODO: extending this to more inter-event correlation models  # noqa: TD002
-            sys.exit(
+            raise NotImplementedError(
                 'GM_Simulator.compute_intra_event_residual: currently supporting Jayaram & Baker (2009), Loth & Baker (2013),Markhvida et al. (2017), Du & Ning (2021)'
             )
         return residuals

@@ -145,7 +145,7 @@ if __name__ == '__main__':
 
             if returncode != 0:
                 print(result)
-                sys.exit(f'return code: {returncode}')
+                raise RuntimeError(f'return code: {returncode}')
                 
 
 

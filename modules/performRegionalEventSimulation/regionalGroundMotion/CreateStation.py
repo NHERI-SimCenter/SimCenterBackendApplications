@@ -233,7 +233,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
                 ]
     # Check if any duplicated points
     if selected_stn.duplicated(subset=[lon_label, lat_label]).any():
-        sys.exit(
+        raise ValueError(
             'Error: Duplicated lat and lon in the Site File (.csv), '
             f'please check site \n{selected_stn[selected_stn.duplicated(subset=[lon_label, lat_label], keep = False)].index.tolist()}'
         )
@@ -243,7 +243,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
     # Get Vs30
     if vs30Config['Type'] == 'User-specified':
         if vs30_label not in selected_stn.keys():  # noqa: SIM118
-            sys.exit(
+            raise ValueError(
                 'ERROR: User-specified option is selected for Vs30 model but the provided.'  # noqa: ISC003
                 + "but the provided Site File doesn't contain a column named 'Vs30'."
                 + '\nNote: the User-specified Vs30 model is only supported for Scattering Locations site definition.'
@@ -603,7 +603,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
 
         if stn.get('vsInferred'):
             if stn.get('vsInferred') not in [0, 1]:
-                sys.exit(
+                raise ValueError(
                     "CreateStation: Only '0' or '1' can be assigned to the"  # noqa: ISC003
                     + " 'vsInferred' column in the Site File (.csv), where 0 stands for false and 1 stands for true."
                 )

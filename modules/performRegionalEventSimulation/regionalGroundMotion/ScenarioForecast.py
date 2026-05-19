@@ -213,6 +213,3 @@ if __name__ == '__main__':
         print('HazardSimulation: currently only supports EQ and Wind simulations.')  # noqa: T201
     # print(scenarios)
     print('HazardSimulation: scenarios created.')  # noqa: T201
-
-    # Closing the current process
-    sys.exit(0)

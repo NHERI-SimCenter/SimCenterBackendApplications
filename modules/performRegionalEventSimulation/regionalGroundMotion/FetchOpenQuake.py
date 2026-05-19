@@ -810,7 +810,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
         # dbserver.ensure_on()
         if dbserver.get_status() == 'not-running':
             if config.dbserver.multi_user:
-                sys.exit(
+                raise RuntimeError(
                     'Please start the DbServer: ' 'see the documentation for details'
                 )
             # otherwise start the DbServer automatically; NB: I tried to use
@@ -831,7 +831,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
             waiting_seconds = 30
             while dbserver.get_status() == 'not-running':
                 if waiting_seconds == 0:
-                    sys.exit(
+                    raise RuntimeError(
                         'The DbServer cannot be started after 30 seconds. '
                         'Please check the configuration'
                     )
@@ -843,7 +843,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
         # check if we are talking to the right server
         err = dbserver.check_foreign()
         if err:
-            sys.exit(err)
+            raise RuntimeError(err)
 
         # Copy the event_info
         self.event_info = event_info

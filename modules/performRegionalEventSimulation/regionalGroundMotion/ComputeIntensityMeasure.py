@@ -101,7 +101,6 @@ import collections  # noqa: E402
 import json  # noqa: E402
 import os  # noqa: E402
 import socket  # noqa: E402
-import sys  # noqa: E402
 import time  # noqa: E402
 from pathlib import Path  # noqa: E402
 
@@ -807,7 +806,7 @@ def compute_im(  # noqa: C901, D103
             ho_period = generator_info['Parameters'].get('Period')
             if im_info['Type'] == 'Vector':
                 if im_info.get('SA') is None:
-                    sys.exit(
+                    raise ValueError(
                         'SA is used in hazard downsampling but not defined in the intensity measure tab'
                     )
                 elif im_info.get('Periods', None) is not None:

@@ -41,7 +41,6 @@ import collections
 import itertools
 import json as python_json
 import os
-import sys
 import threading
 import time
 
@@ -958,7 +957,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: D101
         )
 
         if self.num_selected[self.selected_alpha_ind] == 0:
-            sys.exit(
+            raise RuntimeError(
                 'ERROR: Zero scenarios/ground motions are selected in Wang et al. (2023).\n'  # noqa: ISC003
                 + f'The tunnling parameter used is {self.alphas[self.selected_alpha_ind]}.\n'
                 + 'Try using a smaller tuning parameter.'
