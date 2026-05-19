@@ -115,7 +115,13 @@ except ImportError:
 from org.opensha.sha.imr import *  # noqa: F403
 from org.opensha.sha.imr.attenRelImpl import *  # noqa: F403
 from org.opensha.sha.imr.attenRelImpl.ngaw2 import *  # noqa: F403
-from org.opensha.sha.imr.attenRelImpl.ngaw2.NGAW2_Wrappers import *  # noqa: F403
+# v25.4: NGAW2_Wrappers became a Java class with static nested wrapper
+# classes (it used to be a sub-package). `from ...NGAW2_Wrappers import *`
+# would silently import nothing, so bind the nested wrappers explicitly.
+ASK_2014_Wrapper = NGAW2_Wrappers.ASK_2014_Wrapper  # noqa: F405
+BSSA_2014_Wrapper = NGAW2_Wrappers.BSSA_2014_Wrapper  # noqa: F405
+CB_2014_Wrapper = NGAW2_Wrappers.CB_2014_Wrapper  # noqa: F405
+CY_2014_Wrapper = NGAW2_Wrappers.CY_2014_Wrapper  # noqa: F405
 from org.opensha.sha.imr.param.IntensityMeasureParams import *  # noqa: F403
 from org.opensha.sha.imr.param.OtherParams import *  # noqa: F403
 from org.opensha.sha.util import *  # noqa: F403
@@ -254,10 +260,30 @@ def getERF(scenario_info, update_flag=True):  # noqa: FBT002, C901, N802, D103
     else:
         print('Please check the ERF model name.')  # noqa: T201
 
-    if erf_name and update_flag:
-        erf.updateForecast()
+    if erf is not None:
+        _set_point_source_distance_correction(erf)
+        if update_flag:
+            erf.updateForecast()
     # return
     return erf
+
+
+def _set_point_source_distance_correction(erf):
+    """Set the point-source distance correction to NSHM_2013 on the ERF.
+
+    NSHM_2013 is the current USGS standard, but per-ERF defaults differ:
+    UCERF2 and MeanUCERF2 default to NSHM_2008, and on MeanUCERF3 the
+    parameter is nested inside "Gridded Seismicity Settings" (where its
+    default is already NSHM_2013). Frankel02 and WGCEP_UCERF1 do not expose
+    this parameter at all. The try/except silently skips those cases.
+    """
+    try:
+        erf.setParameter(
+            'Point Source Distance Correction',
+            PointSourceDistanceCorrections.NSHM_2013,
+        )
+    except:  # noqa: E722
+        pass
 
 
 def setERFbackgroundOptions(erf, selection):  # noqa: N802, D103
@@ -1114,12 +1140,29 @@ def get_site_vs30_from_opensha(lat, lon, vs30model='CGS/Wills VS30 Map (2015)'):
         else:  # noqa: RET508
             continue
 
-    # check if any nan (Wills Map return nan for offshore sites)
-    # Using global vs30 as default patch - 'Global Vs30 from Topographic Slope (Wald & Allen 2008)'
+    # The Wills 2015 map returns NaN for offshore sites; fall back to the
+    # global topographic-slope Vs30 model. Look up the fallback provider by
+    # name (not by index) so an upstream reorder of the provider list does
+    # not silently route this code to the wrong dataset.
+    # (v25.4 inserted Thompson 2022 at index 0, shifting the Wald & Allen
+    # global provider from index 3 to index 4; index 3 is now Wills Map 2006,
+    # which returns NaN outside California.)
     if any([np.isnan(x) for x in vs30]):  # noqa: C419
-        non_list = np.where(np.isnan(vs30))[0].tolist()
-        for i in non_list:
-            vs30[i] = float(siteData.get(3).getValue(i).getValue())
+        fallback_name = 'Global Vs30 from Topographic Slope (Wald & Allen 2008)'
+        fallback_provider_data = None
+        for i in range(int(siteData.size())):
+            if str(siteData.get(i).getSourceName()) == fallback_name:
+                fallback_provider_data = siteData.get(i)
+                break
+        if fallback_provider_data is None:
+            print(  # noqa: T201
+                f'FetchOpenSHA: fallback Vs30 provider "{fallback_name}" '
+                f'not found; leaving NaN Vs30 values unchanged.'
+            )
+        else:
+            non_list = np.where(np.isnan(vs30))[0].tolist()
+            for i in non_list:
+                vs30[i] = float(fallback_provider_data.getValue(i).getValue())
 
     # return
     return vs30
