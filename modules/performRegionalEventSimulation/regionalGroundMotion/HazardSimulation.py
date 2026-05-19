@@ -537,6 +537,8 @@ if __name__ == '__main__':
     import socket
 
     if 'stampede2' not in socket.gethostname():
+        import GlobalVariable
+
         if importlib.util.find_spec('jpype') is None:
             subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])  # noqa: S603
         import jpype
@@ -547,7 +549,11 @@ if __name__ == '__main__':
         #jpype.addClassPath('./lib/OpenSHA-1.5.2.jar') # not supported by opensha starting from 02/2026
         jpype.addClassPath('./lib/{}'.format(OPENSHA_JAR))
         try:
-            jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
+            jpype.startJVM(
+                f'-Xmx{memory_request}G',
+                convertStrings=False,
+                jvmpath=GlobalVariable.find_compatible_jvm_path(),
+            )
         except:  # noqa: E722
             print(  # noqa: T201
                 #f'StartJVM of ./lib/OpenSHA-1.5.2.jar with {memory_request} GB Memory fails. Try again after releasing some memory'

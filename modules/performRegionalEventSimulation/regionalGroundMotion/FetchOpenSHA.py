@@ -65,7 +65,11 @@ if 'stampede2' not in socket.gethostname():
         memory_total = psutil.virtual_memory().total / (1024.0**3)
         memory_request = int(memory_total * 0.75)
         jpype.addClassPath('./lib/opensha-all.jar')
-        jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
+        jpype.startJVM(
+            f'-Xmx{memory_request}G',
+            convertStrings=False,
+            jvmpath=GlobalVariable.find_compatible_jvm_path(),
+        )
 from java.io import *  # noqa: F403
 from java.lang import *  # noqa: F403
 from java.lang.reflect import *  # noqa: F403
