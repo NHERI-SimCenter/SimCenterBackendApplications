@@ -527,8 +527,6 @@ class BrayMacedo2019(Landslide):
             raise ValueError(
                 f"'PGA' is missing in the selected intensity measures and the landslide model 'BrayMacedo2019' can not be computed."  # noqa: F541
             )
-            # print(f"At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."\
-            #       , file=sys.stderr)
             # sys.stderr.write("test")
             # sys.exit(-1)
         return (

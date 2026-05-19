@@ -367,8 +367,6 @@ class ZhuEtal2017(Liquefaction):
             raise ValueError(
                 "At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."
             )
-            # print(f"At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."\
-            #       , file=sys.stderr)
             # sys.stderr.write("test")
             # sys.exit(-1)
         return ln_im_data, eq_data, im_list, additional_output

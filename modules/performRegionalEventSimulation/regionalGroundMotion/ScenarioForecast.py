@@ -40,7 +40,6 @@
 import argparse
 import json
 import os
-import sys
 import tarfile
 
 import psutil
@@ -95,7 +94,6 @@ if __name__ == '__main__':
 
             memory_total = psutil.virtual_memory().total / (1024.0**3)
             memory_request = int(memory_total * 0.75)
-            #jpype.addClassPath('./lib/OpenSHA-1.5.2.jar') # not supported by opensha starting from 02/2026
             jpype.addClassPath('./lib/{}'.format(OPENSHA_JAR))
             jpype.startJVM(
                 f'-Xmx{memory_request}G',

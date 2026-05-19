@@ -5,9 +5,8 @@ import platform
 import subprocess
 import sys
 
-# JPype permits only one JVM per Python process. The entry-point scripts
-# (FetchOpenSHA.py, HazardSimulation.py, HazardSimulationEQ.py,
-# ScenarioForecast.py) check this flag before calling jpype.startJVM().
+# JPype allows only one JVM per Python process; entry-point scripts check
+# this flag before calling jpype.startJVM().
 JVM_started = False
 
 
@@ -42,26 +41,22 @@ def _find_jvm_macos():
 def _find_jvm_windows():
     """Locate a JPype-compatible JVM on Windows.
 
-    Honors ``JAVA_HOME`` first (which the Adoptium / Temurin installer sets
-    automatically). Falls back to scanning the standard install folders
-    under ``Program Files``; when several JDKs are installed, the one with
-    the highest-sorting directory name wins (so JDK 17 beats JDK 16, and
-    JDK 21 beats JDK 17). Returns None if nothing usable is found, letting
-    JPype's default lookup take over.
+    Honors ``JAVA_HOME`` first, then scans the standard install folders
+    under ``Program Files``. When several JDKs are installed, the one with
+    the highest-sorting directory name wins (so JDK 17 beats JDK 16).
+    Returns None if nothing usable is found.
     """
 
     def _jvm_dll(jdk_home):
         candidate = os.path.join(jdk_home, 'bin', 'server', 'jvm.dll')  # noqa: PTH118
         return candidate if os.path.exists(candidate) else None  # noqa: PTH110
 
-    # 1. JAVA_HOME (set by every modern Windows JDK installer).
     java_home = os.environ.get('JAVA_HOME')
     if java_home:
         dll = _jvm_dll(java_home)
         if dll:
             return dll
 
-    # 2. Scan the conventional install roots.
     is_64bit = sys.maxsize > 2**32
     program_files = os.environ.get(
         'ProgramFiles' if is_64bit else 'ProgramFiles(x86)',
@@ -88,9 +83,9 @@ def _find_jvm_windows():
     if not found:
         return None
 
-    # Sort by directory name descending; modern Adoptium directory names
-    # embed the version (e.g., "jdk-17.0.10.7-hotspot"), so this lands on
-    # the newest JDK in nearly all cases.
+    # Modern Adoptium directory names embed the version
+    # (e.g. "jdk-17.0.10.7-hotspot"), so reverse-sorted alphabetically
+    # is also reverse-sorted by version.
     found.sort(reverse=True)
     return found[0][1]
 
@@ -98,24 +93,12 @@ def _find_jvm_windows():
 def find_compatible_jvm_path():
     """Return a JVM library path matching the running Python interpreter.
 
-    On macOS, multiple JDKs of different architectures can be installed
-    side-by-side; JPype's default lookup may pick one whose architecture
-    does not match Python, which then fails to load. This helper uses
-    ``/usr/libexec/java_home -a <arch>`` to find a JDK whose architecture
-    matches the current Python.
-
-    On Windows, the equivalent risk is less severe (32-bit and 64-bit
-    JDKs live in separate ``Program Files`` trees) but stale or
-    misconfigured ``JAVA_HOME`` values, and multiple JDK versions
-    coexisting, can still derail JPype's default lookup. This helper
-    validates ``JAVA_HOME`` and, failing that, scans the standard install
-    folders, preferring the highest version found.
-
-    On Linux and other platforms, returns None and lets JPype's default
-    lookup handle things. Returning None is also the safe fallback when
-    the platform-specific lookup cannot find anything usable; the caller
-    should pass the result through to ``jpype.startJVM(jvmpath=...)``
-    unconditionally.
+    Guards against JPype's default lookup picking a JVM whose architecture
+    does not match Python (common on macOS when both arm64 and x86_64 JDKs
+    are installed) or a stale JAVA_HOME on Windows. Returns None on Linux
+    and other platforms, and as a safe fallback when no usable JVM is
+    found; callers should pass the result through to
+    ``jpype.startJVM(jvmpath=...)`` unconditionally.
     """
     if sys.platform == 'darwin':
         return _find_jvm_macos()

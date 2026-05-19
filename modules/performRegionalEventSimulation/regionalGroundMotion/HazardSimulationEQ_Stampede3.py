@@ -1,6 +1,5 @@
 import ujson as json
 import os
-import sys
 import pickle
 from tqdm import tqdm
 import numpy as np

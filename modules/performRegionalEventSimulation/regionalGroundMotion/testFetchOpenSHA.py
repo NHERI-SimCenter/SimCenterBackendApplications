@@ -10,8 +10,6 @@ import psutil
 import GlobalVariable
 
 if 'stampede2' not in socket.gethostname():
-    import GlobalVariable
-
     if GlobalVariable.JVM_started is False:
         GlobalVariable.JVM_started = True
         import jpype
@@ -20,18 +18,17 @@ if 'stampede2' not in socket.gethostname():
         memory_total = psutil.virtual_memory().total / (1024.0**3)
         memory_request = int(memory_total * 0.75)
         jpype.addClassPath('./lib/opensha-all.jar')
-        jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
+        jpype.startJVM(
+            f'-Xmx{memory_request}G',
+            convertStrings=False,
+            jvmpath=GlobalVariable.find_compatible_jvm_path(),
+        )
 
-# Java stdlib
 from java.util import ArrayList
-
-# OpenSHA — commons
 from org.opensha.commons.data import Site
 from org.opensha.commons.data.siteData import OrderedSiteDataProviderList
 from org.opensha.commons.geo import Location
 from org.opensha.commons.param.event import ParameterChangeWarningListener
-
-# OpenSHA — earthquake / ERF
 from org.opensha.sha.earthquake import EqkRupture
 from org.opensha.sha.earthquake.param import (
     BPTAveragingTypeOptions,
@@ -50,24 +47,8 @@ from org.opensha.sha.earthquake.rupForecastImpl.WGCEP_UCERF_2_Final import UCERF
 from org.opensha.sha.earthquake.rupForecastImpl.WGCEP_UCERF_2_Final.MeanUCERF2 import (
     MeanUCERF2,
 )
-
-# OpenSHA — fault surface
 from org.opensha.sha.faultSurface import PointSurface
 from org.opensha.sha.faultSurface.utils import PointSourceDistanceCorrections
-
-# OpenSHA — IMR / GMM
-from org.opensha.sha.imr.attenRelImpl import AfshariStewart_2016_AttenRel
-from org.opensha.sha.imr.attenRelImpl.ngaw2 import (
-    ASK_2014,
-    BSSA_2014,
-    CB_2014,
-    CY_2014,
-)
-from org.opensha.sha.imr.param.IntensityMeasureParams import PeriodParam, SA_Param
-from org.opensha.sha.imr.param.OtherParams import StdDevTypeParam
-
-# OpenSHA — gcim (KS_2006 and BommerEtAl_2009 moved here in v25.4; GcimCalculator
-# and the Ds5XX duration parameters are gcim-only)
 from org.opensha.sha.gcim.calc import GcimCalculator
 from org.opensha.sha.gcim.imr.attenRelImpl import (
     BommerEtAl_2009_AttenRel,
@@ -77,28 +58,34 @@ from org.opensha.sha.gcim.imr.param.IntensityMeasureParams import (
     Ds575_Param,
     Ds595_Param,
 )
-
-# OpenSHA — utilities
+from org.opensha.sha.imr.attenRelImpl import AfshariStewart_2016_AttenRel
+from org.opensha.sha.imr.attenRelImpl.ngaw2 import (
+    ASK_2014,
+    BSSA_2014,
+    CB_2014,
+    CY_2014,
+)
+from org.opensha.sha.imr.param.IntensityMeasureParams import PeriodParam, SA_Param
+from org.opensha.sha.imr.param.OtherParams import StdDevTypeParam
 from org.opensha.sha.util import SiteTranslator
 
-# UCERF3 (still under the legacy `scratch.*` namespace upstream)
+# UCERF3 lives under the upstream `scratch.*` namespace.
 try:
     from scratch.UCERF3.erf.mean import MeanUCERF3
 except ModuleNotFoundError:
     MeanUCERF3 = jpype.JClass('scratch.UCERF3.erf.mean.MeanUCERF3')
 
-# Import the 10 functions from the main module
 from FetchOpenSHA import (
-    getERF,
     CreateIMRInstance,
-    get_site_prop,
     get_IM,
     get_PointSource_info_CY2014,
-    horzDistanceFast,
-    getPtSrcDistCorr,
+    get_site_prop,
     get_site_vs30_from_opensha,
     get_site_z1pt0_from_opensha,
     get_site_z2pt5_from_opensha,
+    getERF,
+    getPtSrcDistCorr,
+    horzDistanceFast,
 )
 
 def run_tests():
@@ -326,7 +313,6 @@ def run_tests():
             report(f'{test_id} {name_str} via Wrapper', False, str(e))
 
     try:
-        from org.opensha.commons.param.event import ParameterChangeWarningListener
 
         @jpype.JImplements(ParameterChangeWarningListener)
         class DummyListener:
@@ -344,7 +330,6 @@ def run_tests():
         report('3.5 KS_2006 (gcim)', False, str(e))
 
     try:
-        from org.opensha.commons.param.event import ParameterChangeWarningListener
 
         @jpype.JImplements(ParameterChangeWarningListener)
         class DummyListener2:

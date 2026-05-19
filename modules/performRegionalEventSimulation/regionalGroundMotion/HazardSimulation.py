@@ -41,7 +41,6 @@ import argparse
 import json
 import os
 import shutil
-import sys
 import time
 
 import numpy as np
@@ -370,7 +369,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
             id_selected_scens = [int(x / num_gm_per_site) for x in id_selected_gmms]
             id_selected_simus = [x % num_gm_per_site for x in id_selected_gmms]
             # export sampled earthquakes
-            _ = export_sampled_gmms(  # noqa: F405
+            _ = export_sampled_gmms(  # noqa: F821 -- export_sampled_gmms is a method, not a free function
                 id_selected_gmms, id_selected_scens, P_gmm, output_dir
             )
             num_site = ln_im_mr[0].shape[0]
@@ -445,14 +444,14 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
             user_password = event_info.get('UserPassword', None)
             if (user_name is not None) and (user_password is not None) and (not R2D):
                 print('HazardSimulation: downloading ground motion records.')  # noqa: T201
-                raw_dir = download_ground_motion(  # noqa: F405
+                raw_dir = download_ground_motion(  # noqa: F821 -- see import block
                     gm_id, user_name, user_password, output_dir
                 )
                 if raw_dir:
                     print('HazardSimulation: ground motion records downloaded.')  # noqa: T201
                     # Parsing records
                     print('HazardSimulation: parsing records.')  # noqa: T201
-                    record_dir = parse_record(  # noqa: F405, F841
+                    record_dir = parse_record(  # noqa: F821, F841 -- see import block
                         gm_file,
                         raw_dir,
                         output_dir,
@@ -532,7 +531,6 @@ if __name__ == '__main__':
 
         memory_total = psutil.virtual_memory().total / (1024.0**3)
         memory_request = int(memory_total * 0.75)
-        #jpype.addClassPath('./lib/OpenSHA-1.5.2.jar') # not supported by opensha starting from 02/2026
         jpype.addClassPath('./lib/{}'.format(OPENSHA_JAR))
         try:
             jpype.startJVM(
@@ -542,7 +540,6 @@ if __name__ == '__main__':
             )
         except:  # noqa: E722
             print(  # noqa: T201
-                #f'StartJVM of ./lib/OpenSHA-1.5.2.jar with {memory_request} GB Memory fails. Try again after releasing some memory'
                 f'StartJVM of ./lib/{OPENSHA_JAR} with {memory_request} GB Memory fails. Try again after releasing some memory'
             )
     if oq_flag:
@@ -585,6 +582,10 @@ if __name__ == '__main__':
         output_all_ground_motion_info,
         select_ground_motion,
     )
+    # The NGAWest2 record-download branch below calls download_ground_motion
+    # and parse_record, which are not defined in SelectGroundMotion's public
+    # surface; the F821 noqa annotations at those sites mark that branch as
+    # known-dead.
 
     if oq_flag:
         from FetchOpenQuake import (

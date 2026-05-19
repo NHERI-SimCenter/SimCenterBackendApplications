@@ -358,12 +358,6 @@ def openquake_config(site_info, scen_info, event_info, workDir):  # noqa: C901, 
     with open(filename_ini, 'w') as configfile:  # noqa: PTH123
         cfg.write(configfile)
 
-    # OpenQuake is declared as a dependency of the SimCenter backend
-    # (currently nheri_simcenter[r2d] ships openquake.engine==3.17.1). This
-    # block locates whichever version is installed in the active environment
-    # and surfaces a warning if it does not match the scenario's OQVersion.
-    # User-supplied local OpenQuake checkouts can still be used via the
-    # OQLocal field, which prepends the checkout to sys.path before importing.
     oq_ver_loaded = None
     try:
         from importlib_metadata import version

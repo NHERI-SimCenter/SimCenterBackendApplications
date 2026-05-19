@@ -1,12 +1,11 @@
-# WARNING: this script still references the legacy OpenSHA-1.5.2.jar and has
-# not been updated for the v25.4.1 upgrade. It is not invoked by R2D. Before
-# use, switch to opensha-all.jar and verify compatibility with FetchOpenSHA.py.
-
+# WARNING: this script targets the legacy OpenSHA v1.5.2 jar and is not
+# invoked by R2D. To use it, switch to opensha-all.jar and verify
+# compatibility with FetchOpenSHA.py.
 import ujson as json
 import os
 import sys
 import psutil
-# Add the folder containing the script to the system path
+
 script_path = os.path.dirname(os.path.realpath(__file__))
 opensha_path = os.path.join(script_path, 'lib', 'OpenSHA-1.5.2.jar')
 sys.path.append(script_path)
@@ -21,7 +20,6 @@ if GlobalVariable.JVM_started is False:
     GlobalVariable.JVM_started = True
     import jpype
     import jpype.imports
-    # from jpype.types import *  # noqa: F403
 
     memory_total = psutil.virtual_memory().total / (1024.0**3)
     memory_request = int(memory_total * 0.25)
@@ -29,34 +27,25 @@ if GlobalVariable.JVM_started is False:
     jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
 print('JVM started')
 from ComputeIntensityMeasure import compute_im  # noqa: F403
-# print('debug 3')
 from GMSimulators import simulate_ground_motion
-# print('debug 1')
 from LoadRupFile import load_earthquake_rup_scenario  # noqa: F403
-# print('debug 1')
 from SelectGroundMotion import select_ground_motion
 from SelectGroundMotion import output_all_ground_motion_info
-# print('debug 1')
 from ComputeIntensityMeasure import export_im
-# print('debug 1')
 
-# # @profile
+
 def run_scenario_i(sce_idx, hazard_info_orig, all_rups, procID = 0):
 
-    
     hazard_info = copy.deepcopy(hazard_info_orig)
-    # Select the range of scenarios to simulate
-    hazard_info['Scenario']['Generator']['RuptureFilter'] = str(sce_idx+1) # The index in the r2d ground motion simulation starts from 1
-    
-    # Below are initializing HazardSimulationEQ
-    # directory (back compatibility here)
+    # R2D rupture indices are 1-based.
+    hazard_info['Scenario']['Generator']['RuptureFilter'] = str(sce_idx+1)
+
     work_dir = hazard_info['Directory']
     output_dir = os.path.join(work_dir, f'Output_{sce_idx}')
     try:
         os.mkdir(f'{output_dir}')  # noqa: PTH102
     except:  # noqa: E722
         print('HazardSimulation: output folder already exists.')  # noqa: T201
-    # Read Site .csv
     site_file = hazard_info['Site']['siteFile']
     try:
         stations = pd.read_csv(site_file).to_dict(orient='records')
@@ -69,16 +58,10 @@ def run_scenario_i(sce_idx, hazard_info_orig, all_rups, procID = 0):
     scenarios = load_earthquake_rup_scenario(scenario_info, all_rups)   # noqa: F405
     print(f'Proc {procID}: HazardSimulation: scenarios loaded.')  # noqa: T201
 
-    # current, peak = tracemalloc.get_traced_memory()
-    # print(f"Current memory usage: {current / 10**6} MB")
-    # print(f"Peak memory usage: {peak / 10**6} MB")
-
     selected_scen_ids = sorted(list(scenarios.keys()))  # noqa: C414
-    # Computing intensity measures
     print(f'Proc {procID}: HazardSimulation: computing intensity measures.')  # noqa: T201
-    # Computing uncorrelated Sa
     event_info = hazard_info['Event']
-    # When vector IM is used. The PGA/SA needs to be computed before PGV
+    # PGA/SA must be computed before PGV when a vector IM is used.
     im_info = event_info['IntensityMeasure']
     im_raw_path, im_list = compute_im(  # noqa: F405
                 scenarios,
@@ -90,13 +73,8 @@ def run_scenario_i(sce_idx, hazard_info_orig, all_rups, procID = 0):
                 output_dir,
                 mth_flag=False,
             )
-    
-    # current, peak = tracemalloc.get_traced_memory()
-    # print(f"Current memory usage: {current / 10**6} MB")
-    # print(f"Peak memory usage: {peak / 10**6} MB")
 
     num_gm_per_site = event_info['NumberPerSite']
-    # Computing correlated IMs
     ln_im_mr, mag_maf = simulate_ground_motion(
         stations,
         im_raw_path,
@@ -108,9 +86,7 @@ def run_scenario_i(sce_idx, hazard_info_orig, all_rups, procID = 0):
         selected_scen_ids,
     )
 
-    # Selecting ground motion records
     if scenario_info['Type'] == 'Earthquake':
-        # Selecting records
         data_source = event_info.get('Database', 0)
         if data_source:
             print('HazardSimulation: selecting ground motion records.')  # noqa: T201
@@ -131,7 +107,6 @@ def run_scenario_i(sce_idx, hazard_info_orig, all_rups, procID = 0):
             print(  # noqa: T201
                 f'HazardSimulation: ground motion records selected  ({time.time() - start_time} s).'
             )
-            # print(gm_id)
             gm_id = [int(i) for i in np.unique(gm_id)]
             gm_file = [i for i in np.unique(gm_file)]  # noqa: C416
             runtag = output_all_ground_motion_info(  # noqa: F405

@@ -41,7 +41,6 @@ import argparse
 import json
 import os
 import shutil
-import sys
 import time
 
 import numpy as np
@@ -153,11 +152,11 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
             ]:
                 # Calling openquake to run classical PSHA
                 # oq_version = scenario_info['EqRupture'].get('OQVersion',default_oq_version)
-                oq_run_flag = oq_run_classical_psha(  # noqa: F405
+                oq_run_flag = oq_run_classical_psha(
                     filePath_ini,
                     exports='csv',
                     oq_version=oq_ver_loaded,
-                    dir_info=dir_info,  # noqa: F405
+                    dir_info=dir_info,  # noqa: F821 -- dir_info is never defined in this scope
                 )
                 if oq_run_flag:
                     err_msg = 'HazardSimulation: OpenQuake Classical PSHA failed.'
@@ -173,10 +172,10 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
                 else:
                     print('HazardSimulation: OpenQuake Classical PSHA completed.')  # noqa: T201
                 if scenario_info['EqRupture'].get('UHS', False):
-                    ln_im_mr, mag_maf, im_list = oq_read_uhs_classical_psha(  # noqa: F405
+                    ln_im_mr, mag_maf, im_list = oq_read_uhs_classical_psha(
                         scenario_info,
                         event_info,
-                        dir_info,  # noqa: F405
+                        dir_info,  # noqa: F821 -- dir_info is never defined in this scope
                     )
                 else:
                     ln_im_mr = []
@@ -186,7 +185,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
 
             elif scenario_info['EqRupture']['Type'] == 'oqSourceXML':
                 # Creating and conducting OpenQuake calculations
-                oq_calc = OpenQuakeHazardCalc(  # noqa: F405
+                oq_calc = OpenQuakeHazardCalc(
                     filePath_ini,
                     event_info,
                     oq_ver_loaded,
@@ -413,14 +412,14 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
             user_password = event_info.get('UserPassword', None)
             if (user_name is not None) and (user_password is not None) and (not R2D):
                 print('HazardSimulation: downloading ground motion records.')  # noqa: T201
-                raw_dir = download_ground_motion(  # noqa: F405
+                raw_dir = download_ground_motion(  # noqa: F821 -- see import block
                     gm_id, user_name, user_password, output_dir
                 )
                 if raw_dir:
                     print('HazardSimulation: ground motion records downloaded.')  # noqa: T201
                     # Parsing records
                     print('HazardSimulation: parsing records.')  # noqa: T201
-                    record_dir = parse_record(  # noqa: F405, F841
+                    record_dir = parse_record(  # noqa: F821, F841 -- see import block
                         gm_file,
                         raw_dir,
                         output_dir,
@@ -561,7 +560,6 @@ if __name__ == '__main__':
 
             memory_total = psutil.virtual_memory().total / (1024.0**3)
             memory_request = int(memory_total * 0.75)
-            #jpype.addClassPath('./lib/OpenSHA-1.5.2.jar') # not supported by opensha starting from 02/2026
             jpype.addClassPath('./lib/{}'.format(OPENSHA_JAR))
             jpype.startJVM(
                 f'-Xmx{memory_request}G',
@@ -604,6 +602,10 @@ if __name__ == '__main__':
         output_all_ground_motion_info,
         select_ground_motion,
     )
+    # The NGAWest2 record-download branch below calls download_ground_motion
+    # and parse_record, which are not defined in SelectGroundMotion's public
+    # surface; the F821 noqa annotations at those sites mark that branch as
+    # known-dead.
 
     if oq_flag:
         from FetchOpenQuake import (
