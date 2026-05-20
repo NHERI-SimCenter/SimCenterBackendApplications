@@ -1,47 +1,42 @@
 ##############################################################
-# OpenSHA v25.4 Compatibility Test Suite
+# OpenSHA v26.1 Compatibility Test Suite
 # Run with: python test_opensha25.py
 ##############################################################
 
 import numpy as np
 import socket
-import subprocess
-import importlib
-import sys
 import psutil
 
 import GlobalVariable
 
 if 'stampede2' not in socket.gethostname():
-    import GlobalVariable
-
     if GlobalVariable.JVM_started is False:
         GlobalVariable.JVM_started = True
-        if importlib.util.find_spec('jpype') is None:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])
         import jpype
         import jpype.imports
-        from jpype.types import *
 
         memory_total = psutil.virtual_memory().total / (1024.0**3)
         memory_request = int(memory_total * 0.75)
         jpype.addClassPath('./lib/opensha-all.jar')
-        jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
+        jpype.startJVM(
+            f'-Xmx{memory_request}G',
+            convertStrings=False,
+            jvmpath=GlobalVariable.find_compatible_jvm_path(),
+        )
 
-from java.io import *
-from java.lang import *
-from java.lang.reflect import *
-from java.util import *
-from org.opensha.commons.data import *
-from org.opensha.commons.data.function import *
-from org.opensha.commons.data.siteData import *
-from org.opensha.commons.geo import *
-from org.opensha.commons.param import *
-from org.opensha.commons.param.constraint import *
-from org.opensha.commons.param.event import *
-from org.opensha.sha.calc import *
-from org.opensha.sha.earthquake import *
-from org.opensha.sha.earthquake.param import *
+from java.util import ArrayList
+from org.opensha.commons.data import Site
+from org.opensha.commons.data.siteData import OrderedSiteDataProviderList
+from org.opensha.commons.geo import Location
+from org.opensha.commons.param.event import ParameterChangeWarningListener
+from org.opensha.sha.earthquake import EqkRupture
+from org.opensha.sha.earthquake.param import (
+    BPTAveragingTypeOptions,
+    BackgroundRupType,
+    IncludeBackgroundOption,
+    MagDependentAperiodicityOptions,
+    ProbabilityModelOptions,
+)
 from org.opensha.sha.earthquake.rupForecastImpl.Frankel02 import (
     Frankel02_AdjustableEqkRupForecast,
 )
@@ -52,43 +47,49 @@ from org.opensha.sha.earthquake.rupForecastImpl.WGCEP_UCERF_2_Final import UCERF
 from org.opensha.sha.earthquake.rupForecastImpl.WGCEP_UCERF_2_Final.MeanUCERF2 import (
     MeanUCERF2,
 )
-from org.opensha.sha.faultSurface import *
-from org.opensha.sha.faultSurface.utils import PointSourceDistanceCorrection
+from org.opensha.sha.faultSurface import PointSurface
 from org.opensha.sha.faultSurface.utils import PointSourceDistanceCorrections
-from org.opensha.sha.imr import *
-from org.opensha.sha.imr.attenRelImpl import *
-from org.opensha.sha.imr.attenRelImpl.ngaw2 import *
-from org.opensha.sha.imr.attenRelImpl.ngaw2.NGAW2_Wrappers import *
-from org.opensha.sha.imr.param.IntensityMeasureParams import *
-from org.opensha.sha.imr.param.OtherParams import *
-from org.opensha.sha.util import *
+from org.opensha.sha.gcim.calc import GcimCalculator
+from org.opensha.sha.gcim.imr.attenRelImpl import (
+    BommerEtAl_2009_AttenRel,
+    KS_2006_AttenRel,
+)
+from org.opensha.sha.gcim.imr.param.IntensityMeasureParams import (
+    Ds575_Param,
+    Ds595_Param,
+)
+from org.opensha.sha.imr.attenRelImpl import AfshariStewart_2016_AttenRel
+from org.opensha.sha.imr.attenRelImpl.ngaw2 import (
+    ASK_2014,
+    BSSA_2014,
+    CB_2014,
+    CY_2014,
+)
+from org.opensha.sha.imr.param.IntensityMeasureParams import PeriodParam, SA_Param
+from org.opensha.sha.imr.param.OtherParams import StdDevTypeParam
+from org.opensha.sha.util import SiteTranslator
 
+# UCERF3 lives under the upstream `scratch.*` namespace.
 try:
     from scratch.UCERF3.erf.mean import MeanUCERF3
 except ModuleNotFoundError:
     MeanUCERF3 = jpype.JClass('scratch.UCERF3.erf.mean.MeanUCERF3')
 
-from org.opensha.sha.gcim.calc import *
-from org.opensha.sha.gcim.imr.attenRelImpl import *
-from org.opensha.sha.gcim.imr.param.EqkRuptureParams import *
-from org.opensha.sha.gcim.imr.param.IntensityMeasureParams import *
-
-# Import the 10 functions from the main module
-from FetchOpenSHA_25_4 import (
-    getERF,
+from FetchOpenSHA import (
     CreateIMRInstance,
-    get_site_prop,
     get_IM,
     get_PointSource_info_CY2014,
-    horzDistanceFast,
-    getPtSrcDistCorr,
+    get_site_prop,
     get_site_vs30_from_opensha,
     get_site_z1pt0_from_opensha,
     get_site_z2pt5_from_opensha,
+    getERF,
+    getPtSrcDistCorr,
+    horzDistanceFast,
 )
 
 def run_tests():
-    """Run all tests to verify OpenSHA v25.4 compatibility."""
+    """Run all tests to verify OpenSHA v26.1 compatibility."""
     from jpype import JInt
 
     results = {'passed': 0, 'failed': 0, 'skipped': 0}
@@ -312,7 +313,6 @@ def run_tests():
             report(f'{test_id} {name_str} via Wrapper', False, str(e))
 
     try:
-        from org.opensha.commons.param.event import ParameterChangeWarningListener
 
         @jpype.JImplements(ParameterChangeWarningListener)
         class DummyListener:
@@ -330,7 +330,6 @@ def run_tests():
         report('3.5 KS_2006 (gcim)', False, str(e))
 
     try:
-        from org.opensha.commons.param.event import ParameterChangeWarningListener
 
         @jpype.JImplements(ParameterChangeWarningListener)
         class DummyListener2:
@@ -730,7 +729,7 @@ def run_tests():
 
     # ==========================================================
     print('\n' + '=' * 70)
-    print('TEST GROUP 10: v25.4 PointSource Distance Correction API')
+    print('TEST GROUP 10: PointSource Distance Correction API')
     print('=' * 70)
     # ==========================================================
 
@@ -786,7 +785,7 @@ def run_tests():
     print('=' * 70)
 
     if results['failed'] == 0:
-        print('\n🎉 All tests passed! OpenSHA v25.4 integration is working.\n')
+        print('\n🎉 All tests passed! OpenSHA v26.1 integration is working.\n')
     else:
         print(f'\n⚠️  {results["failed"]} test(s) failed. See above.\n')
 
@@ -795,6 +794,6 @@ def run_tests():
 
 if __name__ == '__main__':
     print('\n' + '=' * 70)
-    print('OpenSHA v25.4 Compatibility Test Suite')
+    print('OpenSHA v26.1 Compatibility Test Suite')
     print('=' * 70)
     run_tests()

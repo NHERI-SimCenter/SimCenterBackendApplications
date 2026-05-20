@@ -44,6 +44,18 @@
 
 from __future__ import annotations  # noqa: I001
 
+import ctypes
+import sys
+
+# Programmatic fix for Apple Silicon macOS flat namespace errors
+if sys.platform == "darwin":
+    try:
+        # Force-load libomp globally so its symbols are visible to dlopen()
+        ctypes.CDLL('/opt/homebrew/opt/libomp/lib/libomp.dylib', mode=ctypes.RTLD_GLOBAL)
+    except OSError:
+        # Fallback for systems where Homebrew is not installed or configured differently
+        pass
+
 import gc
 import os
 import json
@@ -63,7 +75,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 import geopandas as gpd
 import numpy as np
-import pandana.network as pdna
+#import pandana.network as pdna
+import pandarm as pdna
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from scipy.spatial.distance import cdist

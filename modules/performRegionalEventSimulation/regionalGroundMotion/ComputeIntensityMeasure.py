@@ -101,7 +101,6 @@ import collections  # noqa: E402
 import json  # noqa: E402
 import os  # noqa: E402
 import socket  # noqa: E402
-import sys  # noqa: E402
 import time  # noqa: E402
 from pathlib import Path  # noqa: E402
 
@@ -111,8 +110,14 @@ from tqdm import tqdm  # noqa: E402
 
 if 'stampede2' not in socket.gethostname():
     from FetchOpenQuake import get_site_rup_info_oq
-    #from FetchOpenSHA import *  # noqa: F403
-    from FetchOpenSHA_25_4 import *  # noqa: F403
+    from FetchOpenSHA import (
+        getERF,
+        get_IM,
+        get_PointSource_info_CY2014,
+        get_rupture_info_ASK2014_aftershock,
+        get_rupture_info_CY2014,
+        get_site_prop,
+    )
 import threading  # noqa: E402
 
 import ujson  # noqa: E402
@@ -808,7 +813,7 @@ def compute_im(  # noqa: C901, D103
             ho_period = generator_info['Parameters'].get('Period')
             if im_info['Type'] == 'Vector':
                 if im_info.get('SA') is None:
-                    sys.exit(
+                    raise ValueError(
                         'SA is used in hazard downsampling but not defined in the intensity measure tab'
                     )
                 elif im_info.get('Periods', None) is not None:

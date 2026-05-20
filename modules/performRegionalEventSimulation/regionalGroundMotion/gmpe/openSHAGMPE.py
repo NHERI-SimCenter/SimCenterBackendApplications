@@ -38,7 +38,6 @@
 # Transferred from openSHA to achieve better performance in r2d
 
 import os
-import sys
 import time
 
 import numpy as np
@@ -81,10 +80,9 @@ class chiou_youngs_2013:  # noqa: D101
             supported_imt = [
                 f'SA{x}s' if isinstance(x, float) else x for x in self.supportedImt
             ]
-            sys.exit(
+            raise ValueError(
                 f'The IM type {imt} is not supported by Chiou and Young (2014). \n The supported IM types are {supported_imt}'
             )
-            return False
         self.c1 = self.coeff['c1'][imt]
         self.c1a = self.coeff['c1a'][imt]
         self.c1b = self.coeff['c1b'][imt]
@@ -350,10 +348,9 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
             supported_imt = [
                 f'SA{x}s' if isinstance(x, float) else x for x in self.supportedImt
             ]
-            sys.exit(
+            raise ValueError(
                 f'The IM type {imt} is not supported by Abrahamson, Silva, and Kamai (2014). \n The supported IM types are {supported_imt}'
             )
-            return
         self.imt = imt
         self.a1 = self.coeff['a1'][imt]
         self.a2 = self.coeff['a2'][imt]
@@ -663,10 +660,9 @@ class boore_etal_2014:  # noqa: D101
             supported_imt = [
                 f'SA{x}s' if isinstance(x, float) else x for x in self.supportedImt
             ]
-            sys.exit(
+            raise ValueError(
                 f'The IM type {imt} is not supported by Boore, Stewart, Seyhan & Atkinson (2014). \n The supported IM types are {supported_imt}'
             )
-            return
         self.imt = imt
         self.e0 = self.coeff['e0'][imt]
         self.e1 = self.coeff['e1'][imt]
@@ -893,10 +889,9 @@ class campbell_bozorgnia_2014:  # noqa: D101
             supported_imt = [
                 f'SA{x}s' if isinstance(x, float) else x for x in self.supportedImt
             ]
-            sys.exit(
+            raise ValueError(
                 f'The IM type {imt} is not supported by Campbell & Bozorgnia (2014). \n The supported IM types are {supported_imt}'
             )
-            return
         self.imt = imt
         self.c0 = self.coeff['c0'][imt]
         self.c1 = self.coeff['c1'][imt]

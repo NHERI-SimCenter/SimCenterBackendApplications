@@ -37,26 +37,14 @@
 # Kuanshi Zhong
 #
 
-import socket  # noqa: I001
-import sys
+import contextlib
+import socket
 
+import joblib
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
-import importlib
-import subprocess
-
-
-if importlib.util.find_spec('joblib') is None:
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'joblib'])  # noqa: S603
-
-if importlib.util.find_spec('contextlib') is None:
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'contextlib'])  # noqa: S603
-
-import joblib  # noqa: I001
-import contextlib
 from joblib import Parallel, delayed
-import multiprocessing
+from tqdm import tqdm
 
 
 @contextlib.contextmanager
@@ -78,8 +66,7 @@ def tqdm_joblib(tqdm_object):
 
 
 if 'stampede2' not in socket.gethostname():
-    #from FetchOpenSHA import (
-    from FetchOpenSHA_25_4 import (
+    from FetchOpenSHA import (
         get_site_vs30_from_opensha,
         get_site_z1pt0_from_opensha,
         get_site_z2pt5_from_opensha,
@@ -242,7 +229,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
                 ]
     # Check if any duplicated points
     if selected_stn.duplicated(subset=[lon_label, lat_label]).any():
-        sys.exit(
+        raise ValueError(
             'Error: Duplicated lat and lon in the Site File (.csv), '
             f'please check site \n{selected_stn[selected_stn.duplicated(subset=[lon_label, lat_label], keep = False)].index.tolist()}'
         )
@@ -252,7 +239,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
     # Get Vs30
     if vs30Config['Type'] == 'User-specified':
         if vs30_label not in selected_stn.keys():  # noqa: SIM118
-            sys.exit(
+            raise ValueError(
                 'ERROR: User-specified option is selected for Vs30 model but the provided.'  # noqa: ISC003
                 + "but the provided Site File doesn't contain a column named 'Vs30'."
                 + '\nNote: the User-specified Vs30 model is only supported for Scattering Locations site definition.'
@@ -612,7 +599,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
 
         if stn.get('vsInferred'):
             if stn.get('vsInferred') not in [0, 1]:
-                sys.exit(
+                raise ValueError(
                     "CreateStation: Only '0' or '1' can be assigned to the"  # noqa: ISC003
                     + " 'vsInferred' column in the Site File (.csv), where 0 stands for false and 1 stands for true."
                 )
