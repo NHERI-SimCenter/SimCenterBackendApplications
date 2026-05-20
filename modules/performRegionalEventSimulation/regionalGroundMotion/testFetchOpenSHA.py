@@ -1,5 +1,5 @@
 ##############################################################
-# OpenSHA v25.4 Compatibility Test Suite
+# OpenSHA v26.1 Compatibility Test Suite
 # Run with: python test_opensha25.py
 ##############################################################
 
@@ -89,7 +89,7 @@ from FetchOpenSHA import (
 )
 
 def run_tests():
-    """Run all tests to verify OpenSHA v25.4 compatibility."""
+    """Run all tests to verify OpenSHA v26.1 compatibility."""
     from jpype import JInt
 
     results = {'passed': 0, 'failed': 0, 'skipped': 0}
@@ -729,7 +729,7 @@ def run_tests():
 
     # ==========================================================
     print('\n' + '=' * 70)
-    print('TEST GROUP 10: v25.4 PointSource Distance Correction API')
+    print('TEST GROUP 10: PointSource Distance Correction API')
     print('=' * 70)
     # ==========================================================
 
@@ -785,7 +785,7 @@ def run_tests():
     print('=' * 70)
 
     if results['failed'] == 0:
-        print('\n🎉 All tests passed! OpenSHA v25.4 integration is working.\n')
+        print('\n🎉 All tests passed! OpenSHA v26.1 integration is working.\n')
     else:
         print(f'\n⚠️  {results["failed"]} test(s) failed. See above.\n')
 
@@ -794,6 +794,6 @@ def run_tests():
 
 if __name__ == '__main__':
     print('\n' + '=' * 70)
-    print('OpenSHA v25.4 Compatibility Test Suite')
+    print('OpenSHA v26.1 Compatibility Test Suite')
     print('=' * 70)
     run_tests()

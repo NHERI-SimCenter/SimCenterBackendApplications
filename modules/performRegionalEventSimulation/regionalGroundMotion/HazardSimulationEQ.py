@@ -49,7 +49,7 @@ import psutil
 
 R2D = True
 
-OPENSHA_JAR = 'opensha-all.jar' # version 25.4.1 (invoked in 04/2026)
+OPENSHA_JAR = 'opensha-all.jar'  # version 26.1.1 (invoked in 05/2026)
 
 def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
     from CreateScenario import load_ruptures_openquake

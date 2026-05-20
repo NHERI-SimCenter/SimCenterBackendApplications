@@ -44,7 +44,7 @@ import tarfile
 
 import psutil
 
-OPENSHA_JAR = 'opensha-all.jar' # version 25.4.1 (invoked in 04/2026)
+OPENSHA_JAR = 'opensha-all.jar'  # version 26.1.1 (invoked in 05/2026)
 
 if __name__ == '__main__':
     # parse arguments
