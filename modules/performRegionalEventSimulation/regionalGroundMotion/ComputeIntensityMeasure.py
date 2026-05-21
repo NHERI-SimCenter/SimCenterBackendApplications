@@ -1106,21 +1106,25 @@ def export_im(  # noqa: C901, D103, PLR0912
             json.dump(res, f, indent=2)
     # export the event grid and station csv files
     if csv_flag:
-        # output EventGrid.csv
+        # output EventGrid.csv. Site characterization values (Vs30, z1pt0,
+        # z2pt5) come from the SimCenterSiteModel.csv that CreateStation
+        # wrote earlier in the workflow
         station_name = [
             'site' + str(stations[j]['ID']) + '.csv' for j in range(len(stations))
         ]
         lat = [stations[j]['lat'] for j in range(len(stations))]
         lon = [stations[j]['lon'] for j in range(len(stations))]
-        # vs30 = [stations[j]['vs30'] for j in range(len(stations))]
-        # zTR = [stations[j]['DepthToRock'] for j in range(len(stations))]
+        vs30 = [stations[j].get('vs30') for j in range(len(stations))]
+        z1pt0 = [stations[j].get('z1pt0') for j in range(len(stations))]
+        z2pt5 = [stations[j].get('z2pt5') for j in range(len(stations))]
         df = pd.DataFrame(  # noqa: PD901
             {
                 'GP_file': station_name,
                 'Longitude': lon,
                 'Latitude': lat,
-                # 'Vs30': vs30,
-                # 'DepthToRock': zTR
+                'Vs30': vs30,
+                'z1pt0': z1pt0,
+                'z2pt5': z2pt5,
             }
         )
         # if cur_eq[2]:

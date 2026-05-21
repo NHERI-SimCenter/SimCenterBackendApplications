@@ -1006,7 +1006,54 @@ def get_IM(  # noqa: C901, N802, D103
     return res, station_info
 
 
+# Canonical OpenSHA Vs30 provider NAME strings (matches `getSourceName()`).
+# Used to validate / normalize user-supplied Vs30 Type strings.
+_OPENSHA_VS30_NAMES = (
+    'Thompson VS30 Map (2022)',
+    'Thompson VS30 Map (2020)',
+    'Thompson VS30 Map (2018)',
+    'CGS/Wills VS30 Map (2015)',
+    'CGS/Wills Site Classification Map (2006)',
+    'Global Vs30 from Topographic Slope (Wald & Allen 2008)',
+    'Vs30 from various Community Velocity Models',
+)
+
+
+def _resolve_vs30_model_name(vs30model):
+    """Map a Vs30 Type string to a canonical OpenSHA provider NAME.
+
+    Accepts a canonical NAME, a canonical NAME with a UI scope suffix
+    (e.g. " [California only]"), or a legacy substring from older R2D
+    configurations. Returns the canonical NAME so the rest of the code
+    can do exact name matching against `getSourceName()`.
+    """
+    if vs30model in _OPENSHA_VS30_NAMES:
+        return vs30model
+    # Match by prefix to accept UI labels like "<NAME> [California only]".
+    for canonical in _OPENSHA_VS30_NAMES:
+        if vs30model.startswith(canonical):
+            return canonical
+    # Legacy substrings (pre-2026 R2D configurations).
+    if 'Global Vs30' in vs30model:
+        return 'Global Vs30 from Topographic Slope (Wald & Allen 2008)'
+    if 'Wills' in vs30model and '2015' in vs30model:
+        return 'CGS/Wills VS30 Map (2015)'
+    if 'Wills' in vs30model and '2006' in vs30model:
+        return 'CGS/Wills Site Classification Map (2006)'
+    if 'Thompson' in vs30model and '2018' in vs30model:
+        return 'Thompson VS30 Map (2018)'
+    if 'Thompson' in vs30model and '2020' in vs30model:
+        return 'Thompson VS30 Map (2020)'
+    if 'Thompson' in vs30model:
+        # Unqualified or 2022-era "Thompson" string → newest map.
+        return 'Thompson VS30 Map (2022)'
+    # Fall through with the original string; OpenSHA will simply find no
+    # matching provider and the caller will see NaN values.
+    return vs30model
+
+
 def get_site_vs30_from_opensha(lat, lon, vs30model='CGS/Wills VS30 Map (2015)'):  # noqa: D103
+    vs30model = _resolve_vs30_model_name(vs30model)
     sites = ArrayList()  # noqa: F405
     num_sites = len(lat)
     for i in range(num_sites):
@@ -1026,10 +1073,11 @@ def get_site_vs30_from_opensha(lat, lon, vs30model='CGS/Wills VS30 Map (2015)'):
         else:  # noqa: RET508
             continue
 
-    # The Wills 2015 map returns NaN for offshore sites; fall back to the
-    # global topographic-slope Vs30 model. Look up the fallback provider by
-    # name so an upstream reorder of the provider list does not silently
-    # route this code to the wrong dataset.
+    # The selected Vs30 map may return NaN for cells outside its coverage
+    # (e.g. Wills 2015 / Thompson outside California, offshore cells). Fall
+    # back to the global topographic-slope model for those sites. Look up
+    # the fallback provider by name so an upstream reorder of the provider
+    # list does not silently route this code to the wrong dataset.
     if any([np.isnan(x) for x in vs30]):  # noqa: C419
         fallback_name = 'Global Vs30 from Topographic Slope (Wald & Allen 2008)'
         fallback_provider_data = None
@@ -1050,27 +1098,45 @@ def get_site_vs30_from_opensha(lat, lon, vs30model='CGS/Wills VS30 Map (2015)'):
     return vs30
 
 
-def get_site_z1pt0_from_opensha(lat, lon):  # noqa: D103
+def _fetch_z_from_opensha(lat, lon, data_type, model_name):
+    """Fetch Z1.0 or Z2.5 (in km) at a single site from OpenSHA.
+
+    When `model_name` is None or 'OpenSHA default model', returns the value
+    from the first provider in OpenSHA's default order that has non-NaN
+    data for the site (sequenced fallback). When `model_name` is a specific
+    OpenSHA basin-depth provider NAME (matching `getSourceName()`), returns
+    the value from that provider only; NaN if the provider has no data
+    for the site or is not in the list.
+    """
     sites = ArrayList()  # noqa: F405
     sites.add(Site(Location(lat, lon)))  # noqa: F405
     siteDataProviders = OrderedSiteDataProviderList.createSiteDataProviderDefaults()  # noqa: N806, F405
     siteData = siteDataProviders.getAllAvailableData(sites)  # noqa: N806
+
+    use_default_sequence = (
+        model_name is None or model_name == 'OpenSHA default model'
+    )
+    z = float('nan')
     for data in siteData:
-        if data.getValue(0).getDataType() == 'Depth to Vs = 1.0 km/sec':
-            z1pt0 = float(data.getValue(0).getValue())
-            if not np.isnan(z1pt0):
-                break
-    return z1pt0 * 1000.0
+        if str(data.getValue(0).getDataType()) != data_type:
+            continue
+        if not use_default_sequence and str(data.getSourceName()) != model_name:
+            continue
+        candidate = float(data.getValue(0).getValue())
+        if not np.isnan(candidate):
+            z = candidate
+            break
+        if not use_default_sequence:
+            # Asked for a specific model and it returned NaN here.
+            break
+    return z
 
 
-def get_site_z2pt5_from_opensha(lat, lon):  # noqa: D103
-    sites = ArrayList()  # noqa: F405
-    sites.add(Site(Location(lat, lon)))  # noqa: F405
-    siteDataProviders = OrderedSiteDataProviderList.createSiteDataProviderDefaults()  # noqa: N806, F405
-    siteData = siteDataProviders.getAllAvailableData(sites)  # noqa: N806
-    for data in siteData:
-        if data.getValue(0).getDataType() == 'Depth to Vs = 2.5 km/sec':
-            z2pt5 = float(data.getValue(0).getValue())
-            if not np.isnan(z2pt5):
-                break
-    return z2pt5 * 1000.0
+def get_site_z1pt0_from_opensha(lat, lon, model_name=None):  # noqa: D103
+    z = _fetch_z_from_opensha(lat, lon, 'Depth to Vs = 1.0 km/sec', model_name)
+    return z * 1000.0
+
+
+def get_site_z2pt5_from_opensha(lat, lon, model_name=None):  # noqa: D103
+    z = _fetch_z_from_opensha(lat, lon, 'Depth to Vs = 2.5 km/sec', model_name)
+    return z * 1000.0
