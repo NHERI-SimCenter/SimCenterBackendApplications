@@ -122,11 +122,11 @@ if __name__ == '__main__':
     #         shutil.rmtree(os.environ.get('OQ_DATADIR'))
     #     os.makedirs(f"{os.environ.get('OQ_DATADIR')}")
 
-    # untar site databases
+    # untar site databases. global_zTR_4km is the depth-to-bedrock map used
+    # by ground-failure code (liquefaction/landslide); all Vs30 paths
+    # go through OpenSHA, so no Vs30 pickles need to be staged here.
     site_database = [
-        'global_vs30_4km.tar.gz',
         'global_zTR_4km.tar.gz',
-        'thompson_vs30_4km.tar.gz',
     ]
     print('HazardSimulation: Extracting site databases.')  # noqa: T201
     cwd = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120
