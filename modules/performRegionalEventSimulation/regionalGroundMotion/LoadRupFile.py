@@ -2,7 +2,6 @@ import numpy as np
 from tqdm import tqdm
 import geopandas as gpd
 import shapely
-import sys
 import ujson as json
 
 def get_rups_to_run(scenario_info, num_scenarios):  # noqa: C901, D103
@@ -30,7 +29,7 @@ def get_rups_to_run(scenario_info, num_scenarios):  # noqa: C901, D103
                 np.where(np.isin(rups_requested, rups_available))[0]
             ]
     else:
-        sys.exit(
+        raise NotImplementedError(
             f'The scenario selection method {scenario_info["Generator"].get("method", None)} is not available'
         )
     return rups_to_run
@@ -42,11 +41,13 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):  # noqa: N802, N803, D1
         with open(rupFilePath) as f:  # noqa: PTH123
             user_scenarios = json.load(f)
     except:  # noqa: E722
-        sys.exit(f'CreateScenario: source file {rupFilePath} not found.')
+        raise FileNotFoundError(  # noqa: B904
+            f'CreateScenario: source file {rupFilePath} not found.'
+        )
     # number of features (i.e., ruptures)
     num_scenarios = len(user_scenarios.get('features', []))
     if num_scenarios < 1:
-        sys.exit('CreateScenario: source file is empty.')
+        raise ValueError('CreateScenario: source file is empty.')
     rups_to_run = get_rups_to_run(scenario_info, num_scenarios)
     # get rupture and source ids
     scenario_data = {}
@@ -115,7 +116,7 @@ def load_earthquake_rup_scenario(scenario_info, user_scenarios):  # noqa: N802, 
     # number of features (i.e., ruptures)
     num_scenarios = len(user_scenarios)
     if num_scenarios < 1:
-        sys.exit('CreateScenario: source file is empty.')
+        raise ValueError('CreateScenario: source file is empty.')
     rups_to_run = get_rups_to_run(scenario_info, num_scenarios)
     # get rupture and source ids
     scenario_data = {}

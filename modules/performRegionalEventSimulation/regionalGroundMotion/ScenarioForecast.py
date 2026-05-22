@@ -38,16 +38,13 @@
 # Jinyan Zhao
 
 import argparse
-import importlib
 import json
 import os
-import subprocess
-import sys
 import tarfile
 
 import psutil
 
-OPENSHA_JAR = 'opensha-all.jar' # version 25.4.1 (invoked in 04/2026)
+OPENSHA_JAR = 'opensha-all.jar'  # version 26.1.1 (invoked in 05/2026)
 
 if __name__ == '__main__':
     # parse arguments
@@ -84,16 +81,6 @@ if __name__ == '__main__':
     except:  # noqa: E722
         oq_flag = False
 
-    # dependencies
-    packages = ['tqdm', 'psutil', 'pulp', 'requests']
-    for p in packages:
-        if importlib.util.find_spec(p) is None:
-            # print(f"""The Python package {p} is required but not found.
-            #        Please install it by running
-            #       "{sys.executable} -m pip install -q {p}"
-            #        in your terminal or command prompt""")
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-q', p])  # noqa: S603
-
     # set up environment
     import socket
 
@@ -102,21 +89,17 @@ if __name__ == '__main__':
 
         if GlobalVariable.JVM_started is False:
             GlobalVariable.JVM_started = True
-            if importlib.util.find_spec('jpype') is None:
-                subprocess.check_call(  # noqa: S603
-                    [sys.executable, '-m', 'pip', 'install', 'JPype1']
-                )  # noqa: RUF100, S603
             import jpype
-
-            # from jpype import imports
             import jpype.imports
-            from jpype.types import *  # noqa: F403
 
             memory_total = psutil.virtual_memory().total / (1024.0**3)
             memory_request = int(memory_total * 0.75)
-            #jpype.addClassPath('./lib/OpenSHA-1.5.2.jar') # not supported by opensha starting from 02/2026
             jpype.addClassPath('./lib/{}'.format(OPENSHA_JAR))
-            jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
+            jpype.startJVM(
+                f'-Xmx{memory_request}G',
+                convertStrings=False,
+                jvmpath=GlobalVariable.find_compatible_jvm_path(),
+            )
     from CreateScenario import (
         create_earthquake_scenarios,
         create_wind_scenarios,
@@ -139,15 +122,11 @@ if __name__ == '__main__':
     #         shutil.rmtree(os.environ.get('OQ_DATADIR'))
     #     os.makedirs(f"{os.environ.get('OQ_DATADIR')}")
 
-    if oq_flag:
-        # import FetchOpenQuake
-        from FetchOpenQuake import *  # noqa: F403
-
-    # untar site databases
+    # untar site databases. global_zTR_4km is the depth-to-bedrock map used
+    # by ground-failure code (liquefaction/landslide); all Vs30 paths
+    # go through OpenSHA, so no Vs30 pickles need to be staged here.
     site_database = [
-        'global_vs30_4km.tar.gz',
         'global_zTR_4km.tar.gz',
-        'thompson_vs30_4km.tar.gz',
     ]
     print('HazardSimulation: Extracting site databases.')  # noqa: T201
     cwd = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120
@@ -227,6 +206,3 @@ if __name__ == '__main__':
         print('HazardSimulation: currently only supports EQ and Wind simulations.')  # noqa: T201
     # print(scenarios)
     print('HazardSimulation: scenarios created.')  # noqa: T201
-
-    # Closing the current process
-    sys.exit(0)

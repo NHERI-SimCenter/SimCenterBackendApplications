@@ -100,7 +100,7 @@ def select_realizations_to_run(damage_input, run_dir):
             else:
                 rlzs_requested.append(int(rlzs))
         rlzs_requested = np.array(rlzs_requested)
-        rlzs_in_available = np.in1d(rlzs_requested, rlzs_available)  # noqa: NPY201
+        rlzs_in_available = np.isin(rlzs_requested, rlzs_available)
         if rlzs_in_available.sum() != 0:
             rlzs_to_run = rlzs_requested[np.where(rlzs_in_available)[0]]
         else:

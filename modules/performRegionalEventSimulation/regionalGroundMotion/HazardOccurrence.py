@@ -39,9 +39,8 @@
 
 import collections
 import itertools
-import json as python_json
+import json
 import os
-import sys
 import threading
 import time
 
@@ -52,7 +51,7 @@ import pulp
 from scipy.stats import norm
 from sklearn.linear_model import lasso_path
 from tqdm import tqdm
-from USGS_API import *  # noqa: F403
+from USGS_API import USGS_HazardCurve
 
 
 def configure_hazard_occurrence(  # noqa: C901, D103
@@ -166,7 +165,7 @@ def configure_hazard_occurrence(  # noqa: C901, D103
             cur_imt = im_type
         if IMfile.lower().endswith('.json'):
             with open(IMfile) as f:  # noqa: PTH123
-                IMdata = python_json.load(f)  # noqa: N806
+                IMdata = json.load(f)  # noqa: N806
             hc_data = calc_hazard_curves(IMdata, site_config, cur_imt)
         elif IMfile.lower().endswith('.hdf5'):
             hc_data = calc_hazard_curves_hdf5(
@@ -208,7 +207,7 @@ def configure_hazard_occurrence(  # noqa: C901, D103
     }
     # output the hazard occurrence information file
     with open(os.path.join(output_dir, 'HazardCurves.json'), 'w') as f:  # noqa: PTH118, PTH123
-        python_json.dump(occ_dict, f, indent=2)
+        json.dump(occ_dict, f, indent=2)
     occ_dict = {
         'Model': model_type,
         'NumTargetEQs': num_target_eqs,
@@ -383,7 +382,7 @@ def get_hazard_curves(input_dir=None, input_csv=None, input_json=None):  # noqa:
 
     if input_json is not None:  # noqa: RET503
         with open(input_json) as f:  # noqa: PTH123
-            hc_data = python_json.load(f)
+            hc_data = json.load(f)
         return hc_data  # noqa: RET504
 
 
@@ -405,7 +404,7 @@ def get_im_exceedance_probility(  # noqa: C901, D103
     # initialize output
     if IMfile.lower().endswith('.json'):
         with open(IMfile) as f:  # noqa: PTH123
-            im_raw = python_json.load(f)
+            im_raw = json.load(f)
         num_sites = len(im_raw[scenario_idx[0]].get('GroundMotions'))
     elif IMfile.lower().endswith('.hdf5'):
         with h5py.File(IMfile, 'r') as f:
@@ -571,7 +570,7 @@ def export_sampled_earthquakes(error, id_selected_eqs, eqdata, P, output_dir=Non
 
     if output_dir is not None:
         with open(os.path.join(output_dir, 'RupSampled.json'), 'w') as f:  # noqa: PTH118, PTH123
-            python_json.dump(dict_selected_eqs, f, indent=2)
+            json.dump(dict_selected_eqs, f, indent=2)
 
 
 # def export_sampled_earthquakes(occ_dict, im_raw, site_config, id_selected_eqs, eqdata, P, output_dir=None):
@@ -613,7 +612,7 @@ def export_sampled_earthquakes(error, id_selected_eqs, eqdata, P, output_dir=Non
 
 #     if output_dir is not None:
 #         with open(os.path.join(output_dir,'RupSampled.json'), 'w') as f:
-#             python_json.dump(dict_selected_eqs, f, indent=2)
+#             json.dump(dict_selected_eqs, f, indent=2)
 
 
 class OccurrenceModel_ManzourDavidson2016:  # noqa: D101
@@ -807,7 +806,7 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: D101
 
         if output_dir is not None:
             with open(os.path.join(output_dir, 'InfoSampledGM.json'), 'w') as f:  # noqa: PTH118, PTH123
-                python_json.dump(dict_selected_gmms, f, indent=2)
+                json.dump(dict_selected_gmms, f, indent=2)
 
 
 class OccurrenceModel_Wangetal2023:  # noqa: D101
@@ -958,7 +957,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: D101
         )
 
         if self.num_selected[self.selected_alpha_ind] == 0:
-            sys.exit(
+            raise RuntimeError(
                 'ERROR: Zero scenarios/ground motions are selected in Wang et al. (2023).\n'  # noqa: ISC003
                 + f'The tunnling parameter used is {self.alphas[self.selected_alpha_ind]}.\n'
                 + 'Try using a smaller tuning parameter.'
@@ -992,4 +991,4 @@ class OccurrenceModel_Wangetal2023:  # noqa: D101
 
         if output_dir is not None:
             with open(os.path.join(output_dir, 'InfoSampledGM.json'), 'w') as f:  # noqa: PTH118, PTH123
-                python_json.dump(dict_selected_gmms, f, indent=2)
+                json.dump(dict_selected_gmms, f, indent=2)

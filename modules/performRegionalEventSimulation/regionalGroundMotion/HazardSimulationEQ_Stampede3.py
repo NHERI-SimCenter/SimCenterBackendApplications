@@ -1,6 +1,5 @@
 import ujson as json
 import os
-import sys
 import pickle
 from tqdm import tqdm
 import numpy as np
@@ -145,7 +144,7 @@ if __name__ == '__main__':
 
             if returncode != 0:
                 print(result)
-                sys.exit(f'return code: {returncode}')
+                raise RuntimeError(f'return code: {returncode}')
                 
 
 
