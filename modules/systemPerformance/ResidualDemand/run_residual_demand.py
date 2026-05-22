@@ -50,6 +50,10 @@ from pathlib import Path
 
 import contextily as cx
 import geopandas as gpd
+
+# doing these next two lines so matplotlib is forces non-interactive background to stop hanging on windows due to thred not dying
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -166,6 +170,7 @@ def create_congestion_animation(edge_vol_dir, output_file_name):
         interval=10,
     )
     animation.save(output_file_name, writer='imagemagick', fps=2)
+    plt.close('all')
 
 
 def get_highest_congestion(edge_vol_dir, edges_csv):
