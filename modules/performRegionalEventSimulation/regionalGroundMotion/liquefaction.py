@@ -36,7 +36,9 @@ def sampleRaster(  # noqa: N802
                     f'More than one band in the file {raster_file_path}, the first band is used.'
                 )
         except:  # noqa: E722
-            sys.exit(f'Can not read data from {raster_file_path}')
+            raise OSError(  # noqa: B904
+                f'Can not read data from {raster_file_path}'
+            )
         if xy_crs != raster_crs:
             # make transformer for reprojection
             transformer_xy_to_data = Transformer.from_crs(
@@ -96,7 +98,7 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ARG00
     try:
         user_crs_input = CRS.from_user_input(vector_crs).to_epsg()
         if vector_gdf.crs.to_epsg() != user_crs_input:
-            sys.exit(
+            raise ValueError(
                 f"The CRS of vector file {vector_file_path} is {vector_gdf.crs}, and doesn't match the input CRS ({xy_crs}) defined for liquefaction triggering models"
             )
     except:  # noqa: E722
@@ -362,11 +364,9 @@ class ZhuEtal2017(Liquefaction):
                 else:
                     additional_output.update({key: item})
         else:
-            sys.exit(
+            raise ValueError(
                 "At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."
             )
-            # print(f"At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."\
-            #       , file=sys.stderr)
             # sys.stderr.write("test")
             # sys.exit(-1)
         return ln_im_data, eq_data, im_list, additional_output
@@ -579,7 +579,7 @@ class Hazus2020(Liquefaction):
                 else:
                     additional_output.update({key: item})
         else:
-            sys.exit(
+            raise ValueError(
                 "'PGA'is missing in the selected intensity measures and the liquefaction trigging model 'Hazus2020' can not be computed."
             )
         return ln_im_data, eq_data, im_list, additional_output
@@ -921,7 +921,7 @@ class Hazus2020Lateral(LateralSpread):
                 ln_im_data[scenario_id] = im_data_scen
             im_list = im_list + output_keys
         else:
-            sys.exit(
+            raise ValueError(
                 "At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."
             )
         return ln_im_data, eq_data, im_list
@@ -1090,7 +1090,7 @@ class Hazus2020Vertical(GroundSettlement):
                 ln_im_data[scenario_id] = im_data_scen
             im_list = im_list + output_keys
         else:
-            sys.exit(
+            raise ValueError(
                 "At least one of 'liq_susc' and 'liq_prob' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."
             )
         return ln_im_data, eq_data, im_list

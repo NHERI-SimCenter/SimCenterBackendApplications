@@ -37,26 +37,14 @@
 # Kuanshi Zhong
 #
 
-import socket  # noqa: I001
-import sys
+import contextlib
+import socket
 
+import joblib
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
-import importlib
-import subprocess
-
-
-if importlib.util.find_spec('joblib') is None:
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'joblib'])  # noqa: S603
-
-if importlib.util.find_spec('contextlib') is None:
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'contextlib'])  # noqa: S603
-
-import joblib  # noqa: I001
-import contextlib
 from joblib import Parallel, delayed
-import multiprocessing
+from tqdm import tqdm
 
 
 @contextlib.contextmanager
@@ -78,8 +66,7 @@ def tqdm_joblib(tqdm_object):
 
 
 if 'stampede2' not in socket.gethostname():
-    #from FetchOpenSHA import (
-    from FetchOpenSHA_25_4 import (
+    from FetchOpenSHA import (
         get_site_vs30_from_opensha,
         get_site_z1pt0_from_opensha,
         get_site_z2pt5_from_opensha,
@@ -93,6 +80,39 @@ def get_label(options, labels, label_name):  # noqa: D103
             return option, labels
 
     print(f'WARNING: Could not identify the label for the {label_name}')  # noqa: T201, RET503
+
+
+# Canonical OpenSHA basin-depth provider NAMEs (matches `getSourceName()`).
+# Used to recognize Z1.0 / Z2.5 Type strings that select a specific OpenSHA
+# basin-depth model rather than the default sequenced fallback.
+_OPENSHA_BASIN_DEPTH_NAMES = frozenset([
+    'USGS SF Bay Area Velocity Model Release 21.1',
+    'USGS Bay Area Velocity Model Release 8.3.0',
+    'SCEC Community Velocity Model Version 4, Iteration 26, Basin Depth',
+    'SCEC Community Velocity Model Version 4, Iteration 26, M01 w/ Taper, Basin Depth',
+    'SCEC CCA, Iteration 6, Basin Depth',
+    'SCEC Community Velocity Model Version 4 Basin Depth',
+    'SCEC/Harvard Community Velocity Model Version 11.9.x Basin Depth',
+    'SCEC CyberShake Study 18.8 Stitched Basin Depth',
+    'SCEC CyberShake Study 24.8 Stitched Basin Depth',
+    'SCEC Community Velocity Model Version 2 Basin Depth',
+])
+
+
+def _z_opensha_dispatch(z_config, tag_key):
+    """Decide whether to fetch Z1.0/Z2.5 from OpenSHA and which model.
+
+    Returns a (model_name, should_fetch) tuple:
+      - ('OpenSHA default model' Type with tag==2) → (None, True): sequenced
+      - (Type is a basin-depth NAME)               → (NAME, True):  specific
+      - (anything else)                            → (None, False): no fetch
+    """
+    cfg_type = z_config.get('Type', '')
+    if cfg_type in _OPENSHA_BASIN_DEPTH_NAMES:
+        return cfg_type, True
+    if cfg_type == 'OpenSHA default model' and z_config.get(tag_key) == 2:  # noqa: PLR2004
+        return None, True
+    return None, False
 
 
 class Station:
@@ -242,7 +262,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
                 ]
     # Check if any duplicated points
     if selected_stn.duplicated(subset=[lon_label, lat_label]).any():
-        sys.exit(
+        raise ValueError(
             'Error: Duplicated lat and lon in the Site File (.csv), '
             f'please check site \n{selected_stn[selected_stn.duplicated(subset=[lon_label, lat_label], keep = False)].index.tolist()}'
         )
@@ -252,7 +272,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
     # Get Vs30
     if vs30Config['Type'] == 'User-specified':
         if vs30_label not in selected_stn.keys():  # noqa: SIM118
-            sys.exit(
+            raise ValueError(
                 'ERROR: User-specified option is selected for Vs30 model but the provided.'  # noqa: ISC003
                 + "but the provided Site File doesn't contain a column named 'Vs30'."
                 + '\nNote: the User-specified Vs30 model is only supported for Scattering Locations site definition.'
@@ -266,46 +286,33 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
             nan_loc = []
     else:
         nan_loc = list(range(len(selected_stn.index)))
-    if 'Global Vs30' in vs30Config['Type']:
-        vs30_tag = 1
-    elif 'Thompson' in vs30Config['Type']:
-        vs30_tag = 2
-    elif 'NCM' in vs30Config['Type']:
-        vs30_tag = 3
-    else:
-        vs30_tag = 0
-    if len(nan_loc) and vs30_tag == 1:
-        print('CreateStation: Interpolating global Vs30 map for defined stations.')  # noqa: T201
-        selected_stn.loc[nan_loc, vs30_label] = get_vs30_global(
-            selected_stn.iloc[  # noqa: PD011
-                nan_loc, list(selected_stn.keys()).index(lat_label)
-            ].values.tolist(),
-            selected_stn.iloc[  # noqa: PD011
-                nan_loc, list(selected_stn.keys()).index(lon_label)
-            ].values.tolist(),
+    # Vs30 dispatch.
+    #
+    # All non-User-specified Vs30 paths route through OpenSHA. The
+    # vs30Config['Type'] string is either a canonical OpenSHA provider
+    # NAME (e.g. 'CGS/Wills VS30 Map (2015)') or a legacy substring
+    # ('Global Vs30 ...', 'Thompson ...') that get_site_vs30_from_opensha
+    # maps to a canonical NAME for backward compatibility.
+    #
+    # The NCM branch below is not exposed in the R2D UI; the underlying
+    # USGS web service has not been verified since 2021 (see get_vs30_ncm).
+    if 'NCM' in vs30Config['Type']:
+        # Not reachable from the R2D UI
+        if len(nan_loc):
+            print('CreateStation: Fetch National Crustal Model Vs for defined stations.')  # noqa: T201
+            selected_stn.loc[nan_loc, vs30_label] = get_vs30_ncm(
+                selected_stn.iloc[  # noqa: PD011
+                    nan_loc, list(selected_stn.keys()).index(lat_label)
+                ].values.tolist(),
+                selected_stn.iloc[  # noqa: PD011
+                    nan_loc, list(selected_stn.keys()).index(lon_label)
+                ].values.tolist(),
+            )
+    elif len(nan_loc):
+        print(  # noqa: T201
+            f'CreateStation: Fetch Vs30 from OpenSHA '
+            f'({vs30Config["Type"]}) for defined stations.'
         )
-    if len(nan_loc) and vs30_tag == 2:  # noqa: PLR2004
-        print('CreateStation: Interpolating Thompson Vs30 map for defined stations.')  # noqa: T201
-        selected_stn.loc[nan_loc, vs30_label] = get_vs30_thompson(
-            selected_stn.iloc[  # noqa: PD011
-                nan_loc, list(selected_stn.keys()).index(lat_label)
-            ].values.tolist(),
-            selected_stn.iloc[  # noqa: PD011
-                nan_loc, list(selected_stn.keys()).index(lon_label)
-            ].values.tolist(),
-        )
-    if len(nan_loc) and vs30_tag == 3:  # noqa: PLR2004
-        print('CreateStation: Fetch National Crustal Model Vs for defined stations.')  # noqa: T201
-        selected_stn.loc[nan_loc, vs30_label] = get_vs30_ncm(
-            selected_stn.iloc[  # noqa: PD011
-                nan_loc, list(selected_stn.keys()).index(lat_label)
-            ].values.tolist(),
-            selected_stn.iloc[  # noqa: PD011
-                nan_loc, list(selected_stn.keys()).index(lon_label)
-            ].values.tolist(),
-        )
-    if len(nan_loc) and vs30_tag == 0:
-        print('CreateStation: Fetch OpenSHA Vs30 map for defined stations.')  # noqa: T201
         selected_stn.loc[nan_loc, vs30_label] = get_site_vs30_from_opensha(
             selected_stn.iloc[  # noqa: PD011
                 nan_loc, list(selected_stn.keys()).index(lat_label)
@@ -313,6 +320,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
             selected_stn.iloc[  # noqa: PD011
                 nan_loc, list(selected_stn.keys()).index(lon_label)
             ].values.tolist(),
+            vs30model=vs30Config['Type'],
         )
 
     # Get zTR
@@ -469,55 +477,65 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
                         'chi',
                     ]:
                         user_param_list.pop(user_param_list.index(cur_param))
-    # If z1pt0 is OpenSHA default model, use parallel processing to get z1pt0
-    if z1Config['Type'] == 'OpenSHA default model':
-        z1_tag = z1Config['z1_tag']
-        if z1_tag == 2:  # noqa: PLR2004
-            # num_cores = z1Config.get('num_cores', multiprocessing.cpu_count())
-            num_cores = z1Config.get('num_cores', 1)
-            if num_cores == 1:
-                z1pt0_results = [
-                    get_site_z1pt0_from_opensha(lat, lon)
+    # Z1.0 / Z2.5 fetch from OpenSHA.
+    #
+    # z*Config['Type'] is one of:
+    #   - 'User-specified'           → values come from the site file or a constant
+    #   - 'OpenSHA default model'    → legacy: uses z*_tag for empirical / sequenced / null
+    #   - <OpenSHA basin-depth NAME> → fetch that specific provider's value
+    #
+    # For both 'OpenSHA default model' (with tag=2) and a named OpenSHA
+    # model, we fetch all values up front (optionally in parallel) so the
+    # per-station loop below can just index into the results array.
+    _z1_model, _z1_fetch = _z_opensha_dispatch(z1Config, 'z1_tag')
+    if _z1_fetch:
+        num_cores = z1Config.get('num_cores', 1)
+        if num_cores == 1:
+            z1pt0_results = [
+                get_site_z1pt0_from_opensha(lat, lon, model_name=_z1_model)
+                for lat, lon in zip(
+                    selected_stn['Latitude'].tolist(),
+                    selected_stn['Longitude'].tolist(),
+                )
+            ]
+        else:
+            with tqdm_joblib(
+                tqdm(desc='Get z1pt0 from openSHA', total=selected_stn.shape[0])
+            ) as progress_bar:  # noqa: F841
+                z1pt0_results = Parallel(n_jobs=num_cores)(
+                    delayed(get_site_z1pt0_from_opensha)(
+                        lat, lon, model_name=_z1_model
+                    )
                     for lat, lon in zip(
                         selected_stn['Latitude'].tolist(),
                         selected_stn['Longitude'].tolist(),
                     )
-                ]
-            else:
-                with tqdm_joblib(
-                    tqdm(desc='Get z1pt0 from openSHA', total=selected_stn.shape[0])
-                ) as progress_bar:
-                    z1pt0_results = Parallel(n_jobs=num_cores)(
-                        delayed(get_site_z1pt0_from_opensha)(lat, lon)
-                        for lat, lon in zip(
-                            selected_stn['Latitude'].tolist(),
-                            selected_stn['Longitude'].tolist(),
-                        )
+                )
+
+    _z25_model, _z25_fetch = _z_opensha_dispatch(z25Config, 'z25_tag')
+    if _z25_fetch:
+        num_cores = z25Config.get('num_cores', 1)
+        if num_cores == 1:
+            z2pt5_results = [
+                get_site_z2pt5_from_opensha(lat, lon, model_name=_z25_model)
+                for lat, lon in zip(
+                    selected_stn['Latitude'].tolist(),
+                    selected_stn['Longitude'].tolist(),
+                )
+            ]
+        else:
+            with tqdm_joblib(
+                tqdm(desc='Get z2pt5 from openSHA', total=selected_stn.shape[0])
+            ) as progress_bar:  # noqa: F841
+                z2pt5_results = Parallel(n_jobs=num_cores)(
+                    delayed(get_site_z2pt5_from_opensha)(
+                        lat, lon, model_name=_z25_model
                     )
-    if z25Config['Type'] == 'OpenSHA default model':
-        z25_tag = z25Config['z25_tag']
-        if z25_tag == 2:  # noqa: PLR2004
-            # num_cores = z25Config.get('num_cores', multiprocessing.cpu_count())
-            num_cores = z25Config.get('num_cores', 1)
-            if num_cores == 1:
-                z2pt5_results = [
-                    get_site_z2pt5_from_opensha(lat, lon)
                     for lat, lon in zip(
                         selected_stn['Latitude'].tolist(),
                         selected_stn['Longitude'].tolist(),
                     )
-                ]
-            else:
-                with tqdm_joblib(
-                    tqdm(desc='Get z2pt5 from openSHA', total=selected_stn.shape[0])
-                ) as progress_bar:  # noqa: F841
-                    z2pt5_results = Parallel(n_jobs=num_cores)(
-                        delayed(get_site_z2pt5_from_opensha)(lat, lon)
-                        for lat, lon in zip(
-                            selected_stn['Latitude'].tolist(),
-                            selected_stn['Longitude'].tolist(),
-                        )
-                    )
+                )
 
     ground_failure_input_keys = set()
     for ind in tqdm(range(selected_stn.shape[0]), desc='Stations'):
@@ -572,6 +590,14 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
             elif z1_tag == 0:
                 z1pt0 = get_z1(tmp.get('Vs30'))
                 tmp.update({'z1pt0': z1pt0})
+        elif z1Config['Type'] in _OPENSHA_BASIN_DEPTH_NAMES:
+            # Specific OpenSHA basin-depth model; fall back to the
+            # empirical Chiou & Youngs (2013) equation if the chosen
+            # model has no data at this site.
+            z1pt0 = z1pt0_results[ind]
+            if np.isnan(z1pt0):
+                z1pt0 = get_z1(tmp.get('Vs30'))
+            tmp.update({'z1pt0': z1pt0})
 
         if (z25Config['Type'] == 'User-specified') and stn.get('z2pt5'):
             tmp.update({'z2pt5': stn.get('z2pt5')})
@@ -591,6 +617,14 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
             elif z25_tag == 0:
                 z2pt5 = get_z25(tmp['z1pt0'])
                 tmp.update({'z2pt5': z2pt5})
+        elif z25Config['Type'] in _OPENSHA_BASIN_DEPTH_NAMES:
+            # Specific OpenSHA basin-depth model; fall back to the
+            # empirical Campbell & Bozorgnia (2013) equation if the
+            # chosen model has no data at this site.
+            z2pt5 = z2pt5_results[ind]
+            if np.isnan(z2pt5):
+                z2pt5 = get_z25(tmp['z1pt0'])
+            tmp.update({'z2pt5': z2pt5})
 
         if 'DepthToRock' in stn.index:
             tmp.update({'DepthToRock': stn.get('DepthToRock')})
@@ -612,7 +646,7 @@ def create_stations(  # noqa: C901, PLR0912, PLR0915
 
         if stn.get('vsInferred'):
             if stn.get('vsInferred') not in [0, 1]:
-                sys.exit(
+                raise ValueError(
                     "CreateStation: Only '0' or '1' can be assigned to the"  # noqa: ISC003
                     + " 'vsInferred' column in the Site File (.csv), where 0 stands for false and 1 stands for true."
                 )
@@ -726,32 +760,6 @@ def create_gridded_stations(
     )
 
 
-def get_vs30_global(lat, lon):
-    """Interpolate global Vs30 at given latitude and longitude
-    Input:
-        lat: list of latitude
-        lon: list of longitude
-    Output:
-        vs30: list of vs30
-    """  # noqa: D205, D400
-    import os
-    import pickle
-
-    from scipy import interpolate
-
-    # Loading global Vs30 data
-    cwd = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120
-    with open(cwd + '/database/site/global_vs30_4km.pkl', 'rb') as f:  # noqa: PTH123
-        vs30_global = pickle.load(f)  # noqa: S301
-    # Interpolation function (linear)
-    interpFunc = interpolate.interp2d(  # noqa: N806
-        vs30_global['Longitude'], vs30_global['Latitude'], vs30_global['Vs30']
-    )
-    vs30 = [float(interpFunc(x, y)) for x, y in zip(lon, lat)]
-    # return
-    return vs30  # noqa: DOC201, RET504, RUF100
-
-
 def parallel_interpolation(func, lat, lon):
     """Interpolate data in parallel
     Input:
@@ -762,40 +770,6 @@ def parallel_interpolation(func, lat, lon):
         data: list of interpolated data
     """  # noqa: D205, D400
     return func(lat, lon)
-
-
-def get_vs30_thompson(lat, lon):
-    """Interpolate global Vs30 at given latitude and longitude
-    Input:
-        lat: list of latitude
-        lon: list of longitude
-    Output:
-        vs30: list of vs30
-    """  # noqa: D205, D400
-    import os
-    import pickle
-
-    from scipy import interpolate
-
-    # Loading Thompson Vs30 data
-    cwd = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120
-    with open(cwd + '/database/site/thompson_vs30_4km.pkl', 'rb') as f:  # noqa: PTH123
-        vs30_thompson = pickle.load(f)  # noqa: S301
-    # Interpolation function (linear)
-    vs30_thompson['Vs30'][vs30_thompson['Vs30'] < 0.1] = 760  # noqa: PLR2004
-    interpFunc = interpolate.interp2d(  # noqa: N806
-        vs30_thompson['Longitude'], vs30_thompson['Latitude'], vs30_thompson['Vs30']
-    )
-    vs30 = [float(interpFunc(x, y)) for x, y in zip(lon, lat)]
-
-    num_zeros = len([x for x in vs30 if x == 0])
-    if num_zeros > 0:
-        # Thompson's map gives zero values for water-covered region and outside CA -> use 760 for default
-        print(  # noqa: T201
-            f'CreateStation: Warning - approximate 760 m/s for {num_zeros} sites not supported by Thompson Vs30 map (water/outside CA).'
-        )
-    # return
-    return vs30  # noqa: DOC201, RET504, RUF100
 
 
 def get_z1(vs30):
@@ -879,6 +853,13 @@ def export_site_prop(stn_file, output_dir, filename):
 def get_zTR_ncm(lat, lon):  # noqa: N802
     """Call USGS National Crustal Model services for zTR
     https://earthquake.usgs.gov/nshmp/ncm
+
+    NOTE: not currently reachable from the R2D UI (no UI option produces
+    a BedrockDepth Type containing 'NCM' / 'National Crustal Model'). The
+    request URL below appears to repeat `/ws/nshmp/ncm/` — looks like a
+    pre-existing typo from 2021; the endpoint may have moved or been
+    retired. Verify before re-exposing.
+
     Input:
         lat: list of latitude
         lon: list of longitude
@@ -891,6 +872,7 @@ def get_zTR_ncm(lat, lon):  # noqa: N802
 
     # Looping over sites
     for cur_lat, cur_lon in zip(lat, lon):
+        # `/ws/nshmp/ncm/ws/nshmp/ncm/` looks duplicated — likely a typo.
         url_geology = f'https://earthquake.usgs.gov/ws/nshmp/ncm/ws/nshmp/ncm/geologic-framework?location={cur_lat}%2C{cur_lon}'
         # geological data (depth to bedrock)
         r1 = requests.get(url_geology)  # noqa: S113
@@ -913,6 +895,12 @@ def get_zTR_ncm(lat, lon):  # noqa: N802
 def get_vsp_ncm(lat, lon, depth):
     """Call USGS National Crustal Model services for Vs30 profile
     https://earthquake.usgs.gov/nshmp/ncm
+
+    NOTE: only reachable through `get_vs30_ncm`, which is itself not
+    exposed in the R2D UI (no UI option produces a Vs30 Type containing
+    'NCM'). The request URL has the same `/ws/nshmp/ncm/` repetition as
+    `get_zTR_ncm`; endpoint status unverified.
+
     Input:
         lat: list of latitude
         lon: list of longitude
@@ -927,6 +915,7 @@ def get_vsp_ncm(lat, lon, depth):
 
     # Looping over sites
     for cur_lat, cur_lon in zip(lat, lon):
+        # `/ws/nshmp/ncm/ws/nshmp/ncm/` looks duplicated — likely a typo.
         url_geophys = f'https://earthquake.usgs.gov/ws/nshmp/ncm/ws/nshmp/ncm/geophysical?location={cur_lat}%2C{cur_lon}&depths={depthMin}%2C{depthInc}%2C{depthMax}'
         r1 = requests.get(url_geophys)  # noqa: S113
         cur_res = r1.json()
@@ -968,7 +957,13 @@ def compute_vs30_from_vsp(depthp, vsp):
 
 
 def get_vs30_ncm(lat, lon):
-    """Fetch Vs30 at given latitude and longitude from NCM
+    """Fetch Vs30 at given latitude and longitude from NCM.
+
+    NOTE: not currently reachable from the R2D UI — the dispatch in the
+    Vs30 section triggers on `'NCM' in vs30Config['Type']`, but no R2D
+    Vs30 option produces such a Type string. The underlying USGS
+    /ws/nshmp/ncm endpoint status is unverified.
+
     Input:
         lat: list of latitude
         lon: list of longitude
