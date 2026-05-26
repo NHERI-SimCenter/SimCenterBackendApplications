@@ -200,18 +200,41 @@ void runGSA::preprocess_gmat(vector<vector<double>> gmat, vector<vector<double>>
 	std::vector<double> avg(nqoi, 0.0);
 	std::vector<double> var(nqoi, 0.0);
 	std::vector<double> normVar(nqoi, 0.0);
-	for (std::vector<double>& row : gmat_eff)
-	{
-		std::transform(avg.begin(), avg.end(), row.begin(), avg.begin(), std::plus<double>()); // sum
-		std::transform(var.begin(), var.end(), row.begin(), var.begin(), [](double a, double b) {return a + b*b; }); // square sum
-	}
-	const double scale(1/(double)nmc);
-	std::transform(avg.begin(), avg.end(), avg.begin() ,[scale](double element) { return element *= scale; }); // avg of value
-	std::transform(var.begin(), var.end(), var.begin(), [scale](double element) { return element *= scale; }); // avg of squared value
+    std::vector<int> validCount(nqoi, 0); // NEW: per-column non-NaN count
 
-	// Final Variance
-	std::transform(var.begin(), var.end(), avg.begin(), var.begin(), [](double a, double b) {return abs(a - b * b); });
-	varQoI = var;
+//	for (std::vector<double>& row : gmat_eff)
+//	{
+//		std::transform(avg.begin(), avg.end(), row.begin(), avg.begin(), std::plus<double>()); // sum
+//		std::transform(var.begin(), var.end(), row.begin(), var.begin(), [](double a, double b) {return a + b*b; }); // square sum
+//	}
+//	const double scale(1/(double)nmc);
+//	std::transform(avg.begin(), avg.end(), avg.begin() ,[scale](double element) { return element *= scale; }); // avg of value
+//	std::transform(var.begin(), var.end(), var.begin(), [scale](double element) { return element *= scale; }); // avg of squared value
+//
+//	// Final Variance
+//	std::transform(var.begin(), var.end(), avg.begin(), var.begin(), [](double a, double b) {return abs(a - b * b); });
+//	varQoI = var;
+
+    for (std::vector<double>& row : gmat_eff)
+    {
+        // NEW: element-wise accumulation that skips NaNs
+        for (size_t j = 0; j < row.size(); ++j) {
+            if (!std::isnan(row[j])) {
+                avg[j] += row[j];
+                var[j] += row[j] * row[j];
+                validCount[j]++;
+            }
+        }
+    }
+    // CHANGED: scale per-column by its own valid count instead of a single nmc
+    for (size_t j = 0; j < avg.size(); ++j) {
+        double s = (validCount[j] > 0) ? 1.0 / (double)validCount[j] : 0.0;
+        avg[j] *= s;
+        var[j] *= s;
+    }
+    // Final Variance
+    std::transform(var.begin(), var.end(), avg.begin(), var.begin(), [](double a, double b) {return abs(a - b * b); });
+    varQoI = var;
 
 	// Normalized effective matrix
 	for (auto& row : gmat_eff)
@@ -536,7 +559,8 @@ void runGSA::runMultipleGSA(vector<vector<double>> gmat_red, int Kos)
 
 void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> comb, vector<double>& Si, char Opt)
 {
-	//
+
+    //
 	// we will ignore NaN in gvec
 	//
 
@@ -576,6 +600,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 		gvec.reserve(nmc);
 		for (int i = 0; i < nmc; i++) {
 			gvec.push_back(gmat[i][nq]);
+//            std::cout<<gmat[i][nq]<<std::endl;
 		}
 
 
@@ -654,6 +679,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 			count_valid = 0;
 			for (int ns = 0; ns < nmc; ns++)
 			{
+                //std::cout << gvec[ns] << std::endl;
 				// Only if g is not NaN
 				if (!std::isnan(gvec[ns])) {
 					data(ne, count_valid) = xval[ns][idx];
@@ -677,7 +703,9 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 			Kthres = nmc_new / 10;   // main
 		}
 
+
 		while (1) {
+
 
             try
             {
