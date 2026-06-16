@@ -776,7 +776,7 @@
       },
       {
         "Name": "CustomPyInput",
-        "ExecutablePath": "applications/createSAM/customPyInput/customPyInput.py",
+        "ExecutablePath": "applications/createSAM/customPyInput/CustomPyInput.py",
         "ApplicationSpecificInputs": [
           {
             "id": "mainScript",

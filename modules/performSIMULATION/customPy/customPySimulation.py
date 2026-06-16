@@ -110,21 +110,35 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_p
 
     custom_script_path = SAM_in['mainScript']
 
-    # copy the custom scripts to the current directory if not yet
+    # locate the custom script: check cwd, then modelPath (copy), then custom_path (no copy)
+    import_name = custom_script_path[:-3]
     if os.path.exists(custom_script_path):  # noqa: PTH110
-        pass
+        pass  # script already in cwd
     else:
-        custom_script_dir = SAM_in.get('modelPath', None)
-        if custom_script_dir is None:
-            log_msg('No modelPath found in the SAM file.')  # noqa: F405
+        model_path = SAM_in.get('modelPath', None)
+        custom_path = AIM_in.get('commonFileDir', None)
+        if model_path is not None and os.path.isfile(  # noqa: PTH113
+            os.path.join(model_path, custom_script_path)  # noqa: PTH118
+        ):
+            if not os.path.isdir(model_path):  # noqa: PTH112
+                log_msg(f'modelPath directory does not exist: {model_path}')  # noqa: F405
+            else:
+                shutil.copytree(model_path, os.getcwd(), dirs_exist_ok=True)  # noqa: PTH109
+                log_msg(  # noqa: F405
+                    f'Custom scripts copied from {model_path} to {os.getcwd()}'  # noqa: PTH109
+                )
+        elif custom_path is not None and os.path.isfile(  # noqa: PTH113
+            os.path.join(custom_path, custom_script_path)  # noqa: PTH118
+        ):
+            sys.path.insert(0, custom_path)
+            log_msg(f'Custom script found in custom_path: {custom_path}')  # noqa: F405
         else:
-            shutil.copytree(custom_script_dir, os.getcwd(), dirs_exist_ok=True)  # noqa: PTH109
             log_msg(  # noqa: F405
-                f'Custom scripts copied from {custom_script_dir} to {os.getcwd()}'  # noqa: PTH109
+                f'Custom script {custom_script_path} not found in cwd, modelPath, or custom_path'
             )
 
     custom_script = importlib.__import__(
-        custom_script_path[:-3],
+        import_name,
         globals(),
         locals(),
         [
