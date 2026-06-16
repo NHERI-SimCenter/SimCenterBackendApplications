@@ -31,7 +31,7 @@ while [[ $# -gt 0 ]]; do
             fi
 
             if [[ "$ARCH" == "x86_64" ]]; then
-		CMAKE_DAKOTA_VERSION=619
+		CMAKE_DAKOTA_VERSION=624
 	    else
 		CMAKE_DAKOTA_VERSION=623		
             fi	    
