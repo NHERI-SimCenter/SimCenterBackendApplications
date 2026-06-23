@@ -233,7 +233,9 @@ def select_ground_motion(  # noqa: C901, D103
             filename.extend(tmp_filename)
             # print(tmp_min_err)
     else:
-        sys.exit('SelectGroundMotion: currently only supporting NGAWest2.')
+        raise NotImplementedError(
+            'SelectGroundMotion: currently only supporting NGAWest2.'
+        )
 
     # output data
     station_name = ['site' + str(j) + '.csv' for j in range(len(stations))]

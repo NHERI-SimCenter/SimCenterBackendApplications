@@ -147,6 +147,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     did_stochastic = sur['doStochastic']
     did_logtransform = sur['doLogtransform']
     did_normalization = sur['doNormalization']
+    did_multioutput_corr = sur.get('doMultiOutputCorr', False)  # noqa: N806
     kernel = sur['kernName']
 
     if kernel == 'Radial Basis':
@@ -214,7 +215,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
             self.set_XY(X, Y)
 
-        def get_stochastic_variance(X, Y, x, ny):  # noqa: C901, N803
+        def get_stochastic_variance(X, Y, x, ny, did_multioutput_corr=False, var_pred_train=None, var_pred_test=None):  # noqa: C901, N803
             # X_unique, X_idx, indices, counts = np.unique(X, axis=0, return_index=True, return_counts=True, return_inverse=True)
             X_unique, dummy, indices, counts = np.unique(  # noqa: N806
                 X, axis=0, return_index=True, return_counts=True, return_inverse=True
@@ -270,53 +271,66 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 X_unique = X  # noqa: N806
                 Y_mean = Y  # noqa: N806
                 indices = range(Y.shape[0])
+                if not did_multioutput_corr:
 
-                #
-                # check if we have an old example file - to be deleted in the future
-                #
-                old_version = False
-                for key, val in sur['modelInfo'][g_name_sur[ny] + '_Var'].items():  # noqa: B007, PERF102
-                    if 'sum' in key:
-                        old_version = True
-                        break
+                    #
+                    # check if we have an old example file - to be deleted in the future
+                    #
+                    old_version = False
+                    for key, val in sur['modelInfo'][g_name_sur[ny] + '_Var'].items():  # noqa: B007, PERF102
+                        if 'sum' in key:
+                            old_version = True
+                            break
 
-                if old_version:
-                    print(  # noqa: T201
-                        'The surrogate model was trained using an older version of the tool. Please retrain the model using this version or use older version.',
-                        file=sys.stderr,
+                    if old_version:
+                        print(  # noqa: T201
+                            'The surrogate model was trained using an older version of the tool. Please retrain the model using this version or use older version.',
+                            file=sys.stderr,
+                        )
+                        exit(-1)  # noqa: PLR1722
+
+                    log_vars = np.atleast_2d(
+                        sur['modelInfo'][g_name_sur[ny] + '_Var']['TrainingSamplesY']
+                    ).T
+
+                    kernel_var = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True)
+
+                    m_var = GPy.models.GPRegression(
+                        X, log_vars, kernel_var, normalizer=True, Y_metadata=None
                     )
-                    exit(-1)  # noqa: PLR1722
 
-                log_vars = np.atleast_2d(
-                    sur['modelInfo'][g_name_sur[ny] + '_Var']['TrainingSamplesY']
-                ).T
+                    # print("Variance field obtained for ny={}".format(ny))
+                    for key, val in sur['modelInfo'][g_name_sur[ny] + '_Var'].items():  # noqa: B007, PERF102
+                        exec('m_var.' + key + '= np.array(val)')  # noqa: S102
 
-                kernel_var = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True)
+                    if not did_multioutput_corr:
+                        log_var_pred, dum = m_var.predict(X)
+                        var_pred = np.exp(log_var_pred)
+                    else:
+                        # in fact it was not log
+                        var_pred, dum = m_var.predict(X)
 
-                m_var = GPy.models.GPRegression(
-                    X, log_vars, kernel_var, normalizer=True, Y_metadata=None
-                )
+                    if did_normalization:
+                        # Y_normFact = np.var(Y)  # noqa: N806, RUF100
+                        Y_normFact = np.mean(var_pred.T[0])  # noqa: N806
 
-                # print("Variance field obtained for ny={}".format(ny))
-                for key, val in sur['modelInfo'][g_name_sur[ny] + '_Var'].items():  # noqa: B007, PERF102
-                    exec('m_var.' + key + '= np.array(val)')  # noqa: S102
+                    else:
+                        Y_normFact = 1  # noqa: N806
 
-                log_var_pred, dum = m_var.predict(X)
-                var_pred = np.exp(log_var_pred)
+                    norm_var_str = (
+                        (var_pred.T[0]) / Y_normFact
+                    )  # if normalization was used..
 
-                if did_normalization:
-                    # Y_normFact = np.var(Y)  # noqa: N806, RUF100
-                    Y_normFact = np.mean(var_pred.T[0])  # noqa: N806
-
+                    log_var_pred_x, dum = m_var.predict(x)
+                    nugget_var_pred_x = np.exp(log_var_pred_x.T[0]) / Y_normFact
                 else:
-                    Y_normFact = 1  # noqa: N806
+                    if did_normalization:
+                        Y_normFact = np.mean(var_pred_train.T[0])
+                    else:
+                        Y_normFact = 1
+                    norm_var_str = (var_pred_train.T[0]/Y_normFact) 
+                    nugget_var_pred_x = var_pred_test/Y_normFact
 
-                norm_var_str = (
-                    (var_pred.T[0]) / Y_normFact
-                )  # if normalization was used..
-
-                log_var_pred_x, dum = m_var.predict(x)
-                nugget_var_pred_x = np.exp(log_var_pred_x.T[0]) / Y_normFact
 
             return (
                 X_unique,
@@ -326,6 +340,65 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 nugget_var_pred_x,
                 np.var(Y_mean),
             )
+        
+        
+        def get_stochastic_correlation(X, Y, x):  # noqa: C901, N803
+            
+            y_dim = Y.shape[1]
+            #
+            # Tertiary results to reconstruct cov observations..
+            #
+            n_samp = X.shape[0]
+            n_new_samp = x.shape[0]
+
+            Y_pre_mean = np.zeros((n_samp, y_dim))
+            for ny in range(y_dim):
+                Y_pre_mean[:,ny:ny+1] = np.atleast_2d(sur['modelInfo'][g_name_sur[ny] + '_TertMean']['TrainingSamplesY']).T
+
+
+            tril_idx = np.tril_indices(y_dim)
+            diag_in_vec = np.where(tril_idx[0] == tril_idx[1])[0]
+            n_elem = len(tril_idx[0])
+
+
+            cov_vec = np.zeros([n_samp, n_elem])
+            for ns in range(n_samp):
+                cov_samp = (Y_pre_mean[ns:ns+1,:]-Y[ns:ns+1,:]).T @ (Y_pre_mean[ns:ns+1,:]-Y[ns:ns+1,:])
+                cov_vec[ns,:] = cov_samp[tril_idx]
+        
+            kernel_var = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True)
+
+            gps = []
+            cov_pred = np.zeros([n_new_samp, n_elem])
+            cov_pred_train = np.zeros([n_samp, n_elem])
+            for i in range(n_elem):
+                gp = GPy.models.GPRegression(X.copy(), cov_vec[:, i:i+1], kernel=kernel_var)
+
+                # Use the parameter values of 1st variance (it is parallel GP, so the parameters are the same)
+                for key, val in sur['modelInfo'][g_name_sur[0] + '_Var'].items():  # noqa: B007, PERF102
+                    exec('gp.' + key + '= np.array(val)')  # noqa: S102
+
+                gps.append(gp)
+                cov_pred[:,i:i+1], dum = gp.predict(x)
+                cov_pred_train[:,i:i+1], dum = gp.predict(X)
+
+            cov_pred, projection_counter = make_psd(cov_pred,1.e-6, tril_idx, y_dim)  # ensure PSD
+            cov_pred_train, projection_counter = make_psd(cov_pred_train,1.e-6, tril_idx, y_dim)  # ensure PSD
+
+            
+            var_pred = cov_pred[:,diag_in_vec]
+            corr_pred = np.zeros_like(cov_pred)
+            idx = 0
+            for i in range(y_dim):
+                for j in range(i+1):
+                    corr_pred[:,idx] = cov_pred[:,idx] / np.sqrt(var_pred[:,i] * var_pred[:,j])
+                    idx += 1
+           
+
+            var_pred_test = var_pred
+            var_pred_train = cov_pred_train[:,diag_in_vec]
+            return corr_pred, var_pred_train, var_pred_test, tril_idx 
+
 
     # REQUIRED: rv_name, y_var
 
@@ -569,6 +642,10 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     nugget_var_list = [0] * ng_sur
 
     if not did_mf:
+
+        if did_multioutput_corr:
+            cor_vect, var_pred_train, var_pred_test, tril_idx  = get_stochastic_correlation(X, Y, rv_val)
+
         for ny in range(ng_sur):
             if did_stochastic[ny]:
                 m_list = m_list + [  # noqa: RUF005
@@ -586,17 +663,26 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     counts,
                     nugget_var_pred,
                     Y_normFact,  # noqa: N806
-                ) = get_stochastic_variance(X, Y[:, ny][np.newaxis].T, rv_val, ny)
+                ) = get_stochastic_variance(X, Y[:, ny][np.newaxis].T, rv_val, ny, did_multioutput_corr, var_pred_train[:,ny:ny+1], var_pred_test[:,ny:ny+1])
                 Y_metadata = {'variance_structure': norm_var_str / counts}  # noqa: N806
                 m_list[ny].set_XY2(X_unique, Y_mean, Y_metadata=Y_metadata)
                 for key, val in sur['modelInfo'][g_name_sur[ny]].items():  # noqa: B007, PERF102
                     exec('m_list[ny].' + key + '= np.array(val)')  # noqa: S102
 
+                if did_normalization:
+                    norm_var = m_list[ny].normalizer.std**2
+                else:
+                    norm_var = 1
+
                 nugget_var_list[ny] = (
                     m_list[ny].Gaussian_noise.parameters
                     * nugget_var_pred
-                    * Y_normFact
+                    * norm_var
                 )
+
+                #
+                # Get output
+                #
 
             else:
                 m_list = m_list + [  # noqa: RUF005
@@ -644,83 +730,119 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     y_q1m = np.zeros([nsamp, y_dim])
     y_q3m = np.zeros([nsamp, y_dim])
 
+    y_pred_median_tmp = np.zeros([nsamp, y_dim])
     for ny in range(y_dim):
         y_data_var[:, ny] = np.var(m_list[ny].Y)
         if ny in constIdx:
-            y_pred_median_tmp, y_pred_var_tmp[ny], y_pred_var_m_tmp[ny] = (
+            y_pred_median_tmp[:,ny], y_pred_var_tmp[ny], y_pred_var_m_tmp[ny] = (
                 np.ones([nsamp]) * constVal[constIdx.index(ny)],
                 np.zeros([nsamp]),
                 np.zeros([nsamp]),
             )
         else:
-            y_pred_median_tmp, y_pred_var_tmp_tmp = predict(
+            y_pred_median_tmp[:,ny:ny+1], y_pred_var_tmp_tmp = predict(
                 m_list[ny], rv_val, did_mf
             )  # noiseless
-            y_pred_median_tmp = np.squeeze(y_pred_median_tmp)
+            y_pred_median_tmp[:,ny] = np.squeeze(y_pred_median_tmp[:,ny])
             y_pred_var_tmp_tmp = np.squeeze(y_pred_var_tmp_tmp)
 
             if did_linear:
                 y_lin_pred = lin_list[ny].predict(rv_val[:, lin_index])
-                y_pred_median_tmp = y_pred_median_tmp + y_lin_pred
+                y_pred_median_tmp[:,ny] = y_pred_median_tmp[:,ny] + y_lin_pred
 
         y_pred_var_tmp[:, ny] = y_pred_var_tmp_tmp
         y_pred_var_m_tmp[:, ny] = y_pred_var_tmp_tmp + np.squeeze(
             nugget_var_list[ny]
         )
-        y_samp_tmp = np.random.normal(
-            y_pred_median_tmp, np.sqrt(y_pred_var_m_tmp[:, ny])
-        )
 
         if did_logtransform:
-            y_pred_median[:, ny] = np.exp(y_pred_median_tmp)
+            y_pred_median[:, ny] = np.exp(y_pred_median_tmp[:,ny])
             y_pred_var[:, ny] = np.exp(
-                2 * y_pred_median_tmp + y_pred_var_tmp[:, ny]
+                2 * y_pred_median_tmp[:,ny] + y_pred_var_tmp[:, ny]
             ) * (np.exp(y_pred_var_tmp[:, ny]) - 1)
             y_pred_var_m[:, ny] = np.exp(
-                2 * y_pred_median_tmp + y_pred_var_m_tmp[:, ny]
+                2 * y_pred_median_tmp[:,ny] + y_pred_var_m_tmp[:, ny]
             ) * (np.exp(y_pred_var_m_tmp[:, ny]) - 1)
 
-            y_samp[:, ny] = np.exp(y_samp_tmp)
 
             y_q1[:, ny] = lognorm.ppf(
                 0.05,
                 s=np.sqrt(y_pred_var_tmp[:, ny]),
-                scale=np.exp(y_pred_median_tmp),
+                scale=np.exp(y_pred_median_tmp[:,ny]),
             )
             y_q3[:, ny] = lognorm.ppf(
                 0.95,
                 s=np.sqrt(y_pred_var_tmp[:, ny]),
-                scale=np.exp(y_pred_median_tmp),
+                scale=np.exp(y_pred_median_tmp[:,ny]),
             )
             y_q1m[:, ny] = lognorm.ppf(
                 0.05,
                 s=np.sqrt(y_pred_var_m_tmp[:, ny]),
-                scale=np.exp(y_pred_median_tmp),
+                scale=np.exp(y_pred_median_tmp[:,ny]),
             )
             y_q3m[:, ny] = lognorm.ppf(
                 0.95,
                 s=np.sqrt(y_pred_var_m_tmp[:, ny]),
-                scale=np.exp(y_pred_median_tmp),
+                scale=np.exp(y_pred_median_tmp[:,ny]),
             )
 
         else:
-            y_pred_median[:, ny] = y_pred_median_tmp
+            y_pred_median[:, ny] = y_pred_median_tmp[:,ny]
             y_pred_var[:, ny] = y_pred_var_tmp[:, ny]
             y_pred_var_m[:, ny] = y_pred_var_m_tmp[:, ny]
-            y_samp[:, ny] = y_samp_tmp
             y_q1[:, ny] = norm.ppf(
-                0.05, loc=y_pred_median_tmp, scale=np.sqrt(y_pred_var_tmp[:, ny])
+                0.05, loc=y_pred_median_tmp[:,ny], scale=np.sqrt(y_pred_var_tmp[:, ny])
             )
             y_q3[:, ny] = norm.ppf(
-                0.95, loc=y_pred_median_tmp, scale=np.sqrt(y_pred_var_tmp[:, ny])
+                0.95, loc=y_pred_median_tmp[:,ny], scale=np.sqrt(y_pred_var_tmp[:, ny])
             )
             y_q1m[:, ny] = norm.ppf(
-                0.05, loc=y_pred_median_tmp, scale=np.sqrt(y_pred_var_m_tmp[:, ny])
+                0.05, loc=y_pred_median_tmp[:,ny], scale=np.sqrt(y_pred_var_m_tmp[:, ny])
             )
             y_q3m[:, ny] = norm.ppf(
-                0.95, loc=y_pred_median_tmp, scale=np.sqrt(y_pred_var_m_tmp[:, ny])
+                0.95, loc=y_pred_median_tmp[:,ny], scale=np.sqrt(y_pred_var_m_tmp[:, ny])
             )
 
+    y_samp_tmp = np.zeros([nsamp, y_dim])
+
+    sample_statistics = [None] * nsamp
+    for ns in range(nsamp):
+        sample_statistics[ns] = {}
+        if not did_multioutput_corr:
+            cov_mat = np.diag(y_pred_var_m_tmp[ns, :])
+            print_extra_outputs = False  
+        else:                    
+            print_extra_outputs = True  
+            std_mat = np.sqrt(np.diag(y_pred_var_m_tmp[ns, :]))
+            cor_mat = np.zeros([y_dim, y_dim])
+            cor_mat[tril_idx] = cor_vect[ns, :]
+            cor_mat = cor_mat + cor_mat.T - np.diag(np.diag(cor_mat))
+            cov_mat = std_mat @ cor_mat @ std_mat
+        y_samp_tmp[ns,:] = np.random.multivariate_normal(y_pred_median_tmp[ns,:], cov_mat)
+
+        if print_extra_outputs:
+            sample_statistics[ns]["id"] = ns
+            if did_logtransform:
+                sample_statistics[ns]["log_mean"] = y_pred_median_tmp[ns,:].tolist()
+                sample_statistics[ns]["log_corr"] = cor_vect[ns, :].tolist()
+                sample_statistics[ns]["log_var_epis"] = y_pred_var_tmp[:,ny].tolist()
+                sample_statistics[ns]["log_var_alea"] = np.squeeze(nugget_var_list[ny]).tolist()
+            else:
+                sample_statistics[ns]["mean"] = y_pred_median_tmp[ns,:].tolist()
+                sample_statistics[ns]["corr"] = cor_vect[ns, :].tolist()
+                sample_statistics[ns]["var_epis"] = y_pred_var_tmp[:,ny].tolist()
+                sample_statistics[ns]["var_alea"] = np.squeeze(nugget_var_list[ny]).tolist()
+
+    if print_extra_outputs:
+        with open("sample_statistics.json", "w") as f:
+            json.dump(sample_statistics, f)
+
+    if did_logtransform:
+        y_samp = np.exp(y_samp_tmp)
+    else:
+        y_samp = y_samp_tmp
+
+    for ny in range(y_dim):
         if np.isnan(y_samp[:, ny]).any():
             y_samp[:, ny] = np.nan_to_num(y_samp[:, ny])
         if np.isnan(y_pred_var[:, ny]).any():
@@ -1030,6 +1152,29 @@ def predict(m, X, did_mf):  # noqa: N803, D103
         X_list_h = X_list[X.shape[0] :]  # noqa: N806
         return m.predict(X_list_h)
 
+def make_psd(A_vectorized, tol, tril_idx, dim):
+
+    n_samp = A_vectorized.shape[0]
+    A_psd_vectorized = A_vectorized.copy()
+    counter = 0
+    for s in range(n_samp):
+        A = vect_to_mat(A_vectorized[s, :], tril_idx, dim)
+        A = 0.5 * (A+ A.T)
+        eigvals, eigvecs = np.linalg.eigh(A)
+        if np.all(eigvals >= tol):
+            pass
+        else:
+            eigvals[eigvals < tol] = 0.0
+            A_psd = eigvecs @ np.diag(eigvals) @ eigvecs.T
+            A_psd_vectorized[s, :] = A_psd[tril_idx]
+            counter += 1
+    return A_psd_vectorized, counter
+        
+def vect_to_mat(vect, tril_idx, dim):
+    mat = np.zeros([dim, dim])
+    mat[tril_idx] = vect
+    mat = mat + mat.T - np.diag(np.diag(mat))
+    return mat
 
 if __name__ == '__main__':
     error_file = open('../surrogate.err', 'w')  # noqa: SIM115, PTH123

@@ -41,14 +41,19 @@ import ujson as json
 import os
 import random
 import socket
-import sys
 import time
 
 import numpy as np
 import pandas as pd
 
 if 'stampede2' not in socket.gethostname():
-    from FetchOpenSHA import *  # noqa: F403
+    from FetchOpenSHA import (
+        export_to_json,
+        getERF,
+        get_rupture_distance,
+        get_source_distance,
+        get_source_rupture,
+    )
 
 
 def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):  # noqa: C901, D103
@@ -98,7 +103,7 @@ def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):  # noqa: C901
     elif scenario_info['Generator'].get('method', None) == 'Subsampling':
         rups_to_run = list(range(num_scenarios))
     else:
-        sys.exit(
+        raise NotImplementedError(
             f'The scenario selection method {scenario_info["Generator"].get("method", None)} is not available'
         )
     return rups_to_run
@@ -111,11 +116,13 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):  # noqa: N802, N803, D1
         with open(rupFilePath) as f:  # noqa: PTH123
             user_scenarios = json.load(f)
     except:  # noqa: E722
-        sys.exit(f'CreateScenario: source file {rupFilePath} not found.')
+        raise FileNotFoundError(  # noqa: B904
+            f'CreateScenario: source file {rupFilePath} not found.'
+        )
     # number of features (i.e., ruptures)
     num_scenarios = len(user_scenarios.get('features', []))
     if num_scenarios < 1:
-        sys.exit('CreateScenario: source file is empty.')
+        raise ValueError('CreateScenario: source file is empty.')
     rups_to_run = get_rups_to_run(scenario_info, user_scenarios, num_scenarios)
     # get rupture and source ids
     scenario_data = {}
@@ -189,7 +196,7 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
     # Reference location
     mlat = np.mean(lat)
     mlon = np.mean(lon)
-    import json
+    #import json already imported
 
     from openquake.commonlib import readinput
     from openquake.hazardlib import nrml, site, sourceconverter
@@ -204,11 +211,13 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
         with open(rupFile) as f:  # noqa: PTH123
             user_scenarios = json.load(f)
     except:  # noqa: E722
-        sys.exit(f'CreateScenario: source file {rupFile} not found.')
+        raise FileNotFoundError(  # noqa: B904
+            f'CreateScenario: source file {rupFile} not found.'
+        )
     # number of features (i.e., ruptures)
     num_scenarios = len(user_scenarios.get('features', []))
     if num_scenarios < 1:
-        sys.exit('CreateScenario: source file is empty.')
+        raise ValueError('CreateScenario: source file is empty.')
     rups_to_run = get_rups_to_run(scenario_info, user_scenarios, num_scenarios)
     in_dir = os.path.join(work_dir, 'Input')  # noqa: PTH118
     oq = readinput.get_oqparam(

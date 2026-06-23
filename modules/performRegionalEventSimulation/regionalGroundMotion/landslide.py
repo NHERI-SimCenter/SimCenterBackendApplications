@@ -27,7 +27,9 @@ def sampleRaster(  # noqa: N802
                     f'More than one band in the file {raster_file_path}, the first band is used.'
                 )
         except:  # noqa: E722
-            sys.exit(f'Can not read data from {raster_file_path}')
+            raise OSError(  # noqa: B904
+                f'Can not read data from {raster_file_path}'
+            )
         if xy_crs != raster_crs:
             # make transformer for reprojection
             transformer_xy_to_data = Transformer.from_crs(
@@ -84,7 +86,7 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ARG00
     xy_crs = CRS.from_user_input(4326)
     vector_gdf = gpd.read_file(vector_file_path)
     if vector_gdf.crs != vector_crs:
-        sys.exit(
+        raise ValueError(
             f"The CRS of vector file {vector_file_path} is {vector_gdf.crs}, and doesn't match the input CRS ({xy_crs}) defined for liquefaction triggering models"
         )
     if xy_crs != vector_crs:
@@ -522,11 +524,9 @@ class BrayMacedo2019(Landslide):
                 ln_im_data[scenario_id] = im_data_scen
             im_list = im_list + output_keys  # noqa: PLR6104, RUF100
         else:
-            sys.exit(
+            raise ValueError(
                 f"'PGA' is missing in the selected intensity measures and the landslide model 'BrayMacedo2019' can not be computed."  # noqa: F541
             )
-            # print(f"At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."\
-            #       , file=sys.stderr)
             # sys.stderr.write("test")
             # sys.exit(-1)
         return (

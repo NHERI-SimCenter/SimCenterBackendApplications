@@ -41,7 +41,6 @@ import collections
 import itertools
 import json
 import os
-import sys
 import threading
 import time
 
@@ -52,7 +51,7 @@ import pulp
 from scipy.stats import norm
 from sklearn.linear_model import lasso_path
 from tqdm import tqdm
-from USGS_API import *  # noqa: F403
+from USGS_API import USGS_HazardCurve
 
 
 def configure_hazard_occurrence(  # noqa: C901, D103
@@ -87,14 +86,18 @@ def configure_hazard_occurrence(  # noqa: C901, D103
     # return periods
     if hc_input is None:
         return {}
-    elif hc_input == 'Inferred_NSHMP':  # noqa: RET505
+    elif hc_input == 'NSHM V1' or hc_input == 'NSHM V2':  # noqa: RET505
         period = hzo_config.get('Period', 0.0)
         if im_type == 'SA':
             cur_imt = im_type + f'{period:.1f}'.replace('.', 'P')
         else:
             cur_imt = im_type
         # fetching hazard curve from usgs
-        cur_edition = hzo_config.get('Edition', 'E2014')
+        version_str = hc_input.split(' ')[-1]
+        if version_str == 'V1':
+            cur_edition = 'E2008'
+        else:
+            cur_edition = 'E2014'
         hazard_curve_collector = []
         for site_id in range(len(site_config)):
             cur_site = site_config[site_id]
@@ -954,7 +957,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: D101
         )
 
         if self.num_selected[self.selected_alpha_ind] == 0:
-            sys.exit(
+            raise RuntimeError(
                 'ERROR: Zero scenarios/ground motions are selected in Wang et al. (2023).\n'  # noqa: ISC003
                 + f'The tunnling parameter used is {self.alphas[self.selected_alpha_ind]}.\n'
                 + 'Try using a smaller tuning parameter.'

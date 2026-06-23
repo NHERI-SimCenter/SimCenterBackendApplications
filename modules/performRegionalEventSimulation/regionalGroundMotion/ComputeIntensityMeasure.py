@@ -54,18 +54,21 @@ LOCAL_IM_GMPE = {
     'SA': [
         'Chiou & Youngs (2014)',
         'Abrahamson, Silva & Kamai (2014)',
+        'Abrahamson, Silva & Kamai (2014) Aftershock',
         'Boore, Stewart, Seyhan & Atkinson (2014)',
         'Campbell & Bozorgnia (2014)',
     ],
     'PGA': [
         'Chiou & Youngs (2014)',
         'Abrahamson, Silva & Kamai (2014)',
+        'Abrahamson, Silva & Kamai (2014) Aftershock',
         'Boore, Stewart, Seyhan & Atkinson (2014)',
         'Campbell & Bozorgnia (2014)',
     ],
     'PGV': [
         'Chiou & Youngs (2014)',
         'Abrahamson, Silva & Kamai (2014)',
+        'Abrahamson, Silva & Kamai (2014) Aftershock',
         'Boore, Stewart, Seyhan & Atkinson (2014)',
         'Campbell & Bozorgnia (2014)',
     ],
@@ -98,7 +101,6 @@ import collections  # noqa: E402
 import json  # noqa: E402
 import os  # noqa: E402
 import socket  # noqa: E402
-import sys  # noqa: E402
 import time  # noqa: E402
 from pathlib import Path  # noqa: E402
 
@@ -108,7 +110,14 @@ from tqdm import tqdm  # noqa: E402
 
 if 'stampede2' not in socket.gethostname():
     from FetchOpenQuake import get_site_rup_info_oq
-    from FetchOpenSHA import *  # noqa: F403
+    from FetchOpenSHA import (
+        getERF,
+        get_IM,
+        get_PointSource_info_CY2014,
+        get_rupture_info_ASK2014_aftershock,
+        get_rupture_info_CY2014,
+        get_site_prop,
+    )
 import threading  # noqa: E402
 
 import ujson  # noqa: E402
@@ -136,11 +145,16 @@ class IM_Calculator:  # noqa: D101
         gmpe_weights_dict=dict(),  # noqa: B006, C408
         im_type=None,
         site_info=dict(),  # noqa: B006, C408
+        mainshock=None
     ):
         # basic set-ups
         self.set_im_gmpe(im_dict, gmpe_dict, gmpe_weights_dict)
         self.set_im_type(im_type)
         self.set_sites(site_info)
+        if mainshock is not None:
+            self.mainshock = mainshock.copy() # single row gdf containing mainshock rupture surface
+        else:
+            self.mainshock = None
         # self.set_source(source_info)
 
     def set_source(self, source_info):  # noqa: D102
@@ -155,6 +169,7 @@ class IM_Calculator:  # noqa: D101
                 or 'Abrahamson, Silva & Kamai (2014)' in gmpe_list
                 or 'Boore, Stewart, Seyhan & Atkinson (2014)' in gmpe_list
                 or 'Campbell & Bozorgnia (2014)' in gmpe_list
+                or 'Abrahamson, Silva & Kamai (2014) Aftershock' in gmpe_list
             ):
                 source_index = source_info.get('SourceIndex', None)
                 rupture_index = source_info.get('RuptureIndex', None)
@@ -163,6 +178,14 @@ class IM_Calculator:  # noqa: D101
                     self.erf, source_index, rupture_index, self.site_info
                 )
                 # self.timeGetRuptureInfo += time.process_time_ns() - start
+            if 'Abrahamson, Silva & Kamai (2014) Aftershock' in gmpe_list:
+                source_index = source_info.get('SourceIndex', None)
+                rupture_index = source_info.get('RuptureIndex', None)
+                crJB = get_rupture_info_ASK2014_aftershock(  # noqa: F405
+                    self.erf, source_index, rupture_index, self.mainshock
+                )
+                site_rup_dict['crJB'] = crJB
+
         elif source_info['Type'] == 'PointSource':
             if (
                 'Chiou & Youngs (2014)' in gmpe_list
@@ -456,7 +479,7 @@ class IM_Calculator:  # noqa: D101
                         eq_magnitude, self.site_rup_dict, cur_site, im_info
                     )
                     # self.timeGetIM += time.process_time_ns() - start
-                elif cur_gmpe == 'Abrahamson, Silva & Kamai (2014)':
+                elif cur_gmpe == 'Abrahamson, Silva & Kamai (2014)' or cur_gmpe == 'Abrahamson, Silva & Kamai (2014) Aftershock':
                     # start = time.process_time_ns()
                     tmpResult = self.ASK.get_IM(  # noqa: N806
                         eq_magnitude, self.site_rup_dict, cur_site, im_info
@@ -790,16 +813,20 @@ def compute_im(  # noqa: C901, D103
             ho_period = generator_info['Parameters'].get('Period')
             if im_info['Type'] == 'Vector':
                 if im_info.get('SA') is None:
-                    sys.exit(
+                    raise ValueError(
                         'SA is used in hazard downsampling but not defined in the intensity measure tab'
                     )
-                elif ho_period in im_info['SA'].get('Periods'):
-                    pass
+                elif im_info.get('Periods', None) is not None:
+                    if ho_period in im_info['Periods']:
+                        pass
+                elif im_info.get('SA', None) is not None:
+                    if ho_period in im_info['SA'].get('Periods'):
+                        pass
                 else:
                     tmp_periods = im_info['SA']['Periods'] + [ho_period]
                     tmp_periods.sort()
                     im_info['SA']['Periods'] = tmp_periods
-            elif ho_period in im_info['SA'].get('Periods'):
+            elif ho_period in im_info.get('Periods'):
                 pass
             else:
                 tmp_periods = im_info['SA']['Periods'] + [ho_period]
@@ -1079,21 +1106,25 @@ def export_im(  # noqa: C901, D103, PLR0912
             json.dump(res, f, indent=2)
     # export the event grid and station csv files
     if csv_flag:
-        # output EventGrid.csv
+        # output EventGrid.csv. Site characterization values (Vs30, z1pt0,
+        # z2pt5) come from the SimCenterSiteModel.csv that CreateStation
+        # wrote earlier in the workflow
         station_name = [
             'site' + str(stations[j]['ID']) + '.csv' for j in range(len(stations))
         ]
         lat = [stations[j]['lat'] for j in range(len(stations))]
         lon = [stations[j]['lon'] for j in range(len(stations))]
-        # vs30 = [stations[j]['vs30'] for j in range(len(stations))]
-        # zTR = [stations[j]['DepthToRock'] for j in range(len(stations))]
+        vs30 = [stations[j].get('vs30') for j in range(len(stations))]
+        z1pt0 = [stations[j].get('z1pt0') for j in range(len(stations))]
+        z2pt5 = [stations[j].get('z2pt5') for j in range(len(stations))]
         df = pd.DataFrame(  # noqa: PD901
             {
                 'GP_file': station_name,
                 'Longitude': lon,
                 'Latitude': lat,
-                # 'Vs30': vs30,
-                # 'DepthToRock': zTR
+                'Vs30': vs30,
+                'z1pt0': z1pt0,
+                'z2pt5': z2pt5,
             }
         )
         # if cur_eq[2]:

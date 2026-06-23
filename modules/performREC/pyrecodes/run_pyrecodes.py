@@ -1,3 +1,35 @@
+import ctypes
+import sys
+
+# Programmatic fix for Apple Silicon macOS flat namespace errors
+if sys.platform == "darwin":
+    try:
+        # Force-load libomp globally so its symbols are visible to dlopen()
+        ctypes.CDLL('/opt/homebrew/opt/libomp/lib/libomp.dylib', mode=ctypes.RTLD_GLOBAL)
+    except OSError:
+        # Fallback for systems where Homebrew is not installed or configured differently
+        pass
+
+# Shim pandana.network -> pandarm so pyrecodes' bundled residual_demand_API
+# (which imports pandana at module load) can run in environments where
+# pandana is not installed. Only pdna.Network is used.
+import types
+import pandarm
+_pandana_network = types.ModuleType('pandana.network')
+_pandana_network.Network = pandarm.Network
+_pandana = types.ModuleType('pandana')
+_pandana.network = _pandana_network
+sys.modules['pandana'] = _pandana
+sys.modules['pandana.network'] = _pandana_network
+
+# Silence pandarm's CRS-default warning: residual_demand_API rebuilds the
+# Network every substep without passing a CRS, which floods the log.
+import warnings
+warnings.filterwarnings(
+    'ignore',
+    message='No CRS was passed to geometry input',
+)
+
 import pyrecodes.resilience_calculator
 import pyrecodes.resilience_calculator.recodes_calculator
 import pyrecodes.resilience_calculator.resilience_calculator
@@ -15,7 +47,7 @@ import pickle
 # sys.path.append('/Users/jinyanzhao/Desktop/SimCenterBuild/r2d_pyrecodes')
 import pyrecodes
 import pyrecodes.main
-from pyrecodes.geovisualizer.r2d_geovisualizer import R2D_GeoVisualizer
+from pyrecodes.geovisualizer.r2d_geovisualizer import R2DGeoVisualizer
 from pyrecodes.plotter.concrete_plotter import ConcretePlotter
 
 
@@ -61,7 +93,7 @@ def select_realizations_to_run(damage_input, run_dir):
                 rlzs_requested.append(int(rlzs))
 
         rlzs_requested = np.array(rlzs_requested)
-        rlzs_in_available = np.in1d(rlzs_requested, rlzs_available)  # noqa: NPY201
+        rlzs_in_available = np.isin(rlzs_requested, rlzs_available)
         if rlzs_in_available.sum() != 0:
             rlzs_to_run = rlzs_requested[np.where(rlzs_in_available)[0]]
         else:
@@ -79,6 +111,51 @@ def select_realizations_to_run(damage_input, run_dir):
             raise ValueError(msg)
 
     return rlzs_to_run
+
+
+def find_display_recodes_calculator(system):
+    """
+    Locate the ReCoDeSCalculator whose output should drive the per-resource visualizations.
+
+    The "All" scope is the convention pyrecodes uses for region-wide
+    accounting, so that's what we match. If a user's system has no
+    such calculator, the caller is expected to handle the None result
+    rather than fall back silently to some other calculator.
+
+    Parameters
+    ----------
+    system : pyrecodes System
+        The system object returned by ``pyrecodes.main.run``.
+
+    Returns
+    -------
+    tuple[int | None, ReCoDeSCalculator | None]
+        ``(index, calculator)`` of the matched calculator, or
+        ``(None, None)`` if no match is configured.
+    """
+    target_cls = pyrecodes.resilience_calculator.recodes_calculator.ReCoDeSCalculator
+    for i, c in enumerate(system.resilience_calculators):
+        if isinstance(c, target_cls) and getattr(c, 'scope', None) == 'All':
+            return i, c
+    return None, None
+
+
+def find_recovery_time_calculator(system):
+    """
+    Return the first calculator that exposes a ``component_recovery_times`` list, or ``None``.
+
+    Both ``ComponentRecoveryTimeCalculator`` and
+    ``R2DComponentRecoveryTimeCalculator`` populate that attribute as a
+    list of length ``len(system.components)``, parallel to
+    ``system.components``. The wrapper just needs the recovery-time
+    value per component, so either subclass is acceptable.
+    """
+    for c in system.resilience_calculators:
+        if hasattr(c, 'component_recovery_times'):
+            return c
+    return None
+
+
 def run_one_realization(main_file, rlz, rwhale_run_dir, system_config, save_pickle_file):
     """
     Run a single realization of the pyrecodes simulation.
@@ -91,36 +168,44 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config, save_pick
     system_config (dict): System configuration dictionary.
     """
     # Run the pyrecodes
-    system = pyrecodes.main.run(main_file)
+    main_file_path = Path(main_file)
+    system = pyrecodes.main.run(str(main_file_path.parent), main_file_path.name)
     system.calculate_resilience(print_output=False)
 
     # Add the component recovery time to the Results_rlz.json file
     with Path(rwhale_run_dir / f'Results_{rlz}.json').open() as f:
         results_rlz = json.load(f)
-    all_recovery_time = system.resilience_calculators[1].component_recovery_times
-    for ind, comp in enumerate(system.components):
-        if getattr(comp, 'r2d_comp', False) is True:
-            asset_type = comp.asset_type
-            asset_subtype = comp.asset_subtype
-            asset_id = comp.general_information['AIM_id']
-            results_rlz[asset_type][asset_subtype][asset_id]['Recovery'] = {
-                'Time': next(iter(all_recovery_time[ind].values()))
-            }
+    recovery_calc = find_recovery_time_calculator(system)
+    if recovery_calc is None:
+        print(  # noqa: T201
+            f'Warning: no component-recovery-time calculator found in system; '
+            f'skipping recovery-time merge for realization {rlz}.'
+        )
+    else:
+        all_recovery_time = recovery_calc.component_recovery_times
+        for ind, comp in enumerate(system.components):
+            if getattr(comp, 'r2d_comp', False) is True:
+                asset_type = comp.asset_type
+                asset_subtype = comp.asset_subtype
+                asset_id = comp.general_information['AIM_id']
+                results_rlz[asset_type][asset_subtype][asset_id]['Recovery'] = {
+                    'Time': next(iter(all_recovery_time[ind].values()))
+                }
     # Write the results to a file in the current realization workdir
     with (Path(f'Results_{rlz}.json')).open('w') as f:
         json.dump(results_rlz, f)
 
     # Create a gif of the recovery process
-    geo_visualizer = R2D_GeoVisualizer(system.components)
+    geo_visualizer = R2DGeoVisualizer(system.components)
     # time_step_list = list(range(0, system.time_step, 1))
     time_step_list = list(np.linspace(0, system.time_step, min(system.time_step, 20)).astype(int))
     for time_step in time_step_list:
         fig, ax = plt.subplots(figsize=(10, 10))
-        geo_visualizer.create_current_state_figure(time_step, ax=ax)
+        geo_visualizer.create_current_recovery_state_figure(time_step, ax=ax)
         legend = ax.get_legend()
         legend.set(loc='center left', bbox_to_anchor=(1, 0.5))
         plt.savefig(f'status_at_time_step_{time_step}.png', dpi=300, bbox_inches='tight', transparent=False, pad_inches=0)
-    geo_visualizer.create_recovery_gif(time_step_list, file_name = \
+    geo_visualizer.create_recovery_gif(time_step_list, load_file_name = \
                                 'status_at_time_step_TIME_STEP.png', fps=2)
 
     # create a plot of the supply and demand recovery of the first resource
@@ -137,33 +222,47 @@ def run_one_realization(main_file, rlz, rwhale_run_dir, system_config, save_pick
         units_to_plot.append(system_config['Resources']['TransportationService'].get('Unit', 'unit_TransportationService'))
     print(f'Resources to plot {resources_to_plot}')
 
+    # Write one supply/demand/consumption JSON per (ReCoDeS calculator,
+    # resource) pair, with the calculator's positional index as the
+    # filename suffix.
     for calculator_i, calculator in enumerate(system.resilience_calculators):
         if isinstance(calculator, pyrecodes.resilience_calculator.recodes_calculator.ReCoDeSCalculator):
-            resources_to_plot_i = []
-            for resource in resources_to_plot:
-                if resource in calculator.resource_names:
-                    resources_to_plot_i.append(resource)
+            resources_to_plot_i = [
+                resource for resource in resources_to_plot
+                if resource in calculator.resource_names
+            ]
             if len(resources_to_plot_i) > 0:
                 plotter_object.save_supply_demand_consumption(system, resources_to_plot_i, calculator_i)
-    #    plotter_object.save_component_recovery_progress(system.components[:20])
 
-    
-    for resource, unit in zip(resources_to_plot, units_to_plot):
-        y_axis_label = f'{resource} {unit} | {system.resilience_calculators[0].scope}'
-        x_axis_label = 'Time step [day]'
-        axis_object = plotter_object.setup_lor_plot_fig(x_axis_label, y_axis_label)
-        time_range = system.time_step+1
-        time_steps_before_event = 10
-        plotter_object.plot_single_resource(list(range(-time_steps_before_event, time_range)), system.resilience_calculators[0].system_supply[resource][:time_range],
-                                        system.resilience_calculators[0].system_demand[resource][:time_range],
-                                        system.resilience_calculators[0].system_consumption[resource][:time_range], axis_object, warmup=time_steps_before_event,
-                                        show = False
-                                        )
-        plotter_object.save_current_figure(savename = f'{resource}_supply_demand_consumption.png')
-        
-        plotter_object.save_supply_demand_consumption(system, [resource])
+    # Render the per-resource PNG plots from the "All" scope calculator.
+    display_calc_idx, display_calc = find_display_recodes_calculator(system)
+    if display_calc is None:
+        print(  # noqa: T201
+            'Warning: no ReCoDeSCalculator with scope="All" found in system; '
+            'skipping per-resource supply/demand PNG plots.'
+        )
+    else:
+        for resource, unit in zip(resources_to_plot, units_to_plot):
+            if resource not in display_calc.resource_names:
+                continue
+            y_axis_label = f'{resource} {unit} | {display_calc.scope}'
+            x_axis_label = 'Time step [day]'
+            axis_object = plotter_object.setup_lor_plot_fig(x_axis_label, y_axis_label)
+            time_range = system.time_step + 1
+            time_steps_before_event = 10
+            plotter_object.plot_single_resource(
+                list(range(-time_steps_before_event, time_range)),
+                display_calc.system_supply[resource][:time_range],
+                display_calc.system_demand[resource][:time_range],
+                display_calc.system_consumption[resource][:time_range],
+                axis_object,
+                warmup=time_steps_before_event,
+                show=False,
+            )
+            plotter_object.save_current_figure(savename=f'{resource}_supply_demand_consumption.png')
 
-        plotter_object.save_component_recovery_progress(system.components)
+    plotter_object.save_component_recovery_progress(system.components)
+
     if save_pickle_file:
         # Save the system components as a pickle file
         with open(f'system_{rlz}.pickle', 'wb') as f:
@@ -258,7 +357,7 @@ def modify_system_config_residual_demand_distribution(system_config, input_data_
 
 def modify_main_file(main_file_dict, component_library, run_dir):
     """
-    Modify the main configuration file with updated paths for the component library and system configuration.
+    Copy the component library into run_dir and write main.json there with basename references to the staged inputs.
 
     Parameters
     ----------
@@ -266,17 +365,18 @@ def modify_main_file(main_file_dict, component_library, run_dir):
         The main configuration dictionary.
     component_library : str
         Path to the component library file.
-    rwhale_run_dir : str
-        Directory where the results are stored.
+    run_dir : Path
+        Per-realization run directory.
 
     Returns
     -------
-    bool
-        True if the modification is successful.
+    str
+        Path to the written main.json file.
     """
-    main_file_dict['System']['SystemConfigurationFile'] = str(
-            run_dir / 'SystemConfiguration.json')
-    main_file_dict['ComponentLibrary']['ComponentLibraryFile'] = component_library
+    component_library_basename = Path(component_library).name
+    shutil.copy2(component_library, run_dir / component_library_basename)
+    main_file_dict['ComponentLibrary']['ComponentLibraryFile'] = component_library_basename
+    main_file_dict['System']['SystemConfigurationFile'] = 'SystemConfiguration.json'
     main_file_path = str(run_dir / 'main.json')
     with Path(main_file_path).open('w') as f:
         json.dump(main_file_dict, f)
@@ -520,6 +620,11 @@ def run_pyrecodes(  # noqa: C901
             print(f'Rrealization {rlz} completed')  # noqa: T201
         # Write the aggregated results to the Results_det.json file
         aggregate_results_to_det(results_agg, Path(run_dir / 'Results_det.json'))
+        print(  # noqa: T201
+            f'Pyrecodes recovery simulation completed. '
+            f'Aggregated results written to {run_dir / "Results_det.json"}. '
+            f'Per-realization outputs are in {run_dir / "RecoverySimulation"}.'
+        )
     else:
         msg = 'Damage input type not recognized'
         raise ValueError(msg)

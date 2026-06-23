@@ -69,16 +69,6 @@ import warnings
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path, PurePath
-import platform
-
-# check python
-
-python_path= sys.executable
-a = platform.uname()
-
-if a.system == "Darwin" and (not a.machine=='x86_64'):
-    raise ValueError(f"Python version mismatch. Please update the python following the installation instruction. Current python {python_path} is based on machine={a.machine}, but we need the one for x86_64")
-    exit(-2)
 
 # ################# FMK - removing check on nheri-simcenter for moment ####################
     
@@ -612,9 +602,10 @@ class WorkflowApplication:
                     if 'PelicunDefault' in self.pref[preference]:
                         continue
 
-                    self.pref[preference] = resolve_path(
-                        self.pref[preference], ref_path
-                    )
+                    if ref_path:
+                        self.pref[preference] = resolve_path(
+                            self.pref[preference], ref_path
+                        )
 
     def get_command_list(self, app_path, force_posix=False):  # noqa: FBT002, C901
         """Short description
@@ -2933,14 +2924,6 @@ class Workflow:
         workflow_app = self.workflow_apps['Performance']
 
         command_list = workflow_app.get_command_list(app_path=self.app_dir_local)
-
-        command_list.append('--dirnameOutput')
-
-        # Only add asset id if we are running a regional assessment
-        if asst_id != None:  # noqa: E711
-            command_list.append(f'{aimDir}/{asst_id}')
-        else:
-            command_list.append(f'{aimDir}')
 
         command = create_command(command_list)
 

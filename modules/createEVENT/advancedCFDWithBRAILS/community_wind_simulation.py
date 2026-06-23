@@ -25,7 +25,7 @@ def ask_float(prompt: str, default: str | None = None) -> float:
         try:
             return float(txt)
         except ValueError:
-            print("  ↳ please enter a valid number")
+            print("   please enter a valid number")
 
 def ask_mult(prompt: str, default_mult: float) -> float:
     """Return a **multiplier** (not yet multiplied by Hmax)."""
@@ -38,7 +38,7 @@ def ask_mult(prompt: str, default_mult: float) -> float:
             raise ValueError
         return value
     except ValueError:
-        print("  ↳ please enter a non-negative number")
+        print("   please enter a non-negative number")
         return ask_float(prompt, default_mult)
 
 def ask_path(prompt: str, default: str) -> Path:
@@ -50,7 +50,7 @@ def ask_file(prompt: str) -> Path:
         p = Path(input(f"{prompt}: ").strip())
         if p.exists():
             return p
-        print("  ↳ file not found, try again.")
+        print("   file not found, try again.")
 
 def ask_dir(prompt: str, default="case") -> Path:
     p = Path(input(f"{prompt} [{default}]: ").strip() or default)
@@ -60,7 +60,7 @@ def ask_dir(prompt: str, default="case") -> Path:
 def ask_side() -> str:
     val = input("Side boundary type {cyclic|slip} [cyclic]: ").strip().lower() or "cyclic"
     while val not in ("cyclic", "slip"):
-        val = input("  ↳ choose cyclic or slip: ").strip().lower() or "cyclic"
+        val = input("   choose cyclic or slip: ").strip().lower() or "cyclic"
     return val
 
 def ask_angle() -> float:
@@ -69,12 +69,12 @@ def ask_angle() -> float:
             deg = float(input("Wind-direction angle θ (deg, Counter-Clockwise from E): ").strip())
             return deg
         except ValueError:
-            print("  ↳ enter a numeric value")
+            print("   enter a numeric value")
 
 def ask_choice(prompt: str, choices: list[str], default: str) -> str:
     txt = input(f"{prompt} [{default}]: ").strip().upper() or default
     while txt not in choices:
-        txt = input(f"  ↳ choose one of {choices}: ").strip().upper() or default
+        txt = input(f"   choose one of {choices}: ").strip().upper() or default
     return txt
 
 def ask_box(idx: int) -> tuple | None:
@@ -102,7 +102,7 @@ def ask_box(idx: int) -> tuple | None:
         if lev_raw.isdigit():
             lev = lev_raw               # keep as string
             break
-        print("  ↳ enter an integer value")
+        print("   enter an integer value")
 
     return name, vals, lev    # tuple with 3 elements
 
@@ -1429,6 +1429,76 @@ wallDist
 
 """)
 
+TP_fvSch_URANS = textwrap.dedent("""
+/*--------------------------------*- C++ -*----------------------------------*\\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  www.OpenFoam.org
+    \\  /    A nd           | Version:  10
+     \\/     M anipulation  |
+\\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSchemes;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+ddtSchemes
+{
+    default         Euler;
+}
+
+gradSchemes
+{
+    default         cellLimited Gauss linear 0.5;
+}
+
+divSchemes
+{
+    default         none;
+    div(phi,U)      bounded Gauss linearUpwindV grad(U);
+    div(phi,k)      bounded Gauss upwind; 
+    div(phi,epsilon) bounded Gauss upwind;
+    div(phi,omega)  bounded Gauss upwind;
+    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+}
+
+laplacianSchemes
+{
+    default         Gauss linear limited 0.5;
+}
+
+interpolationSchemes
+{
+    default         linear;
+    interpolate(U)  linear;
+}
+
+snGradSchemes
+{
+    default         limited 0.5;
+}
+
+fluxRequired
+{
+    default         no;
+    p               ;
+}
+
+wallDist
+{
+    method meshWave;
+}
+
+// ************************************************************************* //
+
+
+""")
+
 TP_fvSol_RANS = textwrap.dedent("""
 /*--------------------------------*- C++ -*----------------------------------*\\
   =========                 |
@@ -1494,6 +1564,17 @@ solvers
     }
 
     epsilon
+    {
+        solver          smoothSolver;   // solver type
+        smoother        GaussSeidel;    // smoother type
+        tolerance       1e-09;          // solver finishes if either absolute
+        relTol          0.001;           // tolerance is reached or the relative
+                                        // tolerance here
+        nSweeps         1;              // setting for smoothSolver
+        maxIter         100;            // limitation of iterations number
+    }
+
+    omega
     {
         solver          smoothSolver;   // solver type
         smoother        GaussSeidel;    // smoother type
@@ -1894,7 +1975,7 @@ def existing_path(msg: str) -> Path:
         p = Path(input(f"{msg}: ").strip())
         if p.exists():
             return p
-        print("  ↳ file not found, try again.")
+        print("  file not found, try again.")
 
 
 # load user inputs from a JSON file
@@ -1915,7 +1996,7 @@ def load_input(json_path=None):
             inputs = json.load(f)
             
     except json.JSONDecodeError as e:
-        print(f"❌ JSON syntax error in {path}: {e} .. use a JSON validator")
+        print(f" JSON syntax error in {path}: {e} .. use a JSON validator")
         sys.exit("Invalid JSON — stopping.")
 
     if not isinstance(inputs, dict):
@@ -2018,7 +2099,7 @@ def main(config: Dict[str, Any]) -> None:
     Tfootprints = Scraper({"length": "m"}).get_footprints(regionT)
 
     Tfootprints.write_to_geojson(out_path)
-    print(f"✓  GeoJSON written to {out_path.resolve()}")
+    print(f"  GeoJSON written to {out_path.resolve()}")
     
 
 
@@ -2034,7 +2115,7 @@ def main(config: Dict[str, Any]) -> None:
     inventory = scraper.get_footprints(regionR)
     inventory.write_to_geojson(out_file)
 
-    print(f"✓  Footprints saved to {out_file.resolve()}")
+    print(f"  Footprints saved to {out_file.resolve()}")
 
     full = out_path
     roi  = out_file
@@ -2136,7 +2217,7 @@ def main(config: Dict[str, Any]) -> None:
         return m
     write_stl_ascii(mesh(gdf_roi), roi_stl,  "ROI")
     write_stl_ascii(mesh(rest),    rest_stl, "Surrounding")
-    print("✓ STL files created.")
+    print(" STL files created.")
     
     # --- compute bounds ---------------------------------------------------
     verts=np.vstack([trimesh.load_mesh(str(roi_stl)).vertices,
@@ -2170,7 +2251,7 @@ def main(config: Dict[str, Any]) -> None:
     write_bmd(x0,x1,y0,y1,z0,z1,nx,ny,nz,side_choice,
               case/"system"/"blockMeshDict")
     
-    print("✓ blockMeshDict written.")
+    print(" blockMeshDict written.")
     print(f"Applied rotation −{angle_deg}° so wind aligns with +x.")
     print(f"Extents: ({x0},{y0},{z0}) to ({x1},{y1},{z1})")
     # ───────────────────────── Write snappyHexMesh ─────────────────────────
@@ -2273,7 +2354,7 @@ def main(config: Dict[str, Any]) -> None:
 
     Path(case/"system"/"snappyHexMeshDict").write_text(dict_text)
     Path(case/"system"/"surfaceFeaturesDict").write_text(TP_surfFeat)
-    print(f"✓  snappyHexMeshDict written to {Path(case/"system"/"snappyHexMeshDict").resolve()}")
+    print(f"  snappyHexMeshDict written to {Path(case/"system"/"snappyHexMeshDict").resolve()}")
     print(f"   ROI surface level        : {roi_level}")
     print(f"   Surrounding surface level: {sur_level}")
 
@@ -2315,9 +2396,9 @@ def main(config: Dict[str, Any]) -> None:
             Uref=float(inlet['Uref'])
             Href=float(inlet['Href'])
             z0=float(inlet['z0'])
-            if fw == "les" or fw =="urans":
+            if fw == "LES" or fw =="URANS" or fw == "les" or fw == "urans":
                 inflow=inlet['inflow']
-                les_algorithm=inlet['les_algorithm']
+                les_algorithm=inlet['solver']
                 
         except KeyError as e:
             raise ValueError(f"Missing key {e} in boundary_conditions: {region}") from e
@@ -2325,15 +2406,15 @@ def main(config: Dict[str, Any]) -> None:
             raise ValueError("Uref, Href, z0 must be floats")            
                 
     else:
-        print("✓ constant/transportProperties written.")
+        print(" constant/transportProperties written.")
         while True:
-            fw = input("Framework? [RANS / LES / URANS]: ").strip().lower()
+            fw = input("Framework [RANS / LES / URANS]: ").strip().lower()
             if fw in ("rans", "les", "urans"):
                 break
 
-        if fw == "les":
+        if fw == "les" or fw == "LES":
             while True:
-                subm = input("SGS Model? [SMAGORINSKY/KEQN/DYNKEQN/WALE]: ").strip().lower()
+                subm = input("SGS Model [SMAGORINSKY/KEQN/DYNKEQN/WALE]: ").strip().lower()
                 if subm in ("smagorinsky", "keqn", "dynkeqn", "wale"):
                     break
             # meanABL or turbulent inflow?
@@ -2357,9 +2438,9 @@ def main(config: Dict[str, Any]) -> None:
             Href = float(ask("Reference height Zref (m)", "10"))
             z0   = float(ask("Roughness length z0 (m)", "0.1"))
 
-        elif fw == "urans":
+        elif fw == "urans" or fw == "URANS":
             while True:
-                subm = input("Turbulence Model? [KEPSILON/KOMEGA/KOMEGASSTSAS]: ").strip().lower()
+                subm = input("Turbulence Model [KEPSILON/KOMEGA/KOMEGASSTSAS]: ").strip().lower()
                 if subm in ("kepsilon", "komega", "komegasstsas"):
                     break
             # meanABL or turbulent inflow?
@@ -2406,7 +2487,7 @@ def main(config: Dict[str, Any]) -> None:
             while surround_style not in ("rough", "smooth"):
                 surround_style = ask(" choose rough/smooth", "smooth").lower()
 
-    if fw == "les":
+    if fw == "LES" or fw == "les":
         
         # write turbulenceProperties
         fld2.parent.mkdir(parents=True, exist_ok=True)
@@ -2422,7 +2503,7 @@ def main(config: Dict[str, Any]) -> None:
         else:
             fld2.write_text(TP_LESWale)
 
-        print("✓ turbulenceProperties (LES) written.")
+        print(" turbulenceProperties (LES) written.")
 
         fld1 = Path(case/"0")
         fld1.mkdir(parents=True, exist_ok=True)
@@ -2445,10 +2526,10 @@ def main(config: Dict[str, Any]) -> None:
             fld1.joinpath("k").write_text(
             body_ksgs(SIDE_MAP[side]))
 
-        print(f"✓ fields written to {fld1.resolve()}")
+        print(f" fields written to {fld1.resolve()}")
         #return  # LES path ends here
 
-    elif fw == 'urans':
+    elif fw == 'urans' or fw == 'URANS':
 
         fld2.parent.mkdir(parents=True, exist_ok=True)
         if subm == "kepsilon":
@@ -2460,7 +2541,7 @@ def main(config: Dict[str, Any]) -> None:
         else:
             fld2.write_text(TP_RANSkwSSTSAS)
 
-        print("✓ turbulenceProperties (RANS) written.")
+        print(" turbulenceProperties (RANS) written.")
         
         fld1 = Path(case/"0")
         fld1.mkdir(parents=True, exist_ok=True)
@@ -2490,7 +2571,7 @@ def main(config: Dict[str, Any]) -> None:
             P_BODY % (SIDE_MAP[side], SIDE_MAP[side])
         )
         
-        print(f"✓ fields written to {fld1.resolve()}")
+        print(f" fields written to {fld1.resolve()}")
 
     else:
 
@@ -2506,7 +2587,7 @@ def main(config: Dict[str, Any]) -> None:
             fld2.write_text(TP_RANSkwSST)
 
 
-        print("✓ turbulenceProperties (RANS) written.")
+        print(" turbulenceProperties (RANS) written.")
         
         fld1 = Path(case/"0")
         fld1.mkdir(parents=True, exist_ok=True)
@@ -2532,13 +2613,13 @@ def main(config: Dict[str, Any]) -> None:
             P_BODY % (SIDE_MAP[side], SIDE_MAP[side])
         )
         
-        print(f"✓ fields written to {fld1.resolve()}")
+        print(f" fields written to {fld1.resolve()}")
         
         
     # ───────────────────────── Inputs for ControlDict ─────────────────────────
     
     lib_TINF = ""
-    if fw == "les" or fw == "urans":
+    if fw == "les" or fw == "urans" or fw == "LES" or fw == "URANS":
         
         if inflow == "turbulent":
             lib_TINF = '"libturbulentInflow.so"'
@@ -2552,8 +2633,8 @@ def main(config: Dict[str, Any]) -> None:
                 adjust_time=control_dict['adjust_time']
                 deltaT_write=float(control_dict['deltaT_write'])                
                 maxCo = float(control_dict['max_courant'])
-                n_profile = int(control_dict['num_wind_profiles'])
-                n_plane = int(control_dict['num_section_planes'])              
+                n_profile = int(len(control_dict['wind_profiles']))
+                n_plane = int(len(control_dict['section_planes']))              
 
             except KeyError as e:
                 raise ValueError(f"Missing key {e} in control_dict") from e
@@ -2564,7 +2645,7 @@ def main(config: Dict[str, Any]) -> None:
             
             les_algorithm = get_input("LES algorithm {pisoFoam | pimpleFoam}", "pisoFoam")
             while les_algorithm not in LES_ALGORITHM_MAP:
-                les_algorithm = get_input("  -> Please choose pisoFoam or pimpleFoam", "pisoFoam")
+                les_algorithm = get_input("   Please choose pisoFoam or pimpleFoam", "pisoFoam")
             end_T = get_input("End time for the simulation",    "100.000000")
             deltaT_sim = get_input("Initial time step of the simulation",    "0.0050")
             adjust_time = input("Adjust time step according to maximum Courant number? [yes / no]: ").strip()
@@ -2592,111 +2673,92 @@ def main(config: Dict[str, Any]) -> None:
         Path(case/"system"/"controlDict").parent.mkdir(parents=True, exist_ok=True)
         Path(case/"system"/"controlDict").write_text(les_controldict)
 
-        if fw == 'urans':
+        if fw == 'urans' or fw == 'URANS':
             Path(case/"system"/"fvSolution").parent.mkdir(parents=True, exist_ok=True)
             Path(case/"system"/"fvSolution").write_text(TP_fvSol_URANS)
             Path(case/"system"/"fvSchemes").parent.mkdir(parents=True, exist_ok=True)
             Path(case/"system"/"fvSchemes").write_text(TP_fvSch_URANS)
-            print(f"✓ system/controlDict written to {Path(case/"system"/"controlDict").resolve()}")
+            print(f" system/controlDict written to {Path(case/"system"/"controlDict").resolve()}")
         else:
             Path(case/"system"/"fvSolution").parent.mkdir(parents=True, exist_ok=True)
             Path(case/"system"/"fvSolution").write_text(TP_fvSol_LES)
             Path(case/"system"/"fvSchemes").parent.mkdir(parents=True, exist_ok=True)
             Path(case/"system"/"fvSchemes").write_text(TP_fvSch_LES)
-            print(f"✓ system/controlDict written to {Path(case/"system"/"controlDict").resolve()}")
+            print(f" system/controlDict written to {Path(case/"system"/"controlDict").resolve()}")
         # write profile and plane recorder
         #create_profile_txt(n_profile, Path(case/"system"/"Profile"))
-        for i in range(1, n_profile+1):
-            print(f"\n--- Configuring Profile{i} ---")
-            if 'computational_domain' in config and 'control_dict' in config['computational_domain']:
-                control_dict = config['computational_domain']['control_dict']
+        if 'computational_domain' in config and 'control_dict' in config['computational_domain']:
+            control_dict = config['computational_domain']['control_dict']
+            wind_profiles = config['computational_domain']['control_dict']['wind_profiles']
+            section_planes = config['computational_domain']['control_dict']['section_planes']
+            i = 1
+            for wp in wind_profiles:
+                print(f"\n--- Configuring Profile{i} ---")
+            
 
                 try: 
-                    startX=float(control_dict[f"wind_profile{i}_startX"])
-                    startY=float(control_dict[f"wind_profile{i}_startY"])
-                    startZ=float(control_dict[f"wind_profile{i}_startZ"]) 
-                    endX=float(control_dict[f"wind_profile{i}_endX"])
-                    endY=float(control_dict[f"wind_profile{i}_endY"])
-                    endZ=float(control_dict[f"wind_profile{i}_endZ"])             
-                    n_points=int(control_dict[f"number_points{i}"])
+                    startX=float(wp["startX"])
+                    startY=float(wp["startY"])
+                    startZ=float(wp["startZ"]) 
+                    endX=float(wp["endX"])
+                    endY=float(wp["endY"])
+                    endZ=float(wp["endZ"])             
+                    n_points=int(wp["number_points"])
                     start = (startX, startY, startZ)
                     end = (endX, endY, endZ)
-                    N_profile=int(control_dict[f"Write_Interval{i}"])
-                    fields = control_dict[f"Fields{i}"]
-                    t_start = float(control_dict[f"Start_Time{i}"])
+                    N_profile=int(wp["Write_Interval"])
+                    fields = wp["Fields"]
+                    t_start = float(wp["Start_Time"])
 
                 except KeyError as e:
                     raise ValueError(f"Missing key {e} in control_dict") from e
                 except (TypeError, ValueError):
                     raise ValueError("float (time quantities and courant number) or int expected")
+                points = generate_line_points(start, end, n_points)
 
-            else:
-                start = tuple(map(float, get_input("  Start point (x y z)", "0 0 0").split()))
-                end   = tuple(map(float, get_input("  End point (x y z)", "0 0 0").split()))
-                n_points = int(get_input("  Number of points along the probe line", "5"))
-                fields = get_input("Field write {U or p or U p}", "U")
-                while fields not in FIELD_MAP:
-                    fields = get_input("  -> Please choose U or p or U p", "U")
-                N_profile = get_input("Field write interval",    "10")
-                t_start = get_input("  Time start", "0")
+        
+                profile_text = TP_PROFILE.format(
+                    ProfileName=f"Profile{i}",
+                    N_profile=N_profile,
+                    t_start=t_start,
+                    fields=fields,
+                    points=points
+                )
 
-        # generate probe locations
-            points = generate_line_points(start, end, n_points)
+                out_path = case/"system"/f"Profile{i}"
+                out_path.write_text(profile_text)
+                print(f" Profile written to {out_path.resolve()}")
+                i=i+1
 
-        # fill template
-            profile_text = TP_PROFILE.format(
-                ProfileName=f"Profile{i}",
-                N_profile=N_profile,
-                t_start=t_start,
-                fields=fields,
-                points=points
-            )
 
-            out_path = case/"system"/f"Profile{i}"
-            out_path.write_text(profile_text)
-            print(f"✓ Profile written to {out_path.resolve()}")
+            i = 1
+            for sp in section_planes:
+                print(f"\n--- Configuring Plane{i} ---")
 
-        #create_plane_txt(n_plane, Path(case/"system"/"Plane"))
-        for i in range(1, n_plane+1):
-            print(f"\n--- Configuring Plane{i} ---")
-
-            if 'computational_domain' in config and 'control_dict' in config['computational_domain']:
-                control_dict = config['computational_domain']['control_dict']
+            
 
                 try: 
-                    plane_pointX=float(control_dict[f"section{i}_pointX"])
-                    plane_pointY=float(control_dict[f"section{i}_pointY"])
-                    plane_pointZ=float(control_dict[f"section{i}_pointZ"]) 
-                    plane_normalX=float(control_dict[f"section{i}_NormX"])
-                    plane_normalY=float(control_dict[f"section{i}_NormY"])
-                    plane_normalZ=float(control_dict[f"section{i}_NormZ"])             
-                    N_plane=int(control_dict[f"Write_Interval_plane{i}"])
+                    plane_pointX=float(sp["pointX"])
+                    plane_pointY=float(sp["pointY"])
+                    plane_pointZ=float(sp["pointZ"]) 
+                    plane_normalX=float(sp["NormX"])
+                    plane_normalY=float(sp["NormY"])
+                    plane_normalZ=float(sp["NormZ"])             
+                    N_plane=int(sp["Write_Interval"])
                     plane_point1 = (plane_pointX, plane_pointY, plane_pointZ)
                     plane_normal1 = (plane_normalX, plane_normalY, plane_normalZ)
                     plane_point  = "(" + " ".join(map(str, plane_point1)) + ")"
                     plane_normal = "(" + " ".join(map(str, plane_normal1)) + ")"
-                    t_end=int(control_dict[f"End_Time_plane{i}"])
-                    fields = control_dict[f"Fields_plane{i}"]
-                    t_start = float(control_dict[f"Start_Time_plane{i}"])
+                    t_end=int(sp["End_Time"])
+                    fields = sp["Fields"]
+                    t_start = float(sp["Start_Time"])
 
                 except KeyError as e:
                     raise ValueError(f"Missing key {e} in control_dict") from e
                 except (TypeError, ValueError):
                     raise ValueError("float (time quantities and courant number) or int expected")
 
-            else:
-
-                N_plane = get_input("Plane write interval",    "10")
-                t_start = get_input("  Time start", "0.000000")
-                t_end = get_input("  Time end", "10.000000")
-                fields = get_input("Field write {U or p or U p}", "U")
-                while fields not in FIELD_MAP:
-                    fields = get_input("  -> Please choose U or p or U p", "U")        
-                plane_point = "(" + " ".join(get_input("  Point in plane (x y z)", "0 0 0").split()) + ")"
-                plane_normal = "(" + " ".join(get_input("  Normal vector to plane (x y z)", "0 0 0").split()) + ")"
-
-        # fill template
-            plane_text = TP_PLANE.format(
+                plane_text = TP_PLANE.format(
                 PlaneName=f"Plane{i}",
                 N_plane=N_plane,
                 t_start=t_start,
@@ -2704,11 +2766,70 @@ def main(config: Dict[str, Any]) -> None:
                 fields=fields,
                 plane_point=plane_point,
                 plane_normal=plane_normal
-            )
+                )
 
-            out_path = case/"system"/f"Plane{i}"
-            out_path.write_text(plane_text)
-            print(f"✓ Plane written to {out_path.resolve()}")
+                out_path = case/"system"/f"Plane{i}"
+                out_path.write_text(plane_text)
+                print(f" Plane written to {out_path.resolve()}")
+                i = i+1
+        else:
+            for i in range(1, n_profile+1):
+                start = tuple(map(float, get_input("  Start point (x y z)", "0 0 0").split()))
+                end   = tuple(map(float, get_input("  End point (x y z)", "0 0 0").split()))
+                n_points = int(get_input("  Number of points along the probe line", "5"))
+                fields = get_input("Field write {U or p or U p}", "U")
+                while fields not in FIELD_MAP:
+                    fields = get_input("  Please choose U or p or U p", "U")
+                N_profile = get_input("Field write interval",    "10")
+                t_start = get_input("  Time start", "0")
+
+        # generate probe locations
+                points = generate_line_points(start, end, n_points)
+
+        # fill template
+                profile_text = TP_PROFILE.format(
+                    ProfileName=f"Profile{i}",
+                    N_profile=N_profile,
+                    t_start=t_start,
+                    fields=fields,
+                    points=points
+                )
+
+                out_path = case/"system"/f"Profile{i}"
+                out_path.write_text(profile_text)
+                print(f" Profile written to {out_path.resolve()}")
+
+            for i in range(1, n_plane+1):
+                N_plane = get_input("Plane write interval",    "10")
+                t_start = get_input("  Time start", "0.000000")
+                t_end = get_input("  Time end", "10.000000")
+                fields = get_input("Field write {U or p or U p}", "U")
+                while fields not in FIELD_MAP:
+                    fields = get_input("   Please choose U or p or U p", "U")        
+                plane_point = "(" + " ".join(get_input("  Point in plane (x y z)", "0 0 0").split()) + ")"
+                plane_normal = "(" + " ".join(get_input("  Normal vector to plane (x y z)", "0 0 0").split()) + ")"
+
+        # fill template
+                plane_text = TP_PLANE.format(
+                    PlaneName=f"Plane{i}",
+                    N_plane=N_plane,
+                    t_start=t_start,
+                    t_end=t_end,
+                    fields=fields,
+                    plane_point=plane_point,
+                    plane_normal=plane_normal
+                )
+
+                out_path = case/"system"/f"Plane{i}"
+                out_path.write_text(plane_text)
+                print(f" Plane written to {out_path.resolve()}")
+
+        #create_plane_txt(n_plane, Path(case/"system"/"Plane"))
+        
+
+            
+
+                
     else:
 
         # Control dict if RANS
@@ -2742,7 +2863,7 @@ def main(config: Dict[str, Any]) -> None:
         Path(case/"system"/"fvSolution").write_text(TP_fvSol_RANS)
         Path(case/"system"/"fvSchemes").parent.mkdir(parents=True, exist_ok=True)
         Path(case/"system"/"fvSchemes").write_text(TP_fvSch_RANS)
-        print(f"✓ system/controlDict written to {Path(case/"system"/"controlDict").resolve()}")
+        print(f" system/controlDict written to {Path(case/"system"/"controlDict").resolve()}")
 
         
     if 'number_of_processors' in config:
@@ -2753,7 +2874,7 @@ def main(config: Dict[str, Any]) -> None:
             if txt.isdigit() and int(txt) > 0:
                 nproc = int(txt)
                 break
-            print("  ↳ please enter a positive integer")
+            print("  please enter a positive integer")
 
 # ------------------------------------------------------------------ template for decomposePar
     DECOMP = f"""/*--------------------------------*- C++ -*----------------------------------*\\
@@ -2788,12 +2909,12 @@ def main(config: Dict[str, Any]) -> None:
     outd = Path(case/"system"/"decomposeParDict") 
     outd.parent.mkdir(parents=True, exist_ok=True)
     outd.write_text(DECOMP)
-    print(f"✓ decomposeParDict written to {outd.resolve()}")
+    print(f" decomposeParDict written to {outd.resolve()}")
     print(f"  ( {nproc} subdomains, method = scotch )")
 
     # ───────────────────────── Get TINF file ─────────────────────────
 
-    if fw == "les" or fw == "urans":
+    if fw == "les" or fw == "urans" or fw == "LES" or fw == "URANS":
         if inflow == "turbulent":
 
             if 'computational_domain' in config and 'boundary_conditions' in config['computational_domain']:
@@ -2849,21 +2970,21 @@ def main(config: Dict[str, Any]) -> None:
                     else:
                         f.write(f"(0 0 {z:g})\n")
                 f.write(")\n;\n")
-            print(f"✓ points → {pts_out.resolve()}")
+            print(f" points {pts_out.resolve()}")
 
     # U
             write_list(u_out, u_vals, lambda u: f"{u:g}")
-            print(f"✓ U      → {u_out.resolve()}")
+            print(f" U       {u_out.resolve()}")
 
     # R
             write_list(r_out, r_vals.itertuples(index=False),
                     lambda row: "(" + " ".join(f"{v:g}" for v in row) + ")")
-            print(f"✓ R      → {r_out.resolve()}")
+            print(f" R       {r_out.resolve()}")
 
     # L
             write_list(l_out, l_vals.itertuples(index=False),
                     lambda row: "(" + " ".join(f"{v:g}" for v in row) + ")")
-            print(f"✓ L      → {l_out.resolve()}")
+            print(f" L       {l_out.resolve()}")
 
     Path(case/"Community.foam").touch()
 

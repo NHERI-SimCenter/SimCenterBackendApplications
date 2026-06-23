@@ -38,18 +38,17 @@
 #
 
 import argparse
-import importlib
 import json
 import os
 import shutil
-import subprocess
-import sys
 import time
 
 import numpy as np
 import psutil
 
 R2D = True
+
+OPENSHA_JAR = 'opensha-all.jar'  # version 26.1.1 (invoked in 05/2026)
 
 
 def site_job(hazard_info):  # noqa: C901, D103
@@ -212,7 +211,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
             )
             if not filePath_ini:
                 # Error in ini file
-                sys.exit(
+                raise RuntimeError(
                     'HazardSimulation: errors in preparing the OpenQuake configuration file.'
                 )
             if scenario_info['EqRupture']['Type'] in [
@@ -238,7 +237,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
                             )
                         )
                     print(err_msg)  # noqa: T201
-                    sys.exit(err_msg)
+                    raise RuntimeError(err_msg)
                 else:
                     print('HazardSimulation: OpenQuake Classical PSHA completed.')  # noqa: T201
                 if scenario_info['EqRupture'].get('UHS', False):
@@ -262,7 +261,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
                 print('HazardSimulation: OpenQuake Scenario calculation completed.')  # noqa: T201
 
             else:
-                sys.exit(
+                raise NotImplementedError(
                     'HazardSimulation: OpenQuakeClassicalPSHA, OpenQuakeUserConfig and OpenQuakeScenario are supported.'
                 )
 
@@ -370,7 +369,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
             id_selected_scens = [int(x / num_gm_per_site) for x in id_selected_gmms]
             id_selected_simus = [x % num_gm_per_site for x in id_selected_gmms]
             # export sampled earthquakes
-            _ = export_sampled_gmms(  # noqa: F405
+            _ = export_sampled_gmms(  # noqa: F821 -- export_sampled_gmms is a method, not a free function
                 id_selected_gmms, id_selected_scens, P_gmm, output_dir
             )
             num_site = ln_im_mr[0].shape[0]
@@ -437,7 +436,7 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
             if runtag:
                 print('HazardSimulation: the ground motion list saved.')  # noqa: T201
             else:
-                sys.exit(
+                raise RuntimeError(
                     'HazardSimulation: warning - issues with saving the ground motion list.'
                 )
             # Downloading records
@@ -445,14 +444,14 @@ def hazard_job(hazard_info):  # noqa: C901, D103, PLR0915
             user_password = event_info.get('UserPassword', None)
             if (user_name is not None) and (user_password is not None) and (not R2D):
                 print('HazardSimulation: downloading ground motion records.')  # noqa: T201
-                raw_dir = download_ground_motion(  # noqa: F405
+                raw_dir = download_ground_motion(  # noqa: F821 -- see import block
                     gm_id, user_name, user_password, output_dir
                 )
                 if raw_dir:
                     print('HazardSimulation: ground motion records downloaded.')  # noqa: T201
                     # Parsing records
                     print('HazardSimulation: parsing records.')  # noqa: T201
-                    record_dir = parse_record(  # noqa: F405, F841
+                    record_dir = parse_record(  # noqa: F821, F841 -- see import block
                         gm_file,
                         raw_dir,
                         output_dir,
@@ -522,32 +521,26 @@ if __name__ == '__main__':
     except:  # noqa: E722
         oq_flag = False
 
-    # dependencies
-    if R2D:
-        packages = ['tqdm', 'psutil', 'PuLP', 'requests']
-    else:
-        packages = ['selenium', 'tqdm', 'psutil', 'PuLP', 'requests']
-    for p in packages:
-        if importlib.util.find_spec(p) is None:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-q', p])  # noqa: S603
-
     # set up environment
     import socket
 
     if 'stampede2' not in socket.gethostname():
-        if importlib.util.find_spec('jpype') is None:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])  # noqa: S603
+        import GlobalVariable
+
         import jpype
-        from jpype.types import *  # noqa: F403
 
         memory_total = psutil.virtual_memory().total / (1024.0**3)
         memory_request = int(memory_total * 0.75)
-        jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
+        jpype.addClassPath('./lib/{}'.format(OPENSHA_JAR))
         try:
-            jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
+            jpype.startJVM(
+                f'-Xmx{memory_request}G',
+                convertStrings=False,
+                jvmpath=GlobalVariable.find_compatible_jvm_path(),
+            )
         except:  # noqa: E722
             print(  # noqa: T201
-                f'StartJVM of ./lib/OpenSHA-1.5.2.jar with {memory_request} GB Memory fails. Try again after releasing some memory'
+                f'StartJVM of ./lib/{OPENSHA_JAR} with {memory_request} GB Memory fails. Try again after releasing some memory'
             )
     if oq_flag:
         # clear up old db.sqlite3 if any
@@ -570,18 +563,37 @@ if __name__ == '__main__':
             shutil.rmtree(os.environ.get('OQ_DATADIR'))
         os.makedirs(f"{os.environ.get('OQ_DATADIR')}")  # noqa: PTH103
 
-    # import modules
-    # from ComputeIntensityMeasure import *
-    # from CreateScenario import *
-    # from CreateStation import *
-
-    # # KZ-08/23/22: adding hazard occurrence model
-    # from HazardOccurrence import *
-    # from SelectGroundMotion import *
+    from ComputeIntensityMeasure import compute_im, export_im
+    from CreateScenario import (
+        create_earthquake_scenarios,
+        create_wind_scenarios,
+        load_earthquake_scenarios,
+    )
+    from CreateStation import create_stations
+    from GMSimulators import simulate_ground_motion
+    from HazardOccurrence import (
+        configure_hazard_occurrence,
+        export_sampled_earthquakes,
+        get_im_exceedance_probability_gm,
+        get_im_exceedance_probility,
+        sample_earthquake_occurrence,
+    )
+    from SelectGroundMotion import (
+        output_all_ground_motion_info,
+        select_ground_motion,
+    )
+    # The NGAWest2 record-download branch below calls download_ground_motion
+    # and parse_record, which are not defined in SelectGroundMotion's public
+    # surface; the F821 noqa annotations at those sites mark that branch as
+    # known-dead.
 
     if oq_flag:
-        # import FetchOpenQuake
-        from FetchOpenQuake import *  # noqa: F403
+        from FetchOpenQuake import (
+            OpenQuakeHazardCalc,
+            openquake_config,
+            oq_read_uhs_classical_psha,
+            oq_run_classical_psha,
+        )
 
     # Initial process list
     import psutil
@@ -599,6 +611,3 @@ if __name__ == '__main__':
         site_job(hazard_info)
     else:
         print('HazardSimulation: --job_type = Hazard or Site (please check).')  # noqa: T201
-
-    # Closing the current process
-    sys.exit(0)
