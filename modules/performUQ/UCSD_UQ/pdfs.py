@@ -141,7 +141,7 @@ class BetaDist:  # noqa: D101
         self.lowerbound = lowerbound
         self.upperbound = upperbound
         self.dist = stats.beta(
-            self.alpha, self.beta, self.lowerbound, self.upperbound
+            self.alpha, self.beta, loc=self.lowerbound, scale=self.upperbound - self.lowerbound
         )
 
     def generate_rns(self, N):  # noqa: N803, D102
@@ -242,7 +242,7 @@ class GammaDist:  # noqa: D101
 class ChiSquareDist:  # noqa: D101
     def __init__(self, k):
         self.k = k
-        self.dist = stats.chi2(k=self.k)
+        self.dist = stats.chi2(df=self.k)
 
     def generate_rns(self, N):  # noqa: N803, D102
         return self.dist.rvs(size=N)
