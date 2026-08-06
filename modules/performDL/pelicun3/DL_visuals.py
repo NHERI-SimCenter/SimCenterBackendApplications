@@ -51,6 +51,7 @@ import numpy as np
 import pandas as pd
 from pelicun.base import convert_to_MultiIndex, pelicun_path
 from plotly import graph_objects as go
+from plotly.offline import get_plotlyjs
 from plotly.subplots import make_subplots
 from scipy.stats import norm, weibull_min
 
@@ -452,7 +453,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: C901, D1
         )
 
         with open(f'{output_path}/{comp_id}.html', 'w') as f:  # noqa: PTH123
-            f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
+            f.write(fig.to_html(full_html=False, include_plotlyjs='directory'))
 
     # store the source database file(s) in the output directory for future reference
     shutil.copy(comp_db_path, Path(output_path) / Path(comp_db_path).name)
@@ -1025,7 +1026,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: C901, PLR09
             with open(f'{output_path}/{comp_id}-{c_type}.html', 'w') as f:  # noqa: PTH123
                 # Minimize size by not saving javascript libraries which means
                 # internet connection is required to view the figure.
-                f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
+                f.write(fig.to_html(full_html=False, include_plotlyjs='directory'))
 
     # store the source database file(s) in the output directory for future reference
     shutil.copy(comp_db_path, Path(output_path) / Path(comp_db_path).name)
@@ -1102,6 +1103,27 @@ def check_diff(comp_db_path, output_path):  # noqa: D103
         return True
 
 
+def write_plotly_bundle(output_path, create_zip='0'):  # noqa: D103
+    if create_zip == '1':
+        return
+
+    # A local bundle is needed because the CDN script tag carries SRI/CORS
+    # attributes that QtWebEngine blocks, and it needs the replacement below
+    # because Qt 5.15's Chromium cannot parse :focus-visible CSS rules
+    plotly_js = get_plotlyjs().replace(':focus-visible', ':focus')
+
+    # Refresh the bundle in cached figure folders too, so bundle updates
+    # reach them, but skip the write when the file is already current.
+    bundle_path = Path(output_path, 'plotly.min.js')
+    if (
+        bundle_path.is_file()
+        and bundle_path.stat().st_size == len(plotly_js.encode('utf-8'))
+    ):
+        return
+
+    bundle_path.write_text(plotly_js, encoding='utf-8')
+
+
 def main(args):  # noqa: D103
     parser = argparse.ArgumentParser()
     parser.add_argument('viz_type')
@@ -1131,9 +1153,38 @@ def main(args):  # noqa: D103
         else:
             print('No need to generate, figures already exist in the output folder.')  # noqa: T201
 
+        write_plotly_bundle(output_path, args.zip)
+
     elif args.viz_type == 'query':
         if args.comp_db_path == 'default_db':
             print(pelicun_path)  # noqa: T201
+
+        elif args.comp_db_path == 'dataset_paths':
+            try:
+                from pelicun.file_io import (  # noqa: PLC0415, RUF100
+                    resolve_default_dataset_path,
+                )
+            except ImportError:
+                print(  # noqa: T201
+                    'The installed pelicun does not provide dataset path '
+                    'resolution. pelicun >= 3.10 is required.',
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+
+            alias_map_path = pelicun_path / 'resources' / 'dlml_resource_paths.json'
+            with alias_map_path.open(encoding='utf-8') as f:
+                alias_map = json.load(f)
+
+            dataset_paths = {
+                alias: {
+                    'path': str(resolve_default_dataset_path(alias)),
+                    'id': dataset_id.rstrip('/'),
+                }
+                for alias, dataset_id in alias_map.items()
+            }
+
+            print(json.dumps(dataset_paths))  # noqa: T201
 
     # print("--- %s seconds ---" % (time.time() - start_time))
 
