@@ -45,68 +45,83 @@ from pathlib import Path, PurePath
 import numpy as np
 
 
-def write_RV(EVENT_input_path):  # noqa: C901, N802, N803, D103
+def write_RV(AIM_input_path, EVENT_input_path):  # noqa: C901, N802, N803, D103
     # open the event file and get the list of events
     with open(EVENT_input_path, encoding='utf-8') as f:  # noqa: PTH123
         EVENT_in = json.load(f)  # noqa: N806
+    # open the event file and get the list of events
+    with open(AIM_input_path, encoding='utf-8') as f:  # noqa: PTH123
+        AIM_in = json.load(f)  # noqa: N806
+    # This is for geojson type of event input, which should be the future standard
+    if 'SimCenterEvent' in AIM_in['Events'][0]:
+        value_list = AIM_in['Events'][0]['SimCenterEvent']['Values']
+        label_list = AIM_in['Events'][0]['SimCenterEvent']['Labels']
+        evt = EVENT_in['Events'][0]
+        data_dir = Path(evt['data_dir'])
+        f_scale = evt['unitScaleFactor']
+        header = label_list
+        EDP_output = np.array(value_list)  # noqa: N806
 
-    # if there is a list of possible events, load all of them
-    if len(EVENT_in['randomVariables']) > 0:
-        event_list = EVENT_in['randomVariables'][0]['elements']
+    # Below is for backward compatibility with the old format
     else:
-        event_list = [
-            EVENT_in['Events'][0]['event_id'],
-        ]
-
-    evt = EVENT_in['Events'][0]
-    data_dir = Path(evt['data_dir'])
-    f_scale = evt['unitScaleFactor']
-
-    file_sample_dict = {}
-
-    for e_i, event in enumerate(event_list):
-        filename, sample_id, __ = event.split('x')
-
-        if filename not in file_sample_dict:
-            file_sample_dict.update({filename: [[], []]})
-
-        file_sample_dict[filename][0].append(e_i)
-        file_sample_dict[filename][1].append(int(sample_id))
-
-    EDP_output = None  # noqa: N806
-
-    for filename in file_sample_dict:
-        # get the header
-        header_data = np.genfromtxt(
-            data_dir / filename,
-            delimiter=',',
-            names=None,
-            max_rows=1,
-            dtype=str,
-            ndmin=1,
-        )
-        header = header_data  # .dtype.
-
-        data = np.genfromtxt(data_dir / filename, delimiter=',', skip_header=1)
-
-        # get the number of columns and reshape the data
-        col_count = len(header)
-        if col_count > 1:
-            data = data.reshape((data.size // col_count, col_count))
+        # if there is a list of possible events, load all of them
+        if len(EVENT_in['randomVariables']) > 0:
+            event_list = EVENT_in['randomVariables'][0]['elements']
         else:
-            data = np.atleast_1d(data)
+            event_list = [
+                EVENT_in['Events'][0]['event_id'],
+            ]
 
-        # choose the right samples
-        samples = data[file_sample_dict[filename][1]]
+        evt = EVENT_in['Events'][0]
+        data_dir = Path(evt['data_dir'])
+        f_scale = evt['unitScaleFactor']
 
-        if EDP_output is None:
-            if len(samples.shape) > 1:
-                EDP_output = np.zeros((len(event_list), samples.shape[1]))  # noqa: N806
+        file_sample_dict = {}
+
+        for e_i, event in enumerate(event_list):
+            filename, sample_id, __ = event.split('x')
+
+            if filename not in file_sample_dict:
+                file_sample_dict.update({filename: [[], []]})
+
+            file_sample_dict[filename][0].append(e_i)
+            file_sample_dict[filename][1].append(int(sample_id))
+
+        EDP_output = None  # noqa: N806
+
+        for filename in file_sample_dict:
+            # get the header
+            header_data = np.genfromtxt(
+                data_dir / filename,
+                delimiter=',',
+                names=None,
+                max_rows=1,
+                dtype=str,
+                ndmin=1,
+            )
+            header = header_data  # .dtype.
+
+            data = np.genfromtxt(data_dir / filename, delimiter=',', skip_header=1)
+
+            # get the number of columns and reshape the data
+            col_count = len(header)
+            if col_count > 1:
+                data = data.reshape((data.size // col_count, col_count))
             else:
-                EDP_output = np.zeros(len(event_list))  # noqa: N806
+                data = np.atleast_1d(data)
 
-        EDP_output[file_sample_dict[filename][0]] = samples
+            # choose the right samples
+            samples = data[file_sample_dict[filename][1]]
 
+            if EDP_output is None:
+                if len(samples.shape) > 1:
+                    EDP_output = np.zeros((len(event_list), samples.shape[1]))  # noqa: N806
+                else:
+                    EDP_output = np.zeros(len(event_list))  # noqa: N806
+
+            EDP_output[file_sample_dict[filename][0]] = samples
+
+    # Below is used for both geojson and old hazard difinition format
     if len(EDP_output.shape) == 1:
         EDP_output = np.reshape(EDP_output, (EDP_output.shape[0], 1))  # noqa: N806
 
@@ -191,6 +206,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.getRV:
-        sys.exit(write_RV(args.filenameEVENT))
+        sys.exit(write_RV(args.filenameAIM, args.filenameEVENT))
     else:
         sys.exit(create_EDP(args.filenameEVENT, args.filenameEDP))

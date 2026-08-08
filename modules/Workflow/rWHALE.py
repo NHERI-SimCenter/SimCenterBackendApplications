@@ -202,7 +202,12 @@ def main(  # noqa: C901, D103
 
         # now for each asset, do regional mapping
         for asset_type, assetIt in asset_files.items():  # noqa: N806
-            WF.perform_regional_mapping(assetIt, asset_type)
+            if not isinstance(WF.shared_data['RegionalEvent']['eventFile'], list):
+                WF.shared_data['RegionalEvent']['eventFile'] = [
+                    WF.shared_data['RegionalEvent']['eventFile']
+                ]
+            for event_grid in WF.shared_data['RegionalEvent']['eventFile']:
+                WF.perform_regional_mapping(assetIt, asset_type, event_grid)
 
     if parallelType == 'parSETUP':
         return
