@@ -1395,10 +1395,22 @@ double runGSA::mvnPdf(mat x, mat mu, mat cov)
 	return norm * std::exp(-0.5 * quadform(0,0));
 }
 
-double runGSA::calMean(vector<double> x) {
-	double sum = std::accumulate(std::begin(x), std::end(x), 0.0);
-	return sum / x.size();
+// double runGSA::calMean(vector<double> x) {
+// 	double sum = std::accumulate(std::begin(x), std::end(x), 0.0);
+// 	return sum / x.size();
 
+// }
+
+double runGSA::calMean(vector<double> x) {
+    double sum = 0.0;
+    int count = 0;
+    for (const double d : x) {
+        if (!std::isnan(d)) {
+            sum += d;
+            count++;
+        }
+    }
+    return (count > 0) ? sum / count : 0.0;
 }
 
 runGSA::~runGSA() {};
