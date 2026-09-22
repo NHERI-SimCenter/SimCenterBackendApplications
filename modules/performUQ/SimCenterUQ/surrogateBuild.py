@@ -1480,7 +1480,7 @@ class surrogate(UQengine):  # noqa: D101
 
     def train_surrogate(self, t_init):  # noqa: C901, D102, PLR0915
         self.seed = 43
-        np.random.seed(43)
+        np.random.seed(self.seed)
 
         self.nc1 = min(200 * self.x_dim, 2000)  # candidate points
         self.nq = min(200 * self.x_dim, 2000)  # integration points
@@ -1720,9 +1720,9 @@ class surrogate(UQengine):  # noqa: D101
             self.NRMSE_hist = np.vstack((self.NRMSE_hist, np.array(NRMSE_val)))
             # self.NRMSE_idx = np.vstack((self.NRMSE_idx, i))
 
+            self.n_unique_hf = np.min([self.n_unique_hf,self.X_hf.shape[0]])
             if (
-                self.n_unique_hf
-                >= model_hf.thr_count  # self.id_sim_hf >= model_hf.thr_count
+                self.n_unique_hf >= model_hf.thr_count  # self.id_sim_hf >= model_hf.thr_count
                 and self.id_sim_lf >= model_lf.thr_count
             ):
                 n_iter = i
@@ -2546,8 +2546,19 @@ class surrogate(UQengine):  # noqa: D101
             results['SAM'] = SAMjson
             results['EDP'] = EDPjson
 
+        def np_default(o):
+            if isinstance(o, np.integer):
+                return int(o)
+            if isinstance(o, np.floating):
+                return float(o)
+            if isinstance(o, np.bool_):
+                return bool(o)
+            if isinstance(o, np.ndarray):
+                return o.tolist()
+            raise TypeError(f"Object of type {o.__class__.__name__} is not JSON serializable")
+
         with open(self.work_dir + '/dakota.out', 'w', encoding='utf-8') as fp:  # noqa: PTH123
-            json.dump(results, fp, indent=1)
+            json.dump(results, fp, indent=1, default=np_default)
 
         with open(self.work_dir + '/GPresults.out', 'w') as file:  # noqa: PTH123
             file.write('* Problem setting\n')
@@ -3025,6 +3036,7 @@ class surrogate(UQengine):  # noqa: D101
                 for i in range(nc1):
                     phic[i, :] = e2[closest_node(xc1[i, :], X_hf, ll)]
                 phicr = pow(phic[:, y_idx], r)
+                phicr = np.nan_to_num(phicr, nan=np.min(phicr), posinf=np.min(phicr))
 
                 yc1_pred, yc1_var = self.predict(m_stack, xc1)  # use only variance
                 MMSEc1 = yc1_var.flatten() * phicr.flatten()  # noqa: N806
@@ -3151,7 +3163,12 @@ class surrogate(UQengine):  # noqa: D101
                 )
 
                 Rmat = self.m_list[ny].kern.K(Xm)  # noqa: N806
-                Rinv = np.linalg.inv(Rmat + nugget_mat)  # noqa: N806
+                # Rinv = np.linalg.inv(Rmat + nugget_mat)  # noqa: N806
+                try:
+                    Rinv = np.linalg.inv(Rmat + nugget_mat)
+                except np.linalg.LinAlgError:
+                    Rinv = np.linalg.inv(Rmat + nugget_mat + 1e-8 * np.mean(np.diag(Rmat)) * np.eye(Rmat.shape[0]))
+
                 e = np.squeeze(
                     np.matmul(Rinv, (Ym - self.normMeans[ny]))
                 ) / np.squeeze(np.diag(Rinv))
@@ -3518,6 +3535,7 @@ class model_info:  # noqa: D101
             X_samples = np.zeros((n, self.x_dim))  # noqa: N806
             # LHS
             sampler = qmc.LatinHypercube(d=self.x_dim, seed=self.global_seed)
+            self.global_seed += 1
             U = sampler.random(n=n)  # noqa: N806
             for nx in range(self.x_dim):
                 if self.xDistTypeArr[nx] == 'U':
@@ -3616,7 +3634,7 @@ def calibrating(  # noqa: C901, D103
             #             myrange = np.max(X, axis=0) - np.min(X, axis=0)
             #             exec('m_tmp.' + parname + '[[nx]] = myrange[nx]')  # noqa: RUF100, S102
 
-            m_tmp[variance_keyword].constrain_bounded(0.05, 2, warning=False)
+            # m_tmp[variance_keyword].constrain_bounded(0.05, 2, warning=False)
             for parname in m_tmp.parameter_names():
                 if parname.endswith('lengthscale'):
                     for nx in range(X.shape[1]):
