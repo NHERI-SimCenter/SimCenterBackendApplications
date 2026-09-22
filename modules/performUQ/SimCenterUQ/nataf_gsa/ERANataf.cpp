@@ -654,7 +654,8 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 			}
 			else {
 				for (int j = 0; j < inp.nqoi; j++) {
-					tmpres[i * inp.nqoi + j] = 0.0; // dummy
+					// tmpres[i * inp.nqoi + j] = 0.0; // dummy
+					tmpres[i * inp.nqoi + j] = std::numeric_limits<double>::quiet_NaN();
 				}
 			}
 		}
