@@ -1,4 +1,3 @@
-
 /* *****************************************************************************
 Copyright (c) 2016-2017, The Regents of the University of California (Regents).
 All rights reserved.
@@ -37,7 +36,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 /**
  *  @author  Sang-ri Yi
- *  @date    8/2021
+ *  @date	8/2021
  *  @section DESCRIPTION
  *  Runs global sensitivity analysis. See: Hu, Z. and Mahadevan, S. (2019). Probability models for data-driven global sensitivity analysis. Reliability Engineering & System Safety, 187, 40-57.
  */
@@ -46,17 +45,21 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "ERANataf.h"
 #include <cmath>
 #include <iterator>
+#include <cstdint>
+#include <cstring>
+// NaN test that survives fast-math (e.g. Intel icx's default -fp-model=fast), where std::isnan() can be compiled to "false"
+static bool isNaNSafe(const double& x) { std::uint64_t u; std::memcpy(&u, &x, sizeof u); volatile std::uint64_t v = u; return (v & 0x7FFFFFFFFFFFFFFFULL) > 0x7FF0000000000000ULL; }
 using namespace arma::newarp;
 
 runGSA::runGSA() {}
 
 runGSA::runGSA(string workflowDriver,
-	string osType,
-	string runType,
-	jsonInput inp,
-	ERANataf T,
-	int procno,
-	int nproc)
+			   string osType,
+			   string runType,
+			   jsonInput inp,
+			   ERANataf T,
+			   int procno,
+			   int nproc)
 {
 
 	//
@@ -64,19 +67,19 @@ runGSA::runGSA(string workflowDriver,
 	//
 
 	vector<vector<double>> xvals(inp.nmc, vector<double>(inp.nrv, 0.0));
-	vector<vector<double>> gvals(inp.nmc, std::vector<double>(inp.nqoi, 0));	
+	vector<vector<double>> gvals(inp.nmc, std::vector<double>(inp.nqoi, 0));
 	vector<vector<string>> discreteStrSamps(inp.nmc, vector<string>(inp.nst, ""));
 	if (inp.uqMethod.compare("Monte Carlo") == 0) {
 
-	vector<vector<double>> uvals(inp.nmc, vector<double>(inp.nrv, 0.0));
-	vector<vector<int>> resampIDvals(inp.nmc, vector<int>(inp.nreg, 0.0));
+		vector<vector<double>> uvals(inp.nmc, vector<double>(inp.nrv, 0.0));
+		vector<vector<int>> resampIDvals(inp.nmc, vector<int>(inp.nreg, 0.0));
 
-	T.sample(inp.nmc, inp, procno, uvals, resampIDvals, discreteStrSamps);
+		T.sample(inp.nmc, inp, procno, uvals, resampIDvals, discreteStrSamps);
 
-	//
-	// Simulate model
-	//
-	T.simulateAppBatch(workflowDriver, osType, runType, inp, uvals, resampIDvals, discreteStrSamps, 0, xvals, gvals, procno, nproc);
+		//
+		// Simulate model
+		//
+		T.simulateAppBatch(workflowDriver, osType, runType, inp, uvals, resampIDvals, discreteStrSamps, 0, xvals, gvals, procno, nproc);
 
 	}
 	else if (inp.uqMethod.compare("Import Data Files") == 0) {
@@ -109,15 +112,15 @@ runGSA::runGSA(string workflowDriver,
 		this->performPCA = false;
 	} else {
 		this->performPCA = true;
-	}    
-	
+	}
+
 	nmc = xval.size();
 	nrv = xval[0].size();
 	nqoi = gmat[0].size();
 	ncombs = combs_tmp.size();
 
 	vector<vector<double>> gmat_eff = gmat;
-    vector<vector<double>> gmat_red;
+	vector<vector<double>> gmat_red;
 
 	//if (nrv == 1) {
 	//	vector<double> vect(nqoi, 1.0);
@@ -137,17 +140,17 @@ runGSA::runGSA(string workflowDriver,
 	//
 
 	//mat princ_dir_red;
-    if (performPCA) {
+	if (performPCA) {
 		std::cout << "Running PCA ..." << std::endl;
 		auto readStart = std::chrono::high_resolution_clock::now();
-        runPCA(gmat_eff, gmat_red, princ_dir_red);
+		runPCA(gmat_eff, gmat_red, princ_dir_red);
 		auto readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
 		std::cout << " - Done PCA... Elapsed total time: " << readEnd  << "s\n";
-    } else {
-        //copy
-        //for (int i = 0; i < gmat_eff.size(); i++) {
-        //    gmat_red.push_back(gmat_eff[i]);
-        //}
+	} else {
+		//copy
+		//for (int i = 0; i < gmat_eff.size(); i++) {
+		//	gmat_red.push_back(gmat_eff[i]);
+		//}
 		std::cout << "Processing without PCA ..." << std::endl;
 
 		for (int nq = constantQoiIdx.size() - 1; nq >= 0; nq--) {
@@ -155,9 +158,9 @@ runGSA::runGSA(string workflowDriver,
 		}
 		gmat_red = gmat_eff;
 		princ_dir_red.eye(nqoi, nqoi);
-    }
+	}
 
-    runMultipleGSA(gmat_red, Kos);
+	runMultipleGSA(gmat_red, Kos);
 
 	//
 	// Post processing
@@ -200,7 +203,7 @@ void runGSA::preprocess_gmat(vector<vector<double>> gmat, vector<vector<double>>
 	std::vector<double> avg(nqoi, 0.0);
 	std::vector<double> var(nqoi, 0.0);
 	std::vector<double> normVar(nqoi, 0.0);
-    std::vector<int> validCount(nqoi, 0); // NEW: per-column non-NaN count
+	std::vector<int> validCount(nqoi, 0); // NEW: per-column non-NaN count
 
 //	for (std::vector<double>& row : gmat_eff)
 //	{
@@ -215,32 +218,32 @@ void runGSA::preprocess_gmat(vector<vector<double>> gmat, vector<vector<double>>
 //	std::transform(var.begin(), var.end(), avg.begin(), var.begin(), [](double a, double b) {return abs(a - b * b); });
 //	varQoI = var;
 
-    for (std::vector<double>& row : gmat_eff)
-    {
-        // NEW: element-wise accumulation that skips NaNs
-        for (size_t j = 0; j < row.size(); ++j) {
-            if (!std::isnan(row[j])) {
-                avg[j] += row[j];
-                var[j] += row[j] * row[j];
-                validCount[j]++;
-            }
-        }
-    }
-    // CHANGED: scale per-column by its own valid count instead of a single nmc
-    for (size_t j = 0; j < avg.size(); ++j) {
-        double s = (validCount[j] > 0) ? 1.0 / (double)validCount[j] : 0.0;
-        avg[j] *= s;
-        var[j] *= s;
-    }
-    // Final Variance
-    std::transform(var.begin(), var.end(), avg.begin(), var.begin(), [](double a, double b) {return abs(a - b * b); });
-    varQoI = var;
+	for (std::vector<double>& row : gmat_eff)
+	{
+		// NEW: element-wise accumulation that skips NaNs
+		for (size_t j = 0; j < row.size(); ++j) {
+			if (!isNaNSafe(row[j])) {
+				avg[j] += row[j];
+				var[j] += row[j] * row[j];
+				validCount[j]++;
+			}
+		}
+	}
+	// CHANGED: scale per-column by its own valid count instead of a single nmc
+	for (size_t j = 0; j < avg.size(); ++j) {
+		double s = (validCount[j] > 0) ? 1.0 / (double)validCount[j] : 0.0;
+		avg[j] *= s;
+		var[j] *= s;
+	}
+	// Final Variance
+	std::transform(var.begin(), var.end(), avg.begin(), var.begin(), [](double a, double b) {return abs(a - b * b); });
+	varQoI = var;
 
 	// Normalized effective matrix
 	for (auto& row : gmat_eff)
 	{
 		// zero mean
-		std::transform(row.begin(), row.end(), avg.begin(), row.begin(), std::minus<double>()); 
+		std::transform(row.begin(), row.end(), avg.begin(), row.begin(), std::minus<double>());
 		std::transform(row.begin(), row.end(), var.begin(), row.begin(), [](double a, double b) { return a / sqrt(b); });  // do not need to worry about constants yet
 	}
 
@@ -251,7 +254,7 @@ void runGSA::preprocess_gmat(vector<vector<double>> gmat, vector<vector<double>>
 		else {
 			return a/b/b; // normalize..
 		}});// avg of square - square of avg
-	
+
 
 	std::cout << " - QoI now has zero mean  " << std::endl;
 	std::cout << " - Checking if there are constant QoIs  " << std::endl;
@@ -281,7 +284,7 @@ void runGSA::preprocess_gmat(vector<vector<double>> gmat, vector<vector<double>>
 			nonConstantQoiIdx.push_back(i);
 		}
 		i++;
-	} 
+	}
 	std::cout << "  - Number of constant QoIs:  " << constantQoiIdx.size() << std::endl;
 	std::cout << "  - Number of nonconstant QoIs:  " << nonConstantQoiIdx.size() << std::endl;
 
@@ -289,21 +292,21 @@ void runGSA::preprocess_gmat(vector<vector<double>> gmat, vector<vector<double>>
 	int count = 0;
 	for (int nq = nqoi-1; nq >= 0; nq--) {
 		bool isConstant = true;
-		
-		
+
+
 		std::cout << gmat_eff[0][nq] << " " << gmat_eff][nq] << std::endl;
 		int testcount = 0;
 		for (int i = 0; i < nmc-1; i++)
-		{ 
+		{
 			testcount += 1;
 			if (gmat_eff[i][nq] != gmat_eff[i + (int)1][nq]) {
 				isConstant = false;
 				break;
 			}
-			
+
 
 		}
-		
+
 		//std::cout << isConstant << std::endl;
 
 		if (isConstant) {
@@ -313,180 +316,180 @@ void runGSA::preprocess_gmat(vector<vector<double>> gmat, vector<vector<double>>
 			count++;
 		}
 */
-		/*
-		if (gmat[1][nq] == gmat[0][nq]) {
+	/*
+	if (gmat[1][nq] == gmat[0][nq]) {
 
-			for (int i = 0; i < nmc; i++)
-				mean += gmat[i][nq];
+		for (int i = 0; i < nmc; i++)
+			mean += gmat[i][nq];
 
-			mean = mean / double(nmc);
-			for (int i = 0; i < nmc; i++)
-				sqDiff += (gmat[i][nq] - mean) * (gmat[i][nq] - mean);
+		mean = mean / double(nmc);
+		for (int i = 0; i < nmc; i++)
+			sqDiff += (gmat[i][nq] - mean) * (gmat[i][nq] - mean);
 
-			//double var = sqDiff / nmc;
-			if (sqDiff < 1.e-10) {
-				constantQoiIdx.push_back(nq);
-				// remove the column 
-				for (auto& row : gmat_eff) row.erase(next(row.begin(), nq));
-			}
-			else {
-				for (auto& row : gmat_eff) row[nq] = row[nq]- mean;
-				count++;
-			}
-
+		//double var = sqDiff / nmc;
+		if (sqDiff < 1.e-10) {
+			constantQoiIdx.push_back(nq);
+			// remove the column
+			for (auto& row : gmat_eff) row.erase(next(row.begin(), nq));
 		}
-		
-		if (nq % 10000 == 0) {
-			std::cout << "  - Current row is " << nq << " among " << nqoi << std::endl;
+		else {
+			for (auto& row : gmat_eff) row[nq] = row[nq]- mean;
+			count++;
 		}
+
 	}
-	*/
+
+	if (nq % 10000 == 0) {
+		std::cout << "  - Current row is " << nq << " among " << nqoi << std::endl;
+	}
+}
+*/
 	nqoi_eff = nqoi- constantQoiIdx.size();
 
 }
 
 void runGSA::runMultipleGSA(vector<vector<double>> gmat_red, int Kos)
 {
-    int nqoi_red = gmat_red[0].size();
+	int nqoi_red = gmat_red[0].size();
 
-    int Kos_base_main = std::min(Kos, int(ceil(nmc / 20.0)));
-    int Kos_base_total = std::min(Kos, int(ceil(nmc / 20.0)));
+	int Kos_base_main = std::min(Kos, int(ceil(nmc / 20.0)));
+	int Kos_base_total = std::min(Kos, int(ceil(nmc / 20.0)));
 
-    //std::cout<<"Just testing this location 2\n";
+	//std::cout<<"Just testing this location 2\n";
 
 	/*
-    #ifdef MPI_RUN
-        std::cout<<"sensitivity running MPI " << std::endl;
+	#ifdef MPI_RUN
+		std::cout<<"sensitivity running MPI " << std::endl;
 
-            //
-            // MPI
-            //
+			//
+			// MPI
+			//
 
-            int chunkSize = std::ceil(double(nqoi) / double(nprocs));
-            //int lastChunk = inp.nmc - chunkSize * (nproc-1);
-            double* SmAll = (double*)malloc(ncombs * chunkSize * nprocs * sizeof(double));
-            double* SmTmp = (double*)malloc(ncombs * chunkSize * sizeof(double));
-            double* StAll = (double*)malloc(ncombs * chunkSize * nprocs * sizeof(double));
-            double* StTmp = (double*)malloc(ncombs * chunkSize * sizeof(double));
-            // for each QoI
-            //std::cout<<"Just testing this location 3 \n";
-            for (int nq = 0; nq < chunkSize ; nq++) {
-                int id = chunkSize * procno + nq;
-                if (id >= nqoi) { // dummy
-                    for (int i = 0; i < ncombs; i++) {
-                        StTmp[nq * ncombs + i] = 0.;
-                        SmTmp[nq * ncombs + i] = 0.;
-                    }
-                    continue;
-                }
+			int chunkSize = std::ceil(double(nqoi) / double(nprocs));
+			//int lastChunk = inp.nmc - chunkSize * (nproc-1);
+			double* SmAll = (double*)malloc(ncombs * chunkSize * nprocs * sizeof(double));
+			double* SmTmp = (double*)malloc(ncombs * chunkSize * sizeof(double));
+			double* StAll = (double*)malloc(ncombs * chunkSize * nprocs * sizeof(double));
+			double* StTmp = (double*)malloc(ncombs * chunkSize * sizeof(double));
+			// for each QoI
+			//std::cout<<"Just testing this location 3 \n";
+			for (int nq = 0; nq < chunkSize ; nq++) {
+				int id = chunkSize * procno + nq;
+				if (id >= nqoi) { // dummy
+					for (int i = 0; i < ncombs; i++) {
+						StTmp[nq * ncombs + i] = 0.;
+						SmTmp[nq * ncombs + i] = 0.;
+					}
+					continue;
+				}
 
-                vector<double> gvec;
-                double sqDiff = 0;
-                gvec.reserve(nmc);
-                for (int i = 0; i < nmc; i++) {
-                    gvec.push_back(gmat_red[i][id]);
-                }
+				vector<double> gvec;
+				double sqDiff = 0;
+				gvec.reserve(nmc);
+				for (int i = 0; i < nmc; i++) {
+					gvec.push_back(gmat_red[i][id]);
+				}
 
-                // check if the variance is zero
-                double mean = 0;
-                for (int i = 0; i < nmc; i++)
-                    mean += gvec[i];
+				// check if the variance is zero
+				double mean = 0;
+				for (int i = 0; i < nmc; i++)
+					mean += gvec[i];
 
-                mean = mean / double(nmc);
-                for (int i = 0; i < nmc; i++)
-                    sqDiff += (gmat_red[i][id] - mean) * (gmat_red[i][id] - mean);
+				mean = mean / double(nmc);
+				for (int i = 0; i < nmc; i++)
+					sqDiff += (gmat_red[i][id] - mean) * (gmat_red[i][id] - mean);
 
-                //double var = sqDiff / nmc;
-                if (sqDiff < 1.e-10) {
-                    //theErrorFile << "Error running FEM: the variance of output is zero. Output value is " << mean;
-                    //theErrorFile.close();
-                    //exit(1);
-                    //vector<double> zeros(ncombs, 0.0);
-                    //Simat.push_back(zeros);
-                    //Stmat.push_back(zeros);
-                    //continue;
-                    for (int i = 0; i < ncombs; i++) {
-                        StTmp[nq * ncombs + i] = 0.;
-                        SmTmp[nq * ncombs + i] = 0.;
-                    }
-                    continue;
-                };
+				//double var = sqDiff / nmc;
+				if (sqDiff < 1.e-10) {
+					//theErrorFile << "Error running FEM: the variance of output is zero. Output value is " << mean;
+					//theErrorFile.close();
+					//exit(1);
+					//vector<double> zeros(ncombs, 0.0);
+					//Simat.push_back(zeros);
+					//Stmat.push_back(zeros);
+					//continue;
+					for (int i = 0; i < ncombs; i++) {
+						StTmp[nq * ncombs + i] = 0.;
+						SmTmp[nq * ncombs + i] = 0.;
+					}
+					continue;
+				};
 
 				vector<double> Sij, Stj;
 				vector<vector<double>> Eij, Etj;
 
-                runSingleGSA(gvec, Kos_base_main, 'M', Sij, Eij);
-                runSingleGSA(gvec, Kos_base_total, 'T', Stj, Etj);
+				runSingleGSA(gvec, Kos_base_main, 'M', Sij, Eij);
+				runSingleGSA(gvec, Kos_base_total, 'T', Stj, Etj);
 
-                if (Stj < Sij) {
-                    Stj = Sij;
-                }
+				if (Stj < Sij) {
+					Stj = Sij;
+				}
 
-                for (int i = 0; i < ncombs; i++) {
-                    SmTmp[nq * ncombs + i] = Sij[i];
-                    StTmp[nq * ncombs + i] = Stj[i];
-                }
-                //Simat.push_back(Stj);
-                //Stmat.push_back(Sij);
-            }
-            MPI_Allgather(StTmp, ncombs * chunkSize, MPI_DOUBLE, StAll, ncombs * chunkSize, MPI_DOUBLE, MPI_COMM_WORLD);
-            MPI_Allgather(SmTmp, ncombs * chunkSize, MPI_DOUBLE, SmAll, ncombs * chunkSize, MPI_DOUBLE, MPI_COMM_WORLD);
-            for (int i = 0; i < nqoi; i++) {
-                vector<double> StVectmp(ncombs,0), SmVectmp(ncombs, 0);
-                for (int j = 0; j < ncombs; j++) {
-                    StVectmp[j] = StAll[i * ncombs + j];
-                    SmVectmp[j] = SmAll[i * ncombs + j];
-                }
-                Stmat.push_back(StVectmp);
-                Simat.push_back(SmVectmp);
-            }
+				for (int i = 0; i < ncombs; i++) {
+					SmTmp[nq * ncombs + i] = Sij[i];
+					StTmp[nq * ncombs + i] = Stj[i];
+				}
+				//Simat.push_back(Stj);
+				//Stmat.push_back(Sij);
+			}
+			MPI_Allgather(StTmp, ncombs * chunkSize, MPI_DOUBLE, StAll, ncombs * chunkSize, MPI_DOUBLE, MPI_COMM_WORLD);
+			MPI_Allgather(SmTmp, ncombs * chunkSize, MPI_DOUBLE, SmAll, ncombs * chunkSize, MPI_DOUBLE, MPI_COMM_WORLD);
+			for (int i = 0; i < nqoi; i++) {
+				vector<double> StVectmp(ncombs,0), SmVectmp(ncombs, 0);
+				for (int j = 0; j < ncombs; j++) {
+					StVectmp[j] = StAll[i * ncombs + j];
+					SmVectmp[j] = SmAll[i * ncombs + j];
+				}
+				Stmat.push_back(StVectmp);
+				Simat.push_back(SmVectmp);
+			}
 
-    #else
+	#else
 	*/
 	/*
-        std::cout<<"sensitivity running open MP " << std::endl;
-        for (int j = 0; j < nqoi; j++) {
+		std::cout<<"sensitivity running open MP " << std::endl;
+		for (int j = 0; j < nqoi; j++) {
 
-            vector<double> gvec;
-            double sqDiff = 0;
-            gvec.reserve(nmc);
-            for (int i = 0; i < nmc; i++) {
-                gvec.push_back(gmat_red[i][j]);
-            }
+			vector<double> gvec;
+			double sqDiff = 0;
+			gvec.reserve(nmc);
+			for (int i = 0; i < nmc; i++) {
+				gvec.push_back(gmat_red[i][j]);
+			}
 
-            // check if the variance is zero
-            double mean = 0;
-            for (int i = 0; i < nmc; i++)
-                mean += gvec[i];
+			// check if the variance is zero
+			double mean = 0;
+			for (int i = 0; i < nmc; i++)
+				mean += gvec[i];
 
-            mean = mean / double(nmc);
-            for (int i = 0; i < nmc; i++)
-                sqDiff += (gmat_red[i][j] - mean) * (gmat_red[i][j] - mean);
+			mean = mean / double(nmc);
+			for (int i = 0; i < nmc; i++)
+				sqDiff += (gmat_red[i][j] - mean) * (gmat_red[i][j] - mean);
 
-            //double var = sqDiff / nmc;
-            if (sqDiff < 1.e-10) {
-                vector<double> zeros(ncombs, 0.0);
-                Simat.push_back(zeros);
-                Stmat.push_back(zeros);
-                continue;
-            };
+			//double var = sqDiff / nmc;
+			if (sqDiff < 1.e-10) {
+				vector<double> zeros(ncombs, 0.0);
+				Simat.push_back(zeros);
+				Stmat.push_back(zeros);
+				continue;
+			};
 
-            vector<double> Sij, Stj;
+			vector<double> Sij, Stj;
 			vector<vector<double>> Eij, Etj;
 
-            runSingleGSA(gvec, Kos, 'M', Sij, Eij);
-            runSingleGSA(gvec, Kos, 'T', Stj, Etj);
+			runSingleGSA(gvec, Kos, 'M', Sij, Eij);
+			runSingleGSA(gvec, Kos, 'T', Stj, Etj);
 
-            vector<double> Si_temp, Kos, St_temp;
+			vector<double> Si_temp, Kos, St_temp;
 
-            for (int nc = 0; nc < ncombs; nc++) {
-                if (Stj[nc] < Sij[nc]) {
-                    Stj[nc] = Sij[nc];
-                }
-            }
-            Simat.push_back(Sij);
-            Stmat.push_back(Stj);
-        }
+			for (int nc = 0; nc < ncombs; nc++) {
+				if (Stj[nc] < Sij[nc]) {
+					Stj[nc] = Sij[nc];
+				}
+			}
+			Simat.push_back(Sij);
+			Stmat.push_back(Stj);
+		}
 	*/
 	//std::cout << "sensitivity running open MP " << std::endl;
 
@@ -550,8 +553,8 @@ void runGSA::runMultipleGSA(vector<vector<double>> gmat_red, int Kos)
 			Stmat_T[nq].push_back(Stmat[nc][nq]);
 		}
 	}
-	Simat = Simat_T;    // <--- reassign here
-	Stmat = Stmat_T;    // <--- reassign here
+	Simat = Simat_T;	// <--- reassign here
+	Stmat = Stmat_T;	// <--- reassign here
 	*/
 	//#endif
 
@@ -560,7 +563,7 @@ void runGSA::runMultipleGSA(vector<vector<double>> gmat_red, int Kos)
 void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> comb, vector<double>& Si, char Opt)
 {
 
-    //
+	//
 	// we will ignore NaN in gvec
 	//
 
@@ -580,7 +583,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 				Si.assign(nqoi, { sqrt(-1) }); // enforcing NaN
 				return;
 			}
-		}		
+		}
 	}
 
 	int nqoi_red = gmat[0].size();
@@ -591,7 +594,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 	vector<double> Var_tmp;
 	Si_tmp.reserve(nqoi); // with zeros
 	//Var_tmp.reserve(nqoi); // with zeros
-	
+
 	int	total_qoi_count = 0;
 	int nconst = 0;
 
@@ -600,7 +603,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 		gvec.reserve(nmc);
 		for (int i = 0; i < nmc; i++) {
 			gvec.push_back(gmat[i][nq]);
-//            std::cout<<gmat[i][nq]<<std::endl;
+//			std::cout<<gmat[i][nq]<<std::endl;
 		}
 
 
@@ -608,7 +611,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 		for (int ns = 0; ns < nmc; ns++)
 		{
 			// Only if g is not NaN
-			if (!std::isnan(gvec[ns])) {
+			if (!isNaNSafe(gvec[ns])) {
 				nmc_new++;
 			}
 		}
@@ -618,7 +621,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 
 		const int endm = comb.size(); // (nx+ng)-1
 		const int endx = endm - 1;			// (nx)-1
-        //no need for gsa
+		//no need for gsa
 		if (endm == 0)
 		{
 			if (Opt == 'T')
@@ -630,9 +633,9 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 				Si.push_back(0.);   // main
 			}
 			if (!performPCA){
-			  printf("    GSA nq=%i, Si=%.2f, K=%i \n", nq + 1, Si[nq], Kos);
-			} else { 
-			  printf("    GSA PCA %i, Si=%.2f, K=%i \n", nq + 1, Si[nq], Kos);
+				printf("	GSA nq=%i, Si=%.2f, K=%i \n", nq + 1, Si[nq], Kos);
+			} else {
+				printf("	GSA PCA %i, Si=%.2f, K=%i \n", nq + 1, Si[nq], Kos);
 			}
 			continue;
 		}
@@ -648,10 +651,10 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 				Si.push_back(1.);   // main
 			}
 			if (!performPCA) {
-				printf("    GSA nq=%i, Si=%.2f, K=%i \n", nq + 1, Si[nq], Kos);
+				printf("	GSA nq=%i, Si=%.2f, K=%i \n", nq + 1, Si[nq], Kos);
 			}
 			else {
-				printf("    GSA PCA %i, Si=%.2f, K=%i \n", nq + 1, Si[nq], Kos);
+				printf("	GSA PCA %i, Si=%.2f, K=%i \n", nq + 1, Si[nq], Kos);
 			}
 			continue;
 		}
@@ -662,7 +665,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 		for (int ns = 0; ns < nmc; ns++)
 		{
 			// Only if g is not NaN
-			if (!std::isnan(gvec[ns])) {
+			if (!isNaNSafe(gvec[ns])) {
 				data(endm, count_valid) = gvec[ns];
 				count_valid++;
 			}
@@ -672,16 +675,16 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 		{
 			int idx = comb[ne];
 
-  			if (idx > nrv - 1) {
+			if (idx > nrv - 1) {
 				std::string errMsg = "Error running UQ engine: combination index exceeds the bound";
 				theErrorFile.write(errMsg);
 			}
 			count_valid = 0;
 			for (int ns = 0; ns < nmc; ns++)
 			{
-                //std::cout << gvec[ns] << std::endl;
+				//std::cout << gvec[ns] << std::endl;
 				// Only if g is not NaN
-				if (!std::isnan(gvec[ns])) {
+				if (!isNaNSafe(gvec[ns])) {
 					data(ne, count_valid) = xval[ns][idx];
 					count_valid++;
 				}
@@ -707,16 +710,16 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 		while (1) {
 
 
-            try
-            {
-                status = model.learn(data, Kos, maha_dist, static_subset, 1000, 1000, V * 1.e-12, false);// max kmeans iter = 100, max EM iter = 200, convergence variance = V*1.e-15
-                logL = model.sum_log_p(data);
-            }
-            catch (std::exception& e)
-            {
-                std::string errMsg = "GSA engine failed to fit a Gaussian Mixture model. Check if your input and output random variables are continuous. If so, a larger number of samples is desired.";
-                theErrorFile.write(errMsg);
-            }
+			try
+			{
+				status = model.learn(data, Kos, maha_dist, static_subset, 1000, 1000, V * 1.e-12, false);// max kmeans iter = 100, max EM iter = 200, convergence variance = V*1.e-15
+				logL = model.sum_log_p(data);
+			}
+			catch (std::exception& e)
+			{
+				std::string errMsg = "GSA engine failed to fit a Gaussian Mixture model. Check if your input and output random variables are continuous. If so, a larger number of samples is desired.";
+				theErrorFile.write(errMsg);
+			}
 
 			if ((logL < oldLogL) || (Kos >= Kthres)) {
 				break;
@@ -729,10 +732,10 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 		}
 
 		if (!performPCA) {
-			printf("    GSA nq=%i, K=%i \n", nq + 1, Kos);
+			printf("	GSA nq=%i, K=%i \n", nq + 1, Kos);
 		}
 		else {
-			printf("    GSA PCA %i, K=%i \n", nq + 1, Kos);
+			printf("	GSA PCA %i, K=%i \n", nq + 1, Kos);
 		}
 
 		if (status == false)
@@ -749,8 +752,8 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 
 		mat mu = model.means;   //nrv x Ko
 		cube cov = model.fcovs; //nrv x nrv x Ko
-		rowvec pi = model.hefts;   //1 x Ko 
-		rowvec mug = mu.row(endm);    //1 x Ko
+		rowvec pi = model.hefts;   //1 x Ko
+		rowvec mug = mu.row(endm);	//1 x Ko
 
 		vector<double> mui;
 		mui.reserve(nmc_new);
@@ -832,7 +835,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 		else {
 			Ei.push_back(mui);
 		}
-				
+
 	}
 
 	if (performPCA) {
@@ -871,14 +874,14 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 			if (nqoi!=nqoi_eff) {
 				while (constantQoiIdx[nconst]==total_qoi_count)
 				{
-				if (Opt == 'T') {
-					Si_tmp.push_back(1.0);
-				} else if (Opt == 'M') {
-					Si_tmp.push_back(0.0);
-				}
-				Var_tmp.push_back(0.0);
-				total_qoi_count++;
-				nconst++;
+					if (Opt == 'T') {
+						Si_tmp.push_back(1.0);
+					} else if (Opt == 'M') {
+						Si_tmp.push_back(0.0);
+					}
+					Var_tmp.push_back(0.0);
+					total_qoi_count++;
+					nconst++;
 				}
 			}
 			rowvec aa = princ_dir_red.row(nq);
@@ -887,9 +890,9 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 			double V = sum(aa % trans(lambs_red) % aa);
 			//double V = 0.1;
 			Si_tmp.push_back(Vi / V);
-            //std::cout<<"flag==========================="<<std::endl;
-            //std::cout<<Vi<<std::endl;
-            //std::cout<<V<<std::endl;
+			//std::cout<<"flag==========================="<<std::endl;
+			//std::cout<<Vi<<std::endl;
+			//std::cout<<V<<std::endl;
 			Var_tmp.push_back(V);
 			total_qoi_count++;
 		}
@@ -919,12 +922,12 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 	{
 		std::for_each(Si_tmp.begin(), Si_tmp.end(), [](double& S) { S = 1.0 - S; });
 	}
-	Si= Si_tmp;   
+	Si= Si_tmp;
 	//varQoI = Var_tmp;
 
 	for (int nq = 0; nq < nqoi_eff; nq++) {
 		//printf("GSA nq=%i, Si=%.2f, %c \n", nq + 1, Si[nq], Opt);
-	  if (std::isinf(Si[nq]) || std::isnan(Si[nq]))
+		if (std::isinf(Si[nq]) || std::isnan(Si[nq]))
 		{
 			Si[nq] = -100;
 		}
@@ -936,18 +939,18 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 
 void runGSA::runSingleGSA(vector<double> gvec,int Ko,char Opt, vector<double>& Si, vector<vector<double>>& Ei)
 {
-    //
-    // we will ignore NaN in gvec
-    //
+	//
+	// we will ignore NaN in gvec
+	//
 
-    int nmc_new = 0;
-    for (int ns = 0; ns < nmc; ns++)
-    {
-        // Only if g is not NaN
-        if (!std::isnan(gvec[ns])) {
-            nmc_new++;
-        }
-    }
+	int nmc_new = 0;
+	for (int ns = 0; ns < nmc; ns++)
+	{
+		// Only if g is not NaN
+		if (!std::isnan(gvec[ns])) {
+			nmc_new++;
+		}
+	}
 
 	vector<vector<int>> combs;
 
@@ -1010,15 +1013,15 @@ void runGSA::runSingleGSA(vector<double> gvec,int Ko,char Opt, vector<double>& S
 		mat data(endm + 1, nmc_new);
 
 
-        int count_valid = 0;
-        for (int ns = 0; ns < nmc; ns++)
-        {
-            // Only if g is not NaN
-            if (!std::isnan(gvec[ns])) {
-                data(endm, count_valid) = gvec[ns];
-                count_valid++;
-            }
-        }
+		int count_valid = 0;
+		for (int ns = 0; ns < nmc; ns++)
+		{
+			// Only if g is not NaN
+			if (!std::isnan(gvec[ns])) {
+				data(endm, count_valid) = gvec[ns];
+				count_valid++;
+			}
+		}
 
 		for (int ne = 0; ne < endm; ne++)
 		{
@@ -1028,16 +1031,16 @@ void runGSA::runSingleGSA(vector<double> gvec,int Ko,char Opt, vector<double>& S
 				std::string errMsg = "Error running UQ engine: combination index exceeds the bound";
 				theErrorFile.write(errMsg);
 			}
-            count_valid = 0;
+			count_valid = 0;
 			for (int ns = 0; ns < nmc; ns++)
 			{
-                // Only if g is not NaN
-                if (!std::isnan(gvec[ns])) {
-                    data(ne, count_valid) = xval[ns][idx];
-                    count_valid++;
-                }
+				// Only if g is not NaN
+				if (!std::isnan(gvec[ns])) {
+					data(ne, count_valid) = xval[ns][idx];
+					count_valid++;
+				}
 			}
-        }
+		}
 
 		gmm_full model;
 		//bool status = model.learn(data, Kos, maha_dist, static_subset, 30, 100, V *1.e-3, false);
@@ -1084,8 +1087,8 @@ void runGSA::runSingleGSA(vector<double> gvec,int Ko,char Opt, vector<double>& S
 
 		mat mu = model.means;   //nrv x Ko
 		cube cov = model.fcovs; //nrv x nrv x Ko
-		rowvec pi = model.hefts;   //1 x Ko 
-		rowvec mug = mu.row(endm);    //1 x Ko
+		rowvec pi = model.hefts;   //1 x Ko
+		rowvec mug = mu.row(endm);	//1 x Ko
 
 		vector<double> mui;
 		mui.reserve(nmc_new);
@@ -1157,32 +1160,45 @@ void runGSA::runSingleGSA(vector<double> gvec,int Ko,char Opt, vector<double>& S
 
 void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_red, mat& princ_dir_red) {
 
-    mat U_matrix;
-    vec svec;
-    mat V_matrix;
+	mat U_matrix;
+	vec svec;
+	mat V_matrix;
 
-    int n = gmat.size();
+	int n = gmat.size();
 	int p = nqoi_eff;
+	// PCA (SVD/eig) needs complete rows: use only samples with no NaN in any non-constant QoI
+	vector<int> validRows;
+	bool partialRows = false; // a left-out sample that still had some valid QoIs
+	for (int nr = 0; nr < n; nr++) {
+		int nNaN = 0;
+		for (int nqe : nonConstantQoiIdx) if (isNaNSafe(gmat[nr][nqe])) nNaN++;
+		if (nNaN == 0) validRows.push_back(nr);
+		else if (nNaN < (int)nonConstantQoiIdx.size()) partialRows = true;
+	}
+	const int nAll = n;
+	n = (int)validRows.size();
+	if (n == 0) { std::string errMsg = "Error running UQ engine: PCA needs at least one sample without NaN outputs."; theErrorFile.write(errMsg); }
 
-    mat gmat_matrix(n, p);
+	mat gmat_matrix(n, p);
 
 	arma::uvec idx(nonConstantQoiIdx.size());
 	for (int nqe = 0; nqe < nonConstantQoiIdx.size(); nqe++) {
 		idx(nqe) = nonConstantQoiIdx[nqe];
 	}
 
-    for (int nr = 0; nr < n; nr++)
-    {
-		arma::vec r(gmat[nr]);
+	for (int nr = 0; nr < n; nr++)
+	{
+		arma::vec r(gmat[validRows[nr]]);
 		gmat_matrix.row(nr) = r.elem(idx).t();
-    }
+	}
+	if (partialRows) gmat_matrix.each_row() -= arma::mean(gmat_matrix, 0); // re-center only if partly-NaN samples were left out
 
 	//
 	// run SVD
 	//
 	auto readStart = std::chrono::high_resolution_clock::now();
 	auto readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
-	
+
 	if (n>p) {
 		//
 		// run SVD - took 386 s
@@ -1224,7 +1240,9 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
 		//std::cout << "lambda is " << Lvece << std::endl;
 		svec = sqrt(reverse(Lvece)); // because eigenvalues are ascending order
 		U_matrix = fliplr((U_matrix)); // because eigenvalues are ascending order
-		svec.replace(datum::nan, min(svec));
+		double minValid = 0.0; bool haveValid = false; // = svec.replace(datum::nan, min(svec)), without relying on NaN comparisons
+		for (arma::uword k = 0; k < svec.n_elem; k++) if (!isNaNSafe(svec(k)) && (!haveValid || svec(k) < minValid)) { minValid = svec(k); haveValid = true; }
+		for (arma::uword k = 0; k < svec.n_elem; k++) if (isNaNSafe(svec(k))) svec(k) = minValid;
 
 		mat invSmat = arma::diagmat(1 / svec);
 		//V_matrix2 = (invSmat * U_matrix2.t() * gmat_matrix).t();
@@ -1242,7 +1260,7 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
 		std::cout << V_matrix.n_cols << std::endl;// 500
 		std::cout << V_matrix.n_rows << std::endl;// 1558663
 
-		
+
 		mat tmp = U_matrix * arma::diagmat(svec) * V_matrix.t();
 
 		std::cout << "G " << std::endl;
@@ -1260,8 +1278,8 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
 
 	for (int i = 0; i < 10; i++) {
 			std::cout << svec(i) << " " << svec2(i) << std::endl;
-	}	
-	
+	}
+
 	std::cout << "U " << std::endl;
 
 	for (int i = 0; i < 10; i++) {
@@ -1313,7 +1331,7 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
 
 	for (int nr = 0; nr < n; nr++)
 	{
-		
+
 		for (int nc = 0; nc < p; nc++)
 		{
 			gmat_matrix2(nr, nc) = gmat_matrix(nr,nc);
@@ -1330,7 +1348,7 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
 
 	mat princ_dir, princ_comp;
 	int neigen = std::min(n,p);
-	princ_dir = V_matrix;       // projection matrix
+	princ_dir = V_matrix;	   // projection matrix
 //princ_comp = U_matrix.cols(0, p - 1) * arma::diagmat(svec); // reduced variables
 	princ_comp = U_matrix * arma::diagmat(svec);;
 
@@ -1339,9 +1357,10 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
 	vec lamb = pow(svec, 2);
 	double totVar = sum(lamb);
 
+	npc = neigen;
 	for (int i = 0; i < neigen; i++) {
 		sum_var = sum_var + lamb[i] / totVar;
-		if (sum_var > PCAvarRatioThres) {
+		if (sum_var >= PCAvarRatioThres) {
 			npc = i+1;
 			PCAvarRatio = sum_var;
 			break;
@@ -1351,12 +1370,14 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
 	std::cout << " - Number of the final PC components are " << npc << " to capture " << PCAvarRatioThres*100 << "% of variance" << std::endl;
 
 	princ_dir_red = princ_dir.cols(0, npc - 1); // projection matrix
-	mat princ_comp_red = princ_comp.cols(0, npc - 1);           // reduced variables
+	mat princ_comp_red = princ_comp.cols(0, npc - 1);		   // reduced variables
 
+	double nanVal; const std::uint64_t nanBits = 0x7FF8000000000000ULL; std::memcpy(&nanVal, &nanBits, sizeof nanVal);
+	gmat_red.assign(nAll, vector<double>(npc, nanVal)); // samples left out of the PCA stay NaN, so the GSA skips them
 	for (size_t i = 0; i < princ_comp_red.n_rows; ++i) {
-		gmat_red.push_back(arma::conv_to< vector<double> >::from(princ_comp_red.row(i)));
+		gmat_red[validRows[i]] = arma::conv_to< vector<double> >::from(princ_comp_red.row(i));
 	};
-	lambs_red = pow(svec.rows(0, npc - 1), 2) / nmc;
+	lambs_red = pow(svec.rows(0, npc - 1), 2) / n; // n = samples used in the PCA
 	/*
 	//std::cout << "print this first" << std::endl;
 	//std::cout << princ_comp_red* trans(princ_dir_red) << std::endl;
@@ -1378,13 +1399,13 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
 	//std::cout << "singularvalue decomposition" << std::endl;
 	//std::cout << "lambda is " << Lvece << std::endl;
 	//std::cout << "normalized lambda is " << Lvece / sum(trace(C)) << std::endl;
-	
+
 	*/
 }
 
-double runGSA::mvnPdf(mat x, mat mu, mat cov) 
+double runGSA::mvnPdf(mat x, mat mu, mat cov)
 {
-	
+
 	double n = size(x)(1);
 	double sqrt2pi = std::sqrt(2 * PI);
 	mat xmu = x - mu;
@@ -1395,22 +1416,11 @@ double runGSA::mvnPdf(mat x, mat mu, mat cov)
 	return norm * std::exp(-0.5 * quadform(0,0));
 }
 
-// double runGSA::calMean(vector<double> x) {
-// 	double sum = std::accumulate(std::begin(x), std::end(x), 0.0);
-// 	return sum / x.size();
-
-// }
-
 double runGSA::calMean(vector<double> x) {
-    double sum = 0.0;
-    int count = 0;
-    for (const double d : x) {
-        if (!std::isnan(d)) {
-            sum += d;
-            count++;
-        }
-    }
-    return (count > 0) ? sum / count : 0.0;
+	double sum = 0.0; int count = 0;
+	for (const double d : x) if (!isNaNSafe(d)) { sum += d; count++; }
+	return (count > 0) ? sum / count : 0.0;
+
 }
 
 runGSA::~runGSA() {};
@@ -1418,13 +1428,13 @@ runGSA::~runGSA() {};
 double runGSA::calVar(vector<double> x) {
 	double m = calMean(x);
 	double accum = 0.0;
-    int count = 0;
+	int count = 0;
 	std::for_each(std::begin(x), std::end(x), [&](const double d) {
-            if (!std::isnan(d)) {
-		        accum += (d - m) * (d - m);
-                count++;
-            }
-		});
+		if (!isNaNSafe(d)) {
+			accum += (d - m) * (d - m);
+			count++;
+		}
+	});
 	//std::cout << (accum / (x.size())) << std::endl;
 	return (accum / count);
 }
@@ -1463,26 +1473,26 @@ void runGSA::writeTabOutputs(jsonInput inp, int procno)
 		Taboutfile.setf(std::ios::fixed, std::ios::floatfield); // set fixed floating format
 		Taboutfile.precision(10); // for fixed format
 
-		Taboutfile << "idx         ";
+		Taboutfile << "idx		 ";
 		for (int j = 0; j < inp.nrv + inp.nco + inp.nre; j++) {
-			Taboutfile << inp.rvNames[j] << "           ";
+			Taboutfile << inp.rvNames[j] << "		   ";
 		}
 		for (int j = 0; j < inp.nqoi; j++) {
-			Taboutfile << inp.qoiNames[j] << "            ";
+			Taboutfile << inp.qoiNames[j] << "			";
 		}
 		Taboutfile << std::endl;
 
 
 		for (int i = 0; i < inp.nmc; i++) {
-			Taboutfile << std::to_string(i + 1) << "    ";
+			Taboutfile << std::to_string(i + 1) << "	";
 			for (int j = 0; j < inp.nrv + inp.nco + inp.nre; j++) {
-				Taboutfile << std::to_string(xval[i][j]) << "    ";
+				Taboutfile << std::to_string(xval[i][j]) << "	";
 			}
 			for (int j = 0; j < inp.nqoi; j++) {
-				Taboutfile << std::to_string(gmat[i][j]) << "    ";
+				Taboutfile << std::to_string(gmat[i][j]) << "	";
 			}
 			Taboutfile << std::endl;
-		} 
+		}
 	}
 }
 */
@@ -1559,7 +1569,7 @@ void runGSA::writeOutputs(jsonInput inp, double dur, int procno)
 			outfile << inp.rvNames[inp.groups[j][inp.groups[j].size() - 1]] << ") ";
 		}
 		outfile << std::endl;
-		
+
 		for (int i = 0; i < inp.nqoiVects; i++) {
 			for (int j = 0; j < inp.ngr; j++) {
 				outfile << Simatagg[j][i] << " ";
