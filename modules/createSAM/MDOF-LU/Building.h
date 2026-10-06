@@ -27,10 +27,10 @@ public:
 
     Building();    
 
-    void readBIM(const char *fileEVENT, const char *fileBIM);
-    void readBIM(const char *fileEVENT, const char *fileBIM, const char *fileSAM);
-    void writeSAM(const char *path);
-    void writeRV(const char *path, double stdStiffness, double stdDamping);
+  void readBIM(const char *fileEVENT, const char *fileBIM, int sample);
+  void readBIM(const char *fileEVENT, const char *fileBIM, const char *fileSAM, int sample);
+  void writeSAM(const char *path);
+  void writeRV(const char *path, double stdStiffness, double stdDamping);
 
     string GetHazusType();    
     static StruType s2StruType(string s);

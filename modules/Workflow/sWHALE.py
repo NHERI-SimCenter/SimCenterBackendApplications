@@ -105,19 +105,28 @@ def runSWhale(  # noqa: N802, D103
         WF.init_simdir(assetID, assetAIM)
 
         # prepare the input files for the simulation
+        #print('****Wf.process_inputs****')                        
         WF.preprocess_inputs(prep_app_sequence, assetAIM, assetID, asset_type)
 
         # create the workflow driver file
+        #print('****Wf.create_driver_file****')                                
         WF.create_driver_file(WF_app_sequence, assetID, assetAIM)
 
-        # gather all Randomvariables and EDP's and place in new input file for UQ
-        WF.gather_workflow_inputs(assetID, assetAIM)
+        # gather all Randomvariables and EDP's and place in new input file for UQ .. creates sc_driver
+        #print('****Wf.gather_workflow_inputs****')                
+        WF.gather_workflow_inputs(
+            assetID, assetAIM, copy_resources=copy_resources
+        )
+        
         # run uq engine to simulate response
+        #print('****Wf.simulate_response****')        
         WF.simulate_response(AIM_file_path=assetAIM, asst_id=assetID)
 
     if WF.run_type != 'set_up':
         # run dl engine to estimate losses
         # Use the templatedir/AIM.json for pelicun
+
+        #print('****Wf.estimate_losses****')
         WF.estimate_losses(
             AIM_file_path=assetAIM,
             asst_id=assetID,

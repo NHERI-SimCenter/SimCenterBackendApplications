@@ -11,6 +11,20 @@
 #include "whereami.h"
 #include <jansson.h>
 
+#include <filesystem>
+#include <string>
+#include <stdexcept>
+
+// returns the integer X from a current working directory named workdir.X
+int getWorkdirNumber()
+{
+  std::string dirname = std::filesystem::current_path().filename().string();
+  const std::string prefix = "workdir.";
+  if (dirname.rfind(prefix, 0) != 0) {
+    return 0;
+  }
+  return std::stoi(dirname.substr(prefix.size()));
+}
 
 int main(int argc, char **argv)
 {
@@ -75,7 +89,24 @@ int main(int argc, char **argv)
   json_error_t error;
   json_t *rootBIM = json_load_file(filenameAIM, 0, &error);  
   json_t *modType = json_object_get(rootBIM,"Modeling");
+  json_t *uqType = json_object_get(rootBIM,"UQ");  
   json_t *constPath = json_object_get(rootBIM,"commonFileDir");
+
+  
+  // currentWorld in case multiple
+  int currWorld = 1;
+  int workdirNum = getWorkdirNumber();
+  
+  json_t *uqData = json_object_get(uqType,"samplingMethodData");
+  if (uqData != NULL) {
+    json_t *numSamples = json_object_get(uqData,"samples");
+    if (numSamples != NULL) {
+      int number = json_number_value(numSamples);
+      currWorld = workdirNum % number;
+    }
+  }
+
+  // std::cerr << "MDOF_LU  : " << currWorld << "\n";
   
   if (modType != NULL) {
     json_t *hType = json_object_get(modType,"hazusData");
@@ -108,12 +139,13 @@ int main(int argc, char **argv)
   
   HazusSAM_Generator* aim = new HazusSAM_Generator(filenameHazusData);
   Building *theBuilding = new Building();
+
   
   if(getRV == true) {
-    theBuilding->readBIM(filenameEVENT, filenameAIM);
+    theBuilding->readBIM(filenameEVENT, filenameAIM, 0);
     theBuilding->writeRV(filenameSAM, stdStiffness, stdDamping);
   } else {
-    theBuilding->readBIM(filenameEVENT, filenameAIM, filenameSAM);
+    theBuilding->readBIM(filenameEVENT, filenameAIM, filenameSAM, currWorld);
     aim->CalcBldgPara(theBuilding);
     theBuilding->writeSAM(filenameSAM);
   }
