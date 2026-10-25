@@ -167,7 +167,7 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
             else:
                 event_type = 'intensityMeasure'
 
-            event_count = first_file.shape[0]  # noqa: F841
+            event_count = first_file.shape[0]
 
             # collect the list of events and scale factors
             event_list = []
@@ -176,7 +176,7 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
             closestPnt = grid_df.iloc[closest[idx]]  # noqa: N806
 
             # if the grid has ground motion records...
-            if event_type == 'timeHistory':
+            if event_type == 'timeHistory' and event_count == 1:
                 # load the file for the selected grid point
                 event_collection_file = closestPnt['GP_file']
 
@@ -204,7 +204,7 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
                                 scale_list.append(1.0)
 
             # if the grid has intensity measures
-            elif event_type == 'intensityMeasure':
+            else:
                 # save the collection file name and the IM row id
                 event_list.append(closestPnt['GP_file'] + f'x{0}')
 

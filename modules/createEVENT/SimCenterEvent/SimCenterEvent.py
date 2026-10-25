@@ -40,7 +40,9 @@
 import argparse
 import json
 import os
+import re
 import sys
+import csv
 from pathlib import Path
 
 import numpy as np
@@ -54,10 +56,23 @@ sys.path.insert(0, str(main_dir / 'common'))
 from simcenter_common import get_scale_factors, get_unit_bases  # noqa: E402
 
 
+def get_current_sample_index():  # noqa: D103
+    # dakota (and other UQ drivers) run each sample evaluation inside a
+    # directory named 'workdir.<sample number>' (1-based). Recover that
+    # sample number from the current working directory so we can pick a
+    # matching record out of a "site file" csv.
+    match = re.search(r'workdir\.(\d+)', os.getcwd())
+    if match:
+        return int(match.group(1))
+    return None
+
+
 def write_RV(AIM_file, EVENT_file):  # noqa: N802, N803, D103
     # load the AIM file to get information about the assigned events
     with open(AIM_file, encoding='utf-8') as f:  # noqa: PTH123
         aim_file = json.load(f)
+
+    samples = aim_file.get('UQ', {}).get('samplingMethodData', {}).get('samples', None)
 
     input_units = None
     if 'RegionalEvent' in aim_file.keys():  # noqa: SIM118
@@ -149,7 +164,9 @@ def write_RV(AIM_file, EVENT_file):  # noqa: N802, N803, D103
 
     if aim_event_input['type'] == 'timeHistory':
         event_file['Events'][0].update(
-            load_record(events[0][0], data_dir, empty=len(events) > 1)
+            load_record(
+                events[0][0], data_dir, samples=samples, empty=len(events) > 1
+            )
         )
         # , event_class = event_class))
 
@@ -164,6 +181,7 @@ def load_record(  # noqa: D103
     f_scale_user=1.0,
     f_scale_units={'ALL': 1.0},  # noqa: B006
     empty=False,  # noqa: FBT002
+    samples=None,
 ):
     # event_class=None):
 
@@ -173,6 +191,35 @@ def load_record(  # noqa: D103
     # extract the file name (the part after "x" is only for bookkeeping)
     file_name = file_name.split('x')[0]
 
+    #
+    # if file is a .csv file, then we have to open the "site file" and set file_name
+    # to be one given by the global random variable for this sample
+    #
+
+    if file_name.endswith('.csv'):
+        with open(data_dir / file_name, encoding='utf-8') as f:
+            reader = csv.reader(f)
+            next(reader)  # skip the header row (TH_file,factor)
+
+            motion_file = []
+            scale_factor = []
+            for row in reader:
+                motion_file.append(row[0])
+                scale_factor.append(float(row[1]) if len(row) > 1 else 1.0)
+
+            
+        # select record based on GlobalRV
+        # each sample runs in a 'workdir.<x>' directory (1-based); pick the
+        # record for this sample by wrapping x around the number of samples
+        record_to_select = 0
+        sample_index = get_current_sample_index()
+        if sample_index is not None and samples:
+            record_to_select = sample_index % samples
+                
+        file_name = motion_file[record_to_select]
+                
+        f_scale_user = f_scale_user * scale_factor[record_to_select]
+    
     # open the input event data file
     # (SimCenter json format is assumed here)
     with open(data_dir / f'{file_name}.json', encoding='utf-8') as f:  # noqa: PTH123
@@ -269,7 +316,7 @@ def get_records(AIM_file, EVENT_file):  # noqa: N803
 
     event_data = np.array(AIM_file['Events'][0]['Events']).T
     event_loc = np.where(event_data == event_id)[1][0]
-    f_scale_user = event_data.T[event_loc][1]
+    f_scale_user = float(event_data.T[event_loc][1])
 
     # f_scale_user = dict([(evt['fileName'], evt.get('factor', 1.0))
     #                     for evt in AIM_file["Events"]["Events"]])[event_id]
@@ -277,9 +324,11 @@ def get_records(AIM_file, EVENT_file):  # noqa: N803
     # get the location of the event data
     data_dir = Path(AIM_file['Events'][0]['EventFolderPath'])
 
+    samples = AIM_file.get('UQ', {}).get('samplingMethodData', {}).get('samples', None)
+
     # load the event data and scale it
     event_file['Events'][0].update(
-        load_record(event_id, data_dir, f_scale_user, f_scale_units)
+        load_record(event_id, data_dir, f_scale_user, f_scale_units, samples=samples)
     )  # , event_class = event_class))
 
     # save the updated EVENT file

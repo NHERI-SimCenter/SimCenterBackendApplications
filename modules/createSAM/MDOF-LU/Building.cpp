@@ -1,8 +1,56 @@
 #include "Building.h"
 #include <jansson.h> // for Json
 #include <cstring>
+#include <cstdlib>
 #include <iostream>
 #include "common/Units.h"
+
+// helpers to read GI values that may be a single value or a list of values
+// (one per sample); if a list, sample is used as index (wrapping if list is shorter)
+
+static json_t *
+getSampleValue(json_t *obj, int sample)
+{
+  if (obj == NULL || !json_is_array(obj))
+    return obj;
+  size_t size = json_array_size(obj);
+  if (size == 0)
+    return NULL;
+  if (sample < 0)
+    sample = 0;
+  return json_array_get(obj, sample % size);
+}
+
+static int
+getInt(json_t *obj, int sample)
+{
+  json_t *val = getSampleValue(obj, sample);
+  if (json_is_integer(val))
+    return json_integer_value(val);
+  if (json_is_real(val))
+    return (int)json_real_value(val);
+  if (json_is_string(val))
+    return atoi(json_string_value(val));
+  return 0;
+}
+
+static double
+getFloat(json_t *obj, int sample)
+{
+  json_t *val = getSampleValue(obj, sample);
+  if (json_is_number(val))
+    return json_number_value(val);
+  if (json_is_string(val))
+    return atof(json_string_value(val));
+  return 0.0;
+}
+
+static const char *
+getString(json_t *obj, int sample)
+{
+  json_t *val = getSampleValue(obj, sample);
+  return json_string_value(val); // NULL if not a string
+}
 
 Building::Building()
   :kFactor(1.0), dampFactor(1.0)
@@ -107,7 +155,7 @@ Building::SeismicZone Building::s2SeismicZone(string s)
 // readBIM for writeRV
 
 void
-Building::readBIM(const char *event, const char *bim)
+Building::readBIM(const char *event, const char *bim, int sample)
 {
   //Parse BIM Json input file
   json_error_t error;
@@ -117,8 +165,8 @@ Building::readBIM(const char *event, const char *bim)
   json_t *nType = json_object_get(GI,"NumberOfStories");
   if (nType == NULL)
     nType = json_object_get(GI,"stories");
-  
-  nStory=json_integer_value(nType);
+
+  nStory=getInt(nType, sample);
 
   double unitConversionFactorLength = 1.0;  
   json_t* bimUnitsJson = json_object_get(GI, "units");
@@ -130,15 +178,16 @@ Building::readBIM(const char *event, const char *bim)
     myUnits.lengthUnit = Units::ParseLengthUnit("m");
     unitConversionFactorLength = Units::GetLengthFactor(bimUnits, myUnits);    
   }
+
   json_t *hType = json_object_get(GI,"height");
   if (hType == NULL) {
     storyheight=3.6; // meters, I assume it uses standard units
   } else {
-    storyheight=json_number_value(hType)/(nStory*1.);
+    storyheight=getFloat(hType, sample)/(nStory*1.);
     storyheight *= unitConversionFactorLength;    
   }
   
-  std::cerr << "Story height: " << storyheight << " " << nStory << "\n";
+  //  std::cerr << "Story height: " << storyheight << " " << nStory << "\n";
   
   ndf = 6;
 
@@ -151,7 +200,7 @@ Building::readBIM(const char *event, const char *bim)
 //
 
 void
-Building::readBIM(const char *event, const char *bim, const char *sam)
+Building::readBIM(const char *event, const char *bim, const char *sam, int sample)
 {
   //Parse BIM Json input file
   json_error_t error;
@@ -163,9 +212,12 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
   json_t *nType = json_object_get(GI,"NumberOfStories");
   if (nType == NULL)
     nType = json_object_get(GI,"stories");
-  nStory=json_integer_value(nType);  
-  area=json_number_value(aType);
 
+
+  nStory=getInt(nType, sample);  
+  area=getFloat(aType, sample);
+
+  // std::cerr << "Building::readBIM numStory: " << nStory << " sample: " << sample;  
 
   double unitConversionFactorLength = 1.0;  
   json_t* bimUnitsJson = json_object_get(GI, "units");
@@ -182,11 +234,11 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
   if (hType == NULL) {
     storyheight=3.6; // meters, I assume it uses standard units
   } else {
-    storyheight=json_number_value(hType)/(nStory*1.);
+    storyheight=getFloat(hType, sample)/(nStory*1.);
     storyheight *= unitConversionFactorLength;    
   }
   
-  std::cerr << "Story height: " << storyheight << " " << nStory << "\n";
+  // std::cerr << "Story height: " << storyheight << " " << nStory << "\n";
   
   ndf = 6;
   
@@ -194,7 +246,7 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
   json_t *dRatio = json_object_get(GI,"DampingRatio");
 
   json_t *zType = json_object_get(GI, "seismicZone");
-  const char *type = json_string_value(sType);
+  const char *type = getString(sType, sample);
   string s(type);
   strutype=s2StruType(s);
 
@@ -211,7 +263,7 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
   zone = s2SeismicZone(s1);
   
   json_t *yType = json_object_get(GI,"YearBuilt");
-  year=json_integer_value(yType);
+  year=getInt(yType, sample);
 
 
   if (dRatio == NULL) {
@@ -410,6 +462,9 @@ Building::writeSAM(const char *path)
     json_object_set(units,"temperature", json_string("C"));
     json_object_set(units,"time", json_string("sec"));           
     json_object_set(root, "units", units);
+
+    json_object_set(root,"ndm",json_integer(3));
+    json_object_set(root,"numStory",json_integer(nStory));
     
     // write the file & clean memory
     json_dump_file(root,path,0);

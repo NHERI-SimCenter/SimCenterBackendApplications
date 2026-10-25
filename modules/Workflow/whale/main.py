@@ -63,6 +63,7 @@ import platform
 import posixpath
 import pprint
 import shlex
+import statistics
 import subprocess
 import sys
 import warnings
@@ -2309,10 +2310,17 @@ class Workflow:
                 )
                 log_div()
 
-    def gather_workflow_inputs(self, asst_id=None, AIM_file_path='AIM.json'):  # noqa: N803, D102
+    def gather_workflow_inputs(  # noqa: D102
+        self,
+        asst_id=None,
+        AIM_file_path='AIM.json',  # noqa: N803
+        copy_resources=False,  # noqa: FBT002
+    ):
+        
         log_msg('Gathering Workflow Inputs.', prepend_timestamp=False)
 
         if 'UQ' in self.workflow_apps.keys():  # noqa: SIM118
+            
             # Get the directory to the asset class dir, e.g., buildings
             aimDir = os.path.dirname(AIM_file_path)  # noqa: PTH120, N806
 
@@ -2363,7 +2371,7 @@ class Workflow:
             self.modifiedRun = True  # ADAM to fix
             command = create_command(arg_list)
 
-            # print('FMK- gather command:', command)
+            # print(f'gather command: {command}')
 
             result, returncode = run_command(command, ' Gathering workflow inputs')
 
@@ -2373,6 +2381,82 @@ class Workflow:
                 prepend_timestamp=False,
                 prepend_blank_space=False,
             )
+
+            #
+            # fmk - code to do DL in perform_simulation if Realizations == 1 & just for buildings
+            #    - we need to revise EDP in pathToSCFile for DL (keep old in EDP_SIM)
+            #    - we need to add DL command to driver file
+
+            the_DL_app = self.workflow_apps.get('DL', None)  # noqa: N806
+            if isinstance(the_DL_app, dict):
+                dl_app_dict = {key: vars(app) for key, app in the_DL_app.items()}
+            elif the_DL_app is not None:
+                dl_app_dict = vars(the_DL_app)
+            else:
+                dl_app_dict = None
+            
+            if isinstance(dl_app_dict, dict):
+
+                buildings = dl_app_dict.get('Buildings')
+                pref = buildings.get('pref') if isinstance(buildings, dict) else None
+                realizations = pref.get('Realizations') if isinstance(pref, dict) else None
+                
+                if realizations == 1:
+
+                    #
+                    # rename the 'EDP' field to 'SIM_EDP' in the sc_ input file
+                    # and add new EDP
+                    #
+                    
+                    with open(pathToScFile, 'r') as f:  # noqa: PTH123
+                        sc_data = json.load(f)
+                    if 'EDP' in sc_data:
+                        sc_data['SIM_EDP'] = sc_data.pop('EDP')
+                        
+                    # now add DL EDP
+                    sc_data['EDP'] = [
+                        {'length': 1, 'type': 'scalar', 'name': 'repair_cost'},
+                        {'length': 1, 'type': 'scalar', 'name': 'collapse'},
+                        {'length': 1, 'type': 'scalar', 'name': 'most_likely_critical_damage_state'},
+                        {'length': 1, 'type': 'scalar', 'name': 'irreparable'},
+
+                    ]
+                    with open(pathToScFile, 'w') as f:  # noqa: PTH123
+                        json.dump(sc_data, f, indent=2)
+
+                    #
+                    # the mod driver files need to be modified with new DL command
+                    #
+
+                    # print(self.workflow_apps)
+
+                    dl_app = (
+                        the_DL_app['Buildings']
+                        if isinstance(the_DL_app, dict)
+                        else the_DL_app
+                    )
+                    dl_app.defaults['filenameDL'] = os.path.basename(pathToScFile)  # noqa: PTH119
+                    command_list = dl_app.get_command_list(
+                        app_path=self.app_dir_local
+                    )
+
+                    command_list.append('--dirnameOutput')
+                    command_list.append(".")
+
+                    command_list.append('--run_single')
+                    command_list.append("True")                    
+                    
+                    if copy_resources:
+                        command_list.append('--resource_dir')
+                        command_list.append(self.working_dir)
+                        
+                    command = create_command(command_list)
+
+                    modDriverFile = self.default_values['modDriverFile']  # noqa: N806
+                    # print(f"DL_COMMAND TO ADD {command} to {modDriverFile}")
+                    with open(modDriverFile, 'a', newline='\n', encoding='utf-8') as f:  # noqa: PTH123
+                        f.write(command + '\n')
+
 
             log_msg('Successfully Gathered Inputs.', prepend_timestamp=False)
             log_div()
@@ -2421,7 +2505,6 @@ class Workflow:
             for app_type in app_sequence:
                 workflow_app = self.workflow_apps[app_type]
 
-                # print('FMK runtype', self.run_type)
                 if self.run_type in ['set_up', 'runningRemote', 'parSETUP']:
                     if type(workflow_app) is dict:
                         for itemKey, item in workflow_app.items():  # noqa: B007, N806, PERF102
@@ -2511,6 +2594,8 @@ class Workflow:
         aimDir = os.path.dirname(AIM_file_path)  # noqa: PTH120, N806
         aimFileName = os.path.basename(AIM_file_path)  # noqa: PTH119, N806, F841
 
+        # print(f"aimDir {aimDir}  aimFileName {aimFileName}")
+        
         # If the path is not provided, assume the AIM file is in the run dir
         if os.path.exists(aimDir) == False:  # noqa: PTH110, E712
             aimDir = self.run_dir  # noqa: N806
@@ -2563,6 +2648,8 @@ class Workflow:
 
             command = create_command(command_list)
 
+            # print(f"command: {command}")
+
             log_msg('Simulation command:', prepend_timestamp=False)
             log_msg(
                 f'\n{command}\n',
@@ -2589,7 +2676,6 @@ class Workflow:
                     os.chdir(asst_id)
 
                 try:
-                
                 
                     # Open the file and count the number of lines (rows)
                     with open('dakotaTab.out', 'r') as file:
@@ -2672,9 +2758,10 @@ class Workflow:
         Parameters
         ----------
 
+        # print(f'whale/main.py - asset_type : {asset_type} input_file: {input_file}')
+        
         """  # noqa: D400, D414
         if 'DL' in self.workflow_apps.keys():  # noqa: SIM118
-            log_msg('Running damage and loss assessment')
 
             # Get the directory to the asset class dir, e.g., buildings
             aimDir = os.path.dirname(AIM_file_path)  # noqa: PTH120, N806
@@ -2687,7 +2774,146 @@ class Workflow:
 
             os.chdir(aimDir)
 
+            #
+            # fmk - changes for Realizations == 1
+            #      instead of running pelicun we need to put the results from workdir into standard
+            #      do we only do this for pelicun!!
+            
+            # print(f"assset_type: {asset_type} aimDir: {aimDir} aimFileName: {aimFileName}")
+                
+            the_DL_app = self.workflow_apps.get('DL', None)  # noqa: N806
+            if isinstance(the_DL_app, dict):
+                dl_app_dict = {key: vars(app) for key, app in the_DL_app.items()}
+            elif the_DL_app is not None:
+                dl_app_dict = vars(the_DL_app)
+            else:
+                dl_app_dict = None
+            
+            if isinstance(dl_app_dict, dict):
+
+                # fmk - Buildings for now .. extens to other asset types
+                buildings = dl_app_dict.get('Buildings')
+                pref = buildings.get('pref') if isinstance(buildings, dict) else None
+                realizations = pref.get('Realizations') if isinstance(pref, dict) else None
+                
+                if realizations == 1:
+
+                    #
+                    # need to combine all DL.json files in workdir.X directories into 1 DL.json
+                    # as each DL.json has 'summary', 'summary_stats', and 'damage' sections; the
+                    # 'summary' and 'damage' lists are concatenated across the workdir.X's and
+                    # 'summary_stats' is recomputed from the combined 'summary'.                    
+                    #
+
+                    log_msg('Putting damage and loss assessment results together')
+                    
+                    src = posixpath.join(aimDir, aimFileName)
+                    dst = posixpath.join(aimDir, f'{asst_id}/{aimFileName}')
+
+                    # copy the AIM file from the main dir to the building dir
+                    shutil.copy(src, dst)
+                    
+                    os.chdir(str(asst_id))
+
+                    #
+                    # simple _merge function to merge into existing
+                    # note: as the damage groups may be different! (different numStories for e.g.)
+                    #       have to add new feature found to all previous, throw a None in there
+                    #       instead of 0
+                    
+                    def _merge(combined, new, n_prev):
+                        n_new = max(
+                            (len(v) for v in new.values() if isinstance(v, list)),
+                            default=0,
+                        )
+                        for key, value in new.items():
+                            if not isinstance(value, list):
+                                value = [value]  # noqa: PLW2901
+                            col = combined.setdefault(key, [None] * n_prev)
+                            col.extend(value)
+                            col.extend([None] * (n_new - len(value)))
+                        for key, col in combined.items():
+                            if key not in new:
+                                col.extend([None] * n_new)
+                        return n_prev + n_new
+
+                    #
+                    # combine decision and damage variables
+                    #
+                    
+                    combined_decision = {}
+                    combined_damage = {}
+                    n_dec = 0
+                    n_dmg = 0
+                    i = 1
+                    while os.path.isdir(f'workdir.{i}'):
+                        workdir_results_path = posixpath.join(
+                            f'workdir.{i}', 'DL.json'
+                        )
+                        with open(workdir_results_path) as f:  # noqa: PTH123
+                            workdir_results = json.load(f)
+
+                        n_dec = _merge(
+                            combined_decision,
+                            workdir_results.get('decision_variables', {}),
+                            n_dec,
+                        )
+                        n_dmg = _merge(
+                            combined_damage,
+                            workdir_results.get('damage_measures', {}),
+                            n_dmg,
+                        )
+
+                        i += 1
+
+                    #
+                    # compute summary stats
+                    #
+                    
+                    summary_stats = {}
+                    for item, values in combined_decision.items():
+                        if isinstance(values, list) and all(
+                            isinstance(v, (int, float)) for v in values
+                        ):
+                            summary_stats[f'{item}_mean'] = statistics.mean(values)
+                            summary_stats[f'{item}_stddev'] = statistics.pstdev(
+                                values
+                            )
+
+                    #
+                    # For each realization take the worst damage state over
+                    # all component groups (None/NaN groups are skipped), then
+                    # the most frequent of these (ties averaged) .. per what Jinyan put in
+                    #
+                    
+                    dmg_data = pd.DataFrame(combined_damage)
+                    summary_stats['most_likely_critical_damage_state'] = float(
+                        dmg_data.max(axis=1).mode().mean()
+                    )
+
+                    combined_results = {
+                        'decision_variables': combined_decision,
+                        'summary_stats': summary_stats,
+                        'damage_measures': combined_damage,
+                    }
+
+                    #
+                    # end by writing file
+                    #
+                    
+                    with open('DL.json', 'w') as f:  # noqa: PTH123
+                        json.dump(combined_results, f, indent=2)
+
+                    return
+            
+            log_msg('Running damage and loss assessment')
+
+            os.chdir(aimDir)
+
             if 'Assets' not in self.app_type_list:
+
+                # PBE
+                
                 # Copy the dakota.json file from the templatedir to the run_dir so that
                 # all the required inputs are in one place.
                 input_file = PurePath(input_file).name
@@ -2698,7 +2924,11 @@ class Workflow:
                 )
                 # src = posixpath.join(self.run_dir,'templatedir/{}'.format(input_file)),
                 # dst = posixpath.join(self.run_dir,AIM_file_path))
+                
             else:
+
+                # Regional Workflow
+                
                 src = posixpath.join(aimDir, aimFileName)
                 dst = posixpath.join(aimDir, f'{asst_id}/{aimFileName}')
 
@@ -2766,6 +2996,7 @@ class Workflow:
                             pass
 
             else:
+                
                 if AIM_file_path is not None:
                     workflow_app.defaults['filenameDL'] = AIM_file_path
                     # for input_var in workflow_app.inputs:
@@ -2958,6 +3189,8 @@ class Workflow:
         """  # noqa: D400, D414
         log_msg('Collecting ' + asset_type + ' damage and loss results')
 
+        # print(f"out_types: {out_types}")
+        
         R2D_res_out_types = []  # noqa: N806
         with open(self.input_file) as f:  # noqa: PTH123
             input_data = json.load(f)
@@ -3012,6 +3245,9 @@ class Workflow:
                 elif f'{asset_id}-AIM.json' in os.listdir(asset_dir):
                     AIM_file = asset_dir / f'{asset_id}-AIM.json'  # noqa: N806
 
+                elif f'{asset_id}-AIM_0_ap.json' in os.listdir(asset_dir):
+                    AIM_file = asset_dir / f'{asset_id}-AIM_0_ap.json'  # noqa: N806                    
+
                 else:
                     # skip this asset if there is no AIM file available
                     show_warning(
@@ -3025,6 +3261,14 @@ class Workflow:
                 sample_size = AIM_data_i['Applications']['DL']['ApplicationData'][
                     'Realizations'
                 ]
+
+                # in case Realizations = 1, sample size is number UQ samples
+                if sample_size == 1:
+                    sample_size = (
+                        AIM_data_i.get('UQ', {})
+                        .get('samplingMethodData', {})
+                        .get('samples', sample_size)
+                    )
 
                 # initialize the output dict if this is the first asset
                 if initialize_dicts:
@@ -3127,178 +3371,175 @@ class Workflow:
                             # deter_pointer[asset_id].update({
                             #     "R2Dres":r2d_res_i
                             # })
-                if 'DM' in out_types:
-                    dmg_out_file_i = 'DMG_grp.json'
 
-                    if dmg_out_file_i not in os.listdir(asset_dir):
+                if 'DM' in out_types or 'DV' in out_types:
+                    dl_out_file_i = 'DL.json'
+
+                    if dl_out_file_i not in os.listdir(asset_dir):
                         show_warning(
-                            f"Couldn't find DMG file for {assetTypeHierarchy[-1]} {asset_id}"
+                            f"Couldn't find DL file for {assetTypeHierarchy[-1]} {asset_id}"
                         )
+                        continue
 
-                    else:
-                        with open(asset_dir / dmg_out_file_i, encoding='utf-8') as f:  # noqa: PTH123
-                            dmg_data_i = json.load(f)
+                    with open(asset_dir / dl_out_file_i, encoding='utf-8') as f:  # noqa: PTH123
+                        dl_data_i = json.load(f)                        
 
-                        # remove damage unit info
-                        del dmg_data_i['Units']
+                        if 'DM' in out_types:
+                            dmg_data_i = dl_data_i["damage_measures"]
 
-                        # parse damage data into a DataFrame
-                        dmg_data_i = pd.DataFrame(dmg_data_i)
+                            # remove damage unit info
+                            if 'Units' in dmg_data_i:
+                                del dmg_data_i['Units']
 
-                        # convert to realization-by-realization format
-                        dmg_output = {}
-                        for rlz_i in dmg_data_i.index:
-                            rlz_output = {}
+                            # parse damage data into a DataFrame
+                            dmg_data_i = pd.DataFrame(dmg_data_i)
 
-                            for col in dmg_data_i.columns:
-                                if not pd.isna(dmg_data_i.loc[rlz_i, col]):
-                                    rlz_output.update(
-                                        {col: int(dmg_data_i.loc[rlz_i, col])}
-                                    )
+                            # convert to realization-by-realization format
+                            dmg_output = {}
+                            for rlz_i in dmg_data_i.index:
+                                rlz_output = {}
 
-                            dmg_output.update({rlz_i: rlz_output})
+                                for col in dmg_data_i.columns:
+                                    if not pd.isna(dmg_data_i.loc[rlz_i, col]):
+                                        rlz_output.update(
+                                            {col: int(dmg_data_i.loc[rlz_i, col])}
+                                        )
 
-                        # we assume that damage information is condensed
-                        # TODO: implement condense_ds flag in DL_calc  # noqa: TD002
-                        for rlz_i in range(sample_size):
-                            rlzn_pointer[rlz_i][asset_id].update(
-                                {'Damage': dmg_output[rlz_i]}
-                            )
-                        if 'DM' in R2D_res_out_types:
-                            # use forward fill in case of multiple modes
-                            meanValues = dmg_data_i.mode().ffill().mean()  # noqa: N806, F841
-                            stdValues = dmg_data_i.std()  # noqa: N806, F841
-                            r2d_res_dmg = dict()  # noqa: C408
-                            # for key in dmg_data_i.columns:
-                            #     meanKey = f'R2Dres_mode_{key}'
-                            #     stdKey = f'R2Dres_std_{key}'
-                            #     r2d_res_dmg.update({meanKey:meanValues[key],\
-                            #                         stdKey:stdValues[key]})
-                            r2d_res_dmg.update(
-                                {
-                                    'R2Dres_MostLikelyCriticalDamageState': dmg_data_i.max(
-                                        axis=1
-                                    )
-                                    .mode()
-                                    .mean()
-                                }
-                            )
-                            r2d_res_i = deter_pointer[asset_id].get('R2Dres', {})
-                            r2d_res_i.update(r2d_res_dmg)
-                            deter_pointer[asset_id].update({'R2Dres': r2d_res_i})
+                                dmg_output.update({rlz_i: rlz_output})
 
-                if 'DV' in out_types:
-                    dv_out_file_i = 'DV_repair_grp.json'
-                    dl_summary_file = 'DL_summary_stats.json'
-
-                    if dv_out_file_i not in os.listdir(asset_dir):
-                        show_warning(
-                            f"Couldn't find DV file for {assetTypeHierarchy[-1]} {asset_id}"
-                        )
-
-                    elif dl_summary_file not in os.listdir(asset_dir):
-                        show_warning(
-                            f"Couldn't find DL summary file for {assetTypeHierarchy[-1]} {asset_id}"
-                        )
-
-                    else:
-                        with open(asset_dir / dv_out_file_i, encoding='utf-8') as f:  # noqa: PTH123
-                            dv_data_i = json.load(f)
-
-                        with open(asset_dir / dl_summary_file, encoding='utf-8') as f:  # noqa: PTH123
-                            dl_summary = json.load(f)
-
-                        # extract DV unit info
-                        dv_units = dv_data_i['Units']
-                        del dv_data_i['Units']
-
-                        # parse decision variable data into a DataFrame
-                        dv_data_i = pd.DataFrame(dv_data_i)
-
-                        # Convert cost from loss ratio to monetary value
-                        replacement_cost = GI_data_i_det.get('ReplacementCost', 1.0)
-                        for col in dv_data_i.columns:
-                            if col.startswith('Cost'):
-                                dv_data_i[col] = (
-                                    dv_data_i[col] * replacement_cost
+                            # we assume that damage information is condensed
+                            # TODO: implement condense_ds flag in DL_calc  # noqa: TD002
+                            for rlz_i in range(sample_size):
+                                rlzn_pointer[rlz_i][asset_id].update(
+                                    {'Damage': dmg_output[rlz_i]}
                                 )
-                        # get a list of dv types
-                        dv_types = np.unique(
-                            [col.split('-')[0] for col in dv_data_i.columns]
-                        )
+                                
+                            if 'DM' in R2D_res_out_types:
+                                # use forward fill in case of multiple modes
+                                meanValues = dmg_data_i.mode().ffill().mean()  # noqa: N806, F841
+                                stdValues = dmg_data_i.std()  # noqa: N806, F841
+                                r2d_res_dmg = dict()  # noqa: C408
+                                # for key in dmg_data_i.columns:
+                                #     meanKey = f'R2Dres_mode_{key}'
+                                #     stdKey = f'R2Dres_std_{key}'
+                                #     r2d_res_dmg.update({meanKey:meanValues[key],\
+                                #                         stdKey:stdValues[key]})
+                                r2d_res_dmg.update(
+                                    {
+                                        'R2Dres_MostLikelyCriticalDamageState': dmg_data_i.max(
+                                            axis=1
+                                        )
+                                        .mode()
+                                        .mean()
+                                    }
+                                )
+                                r2d_res_i = deter_pointer[asset_id].get('R2Dres', {})
+                                r2d_res_i.update(r2d_res_dmg)
+                                deter_pointer[asset_id].update({'R2Dres': r2d_res_i})
 
-                        # convert to realization-by-realization format
-                        dv_output = {
-                            int(rlz_i): {
-                                dv_type: {
-                                    col[len(dv_type) + 1 :]: float(
-                                        dv_data_i.loc[rlz_i, col]
+                        if 'DV' in out_types:
+                            
+                            dv_data_i = dl_data_i["decision_variables"]                        
+                            dl_summary = dl_data_i["summary_stats"]
+                            
+                            # extract and remove DV unit info
+                            dv_units = dv_data_i.pop('Units', {})
+
+                            # parse decision variable data into a DataFrame
+                            dv_data_i = pd.DataFrame(dv_data_i)
+
+                            # Convert cost from loss ratio to monetary value
+                            replacement_cost = GI_data_i_det.get('ReplacementCost', 1.0)
+                            for col in dv_data_i.columns:
+                                if col.startswith('Cost'):
+                                    dv_data_i[col] = (
+                                        dv_data_i[col] * replacement_cost
                                     )
-                                    for col in dv_data_i.columns
-                                    if col.startswith(dv_type)
-                                }
-                                for dv_type in dv_types
-                            }
-                            for rlz_i in dv_data_i.index
-                        }
-
-                        # save loss data
-                        for rlz_i in range(sample_size):
-                            rlzn_pointer[rlz_i][asset_id].update(
-                                {'Loss': {'Repair': dv_output[rlz_i]}}
+                                
+                            # get a list of dv types
+                            dv_types = np.unique(
+                                [col.split('-')[0] for col in dv_data_i.columns]
                             )
 
-                        # save DV units
-                        deter_pointer[asset_id].update({'Loss': {'Units': dv_units}})
+                            # convert to realization-by-realization format
+                            dv_output = {
+                                int(rlz_i): {
+                                    dv_type: {
+                                        col[len(dv_type) + 1 :]: float(
+                                            dv_data_i.loc[rlz_i, col]
+                                        )
+                                        for col in dv_data_i.columns
+                                        if col.startswith(dv_type)
+                                    }
+                                    for dv_type in dv_types
+                                }
+                                for rlz_i in dv_data_i.index
+                            }
 
-                        if 'DV' in R2D_res_out_types:
-                            r2d_res_dv = dict()  # noqa: C408
+                            # save loss data
+                            for rlz_i in range(sample_size):
+                                rlzn_pointer[rlz_i][asset_id].update(
+                                    {'Loss': {'Repair': dv_output[rlz_i]}}
+                                )
 
-                            if 'repair_cost' in dl_summary:
-                                repair_cost_data = dl_summary['repair_cost']
+                            # save DV units
+                            if dv_units:
+                                deter_pointer[asset_id].update({'Loss': {'Units': dv_units}})
 
-                            elif 'repair_cost-' in dl_summary:
-                                repair_cost_data = dl_summary['repair_cost-']
+                            if 'DV' in R2D_res_out_types:
+                                r2d_res_dv = dict()  # noqa: C408
 
-                            else:
-                                repair_cost_data = None
+                                # summary_stats holds flat '<name>_mean' and
+                                # '<name>_stddev' entries; return the first
+                                # candidate name found as {'mean', 'std'}
+                                def get_stats(names):
+                                    for name in names:
+                                        if f'{name}_mean' in dl_summary:
+                                            return {
+                                                'mean': dl_summary[f'{name}_mean'],
+                                                'std': dl_summary.get(f'{name}_stddev', 0.0),
+                                            }
+                                    return None
 
-                            if repair_cost_data:
+                                repair_cost_data = get_stats(
+                                    ['repair_cost', 'repair_cost-']
+                                )
 
-                                cost_unit = [unit for dv_output, unit in dv_units.items() if dv_output.startswith('Cost')][0]                            
+                                if repair_cost_data:
 
-                                r2d_res_dv.update({
-                                    f'R2Dres_mean_RepairCost_{cost_unit}': repair_cost_data['mean'],
-                                    f'R2Dres_std_RepairCost_{cost_unit}': repair_cost_data['std']                                  
-                                    })
+                                    cost_unit = next(
+                                        (unit for dv_name, unit in dv_units.items() if dv_name.startswith('Cost')),
+                                        'loss_ratio',
+                                    )
 
-                                if cost_unit == 'loss_ratio' and np.abs(replacement_cost-1.0)>1e-5:
                                     r2d_res_dv.update({
-                                        f'R2Dres_mean_RepairCost': repair_cost_data['mean'] * replacement_cost,
-                                        f'R2Dres_std_RepairCost': repair_cost_data['std'] * replacement_cost                                    
+                                        f'R2Dres_mean_RepairCost': repair_cost_data['mean'],
+                                        f'R2Dres_std_RepairCost': repair_cost_data['std']
+                                    })                                        
+
+                                    if cost_unit == 'loss_ratio' and np.abs(replacement_cost-1.0)>1e-5:
+                                        r2d_res_dv.update({
+                                            f'R2Dres_mean_RepairCost': repair_cost_data['mean'] * replacement_cost,
+                                            f'R2Dres_std_RepairCost': repair_cost_data['std'] * replacement_cost 
                                         })
 
-                            if 'repair_time' in dl_summary:
-                                repair_time_data = dl_summary['repair_time']
+                                repair_time_data = get_stats(
+                                    ['repair_time', 'repair_time-sequential']
+                                )
 
-                            elif 'repair_time-sequential' in dl_summary:
-                                repair_time_data = dl_summary['repair_time-sequential']
+                                if repair_time_data:
 
-                            else:
-                                repair_time_data = None
+                                    #time_unit = [unit for dv_output, unit in dv_units.items() if dv_output.startswith('Time')][0]
+                                    time_unit="days"
 
-                            if repair_time_data:
-
-                                time_unit = [unit for dv_output, unit in dv_units.items() if dv_output.startswith('Time')][0]
-
-                                r2d_res_dv.update({
-                                    f'R2Dres_mean_RepairTime_{time_unit}': repair_time_data['mean'],
-                                    f'R2Dres_std_RepairTime_{time_unit}': repair_time_data['std']
+                                    r2d_res_dv.update({
+                                        f'R2Dres_mean_RepairTime_{time_unit}': repair_time_data['mean'],
+                                        f'R2Dres_std_RepairTime_{time_unit}': repair_time_data['std']
                                     })
 
-                            r2d_res_i = deter_pointer[asset_id].get('R2Dres', {})
-                            r2d_res_i.update(r2d_res_dv)
-                            deter_pointer[asset_id].update({'R2Dres': r2d_res_i})
+                                r2d_res_i = deter_pointer[asset_id].get('R2Dres', {})
+                                r2d_res_i.update(r2d_res_dv)
+                                deter_pointer[asset_id].update({'R2Dres': r2d_res_i})
 
             # This is also ugly but necessary for backward compatibility so that
             # file structure created from apps other than GeoJSON_TO_ASSET can be
@@ -3357,7 +3598,7 @@ class Workflow:
                         realizations_DL = None  # noqa: N806
 
                         for asst in asst_data:
-                            print('ASSET', asst)  # noqa: T201
+                            # print('ASSET', asst)  # noqa: T201
                             asst_file = asst['file']
 
                             # Get the folder containing the results
@@ -3453,7 +3694,7 @@ class Workflow:
                         count = 0
                         for asst in asst_data:
                             if count % self.numP == self.procID:
-                                print('ASSET', self.procID, self.numP, asst['file'])  # noqa: T201
+                                # print('ASSET', self.procID, self.numP, asst['file'])  # noqa: T201
                                 asst_file = asst['file']
 
                                 # Get the folder containing the results

@@ -274,13 +274,21 @@ def split_and_select_components(input_config, asset_source_file):  # noqa: C901,
         component_type = feat['properties'].get('type', None)
         if component_type in component_dict:
             feat_id = int(feat['id'])
-            if requested_dict[component_type].size == 0:
-                component_dict.pop(component_type)
-                continue
-            if feat_id in requested_dict[component_type]:
+            # an empty filter selects all assets of this component type
+            if (
+                requested_dict[component_type].size == 0
+                or feat_id in requested_dict[component_type]
+            ):
                 feat['properties'].update({'id': feat_id})
                 component_dict[component_type].append(feat)
     for component in component_dict:
+        if len(component_dict[component]) == 0:
+            msg = (
+                f"No '{component}' assets in {asset_source_file} match the "
+                f"requested filter; check the filter against the feature ids "
+                f'in the file.'
+            )
+            raise ValueError(msg)
         component_dict[component] = gpd.GeoDataFrame.from_features(
             component_dict[component], crs=crs['properties']['name']
         ).set_index('id')

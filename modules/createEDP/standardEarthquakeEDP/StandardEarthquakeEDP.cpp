@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 {
   // StandardEarthquakeEDP --filenameAIM file --filenameEVENT file? --filenameSAM file? --filenameEDP file? <--getRV>
 
-  if (argc == 10) { // only do if --getRV is passed
+  if (argc == 10 || argc == 9) { 
 
     char *filenameAIM = argv[2];     
     char *filenameEVENT = argv[4]; 
@@ -88,13 +88,15 @@ int main(int argc, char **argv)
     json_error_t error;
 
     json_t *rootEVENT = json_load_file(filenameEVENT, 0, &error);
-    json_t *eventsArray = json_object_get(rootEVENT,"Events");  
-    
+
+    json_t *eventsArray = json_object_get(rootEVENT,"Events");
     json_t *rootSAM = json_load_file(filenameSAM, 0, &error);
-    json_t *mappingArray = json_object_get(rootSAM,"NodeMapping"); 
+    json_t *mappingArray = json_object_get(rootSAM,"NodeMapping");
     json_t *theNDM = json_object_get(rootSAM,"ndm");  
     int ndm = json_integer_value(theNDM);
 
+    // std::cerr << "ndm: " << ndm << "\n";
+    
     if (ndm == 0) {
       const char *ndmString = json_string_value(theNDM);
       ndm = atoi(ndmString);

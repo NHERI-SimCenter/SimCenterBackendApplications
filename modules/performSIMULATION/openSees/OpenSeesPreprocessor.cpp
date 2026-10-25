@@ -6,8 +6,47 @@
 #include <sstream>
 #include <cmath>
 #include <vector>
+#include <filesystem>
 
 #include "common/Units.h"
+
+// returns the integer X from a current working directory named workdir.X
+int getWorkdirNumber()
+{
+  std::string dirname = std::filesystem::current_path().filename().string();
+  const std::string prefix = "workdir.";
+  if (dirname.rfind(prefix, 0) != 0) {
+    return 0;
+  }
+  return std::stoi(dirname.substr(prefix.size()));
+}
+
+static json_t *
+getSampleValue(json_t *obj, int sample)
+{
+  if (obj == NULL || !json_is_array(obj))
+    return obj;
+  size_t size = json_array_size(obj);
+  if (size == 0)
+    return NULL;
+  if (sample < 0)
+    sample = 0;
+  return json_array_get(obj, sample % size);
+}
+
+static int
+getInt(json_t *obj, int sample)
+{
+  json_t *val = getSampleValue(obj, sample);
+  if (json_is_integer(val))
+    return json_integer_value(val);
+  if (json_is_real(val))
+    return (int)json_real_value(val);
+  if (json_is_string(val))
+    return atoi(json_string_value(val));
+  return 0;
+}
+
 
 OpenSeesPreprocessor::OpenSeesPreprocessor()
   :rootAIM(0), rootSAM(0), rootEVENT(0), rootEDP(0), rootSIM(0), 
@@ -506,6 +545,8 @@ OpenSeesPreprocessor::processDamping(ofstream &s) {
       else
         nEigenJ=3*2;          
       
+      // std::cerr << "OpenSeesPreprocessor nStory: " << nStory << "\n";
+
       s << "set nEigenJ "<<nEigenJ<<";\n"
 	<< "set lambdaN [eigen -fullGenLapack "<< nEigenJ <<"];\n"
 	<< "set lambdaI [lindex $lambdaN [expr $nEigenI-1]];\n"
@@ -518,11 +559,15 @@ OpenSeesPreprocessor::processDamping(ofstream &s) {
 	<< "set betaKcomm [expr $KcommSwitch*2.*$xDamp/($omegaI+$omegaJ)];\n"
 	<< "rayleigh $alphaM $betaKcurr $betaKinit $betaKcomm;\n";
     }
+    
   } else {
 
     const char *dampingModel = json_string_value(json_object_get(rootSIM,"dampingModel"));
 
+    std::cerr << "OpenSeesPreprocessor nStory: " << numStories << "\n";
+    
     if ((strcmp(dampingModel,"Rayleigh Damping")) == 0) {
+
 
       int mode1 = json_integer_value(json_object_get(rootSIM,"firstMode"));	
       int mode2 = json_integer_value(json_object_get(rootSIM,"secondMode"));
@@ -1116,9 +1161,23 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
   // NOTE: if no units use default in GI
   json_t* genInfoJson = json_object_get(rootAIM, "GeneralInformation");
   json_t* numStoriesJson = json_object_get(genInfoJson, "NumberOfStories");
+
+  // currentWorld in case multiple
+  json_t *uqType = json_object_get(rootAIM,"UQ");    
+  int currWorld = 1;
+  int workdirNum = getWorkdirNumber();
+  
+  json_t *uqData = json_object_get(uqType,"samplingMethodData");
+  if (uqData != NULL) {
+    json_t *numSamples = json_object_get(uqData,"samples");
+    if (numSamples != NULL) {
+      int number = json_number_value(numSamples);
+      currWorld = workdirNum % number;
+    }
+  }  
   
   if (numStoriesJson != NULL)
-    numStories = json_integer_value(numStoriesJson);
+    numStories = getInt(numStoriesJson, currWorld);
   else
     numStories = 1;
   

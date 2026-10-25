@@ -277,7 +277,7 @@ def find_neighbors(  # noqa: C901, D103
                     nbr_index = ind_list[nbr]
 
                     # if the grid has ground motion records...
-                    if event_type == 'timeHistory':
+                    if event_type == 'timeHistory' and event_count == 1:
                         # load the file for the selected grid point
                         event_collection_file = grid_df.iloc[nbr_index]['GP_file']
                         event_df = pd.read_csv(
@@ -294,7 +294,8 @@ def find_neighbors(  # noqa: C901, D103
                             scale_list.append(1.0)
 
                     # if the grid has intensity measures
-                    elif event_type == 'intensityMeasure':
+                    #elif event_type == 'intensityMeasure':
+                    else:
                         # save the collection file name and the IM row id
                         event_list.append(
                             grid_df.iloc[nbr_index]['GP_file'] + f'x{event_j}'

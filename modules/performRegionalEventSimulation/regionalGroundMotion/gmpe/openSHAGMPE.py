@@ -67,8 +67,8 @@ class chiou_youngs_2013:  # noqa: D101
         self.C11 = self.coeff['c11']['PGA']
         self.CRB = self.coeff['cRB']['PGA']
         self.PHI6 = self.coeff['phi6']['PGA']
-        self.A = np.power(571, 4)
-        self.B = np.power(1360, 4) + self.A
+        self.A = 571.0**4
+        self.B = 1360.0**4 + self.A
         self.CRBsq = self.CRB * self.CRB
 
     def setIMT(self, imt):  # noqa: N802, D102
@@ -175,7 +175,7 @@ class chiou_youngs_2013:  # noqa: D101
 
     def calcZ1ref(self, vs30):  # noqa: N802, D102
         # -- Equation 18
-        vsPow4 = vs30 * vs30 * vs30 * vs30  # noqa: N806
+        vsPow4 = float(vs30) ** 4  # noqa: N806
         return np.exp(-7.15 / 4 * np.log((vsPow4 + self.A) / self.B)) / 1000.0  # km
 
     def calcDeltaZ1(self, z1p0, vs30):  # noqa: N802, D102
@@ -333,8 +333,8 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
         self.C4 = 4.5
 
         # implementation constants
-        self.A = np.power(610, 4)
-        self.B = np.power(1360, 4) + self.A
+        self.A = 610.0**4
+        self.B = 1360.0**4 + self.A
         self.VS_RK = 1180.0
         self.A2_HW = 0.2
         self.H1 = 0.25
@@ -392,7 +392,7 @@ class abrahamson_silva_kamai_2014:  # noqa: D101
             return 1500.0
 
     def calcZ1ref(self, vs30):  # noqa: N802, D102
-        vsPow4 = vs30 * vs30 * vs30 * vs30  # noqa: N806
+        vsPow4 = float(vs30) ** 4  # noqa: N806
         return np.exp(-7.67 / 4.0 * np.log((vsPow4 + self.A) / self.B)) / 1000.0
 
     def calcSoilTerm(self, vs30, z1p0):  # noqa: N802, D102
@@ -644,7 +644,7 @@ class boore_etal_2014:  # noqa: D101
 
         # Constants same for all periods
         self.A = np.power(570.94, 4)
-        self.B = np.power(1360, 4) + self.A
+        self.B = 1360.0**4 + self.A
         self.M_REF = 4.5
         self.R_REF = 1.0
         self.DC3_CA_TW = 0.0
@@ -755,7 +755,7 @@ class boore_etal_2014:  # noqa: D101
         return z1p0 - self.calcZ1ref(vs30)
 
     def calcZ1ref(self, vs30):  # noqa: N802, D102
-        vsPow4 = np.power(vs30, 4)  # noqa: N806
+        vsPow4 = float(vs30) ** 4  # noqa: N806
         return np.exp(-7.15 / 4.0 * np.log((vsPow4 + self.A) / self.B)) / 1000.0
 
     def calcMean(self, Mw, rJB, vs30, z1p0, style, pgaRock):  # noqa: N802, N803, D102
