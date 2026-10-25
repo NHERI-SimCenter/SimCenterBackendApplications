@@ -90,11 +90,36 @@ class generalAIMGenerator:
                 },
             ),
         }
+
         # save every label as-is
         AIM_i['GeneralInformation'].update(asset)
         AIM_i['GeneralInformation']['geometry'] = AIM_i['GeneralInformation'][
             'geometry'
         ].wkt
+
+        # properties holding a list have one value per possible world;
+        # only flag the asset if it has more than one possible world
+        GI = AIM_i['GeneralInformation']  # noqa: N806
+
+        #
+        # chek for num_possible_worlds, unless already present (assume it's correct if does!)
+        #   - if num_possible_worlds > 1; add possible world info to asset output
+        #
+        
+        if 'num_possible_worlds' not in GI:
+            changing_features = [
+                k
+                for k, v in GI.items()
+                if isinstance(v, (list, tuple, np.ndarray))
+                and k != 'changing_features'
+            ]
+            num_possible_worlds = max(
+                (len(GI[k]) for k in changing_features), default=1
+            )
+            if num_possible_worlds > 1:
+                GI['num_possible_worlds'] = num_possible_worlds
+                GI['changing_features'] = changing_features
+
         # if component_type is not None:
         #     AIM_i["GeneralInformation"].update({"assetSubtype":component_type})
         return AIM_i
