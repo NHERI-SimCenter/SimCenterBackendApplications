@@ -188,8 +188,15 @@ def load_record(  # noqa: D103
     # just in case
     data_dir = Path(data_dir)
 
-    # extract the file name (the part after "x" is only for bookkeeping)
-    file_name = file_name.split('x')[0]
+    # extract the file name; the mapping app appends 'x<row>' (site csv files
+    # only) and 'x<counter>' for bookkeeping. Strip these from the end so
+    # file names that contain an 'x' are left intact
+    row_from_id = None
+    match = re.match(r'^(.+?\.csv)x(\d+)(?:x\d+)?$', file_name)
+    if match:
+        file_name, row_from_id = match.group(1), int(match.group(2))
+    else:
+        file_name = re.sub(r'x\d+$', '', file_name)
 
     #
     # if file is a .csv file, then we have to open the "site file" and set file_name
@@ -207,15 +214,36 @@ def load_record(  # noqa: D103
                 motion_file.append(row[0])
                 scale_factor.append(float(row[1]) if len(row) > 1 else 1.0)
 
-            
-        # select record based on GlobalRV
-        # each sample runs in a 'workdir.<x>' directory (1-based); pick the
-        # record for this sample by wrapping x around the number of samples
-        record_to_select = 0
+
+        #
+        # if "row_from_id" is not None use the row selected by the mapping app (NNE.py) as encoded there
+        # otherwise fall back to the sample index. Each sample runs  in a 'workdir.<x>' directory (1-based)
+        #
+
+
+        # fmk - changing behaviour, samples in HTA should just be for different sites and not include # ground motions at a site
+        #       if num samples in HTA not as in UQ incorrect samples chosen (e.g. example E4 would leave many ground motions
+        #       in site files unused if num samples in UQ section increased to more reasonable number!) .. to go back to HTA assigned
+        #       comment out 6 line below and set num_samples = samples
+        if row_from_id is not None:
+            row_from_id = None
+            num_samples = len(motion_file)
+        else:
+            num_samples = samples
+        
         sample_index = get_current_sample_index()
-        if sample_index is not None and samples:
-            record_to_select = sample_index % samples
-                
+        if row_from_id is not None:
+            record_to_select = row_from_id
+        elif sample_index is not None and num_samples:
+            record_to_select = sample_index % num_samples
+        else:
+            record_to_select = 0
+
+        # never select past the end of the site file
+        record_to_select = record_to_select % len(motion_file)
+
+        # print(f'motion_file {motion_file}')
+        
         file_name = motion_file[record_to_select]
                 
         f_scale_user = f_scale_user * scale_factor[record_to_select]
