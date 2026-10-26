@@ -3448,6 +3448,24 @@ class Workflow:
                             # parse decision variable data into a DataFrame
                             dv_data_i = pd.DataFrame(dv_data_i)
 
+                            # DL.json holds pelicun's DL_summary names (repair_cost-,
+                            # repair_time-parallel, ...); map them to the Cost-/Time-
+                            # names Loss.Repair consumers (e.g. pyrecodes) expect and
+                            # drop the non-repair columns (collapse, irreparable)
+                            legacy_dv_names = {'repair_cost': 'Cost', 'repair_time': 'Time'}
+
+                            def to_legacy_dv_name(col):
+                                dv_name, _, dv_sub = col.partition('-')
+                                if dv_name in legacy_dv_names:
+                                    return f'{legacy_dv_names[dv_name]}-{dv_sub or "total"}'
+                                return col
+
+                            dv_data_i = dv_data_i.rename(columns=to_legacy_dv_name)
+                            dv_data_i = dv_data_i[
+                                [col for col in dv_data_i.columns
+                                 if col.startswith(('Cost-', 'Time-'))]
+                            ]
+
                             # Convert cost from loss ratio to monetary value
                             replacement_cost = GI_data_i_det.get('ReplacementCost', 1.0)
                             for col in dv_data_i.columns:
@@ -3476,11 +3494,13 @@ class Workflow:
                                 for rlz_i in dv_data_i.index
                             }
 
-                            # save loss data
-                            for rlz_i in range(sample_size):
-                                rlzn_pointer[rlz_i][asset_id].update(
-                                    {'Loss': {'Repair': dv_output[rlz_i]}}
-                                )
+                            # save loss data (skip assets with no repair DVs,
+                            # e.g. damage-only pipes)
+                            if not dv_data_i.empty:
+                                for rlz_i in range(sample_size):
+                                    rlzn_pointer[rlz_i][asset_id].update(
+                                        {'Loss': {'Repair': dv_output[rlz_i]}}
+                                    )
 
                             # save DV units
                             if dv_units:
