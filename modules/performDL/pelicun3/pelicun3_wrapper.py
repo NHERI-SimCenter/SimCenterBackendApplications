@@ -287,6 +287,18 @@ def load_dl_file(cwd, name):
     )
 
 
+def dl_outputs_exist(cwd=None):
+
+    """
+    True if DL_calculation wrote a DL_summary in cwd. pelicun writes nothing
+    when it skips an asset (e.g. `DL: N/A` for an unsupported element type).
+    """
+
+    cwd = Path(cwd) if cwd else Path.cwd()
+    return any((cwd / f'DL_summary{ext}').exists()
+               for ext in ('.json', '.csv', '.zip'))
+
+
 def load_dl_outputs(cwd=None):
 
     """
@@ -569,6 +581,9 @@ def main():
             if known.dirnameOutput:
                 dl_args = ['--dirnameOutput', known.dirnameOutput, *dl_args]
             run_dl_calculation(dl_args)
+            if not dl_outputs_exist():
+                print('pelicun skipped this asset; no DL results to combine')
+                return
             combine_dl_results(*load_dl_outputs())
             
         else:
@@ -594,7 +609,11 @@ def main():
                 create_world(sc_input, valid_world_input_filename, possible_world)
                 run_dl_calculation(world_args)
 
-            # combine all the world results
+            # combine all the world results (unless pelicun skipped the asset)
+            if not all(dl_outputs_exist(output_root / f'world_{w}')
+                       for w in range(num_possible_worlds)):
+                print('pelicun skipped this asset; no DL results to combine')
+                return
             combine_sampled_dl_results(num_possible_worlds, output_root)
 
         return
@@ -630,6 +649,9 @@ def main():
 
     # Run dl_main() & create a results.out for the UQ engine
     run_dl_calculation(dl_args)
+    if not dl_outputs_exist():
+        print('pelicun skipped this asset; no DL results to combine')
+        return
     dl_summary, dmg_grp, most_likely = load_dl_outputs()
     run_parse_results(known.edpResultsOut, dl_summary, most_likely)
 
