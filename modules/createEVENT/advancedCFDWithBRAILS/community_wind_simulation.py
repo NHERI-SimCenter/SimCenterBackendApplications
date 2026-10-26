@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 import argparse
 from pathlib import Path
 import sys, math
@@ -1429,76 +1429,6 @@ wallDist
 
 """)
 
-TP_fvSch_URANS = textwrap.dedent("""
-/*--------------------------------*- C++ -*----------------------------------*\\
-  =========                 |
-  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     | Website:  www.OpenFoam.org
-    \\  /    A nd           | Version:  10
-     \\/     M anipulation  |
-\\*---------------------------------------------------------------------------*/
-FoamFile
-{
-    version     2.0;
-    format      ascii;
-    class       dictionary;
-    location    "system";
-    object      fvSchemes;
-}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-ddtSchemes
-{
-    default         Euler;
-}
-
-gradSchemes
-{
-    default         cellLimited Gauss linear 0.5;
-}
-
-divSchemes
-{
-    default         none;
-    div(phi,U)      bounded Gauss linearUpwindV grad(U);
-    div(phi,k)      bounded Gauss upwind; 
-    div(phi,epsilon) bounded Gauss upwind;
-    div(phi,omega)  bounded Gauss upwind;
-    div((nuEff*dev2(T(grad(U))))) Gauss linear;
-}
-
-laplacianSchemes
-{
-    default         Gauss linear limited 0.5;
-}
-
-interpolationSchemes
-{
-    default         linear;
-    interpolate(U)  linear;
-}
-
-snGradSchemes
-{
-    default         limited 0.5;
-}
-
-fluxRequired
-{
-    default         no;
-    p               ;
-}
-
-wallDist
-{
-    method meshWave;
-}
-
-// ************************************************************************* //
-
-
-""")
-
 TP_fvSol_RANS = textwrap.dedent("""
 /*--------------------------------*- C++ -*----------------------------------*\\
   =========                 |
@@ -1564,17 +1494,6 @@ solvers
     }
 
     epsilon
-    {
-        solver          smoothSolver;   // solver type
-        smoother        GaussSeidel;    // smoother type
-        tolerance       1e-09;          // solver finishes if either absolute
-        relTol          0.001;           // tolerance is reached or the relative
-                                        // tolerance here
-        nSweeps         1;              // setting for smoothSolver
-        maxIter         100;            // limitation of iterations number
-    }
-
-    omega
     {
         solver          smoothSolver;   // solver type
         smoother        GaussSeidel;    // smoother type
@@ -2385,6 +2304,7 @@ def main(config: Dict[str, Any]) -> None:
         
     if 'computational_domain' in config and 'boundary_conditions' in config['computational_domain']:
         boundary_conditions = config['computational_domain']['boundary_conditions']
+        control_dict = config['computational_domain']['control_dict']
         try:
             ground_style=boundary_conditions['ground_style']
             roi_style=boundary_conditions['roi_style']
@@ -2631,6 +2551,7 @@ def main(config: Dict[str, Any]) -> None:
                 deltaT_sim=float(control_dict['initial_deltaT_sim'])
                 maxDeltaT = float(control_dict['max_deltaT_sim']) 
                 adjust_time=control_dict['adjust_time']
+                adjust_time = adjust_time.strip().lower()
                 deltaT_write=float(control_dict['deltaT_write'])                
                 maxCo = float(control_dict['max_courant'])
                 n_profile = int(len(control_dict['wind_profiles']))
@@ -2919,8 +2840,10 @@ def main(config: Dict[str, Any]) -> None:
 
             if 'computational_domain' in config and 'boundary_conditions' in config['computational_domain']:
                 #inlet = config['computational_domain']['inlet']
-                src = inlet['path_TINF_file']
-                    
+                srcN = inlet['path_to_tinf_file']
+                srcN1 = inlet['path_to_tinf_filePath']
+                src = Path(srcN1)/srcN
+
             else:
                 src = existing_path("Path to CSV file for TINF")
 
