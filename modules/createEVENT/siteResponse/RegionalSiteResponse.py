@@ -38,9 +38,11 @@
 
 
 import argparse
+import csv
 import json
 import os
 import posixpath
+import re
 import shutil
 import subprocess
 import sys
@@ -404,7 +406,41 @@ def write_RV(BIM_file, EVENT_file, data_dir):  # noqa: N802, N803, D103
 def load_record(fileName, data_dir, scale_factor=1.0, empty=False):  # noqa: FBT002, N803, D103
     # Copied from SimCenterEvent, write data of motions into Event
 
-    fileName = fileName.split('x')[0]  # noqa: N806
+    # strip the 'x<row>x<counter>' bookkeeping added by the mapping app from the
+    # end, so file names that contain an 'x' are left intact (as in SimCenterEvent)
+    match = re.match(r'^(.+?\.csv)x(\d+)(?:x\d+)?$', fileName)
+    if match:
+        fileName = match.group(1)  # noqa: N806
+    else:
+        fileName = re.sub(r'x\d+$', '', fileName)  # noqa: N806
+
+    #
+    # if file is a .csv file, then we have to open the "site file" and set fileName
+    # to be the record selected for this sample (same approach as SimCenterEvent)
+    #
+
+    if fileName.endswith('.csv'):
+        with open(posixpath.join(data_dir, fileName), encoding='utf-8') as f:  # noqa: PTH123
+            reader = csv.reader(f)
+            next(reader)  # skip the header row (TH_file,factor)
+
+            motion_file = []
+            motion_scale = []
+            for row in reader:
+                if not row:
+                    continue
+                motion_file.append(row[0])
+                motion_scale.append(float(row[1]) if len(row) > 1 else 1.0)
+
+        # each sample runs in a 'workdir.<x>' directory; pick the record for
+        # this sample by wrapping x around the number of records in the site file
+        record_to_select = 0
+        match = re.search(r'workdir\.(\d+)', os.getcwd())  # noqa: PTH109
+        if match:
+            record_to_select = int(match.group(1)) % len(motion_file)
+
+        fileName = motion_file[record_to_select]  # noqa: N806
+        scale_factor = scale_factor * motion_scale[record_to_select]
 
     with open(posixpath.join(data_dir, f'{fileName}.json')) as f:  # noqa: PTH123
         event_data = json.load(f)
