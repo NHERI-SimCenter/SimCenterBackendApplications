@@ -2453,6 +2453,9 @@ class Workflow:
                     command = create_command(command_list)
 
                     modDriverFile = self.default_values['modDriverFile']  # noqa: N806
+                    # createStandardUQ_Input writes sc_driver.bat on Windows local runs
+                    if platform.system() == 'Windows' and self.run_type == 'runningLocal':
+                        modDriverFile = modDriverFile + '.bat'  # noqa: N806
                     # print(f"DL_COMMAND TO ADD {command} to {modDriverFile}")
                     with open(modDriverFile, 'a', newline='\n', encoding='utf-8') as f:  # noqa: PTH123
                         f.write(command + '\n')
