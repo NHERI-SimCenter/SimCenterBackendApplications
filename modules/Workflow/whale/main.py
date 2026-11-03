@@ -2386,6 +2386,7 @@ class Workflow:
             # fmk - code to do DL in perform_simulation if Realizations == 1 & just for buildings
             #    - we need to revise EDP in pathToSCFile for DL (keep old in EDP_SIM)
             #    - we need to add DL command to driver file
+            #    - NOTE: just for Buildings, as these only assets for which FEM is done
 
             the_DL_app = self.workflow_apps.get('DL', None)  # noqa: N806
             if isinstance(the_DL_app, dict):
@@ -3808,6 +3809,10 @@ class Workflow:
         log_div()
 
     def compile_r2d_results_geojson(self, asset_files):  # noqa: D102
+
+        #asset_types = list(asset_files.keys())
+        #print(f'compile_r2d_results_geojson { asset_types}')
+        
         run_path = self.run_dir
         with open(self.input_file, encoding='utf-8') as f:  # noqa: PTH123
             input_data = json.load(f)
@@ -3869,11 +3874,15 @@ class Workflow:
                     ft.update({'properties': asst_GI})
                     ft['properties'].update(subtypeResult[str(asset_id)]['R2Dres'])
                     geojson_result['features'].append(ft)
+                    
         with open(run_path / 'R2D_results.geojson', 'w', encoding='utf-8') as f:  # noqa: PTH123
             json.dump(geojson_result, f, indent=2)
 
     def combine_assets_results(self, asset_files):  # noqa: D102
+        
         asset_types = list(asset_files.keys())
+        #print(f'combine_asset_results { asset_types}')
+        
         for asset_type in asset_types:
             if self.workflow_apps['DL'][asset_type].name != 'Pelicun3':
                 # isPelicun3 = False
@@ -3883,12 +3892,19 @@ class Workflow:
                 input_data = json.load(f)
             sample_size = []
             for asset_type, assetIt in asset_files.items():  # noqa: B007, N806, PERF102
-                sample_size.append(
-                    input_data['Applications']['DL'][asset_type]['ApplicationData'][
-                        'Realizations'
-                    ]
-                )
+                sample_size_asset = input_data['Applications']['DL'][asset_type]['ApplicationData']['Realizations']
+                if sample_size_asset == 1:
+                    sample_size_asset = (
+                        input_data.get('UQ', {})
+                        .get(asset_type, {})
+                        .get('samplingMethodData', {})
+                        .get('samples', sample_size_asset)
+                    )
+                   
+                sample_size.append(sample_size_asset)
+                
             sample_size = min(sample_size)
+            
             # Create the Results_det.json and Results_rlz_i.json for recoverary
             deterministic = {}
             realizations = {rlz_i: {} for rlz_i in range(sample_size)}
