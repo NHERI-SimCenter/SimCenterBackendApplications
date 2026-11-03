@@ -3537,9 +3537,10 @@ class Workflow:
                                     )
 
                                     r2d_res_dv.update({
-                                        f'R2Dres_mean_RepairCost': repair_cost_data['mean'],
-                                        f'R2Dres_std_RepairCost': repair_cost_data['std']
+                                        f'R2Dres_mean_RepairCost_loss_ratio': repair_cost_data['mean'],
+                                        f'R2Dres_std_RepairCost_loss_ratio': repair_cost_data['std']
                                     })                                        
+
 
                                     if cost_unit == 'loss_ratio' and np.abs(replacement_cost-1.0)>1e-5:
                                         r2d_res_dv.update({
