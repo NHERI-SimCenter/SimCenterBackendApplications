@@ -156,14 +156,27 @@ def to_metric(gdf: gpd.GeoDataFrame, epsg:int):
 # ───────────────────────── Add the nearest height if data missing ─────────────────────────
 
 def nearest_fill(gdf: gpd.GeoDataFrame, fld:str, dflt:float):
+    n_tot = len(gdf)
+    n_na  = int(gdf[fld].isna().sum())
     kn = gdf[~gdf[fld].isna()].copy()
+    if n_na == 0:
+        return gdf
     if kn.empty:
+        print(f"WARNING: community_wind_simulation::nearest_fill: all {n_tot} buildings have missing/NA or <= 0 '{fld}'. "
+              f"Assigning the default height of {dflt} to every building.")
         gdf[fld] = dflt
         return gdf
+    print(f"WARNING: community_wind_simulation::nearest_fill: {n_na} of {n_tot} buildings have missing/NA or <= 0 '{fld}'. "
+          f"Each was assigned the '{fld}' of its nearest building with a known value "
+          f"({n_tot - n_na} known; values range {kn[fld].min():g} to {kn[fld].max():g}).")
     sidx = kn.sindex
     for idx, g in gdf[gdf[fld].isna()].geometry.items():
         near = sidx.nearest(g, return_all=False)
-        pos  = int(near[0]) if isinstance(near, np.ndarray) else int(next(near))
+        if isinstance(near, np.ndarray):
+            # geopandas>=0.12 / shapely 2: shape (2, k) -> row 1 = tree (kn) indices
+            pos = int(near[1][0]) if near.ndim == 2 else int(near.ravel()[0])
+        else:
+            pos = int(next(iter(near)))   # legacy rtree generator
         gdf.at[idx, fld] = kn.iloc[pos][fld]
     return gdf
 
@@ -2079,11 +2092,23 @@ def main(config: Dict[str, Any]) -> None:
 
     # --- split remaining --------------------------------------------------
     rest = gdf_full.loc[~gdf_full.geometry.apply(lambda g: g.wkb in {w.wkb for w in gdf_roi.geometry})].copy()
+    if rest.empty:
+        sys.exit("ERROR: community_wind_simulation: no surrounding buildings found outside the ROI "
+                 f"({len(gdf_full)} buildings in total, {len(gdf_roi)} in the ROI). "
+                 "Enlarge the surrounding region or reduce the ROI - stopping.")
 
     # --- heights ----------------------------------------------------------
     for gdf in (gdf_roi, rest):
         if fld not in gdf.columns: gdf[fld]=np.nan
         gdf[fld]=pd.to_numeric(gdf[fld],errors="coerce")
+    if dflt <= 0:
+        sys.exit(f"ERROR: community_wind_simulation: default_building_height must be > 0, got {dflt} - stopping.")
+    for name, gdf in (("ROI", gdf_roi), ("Surrounding", rest)):
+        bad = gdf[fld] <= 0
+        if bad.any():
+            print(f"WARNING: community_wind_simulation: {int(bad.sum())} {name} buildings have '{fld}' <= 0; "
+                  f"treating these as missing.")
+            gdf.loc[bad, fld] = np.nan
     gdf_roi = nearest_fill(gdf_roi,fld,dflt)
     rest    = nearest_fill(rest   ,fld,dflt)
     hmax = max(gdf_roi[fld].max(), rest[fld].max())
@@ -2125,17 +2150,18 @@ def main(config: Dict[str, Any]) -> None:
         gdf.set_geometry(gdf.geometry.translate(xoff=-xshift,yoff=-yshift), inplace=True)
 
     # --- STL write --------------------------------------------------------
-    def mesh(gdf):
+    def mesh(gdf, name):
         parts=[]
         for pg,h in zip(gdf.geometry,gdf[fld]):
             if isinstance(pg,geom.MultiPolygon): parts.extend(extrude(p,h) for p in pg.geoms)
             else: parts.append(extrude(pg,h))
-
-            m=trimesh.util.concatenate(parts)
+        if not parts:
+            sys.exit(f"ERROR: community_wind_simulation: no {name} building geometry to write to STL - stopping.")
+        m=trimesh.util.concatenate(parts)
         # m.remove_duplicate_faces(); m.remove_degenerate_faces(); m.fill_holes()
         return m
-    write_stl_ascii(mesh(gdf_roi), roi_stl,  "ROI")
-    write_stl_ascii(mesh(rest),    rest_stl, "Surrounding")
+    write_stl_ascii(mesh(gdf_roi, "ROI"), roi_stl,  "ROI")
+    write_stl_ascii(mesh(rest, "Surrounding"),    rest_stl, "Surrounding")
     print(" STL files created.")
     
     # --- compute bounds ---------------------------------------------------
