@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 import argparse
 from pathlib import Path
 import sys, math
@@ -156,14 +156,27 @@ def to_metric(gdf: gpd.GeoDataFrame, epsg:int):
 # ───────────────────────── Add the nearest height if data missing ─────────────────────────
 
 def nearest_fill(gdf: gpd.GeoDataFrame, fld:str, dflt:float):
+    n_tot = len(gdf)
+    n_na  = int(gdf[fld].isna().sum())
     kn = gdf[~gdf[fld].isna()].copy()
+    if n_na == 0:
+        return gdf
     if kn.empty:
+        print(f"WARNING: community_wind_simulation::nearest_fill: all {n_tot} buildings have missing/NA or <= 0 '{fld}'. "
+              f"Assigning the default height of {dflt} to every building.")
         gdf[fld] = dflt
         return gdf
+    print(f"WARNING: community_wind_simulation::nearest_fill: {n_na} of {n_tot} buildings have missing/NA or <= 0 '{fld}'. "
+          f"Each was assigned the '{fld}' of its nearest building with a known value "
+          f"({n_tot - n_na} known; values range {kn[fld].min():g} to {kn[fld].max():g}).")
     sidx = kn.sindex
     for idx, g in gdf[gdf[fld].isna()].geometry.items():
         near = sidx.nearest(g, return_all=False)
-        pos  = int(near[0]) if isinstance(near, np.ndarray) else int(next(near))
+        if isinstance(near, np.ndarray):
+            # geopandas>=0.12 / shapely 2: shape (2, k) -> row 1 = tree (kn) indices
+            pos = int(near[1][0]) if near.ndim == 2 else int(near.ravel()[0])
+        else:
+            pos = int(next(iter(near)))   # legacy rtree generator
         gdf.at[idx, fld] = kn.iloc[pos][fld]
     return gdf
 
@@ -1429,76 +1442,6 @@ wallDist
 
 """)
 
-TP_fvSch_URANS = textwrap.dedent("""
-/*--------------------------------*- C++ -*----------------------------------*\\
-  =========                 |
-  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     | Website:  www.OpenFoam.org
-    \\  /    A nd           | Version:  10
-     \\/     M anipulation  |
-\\*---------------------------------------------------------------------------*/
-FoamFile
-{
-    version     2.0;
-    format      ascii;
-    class       dictionary;
-    location    "system";
-    object      fvSchemes;
-}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-ddtSchemes
-{
-    default         Euler;
-}
-
-gradSchemes
-{
-    default         cellLimited Gauss linear 0.5;
-}
-
-divSchemes
-{
-    default         none;
-    div(phi,U)      bounded Gauss linearUpwindV grad(U);
-    div(phi,k)      bounded Gauss upwind; 
-    div(phi,epsilon) bounded Gauss upwind;
-    div(phi,omega)  bounded Gauss upwind;
-    div((nuEff*dev2(T(grad(U))))) Gauss linear;
-}
-
-laplacianSchemes
-{
-    default         Gauss linear limited 0.5;
-}
-
-interpolationSchemes
-{
-    default         linear;
-    interpolate(U)  linear;
-}
-
-snGradSchemes
-{
-    default         limited 0.5;
-}
-
-fluxRequired
-{
-    default         no;
-    p               ;
-}
-
-wallDist
-{
-    method meshWave;
-}
-
-// ************************************************************************* //
-
-
-""")
-
 TP_fvSol_RANS = textwrap.dedent("""
 /*--------------------------------*- C++ -*----------------------------------*\\
   =========                 |
@@ -1564,17 +1507,6 @@ solvers
     }
 
     epsilon
-    {
-        solver          smoothSolver;   // solver type
-        smoother        GaussSeidel;    // smoother type
-        tolerance       1e-09;          // solver finishes if either absolute
-        relTol          0.001;           // tolerance is reached or the relative
-                                        // tolerance here
-        nSweeps         1;              // setting for smoothSolver
-        maxIter         100;            // limitation of iterations number
-    }
-
-    omega
     {
         solver          smoothSolver;   // solver type
         smoother        GaussSeidel;    // smoother type
@@ -2160,11 +2092,23 @@ def main(config: Dict[str, Any]) -> None:
 
     # --- split remaining --------------------------------------------------
     rest = gdf_full.loc[~gdf_full.geometry.apply(lambda g: g.wkb in {w.wkb for w in gdf_roi.geometry})].copy()
+    if rest.empty:
+        sys.exit("ERROR: community_wind_simulation: no surrounding buildings found outside the ROI "
+                 f"({len(gdf_full)} buildings in total, {len(gdf_roi)} in the ROI). "
+                 "Enlarge the surrounding region or reduce the ROI - stopping.")
 
     # --- heights ----------------------------------------------------------
     for gdf in (gdf_roi, rest):
         if fld not in gdf.columns: gdf[fld]=np.nan
         gdf[fld]=pd.to_numeric(gdf[fld],errors="coerce")
+    if dflt <= 0:
+        sys.exit(f"ERROR: community_wind_simulation: default_building_height must be > 0, got {dflt} - stopping.")
+    for name, gdf in (("ROI", gdf_roi), ("Surrounding", rest)):
+        bad = gdf[fld] <= 0
+        if bad.any():
+            print(f"WARNING: community_wind_simulation: {int(bad.sum())} {name} buildings have '{fld}' <= 0; "
+                  f"treating these as missing.")
+            gdf.loc[bad, fld] = np.nan
     gdf_roi = nearest_fill(gdf_roi,fld,dflt)
     rest    = nearest_fill(rest   ,fld,dflt)
     hmax = max(gdf_roi[fld].max(), rest[fld].max())
@@ -2206,17 +2150,18 @@ def main(config: Dict[str, Any]) -> None:
         gdf.set_geometry(gdf.geometry.translate(xoff=-xshift,yoff=-yshift), inplace=True)
 
     # --- STL write --------------------------------------------------------
-    def mesh(gdf):
+    def mesh(gdf, name):
         parts=[]
         for pg,h in zip(gdf.geometry,gdf[fld]):
             if isinstance(pg,geom.MultiPolygon): parts.extend(extrude(p,h) for p in pg.geoms)
             else: parts.append(extrude(pg,h))
-
-            m=trimesh.util.concatenate(parts)
+        if not parts:
+            sys.exit(f"ERROR: community_wind_simulation: no {name} building geometry to write to STL - stopping.")
+        m=trimesh.util.concatenate(parts)
         # m.remove_duplicate_faces(); m.remove_degenerate_faces(); m.fill_holes()
         return m
-    write_stl_ascii(mesh(gdf_roi), roi_stl,  "ROI")
-    write_stl_ascii(mesh(rest),    rest_stl, "Surrounding")
+    write_stl_ascii(mesh(gdf_roi, "ROI"), roi_stl,  "ROI")
+    write_stl_ascii(mesh(rest, "Surrounding"),    rest_stl, "Surrounding")
     print(" STL files created.")
     
     # --- compute bounds ---------------------------------------------------
@@ -2385,6 +2330,7 @@ def main(config: Dict[str, Any]) -> None:
         
     if 'computational_domain' in config and 'boundary_conditions' in config['computational_domain']:
         boundary_conditions = config['computational_domain']['boundary_conditions']
+        control_dict = config['computational_domain']['control_dict']
         try:
             ground_style=boundary_conditions['ground_style']
             roi_style=boundary_conditions['roi_style']
@@ -2631,6 +2577,7 @@ def main(config: Dict[str, Any]) -> None:
                 deltaT_sim=float(control_dict['initial_deltaT_sim'])
                 maxDeltaT = float(control_dict['max_deltaT_sim']) 
                 adjust_time=control_dict['adjust_time']
+                adjust_time = adjust_time.strip().lower()
                 deltaT_write=float(control_dict['deltaT_write'])                
                 maxCo = float(control_dict['max_courant'])
                 n_profile = int(len(control_dict['wind_profiles']))
@@ -2919,8 +2866,10 @@ def main(config: Dict[str, Any]) -> None:
 
             if 'computational_domain' in config and 'boundary_conditions' in config['computational_domain']:
                 #inlet = config['computational_domain']['inlet']
-                src = inlet['path_TINF_file']
-                    
+                srcN = inlet['path_to_tinf_file']
+                srcN1 = inlet['path_to_tinf_filePath']
+                src = Path(srcN1)/srcN
+
             else:
                 src = existing_path("Path to CSV file for TINF")
 
