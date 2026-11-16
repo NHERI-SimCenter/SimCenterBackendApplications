@@ -651,7 +651,7 @@ class GaussianProcessModel:
                     param.name: {
                         'value': param.values.tolist()  # noqa: PD011
                         if param.size > 1
-                        else float(param.values),
+                        else param.values.item(),
                         'shape': param.shape,
                     }
                     for param in gp.kern.parameters
@@ -663,7 +663,7 @@ class GaussianProcessModel:
                 linear_model = self.linear_models[i]
                 params['linear_regression'] = {
                     'coefficients': linear_model.coef_.tolist(),  # type: ignore
-                    'intercept': float(linear_model.intercept_),  # type: ignore
+                    'intercept': np.asarray(linear_model.intercept_).item(),  # type: ignore
                 }
             else:
                 params['linear_regression'] = None

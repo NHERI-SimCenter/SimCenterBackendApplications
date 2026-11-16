@@ -1094,8 +1094,8 @@ class surrogate(UQengine):  # noqa: D101
             m_mean.optimize(messages=True, max_f_eval=1000)
             # m_mean = my_optimize_restart(m_mean, self.nopt)
             Y_mean[:,ny:ny+1], mean_var = m_mean.predict(X)
-            initial_noise_variance[ny] = float(m_mean.Gaussian_noise.variance)
-            initial_process_variance[ny] = float(m_mean.Mat52.variance)
+            initial_noise_variance[ny] = m_mean.Gaussian_noise.variance.item()
+            initial_process_variance[ny] = m_mean.Mat52.variance.item()
             tert_param[ny] = m_mean.param_array
         # -----------------------------
         # Prepare covariance data
@@ -1356,8 +1356,8 @@ class surrogate(UQengine):  # noqa: D101
 
         mean_pred, mean_var = m_mean.predict(X)
 
-        initial_noise_variance = float(m_mean.Gaussian_noise.variance)
-        initial_process_variance = float(m_mean.Mat52.variance)
+        initial_noise_variance = m_mean.Gaussian_noise.variance.item()
+        initial_process_variance = m_mean.Mat52.variance.item()
 
         # if np.sum(self.linear_list) > 0:
         #    mean_pred = mean_pred + lin_tmp.predict(X[:, self.linear_list])
@@ -2015,13 +2015,14 @@ class surrogate(UQengine):  # noqa: D101
                     y_preds, y_pred_vars = self.predict(
                         m_tmp, Xerr[ns, :][np.newaxis]
                     )
-                    y_pred_var[ns, ny] = y_pred_vars
-                    y_pred_mean[ns, ny] = y_preds
+                    y_pred_var[ns, ny] = np.asarray(y_pred_vars).item()
+                    y_pred_mean[ns, ny] = np.asarray(y_preds).item()
 
                 # dummy, y_base_var[ny] = self.predict(m_tmp, Xerr[ns, :][np.newaxis]*10000)
-                dummy, y_base_var[ny] = self.predict(
+                dummy, y_base_var_tmp = self.predict(
                     m_tmp, Xerr[ns, :][np.newaxis] * 10000
                 )
+                y_base_var[ny] = np.asarray(y_base_var_tmp).item()
 
                 # if self.do_logtransform:
                 #    y_pred_var[ns, ny] = np.exp(2 * y_preds + y_pred_vars) * (
@@ -2436,20 +2437,20 @@ class surrogate(UQengine):  # noqa: D101
             #         nuggetVal_linear = np.exp(2*log_mean+log_var)*(np.exp(log_var)-1) # in linear space
 
             if self.do_mf:
-                results['valNugget1'][self.g_name[ny]] = float(
+                results['valNugget1'][self.g_name[ny]] = np.asarray(
                     self.m_list[ny].gpy_model['mixed_noise.Gaussian_noise.variance']
                     * self.normVars[ny]
-                )
-                results['valNugget2'][self.g_name[ny]] = float(
+                ).item()
+                results['valNugget2'][self.g_name[ny]] = np.asarray(
                     self.m_list[ny].gpy_model[
                         'mixed_noise.Gaussian_noise_1.variance'
                     ]
                     * self.normVars[ny]
-                )
+                ).item()
             elif not self.heteroscedastic:
-                results['valNugget'][self.g_name[ny]] = float(
+                results['valNugget'][self.g_name[ny]] = np.asarray(
                     self.m_list[ny]['Gaussian_noise.variance'] * self.normVars[ny]
-                )
+                ).item()
 
             results['valNRMSE'][self.g_name[ny]] = self.NRMSE_val[ny]
             results['valR2'][self.g_name[ny]] = self.R2_val[ny]
@@ -2526,9 +2527,9 @@ class surrogate(UQengine):  # noqa: D101
                 results['modelInfo'][self.g_name[ny] + '_Lin']['coef'] = np.squeeze(
                     self.lin_list[ny].coef_
                 ).tolist()
-                results['modelInfo'][self.g_name[ny] + '_Lin']['intercept'] = float(
+                results['modelInfo'][self.g_name[ny] + '_Lin']['intercept'] = np.asarray(
                     self.lin_list[ny].intercept_
-                )
+                ).item()
 
         if self.isEEUQ or self.isWEUQ or self.isHydroUQ:
             # read SAM.json
@@ -3174,21 +3175,30 @@ class surrogate(UQengine):  # noqa: D101
                 ) / np.squeeze(np.diag(Rinv))
                 # e = np.squeeze(np.matmul(Rinv, (Ym))) / np.squeeze(np.diag(Rinv))
 
+                # numpy >= 2.5 no longer allows assigning size-1 arrays into
+                # scalar slots, so reduce GPy Params / (n,1) arrays first
+                e = np.atleast_1d(e)
+                diag_Rinv = np.atleast_1d(np.squeeze(np.diag(Rinv)))  # noqa: N806
+                Y_mean_ny = np.asarray(self.Y_mean[ny]).reshape(-1)  # noqa: N806
+                var_str_ny = np.asarray(self.var_str[ny]).reshape(-1)
+                norm_var_ny = np.asarray(self.normVars[ny]).item()
+                noise_var_ny = np.asarray(
+                    self.m_list[ny].Gaussian_noise.parameters[0]
+                ).item()
+
                 # works both for stochastic/stochastic
                 for nx in range(X_hf.shape[0]):
                     e2[nx, ny] = e[indices[nx]] ** 2
                     # Y_pred_var[nx, ny] = 1 / np.diag(Rinv)[indices[nx]]  * self.normVars[ny]
-                    Y_pred[nx, ny] = self.Y_mean[ny][indices[nx]] - e[indices[nx]]
+                    Y_pred[nx, ny] = Y_mean_ny[indices[nx]] - e[indices[nx]]
                     # Y_pred_var_w_measure[nx, ny] = Y_pred_var[nx, ny]  + self.m_list[ny].Gaussian_noise.parameters[0]*self.var_str[ny][indices[nx]] * self.normVars[ny]
                     Y_pred_var_w_measure[nx, ny] = (
-                        1 / np.diag(Rinv)[indices[nx]] * self.normVars[ny]
+                        1 / diag_Rinv[indices[nx]] * norm_var_ny
                     )
                     Y_pred_var[nx, ny] = max(
                         0,
                         Y_pred_var_w_measure[nx, ny]
-                        - self.m_list[ny].Gaussian_noise.parameters[0]
-                        * self.var_str[ny][indices[nx]]
-                        * self.normVars[ny],
+                        - noise_var_ny * var_str_ny[indices[nx]] * norm_var_ny,
                     )
 
                 if sum(self.linear_list) > 0:
@@ -3234,6 +3244,8 @@ class surrogate(UQengine):  # noqa: D101
 
                     x_loo = X_hf[ns, :][np.newaxis]
                     Y_pred_tmp, Y_err_tmp = self.predict(m_tmp, x_loo)  # noqa: N806
+                    Y_pred_tmp = np.asarray(Y_pred_tmp).item()  # noqa: N806
+                    Y_err_tmp = np.asarray(Y_err_tmp).item()  # noqa: N806
 
                     Y_pred2[ns, ny] = Y_pred_tmp
                     Y_pred_var2[ns, ny] = Y_err_tmp

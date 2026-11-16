@@ -947,7 +947,7 @@ class ERADist:
                     x0 = x_m
                     sol = optimize.minimize(equation, x0)
                     if sol.success == True:  # noqa: E712
-                        self.Par = {'x_m': x_m, 'alpha': float(sol.x)}
+                        self.Par = {'x_m': x_m, 'alpha': float(sol.x[0])}
                         self.Dist = stats.genpareto(
                             c=1 / self.Par['alpha'],
                             scale=self.Par['x_m'] / self.Par['alpha'],

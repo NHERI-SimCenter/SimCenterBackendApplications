@@ -225,14 +225,14 @@ class ERANataf:
                             func=fun, x0=self.Rho_X[i, j], full_output=True
                         )
                         if sol[2] == 1:
-                            self.Rho_Z[i, j] = sol[0]
+                            self.Rho_Z[i, j] = sol[0][0]
                             self.Rho_Z[j, i] = self.Rho_Z[i, j]
                         else:
                             sol = optimize.fsolve(
                                 func=fun, x0=-self.Rho_X[i, j], full_output=True
                             )
                             if sol[2] == 1:
-                                self.Rho_Z[i, j] = sol[0]
+                                self.Rho_Z[i, j] = sol[0][0]
                                 self.Rho_Z[j, i] = self.Rho_Z[i, j]
                             else:
                                 for i in range(10):  # noqa: B007, PLW2901
@@ -243,7 +243,7 @@ class ERANataf:
                                     if sol[2] == 1:
                                         break
                                 if sol[2] == 1:
-                                    self.Rho_Z[i, j] = sol[0]
+                                    self.Rho_Z[i, j] = sol[0][0]
                                     self.Rho_Z[j, i] = self.Rho_Z[i, j]
                                 else:
                                     raise RuntimeError(  # noqa: TRY003

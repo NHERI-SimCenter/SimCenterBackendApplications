@@ -317,7 +317,7 @@ class AdaptiveDesignOfExperiments:
         kernel = self.gp_model_for_doe.kern
         doe_hyperparams = {
             p.name: {
-                'value': p.values.tolist() if p.size > 1 else float(p.values),
+                'value': p.values.tolist() if p.size > 1 else p.values.item(),
                 'shape': p.shape,
             }
             for p in kernel.parameters
