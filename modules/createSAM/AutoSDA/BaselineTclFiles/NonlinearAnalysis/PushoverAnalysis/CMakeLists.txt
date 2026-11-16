@@ -1,7 +1,5 @@
-simcenter_add_file(NAME DefineVariables.tcl)
-simcenter_add_file(NAME Database.csv)
-simcenter_add_file(NAME Model.tcl)
-simcenter_add_file(NAME DefineAllRecorders.tcl)
-simcenter_add_file(NAME PerformGravityAnalysis.tcl)
-simcenter_add_file(NAME DefineFunctionsAndProcedures.tcl)
-simcenter_add_file(NAME RunStaticPushover.tcl)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES
+    DefineVariables.tcl Database.csv Model.tcl DefineAllRecorders.tcl
+    PerformGravityAnalysis.tcl DefineFunctionsAndProcedures.tcl RunStaticPushover.tcl
+    DESTINATION ${_rel})

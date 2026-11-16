@@ -1,5 +1,5 @@
-simcenter_add_executable(NAME MultiplePEER
-                         FILES MultiplePEER_Events.cpp
-                         DEPENDS CONAN_PKG::jansson)
-
-set_property(TARGET MultiplePEER PROPERTY CXX_STANDARD 17)
+add_executable(MultiplePEER MultiplePEER_Events.cpp)
+target_include_directories(MultiplePEER PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(MultiplePEER PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS MultiplePEER DESTINATION ${_rel})

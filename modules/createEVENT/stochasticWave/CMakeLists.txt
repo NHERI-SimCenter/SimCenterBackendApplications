@@ -1,3 +1,2 @@
-simcenter_add_python_script(SCRIPT StochasticWave.py)
-simcenter_add_python_script(SCRIPT StochasticWaveLoadsJONSWAP.py)
-simcenter_add_python_script(SCRIPT Jonswap.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES StochasticWave.py StochasticWaveLoadsJONSWAP.py Jonswap.py DESTINATION ${_rel})

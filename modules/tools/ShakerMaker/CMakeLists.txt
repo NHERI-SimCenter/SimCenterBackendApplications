@@ -1,5 +1,5 @@
 add_subdirectory(Examples)
 add_subdirectory(TapisFiles)
-simcenter_add_python_script(SCRIPT faultplotter.py)
-simcenter_add_python_script(SCRIPT ShakerMakersubmitjob.py)
-simcenter_add_python_script(SCRIPT DatabaseMetadata.json)
+
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES faultplotter.py ShakerMakersubmitjob.py DatabaseMetadata.json DESTINATION ${_rel})

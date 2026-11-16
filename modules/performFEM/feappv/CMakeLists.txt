@@ -1,6 +1,5 @@
-simcenter_add_executable(NAME createFeapDriver
-                         FILES createFeapDriver.cpp processInput.cpp
-                         DEPENDS CONAN_PKG::jansson)
-
-set_property(TARGET createFeapDriver PROPERTY CXX_STANDARD 17)
-
+add_executable(createFeapDriver createFeapDriver.cpp processInput.cpp)
+target_include_directories(createFeapDriver PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(createFeapDriver PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS createFeapDriver DESTINATION ${_rel})

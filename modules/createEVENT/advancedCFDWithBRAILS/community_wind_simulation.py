@@ -66,7 +66,7 @@ def ask_side() -> str:
 def ask_angle() -> float:
     while True:
         try:
-            deg = float(input("Wind-direction angle θ (deg, Counter-Clockwise from E): ").strip())
+            deg = float(input("Wind-direction angle theta (deg, Counter-Clockwise from E): ").strip())
             return deg
         except ValueError:
             print("   enter a numeric value")
@@ -90,7 +90,7 @@ def ask_box(idx: int) -> tuple | None:
     try:
         vals = tuple(float(v) for v in coords)
     except ValueError:
-        print("  ✗  invalid number — try again")
+        print("  x  invalid number - try again")
         return ask_box(idx)
 
     default_name = f"box{idx}"
@@ -403,7 +403,7 @@ REFINE_BOX = "        {name}\n        {{\n            mode inside;\n" \
 def cli() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Create turbulenceProperties and initial fields "
-                    "(RANS k-ε or LES with mean ABL or turbulent DFM inlet).")
+                    "(RANS k-epsilon or LES with mean ABL or turbulent DFM inlet).")
     
     return p.parse_args()
 
@@ -1929,7 +1929,7 @@ def load_input(json_path=None):
             
     except json.JSONDecodeError as e:
         print(f" JSON syntax error in {path}: {e} .. use a JSON validator")
-        sys.exit("Invalid JSON — stopping.")
+        sys.exit("Invalid JSON - stopping.")
 
     if not isinstance(inputs, dict):
         raise ValueError("Input JSON file must contain a JSON object!")
@@ -2197,7 +2197,7 @@ def main(config: Dict[str, Any]) -> None:
               case/"system"/"blockMeshDict")
     
     print(" blockMeshDict written.")
-    print(f"Applied rotation −{angle_deg}° so wind aligns with +x.")
+    print(f"Applied rotation -{angle_deg} deg so wind aligns with +x.")
     print(f"Extents: ({x0},{y0},{z0}) to ({x1},{y1},{z1})")
     # ───────────────────────── Write snappyHexMesh ─────────────────────────
 
@@ -2938,6 +2938,13 @@ def main(config: Dict[str, Any]) -> None:
     Path(case/"Community.foam").touch()
 
 if __name__ == "__main__":
+
+    # Windows consoles/pipes may default to cp1252; never crash on non-ASCII output
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(errors="replace")
+        except (AttributeError, ValueError):
+            pass
 
     json_inputfile_path = sys.argv[1] if len(sys.argv) > 1 else None
     input_config = load_input(json_inputfile_path)

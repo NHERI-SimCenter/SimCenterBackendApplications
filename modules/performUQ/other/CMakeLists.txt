@@ -1,10 +1,5 @@
-simcenter_add_python_script(SCRIPT UQpyRunner.py)
-simcenter_add_python_script(SCRIPT prepareUQ.py)
-simcenter_add_python_script(SCRIPT runWorkflowDriver.py)
-simcenter_add_python_script(SCRIPT configureAndRunUQ.py)
-simcenter_add_python_script(SCRIPT processUQpyOutput.py)
-simcenter_add_python_script(SCRIPT uqRunner.py)
-simcenter_add_python_script(SCRIPT createTemplate.py)
-simcenter_add_python_script(SCRIPT runOtherUQ.py)
-simcenter_add_python_script(SCRIPT HeirBayesRunner.py)
-
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES
+    UQpyRunner.py prepareUQ.py runWorkflowDriver.py configureAndRunUQ.py
+    processUQpyOutput.py uqRunner.py createTemplate.py runOtherUQ.py HeirBayesRunner.py
+    DESTINATION ${_rel})

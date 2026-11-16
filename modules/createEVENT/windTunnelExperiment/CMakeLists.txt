@@ -1,3 +1,5 @@
-simcenter_add_executable(NAME WindTunnelExperiment
-                         FILES WindTunnelExperiment.cpp
-                         DEPENDS CONAN_PKG::jansson common)
+add_executable(WindTunnelExperiment WindTunnelExperiment.cpp)
+target_include_directories(WindTunnelExperiment PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(WindTunnelExperiment PRIVATE jansson::jansson common)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS WindTunnelExperiment DESTINATION ${_rel})

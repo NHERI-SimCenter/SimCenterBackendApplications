@@ -1,7 +1,7 @@
 import os  # noqa: D100
 
 from conan import ConanFile
-from conan.tools.cmake import CMake
+from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
 from conan.tools.files import copy
 
 
@@ -21,7 +21,6 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
         "boost/*:without_fiber": True,
     }
 
-    generators = "CMakeToolchain", "CMakeDeps"
     build_policy = "missing"
 
     requires = [  # noqa: RUF012
@@ -37,6 +36,20 @@ class simCenterBackendApps(ConanFile):  # noqa: D101
         "nlohmann_json/3.11.3",
     ]
 
+    def generate(self):
+        # Generate toolchain + find_package config files        
+        deps = CMakeDeps(self)
+        deps.generate()
+        tc = CMakeToolchain(self)
+        tc.generate()
+
+        # The following solves the "DLL not found" error during local development
+        if self.settings.os == "Windows":
+            # For CMake, the binary usually ends up in build/Release or build/Debug
+            bindir = os.path.join(self.build_folder, str(self.settings.build_type))
+            for dep in self.dependencies.values():
+                copy(self, "*.dll", dep.cpp_info.bindirs[0], bindir)
+                
     def build(self):  # noqa: D102
         cmake = CMake(self)
         cmake.configure()

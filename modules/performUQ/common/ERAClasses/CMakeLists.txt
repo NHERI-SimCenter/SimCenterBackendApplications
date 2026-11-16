@@ -1,4 +1,2 @@
-simcenter_add_python_script(SCRIPT ERADist.py)
-simcenter_add_python_script(SCRIPT ERANataf.py)
-simcenter_add_python_script(SCRIPT ERACond.py)
-simcenter_add_python_script(SCRIPT ERARosen.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES ERADist.py ERANataf.py ERACond.py ERARosen.py DESTINATION ${_rel})

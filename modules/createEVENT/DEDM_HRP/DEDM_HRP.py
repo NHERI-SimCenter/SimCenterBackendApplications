@@ -73,7 +73,7 @@ def parseDEDM_MatFile(matFileIn, windFileOut):
                 [FxForcesUltimate, MzForcesUltimate, FyForcesUltimate],
                 [1, 6, 2]):
 
-                floorForces = force_source if numFloor is 1 else force_source[floor-1]
+                floorForces = force_source if numFloor == 1 else force_source[floor-1]
 
                 ts_i = {
                     'name': f'{floor}_{force_label}',

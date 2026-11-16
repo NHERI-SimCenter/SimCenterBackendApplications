@@ -1,5 +1,6 @@
-simcenter_add_executable(NAME HighRiseTPU
-                         FILES HighRiseTPU.cpp callHighRiseTPU.cpp
-                         DEPENDS CONAN_PKG::jansson CONAN_PKG::libcurl common)
-
-simcenter_add_python_script(SCRIPT HighRiseTPU.py)
+add_executable(HighRiseTPU HighRiseTPU.cpp callHighRiseTPU.cpp)
+target_include_directories(HighRiseTPU PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(HighRiseTPU PRIVATE jansson::jansson CURL::libcurl common)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS HighRiseTPU DESTINATION ${_rel})
+install(FILES HighRiseTPU.py DESTINATION ${_rel})

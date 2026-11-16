@@ -1,3 +1,5 @@
-simcenter_add_executable(NAME StandardStormSurgeEDP
-                         FILES StandardStormSurgeEDP.cpp
-                         DEPENDS CONAN_PKG::jansson)
+add_executable(StandardStormSurgeEDP StandardStormSurgeEDP.cpp)
+target_include_directories(StandardStormSurgeEDP PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(StandardStormSurgeEDP PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS StandardStormSurgeEDP DESTINATION ${_rel})

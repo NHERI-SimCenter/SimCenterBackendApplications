@@ -1,3 +1,3 @@
-simcenter_add_python_script(SCRIPT censusutil.py)
-simcenter_add_python_script(SCRIPT globals.py)
-simcenter_add_file(NAME logging.ini)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES censusutil.py globals.py DESTINATION ${_rel})
+install(FILES logging.ini DESTINATION ${_rel})

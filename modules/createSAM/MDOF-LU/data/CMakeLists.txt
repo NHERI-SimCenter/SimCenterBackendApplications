@@ -1,1 +1,2 @@
-simcenter_add_file(NAME HazusData.txt)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES HazusData.txt DESTINATION ${_rel})

@@ -1,2 +1,2 @@
-simcenter_add_python_script(SCRIPT gridGroundMoion.py)
-simcenter_add_python_script(SCRIPT gmdata.json)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES gridGroundMoion.py gmdata.json DESTINATION ${_rel})

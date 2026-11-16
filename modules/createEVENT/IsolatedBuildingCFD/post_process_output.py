@@ -348,7 +348,7 @@ class PressureData:
         if os.path.isdir(self.path):  # noqa: PTH112
             print('Reading from path : %s' % (self.path))  # noqa: T201, UP031
             time_names = os.listdir(self.path)
-            sorted_index = np.argsort(np.float_(time_names)).tolist()  # noqa: NPY201
+            sorted_index = np.argsort(np.float64(time_names)).tolist()
             # print(sorted_index)
             # print("\tTime directories: %s" %(time_names))
             file_names = []

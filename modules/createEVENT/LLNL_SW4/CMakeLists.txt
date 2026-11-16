@@ -1,1 +1,2 @@
-simcenter_add_python_script(SCRIPT LLNL_SW4.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES LLNL_SW4.py DESTINATION ${_rel})
