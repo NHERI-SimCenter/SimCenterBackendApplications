@@ -2937,6 +2937,8 @@ def main(config: Dict[str, Any]) -> None:
 
     Path(case/"Community.foam").touch()
 
+    print(f"\nDone. OpenFOAM case written to: {Path(case).resolve()}")
+
 if __name__ == "__main__":
 
     # Windows consoles/pipes may default to cp1252; never crash on non-ASCII output
