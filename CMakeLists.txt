@@ -1,14 +1,16 @@
 cmake_minimum_required(VERSION 3.15)
 project(SimCenterBackendApplications C CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 set(CMAKE_COLOR_MAKEFILE ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
+
+# Must be set after including conan_toolchain.cmake, which otherwise overrides
+# CMAKE_CXX_STANDARD down to the conan profile's compiler.cppstd (14).
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 
 
