@@ -16,7 +16,12 @@ add_library(smelt STATIC
   dabaghi_der_kiureghian.cc
   nelder_mead.cc)
 
-# Include directories
-target_include_directories(smelt PUBLIC ${CONAN_INCLUDE_DIRS})
-#target_include_directories(smelt PUBLIC ${CONAN_INCLUDE_DIRS_JANSSON})
+target_include_directories(smelt PUBLIC ${CMAKE_SOURCE_DIR}/modules)
 
+target_link_libraries(smelt PUBLIC
+    jansson::jansson
+    nlohmann_json::nlohmann_json
+    kissfft::kissfft
+    Boost::boost
+    NLopt::nlopt
+    Eigen3::Eigen)

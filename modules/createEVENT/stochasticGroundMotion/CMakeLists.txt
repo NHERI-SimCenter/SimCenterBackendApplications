@@ -1,11 +1,5 @@
-#simcenter_add_executable(NAME StochasticGM
-#                         DEPENDS CONAN_PKG::kissfft smelt) 
-
 add_executable(StochasticGM command_parser.cpp eq_generator.cpp main.cpp)
-
-include_directories(../common/smelt)
-target_link_libraries (StochasticGM CONAN_PKG::kissfft smelt)
-
-set_property(TARGET StochasticGM PROPERTY CXX_STANDARD 17)
-
-install(TARGETS StochasticGM DESTINATION ${PROJECT_SOURCE_DIR}/applications/createEVENT/stochasticGroundMotion)
+target_include_directories(StochasticGM PRIVATE ${CMAKE_SOURCE_DIR}/modules ../common/smelt)
+target_link_libraries(StochasticGM PRIVATE kissfft::kissfft smelt clara::clara)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS StochasticGM DESTINATION ${_rel})

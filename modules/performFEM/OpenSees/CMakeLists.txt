@@ -1,6 +1,5 @@
-simcenter_add_executable(NAME createOpenSeesDriver
-                         FILES createOpenSeesDriver.cpp processInput.cpp
-                         DEPENDS CONAN_PKG::jansson)
-
-set_property(TARGET createOpenSeesDriver PROPERTY CXX_STANDARD 17)
-
+add_executable(createOpenSeesDriver createOpenSeesDriver.cpp processInput.cpp)
+target_include_directories(createOpenSeesDriver PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(createOpenSeesDriver PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS createOpenSeesDriver DESTINATION ${_rel})

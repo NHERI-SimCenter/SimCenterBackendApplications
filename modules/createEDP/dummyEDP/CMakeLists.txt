@@ -1,3 +1,5 @@
-simcenter_add_executable(NAME DummyEDP
-                         FILES DummyEDP.cpp
-                         DEPENDS CONAN_PKG::jansson)
+add_executable(DummyEDP DummyEDP.cpp)
+target_include_directories(DummyEDP PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(DummyEDP PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS DummyEDP DESTINATION ${_rel})

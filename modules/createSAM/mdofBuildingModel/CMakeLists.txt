@@ -1,3 +1,5 @@
-simcenter_add_executable(NAME MDOF_BuildingModel
-                         FILES MDOF_BuildingModelToSAM.cpp
-                         DEPENDS CONAN_PKG::jansson common)
+add_executable(MDOF_BuildingModel MDOF_BuildingModelToSAM.cpp)
+target_include_directories(MDOF_BuildingModel PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(MDOF_BuildingModel PRIVATE jansson::jansson common)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS MDOF_BuildingModel DESTINATION ${_rel})

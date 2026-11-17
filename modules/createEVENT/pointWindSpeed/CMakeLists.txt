@@ -1,5 +1,6 @@
-simcenter_add_executable(NAME pointWindSpeed
-                         FILES WindSpeedFromCloudData.cpp
-                         DEPENDS CONAN_PKG::jansson CONAN_PKG::nanoflann)
-
-simcenter_add_python_script(SCRIPT parseHurricaneScenario.py)
+add_executable(pointWindSpeed WindSpeedFromCloudData.cpp)
+target_include_directories(pointWindSpeed PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(pointWindSpeed PRIVATE jansson::jansson nanoflann::nanoflann)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS pointWindSpeed DESTINATION ${_rel})
+install(FILES parseHurricaneScenario.py DESTINATION ${_rel})

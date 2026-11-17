@@ -1,5 +1,5 @@
-simcenter_add_executable(NAME MultipleSCEvents
-                         FILES MultipleSimCenterEvents.cpp
-                         DEPENDS CONAN_PKG::jansson)
-
-set_property(TARGET MultipleSCEvents PROPERTY CXX_STANDARD 17)
+add_executable(MultipleSCEvents MultipleSimCenterEvents.cpp)
+target_include_directories(MultipleSCEvents PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(MultipleSCEvents PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS MultipleSCEvents DESTINATION ${_rel})

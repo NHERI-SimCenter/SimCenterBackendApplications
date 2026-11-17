@@ -1,3 +1,5 @@
-simcenter_add_module()
+# performHUA has no C++ source files; it only installs Python scripts
 add_subdirectory(pyincore_data)
-simcenter_add_python_script(SCRIPT INCORECensusUtil.py)
+
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES INCORECensusUtil.py DESTINATION ${_rel})

@@ -1,2 +1,2 @@
-simcenter_add_python_script(SCRIPT experimentalWindForces.py)
-simcenter_add_python_script(SCRIPT convertWindMat.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES experimentalWindForces.py convertWindMat.py DESTINATION ${_rel})

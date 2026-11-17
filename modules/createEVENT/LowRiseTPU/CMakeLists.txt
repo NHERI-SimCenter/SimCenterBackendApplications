@@ -1,5 +1,6 @@
-simcenter_add_executable(NAME LowRiseTPU
-                         FILES LowRiseTPU.cpp callTPU.cpp
-                         DEPENDS CONAN_PKG::jansson CONAN_PKG::libcurl common)
-
-simcenter_add_python_script(SCRIPT LowRiseTPU.py)
+add_executable(LowRiseTPU LowRiseTPU.cpp callTPU.cpp)
+target_include_directories(LowRiseTPU PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(LowRiseTPU PRIVATE jansson::jansson CURL::libcurl common)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS LowRiseTPU DESTINATION ${_rel})
+install(FILES LowRiseTPU.py DESTINATION ${_rel})

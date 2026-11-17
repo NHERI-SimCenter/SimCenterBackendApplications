@@ -1,3 +1,5 @@
-simcenter_add_executable(NAME StandardWindEDP
-                         FILES StandardWindEDP.cpp
-                         DEPENDS CONAN_PKG::jansson)
+add_executable(StandardWindEDP StandardWindEDP.cpp)
+target_include_directories(StandardWindEDP PRIVATE ${CMAKE_SOURCE_DIR}/modules)
+target_link_libraries(StandardWindEDP PRIVATE jansson::jansson)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS StandardWindEDP DESTINATION ${_rel})

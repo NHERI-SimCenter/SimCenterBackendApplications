@@ -1,6 +1,5 @@
-simcenter_add_file(NAME EigenValueAnalysis.tcl)
-simcenter_add_file(NAME Database.csv)		
-simcenter_add_file(NAME Model.tcl)
-simcenter_add_file(NAME DefineFunctionsAndProcedures.tcl)
-simcenter_add_file(NAME PerformLoadsAnalysis.tcl)
-simcenter_add_file(NAME DefineVariables.tcl)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES
+    EigenValueAnalysis.tcl Database.csv Model.tcl
+    DefineFunctionsAndProcedures.tcl PerformLoadsAnalysis.tcl DefineVariables.tcl
+    DESTINATION ${_rel})

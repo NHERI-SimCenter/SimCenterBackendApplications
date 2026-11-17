@@ -1,7 +1,4 @@
-#Python scripts for pre and post-processing
-simcenter_add_python_script(SCRIPT foam_file_processor.py)
-simcenter_add_python_script(SCRIPT setup_case.py)
-simcenter_add_python_script(SCRIPT post_process_output.py)
-simcenter_add_python_script(SCRIPT EmptyDomainCFD.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES foam_file_processor.py setup_case.py post_process_output.py EmptyDomainCFD.py DESTINATION ${_rel})
 
 add_subdirectory(templateOF10Dicts)

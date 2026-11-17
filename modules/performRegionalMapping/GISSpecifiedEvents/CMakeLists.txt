@@ -1,2 +1,2 @@
-simcenter_add_python_script(SCRIPT GISSpecifiedEvent.py)
-simcenter_add_python_script(SCRIPT RasterEvent.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES GISSpecifiedEvent.py RasterEvent.py DESTINATION ${_rel})

@@ -1,3 +1,2 @@
-simcenter_add_python_script(SCRIPT pelicun3_wrapper.py)
-simcenter_add_python_script(SCRIPT HDF_to_CSV.py)
-simcenter_add_python_script(SCRIPT DL_visuals.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES pelicun3_wrapper.py HDF_to_CSV.py DL_visuals.py DESTINATION ${_rel})

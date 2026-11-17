@@ -1,16 +1,6 @@
-simcenter_add_python_script(SCRIPT TaichiEvent.py)
-simcenter_add_python_script(SCRIPT taichi_script.py)
-simcenter_add_python_script(SCRIPT mpm_lagrangian_forces.py)
-simcenter_add_python_script(SCRIPT mpm128.py)
-simcenter_add_python_script(SCRIPT mpm3d.py)
-simcenter_add_python_script(SCRIPT pbf2d.py)
-simcenter_add_python_script(SCRIPT karman_vortex_street.py)
-simcenter_add_python_script(SCRIPT vortex_rings.py)
-simcenter_add_python_script(SCRIPT mass_spring_game.py)
-simcenter_add_python_script(SCRIPT fem99.py)
-simcenter_add_python_script(SCRIPT fem128.py)
-simcenter_add_python_script(SCRIPT euler.py)
-simcenter_add_python_script(SCRIPT eulerfluid2d.py)
-simcenter_add_python_script(SCRIPT stable_fluid.py)
-simcenter_add_python_script(SCRIPT waterwave.py)
-simcenter_add_python_script(SCRIPT mandelbrot_zoom.py)
+file(RELATIVE_PATH _rel ${CMAKE_SOURCE_DIR}/modules ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES
+    TaichiEvent.py taichi_script.py mpm_lagrangian_forces.py mpm128.py mpm3d.py pbf2d.py
+    karman_vortex_street.py vortex_rings.py mass_spring_game.py fem99.py fem128.py
+    euler.py eulerfluid2d.py stable_fluid.py waterwave.py mandelbrot_zoom.py
+    DESTINATION ${_rel})
