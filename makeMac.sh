@@ -89,6 +89,8 @@ cmake --install "${BUILD_DIR}" --prefix "${OUTPUT_DIR}" || die "FAIL: CMake inst
 NATAF_DIR="${PWD}/${OUTPUT_DIR}/performUQ/SimCenterUQ"
 if [ "${ARCH}" = "x86_64" ]; then
     LIBOMP_DIR="/usr/local/opt/libomp/lib"
+elif [ "${ARCH}" = "arm64" ]; then
+    LIBOMP_DIR="/opt/homebrew/opt/libomp/lib"
 else
     LIBOMP_DIR="$(brew --prefix libomp)/lib"
 fi

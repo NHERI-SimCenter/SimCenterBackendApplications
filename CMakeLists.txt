@@ -21,6 +21,9 @@ if(APPLE)
     # arm64 Homebrew (/opt/homebrew). The x86_64 Homebrew lives in /usr/local.
     if(CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64")
         set(_libomp_prefix "/usr/local/opt/libomp")
+    elseif(CMAKE_OSX_ARCHITECTURES STREQUAL "arm64")
+        # brew on PATH may be the x86_64 one in /usr/local; use arm64 Homebrew explicitly
+        set(_libomp_prefix "/opt/homebrew/opt/libomp")
     else()
         find_program(_brew brew)
         if(_brew)
