@@ -676,8 +676,9 @@ int addForcesFace(TAP *theTaps, int numTaps,
     for (int j=0; j<numDivisionY; j++) {
       
       double locX = dX/2.0;
-      double Rabove = locY*A/heightStory;
-      double Rbelow = (heightStory-locY)*A/heightStory;
+      double locYs = locY - i*heightStory; // height of this segment within story i (locY is the absolute height)
+      double Rabove = locYs*A/heightStory;
+      double Rbelow = (heightStory-locYs)*A/heightStory;
       
       /*
       for (int k=0; k<numTaps; k++) {
